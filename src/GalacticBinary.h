@@ -4,7 +4,8 @@
 
 struct Data
 {
-  int N;
+  int N;        //number of frequency bins
+  int Nchannel; //number of data channels
   
   long cseed; //seed for MCMC
   long nseed; //seed for noise realization
@@ -74,6 +75,7 @@ struct Source
   int qmax;
   int imin;
   int imax;
+  
   double t0;
 
 };

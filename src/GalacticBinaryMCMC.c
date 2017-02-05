@@ -48,9 +48,8 @@ int main(int argc, char *argv[])
 
   
   /* Initialize data structures */
-  data->N=2048;
   data->tdi = malloc(sizeof(struct TDI));
-  initialize_tdi(data->tdi, data->N);
+  initialize_tdi(data->tdi, data->N, data->Nchannel);
   data->noise = malloc(sizeof(struct Noise));
   initialize_noise(data->noise, data->N);
 
@@ -67,7 +66,7 @@ int main(int argc, char *argv[])
     initialize_chain(chain[ic],data->cseed, ic);
     
     model[ic] = malloc(sizeof(struct Model));
-    initialize_model(model[ic],NC,data->N);
+    initialize_model(model[ic],NC,data->N,data->Nchannel);
   }
 
 

@@ -47,7 +47,7 @@ void initialize_chain(struct Chain *chain, long seed, int i)
   gsl_rng_set (chain->r, seed);
 }
 
-void initialize_model(struct Model *model, int Nmax, int NFFT)
+void initialize_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
 {
   model->Nmax = Nmax;
   model->source = malloc(model->Nmax*sizeof(struct Source *));
@@ -59,10 +59,10 @@ void initialize_model(struct Model *model, int Nmax, int NFFT)
   for(n=0; n<model->Nmax; n++)
   {
     model->source[n] = malloc(sizeof(struct Source));
-    initialize_source(model->source[n],NFFT);
+    initialize_source(model->source[n],NFFT,Nchannel);
   }
   
-  initialize_tdi(model->tdi,NFFT);
+  initialize_tdi(model->tdi,NFFT, Nchannel);
 
   initialize_noise(model->noise,NFFT);
 }
@@ -81,20 +81,23 @@ void free_model(struct Model *model)
   free(model);
 }
 
-void initialize_tdi(struct TDI *tdi, int NFFT)
+void initialize_tdi(struct TDI *tdi, int NFFT, int Nchannel)
 {
+  //Number of frequency bins (2*N samples)
+  tdi->N = NFFT;
+
   //Michelson
-  tdi->X = malloc(2*NFFT*sizeof(double));
-  tdi->Y = malloc(2*NFFT*sizeof(double));
-  tdi->Z = malloc(2*NFFT*sizeof(double));
+  tdi->X = malloc(2*tdi->N*sizeof(double));
+  tdi->Y = malloc(2*tdi->N*sizeof(double));
+  tdi->Z = malloc(2*tdi->N*sizeof(double));
   
   //Noise-orthogonal
-  tdi->A = malloc(2*NFFT*sizeof(double));
-  tdi->E = malloc(2*NFFT*sizeof(double));
-  tdi->T = malloc(2*NFFT*sizeof(double));
+  tdi->A = malloc(2*tdi->N*sizeof(double));
+  tdi->E = malloc(2*tdi->N*sizeof(double));
+  tdi->T = malloc(2*tdi->N*sizeof(double));
   
   int n;
-  for(n=0; n<2*NFFT; n++)
+  for(n=0; n<2*tdi->N; n++)
   {
     tdi->X[n] = 0.0;
     tdi->Y[n] = 0.0;
@@ -103,6 +106,9 @@ void initialize_tdi(struct TDI *tdi, int NFFT)
     tdi->E[n] = 0.0;
     tdi->T[n] = 0.0;
   }
+  
+  //Number of TDI channels (X or A&E or maybe one day A,E,&T)
+  tdi->Nchannel = Nchannel;
 }
 
 void free_tdi(struct TDI *tdi)
@@ -143,7 +149,7 @@ void free_noise(struct Noise *noise)
   free(noise);
 }
 
-void initialize_source(struct Source *source, int NFFT)
+void initialize_source(struct Source *source, int NFFT, int Nchannel)
 {
   //Intrinsic
   source->m1=1.;
@@ -169,7 +175,7 @@ void initialize_source(struct Source *source, int NFFT)
   
   //Response
   source->tdi = malloc(sizeof(struct TDI));
-  initialize_tdi(source->tdi,NFFT);
+  initialize_tdi(source->tdi,NFFT, Nchannel);
   
 };
 

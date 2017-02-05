@@ -10,7 +10,6 @@
 
 #include "LISA.h"
 #include "Constants.h"
-#include "GalacticBinaryMath.h"
 
 void spacecraft(struct Orbit *orbit, double tint, double *xint, double *yint, double *zint)
 {
@@ -316,6 +315,25 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
       E[k] = -sqT*((Z[j]-Y[j])*sLS+(Z[k]-Y[k])*cLS)/SQ3;
     }
   }
+}
+
+static double ipow(double x, int n)
+{
+  int i;
+  double xn = x;
+  switch(n)
+  {
+    case 0:
+      xn = 1.0;
+      break;
+    case 1:
+      xn = x;
+      break;
+    default:
+      for(i=2; i<=n; i++) xn *= x;
+      break;
+  }
+  return xn;
 }
 
 double AEnoise(double L, double fstar, double f)

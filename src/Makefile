@@ -1,9 +1,13 @@
+# OpenMP
 CC = gcc-mp-5
 CCFLAGS = -fopenmp
 
-
 LIBS  = gsl gslcblas m
 CCFLAGS += -g -Wall -std=gnu99
+
+# Compile src with git hash
+GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
+CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o
 
@@ -15,7 +19,7 @@ LISA.o : LISA.c LISA.h
 GalacticBinaryIO.o : GalacticBinaryIO.c GalacticBinaryIO.h LISA.h
 	$(CC) $(CCFLAGS) -c GalacticBinaryIO.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
-GalacticBinaryMath.o : GalacticBinaryMath.c GalacticBinaryMath.h
+GalacticBinaryMath.o : GalacticBinaryMath.c GalacticBinaryMath.h GalacticBinary.h
 	$(CC) $(CCFLAGS) -c GalacticBinaryMath.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
 GalacticBinaryData.o : GalacticBinaryData.c GalacticBinaryData.h GalacticBinary.h GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o LISA.o

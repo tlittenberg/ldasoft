@@ -35,6 +35,8 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
   //TODO: support Michelson-only injection
   fprintf(stdout,"\n==== GalacticBinaryInjectVerificationSource ====\n");
   
+  FILE *fptr;
+  
   /* Get injection parameters */
   double f0,dfdt,costheta,phi,m1,m2,D; //read from injection file
   double cosi,phi0,psi;                //drawn from prior
@@ -51,7 +53,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
   data->qmax = data->qmin+data->N;
 
   struct Source *inj = malloc(sizeof(struct Source));
-  initialize_source(inj,data->N);
+  initialize_source(inj,data->N,2);
 
   //draw extrinsic parameters
   const gsl_rng_type *T = gsl_rng_default;
@@ -100,6 +102,18 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
     data->tdi->E[2*i+1] = inj->tdi->E[2*n+1];
   }
 
+  fptr=fopen("power_injection.dat","w");
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    fprintf(fptr,"%lg %lg %lg ",
+            f,
+            data->tdi->A[2*i]*data->tdi->A[2*i]+data->tdi->A[2*i+1]*data->tdi->A[2*i+1],
+            data->tdi->E[2*i]*data->tdi->E[2*i]+data->tdi->E[2*i+1]*data->tdi->E[2*i+1]);
+    fprintf(fptr,"\n");
+  }
+  fclose(fptr);
+
   //Get noise spectrum for data segment
   for(int n=0; n<data->N; n++)
   {
@@ -108,8 +122,9 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
     data->noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
   }
   
-  //TODO: get injected SNR
-
+  //Get injected SNR
+  fprintf(stdout,"Injected SNR=%g\n\n",snr(inj, data->noise));
+  
   //Add Gaussian noise to injection
   gsl_rng_set (r, data->nseed);
 
@@ -128,17 +143,17 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
   }
   
   
-  FILE *temp=fopen("temp.dat","w");
+  fptr=fopen("power_data.dat","w");
   for(int i=0; i<data->N; i++)
   {
     double f = (double)(i+data->qmin)/data->T;
-    fprintf(temp,"%lg %lg %lg ",
+    fprintf(fptr,"%lg %lg %lg ",
             f,
             data->tdi->A[2*i]*data->tdi->A[2*i]+data->tdi->A[2*i+1]*data->tdi->A[2*i+1],
             data->tdi->E[2*i]*data->tdi->E[2*i]+data->tdi->E[2*i+1]*data->tdi->E[2*i+1]);
-    fprintf(temp,"\n");
+    fprintf(fptr,"\n");
   }
-  fclose(temp);
+  fclose(fptr);
 
   
   gsl_rng_free(r);

@@ -8,6 +8,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "LISA.h"
+#include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 
 
@@ -16,24 +18,44 @@ double chirpmass(double m1, double m2)
   return pow(m1*m2,3./5.)/pow(m1+m2,1./5.);
 }
 
-double ipow(double x, int n)
+
+double fourier_nwip(double *a, double *b, double *Sn, int n)
 {
-  int i;
-  double xn = x;
-  switch(n)
+  int i, j, k;
+  double arg, product;
+  double ReA, ReB, ImA, ImB;
+  
+  arg = 0.0;
+  for(i=0; i<n; i++)
   {
-    case 0:
-      xn = 1.0;
+    j = i * 2;
+    k = j + 1;
+    ReA = a[j]; ImA = a[k];
+    ReB = b[j]; ImB = b[k];
+    product = ReA*ReB + ImA*ImB;
+    arg += product/Sn[i];
+  }
+  
+  return(4.0*arg);
+}
+
+double snr(struct Source *source, struct Noise *noise)
+{
+  double snr2=0.0;
+  switch(source->tdi->Nchannel)
+  {
+    case 1: //Michelson
+      snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->SnX,source->tdi->N);
       break;
-    case 1:
-      xn = x;
-      break;
-    default:
-      for(i=2; i<=n; i++) xn *= x;
+    case 2: //A&E
+      snr2 += fourier_nwip(source->tdi->A,source->tdi->A,noise->SnA,source->tdi->N);
+      snr2 += fourier_nwip(source->tdi->E,source->tdi->E,noise->SnE,source->tdi->N);
       break;
   }
-  return xn;
+  
+  return(sqrt(snr2));
 }
+
 
 /* ********************************************************************************** */
 /*																					  */

@@ -15,13 +15,14 @@
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryWaveform.h"
 
+
 double galactic_binary_Amp(double Mc, double f0, double D, double T)
 {
   double f = f0;//T;
   double M = Mc*TSUN;
   double dL= D*PC/C;
   
-  return 2.*pow(ipow(M,5)*ipow(M_PI*f,2),1./3.)/dL;
+  return 2.*pow(pow(M,5)*pow(M_PI*f,2),1./3.)/dL;
 }
 double galactic_binary_fdot(double Mc, double f0, double T)
 {
@@ -29,7 +30,7 @@ double galactic_binary_fdot(double Mc, double f0, double T)
   double M = Mc*TSUN;
   double Q = 19.2;//96./5.
   
-  return Q*pow(ipow(M_PI,8)*ipow(M,5)*ipow(f,11),1./3.);  
+  return Q*pow(pow(M_PI,8)*pow(M,5)*pow(f,11),1./3.);  
 }
 double galactic_binary_Mc(double f0, double dfdt, double T)
 {

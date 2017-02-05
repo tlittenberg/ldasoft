@@ -10,6 +10,7 @@
 #define GalacticBinaryMath_h
 
 #include <stdio.h>
+#include <stdlib.h>
 
 double swap, tempr;
 #define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
@@ -17,6 +18,9 @@ double swap, tempr;
 double chirpmass(double m1, double m2);
 
 double ipow(double x, int n);
+
+double fourier_nwip(double *a, double *b, double *Sn, int n);
+double snr(struct Source *source, struct Noise *noise);
 
 /* ********************************************************************************** */
 /*																					  */
