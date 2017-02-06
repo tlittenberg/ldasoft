@@ -8,6 +8,11 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_eigen.h>
+
 #include "LISA.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
@@ -56,11 +61,74 @@ double snr(struct Source *source, struct Noise *noise)
   return(sqrt(snr2));
 }
 
+void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
+{
+  int i,j;
+  
+  // Don't let errors kill the program (yikes)
+  gsl_set_error_handler_off ();
+  int err=0;
+  
+  // Find eigenvectors and eigenvalues
+  gsl_matrix *GSLfisher = gsl_matrix_alloc(N,N);
+  gsl_matrix *GSLcovari = gsl_matrix_alloc(N,N);
+  gsl_matrix *GSLevectr = gsl_matrix_alloc(N,N);
+  gsl_vector *GSLevalue = gsl_vector_alloc(N);
+  
+  for(i=0; i<N; i++)for(j=0; j<N; j++) gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
+  
+  // sort and put them into evec
+  gsl_eigen_symmv_workspace * workspace = gsl_eigen_symmv_alloc (N);
+  gsl_permutation * permutation = gsl_permutation_alloc(N);
+  err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
+  err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
+  err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
+  err += gsl_linalg_LU_invert(GSLfisher, permutation, GSLcovari);
+  
+  if(err>0)
+  {
+    fprintf(stderr,"BayesWaveMath.c:135: WARNING: singluar matrix, treating matrix as diagonal\n");
+    fflush(stderr);
+    for(i=0; i<N; i++)for(j=0; j<N; j++)
+    {
+      evector[i][j] = 0.0;
+      if(i==j)
+      {
+        evector[i][j]=1.0;
+        evalue[i]=matrix[i][j];
+      }
+    }
+    
+  }
+  else
+  {
+    
+    //unpack arrays from gsl inversion
+    for(i=0; i<N; i++)
+    {
+      evalue[i] = gsl_vector_get(GSLevalue,i);
+      for(j=0; j<N; j++) evector[i][j] = gsl_matrix_get(GSLevectr,i,j);
+    }
+    
+    for(i=0;i<N-1;i++)for(j=i+1;j<N;j++) gsl_matrix_set(GSLcovari,j,i, gsl_matrix_get(GSLcovari,i,j) );
+    
+    //cap minimum size eigenvalues
+    for(i=0; i<N; i++) if(evalue[i] < 10.) evalue[i] = 10.;
+  }
+  
+  gsl_vector_free (GSLevalue);
+  gsl_matrix_free (GSLfisher);
+  gsl_matrix_free (GSLcovari);
+  gsl_matrix_free (GSLevectr);
+  gsl_eigen_symmv_free (workspace);
+  gsl_permutation_free (permutation);
+}
+
 
 /* ********************************************************************************** */
-/*																					  */
+/*																					                                          */
 /*                                   Fourier Tools                                    */
-/*																					  */
+/*																					                                          */
 /* ********************************************************************************** */
 
 void dfour1(double data[], unsigned long nn, int isign)

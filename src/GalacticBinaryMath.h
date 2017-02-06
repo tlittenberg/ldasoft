@@ -22,6 +22,8 @@ double ipow(double x, int n);
 double fourier_nwip(double *a, double *b, double *Sn, int n);
 double snr(struct Source *source, struct Noise *noise);
 
+void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N);
+
 /* ********************************************************************************** */
 /*																					  */
 /*                                    Fourier Tools                                   */

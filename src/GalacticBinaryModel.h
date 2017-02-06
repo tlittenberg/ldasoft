@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 
-void map_params_to_array(struct Source *source, double *params);
-void map_array_to_params(struct Source *source, double *params);
+void map_params_to_array(struct Source *source, double *params, double T);
+void map_array_to_params(struct Source *source, double *params, double T);
 
 
 void initialize_chain(struct Chain *chain, long seed, int i);

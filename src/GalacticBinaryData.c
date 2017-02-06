@@ -78,10 +78,9 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
   inj->cosi=cosi;
   inj->phi0=phi0;
   inj->psi=psi;
-  map_params_to_array(inj, inj->params);
+  map_params_to_array(inj, inj->params, data->T);
   
   //Book-keeping of injection time-frequency volume
-  inj->t0 = data->t0;
   galactic_binary_alignment(orbit, data, inj);
 
   //Simulate gravitational wave signal
@@ -142,6 +141,49 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
     }
   }
   
+  //Compute fisher information matrix of injection
+  printf("computing Fisher Information Matrix of injection\n");
+  
+  double **fisher  = malloc(8*sizeof(double *));
+  double **evector = malloc(8*sizeof(double *));
+  double *evalue   = malloc(8*sizeof(double));
+  
+  for(int i=0; i<8; i++)
+  {
+    fisher[i]  = malloc(8*sizeof(double *));
+    evector[i] = malloc(8*sizeof(double *));
+  }
+  
+  galactic_binary_fisher(orbit, data, inj, data->noise, fisher);
+  
+  printf("\n Fisher Matrix:\n");
+  for(int i=0; i<8; i++)
+  {
+    fprintf(stdout," ");
+    for(int j=0; j<8; j++)
+    {
+      if(fisher[i][j]<0)fprintf(stdout,"%.2e ", fisher[i][j]);
+      else              fprintf(stdout,"+%.2e ",fisher[i][j]);
+    }
+    fprintf(stdout,"\n");
+  }
+
+  matrix_eigenstuff(fisher, evector, evalue, 8);
+
+  printf("\n Fisher std. errors:\n");
+  for(int j=0; j<8; j++)  fprintf(stdout," %.4e\n", 1./evalue[j]);
+
+
+  
+  for(int i=0; i<8; i++)
+  {
+    free(fisher[i]);
+    free(evector[i]);
+  }
+  free(evector);
+  free(evalue);
+  free(fisher);
+
   
   fptr=fopen("power_data.dat","w");
   for(int i=0; i<data->N; i++)

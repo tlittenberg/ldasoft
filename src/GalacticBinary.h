@@ -94,7 +94,8 @@ struct Noise
 struct Model
 {
   //Source parameters
-  int Nmax;
+  int Nmax;   //maximum number of signals in model
+  int Nlive;  //current number of signals in model
   struct Source **source;
   
   //Noise parameters
