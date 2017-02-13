@@ -12,6 +12,7 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_eigen.h>
+#include <gsl/gsl_sf.h>
 
 #include "LISA.h"
 #include "GalacticBinary.h"
@@ -81,7 +82,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
   gsl_eigen_symmv_workspace * workspace = gsl_eigen_symmv_alloc (N);
   gsl_permutation * permutation = gsl_permutation_alloc(N);
   err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
-  err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
+  //err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
   err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
   err += gsl_linalg_LU_invert(GSLfisher, permutation, GSLcovari);
   
@@ -155,9 +156,9 @@ void dfour1(double data[], unsigned long nn, int isign)
   while (n > mmax) {
     istep=mmax << 1;
     theta=isign*(6.28318530717959/mmax);
-    wtemp=sin(0.5*theta);
+    wtemp=gsl_sf_sin(0.5*theta);
     wpr = -2.0*wtemp*wtemp;
-    wpi=sin(theta);
+    wpi=gsl_sf_sin(theta);
     wr=1.0;
     wi=0.0;
     for (m=1;m<mmax;m+=2) {

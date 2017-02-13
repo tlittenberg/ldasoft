@@ -183,6 +183,27 @@ void initialize_orbit(struct Orbit *orbit)
 }
 /*************************************************************************/
 
+void free_orbit(struct Orbit *orbit)
+{
+  for(int i=0; i<3; i++)
+  {
+    free(orbit->x[i]);
+    free(orbit->y[i]);
+    free(orbit->z[i]);
+    free(orbit->dx[i]);
+    free(orbit->dy[i]);
+    free(orbit->dz[i]);
+  }
+  free(orbit->x);
+  free(orbit->y);
+  free(orbit->z);
+  free(orbit->dx);
+  free(orbit->dy);
+  free(orbit->dz);
+  free(orbit->t);
+
+  free(orbit);
+}
 
 
 void LISA_spline(double *x, double *y, int n, double yp1, double ypn, double *y2)

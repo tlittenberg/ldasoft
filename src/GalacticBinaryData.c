@@ -53,7 +53,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
   data->qmax = data->qmin+data->N;
 
   struct Source *inj = malloc(sizeof(struct Source));
-  initialize_source(inj,data->N,2);
+  alloc_source(inj,data->N,2);
 
   //draw extrinsic parameters
   const gsl_rng_type *T = gsl_rng_default;
@@ -144,17 +144,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
   //Compute fisher information matrix of injection
   printf("computing Fisher Information Matrix of injection\n");
   
-  double **fisher  = malloc(8*sizeof(double *));
-  double **evector = malloc(8*sizeof(double *));
-  double *evalue   = malloc(8*sizeof(double));
-  
-  for(int i=0; i<8; i++)
-  {
-    fisher[i]  = malloc(8*sizeof(double *));
-    evector[i] = malloc(8*sizeof(double *));
-  }
-  
-  galactic_binary_fisher(orbit, data, inj, data->noise, fisher);
+  galactic_binary_fisher(orbit, data, inj, data->noise);
   
   printf("\n Fisher Matrix:\n");
   for(int i=0; i<8; i++)
@@ -162,27 +152,15 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
     fprintf(stdout," ");
     for(int j=0; j<8; j++)
     {
-      if(fisher[i][j]<0)fprintf(stdout,"%.2e ", fisher[i][j]);
-      else              fprintf(stdout,"+%.2e ",fisher[i][j]);
+      if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
+      else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
     }
     fprintf(stdout,"\n");
   }
 
-  matrix_eigenstuff(fisher, evector, evalue, 8);
-
   printf("\n Fisher std. errors:\n");
-  for(int j=0; j<8; j++)  fprintf(stdout," %.4e\n", 1./evalue[j]);
+  for(int j=0; j<8; j++)  fprintf(stdout," %.4e\n", 1./sqrt(inj->fisher_evalue[j]));
 
-
-  
-  for(int i=0; i<8; i++)
-  {
-    free(fisher[i]);
-    free(evector[i]);
-  }
-  free(evector);
-  free(evalue);
-  free(fisher);
 
   
   fptr=fopen("power_data.dat","w");

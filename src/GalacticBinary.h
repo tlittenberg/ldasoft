@@ -37,9 +37,12 @@ struct Flags
 
 struct Chain
 {
-  int index;
-  const gsl_rng_type *T;
-  gsl_rng *r;
+  int NC;
+  int *index;
+  const gsl_rng_type **T;
+  gsl_rng **r;
+  
+  double *temperature;
 };
 
 struct Source
@@ -77,6 +80,11 @@ struct Source
   int imax;
   
   double t0;
+  
+  //Fisher matrix
+  double **fisher_matrix;
+  double **fisher_evectr;
+  double *fisher_evalue;
 
 };
 
@@ -103,5 +111,12 @@ struct Model
   
   //TDI
   struct TDI *tdi;
+  
+  //Source parameter priors
+  double **prior;
+  double logPriorVolume;
+  
+  //Model likelihood
+  double logL;
   
 };

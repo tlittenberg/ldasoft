@@ -12,5 +12,6 @@
 #include <stdio.h>
 
 double draw_from_prior(struct Model *model, double *params, gsl_rng *seed);
+double draw_from_fisher(struct Model *model, struct Source *source, double *params, gsl_rng *seed);
 
 #endif /* GalacticBinaryProposal_h */

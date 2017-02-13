@@ -7,6 +7,7 @@
 //
 #include <math.h>
 
+#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryPrior.h"
 
@@ -35,11 +36,11 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   
   //longitude
   model->prior[2][0] = 0.0;
-  model->prior[2][1] = 2.0*M_PI;
+  model->prior[2][1] = PI2;
   
   //log amplitude
   model->prior[3][0] = -55.0;
-  model->prior[3][1] = -47.0;
+  model->prior[3][1] = -40.0;
   
   //cos inclination
   model->prior[4][0] = -1.0;
@@ -51,7 +52,7 @@ void set_uniform_prior(struct Model *model, struct Data *data)
 
   //phase
   model->prior[6][0] = 0.0;
-  model->prior[6][1] = 2.0*M_PI;
+  model->prior[6][1] = PI2;
   
   //fdot (bins/Tobs)
   model->prior[7][0] = -10.0;
@@ -66,11 +67,35 @@ void set_uniform_prior(struct Model *model, struct Data *data)
 double evaluate_uniform_prior(struct Model *model, double *params)
 {
   double **prior = model->prior;
-
-  for(int i=0; i<8; i++)
-  {
-    if(params[i]<prior[i][0] || params[i]>prior[i][1]) return -1.0e-60;
-  }
   
+  //frequency bin (uniform)
+  if(params[0]<prior[0][0] || params[0]>prior[0][1]) return -INFINITY;
+  
+  //colatitude (reflective)
+  if(params[1] < prior[1][0] ) params[1] = 2.0*prior[1][0] - params[1];
+  if(params[1] > prior[1][1] ) params[1] = 2.0*prior[1][1] - params[1];
+  
+  //longitude (periodic)
+  while(params[2] < prior[2][0]) params[2] += prior[2][1]-prior[2][0];
+  while(params[2] > prior[2][1]) params[2] -= prior[2][1]-prior[2][0];
+  
+  //log amplitude (step)
+  if(params[3]<prior[3][0] || params[3]>prior[3][1]) return -INFINITY;
+  
+  //cos inclination
+  if(params[4] < prior[4][0] ) params[4] = 2.0*prior[4][0] - params[4];
+  if(params[4] > prior[4][1] ) params[4] = 2.0*prior[4][1] - params[4];
+  
+  //polarization
+  while(params[5] < prior[5][0]) params[5] += prior[5][1]-prior[5][0];
+  while(params[5] > prior[5][1]) params[5] -= prior[5][1]-prior[5][0];
+  
+  //phase
+  while(params[6] < prior[6][0]) params[6] += prior[6][1]-prior[6][0];
+  while(params[6] > prior[6][1]) params[6] -= prior[6][1]-prior[6][0];
+  
+  //fdot (bins/Tobs)
+  if(params[7]<prior[7][0] || params[7]>prior[7][1]) return -INFINITY;
+
   return model->logPriorVolume;
 }

@@ -19,7 +19,7 @@ double galactic_binary_Mc(double f0, double dfdt, double T);
 
 double galactic_binary_dL(double f0, double dfdt, double A, double T);
 
-void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise, double **fisher);
+void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise);
 
 void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct Source *source);
 

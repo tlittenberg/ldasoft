@@ -56,7 +56,10 @@ struct TDI
 
 
 void spacecraft(struct Orbit *orbit, double tint, double *xint, double *yint, double *zint);
+
 void initialize_orbit(struct Orbit *orbit);
+void free_orbit(struct Orbit *orbit);
+
 void LISA_spline(double *x, double *y, int n, double yp1, double ypn, double *y2);
 void LISA_splint(double *xa, double *ya, double *y2a, int n, double x, double *y);
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);

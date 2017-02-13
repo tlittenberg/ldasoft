@@ -50,11 +50,12 @@ double galactic_binary_dL(double f0, double dfdt, double A, double T)
   return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
 }
 
-void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise, double **fisher)
+void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise)
 {
+  //TODO:  galactic_binary_fisher should compute joint Fisher
   int i,j,n;
   
-  double epsilon    = 1.0e-1;
+  double epsilon    = 1.0e-5;
   double invepsilon2= 1./(2.*epsilon);
   
   // Plus and minus parameters:
@@ -64,36 +65,45 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   // Plus and minus templates for each detector:
   struct Source *wave_p = malloc(sizeof(struct Source));
   struct Source *wave_m = malloc(sizeof(struct Source));
-  initialize_source(wave_p, data->N, data->Nchannel);
-  initialize_source(wave_m, data->N, data->Nchannel);
+  alloc_source(wave_p, data->N, data->Nchannel);
+  alloc_source(wave_m, data->N, data->Nchannel);
 
   // TDI variables to hold derivatives of h
   struct TDI **dhdx = malloc(8*sizeof(struct TDI *));
   for(n=0; n<8; n++)
   {
     dhdx[n] = malloc(sizeof(struct TDI));
-    initialize_tdi(dhdx[n], data->N, data->Nchannel);
+    alloc_tdi(dhdx[n], data->N, data->Nchannel);
   }
   
   /* assumes all the parameters are log or angles */
   int N2 = data->N*2;
   for(i=0; i<8; i++)
   {
+    // copy parameters
     for(j=0; j<8; j++)
     {
       wave_p->params[j] = source->params[j];
       wave_m->params[j] = source->params[j];
     }
     
+    // perturb parameters
     wave_p->params[i] += epsilon;
     wave_m->params[i] -= epsilon;
 
+    // complete info in source structure
+    map_array_to_params(wave_p, wave_p->params, data->T);
+    map_array_to_params(wave_m, wave_m->params, data->T);
+    
+    // align perturbed waveforms in data array
     galactic_binary_alignment(orbit, data, wave_p);
     galactic_binary_alignment(orbit, data, wave_m);
     
+    // compute perturbed waveforms
     galactic_binary(orbit, data->T, wave_p->t0, wave_p->params, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
     galactic_binary(orbit, data->T, wave_m->t0, wave_m->params, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
     
+    // central differencing derivatives of waveforms w.r.t. parameters
     switch(source->tdi->Nchannel)
     {
       case 1:
@@ -117,28 +127,30 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   {
     for(j=i; j<8; j++)
     {
-      fisher[i][j] = 0.0;
+      source->fisher_matrix[i][j] = 0.0;
       switch(source->tdi->Nchannel)
       {
         case 1:
-          fisher[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->X, noise->SnX, data->N);
+          source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->X, noise->SnX, data->N);
           break;
         case 2:
-          fisher[i][j] += fourier_nwip(dhdx[i]->A, dhdx[j]->A, noise->SnA, data->N);
-          fisher[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->SnE, data->N);
+          source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->A, dhdx[j]->A, noise->SnA, data->N);
+          source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->SnE, data->N);
           break;
       }
-      fisher[j][i] = fisher[i][j];
+      source->fisher_matrix[j][i] = source->fisher_matrix[i][j];
     }
   }
   
+  // Calculate eigenvalues and eigenvectors of fisher matrix
+  matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, 8);
+
   free(params_p);
   free(params_m);
   free_source(wave_p);
   free_source(wave_m);
   for(n=0; n<8; n++) free_tdi(dhdx[n]);
   free(dhdx);
-  
 }
 
 
@@ -160,7 +172,7 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double A, double
   //Sinc spreading
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
   double SNRm = A*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
-  
+
   int SS = (int)(pow(2.0,(rint(log(SNRm)/LN2)+1.0)));
   if(SS > N) SS = N;
   
@@ -169,12 +181,14 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double A, double
 
 void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct Source *source)
 {
+  map_array_to_params(source, source->params, data->T);
+  
   source->t0   = data->t0;
   source->BW   = galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->amp, data->T, data->N);
   source->qmin = (int)(source->f0*data->T) - source->BW/2;
   source->qmax = source->qmin+source->BW;
   source->imin = source->qmin - data->qmin;
-  source->imax = source->imin + source->BW;
+  source->imax = source->imin + source->BW;  
 }
 
 void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, double *X, double *A, double *E, int BW, int NI)
@@ -447,7 +461,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, d
   }
   
   /*   Call subroutines for synthesizing different TDI data channels  */
-  LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X, A, E, BW, NI);
+  LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
 
   /*   Deallocate Arrays   */
 //  free_dvector(x,1,3); free_dvector(y,1,3); free_dvector(z,1,3);
