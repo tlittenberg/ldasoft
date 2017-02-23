@@ -25,6 +25,14 @@ struct Data
   struct TDI *tdi;
   struct Noise *noise;
   
+  //Reconstructed signal
+  int Nwave;
+  int downsample;
+  double ***h_rec; // N x Nchannel x NMCMC 
+  double ***h_res; // N x Nchannel x NMCMC
+  double ***h_pow; // N x Nchannel x NMCMC
+  double ***S_pow; // N x Nchannel x NMCMC
+  
   char injFile[1024];
 };
 
@@ -37,12 +45,22 @@ struct Flags
 
 struct Chain
 {
+  //Number of chains
   int NC;
   int *index;
+  double *acceptance;
+  double *temperature;
+  double *avgLogL;
+  
+  //thread-safe RNG
   const gsl_rng_type **T;
   gsl_rng **r;
   
-  double *temperature;
+  //chain files
+  FILE **noiseFile;
+  FILE **parameterFile;
+  FILE *likelihoodFile;
+  FILE *temperatureFile;
 };
 
 struct Source
@@ -90,6 +108,8 @@ struct Source
 
 struct Noise
 {
+  int N;
+  
   double etaA;
   double etaE;
   double etaX;
@@ -118,5 +138,5 @@ struct Model
   
   //Model likelihood
   double logL;
-  
+  double logLnorm;
 };

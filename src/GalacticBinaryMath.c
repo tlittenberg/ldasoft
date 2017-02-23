@@ -40,6 +40,7 @@ double fourier_nwip(double *a, double *b, double *Sn, int n)
     ReB = b[j]; ImB = b[k];
     product = ReA*ReB + ImA*ImB;
     arg += product/Sn[i];
+    //if(arg!=arg){printf("WTF?  %i,ReA=%g,ImA=%g,ReB=%g,ImB=%g,Sn=%g\n",i,ReA,ImA,ReB,ImB,Sn[i]);}
   }
   
   return(4.0*arg);
@@ -76,19 +77,26 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
   gsl_matrix *GSLevectr = gsl_matrix_alloc(N,N);
   gsl_vector *GSLevalue = gsl_vector_alloc(N);
   
-  for(i=0; i<N; i++)for(j=0; j<N; j++) gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
+  for(i=0; i<N; i++)
+  {
+    for(j=0; j<N; j++)
+    {
+      if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:83: WARNING: nan matrix element, now what?\n");
+      gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
+    }
+  }
   
   // sort and put them into evec
   gsl_eigen_symmv_workspace * workspace = gsl_eigen_symmv_alloc (N);
   gsl_permutation * permutation = gsl_permutation_alloc(N);
   err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
-  //err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
+  err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
   err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
   err += gsl_linalg_LU_invert(GSLfisher, permutation, GSLcovari);
   
   if(err>0)
   {
-    fprintf(stderr,"BayesWaveMath.c:135: WARNING: singluar matrix, treating matrix as diagonal\n");
+    fprintf(stderr,"GalacticBinaryMath.c:98: WARNING: singluar matrix, treating matrix as diagonal\n");
     fflush(stderr);
     for(i=0; i<N; i++)for(j=0; j<N; j++)
     {
@@ -108,13 +116,20 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
     for(i=0; i<N; i++)
     {
       evalue[i] = gsl_vector_get(GSLevalue,i);
-      for(j=0; j<N; j++) evector[i][j] = gsl_matrix_get(GSLevectr,i,j);
+      for(j=0; j<N; j++)
+      {
+        evector[i][j] = gsl_matrix_get(GSLevectr,i,j);
+        if(evector[i][j] != evector[i][j]) evector[i][j] = 0.;
+      }
     }
     
     for(i=0;i<N-1;i++)for(j=i+1;j<N;j++) gsl_matrix_set(GSLcovari,j,i, gsl_matrix_get(GSLcovari,i,j) );
     
     //cap minimum size eigenvalues
-    for(i=0; i<N; i++) if(evalue[i] < 10.) evalue[i] = 10.;
+    for(i=0; i<N; i++)
+    {
+      if(evalue[i] != evalue[i] || evalue[i] <= 10.0) evalue[i] = 10.;
+    }
   }
   
   gsl_vector_free (GSLevalue);

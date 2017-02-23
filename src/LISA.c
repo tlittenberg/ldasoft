@@ -304,7 +304,7 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     
     M[j] = sqT*(X[j]*cLS - X[k]*sLS);
     M[k] =-sqT*(X[j]*sLS + X[k]*cLS);
-    
+        
     //save some CPU time when only X-channel is needed
     if(NI>1)
     {

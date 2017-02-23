@@ -40,17 +40,73 @@ void map_params_to_array(struct Source *source, double *params, double T)
   params[7] = source->dfdt*T*T;
 }
 
-void initialize_chain(struct Chain *chain, long *seed, int NC)
+void alloc_data(struct Data *data, int NMCMC)
+{
+  
+  data->tdi = malloc(sizeof(struct TDI));
+  alloc_tdi(data->tdi, data->N, data->Nchannel);
+  data->noise = malloc(sizeof(struct Noise));
+  alloc_noise(data->noise, data->N);
+  
+  //reconstructed signal model
+  int n_re,n_im;
+  data->h_rec = malloc(data->N*2*sizeof(double **));
+  data->h_res = malloc(data->N*sizeof(double **));
+  data->h_pow = malloc(data->N*sizeof(double **));
+  data->S_pow = malloc(data->N*sizeof(double **));
+  
+  //number of waveform samples to save
+  data->Nwave=100;
+  
+  //downsampling rate of post-burn-in samples 
+  data->downsample = NMCMC/data->Nwave;
+  
+  for(int n=0; n<data->N; n++)
+  {
+    n_re = 2*n;
+    n_im = n_re+1;
+    
+    data->S_pow[n]    = malloc(data->Nchannel*sizeof(double *));
+    data->h_pow[n]    = malloc(data->Nchannel*sizeof(double *));
+    data->h_res[n]    = malloc(data->Nchannel*sizeof(double *));
+    data->h_rec[n_re] = malloc(data->Nchannel*sizeof(double *));
+    data->h_rec[n_im] = malloc(data->Nchannel*sizeof(double *));
+    for(int l=0; l<data->Nchannel; l++)
+    {
+      data->S_pow[n][l]    = malloc(data->Nwave*sizeof(double));
+      data->h_pow[n][l]    = malloc(data->Nwave*sizeof(double));
+      data->h_res[n][l]    = malloc(data->Nwave*sizeof(double));
+      data->h_rec[n_re][l] = malloc(data->Nwave*sizeof(double));
+      data->h_rec[n_im][l] = malloc(data->Nwave*sizeof(double));
+      for(int m=0; m<data->Nwave; m++)
+      {
+        data->h_rec[n_re][l][m] = 0.0;
+        data->h_rec[n_im][l][m] = 0.0;
+        data->h_res[n][l][m]    = 0.0;
+        data->h_pow[n][l][m]    = 0.0;
+        data->S_pow[n][l][m]    = 0.0;
+      }
+    }
+  }
+}
+
+void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, int NC)
 {
   int ic;
   chain->NC = NC;
   chain->index = malloc(NC*sizeof(int));
+  chain->acceptance = malloc(NC*sizeof(double));
   chain->temperature = malloc(NC*sizeof(double));
+  chain->avgLogL     = malloc(NC*sizeof(double));
   for(ic=0; ic<NC; ic++)
   {
     chain->index[ic]=ic;
+    chain->acceptance[ic] = 1.0;
     chain->temperature[ic] = pow(1.2,(double)ic);
+    chain->avgLogL[ic] = 0.0;
   }
+  //set hottest chain to ~infinite temperature
+  chain->temperature[NC-1] = 1e6;
   
   
   chain->r = malloc(NC*sizeof(gsl_rng *));
@@ -64,14 +120,50 @@ void initialize_chain(struct Chain *chain, long *seed, int NC)
     gsl_rng_set (chain->r[ic], *seed);
     *seed = (long)gsl_rng_get(chain->r[ic]);
   }
+
+  chain->likelihoodFile = fopen("log_likelihood_chain.dat","w");
+  
+  chain->temperatureFile = fopen("temperature_chain.dat","w");
+
+  chain->parameterFile = malloc(NC*sizeof(FILE *));
+  chain->parameterFile[0] = fopen("parameter_chain.dat.0","w");
+
+  chain->noiseFile = malloc(NC*sizeof(FILE *));
+  chain->noiseFile[0] = fopen("noise_chain.dat.0","w");
+
+  if(flags->verbose)
+  {
+    char filename[1024];
+    for(ic=1; ic<NC; ic++)
+    {
+      sprintf(filename,"parameter_chain.dat.%i",ic);
+      chain->parameterFile[ic] = fopen(filename,"w");
+
+      sprintf(filename,"noise_chain.dat.%i",ic);
+      chain->noiseFile[ic] = fopen(filename,"w");
+    }
+  }
 }
 
-void free_chain(struct Chain *chain)
+void free_chain(struct Chain *chain, struct Flags *flags)
 {
   free(chain->index);
+  free(chain->temperature);
+  free(chain->acceptance);
+  free(chain->avgLogL);
   
   for(int ic=0; ic<chain->NC; ic++) gsl_rng_free(chain->r[ic]);
   free(chain->r);
+  free(chain->T);
+  
+  fclose(chain->likelihoodFile);
+  fclose(chain->parameterFile[0]);
+  if(flags->verbose)
+  {
+    for(int ic=1; ic<chain->NC; ic++) fclose(chain->parameterFile[ic]);
+  }
+  free(chain->parameterFile);
+  
   free(chain);
 }
 
@@ -102,13 +194,14 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
 void copy_model(struct Model *origin, struct Model *copy)
 {
   copy->logL           = origin->logL;
+  copy->logLnorm       = origin->logLnorm;
   copy->Nlive          = origin->Nlive;
   copy->Nmax           = origin->Nmax;
   copy->logPriorVolume = origin->logPriorVolume;
 
   for(int n=0; n<origin->Nmax; n++) copy_source(origin->source[n],copy->source[n]);
   
-  //copy_tdi(origin->tdi,copy->tdi);
+  copy_tdi(origin->tdi,copy->tdi);
   copy_noise(origin->noise,copy->noise);
   
   for(int n=0; n<8; n++) for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
@@ -185,11 +278,14 @@ void free_tdi(struct TDI *tdi)
   free(tdi->A);
   free(tdi->E);
   free(tdi->T);
+  
   free(tdi);
 }
 
 void alloc_noise(struct Noise *noise, int NFFT)
 {
+  noise->N    = NFFT;
+  
   noise->etaA = 1.0;
   noise->etaE = 1.0;
   noise->etaX = 1.0;
@@ -212,6 +308,13 @@ void copy_noise(struct Noise *origin, struct Noise *copy)
   copy->etaA = origin->etaA;
   copy->etaE = origin->etaE;
   copy->etaX = origin->etaX;
+  
+  for(int n=0; n<origin->N; n++)
+  {
+    copy->SnX[n] = origin->SnX[n];
+    copy->SnA[n] = origin->SnA[n];
+    copy->SnE[n] = origin->SnE[n];
+  }
 }
 
 void free_noise(struct Noise *noise)
@@ -314,7 +417,7 @@ void copy_source(struct Source *origin, struct Source *copy)
   {
     for(int j=0; j<NP; j++)
     {
-      copy->fisher_matrix[i][j] = origin->fisher_evectr[i][j];
+      copy->fisher_matrix[i][j] = origin->fisher_matrix[i][j];
       copy->fisher_evectr[i][j] = origin->fisher_evectr[i][j];
     }
     copy->fisher_evalue[i] = origin->fisher_evalue[i];
@@ -324,9 +427,6 @@ void copy_source(struct Source *origin, struct Source *copy)
 
 void free_source(struct Source *source)
 {
-  free(source->tdi);
-  free(source);
-  
   int NP=8;
   for(int i=0; i<NP; i++)
   {
@@ -336,7 +436,11 @@ void free_source(struct Source *source)
   free(source->fisher_matrix);
   free(source->fisher_evectr);
   free(source->fisher_evalue);
-
+  free(source->params);
+  
+  free_tdi(source->tdi);
+  
+  free(source);
 }
 
 
@@ -375,18 +479,10 @@ void simualte_data(struct Data *data, struct Flags *flags, struct Source **injec
   
 }
 
-double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
+void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model)
 {
-  
-  int n;
-  int i,j;
+  int i,j,n;
   int N2=data->N*2;
-  
-  /**************************/
-  /*                        */
-  /*  Form master template  */
-  /*                        */
-  /**************************/
 
   for(n=0; n<N2; n++)
   {
@@ -394,9 +490,9 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
     model->tdi->A[n]=0.0;
     model->tdi->E[n]=0.0;
   }
-
+  
   struct Source *source;
-
+  
   //Loop over signals in model
   for(n=0; n<model->Nlive; n++)
   {
@@ -412,7 +508,7 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
     for(i=0; i<source->BW; i++)
     {
       j = i+source->imin;
-            
+      
       if(j>-1 && j<data->N)
       {
         int i_re = 2*i;
@@ -431,6 +527,32 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
       }//check that index is in range
     }//loop over waveform bins
   }//loop over sources
+}
+
+void generate_noise_model(struct Data *data, struct Model *model)
+{
+  switch(data->Nchannel)
+  {
+    case 1:
+      for(int n=0; n<data->N; n++) model->noise->SnX[n] = data->noise->SnX[n]*model->noise->etaX;
+      break;
+    case 2:
+      for(int n=0; n<data->N; n++)
+      {
+        model->noise->SnA[n] = data->noise->SnA[n]*model->noise->etaA;
+        model->noise->SnE[n] = data->noise->SnE[n]*model->noise->etaE;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
+{
+  
+  int N2=data->N*2;
+  
 
   /**************************/
   /*                        */
@@ -441,7 +563,7 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
   struct TDI *residual = malloc(sizeof(struct TDI));
   alloc_tdi(residual, data->N, data->Nchannel);
   
-  for(i=0; i<N2; i++)
+  for(int i=0; i<N2; i++)
   {
     residual->X[i] = data->tdi->X[i] - model->tdi->X[i];
     residual->A[i] = data->tdi->A[i] - model->tdi->A[i];
@@ -452,14 +574,11 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
   switch(data->Nchannel)
   {
     case 1:
-      logL += -0.5*fourier_nwip(residual->X, residual->X, data->noise->SnX, data->N)/model->noise->etaX;
-      logL +=  2.0*(double)data->N*log(model->noise->etaX);
+      logL += -0.5*fourier_nwip(residual->X, residual->X, model->noise->SnX, data->N);
       break;
     case 2:
-      logL += -0.5*fourier_nwip(residual->A, residual->A, data->noise->SnA, data->N)/model->noise->etaA;
-      logL += -0.5*fourier_nwip(residual->E, residual->E, data->noise->SnE, data->N)/model->noise->etaE;
-      logL +=  2.0*(double)data->N*log(model->noise->etaA);
-      logL +=  2.0*(double)data->N*log(model->noise->etaE);
+      logL += -0.5*fourier_nwip(residual->A, residual->A, model->noise->SnA, data->N);
+      logL += -0.5*fourier_nwip(residual->E, residual->E, model->noise->SnE, data->N);
       break;
     default:
       fprintf(stderr,"Unsupported number of channels in gaussian_log_likelihood()\n");
@@ -467,6 +586,54 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
   }
 
   free_tdi(residual);
+
   return logL;
+}
+
+double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *model)
+{
+  
+  double logLnorm = 0.0;
+  
+  switch(data->Nchannel)
+  {
+    case 1:
+      logLnorm -= (double)data->N*log(model->noise->etaX);
+      break;
+    case 2:
+      logLnorm -= (double)data->N*log(model->noise->etaA);
+      logLnorm -= (double)data->N*log(model->noise->etaE);
+      break;
+    default:
+      fprintf(stderr,"Unsupported number of channels in gaussian_log_likelihood()\n");
+      exit(1);
+  }
+  
+  return logLnorm;
+}
+
+double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model)
+{
+  
+  double logLnorm = 0.0;
+  
+  switch(data->Nchannel)
+  {
+    case 1:
+      for(int n=0; n<data->N; n++) logLnorm -= log(model->noise->SnX[n]);
+      break;
+    case 2:
+      for(int n=0; n<data->N; n++)
+      {
+        logLnorm -= log(model->noise->SnA[n]);
+        logLnorm -= log(model->noise->SnE[n]);
+      }
+      break;
+    default:
+      fprintf(stderr,"Unsupported number of channels in gaussian_log_likelihood()\n");
+      exit(1);
+  }
+  
+  return logLnorm;
 }
 

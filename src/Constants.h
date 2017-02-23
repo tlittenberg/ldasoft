@@ -29,5 +29,7 @@
 /* Number of meters in a parsec */
 #define PC 3.0856775807e16
 
+/* Number of seconds in a year */
+#define YEAR 31457280.0
 
 #endif /* Constants_h */

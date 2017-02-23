@@ -11,8 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_statistics.h>
+
 #include "LISA.h"
 #include "GalacticBinary.h"
+#include "GalacticBinaryIO.h"
+#include "GalacticBinaryModel.h"
 
 void print_usage()
 {
@@ -198,5 +203,257 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
   
 }
 
+void print_chain_files(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
+{
+  int n,ic;
+  
+  //Always print logL & temperature chains
+  fprintf(chain->likelihoodFile,  "%i ",step);
+  fprintf(chain->temperatureFile, "%i ",step);
+  for(ic=0; ic<chain->NC; ic++)
+  {
+    n = chain->index[ic];
+    fprintf(chain->likelihoodFile,  "%lg ",model[n]->logL+model[n]->logLnorm);
+    fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
+  }
+  fprintf(chain->likelihoodFile, "\n");
+  fprintf(chain->temperatureFile,"\n");
+  
+  //Always print cold chain
+  n = chain->index[0];
+  print_chain_state(data, chain, model[n], chain->parameterFile[0], step);
+  print_noise_state(data, model[n], chain->noiseFile[0], step);
+
+  //Print hot chains if verbose flag
+  if(flags->verbose)
+  {
+    for(ic=1; ic<chain->NC; ic++)
+    {
+      n = chain->index[ic];
+      print_chain_state(data, chain, model[n], chain->parameterFile[ic], step);
+      print_noise_state(data, model[n], chain->noiseFile[ic], step);
+    }//loop over chains
+  }//verbose flag
+}
+
+void print_chain_state(struct Data *data, struct Chain *chain, struct Model *model, FILE *fptr, int step)
+{
+  for(int i=0; i<model->Nlive; i++)
+  {
+    fprintf(fptr, "%i ",step);
+    fprintf(fptr, "%lg ",model->logL+model->logLnorm);
+    print_source_params(data,model->source[i],fptr);
+    fprintf(fptr, "\n");
+  }
+}
+
+void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int step)
+{
+  fprintf(fptr, "%i ",step);
+  fprintf(fptr, "%lg ",model->logL+model->logLnorm);
+
+  switch(data->Nchannel)
+  {
+    case 1:
+      fprintf(fptr, "%lg ", model->noise->etaX);
+      break;
+    case 2:
+      fprintf(fptr, "%lg ", model->noise->etaA);
+      fprintf(fptr, "%lg ", model->noise->etaE);
+      break;
+  }
+  fprintf(fptr, "\n");
+}
+
+void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
+{
+  //map to parameter names (just to make code readable)
+  map_array_to_params(source, source->params, data->T);
+  
+  fprintf(fptr,"%.12g ",source->f0);
+  fprintf(fptr,"%.12g ",source->dfdt);
+  fprintf(fptr,"%lg ",source->amp);
+  fprintf(fptr,"%lg ",source->phi);
+  fprintf(fptr,"%lg ",source->costheta);
+  fprintf(fptr,"%lg ",source->cosi);
+  fprintf(fptr,"%lg ",source->psi);
+  fprintf(fptr,"%lg ",source->phi0);
+}
+
+void save_waveforms(struct Data *data, struct Model *model, int mcmc)
+{
+  int n_re,n_im;
+  double A_re,A_im,E_re,E_im,X_re,X_im,R_re,R_im;
+  
+  switch(data->Nchannel)
+  {
+    case 1:
+      for(int n=0; n<data->N; n++)
+      {
+        n_re = 2*n;
+        n_im = n_re++;
+        
+        X_re = model->tdi->X[n_re];
+        X_im = model->tdi->X[n_im];
+        
+        data->h_rec[n_re][0][mcmc] = X_re;
+        data->h_rec[n_im][0][mcmc] = X_im;
+        
+        R_re = data->tdi->X[n_re] - X_re;
+        R_im = data->tdi->X[n_im] - X_im;
+        
+        data->h_res[n][0][mcmc] = R_re*R_re + R_im*R_im;
+        data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
+        
+        data->S_pow[n][0][mcmc] = model->noise->SnX[n];
+      }
+      break;
+    case 2:
+      for(int n=0; n<data->N; n++)
+      {
+        n_re = 2*n;
+        n_im = n_re++;
+
+        A_re = model->tdi->A[n_re];
+        A_im = model->tdi->A[n_im];
+        E_re = model->tdi->E[n_re];
+        E_im = model->tdi->E[n_im];
+        
+        data->h_rec[n_re][0][mcmc] = A_re;
+        data->h_rec[n_im][0][mcmc] = A_im;
+        data->h_rec[n_re][1][mcmc] = E_re;
+        data->h_rec[n_im][1][mcmc] = E_im;
+        
+        R_re = data->tdi->A[n_re] - A_re;
+        R_im = data->tdi->A[n_im] - A_im;
+        data->h_res[n][0][mcmc] = R_re*R_re + R_im*R_im;
+        
+        R_re = data->tdi->E[n_re] - E_re;
+        R_im = data->tdi->E[n_im] - E_im;
+        data->h_res[n][1][mcmc] = R_re*R_re + R_im*R_im;
+        
+        data->h_pow[n][0][mcmc] = A_re*A_re + A_im*A_im;
+        data->h_pow[n][1][mcmc] = E_re*E_re + E_im*E_im;
+        
+        data->S_pow[n][0][mcmc] = model->noise->SnA[n];
+        data->S_pow[n][1][mcmc] = model->noise->SnE[n];
+      }
+      break;
+  }
+}
+
+void print_reconstructed_waveforms(struct Data *data)
+{
+  //sort h reconstructions
+  for(int n=0; n<data->N*2; n++)
+  {
+    for(int m=0; m<data->Nchannel; m++)
+    {
+      gsl_sort(data->h_rec[n][m],1,data->Nwave);
+    }
+  }
+  for(int n=0; n<data->N; n++)
+  {
+    for(int m=0; m<data->Nchannel; m++)
+    {
+      gsl_sort(data->h_res[n][m],1,data->Nwave);
+      gsl_sort(data->h_pow[n][m],1,data->Nwave);
+      gsl_sort(data->S_pow[n][m],1,data->Nwave);
+    }
+  }
+  
+  FILE *fptr_rec=fopen("power_reconstruction.dat","w");
+  FILE *fptr_res=fopen("power_residual.dat","w");
+  FILE *fptr_Snf=fopen("power_noise.dat","w");
+  //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
+  double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
+  double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    
+    A_med   = gsl_stats_median_from_sorted_data   (data->h_res[i][0], 1, data->Nwave);
+    A_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0], 1, data->Nwave, 0.25);
+    A_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0], 1, data->Nwave, 0.75);
+    A_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0], 1, data->Nwave, 0.05);
+    A_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0], 1, data->Nwave, 0.95);
+    
+    E_med   = gsl_stats_median_from_sorted_data   (data->h_res[i][1], 1, data->Nwave);
+    E_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1], 1, data->Nwave, 0.25);
+    E_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1], 1, data->Nwave, 0.75);
+    E_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1], 1, data->Nwave, 0.05);
+    E_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1], 1, data->Nwave, 0.95);
+    
+    fprintf(fptr_res,"%lg ",f);
+    fprintf(fptr_res,"%lg ",A_med);
+    fprintf(fptr_res,"%lg ",A_lo_50);
+    fprintf(fptr_res,"%lg ",A_hi_50);
+    fprintf(fptr_res,"%lg ",A_lo_90);
+    fprintf(fptr_res,"%lg ",A_hi_90);
+    fprintf(fptr_res,"%lg ",E_med);
+    fprintf(fptr_res,"%lg ",E_lo_50);
+    fprintf(fptr_res,"%lg ",E_hi_50);
+    fprintf(fptr_res,"%lg ",E_lo_90);
+    fprintf(fptr_res,"%lg ",E_hi_90);
+    fprintf(fptr_res,"\n");
+    
+    A_med   = gsl_stats_median_from_sorted_data   (data->h_pow[i][0], 1, data->Nwave);
+    A_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][0], 1, data->Nwave, 0.25);
+    A_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][0], 1, data->Nwave, 0.75);
+    A_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][0], 1, data->Nwave, 0.05);
+    A_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][0], 1, data->Nwave, 0.95);
+    
+    E_med   = gsl_stats_median_from_sorted_data   (data->h_pow[i][1], 1, data->Nwave);
+    E_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][1], 1, data->Nwave, 0.25);
+    E_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][1], 1, data->Nwave, 0.75);
+    E_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][1], 1, data->Nwave, 0.05);
+    E_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][1], 1, data->Nwave, 0.95);
+    
+    
+    fprintf(fptr_rec,"%lg ",f);
+    fprintf(fptr_rec,"%lg ",A_med);
+    fprintf(fptr_rec,"%lg ",A_lo_50);
+    fprintf(fptr_rec,"%lg ",A_hi_50);
+    fprintf(fptr_rec,"%lg ",A_lo_90);
+    fprintf(fptr_rec,"%lg ",A_hi_90);
+    fprintf(fptr_rec,"%lg ",E_med);
+    fprintf(fptr_rec,"%lg ",E_lo_50);
+    fprintf(fptr_rec,"%lg ",E_hi_50);
+    fprintf(fptr_rec,"%lg ",E_lo_90);
+    fprintf(fptr_rec,"%lg ",E_hi_90);
+    fprintf(fptr_rec,"\n");
+
+    
+    A_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][0], 1, data->Nwave);
+    A_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0], 1, data->Nwave, 0.25);
+    A_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0], 1, data->Nwave, 0.75);
+    A_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0], 1, data->Nwave, 0.05);
+    A_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0], 1, data->Nwave, 0.95);
+    
+    E_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][1], 1, data->Nwave);
+    E_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1], 1, data->Nwave, 0.25);
+    E_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1], 1, data->Nwave, 0.75);
+    E_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1], 1, data->Nwave, 0.05);
+    E_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1], 1, data->Nwave, 0.95);
+    
+    
+    fprintf(fptr_Snf,"%lg ",f);
+    fprintf(fptr_Snf,"%lg ",A_med);
+    fprintf(fptr_Snf,"%lg ",A_lo_50);
+    fprintf(fptr_Snf,"%lg ",A_hi_50);
+    fprintf(fptr_Snf,"%lg ",A_lo_90);
+    fprintf(fptr_Snf,"%lg ",A_hi_90);
+    fprintf(fptr_Snf,"%lg ",E_med);
+    fprintf(fptr_Snf,"%lg ",E_lo_50);
+    fprintf(fptr_Snf,"%lg ",E_hi_50);
+    fprintf(fptr_Snf,"%lg ",E_lo_90);
+    fprintf(fptr_Snf,"%lg ",E_hi_90);
+    fprintf(fptr_Snf,"\n");
+
+  }
+  fclose(fptr_res);
+  fclose(fptr_rec);
+  fclose(fptr_Snf);
+}
 
 

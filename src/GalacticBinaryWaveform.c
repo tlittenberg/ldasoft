@@ -76,7 +76,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     alloc_tdi(dhdx[n], data->N, data->Nchannel);
   }
   
-  /* assumes all the parameters are log or angles */
+  /* assumes all the parameters are log or angle */
   int N2 = data->N*2;
   for(i=0; i<8; i++)
   {
@@ -94,7 +94,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     // complete info in source structure
     map_array_to_params(wave_p, wave_p->params, data->T);
     map_array_to_params(wave_m, wave_m->params, data->T);
-    
+
     // align perturbed waveforms in data array
     galactic_binary_alignment(orbit, data, wave_p);
     galactic_binary_alignment(orbit, data, wave_m);
@@ -127,7 +127,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   {
     for(j=i; j<8; j++)
     {
-      source->fisher_matrix[i][j] = 0.0;
+      source->fisher_matrix[i][j] = 10.0; //fisher gets a "DC" level to keep the inversion stable
       switch(source->tdi->Nchannel)
       {
         case 1:
@@ -138,6 +138,18 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
           source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->SnE, data->N);
           break;
       }
+      if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
+      {
+        fprintf(stderr,"GalacticBinaryWaveform.c:141: WARNING: nan matrix element, setting contribution to matrix element to 0?\n");
+        fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->SnA[data->N/2],noise->SnE[data->N/2]);
+        for(int k=0; k<8; k++)
+        {
+          fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
+        }
+        //exit(1);
+        source->fisher_matrix[i][j] = 10.0;
+      }
+
       source->fisher_matrix[j][i] = source->fisher_matrix[i][j];
     }
   }
@@ -149,6 +161,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   free(params_m);
   free_source(wave_p);
   free_source(wave_m);
+
   for(n=0; n<8; n++) free_tdi(dhdx[n]);
   free(dhdx);
 }

@@ -72,8 +72,11 @@ double evaluate_uniform_prior(struct Model *model, double *params)
   if(params[0]<prior[0][0] || params[0]>prior[0][1]) return -INFINITY;
   
   //colatitude (reflective)
-  if(params[1] < prior[1][0] ) params[1] = 2.0*prior[1][0] - params[1];
-  if(params[1] > prior[1][1] ) params[1] = 2.0*prior[1][1] - params[1];
+  while(params[1] < prior[1][0] || params[1] > prior[1][1])
+  {
+    if(params[1] < prior[1][0] ) params[1] = 2.0*prior[1][0] - params[1];
+    if(params[1] > prior[1][1] ) params[1] = 2.0*prior[1][1] - params[1];
+  }
   
   //longitude (periodic)
   while(params[2] < prior[2][0]) params[2] += prior[2][1]-prior[2][0];
@@ -82,9 +85,12 @@ double evaluate_uniform_prior(struct Model *model, double *params)
   //log amplitude (step)
   if(params[3]<prior[3][0] || params[3]>prior[3][1]) return -INFINITY;
   
-  //cos inclination
-  if(params[4] < prior[4][0] ) params[4] = 2.0*prior[4][0] - params[4];
-  if(params[4] > prior[4][1] ) params[4] = 2.0*prior[4][1] - params[4];
+  //cosine inclination (reflective)
+  while(params[4] < prior[4][0] || params[4] > prior[4][1])
+  {
+    if(params[4] < prior[4][0] ) params[4] = 2.0*prior[4][0] - params[4];
+    if(params[4] > prior[4][1] ) params[4] = 2.0*prior[4][1] - params[4];
+  }
   
   //polarization
   while(params[5] < prior[5][0]) params[5] += prior[5][1]-prior[5][0];
