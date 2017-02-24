@@ -44,21 +44,27 @@ void print_usage()
   exit(EXIT_FAILURE);
 }
 
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags)
+void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax)
 {
   //Set defaults
   flags->verbose   = 0;
   flags->injection = 0;
   flags->zeroNoise = 0;
   
-  data->t0       = 0.0;
-  data->T        = 62914560.0; /* two "mldc years" at 15s sampling */
-  data->N        = 2048;
-  data->Nchannel = 2; //1=X, 2=AE
+  for(int i=0; i<Nmax; i++)
+  {
+    data[i]->t0       = 0.0;
+    data[i]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
+    data[i]->N        = 256;
+    data[i]->Nchannel = 2; //1=X, 2=AE
+    
+    data[i]->cseed = 150914+i;
+    data[i]->nseed = 151226+i;
+    data[i]->iseed = 151012+i;
+  }
   
-  data->cseed = 150914;
-  data->nseed = 151226;
-  data->iseed = 151012;
+  flags->injFile = malloc(10*sizeof(char *));
+  for(int n=0; n<10; n++) flags->injFile[n] = malloc(1024*sizeof(char));
   
   if(argc==1) print_usage();
   
@@ -101,18 +107,25 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     {
         
       case 0:
-        if(strcmp("samples",   long_options[long_index].name) == 0) data->N     = (long)atof(optarg);
-        if(strcmp("duration",  long_options[long_index].name) == 0) data->T     = (double)atof(optarg);
-        if(strcmp("start-time",long_options[long_index].name) == 0) data->t0    = (double)atof(optarg);
-        if(strcmp("chainseed", long_options[long_index].name) == 0) data->cseed = (long)atoi(optarg);
-        if(strcmp("noiseseed", long_options[long_index].name) == 0) data->nseed = (long)atoi(optarg);
-        if(strcmp("injseed",   long_options[long_index].name) == 0) data->iseed = (long)atoi(optarg);
+        if(strcmp("samples",   long_options[long_index].name) == 0) data[0]->N     = (long)atof(optarg);
+        if(strcmp("duration",  long_options[long_index].name) == 0) data[0]->T     = (double)atof(optarg);
+        if(strcmp("start-time",long_options[long_index].name) == 0) data[0]->t0    = (double)atof(optarg);
+        if(strcmp("chainseed", long_options[long_index].name) == 0) data[0]->cseed = (long)atoi(optarg);
+        if(strcmp("noiseseed", long_options[long_index].name) == 0) data[0]->nseed = (long)atoi(optarg);
+        if(strcmp("injseed",   long_options[long_index].name) == 0) data[0]->iseed = (long)atoi(optarg);
         if(strcmp("zero-noise",long_options[long_index].name) == 0) flags->zeroNoise = 1;
         if(strcmp("orbit",     long_options[long_index].name) == 0) sprintf(orbit->OrbitFileName,"%s",optarg);
         if(strcmp("inj",       long_options[long_index].name) == 0)
         {
-          sprintf(data->injFile,"%s",optarg);
-          flags->injection=1;
+          sprintf(flags->injFile[flags->injection],"%s",optarg);
+          flags->injection++;
+          if(flags->injection>Nmax)
+          {
+            fprintf(stderr,"Requested number of injections is too large (%i/%i)\n",flags->injection,Nmax);
+            fprintf(stderr,"Remove at least %i --inj arguments\n",flags->injection-Nmax);
+            fprintf(stderr,"Now exiting to system\n");
+            exit(1);
+          }
         }
         if(strcmp("links",      long_options[long_index].name) == 0)
         {
@@ -120,10 +133,10 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
           switch(Nlinks)
           {
             case 4:
-              data->Nchannel=1;
+              data[0]->Nchannel=1;
               break;
             case 6:
-              data->Nchannel=2;
+              data[0]->Nchannel=2;
               break;
             default:
               fprintf(stderr,"Requested umber of links (%i) not supported\n",Nlinks);
@@ -144,6 +157,19 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     }
   }
   
+  // copy command line args to other data structures
+  for(int i=1; i<Nmax; i++)
+  {
+    data[i]->t0       = data[0]->t0;
+    data[i]->T        = data[0]->T;
+    data[i]->N        = data[0]->N;
+    data[i]->Nchannel = data[0]->Nchannel;
+    
+    data[i]->cseed = data[0]->cseed+i;
+    data[i]->nseed = data[0]->nseed+i;
+    data[i]->iseed = data[0]->iseed+i;
+  }
+
   
   // check for required arguments
   int abort=0;
@@ -169,7 +195,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
   fprintf(stdout,"\n");
   fprintf(stdout,"  Orbit file .......... %s   \n",orbit->OrbitFileName);
   fprintf(stdout,"  Data channels ........");
-  switch(data->Nchannel)
+  switch(data[0]->Nchannel)
   {
     case 1:
       fprintf(stdout,"X\n");
@@ -178,25 +204,29 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
       fprintf(stdout,"AE\n");
       break;
   }
-  fprintf(stdout,"  Data sample size .... %i   \n",data->N);
-  fprintf(stdout,"  Data start time ..... %.0f \n",data->t0);
-  fprintf(stdout,"  Data duration ....... %.0f \n",data->T);
-  fprintf(stdout,"  MCMC chain seed ..... %li  \n",data->cseed);
+  fprintf(stdout,"  Data sample size .... %i   \n",data[0]->N);
+  fprintf(stdout,"  Data start time ..... %.0f \n",data[0]->t0);
+  fprintf(stdout,"  Data duration ....... %.0f \n",data[0]->T);
+  fprintf(stdout,"  MCMC chain seed ..... %li  \n",data[0]->cseed);
   fprintf(stdout,"\n");
   fprintf(stdout,"================= RUN FLAGS ================\n");
   if(flags->verbose)  fprintf(stdout,"  Verbose flag ........ ENABLED \n");
   else                fprintf(stdout,"  Verbose flag ........ DISABLED\n");
-  if(flags->injection)
+  if(flags->injection>0)
   {
-    fprintf(stdout,"  Injection is ........ %s\n",data->injFile);
-    fprintf(stdout,"  Injection seed ...... %li  \n",data->iseed);
+    fprintf(stdout,"  Injected sources..... %i\n",flags->injection);
+    fprintf(stdout,"     seed ............. %li\n",data[0]->iseed);
+    for(int i=0; i<flags->injection; i++)
+    {
+      fprintf(stdout,"     source ........... %s\n",flags->injFile[i]);
+    }
   }
   else                fprintf(stdout,"  Injection is ........ DISABLED\n");
   if(flags->zeroNoise)fprintf(stdout,"  Noise realization is. DISABLED\n");
   else
   {
     fprintf(stdout,"  Noise realization is. ENABLED\n");
-    fprintf(stdout,"  Noise seed .......... %li  \n",data->nseed);
+    fprintf(stdout,"  Noise seed .......... %li  \n",data[0]->nseed);
   }
   fprintf(stdout,"\n");
   fprintf(stdout,"\n");

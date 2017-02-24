@@ -22,7 +22,7 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
 void map_params_to_array(struct Source *source, double *params, double T);
 void map_array_to_params(struct Source *source, double *params, double T);
 
-void alloc_data(struct Data *data, int NMCMC);
+void alloc_data(struct Data **data_vec, int NMCMC, int NMAX);
 
 void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, int NC);
 void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel);

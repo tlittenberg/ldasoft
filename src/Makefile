@@ -40,5 +40,8 @@ GalacticBinaryModel.o : GalacticBinaryModel.c GalacticBinaryModel.h LISA.o Galac
 gb_mcmc : GalacticBinaryMCMC.c $(OBJS) GalacticBinary.h
 	$(CC) $(CCFLAGS) -o gb_mcmc GalacticBinaryMCMC.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
 
+install : gb_mcmc
+	install gb_mcmc /Users/tlittenb/ldasoft/master/bin/
+
 clean:
 	rm *.o gb_mcmc

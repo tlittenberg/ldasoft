@@ -24,6 +24,9 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   params[7] = source->dfdt*T*T;
   */
   
+  //TODO:  make t0 a parameter
+  model->t0 = data->t0;
+
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
   
   //frequency bin

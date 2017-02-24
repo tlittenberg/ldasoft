@@ -100,8 +100,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     galactic_binary_alignment(orbit, data, wave_m);
     
     // compute perturbed waveforms
-    galactic_binary(orbit, data->T, wave_p->t0, wave_p->params, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-    galactic_binary(orbit, data->T, wave_m->t0, wave_m->params, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+    galactic_binary(orbit, data->T, data->t0, wave_p->params, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
+    galactic_binary(orbit, data->T, data->t0, wave_m->params, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
     
     // central differencing derivatives of waveforms w.r.t. parameters
     switch(source->tdi->Nchannel)
@@ -196,7 +196,6 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
 {
   map_array_to_params(source, source->params, data->T);
   
-  source->t0   = data->t0;
   source->BW   = galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->amp, data->T, data->N);
   source->qmin = (int)(source->f0*data->T) - source->BW/2;
   source->qmax = source->qmin+source->BW;

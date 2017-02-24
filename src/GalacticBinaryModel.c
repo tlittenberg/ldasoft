@@ -40,51 +40,55 @@ void map_params_to_array(struct Source *source, double *params, double T)
   params[7] = source->dfdt*T*T;
 }
 
-void alloc_data(struct Data *data, int NMCMC)
+void alloc_data(struct Data **data_vec, int NMCMC, int NMAX)
 {
-  
-  data->tdi = malloc(sizeof(struct TDI));
-  alloc_tdi(data->tdi, data->N, data->Nchannel);
-  data->noise = malloc(sizeof(struct Noise));
-  alloc_noise(data->noise, data->N);
-  
-  //reconstructed signal model
-  int n_re,n_im;
-  data->h_rec = malloc(data->N*2*sizeof(double **));
-  data->h_res = malloc(data->N*sizeof(double **));
-  data->h_pow = malloc(data->N*sizeof(double **));
-  data->S_pow = malloc(data->N*sizeof(double **));
-  
-  //number of waveform samples to save
-  data->Nwave=100;
-  
-  //downsampling rate of post-burn-in samples 
-  data->downsample = NMCMC/data->Nwave;
-  
-  for(int n=0; n<data->N; n++)
+  for(int n=0; n<NMAX; n++)
   {
-    n_re = 2*n;
-    n_im = n_re+1;
+    struct Data *data = data_vec[n];
     
-    data->S_pow[n]    = malloc(data->Nchannel*sizeof(double *));
-    data->h_pow[n]    = malloc(data->Nchannel*sizeof(double *));
-    data->h_res[n]    = malloc(data->Nchannel*sizeof(double *));
-    data->h_rec[n_re] = malloc(data->Nchannel*sizeof(double *));
-    data->h_rec[n_im] = malloc(data->Nchannel*sizeof(double *));
-    for(int l=0; l<data->Nchannel; l++)
+    data->tdi = malloc(sizeof(struct TDI));
+    alloc_tdi(data->tdi, data->N, data->Nchannel);
+    data->noise = malloc(sizeof(struct Noise));
+    alloc_noise(data->noise, data->N);
+    
+    //reconstructed signal model
+    int n_re,n_im;
+    data->h_rec = malloc(data->N*2*sizeof(double **));
+    data->h_res = malloc(data->N*sizeof(double **));
+    data->h_pow = malloc(data->N*sizeof(double **));
+    data->S_pow = malloc(data->N*sizeof(double **));
+    
+    //number of waveform samples to save
+    data->Nwave=100;
+    
+    //downsampling rate of post-burn-in samples
+    data->downsample = NMCMC/data->Nwave;
+    
+    for(int n=0; n<data->N; n++)
     {
-      data->S_pow[n][l]    = malloc(data->Nwave*sizeof(double));
-      data->h_pow[n][l]    = malloc(data->Nwave*sizeof(double));
-      data->h_res[n][l]    = malloc(data->Nwave*sizeof(double));
-      data->h_rec[n_re][l] = malloc(data->Nwave*sizeof(double));
-      data->h_rec[n_im][l] = malloc(data->Nwave*sizeof(double));
-      for(int m=0; m<data->Nwave; m++)
+      n_re = 2*n;
+      n_im = n_re+1;
+      
+      data->S_pow[n]    = malloc(data->Nchannel*sizeof(double *));
+      data->h_pow[n]    = malloc(data->Nchannel*sizeof(double *));
+      data->h_res[n]    = malloc(data->Nchannel*sizeof(double *));
+      data->h_rec[n_re] = malloc(data->Nchannel*sizeof(double *));
+      data->h_rec[n_im] = malloc(data->Nchannel*sizeof(double *));
+      for(int l=0; l<data->Nchannel; l++)
       {
-        data->h_rec[n_re][l][m] = 0.0;
-        data->h_rec[n_im][l][m] = 0.0;
-        data->h_res[n][l][m]    = 0.0;
-        data->h_pow[n][l][m]    = 0.0;
-        data->S_pow[n][l][m]    = 0.0;
+        data->S_pow[n][l]    = malloc(data->Nwave*sizeof(double));
+        data->h_pow[n][l]    = malloc(data->Nwave*sizeof(double));
+        data->h_res[n][l]    = malloc(data->Nwave*sizeof(double));
+        data->h_rec[n_re][l] = malloc(data->Nwave*sizeof(double));
+        data->h_rec[n_im][l] = malloc(data->Nwave*sizeof(double));
+        for(int m=0; m<data->Nwave; m++)
+        {
+          data->h_rec[n_re][l][m] = 0.0;
+          data->h_rec[n_im][l][m] = 0.0;
+          data->h_res[n][l][m]    = 0.0;
+          data->h_pow[n][l][m]    = 0.0;
+          data->S_pow[n][l][m]    = 0.0;
+        }
       }
     }
   }
@@ -174,7 +178,8 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
   model->source = malloc(model->Nmax*sizeof(struct Source *));
   model->noise  = malloc(sizeof(struct Noise));
   model->tdi    = malloc(sizeof(struct TDI));
-  
+  model->t0     = 0.0;
+
   int n;
 
   for(n=0; n<model->Nmax; n++)
@@ -193,18 +198,27 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
 
 void copy_model(struct Model *origin, struct Model *copy)
 {
-  copy->logL           = origin->logL;
-  copy->logLnorm       = origin->logLnorm;
-  copy->Nlive          = origin->Nlive;
+  //Source parameters
   copy->Nmax           = origin->Nmax;
-  copy->logPriorVolume = origin->logPriorVolume;
-
+  copy->Nlive          = origin->Nlive;
   for(int n=0; n<origin->Nmax; n++) copy_source(origin->source[n],copy->source[n]);
   
-  copy_tdi(origin->tdi,copy->tdi);
+  //Noise parameters
   copy_noise(origin->noise,copy->noise);
   
+  //TDI
+  copy_tdi(origin->tdi,copy->tdi);
+
+  //Start time for segment for model
+  copy->t0 = origin->t0;
+
+  //Source parameter priors
   for(int n=0; n<8; n++) for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
+  copy->logPriorVolume = origin->logPriorVolume;
+
+  //Model likelihood
+  copy->logL           = origin->logL;
+  copy->logLnorm       = origin->logLnorm;
 }
 
 void free_model(struct Model *model)
@@ -355,8 +369,6 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel)
   source->imin = 0;
   source->imax = NFFT;
   
-  source->t0 = 0.0;
-
   
   //Package parameters for waveform generator
   source->params=malloc(NP*sizeof(double));
@@ -405,8 +417,6 @@ void copy_source(struct Source *origin, struct Source *copy)
   copy->qmax = origin->qmax;
   copy->imin = origin->imin;
   copy->imax = origin->imax;
-  
-  copy->t0 = origin->t0;
   
   
   //Response
@@ -502,7 +512,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     galactic_binary_alignment(orbit, data, source);
     
     //Simulate gravitational wave signal
-    galactic_binary(orbit, data->T, source->t0, source->params, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+    galactic_binary(orbit, data->T, model->t0, source->params, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
     
     //Add waveform to model TDI channels
     for(i=0; i<source->BW; i++)

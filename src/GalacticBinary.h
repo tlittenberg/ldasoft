@@ -33,7 +33,6 @@ struct Data
   double ***h_pow; // N x Nchannel x NMCMC
   double ***S_pow; // N x Nchannel x NMCMC
   
-  char injFile[1024];
 };
 
 struct Flags
@@ -41,6 +40,8 @@ struct Flags
   int verbose;
   int injection;
   int zeroNoise;
+
+  char **injFile;
 };
 
 struct Chain
@@ -97,8 +98,6 @@ struct Source
   int imin;
   int imax;
   
-  double t0;
-  
   //Fisher matrix
   double **fisher_matrix;
   double **fisher_evectr;
@@ -131,6 +130,9 @@ struct Model
   
   //TDI
   struct TDI *tdi;
+  
+  //Start time for segment for model
+  double t0;
   
   //Source parameter priors
   double **prior;

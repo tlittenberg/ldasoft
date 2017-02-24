@@ -13,7 +13,7 @@
 
 void GalacticBinaryReadData(struct Data *data);
 void GalacticBinarySimulateData(struct Data *data);
-void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags);
+void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
 void GalacticBinaryInjectSimulatedSource(struct Data *data);
 
 #endif /* GalacticBinaryData_h */

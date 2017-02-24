@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   time_t start, stop;
   start = time(NULL);
   
-  int NC    = 8;   //number of chains
+  int NC    = 8;    //number of chains
   int Nmax  = 10;   //max number of waveforms
   int NMCMC = 3000; //number of MCMC steps
   int NBURN = 3000; //number of burn-in steps
@@ -46,15 +46,16 @@ int main(int argc, char *argv[])
   
   /* Allocate data structures */
   struct Flags *flags  = malloc(sizeof(struct Flags));
-  struct Data  *data   = malloc(sizeof(struct Data));
   struct Orbit *orbit  = malloc(sizeof(struct Orbit));
   struct Chain *chain  = malloc(sizeof(struct Chain));
+  struct Data  **data  = malloc(sizeof(struct Data*)*Nmax);
   struct Model **model = malloc(sizeof(struct Model*)*NC);
   struct Model **trial = malloc(sizeof(struct Model*)*NC);
   
   
   /* Parse command line and set defaults/flags */
-  parse(argc,argv,data,orbit,flags);
+  for(int i=0; i<Nmax; i++) data[i] = malloc(sizeof(struct Data));
+  parse(argc,argv,data,orbit,flags,Nmax);
   
   
   /* Load spacecraft ephemerides */
@@ -62,15 +63,15 @@ int main(int argc, char *argv[])
   
   
   /* Initialize data structures */
-  alloc_data(data, NMCMC);
+  alloc_data(data, NMCMC, Nmax);
 
   
   /* Inject gravitational wave signal */
-  if(flags->injection) GalacticBinaryInjectVerificationSource(data,orbit,flags);
+  GalacticBinaryInjectVerificationSource(data,orbit,flags);
 
   
   /* Initialize parallel chain */
-  initialize_chain(chain, flags, &data->cseed, NC);
+  initialize_chain(chain, flags, &data[0]->cseed, NC);
   
   
   /* Initialize data models */
@@ -79,30 +80,30 @@ int main(int argc, char *argv[])
   for(ic=0; ic<NC; ic++)
   {
     model[ic] = malloc(sizeof(struct Model));
-    alloc_model(model[ic],Nmax,data->N,data->Nchannel);
+    alloc_model(model[ic],Nmax,data[0]->N,data[0]->Nchannel);
 
     trial[ic] = malloc(sizeof(struct Model));
-    alloc_model(trial[ic],Nmax,data->N,data->Nchannel);
+    alloc_model(trial[ic],Nmax,data[0]->N,data[0]->Nchannel);
 
-    set_uniform_prior(model[ic], data);
+    set_uniform_prior(model[ic], data[0]);
     
     //set noise model
-    copy_noise(data->noise, model[ic]->noise);
+    copy_noise(data[0]->noise, model[ic]->noise);
 
     //set signal model
     for(int n=0; n<Nmax; n++)
     {
       draw_from_prior(model[ic], model[ic]->source[n], model[ic]->source[n]->params, chain->r[ic]);
-      galactic_binary_fisher(orbit, data, model[ic]->source[n], data->noise);
-      map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
+      galactic_binary_fisher(orbit, data[0], model[ic]->source[n], data[0]->noise);
+      map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data[0]->T);
     }
     
     // Form master model & compute likelihood of starting position
-    generate_noise_model(data, model[ic]);
-    generate_signal_model(orbit, data, model[ic]);
+    generate_noise_model(data[0], model[ic]);
+    generate_signal_model(orbit, data[0], model[ic]);
 
-    model[ic]->logL     = gaussian_log_likelihood(orbit, data, model[ic]);
-    model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[ic]);
+    model[ic]->logL     = gaussian_log_likelihood(orbit, data[0], model[ic]);
+    model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data[0], model[ic]);
 
   }
 
@@ -115,36 +116,36 @@ int main(int argc, char *argv[])
     {
       for(int steps=0; steps < 100; steps++)
       {
-        galactic_binary_mcmc(orbit, data, model, trial, chain, ic);
-        noise_model_mcmc(orbit, data, model, trial, chain, ic);
+        galactic_binary_mcmc(orbit, data[0], model, trial, chain, ic);
+        noise_model_mcmc(orbit, data[0], model, trial, chain, ic);
       }
       
       //update fisher matrix for each chain
       for(int n=0; n<model[ic]->Nlive; n++)
       {
-        galactic_binary_fisher(orbit, data, model[ic]->source[n], data->noise);
+        galactic_binary_fisher(orbit, data[0], model[ic]->source[n], data[0]->noise);
       }
       
     }
     ptmcmc(model,chain);
     adapt_temperature_ladder(chain, mcmc+NBURN);
 
-    print_chain_files(data, model, chain, flags, mcmc);
+    print_chain_files(data[0], model, chain, flags, mcmc);
     
     //store reconstructed waveform
-    if(mcmc>0 && mcmc%data->downsample==0)
+    if(mcmc>0 && mcmc%data[0]->downsample==0)
     {
-      print_chain_state(data, chain, model[chain->index[0]], stdout, mcmc);
-      save_waveforms(data, model[chain->index[0]], mcmc/data->downsample);
+      print_chain_state(data[0], chain, model[chain->index[0]], stdout, mcmc);
+      save_waveforms(data[0], model[chain->index[0]], mcmc/data[0]->downsample);
       for(ic=0; ic<NC; ic++) chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
     }
   }
   
   //print aggregate run files/results
-  print_reconstructed_waveforms(data);
+  print_reconstructed_waveforms(data[0]);
   
   FILE *chainFile = fopen("avg_log_likelihood.dat","w");
-  for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(NMCMC/data->downsample));
+  for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(NMCMC/data[0]->downsample));
   fclose(chainFile);
   
   //print total run time
@@ -160,12 +161,12 @@ int main(int argc, char *argv[])
     free_model(trial[ic]);
   }
   free_orbit(orbit);
-  free_noise(data->noise);
-  free_tdi(data->tdi);
+  free_noise(data[0]->noise);
+  free_tdi(data[0]->tdi);
   free_chain(chain,flags);
   free(model);
   free(trial);
-  free(data);
+  free(data[0]);
   
   return 0;
 }
@@ -220,6 +221,38 @@ void ptmcmc(struct Model **model, struct Chain *chain)
     }
   }
 }
+
+void adapt_temperature_ladder(struct Chain *chain, int mcmc)
+{
+  int ic;
+  
+  int NC = chain->NC;
+  
+  double S[NC];
+  double A[NC][2];
+  
+  double nu=1;
+  //double t0=100;
+  double t0=1000.;
+  
+  for(ic=1; ic<NC-1; ic++)
+  {
+    S[ic] = log(chain->temperature[ic] - chain->temperature[ic-1]);
+    A[ic][0] = chain->acceptance[ic-1];
+    A[ic][1] = chain->acceptance[ic];
+  }
+  
+  ic=0;
+  for(ic=1; ic<NC-1; ic++)
+  {
+    S[ic] += (A[ic][0] - A[ic][1])*(t0/((double)mcmc+t0))/nu;
+    //S[ic] += (A[ic][0] - A[ic][1])/nu;
+    
+    chain->temperature[ic] = chain->temperature[ic-1] + exp(S[ic]);
+    
+    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.1) chain->temperature[ic] = chain->temperature[ic-1]*1.1;
+  }//end loop over ic
+}//end adapt function
 
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model **model, struct Model **trial, struct Chain *chain, int ic)
 {
@@ -347,35 +380,4 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
 }
 
-void adapt_temperature_ladder(struct Chain *chain, int mcmc)
-{
-  int ic;
-  
-  int NC = chain->NC;
-  
-  double S[NC];
-  double A[NC][2];
-  
-  double nu=1;
-  //double t0=100;
-  double t0=100.;
-  
-  for(ic=1; ic<NC-1; ic++)
-  {
-    S[ic] = log(chain->temperature[ic] - chain->temperature[ic-1]);
-    A[ic][0] = chain->acceptance[ic-1];
-    A[ic][1] = chain->acceptance[ic];
-  }
-  
-  ic=0;
-  for(ic=1; ic<NC-1; ic++)
-  {
-    S[ic] += (A[ic][0] - A[ic][1])*(t0/((double)mcmc+t0))/nu;
-    //S[ic] += (A[ic][0] - A[ic][1])/nu;
-
-    chain->temperature[ic] = chain->temperature[ic-1] + exp(S[ic]);
-    
-    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.1) chain->temperature[ic] = chain->temperature[ic-1]*1.1;
-  }//end loop over ic
-}//end adapt function
 
