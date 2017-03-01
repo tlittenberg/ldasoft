@@ -205,7 +205,6 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
 
 void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, double *X, double *A, double *E, int BW, int NI)
 {
-  
   /*   Indicies   */
   int i,j,n;
   /*   Carrier frequency bin  */

@@ -19,6 +19,8 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
 double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *model);
 double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model);
 
+void update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags);
+
 void map_params_to_array(struct Source *source, double *params, double T);
 void map_array_to_params(struct Source *source, double *params, double T);
 

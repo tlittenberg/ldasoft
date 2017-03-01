@@ -88,3 +88,17 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, d
   //fm shift is symmetric
   return 0.0;
 }
+
+double t0_shift(struct Model *model, gsl_rng *seed)
+{
+  //uniform draw
+  if(gsl_rng_uniform(seed) < 0.1 )
+    model->t0 = model->t0_min + gsl_rng_uniform(seed)*(model->t0_max - model->t0_min);
+  
+  //gaussian draw
+  else
+    model->t0 += 10000.*gsl_ran_gaussian(seed,1);
+  
+  //t0 shift is symmetric
+  return 0.0;
+}

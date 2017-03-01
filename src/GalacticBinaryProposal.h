@@ -20,5 +20,6 @@
 double draw_from_prior(struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed);
 double draw_from_fisher(struct Model *model, struct Source *source, double *params, gsl_rng *seed);
 double fm_shift(struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed);
+double t0_shift(struct Model *model, gsl_rng *seed);
 
 #endif /* GalacticBinaryProposal_h */

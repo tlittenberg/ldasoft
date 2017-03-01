@@ -42,16 +42,14 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
   double cosi,phi0,psi;                //drawn from prior
   double Mc,amp;                       //calculated
   
-  struct Source *inj = malloc(sizeof(struct Source));
-  alloc_source(inj,data_vec[0]->N,2);
-  
   FILE *injectionFile;
   char filename[1024];
   
   for(int ii = 0; ii<flags->injection; ii++)
   {
-    struct Data *data = data_vec[ii];
-    
+    struct Data *data  = data_vec[ii];
+    struct Source *inj = data->inj;
+  
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
     gsl_rng_env_setup();
@@ -82,14 +80,14 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
     amp = galactic_binary_Amp(Mc, f0, D, data->T);
     
     //map parameters to vector
-    inj->f0 = f0;
-    inj->dfdt=dfdt;
-    inj->costheta=costheta;
-    inj->phi=phi;
-    inj->amp=amp;
-    inj->cosi=cosi;
-    inj->phi0=phi0;
-    inj->psi=psi;
+    inj->f0       = f0;
+    inj->dfdt     = dfdt;
+    inj->costheta = costheta;
+    inj->phi      = phi;
+    inj->amp      = amp;
+    inj->cosi     = cosi;
+    inj->phi0     = phi0;
+    inj->psi      = psi;
     map_params_to_array(inj, inj->params, data->T);
     
     //Book-keeping of injection time-frequency volume
@@ -193,8 +191,6 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
     fclose(injectionFile);
     gsl_rng_free(r);
   }
-  
-  free_source(inj);
   
   fprintf(stdout,"================================================\n\n");
 }

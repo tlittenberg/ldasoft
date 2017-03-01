@@ -35,6 +35,7 @@ void print_usage()
   fprintf(stdout,"       --chainseed   : seed for MCMC RNG                  \n");
   fprintf(stdout,"       --injseed     : seed for injection parameters      \n");
   fprintf(stdout,"       --inj         : inject signal                      \n");
+  fprintf(stdout,"       --fix-sky     : pin sky params to injection        \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)   \n");
   fprintf(stdout,"--\n");
@@ -50,6 +51,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->verbose   = 0;
   flags->injection = 0;
   flags->zeroNoise = 0;
+  flags->fixSky    = 0;
   
   for(int i=0; i<Nmax; i++)
   {
@@ -87,6 +89,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"help",    no_argument,       0,  'h' },
     {"verbose", no_argument,       0,  'v' },
     {"zero-noise", no_argument,    0,   0  },
+    {"fix-sky", no_argument,       0,   0  },
     {0,         0,                 0,   0  }
   };
   
@@ -114,6 +117,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("noiseseed", long_options[long_index].name) == 0) data[0]->nseed = (long)atoi(optarg);
         if(strcmp("injseed",   long_options[long_index].name) == 0) data[0]->iseed = (long)atoi(optarg);
         if(strcmp("zero-noise",long_options[long_index].name) == 0) flags->zeroNoise = 1;
+        if(strcmp("fix-sky",   long_options[long_index].name) == 0) flags->fixSky = 1;
         if(strcmp("orbit",     long_options[long_index].name) == 0) sprintf(orbit->OrbitFileName,"%s",optarg);
         if(strcmp("inj",       long_options[long_index].name) == 0)
         {
@@ -222,6 +226,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     }
   }
   else                fprintf(stdout,"  Injection is ........ DISABLED\n");
+  if(flags->fixSky)   fprintf(stdout,"  Sky parameters are... DISABLED\n");
+  else                fprintf(stdout,"  Sky parameters are... ENABLED\n");
   if(flags->zeroNoise)fprintf(stdout,"  Noise realization is. DISABLED\n");
   else
   {
@@ -233,17 +239,20 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   
 }
 
-void print_chain_files(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
+void print_chain_files(struct Data *data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step)
 {
-  int n,ic;
+  int i,n,ic;
   
   //Always print logL & temperature chains
   fprintf(chain->likelihoodFile,  "%i ",step);
   fprintf(chain->temperatureFile, "%i ",step);
+  double logL;
   for(ic=0; ic<chain->NC; ic++)
   {
     n = chain->index[ic];
-    fprintf(chain->likelihoodFile,  "%lg ",model[n]->logL+model[n]->logLnorm);
+    logL=0.0;
+    for(i=0; i<flags->injection; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
+    fprintf(chain->likelihoodFile,  "%lg ",logL);
     fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
   }
   fprintf(chain->likelihoodFile, "\n");
@@ -251,17 +260,20 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
   
   //Always print cold chain
   n = chain->index[0];
-  print_chain_state(data, chain, model[n], chain->parameterFile[0], step);
-  print_noise_state(data, model[n], chain->noiseFile[0], step);
-
+  for(i=0; i<flags->injection; i++)
+  {
+    print_chain_state(data, chain, model[n][i], chain->parameterFile[0], step);
+    print_noise_state(data, model[n][i], chain->noiseFile[0], step);
+  }
+  
   //Print hot chains if verbose flag
   if(flags->verbose)
   {
     for(ic=1; ic<chain->NC; ic++)
     {
       n = chain->index[ic];
-      print_chain_state(data, chain, model[n], chain->parameterFile[ic], step);
-      print_noise_state(data, model[n], chain->noiseFile[ic], step);
+      print_chain_state(data, chain, model[n][0], chain->parameterFile[ic], step);
+      print_noise_state(data, model[n][0], chain->noiseFile[ic], step);
     }//loop over chains
   }//verbose flag
 }
@@ -272,6 +284,7 @@ void print_chain_state(struct Data *data, struct Chain *chain, struct Model *mod
   {
     fprintf(fptr, "%i ",step);
     fprintf(fptr, "%lg ",model->logL+model->logLnorm);
+    fprintf(fptr, "%lg ",model->t0);
     print_source_params(data,model->source[i],fptr);
     fprintf(fptr, "\n");
   }
@@ -372,7 +385,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
   }
 }
 
-void print_reconstructed_waveforms(struct Data *data)
+void print_reconstructed_waveforms(struct Data *data, int seg)
 {
   //sort h reconstructions
   for(int n=0; n<data->N*2; n++)
@@ -392,9 +405,14 @@ void print_reconstructed_waveforms(struct Data *data)
     }
   }
   
-  FILE *fptr_rec=fopen("power_reconstruction.dat","w");
-  FILE *fptr_res=fopen("power_residual.dat","w");
-  FILE *fptr_Snf=fopen("power_noise.dat","w");
+  char filename[1024];
+  sprintf(filename,"power_reconstruction_%i.dat",seg);
+  FILE *fptr_rec=fopen(filename,"w");
+  sprintf(filename,"power_residual_%i.dat",seg);
+  FILE *fptr_res=fopen(filename,"w");
+  sprintf(filename,"power_noise_%i.dat",seg);
+  FILE *fptr_Snf=fopen(filename,"w");
+  
   //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
   double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
   double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;

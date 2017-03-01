@@ -33,6 +33,9 @@ struct Data
   double ***h_pow; // N x Nchannel x NMCMC
   double ***S_pow; // N x Nchannel x NMCMC
   
+  //Injection
+  struct Source *inj;
+  
 };
 
 struct Flags
@@ -40,6 +43,7 @@ struct Flags
   int verbose;
   int injection;
   int zeroNoise;
+  int fixSky;
 
   char **injFile;
 };
@@ -52,6 +56,7 @@ struct Chain
   double *acceptance;
   double *temperature;
   double *avgLogL;
+  double logLmax;
   
   //thread-safe RNG
   const gsl_rng_type **T;
@@ -133,6 +138,8 @@ struct Model
   
   //Start time for segment for model
   double t0;
+  double t0_min;
+  double t0_max;
   
   //Source parameter priors
   double **prior;

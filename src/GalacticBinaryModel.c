@@ -50,7 +50,9 @@ void alloc_data(struct Data **data_vec, int NMCMC, int NMAX)
     alloc_tdi(data->tdi, data->N, data->Nchannel);
     data->noise = malloc(sizeof(struct Noise));
     alloc_noise(data->noise, data->N);
-    
+    data->inj = malloc(sizeof(struct Source));
+    alloc_source(data->inj,data->N,data->Nchannel);
+
     //reconstructed signal model
     int n_re,n_im;
     data->h_rec = malloc(data->N*2*sizeof(double **));
@@ -111,7 +113,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, int 
   }
   //set hottest chain to ~infinite temperature
   chain->temperature[NC-1] = 1e6;
-  
+  chain->logLmax = 0.0;
   
   chain->r = malloc(NC*sizeof(gsl_rng *));
   chain->T = malloc(NC*sizeof(const gsl_rng_type *));
@@ -211,6 +213,8 @@ void copy_model(struct Model *origin, struct Model *copy)
 
   //Start time for segment for model
   copy->t0 = origin->t0;
+  copy->t0_min = origin->t0_min;
+  copy->t0_max = origin->t0_max;
 
   //Source parameter priors
   for(int n=0; n<8; n++) for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
@@ -420,7 +424,7 @@ void copy_source(struct Source *origin, struct Source *copy)
   
   
   //Response
-  //copy_tdi(origin->tdi,copy->tdi);
+  copy_tdi(origin->tdi,copy->tdi);
   
   //FIsher
   for(int i=0; i<NP; i++)
@@ -645,5 +649,33 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
   }
   
   return logLnorm;
+}
+
+void update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags)
+{
+  int n = chain->index[0];
+  int N = flags->injection;
+  
+  double logL = 0.0;
+  double dlogL= 0.0;
+  
+  // get full likelihood
+  for(int i=0; i<flags->injection; i++) logL += model[chain->index[0]][i]->logL + model[chain->index[0]][i]->logLnorm;
+  
+  // update max
+  if(logL > chain->logLmax)
+  {
+    dlogL = logL - chain->logLmax;
+    chain->logLmax = logL;
+    
+    //clone chains if new mode is found (dlogL > D/2)
+    if( dlogL > (double)(8*N/2) )
+    {
+      for(int ic=1; ic<chain->NC; ic++)
+      {
+        for(int i=0; i<N; i++) copy_model(model[n][i],model[chain->index[ic]][i]);
+      }
+    }
+  }
 }
 

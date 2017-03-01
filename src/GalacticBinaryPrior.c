@@ -26,6 +26,8 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   
   //TODO:  make t0 a parameter
   model->t0 = data->t0;
+  model->t0_min = data->t0 - 1000000.0;
+  model->t0_max = data->t0 + 1000000.0;
 
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
   
