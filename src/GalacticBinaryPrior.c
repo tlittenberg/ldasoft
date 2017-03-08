@@ -32,8 +32,9 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
   
   //frequency bin
-  model->prior[0][0] = data->qmin;
-  model->prior[0][1] = data->qmax;
+  double qpad = 10;
+  model->prior[0][0] = data->qmin+qpad;
+  model->prior[0][1] = data->qmax-qpad;
   
   //colatitude
   model->prior[1][0] = -1.0;
@@ -44,7 +45,7 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   model->prior[2][1] = PI2;
   
   //log amplitude
-  model->prior[3][0] = -55.0;
+  model->prior[3][0] = -50.0;
   model->prior[3][1] = -40.0;
   
   //cos inclination

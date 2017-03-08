@@ -6,6 +6,7 @@ struct Data
 {
   int N;        //number of frequency bins
   int Nchannel; //number of data channels
+  int Nsegment; //number of data segments
   
   long cseed; //seed for MCMC
   long nseed; //seed for noise realization
@@ -19,11 +20,12 @@ struct Data
   double fmin;
   double fmax;
   
-  double t0;
+  double t0;   //start times of segments
+  double tgap; //duration of data gap
   
   //Response
-  struct TDI *tdi;
-  struct Noise *noise;
+  struct TDI **tdi;
+  struct Noise **noise;
   
   //Reconstructed signal
   int Nwave;
@@ -34,7 +36,7 @@ struct Data
   double ***S_pow; // N x Nchannel x NMCMC
   
   //Injection
-  struct Source *inj;
+  struct Source **inj;
   
 };
 
@@ -42,6 +44,7 @@ struct Flags
 {
   int verbose;
   int injection;
+  int segment;
   int zeroNoise;
   int fixSky;
 

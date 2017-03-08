@@ -16,6 +16,8 @@
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
 
+#define FIXME 0
+
 void map_array_to_params(struct Source *source, double *params, double T)
 {
   source->f0       = params[0]/T;
@@ -46,13 +48,21 @@ void alloc_data(struct Data **data_vec, int NMCMC, int NMAX)
   {
     struct Data *data = data_vec[n];
     
-    data->tdi = malloc(sizeof(struct TDI));
-    alloc_tdi(data->tdi, data->N, data->Nchannel);
-    data->noise = malloc(sizeof(struct Noise));
-    alloc_noise(data->noise, data->N);
-    data->inj = malloc(sizeof(struct Source));
-    alloc_source(data->inj,data->N,data->Nchannel);
+    data->tdi   = malloc(sizeof(struct TDI*)    * data->Nsegment);
+    data->noise = malloc(sizeof(struct Noise*)  * data->Nsegment);
+    data->inj   = malloc(sizeof(struct Source*) * data->Nsegment);
 
+    for(int s=0; s<data->Nsegment; s++)
+    {
+      data->tdi[s]   = malloc(sizeof(struct TDI));
+      data->noise[s] = malloc(sizeof(struct Noise));
+      data->inj[s]   = malloc(sizeof(struct Source));
+
+      alloc_tdi(data->tdi[s], data->N, data->Nchannel);
+      alloc_noise(data->noise[s], data->N);
+      alloc_source(data->inj[s],data->N,data->Nchannel);
+    }
+    
     //reconstructed signal model
     int n_re,n_im;
     data->h_rec = malloc(data->N*2*sizeof(double **));
@@ -548,13 +558,13 @@ void generate_noise_model(struct Data *data, struct Model *model)
   switch(data->Nchannel)
   {
     case 1:
-      for(int n=0; n<data->N; n++) model->noise->SnX[n] = data->noise->SnX[n]*model->noise->etaX;
+      for(int n=0; n<data->N; n++) model->noise->SnX[n] = data->noise[FIXME]->SnX[n]*model->noise->etaX;
       break;
     case 2:
       for(int n=0; n<data->N; n++)
       {
-        model->noise->SnA[n] = data->noise->SnA[n]*model->noise->etaA;
-        model->noise->SnE[n] = data->noise->SnE[n]*model->noise->etaE;
+        model->noise->SnA[n] = data->noise[FIXME]->SnA[n]*model->noise->etaA;
+        model->noise->SnE[n] = data->noise[FIXME]->SnE[n]*model->noise->etaE;
       }
       break;
     default:
@@ -562,7 +572,7 @@ void generate_noise_model(struct Data *data, struct Model *model)
   }
 }
 
-double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
+double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model, int n)
 {
   
   int N2=data->N*2;
@@ -579,9 +589,9 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
   
   for(int i=0; i<N2; i++)
   {
-    residual->X[i] = data->tdi->X[i] - model->tdi->X[i];
-    residual->A[i] = data->tdi->A[i] - model->tdi->A[i];
-    residual->E[i] = data->tdi->E[i] - model->tdi->E[i];
+    residual->X[i] = data->tdi[n]->X[i] - model->tdi->X[i];
+    residual->A[i] = data->tdi[n]->A[i] - model->tdi->A[i];
+    residual->E[i] = data->tdi[n]->E[i] - model->tdi->E[i];
   }
 
   double logL = 0.0;
@@ -651,7 +661,7 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
   return logLnorm;
 }
 
-void update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags)
+void update_max_log_likelihood(struct Model ****model, struct Chain *chain, struct Flags *flags)
 {
   int n = chain->index[0];
   int N = flags->injection;
@@ -660,7 +670,7 @@ void update_max_log_likelihood(struct Model ***model, struct Chain *chain, struc
   double dlogL= 0.0;
   
   // get full likelihood
-  for(int i=0; i<flags->injection; i++) logL += model[chain->index[0]][i]->logL + model[chain->index[0]][i]->logLnorm;
+  for(int i=0; i<flags->injection; i++) for(int j=0; j<flags->segment; j++) logL += model[chain->index[0]][i][j]->logL + model[chain->index[0]][i][j]->logLnorm;
   
   // update max
   if(logL > chain->logLmax)
@@ -673,7 +683,7 @@ void update_max_log_likelihood(struct Model ***model, struct Chain *chain, struc
     {
       for(int ic=1; ic<chain->NC; ic++)
       {
-        for(int i=0; i<N; i++) copy_model(model[n][i],model[chain->index[ic]][i]);
+        for(int i=0; i<N; i++) for(int j=0; j<flags->segment; j++) copy_model(model[n][i][j],model[chain->index[ic]][i][j]);
       }
     }
   }
