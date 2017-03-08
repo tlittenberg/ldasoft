@@ -360,11 +360,51 @@ static double ipow(double x, int n)
 double AEnoise(double L, double fstar, double f)
 {
   //Power spectral density of the detector noise and transfer frequency
-  double Sn;
+  double red;
+  double Sloc;
   
+  
+  red = 16.0*(pow((2.0e-5/f), 10.0)+ ipow(1.0e-4/f,2));
+  
+  Sloc = 2.89e-24;
   
   // Calculate the power spectral density of the detector noise at the given frequency
-  Sn = 16.0/3.0*ipow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*(1.0/ipow(2.0*M_PI*f,4))) / ipow(2.0*L,2.0));
   
-  return Sn;
+  return  16.0/3.0*ipow(sin(f/fstar),2)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/ipow(PI2*f,4)*(1.0+red)) ) / ipow(2.0*L,2);
+  
+  
 }
+
+//double AEnoise(double L, double fstar, double f)
+//{
+//  //Power spectral density of the detector noise and transfer frequency
+//  double Sn;
+//  
+//  
+//  // Calculate the power spectral density of the detector noise at the given frequency
+//  Sn = 16.0/3.0*ipow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*(1.0/ipow(2.0*M_PI*f,4))) / ipow(2.0*L,2.0));
+//  
+//  return Sn;
+//}
+//
+//void instrument_noise(double f, double *SAE, double *SXYZ)
+//{
+//  //Power spectral density of the detector noise and transfer frequency
+//  double Sn, red, confusion_noise;
+//  double Sloc;
+//  double f1, f2;
+//  double A1, A2, slope;
+//  FILE *outfile;
+//  
+//  
+//  red = 16.0*(pow((2.0e-5/f), 10.0)+ (1.0e-4/f)*(1.0e-4/f));
+//  
+//  Sloc = 2.89e-24;
+//  
+//  // Calculate the power spectral density of the detector noise at the given frequency
+//  
+//  *SAE = 16.0/3.0*pow(sin(f/fstar),2.0)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
+//  
+//  *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( 4.0*(Sps+Sloc) + 8.0*(1.0+pow(cos(f/fstar),2.0))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
+//  
+//}

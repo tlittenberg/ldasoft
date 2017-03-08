@@ -12,10 +12,10 @@
 #include <stdio.h>
 
 /* Photon shot noise power */
-#define Sps 1.21e-22
+#define Sps 8.321000e-23
 
 /* Acceleration noise power */
-#define Sacc 21.00e-30
+#define Sacc 9.000000e-30
 
 struct Orbit
 {
