@@ -1,6 +1,6 @@
 //
 //  LISA.c
-//  
+//
 //
 //  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
 //
@@ -11,22 +11,76 @@
 #include "LISA.h"
 #include "Constants.h"
 
-void spacecraft(struct Orbit *orbit, double tint, double *xint, double *yint, double *zint)
+void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
 {
   int i;
   
   for(i=0; i<3; i++)
   {
-    LISA_splint(orbit->t, orbit->x[i], orbit->dx[i], orbit->Norb, tint, &xint[i+1]);
-    LISA_splint(orbit->t, orbit->y[i], orbit->dy[i], orbit->Norb, tint, &yint[i+1]);
-    LISA_splint(orbit->t, orbit->z[i], orbit->dz[i], orbit->Norb, tint, &zint[i+1]);
+    LISA_splint(orbit->t, orbit->x[i], orbit->dx[i], orbit->Norb, t, &x[i+1]);
+    LISA_splint(orbit->t, orbit->y[i], orbit->dy[i], orbit->Norb, t, &y[i+1]);
+    LISA_splint(orbit->t, orbit->z[i], orbit->dz[i], orbit->Norb, t, &z[i+1]);
   }
 }
 
-void initialize_orbit(struct Orbit *orbit)
+/*************************************************************************/
+/*        Rigid approximation position of each LISA spacecraft           */
+/*************************************************************************/
+void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
+{
+  
+  double alpha = PI2*t/YEAR;
+  
+  /*
+   double beta1 = 0.;
+   double beta2 = 2.0943951023932; //2.*pi/3.;
+   double beta3 = 4.18879020478639;//4.*pi/3.;
+   */
+  
+  double sa = sin(alpha);
+  double ca = cos(alpha);
+  
+  double sa2  = sa*sa;
+  double ca2  = ca*ca;
+  double saca = sa*ca;
+  double AUca = AU*ca;
+  double AUsa = AU*sa;
+  
+  double sb,cb;
+  
+  sb = 0.0;//sin(beta1);
+  cb = 1.0;//cos(beta1);
+  x[1] = AUca + orbit->R*(saca*sb - (1. + sa2)*cb);
+  y[1] = AUsa + orbit->R*(saca*cb - (1. + ca2)*sb);
+  z[1] = -SQ3*orbit->R*(ca*cb + sa*sb);
+  
+  sb = 0.866025403784439;//sin(beta2);
+  cb = -0.5;//cos(beta2);
+  x[2] = AUca + orbit->R*(saca*sb - (1. + sa2)*cb);
+  y[2] = AUsa + orbit->R*(saca*cb - (1. + ca2)*sb);
+  z[2] = -SQ3*orbit->R*(ca*cb + sa*sb);
+  
+  sb = -0.866025403784438;//sin(beta3);
+  cb = -0.5;//cos(beta3);
+  x[3] = AUca + orbit->R*(saca*sb - (1. + sa2)*cb);
+  y[3] = AUsa + orbit->R*(saca*cb - (1. + ca2)*sb);
+  z[3] = -SQ3*orbit->R*(ca*cb + sa*sb);
+  
+}
+void initialize_analytic_orbit(struct Orbit *orbit)
+{
+  //store armlenght & transfer frequency in orbit structure.
+  orbit->L     = Larm;
+  orbit->fstar = C/(2.0*M_PI*Larm);
+  orbit->ecc   = Larm/(2.0*SQ3*AU);
+  orbit->R     = AU*orbit->ecc;
+  orbit->orbit_function = &analytic_orbits;
+
+}
+void initialize_numeric_orbit(struct Orbit *orbit)
 {
   fprintf(stdout,"==== Initialize LISA Orbit Structure ====\n\n");
-
+  
   int n,i;
   double junk;
   
@@ -160,6 +214,9 @@ void initialize_orbit(struct Orbit *orbit)
   //store armlenght & transfer frequency in orbit structure.
   orbit->L     = L;
   orbit->fstar = C/(2.0*M_PI*L);
+  orbit->ecc   = L/(2.0*SQ3*AU);
+  orbit->R     = AU*orbit->ecc;
+  orbit->orbit_function = &interpolate_orbits;
   
   //free local memory
   for(i=0; i<3; i++)
@@ -179,7 +236,7 @@ void initialize_orbit(struct Orbit *orbit)
   free(dy);
   free(dz);
   fprintf(stdout,"=========================================\n\n");
-
+  
 }
 /*************************************************************************/
 
@@ -201,7 +258,7 @@ void free_orbit(struct Orbit *orbit)
   free(orbit->dy);
   free(orbit->dz);
   free(orbit->t);
-
+  
   free(orbit);
 }
 
@@ -304,7 +361,7 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     
     M[j] = sqT*(X[j]*cLS - X[k]*sLS);
     M[k] =-sqT*(X[j]*sLS + X[k]*cLS);
-        
+    
     //save some CPU time when only X-channel is needed
     if(NI>1)
     {
@@ -379,11 +436,11 @@ double AEnoise(double L, double fstar, double f)
 //{
 //  //Power spectral density of the detector noise and transfer frequency
 //  double Sn;
-//  
-//  
+//
+//
 //  // Calculate the power spectral density of the detector noise at the given frequency
 //  Sn = 16.0/3.0*ipow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*(1.0/ipow(2.0*M_PI*f,4))) / ipow(2.0*L,2.0));
-//  
+//
 //  return Sn;
 //}
 //
@@ -395,16 +452,16 @@ double AEnoise(double L, double fstar, double f)
 //  double f1, f2;
 //  double A1, A2, slope;
 //  FILE *outfile;
-//  
-//  
+//
+//
 //  red = 16.0*(pow((2.0e-5/f), 10.0)+ (1.0e-4/f)*(1.0e-4/f));
-//  
+//
 //  Sloc = 2.89e-24;
-//  
+//
 //  // Calculate the power spectral density of the detector noise at the given frequency
-//  
+//
 //  *SAE = 16.0/3.0*pow(sin(f/fstar),2.0)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
-//  
+//
 //  *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( 4.0*(Sps+Sloc) + 8.0*(1.0+pow(cos(f/fstar),2.0))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
 //  
 //}

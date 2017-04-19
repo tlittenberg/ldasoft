@@ -46,7 +46,7 @@ double galactic_binary_dL(double f0, double dfdt, double A, double T)
 {
   double f    = f0;//T;
   double fd = dfdt;//(T*T);
-  double amp   = exp(A);
+  double amp   = A;
   return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
 }
 
@@ -55,12 +55,14 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   //TODO:  galactic_binary_fisher should compute joint Fisher
   int i,j,n;
   
-  double epsilon    = 1.0e-5;
+  int NP = 8;
+  
+  double epsilon    = 1.0e-7;
   double invepsilon2= 1./(2.*epsilon);
   
   // Plus and minus parameters:
-  double *params_p = malloc(8*sizeof(double));
-  double *params_m = malloc(8*sizeof(double));
+  double *params_p = malloc(NP*sizeof(double));
+  double *params_m = malloc(NP*sizeof(double));
   
   // Plus and minus templates for each detector:
   struct Source *wave_p = malloc(sizeof(struct Source));
@@ -69,8 +71,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   alloc_source(wave_m, data->N, data->Nchannel);
 
   // TDI variables to hold derivatives of h
-  struct TDI **dhdx = malloc(8*sizeof(struct TDI *));
-  for(n=0; n<8; n++)
+  struct TDI **dhdx = malloc(NP*sizeof(struct TDI *));
+  for(n=0; n<NP; n++)
   {
     dhdx[n] = malloc(sizeof(struct TDI));
     alloc_tdi(dhdx[n], data->N, data->Nchannel);
@@ -78,10 +80,10 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   
   /* assumes all the parameters are log or angle */
   int N2 = data->N*2;
-  for(i=0; i<8; i++)
+  for(i=0; i<NP; i++)
   {
     // copy parameters
-    for(j=0; j<8; j++)
+    for(j=0; j<NP; j++)
     {
       wave_p->params[j] = source->params[j];
       wave_m->params[j] = source->params[j];
@@ -100,8 +102,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     galactic_binary_alignment(orbit, data, wave_m);
     
     // compute perturbed waveforms
-    galactic_binary(orbit, data->T, data->t0, wave_p->params, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-    galactic_binary(orbit, data->T, data->t0, wave_m->params, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+    galactic_binary(orbit, data->T, data->t0, wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
+    galactic_binary(orbit, data->T, data->t0, wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
     
     // central differencing derivatives of waveforms w.r.t. parameters
     switch(source->tdi->Nchannel)
@@ -123,11 +125,11 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   }
   
   // Calculate fisher matrix
-  for(i=0; i<8; i++)
+  for(i=0; i<NP; i++)
   {
-    for(j=i; j<8; j++)
+    for(j=i; j<NP; j++)
     {
-      source->fisher_matrix[i][j] = 10.0; //fisher gets a "DC" level to keep the inversion stable
+      //source->fisher_matrix[i][j] = 10.0; //fisher gets a "DC" level to keep the inversion stable
       switch(source->tdi->Nchannel)
       {
         case 1:
@@ -142,27 +144,29 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
       {
         fprintf(stderr,"GalacticBinaryWaveform.c:141: WARNING: nan matrix element, setting contribution to matrix element to 0?\n");
         fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->SnA[data->N/2],noise->SnE[data->N/2]);
-        for(int k=0; k<8; k++)
+        for(int k=0; k<NP; k++)
         {
           fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
         }
         //exit(1);
         source->fisher_matrix[i][j] = 10.0;
       }
-
+      //fprintf(stderr, "F%i%i = %g ",i,j,source->fisher_matrix[i][j]);
       source->fisher_matrix[j][i] = source->fisher_matrix[i][j];
     }
+    //fprintf(stderr, "\n");
   }
+  //fprintf(stderr, "\n");
   
   // Calculate eigenvalues and eigenvectors of fisher matrix
-  matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, 8);
+  matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, NP);
 
   free(params_p);
   free(params_m);
   free_source(wave_p);
   free_source(wave_m);
 
-  for(n=0; n<8; n++) free_tdi(dhdx[n]);
+  for(n=0; n<NP; n++) free_tdi(dhdx[n]);
   free(dhdx);
 }
 
@@ -203,7 +207,7 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
   source->imax = source->imin + source->BW;  
 }
 
-void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, double *X, double *A, double *E, int BW, int NI)
+void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, int NP, double *X, double *A, double *E, int BW, int NI)
 {
   /*   Indicies   */
   int i,j,n;
@@ -225,7 +229,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, d
   /*   Convenient quantities   */
   double dplus[4][4],dcross[4][4];
   /*   GW source parameters   */
-  double phi, psi, amp, Aplus, Across, f0, dfdt, phi0;
+  double phi, psi, amp, Aplus, Across, f0, dfdt, d2fdt2, phi0;
   double costh, sinth, cosph, sinph, cosi, cosps, sinps;
   /*   Time and distance variables   */
   double t, xi[4];
@@ -274,14 +278,17 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, d
   
   /*   Gravitational Wave source parameters   */
   
-  f0    = params[0]/T;
-  costh = params[1];
-  phi   = params[2];
-  amp   = exp(params[3]);
-  cosi  = params[4];
-  psi   = params[5];
-  phi0  = params[6];
-  dfdt  = params[7]/(T*T);
+  f0     = params[0]/T;
+  costh  = params[1];
+  phi    = params[2];
+  amp    = exp(params[3]);
+  cosi   = params[4];
+  psi    = params[5];
+  phi0   = params[6];
+  if(NP>7)
+    dfdt   = params[7]/(T*T);
+  if(NP>8)
+    d2fdt2 = params[8]/(T*T*T);
 
   //Calculate carrier frequency bin
   q = (long)(f0*T);
@@ -298,6 +305,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, d
   Across = -amp*(2.0*cosi);
   
   df = PI2*(f0 - ((double)q)/T);
+  //df = PI2*(((double)q)/T);
   
   //Calculate constant pieces of transfer functions
   DPr =  Aplus*cosps;
@@ -329,7 +337,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, d
     t = t0 + T*(double)(n-1)/(double)BW;
     
     //Calculate position of each spacecraft at time t
-    spacecraft(orbit, t, x, y, z);
+    (*orbit->orbit_function)(orbit, t, x, y, z);
     
     for(i=1; i<=3; i++)
     {
@@ -338,11 +346,14 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, d
       //Wave arrival time at spacecraft i
       xi[i] = t - kdotx[i];
       
-      //First order approximation to frequency at spacecraft i
-      f[i] = f0 + dfdt*xi[i];
+      //Zeroety order approximation to frequency at spacecraft i
+      f[i] = f0;
+      
+      //First order in frequency
+      if(NP>7) f[i] += dfdt*xi[i];
       
       //Second order in frequency
-      //if(NP>8) f[i] += 0.5*fd2*xi[i]*xi[i];
+      if(NP>8) f[i] += 0.5*d2fdt2*xi[i]*xi[i];
       
       //Ratio of true frequency to transfer frequency
       fonfs[i] = f[i]/orbit->fstar;
@@ -398,19 +409,25 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, d
           arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
           
           //Argument of complex exponentials
-          arg2 = df*xi[i] + M_PI*dfdt*xi[i]*xi[i] + phi0 - PI2*kdotx[i]*f0;
+          arg2 = df*xi[i] + phi0 - PI2*kdotx[i]*f0;// + PI2*t0*f0;
+          
+          //First order frequency evolution
+          if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
           
           //Second order frequency evolution
-          //if(NP>8) arg2 += pi/3.0*fd2*xi[i]*xi[i]*x[i];
+          if(NP>8) arg2 += M_PI/3.0*d2fdt2*xi[i]*xi[i]*x[i];
           
           //Transfer function
           sinc = 0.25*sin(arg1)/arg1;
           
           //Evolution of amplitude
-          aevol = 1.0 + 0.66666666666666666666*dfdt/f0*xi[i];
+          aevol = 1.0;
+          
+          //First order amplitude evolution
+          if(NP>7) aevol += 0.66666666666666666666*dfdt/f0*xi[i];
           
           //Second order amplitude evolution
-          //if(NP>8) aevol += const.*fd2*xi[i]*xi[i]/f0;
+          //if(NP>8) aevol += const.*d2fdt2*xi[i]*xi[i]/f0;
           
           ///Real and imaginary pieces of time series (no complex exponential)
           tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);

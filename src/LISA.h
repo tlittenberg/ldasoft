@@ -17,6 +17,10 @@
 /* Acceleration noise power */
 #define Sacc 9.000000e-30
 
+/* Mean arm length of constellation (m) */
+#define Larm 2.5e9
+
+
 struct Orbit
 {
   char OrbitFileName[1024];
@@ -25,6 +29,8 @@ struct Orbit
   
   double L;
   double fstar;
+  double ecc;
+  double R;
   
   double *t;
   double **x;
@@ -33,6 +39,8 @@ struct Orbit
   double **dx;
   double **dy;
   double **dz;
+  
+  void (*orbit_function)(struct Orbit*,double,double*,double*,double*);
 };
 
 struct TDI
@@ -55,9 +63,11 @@ struct TDI
 };
 
 
-void spacecraft(struct Orbit *orbit, double tint, double *xint, double *yint, double *zint);
+void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z);
+void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z);
 
-void initialize_orbit(struct Orbit *orbit);
+void initialize_analytic_orbit(struct Orbit *orbit);
+void initialize_numeric_orbit(struct Orbit *orbit);
 void free_orbit(struct Orbit *orbit);
 
 void LISA_spline(double *x, double *y, int n, double yp1, double ypn, double *y2);

@@ -6,7 +6,6 @@ struct Data
 {
   int N;        //number of frequency bins
   int Nchannel; //number of data channels
-  int Nsegment; //number of data segments
   
   long cseed; //seed for MCMC
   long nseed; //seed for noise realization
@@ -24,8 +23,8 @@ struct Data
   double tgap; //duration of data gap
   
   //Response
-  struct TDI **tdi;
-  struct Noise **noise;
+  struct TDI *tdi;
+  struct Noise *noise;
   
   //Reconstructed signal
   int Nwave;
@@ -36,7 +35,11 @@ struct Data
   double ***S_pow; // N x Nchannel x NMCMC
   
   //Injection
-  struct Source **inj;
+  struct Source *inj;
+  
+  //Spectrum proposal
+  double *p;
+  double pmax;
   
 };
 
@@ -47,7 +50,11 @@ struct Flags
   int segment;
   int zeroNoise;
   int fixSky;
-
+  int knownSource;
+  int orbit;
+  int prior;
+  int cheat;
+  
   char **injFile;
 };
 
@@ -93,12 +100,6 @@ struct Source
   double dfdt;
   double Mc;
   
-  //Package parameters for waveform generator
-  double *params;
-  
-  //Response
-  struct TDI *tdi;
-
   //Book-keeping
   int BW;
   int qmin;
@@ -106,10 +107,16 @@ struct Source
   int imin;
   int imax;
   
+  //Response
+  struct TDI *tdi;
+  
   //Fisher matrix
   double **fisher_matrix;
   double **fisher_evectr;
   double *fisher_evalue;
+
+  //Package parameters for waveform generator
+  double *params;
 
 };
 
@@ -151,4 +158,9 @@ struct Model
   //Model likelihood
   double logL;
   double logLnorm;
+};
+
+struct Proposal
+{
+  
 };

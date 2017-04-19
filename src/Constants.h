@@ -32,4 +32,7 @@
 /* Number of seconds in a year */
 #define YEAR 31457280.0
 
+/* Astronomical unit (meters) */
+#define AU 1.49597870660e11
+
 #endif /* Constants_h */

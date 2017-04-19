@@ -26,22 +26,24 @@ void print_usage()
   fprintf(stdout,"\n");
   fprintf(stdout,"Usage: \n");
   fprintf(stdout,"REQUIRED:\n");
-  fprintf(stdout,"       --orbit       : orbit ephemerides file             \n");
+  fprintf(stdout,"\n");
   fprintf(stdout,"OPTIONAL:\n");
-  fprintf(stdout,"  -h | --help        : print help message and exit        \n");
-  fprintf(stdout,"  -v | --verbose     : enable verbose output              \n");
-  fprintf(stdout,"       --samples     : number of frequency bins (2048)    \n");
-  fprintf(stdout,"       --segments    : number of data segments (1)        \n");
-  fprintf(stdout,"       --start-time  : initial time of segment  (0)       \n");
-  fprintf(stdout,"       --gap-time    : duration of data gaps (0)          \n");
-  fprintf(stdout,"       --duration    : duration of time segment (62914560)\n");
-  fprintf(stdout,"       --noiseseed   : seed for noise RNG                 \n");
-  fprintf(stdout,"       --chainseed   : seed for MCMC RNG                  \n");
-  fprintf(stdout,"       --injseed     : seed for injection parameters      \n");
-  fprintf(stdout,"       --inj         : inject signal                      \n");
-  fprintf(stdout,"       --fix-sky     : pin sky params to injection        \n");
-  fprintf(stdout,"       --zero-noise  : data w/out noise realization       \n");
-  fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)   \n");
+  fprintf(stdout,"  -h | --help        : print help message and exit         \n");
+  fprintf(stdout,"  -v | --verbose     : enable verbose output               \n");
+  fprintf(stdout,"       --orbit       : orbit ephemerides file (2.5 GM MLDC)\n");
+  fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
+  fprintf(stdout,"       --segments    : number of data segments (1)         \n");
+  fprintf(stdout,"       --start-time  : initial time of segment  (0)        \n");
+  fprintf(stdout,"       --gap-time    : duration of data gaps (0)           \n");
+  fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
+  fprintf(stdout,"       --noiseseed   : seed for noise RNG                  \n");
+  fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
+  fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
+  fprintf(stdout,"       --inj         : inject signal                       \n");
+  fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
+  fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
+  fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
+  fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
   fprintf(stdout,"--\n");
   fprintf(stdout,"EXAMPLE:\n");
   fprintf(stdout,"./gb_mcmc --orbit ../config/OrbitConfig1.txt --verbose --inj ../data/sources/RXJ0806.dat\n");
@@ -49,33 +51,39 @@ void print_usage()
   exit(EXIT_FAILURE);
 }
 
-void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax)
+void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, struct Flags *flags, int Nmax)
 {
   //Set defaults
-  flags->verbose   = 0;
-  flags->injection = 0;
-  flags->zeroNoise = 0;
-  flags->fixSky    = 0;
-  flags->segment   = 1;
+  flags->verbose     = 0;
+  flags->injection   = 0;
+  flags->zeroNoise   = 0;
+  flags->fixSky      = 0;
+  flags->cheat       = 0;
+  flags->knownSource = 0;
+  flags->segment     = 1;
+  flags->orbit       = 0;
+  flags->prior       = 0;
   
   for(int i=0; i<Nmax; i++)
   {
-    data[i]->t0       = 0.0;
-    data[i]->tgap     = 0.0;
-    data[i]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
-    data[i]->N        = 256;
-    data[i]->Nsegment = 1; //number of data segments
-    data[i]->Nchannel = 2; //1=X, 2=AE
-    
-    data[i]->cseed = 150914+i;
-    data[i]->nseed = 151226+i;
-    data[i]->iseed = 151012+i;
+    for(int j=0; j<Nmax; j++)
+    {
+      data[i][j]->t0       = 0.0;
+      data[i][j]->tgap     = 0.0;
+      data[i][j]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
+      data[i][j]->N        = 256;
+      data[i][j]->Nchannel = 2; //1=X, 2=AE
+      
+      data[i][j]->cseed = 150914+i*Nmax+j;
+      data[i][j]->nseed = 151226+i*Nmax+j;
+      data[i][j]->iseed = 151012+i*Nmax+j;
+    }
   }
   
   flags->injFile = malloc(10*sizeof(char *));
   for(int n=0; n<10; n++) flags->injFile[n] = malloc(1024*sizeof(char));
   
-  if(argc==1) print_usage();
+  //if(argc==1) print_usage();
   
   //Specifying the expected options
   static struct option long_options[] =
@@ -99,6 +107,9 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"verbose", no_argument,       0,  'v' },
     {"zero-noise", no_argument,    0,   0  },
     {"fix-sky", no_argument,       0,   0  },
+    {"known-source",no_argument,   0,   0  },
+    {"prior",   no_argument,       0,   0  },
+    {"cheat",   no_argument,       0,   0  },
     {0,         0,                 0,   0  }
   };
   
@@ -113,23 +124,35 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fclose(out);
   
   //Loop through argv string and pluck out arguments
+  struct Data *data_ptr = data[0][0];
   while ((opt = getopt_long_only(argc, argv,"apl:b:", long_options, &long_index )) != -1)
   {
     switch (opt)
     {
         
       case 0:
-        if(strcmp("samples",   long_options[long_index].name) == 0) data[0]->N        = atoi(optarg);
-        if(strcmp("segments",  long_options[long_index].name) == 0) flags->segment    = atoi(optarg);
-        if(strcmp("duration",  long_options[long_index].name) == 0) data[0]->T        = (double)atof(optarg);
-        if(strcmp("start-time",long_options[long_index].name) == 0) data[0]->t0       = (double)atof(optarg);
-        if(strcmp("gap-time",  long_options[long_index].name) == 0) data[0]->tgap     = (double)atof(optarg);
-        if(strcmp("chainseed", long_options[long_index].name) == 0) data[0]->cseed    = (long)atoi(optarg);
-        if(strcmp("noiseseed", long_options[long_index].name) == 0) data[0]->nseed    = (long)atoi(optarg);
-        if(strcmp("injseed",   long_options[long_index].name) == 0) data[0]->iseed    = (long)atoi(optarg);
-        if(strcmp("zero-noise",long_options[long_index].name) == 0) flags->zeroNoise  = 1;
-        if(strcmp("fix-sky",   long_options[long_index].name) == 0) flags->fixSky     = 1;
-        if(strcmp("orbit",     long_options[long_index].name) == 0) sprintf(orbit->OrbitFileName,"%s",optarg);
+        if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
+        if(strcmp("segments",    long_options[long_index].name) == 0) flags->segment    = atoi(optarg);
+        if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
+        if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0      = (double)atof(optarg);
+        if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap    = (double)atof(optarg);
+        if(strcmp("chainseed",   long_options[long_index].name) == 0) data_ptr->cseed   = (long)atoi(optarg);
+        if(strcmp("noiseseed",   long_options[long_index].name) == 0) data_ptr->nseed   = (long)atoi(optarg);
+        if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
+        if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
+        if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
+        if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
+        if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
+        if(strcmp("known-source",long_options[long_index].name) == 0)
+        {
+          flags->knownSource = 1;
+          flags->fixSky      = 1;
+        }
+        if(strcmp("orbit",       long_options[long_index].name) == 0)
+        {
+          flags->orbit = 1;
+          sprintf(orbit->OrbitFileName,"%s",optarg);
+        }
         if(strcmp("inj",       long_options[long_index].name) == 0)
         {
           sprintf(flags->injFile[flags->injection],"%s",optarg);
@@ -148,10 +171,10 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
           switch(Nlinks)
           {
             case 4:
-              data[0]->Nchannel=1;
+              data_ptr->Nchannel=1;
               break;
             case 6:
-              data[0]->Nchannel=2;
+              data_ptr->Nchannel=2;
               break;
             default:
               fprintf(stderr,"Requested umber of links (%i) not supported\n",Nlinks);
@@ -173,19 +196,20 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   }
   
   // copy command line args to other data structures
-  data[0]->Nsegment = flags->segment;
-  for(int i=1; i<Nmax; i++)
+  for(int i=0; i<flags->injection; i++)
   {
-    data[i]->t0       = data[0]->t0;
-    data[i]->tgap     = data[0]->tgap;
-    data[i]->T        = data[0]->T;
-    data[i]->N        = data[0]->N;
-    data[i]->Nchannel = data[0]->Nchannel;
-    data[i]->Nsegment = data[0]->Nsegment;
-    
-    data[i]->cseed = data[0]->cseed+i;
-    data[i]->nseed = data[0]->nseed+i;
-    data[i]->iseed = data[0]->iseed+i;
+    for(int j=0; j<flags->segment; j++)
+    {
+      data[i][j]->t0       = data[0][0]->t0 + j*(data[0][0]->T + data[0][0]->tgap);
+      data[i][j]->tgap     = data[0][0]->tgap;
+      data[i][j]->T        = data[0][0]->T;
+      data[i][j]->N        = data[0][0]->N;
+      data[i][j]->Nchannel = data[0][0]->Nchannel;
+      
+      data[i][j]->cseed = data[0][0]->cseed+i*flags->injection + j;
+      data[i][j]->nseed = data[0][0]->nseed+i*flags->injection + j;
+      data[i][j]->iseed = data[0][0]->iseed+i*flags->injection + j;      
+    }
   }
 
   
@@ -211,9 +235,17 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   for(opt=0; opt<argc; opt++) fprintf(stdout,"%s ",argv[opt]);
   fprintf(stdout,"\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"  Orbit file .......... %s   \n",orbit->OrbitFileName);
+  switch(flags->orbit)
+  {
+    case 0:
+      fprintf(stdout,"  Orbit model is ...... EccentricInclined \n");
+      break;
+    case 1:
+      fprintf(stdout,"  Orbit file .......... %s   \n",orbit->OrbitFileName);
+      break;
+  }
   fprintf(stdout,"  Data channels ........");
-  switch(data[0]->Nchannel)
+  switch(data_ptr->Nchannel)
   {
     case 1:
       fprintf(stdout,"X\n");
@@ -222,12 +254,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
       fprintf(stdout,"AE\n");
       break;
   }
-  fprintf(stdout,"  Data sample size .... %i   \n",data[0]->N);
-  fprintf(stdout,"  Data start time ..... %.0f \n",data[0]->t0);
-  fprintf(stdout,"  Data duration ....... %.0f \n",data[0]->T);
-  fprintf(stdout,"  Data segments ....... %i   \n",data[0]->Nsegment);
-  fprintf(stdout,"  Data gap duration.....%.0f \n",data[0]->tgap);
-  fprintf(stdout,"  MCMC chain seed ..... %li  \n",data[0]->cseed);
+  fprintf(stdout,"  Data sample size .... %i   \n",data_ptr->N);
+  fprintf(stdout,"  Data start time ..... %.0f \n",data_ptr->t0);
+  fprintf(stdout,"  Data duration ....... %.0f \n",data_ptr->T);
+  fprintf(stdout,"  Data segments ....... %i   \n",flags->segment);
+  fprintf(stdout,"  Data gap duration.....%.0f \n",data_ptr->tgap);
+  fprintf(stdout,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
   fprintf(stdout,"\n");
   fprintf(stdout,"================= RUN FLAGS ================\n");
   if(flags->verbose)  fprintf(stdout,"  Verbose flag ........ ENABLED \n");
@@ -235,7 +267,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   if(flags->injection>0)
   {
     fprintf(stdout,"  Injected sources..... %i\n",flags->injection);
-    fprintf(stdout,"     seed ............. %li\n",data[0]->iseed);
+    fprintf(stdout,"     seed ............. %li\n",data_ptr->iseed);
     for(int i=0; i<flags->injection; i++)
     {
       fprintf(stdout,"     source ........... %s\n",flags->injFile[i]);
@@ -248,7 +280,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   else
   {
     fprintf(stdout,"  Noise realization is. ENABLED\n");
-    fprintf(stdout,"  Noise seed .......... %li  \n",data[0]->nseed);
+    fprintf(stdout,"  Noise seed .......... %li  \n",data_ptr->nseed);
   }
   fprintf(stdout,"\n");
   fprintf(stdout,"\n");
@@ -278,7 +310,7 @@ void print_chain_files(struct Data *data, struct Model ****model, struct Chain *
   n = chain->index[0];
   for(i=0; i<flags->injection; i++)
   {
-    print_chain_state(data, chain, model[n][i], chain->parameterFile[0], step);
+    print_chain_state(data, chain, model[n][i], flags, chain->parameterFile[0], step);
     print_noise_state(data, model[n][i][FIXME], chain->noiseFile[0], step);
   }
   
@@ -288,24 +320,23 @@ void print_chain_files(struct Data *data, struct Model ****model, struct Chain *
     for(ic=1; ic<chain->NC; ic++)
     {
       n = chain->index[ic];
-      print_chain_state(data, chain, model[n][0], chain->parameterFile[ic], step);
+      print_chain_state(data, chain, model[n][0], flags, chain->parameterFile[ic], step);
       print_noise_state(data, model[n][0][FIXME], chain->noiseFile[ic], step);
     }//loop over chains
   }//verbose flag
 }
 
-void print_chain_state(struct Data *data, struct Chain *chain, struct Model **model, FILE *fptr, int step)
+void print_chain_state(struct Data *data, struct Chain *chain, struct Model **model, struct Flags *flags, FILE *fptr, int step)
 {
   double logL=0.0;
-  for(int i=0; i<data->Nsegment; i++) logL += model[i]->logL+model[i]->logLnorm;
+  for(int i=0; i<flags->segment; i++) logL += model[i]->logL+model[i]->logLnorm;
   for(int i=0; i<model[0]->Nlive; i++)
   {
     fprintf(fptr, "%i ",step);
     fprintf(fptr, "%lg ",logL);
-    fprintf(fptr, "%lg ",model[0]->t0);
-    fprintf(fptr, "%lg ",data->tgap);
+    for(int j=0; j<flags->segment; j++)fprintf(fptr, "%.12g ",model[j]->t0);
+    //fprintf(fptr, "%lg ",data->tgap);
     print_source_params(data,model[0]->source[i],fptr);
-    for(int j=1; j<data->Nsegment; j++)fprintf(fptr, "%lg ",model[j]->source[i]->params[6]);
     fprintf(fptr, "\n");
   }
 }
@@ -362,8 +393,8 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
         data->h_rec[n_re][0][mcmc] = X_re;
         data->h_rec[n_im][0][mcmc] = X_im;
         
-        R_re = data->tdi[0]->X[n_re] - X_re;
-        R_im = data->tdi[0]->X[n_im] - X_im;
+        R_re = data->tdi->X[n_re] - X_re;
+        R_im = data->tdi->X[n_im] - X_im;
         
         data->h_res[n][0][mcmc] = R_re*R_re + R_im*R_im;
         data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
@@ -381,18 +412,18 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
         A_im = model->tdi->A[n_im];
         E_re = model->tdi->E[n_re];
         E_im = model->tdi->E[n_im];
-        
+
         data->h_rec[n_re][0][mcmc] = A_re;
         data->h_rec[n_im][0][mcmc] = A_im;
         data->h_rec[n_re][1][mcmc] = E_re;
         data->h_rec[n_im][1][mcmc] = E_im;
         
-        R_re = data->tdi[0]->A[n_re] - A_re;
-        R_im = data->tdi[0]->A[n_im] - A_im;
+        R_re = data->tdi->A[n_re] - A_re;
+        R_im = data->tdi->A[n_im] - A_im;
         data->h_res[n][0][mcmc] = R_re*R_re + R_im*R_im;
         
-        R_re = data->tdi[0]->E[n_re] - E_re;
-        R_im = data->tdi[0]->E[n_im] - E_im;
+        R_re = data->tdi->E[n_re] - E_re;
+        R_im = data->tdi->E[n_im] - E_im;
         data->h_res[n][1][mcmc] = R_re*R_re + R_im*R_im;
         
         data->h_pow[n][0][mcmc] = A_re*A_re + A_im*A_im;
@@ -405,7 +436,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
   }
 }
 
-void print_waveform_draw(struct Data **data, struct Model ***model, struct Flags *flags)
+void print_waveform_draw(struct Data ***data, struct Model ***model, struct Flags *flags)
 {
   FILE *fptr;
   char filename[128];
@@ -416,18 +447,18 @@ void print_waveform_draw(struct Data **data, struct Model ***model, struct Flags
     {
       sprintf(filename,"waveform_draw_%i_%i.dat",i,j);
       fptr=fopen(filename,"w");
-      for(int n=0; n<data[0]->N; n++)
+      for(int n=0; n<data[i][j]->N; n++)
       {
         int re = 2*n;
         int im = re+1;
-        double f = data[i]->fmin + (double)n/data[0]->T;
+        double f = data[i][j]->fmin + (double)n/data[i][j]->T;
         fprintf(fptr,"%lg ",f);
 //        fprintf(fptr,"%lg ",model[i][j]->tdi->A[re]*model[i][j]->tdi->A[re] + model[i][j]->tdi->A[im]*model[i][j]->tdi->A[im]);
 //        fprintf(fptr,"%lg ",model[i][j]->tdi->E[re]*model[i][j]->tdi->E[re] + model[i][j]->tdi->E[im]*model[i][j]->tdi->E[im]);
-        fprintf(fptr,"%lg ",data[i]->tdi[j]->A[re]);
-        fprintf(fptr,"%lg ",data[i]->tdi[j]->A[im]);
-        fprintf(fptr,"%lg ",data[i]->tdi[j]->E[re]);
-        fprintf(fptr,"%lg ",data[i]->tdi[j]->E[im]);
+        fprintf(fptr,"%lg ",data[i][j]->tdi->A[re]);
+        fprintf(fptr,"%lg ",data[i][j]->tdi->A[im]);
+        fprintf(fptr,"%lg ",data[i][j]->tdi->E[re]);
+        fprintf(fptr,"%lg ",data[i][j]->tdi->E[im]);
         fprintf(fptr,"%lg ",model[i][j]->tdi->A[re]);
         fprintf(fptr,"%lg ",model[i][j]->tdi->A[im]);
         fprintf(fptr,"%lg ",model[i][j]->tdi->E[re]);

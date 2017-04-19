@@ -26,8 +26,8 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   
   //TODO:  make t0 a parameter
   model->t0 = data->t0;
-  model->t0_min = data->t0 - 1000000.0;
-  model->t0_max = data->t0 + 1000000.0;
+  model->t0_min = data->t0 - 20.0;
+  model->t0_max = data->t0 + 20.0;
 
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
   
@@ -45,8 +45,8 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   model->prior[2][1] = PI2;
   
   //log amplitude
-  model->prior[3][0] = -50.0;
-  model->prior[3][1] = -40.0;
+  model->prior[3][0] = -55.0;
+  model->prior[3][1] = -45.0;
   
   //cos inclination
   model->prior[4][0] = -1.0;
@@ -61,8 +61,9 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   model->prior[6][1] = PI2;
   
   //fdot (bins/Tobs)
-  model->prior[7][0] = -10.0;
-  model->prior[7][1] = +10.0;
+  /* emprical envolope functions from Gijs' MLDC catalog */
+  model->prior[7][0] = -0.000005*pow(data->qmin/data->T,(13./3.))*data->T*data->T;//-10.0;
+  model->prior[7][1] = 0.0000008*pow(data->qmin/data->T,(11./3.))*data->T*data->T;//+10.0;
   
   //set prior volume
   model->logPriorVolume = 0.0;
