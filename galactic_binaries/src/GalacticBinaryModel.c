@@ -27,7 +27,10 @@ void map_array_to_params(struct Source *source, double *params, double T)
   source->cosi     = params[4];
   source->psi      = params[5];
   source->phi0     = params[6];
-  source->dfdt     = params[7]/(T*T);
+  if(source->NP>7)
+    source->dfdt   = params[7]/(T*T);
+  if(source->NP>8)
+    source->d2fdt2 = params[8]/(T*T*T);
 }
 
 void map_params_to_array(struct Source *source, double *params, double T)
@@ -39,7 +42,10 @@ void map_params_to_array(struct Source *source, double *params, double T)
   params[4] = source->cosi;
   params[5] = source->psi;
   params[6] = source->phi0;
-  params[7] = source->dfdt*T*T;
+  if(source->NP>7)
+    params[7] = source->dfdt*T*T;
+  if(source->NP>8)
+    params[8] = source->d2fdt2*T*T*T;
 }
 
 void alloc_data(struct Data ***data_vec, struct Flags *flags, int NMCMC)
@@ -56,7 +62,7 @@ void alloc_data(struct Data ***data_vec, struct Flags *flags, int NMCMC)
       
       alloc_tdi(data->tdi, data->N, data->Nchannel);
       alloc_noise(data->noise, data->N);
-      alloc_source(data->inj,data->N,data->Nchannel);
+      alloc_source(data->inj,data->N,data->Nchannel,data->NP);
       
       //reconstructed signal model
       int i_re,i_im;
@@ -182,8 +188,9 @@ void free_chain(struct Chain *chain, struct Flags *flags)
   free(chain);
 }
 
-void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
+void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP)
 {
+  model->NP     = NP;
   model->Nlive  = 1;
   model->Nmax   = Nmax;
   model->source = malloc(model->Nmax*sizeof(struct Source *));
@@ -196,20 +203,21 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
   for(n=0; n<model->Nmax; n++)
   {
     model->source[n] = malloc(sizeof(struct Source));
-    alloc_source(model->source[n],NFFT,Nchannel);
+    alloc_source(model->source[n],NFFT,Nchannel,NP);
   }
   
   alloc_tdi(model->tdi,NFFT, Nchannel);
 
   alloc_noise(model->noise,NFFT);
   
-  model->prior = malloc(8*sizeof(double *));
-  for(n=0; n<8; n++) model->prior[n] = malloc(2*sizeof(double));
+  model->prior = malloc(NP*sizeof(double *));
+  for(n=0; n<NP; n++) model->prior[n] = malloc(2*sizeof(double));
 }
 
 void copy_model(struct Model *origin, struct Model *copy)
 {
   //Source parameters
+  copy->NP             = origin->NP;
   copy->Nmax           = origin->Nmax;
   copy->Nlive          = origin->Nlive;
   for(int n=0; n<origin->Nmax; n++)
@@ -353,9 +361,9 @@ void free_noise(struct Noise *noise)
   free(noise);
 }
 
-void alloc_source(struct Source *source, int NFFT, int Nchannel)
+void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP)
 {
-  int NP = 8;
+  source->NP = NP;
   
   //Intrinsic
   source->m1=1.;
@@ -375,6 +383,7 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel)
   source->amp=1.;
   source->Mc=1.;
   source->dfdt=0.;
+  source->d2fdt2=0.;
   
   //Book-keeping
   source->BW   = NFFT;
@@ -404,8 +413,8 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel)
 
 void copy_source(struct Source *origin, struct Source *copy)
 {
-  int NP = 8;
-  
+  copy->NP = origin->NP;
+
   //Intrinsic
   copy->m1 = origin->m1;
   copy->m2 = origin->m2;
@@ -422,9 +431,10 @@ void copy_source(struct Source *origin, struct Source *copy)
   
   //Derived
   copy->amp  = origin->amp;
-  copy->dfdt = origin->dfdt;
   copy->Mc   = origin->Mc;
-  
+  copy->dfdt = origin->dfdt;
+  copy->d2fdt2 = origin->d2fdt2;
+
   //Book-keeping
   copy->BW   = origin->BW;
   copy->qmin = origin->qmin;
@@ -436,9 +446,9 @@ void copy_source(struct Source *origin, struct Source *copy)
   copy_tdi(origin->tdi,copy->tdi);
   
   //FIsher
-  for(int i=0; i<NP; i++)
+  for(int i=0; i<origin->NP; i++)
   {
-    for(int j=0; j<NP; j++)
+    for(int j=0; j<origin->NP; j++)
     {
       copy->fisher_matrix[i][j] = origin->fisher_matrix[i][j];
       copy->fisher_evectr[i][j] = origin->fisher_evectr[i][j];
@@ -450,7 +460,7 @@ void copy_source(struct Source *origin, struct Source *copy)
 
 void free_source(struct Source *source)
 {
-  int NP=8;
+  int NP=source->NP;
   for(int i=0; i<NP; i++)
   {
     free(source->fisher_matrix[i]);

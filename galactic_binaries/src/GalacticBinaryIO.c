@@ -71,7 +71,8 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
       data[i][j]->t0       = 0.0;
       data[i][j]->tgap     = 0.0;
       data[i][j]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
-      data[i][j]->N        = 256;
+      data[i][j]->N        = 1024;
+      data[i][j]->NP       = 8; //default includes fdot
       data[i][j]->Nchannel = 2; //1=X, 2=AE
       
       data[i][j]->cseed = 150914+i*Nmax+j;
@@ -108,6 +109,7 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
     {"zero-noise", no_argument,    0,   0  },
     {"fix-sky", no_argument,       0,   0  },
     {"known-source",no_argument,   0,   0  },
+    {"f-double-dot",no_argument,   0,   0  },
     {"prior",   no_argument,       0,   0  },
     {"cheat",   no_argument,       0,   0  },
     {0,         0,                 0,   0  }
@@ -143,6 +145,7 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
+        if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
         if(strcmp("known-source",long_options[long_index].name) == 0)
         {
           flags->knownSource = 1;
@@ -204,6 +207,7 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
       data[i][j]->tgap     = data[0][0]->tgap;
       data[i][j]->T        = data[0][0]->T;
       data[i][j]->N        = data[0][0]->N;
+      data[i][j]->NP       = data[0][0]->NP;
       data[i][j]->Nchannel = data[0][0]->Nchannel;
       
       data[i][j]->cseed = data[0][0]->cseed+i*flags->injection + j;
@@ -372,6 +376,8 @@ void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
   fprintf(fptr,"%lg ",source->cosi);
   fprintf(fptr,"%lg ",source->psi);
   fprintf(fptr,"%lg ",source->phi0);
+  if(source->NP>8)
+    fprintf(fptr,"%lg ",source->d2fdt2);
 }
 
 void save_waveforms(struct Data *data, struct Model *model, int mcmc)
@@ -517,7 +523,7 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
     E_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1], 1, data->Nwave, 0.05);
     E_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1], 1, data->Nwave, 0.95);
     
-    fprintf(fptr_res,"%lg ",f);
+    fprintf(fptr_res,"%.12g ",f);
     fprintf(fptr_res,"%lg ",A_med);
     fprintf(fptr_res,"%lg ",A_lo_50);
     fprintf(fptr_res,"%lg ",A_hi_50);
@@ -543,7 +549,7 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
     E_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][1], 1, data->Nwave, 0.95);
     
     
-    fprintf(fptr_rec,"%lg ",f);
+    fprintf(fptr_rec,"%.12g ",f);
     fprintf(fptr_rec,"%lg ",A_med);
     fprintf(fptr_rec,"%lg ",A_lo_50);
     fprintf(fptr_rec,"%lg ",A_hi_50);
@@ -570,7 +576,7 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
     E_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1], 1, data->Nwave, 0.95);
     
     
-    fprintf(fptr_Snf,"%lg ",f);
+    fprintf(fptr_Snf,"%.12g ",f);
     fprintf(fptr_Snf,"%lg ",A_med);
     fprintf(fptr_Snf,"%lg ",A_lo_50);
     fprintf(fptr_Snf,"%lg ",A_hi_50);

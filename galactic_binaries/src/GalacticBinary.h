@@ -35,6 +35,7 @@ struct Data
   double ***S_pow; // N x Nchannel x NMCMC
   
   //Injection
+  int NP; //number of parameters of injection
   struct Source *inj;
   
   //Spectrum proposal
@@ -98,6 +99,7 @@ struct Source
   //Derived
   double amp;
   double dfdt;
+  double d2fdt2;
   double Mc;
   
   //Book-keeping
@@ -116,6 +118,7 @@ struct Source
   double *fisher_evalue;
 
   //Package parameters for waveform generator
+  int NP;
   double *params;
 
 };
@@ -136,6 +139,7 @@ struct Noise
 struct Model
 {
   //Source parameters
+  int NP;     //maximum number of signal parameters
   int Nmax;   //maximum number of signals in model
   int Nlive;  //current number of signals in model
   struct Source **source;

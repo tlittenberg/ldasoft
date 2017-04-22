@@ -44,7 +44,7 @@ gb_catalog : GalacticBinaryCatalog.c $(OBJS) GalacticBinary.h
 	$(CC) $(CCFLAGS) -o gb_catalog GalacticBinaryCatalog.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
 
 install : gb_mcmc gb_catalog
-	install gb_mcmc gb_catalog /Users/tlittenb/ldasoft/master/bin/
+	install gb_mcmc gb_catalog ${HOME}/ldasoft/master/bin/
 
 clean:
 	rm *.o gb_mcmc gb_catalog

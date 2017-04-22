@@ -163,7 +163,7 @@ void GalacticBinaryInjectVerificationSource(struct Data ***data_vec, struct Orbi
       for(int i=0; i<data->N; i++)
       {
         double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%lg %lg %lg ",
+        fprintf(fptr,"%.12g %lg %lg ",
                 f,
                 data->tdi->A[2*i]*data->tdi->A[2*i]+data->tdi->A[2*i+1]*data->tdi->A[2*i+1],
                 data->tdi->E[2*i]*data->tdi->E[2*i]+data->tdi->E[2*i+1]*data->tdi->E[2*i+1]);
@@ -228,7 +228,7 @@ void GalacticBinaryInjectVerificationSource(struct Data ***data_vec, struct Orbi
       for(int i=0; i<data->N; i++)
       {
         double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%lg %lg %lg ",
+        fprintf(fptr,"%.12g %lg %lg ",
                 f,
                 data->tdi->A[2*i]*data->tdi->A[2*i]+data->tdi->A[2*i+1]*data->tdi->A[2*i+1],
                 data->tdi->E[2*i]*data->tdi->E[2*i]+data->tdi->E[2*i+1]*data->tdi->E[2*i+1]);
@@ -326,6 +326,9 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         inj->cosi     = cos(iota);
         inj->phi0     = phi0;
         inj->psi      = psi;
+        if(data->NP>8)
+          inj->d2fdt2 = 11.0/3.0*dfdt*dfdt/f0;
+
         map_params_to_array(inj, inj->params, data->T);
         
         //save parameters to file
@@ -376,7 +379,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         for(int i=0; i<data->N; i++)
         {
           double f = (double)(i+data->qmin)/data->T;
-          fprintf(fptr,"%lg %lg %lg ",
+          fprintf(fptr,"%.12g %lg %lg ",
                   f,
                   data->tdi->A[2*i]*data->tdi->A[2*i]+data->tdi->A[2*i+1]*data->tdi->A[2*i+1],
                   data->tdi->E[2*i]*data->tdi->E[2*i]+data->tdi->E[2*i+1]*data->tdi->E[2*i+1]);
@@ -417,12 +420,12 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         
         galactic_binary_fisher(orbit, data, inj, data->noise);
 
-        /*
+
          printf("\n Fisher Matrix:\n");
-         for(int i=0; i<8; i++)
+         for(int i=0; i<data->NP; i++)
          {
          fprintf(stdout," ");
-         for(int j=0; j<8; j++)
+         for(int j=0; j<data->NP; j++)
          {
          if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
          else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
@@ -431,8 +434,8 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
          }
          
          printf("\n Fisher std. errors:\n");
-         for(int j=0; j<8; j++)  fprintf(stdout," %.4e\n", 1./sqrt(inj->fisher_evalue[j]));
-         */
+         for(int j=0; j<data->NP; j++)  fprintf(stdout," %.4e\n", 1./sqrt(inj->fisher_matrix[j][j]));
+
         
         
         sprintf(filename,"power_data_%i_%i.dat",ii,jj);
@@ -441,7 +444,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         for(int i=0; i<data->N; i++)
         {
           double f = (double)(i+data->qmin)/data->T;
-          fprintf(fptr,"%lg %lg %lg ",
+          fprintf(fptr,"%.12g %lg %lg ",
                   f,
                   data->tdi->A[2*i]*data->tdi->A[2*i]+data->tdi->A[2*i+1]*data->tdi->A[2*i+1],
                   data->tdi->E[2*i]*data->tdi->E[2*i]+data->tdi->E[2*i+1]*data->tdi->E[2*i+1]);

@@ -82,9 +82,9 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
 
 double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed)
 {
-  for(int n=0; n<8; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  for(int n=0; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   
-  for(int j=0; j<8; j++)
+  for(int j=0; j<source->NP; j++)
   {
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
@@ -95,7 +95,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed)
 {
   for(int n=1; n<3; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  for(int n=4; n<7; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  for(int n=4; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   
   for(int j=0; j<8; j++)
   {
@@ -108,7 +108,7 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
 double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed)
 {
   int i,j;
-  int NP=8;
+  int NP=source->NP;
   double sqNP = 2.82842712474619; //sqrt(8)
   double Amps[NP];
   double jump[NP];
@@ -152,7 +152,7 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, d
   
   //update all parameters with a draw from the fisher
   //draw_from_fisher(data, model, source, params, seed);
-  for(int n=1; n<8; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
 
   //perturb frequency by 1 fm
   double scale = floor(4*gsl_ran_gaussian(seed,1));

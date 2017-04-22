@@ -62,12 +62,20 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   
   //fdot (bins/Tobs)
   /* emprical envolope functions from Gijs' MLDC catalog */
+  if(data->NP>7)
+  {
   model->prior[7][0] = -0.000005*pow(data->qmin/data->T,(13./3.))*data->T*data->T;//-10.0;
   model->prior[7][1] = 0.0000008*pow(data->qmin/data->T,(11./3.))*data->T*data->T;//+10.0;
-  
+  }
+  if(data->NP>8)
+  {
+    model->prior[8][0]=-10;
+    model->prior[8][1]= 10;
+  }
+
   //set prior volume
   model->logPriorVolume = 0.0;
-  for(int n=0; n<8; n++) model->logPriorVolume -= log(model->prior[n][1]-model->prior[n][0]);
+  for(int n=0; n<data->NP; n++) model->logPriorVolume -= log(model->prior[n][1]-model->prior[n][0]);
   
 }
 

@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     for(int nseg = 0; nseg < flags->segment; nseg++)
     {
       trial[ic][nseg] = malloc(sizeof(struct Model));
-      alloc_model(trial[ic][nseg],NMAX,data[0][nseg]->N,data[0][nseg]->Nchannel);
+      alloc_model(trial[ic][nseg],NMAX,data[0][nseg]->N,data[0][nseg]->Nchannel,data[0][nseg]->NP);
     }
     
     
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
         struct Model *model_ptr = model[ic][i][nseg];
         struct Data  *data_ptr  = data[i][nseg];
         
-        alloc_model(model_ptr,NMAX,data_ptr->N,data_ptr->Nchannel);
+        alloc_model(model_ptr,NMAX,data_ptr->N,data_ptr->Nchannel, data_ptr->NP);
         
         set_uniform_prior(model_ptr, data_ptr);
         
@@ -145,6 +145,7 @@ int main(int argc, char *argv[])
             model_ptr->source[n]->cosi     = inj->cosi;
             model_ptr->source[n]->phi0     = inj->phi0;
             model_ptr->source[n]->psi      = inj->psi;
+            model_ptr->source[n]->d2fdt2   = inj->d2fdt2;
             map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
 
           }
@@ -529,7 +530,7 @@ void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, 
     {
       trial[i][j] = malloc(sizeof(struct Model));
       
-      alloc_model(trial[i][j],model[i][j]->Nmax,data[i][j]->N,data[i][j]->Nchannel);
+      alloc_model(trial[i][j],model[i][j]->Nmax,data[i][j]->N,data[i][j]->Nchannel, data[i][j]->NP);
       
       set_uniform_prior(trial[i][j], data[i][j]);
       

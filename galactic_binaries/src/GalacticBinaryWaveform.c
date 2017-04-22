@@ -55,7 +55,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   //TODO:  galactic_binary_fisher should compute joint Fisher
   int i,j,n;
   
-  int NP = 8;
+  int NP = source->NP;
   
   double epsilon    = 1.0e-7;
   double invepsilon2= 1./(2.*epsilon);
@@ -67,8 +67,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   // Plus and minus templates for each detector:
   struct Source *wave_p = malloc(sizeof(struct Source));
   struct Source *wave_m = malloc(sizeof(struct Source));
-  alloc_source(wave_p, data->N, data->Nchannel);
-  alloc_source(wave_m, data->N, data->Nchannel);
+  alloc_source(wave_p, data->N, data->Nchannel, NP);
+  alloc_source(wave_m, data->N, data->Nchannel, NP);
 
   // TDI variables to hold derivatives of h
   struct TDI **dhdx = malloc(NP*sizeof(struct TDI *));
@@ -77,7 +77,13 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     dhdx[n] = malloc(sizeof(struct TDI));
     alloc_tdi(dhdx[n], data->N, data->Nchannel);
   }
-  
+//  printf("Parameters = {\n");
+//  for(j=0; j<NP; j++)
+//  {
+//    printf("   %g\n", source->params[j]);
+//  }
+//  printf("}\n");
+
   /* assumes all the parameters are log or angle */
   int N2 = data->N*2;
   for(i=0; i<NP; i++)
