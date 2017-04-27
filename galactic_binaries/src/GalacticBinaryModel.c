@@ -111,10 +111,10 @@ void alloc_data(struct Data ***data_vec, struct Flags *flags, int NMCMC)
   }
 }
 
-void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, int NC)
+void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
 {
   int ic;
-  chain->NC = NC;
+  int NC = chain->NC;
   chain->index = malloc(NC*sizeof(int));
   chain->acceptance = malloc(NC*sizeof(double));
   chain->temperature = malloc(NC*sizeof(double));
@@ -235,13 +235,145 @@ void copy_model(struct Model *origin, struct Model *copy)
   copy->t0_max = origin->t0_max;
 
   //Source parameter priors
-  for(int n=0; n<8; n++) for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
+  for(int n=0; n<origin->NP; n++) for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
   copy->logPriorVolume = origin->logPriorVolume;
 
   //Model likelihood
   copy->logL           = origin->logL;
   copy->logLnorm       = origin->logLnorm;
 }
+
+int compare_model(struct Model *a, struct Model *b)
+{
+  int err = 0;
+
+  //Source parameters
+  if(a->NP    != b->NP)    err++;  //maximum number of signal parameters
+  if(a->Nmax  != b->Nmax)  err++;  //maximum number of signals in model
+  if(a->Nlive != b->Nlive) err++;  //current number of signals in model
+
+  //struct Source **source;
+  for(int i=0; i<a->Nlive; i++)
+  {
+    struct Source *sa = a->source[i];
+    struct Source *sb = b->source[i];
+
+    //Intrinsic
+    if(sa->m1 != sb->m1) err++;
+    if(sa->m2 != sb->m2) err++;
+    if(sa->f0 != sb->f0) err++;
+
+    //Extrinisic
+    if(sa->psi  != sb->psi)  err++;
+    if(sa->cosi != sb->cosi) err++;
+    if(sa->phi0 != sb->phi0) err++;
+
+    if(sa->D        != sb->D)        err++;
+    if(sa->phi      != sb->phi)      err++;
+    if(sa->costheta != sb->costheta) err++;
+
+    //Derived
+    if(sa->amp    != sb->amp)    err++;
+    if(sa->dfdt   != sb->dfdt)   err++;
+    if(sa->d2fdt2 != sb->d2fdt2) err++;
+    if(sa->Mc     != sb->Mc)     err++;
+
+    //Book-keeping
+    if(sa->BW   != sb->BW)   err++;
+    if(sa->qmin != sb->qmin) err++;
+    if(sa->qmax != sb->qmax) err++;
+    if(sa->imin != sb->imin) err++;
+    if(sa->imax != sb->imax) err++;
+
+    //Response
+    //TDI
+    struct TDI *tsa = sa->tdi;
+    struct TDI *tsb = sb->tdi;
+
+    if(tsa->N != tsb->N) err++;
+    if(tsa->Nchannel != tsb->Nchannel) err++;
+
+    for(int i=0; i<2*tsa->N; i++)
+    {
+
+      //Michelson
+      if(tsa->X[i] != tsb->X[i]) err++;
+      if(tsa->Y[i] != tsb->Y[i]) err++;
+      if(tsa->Z[i] != tsb->Z[i]) err++;
+
+      //Noise-orthogonal
+      if(tsa->A[i] != tsb->A[i]) err++;
+      if(tsa->E[i] != tsb->E[i]) err++;
+      if(tsa->T[i] != tsb->T[i]) err++;
+    }
+
+    //Fisher matrix
+    //double **fisher_matrix;
+    //double **fisher_evectr;
+    //double *fisher_evalue;
+
+    //Package parameters for waveform generator
+    if(sa->NP != sb->NP) err++;
+    for(int j=0; j<sa->NP; j++) if(sa->params[j] != sb->params[j]) err++;
+
+  }
+  printf("   errorcheck1 %i\n",err);
+  //Noise parameters
+  struct Noise *na = a->noise;
+  struct Noise *nb = b->noise;
+
+  if(na->N != nb->N) err++;
+
+  if(na->etaA != nb->etaA) err++;
+  if(na->etaE != nb->etaE) err++;
+  if(na->etaX != nb->etaX) err++;
+
+  for(int i=0; i<na->N; i++)
+  {
+    if(na->SnA[i] != nb->SnA[i]) err++;
+    if(na->SnE[i] != nb->SnE[i]) err++;
+    if(na->SnX[i] != nb->SnX[i]) err++;
+  }
+
+  //TDI
+  struct TDI *ta = a->tdi;
+  struct TDI *tb = b->tdi;
+
+  if(ta->N != tb->N) err++;
+  if(ta->Nchannel != tb->Nchannel) err++;
+
+  for(int i=0; i<2*ta->N; i++)
+  {
+
+    //Michelson
+    if(ta->X[i] != tb->X[i]) err++;
+    if(ta->Y[i] != tb->Y[i]) err++;
+    if(ta->Z[i] != tb->Z[i]) err++;
+
+    //Noise-orthogonal
+    if(ta->A[i] != tb->A[i]) err++;
+    if(ta->E[i] != tb->E[i]) err++;
+    if(ta->T[i] != tb->T[i]) err++;
+  }
+  printf("   errorcheck2 %i\n",err);
+
+  //Start time for segment for model
+  if(a->t0     != b->t0)     err++;
+  if(a->t0_min != b->t0_min) err++;
+  if(a->t0_max != b->t0_max) err++;
+
+  //Source parameter priors
+  //double **prior;
+  if(a->logPriorVolume != b->logPriorVolume) err++;
+
+  //Model likelihood
+  if(a->logL     != b->logL)     err++;
+  if(a->logLnorm != b->logLnorm) err++;
+
+  return err;
+}
+
+
 
 void free_model(struct Model *model)
 {
@@ -430,9 +562,9 @@ void copy_source(struct Source *origin, struct Source *copy)
   copy->costheta = origin->costheta;
   
   //Derived
-  copy->amp  = origin->amp;
-  copy->Mc   = origin->Mc;
-  copy->dfdt = origin->dfdt;
+  copy->amp    = origin->amp;
+  copy->Mc     = origin->Mc;
+  copy->dfdt   = origin->dfdt;
   copy->d2fdt2 = origin->d2fdt2;
 
   //Book-keeping
@@ -530,14 +662,21 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
   for(n=0; n<model->Nlive; n++)
   {
     source = model->source[n];
-    
+
+    for(i=0; i<N2; i++)
+    {
+      source->tdi->X[i]=0.0;
+      source->tdi->A[i]=0.0;
+      source->tdi->E[i]=0.0;
+    }
+
     map_array_to_params(source, source->params, data->T);
     
     //Book-keeping of injection time-frequency volume
     galactic_binary_alignment(orbit, data, source);
     
     //Simulate gravitational wave signal
-    galactic_binary(orbit, data->T, model->t0, source->params, 8, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+    galactic_binary(orbit, data->T, model->t0, source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
     
     //Add waveform to model TDI channels
     for(i=0; i<source->BW; i++)

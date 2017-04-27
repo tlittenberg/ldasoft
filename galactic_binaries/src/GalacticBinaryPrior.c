@@ -54,7 +54,7 @@ void set_uniform_prior(struct Model *model, struct Data *data)
 
   //polarization
   model->prior[5][0] = 0.0;
-  model->prior[5][1] = M_PI/4.0;
+  model->prior[5][1] = PI2;
 
   //phase
   model->prior[6][0] = 0.0;

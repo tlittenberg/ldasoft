@@ -177,9 +177,10 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
 }
 
 
-int galactic_binary_bandwidth(double L, double fstar, double f, double A, double T, int N)
+int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, double A, double T, int N)
 {
   int q  = (int)floor(f*T);
+  int p  = (int)floor(fabs(fdot)*T*T);
   double sqT=sqrt(T);
 
   double sf = sin(f/fstar); //sin(f/f*)
@@ -191,6 +192,8 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double A, double
   if(q > 629145)  DS = 512;
   if(q > 1887436) DS = 1024;
   if(q > 6291456) DS = 2048;
+
+  if(p>64) DS*=2;
   
   //Sinc spreading
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
@@ -206,7 +209,7 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
 {
   map_array_to_params(source, source->params, data->T);
   
-  source->BW   = galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->amp, data->T, data->N);
+  source->BW   = galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->dfdt, source->amp, data->T, data->N);
   source->qmin = (int)(source->f0*data->T) - source->BW/2;
   source->qmax = source->qmin+source->BW;
   source->imin = source->qmin - data->qmin;

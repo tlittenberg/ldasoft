@@ -155,7 +155,7 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, d
   for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
 
   //perturb frequency by 1 fm
-  double scale = floor(4*gsl_ran_gaussian(seed,1));
+  double scale = floor(6*gsl_ran_gaussian(seed,1));
   
   params[0] += scale*fm;
   //params[7] += scale*fm*fm;

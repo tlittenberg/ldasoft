@@ -341,10 +341,14 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         
         //Book-keeping of injection time-frequency volume
         galactic_binary_alignment(orbit, data, inj);
+
+        printf("   ...bandwidth : %i\n",inj->BW);
+        printf("   ...fdot      : %g\n",inj->dfdt*data->T*data->T);
+        printf("   ...fddot     : %g\n",inj->d2fdt2*data->T*data->T*data->T);
         
         //Simulate gravitational wave signal
         //double t0 = data->t0 + jj*(data->T + data->tgap);
-        galactic_binary(orbit, data->T, data->t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+        galactic_binary(orbit, data->T, data->t0, inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
         
         //Add waveform to data TDI channels
         for(int n=0; n<inj->BW; n++)

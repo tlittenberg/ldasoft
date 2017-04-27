@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
   struct Flags *flags       = malloc(sizeof(struct Flags));
   struct Orbit *orbit       = malloc(sizeof(struct Orbit));
   struct Data  ***data_ptr  = malloc(sizeof(struct Data**)*NMAX);
+  struct Chain *chain       = malloc(sizeof(struct Chain));
   
   /* Parse command line and set defaults/flags */
   for(int i=0; i<NMAX; i++)
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
     data_ptr[i] = malloc(sizeof(struct Data*)*NMAX);
     for(int j=0; j<NMAX; j++) data_ptr[i][j] = malloc(sizeof(struct Data));
   }
-  parse(argc,argv,data_ptr,orbit,flags,NMAX);
+  parse(argc,argv,data_ptr,orbit,flags,chain,NMAX);
   
   /* Load spacecraft ephemerides */
   switch(flags->orbit)

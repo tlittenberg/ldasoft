@@ -55,6 +55,7 @@ struct Flags
   int orbit;
   int prior;
   int cheat;
+  int burnin;
   
   char **injFile;
 };

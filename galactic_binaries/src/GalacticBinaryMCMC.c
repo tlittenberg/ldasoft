@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
   time_t start, stop;
   start = time(NULL);
   
-  int NC    = 20;   //number of chains
   int NMAX  = 12;   //max number of waveforms & time segments
   int NMCMC = 10000; //number of MCMC steps
   int NBURN = 10000; //number of burn-in steps
@@ -52,9 +51,7 @@ int main(int argc, char *argv[])
   struct Orbit *orbit   = malloc(sizeof(struct Orbit));
   struct Chain *chain   = malloc(sizeof(struct Chain));
   struct Data  ***data  = malloc(sizeof(struct Data**)*NMAX); //data[source][segment]
-  struct Model ***trial = malloc(sizeof(struct Model**)*NC);  //trial[chain][segment]
-  struct Model ****model= malloc(sizeof(struct Model***)*NC); //model[chain][source][segment]
-  
+
   
   /* Parse command line and set defaults/flags */
   for(int i=0; i<NMAX; i++)
@@ -62,9 +59,14 @@ int main(int argc, char *argv[])
     data[i] = malloc(sizeof(struct Data*)*NMAX);
     for(int j=0; j<NMAX; j++) data[i][j] = malloc(sizeof(struct Data));
   }
-  parse(argc,argv,data,orbit,flags,NMAX);
-  
-  
+  parse(argc,argv,data,orbit,flags,chain,NMAX);
+  int NC = chain->NC;
+
+  /* Allocate model structures */
+  struct Model ***trial = malloc(sizeof(struct Model**)*NC);  //trial[chain][segment]
+  struct Model ****model= malloc(sizeof(struct Model***)*NC); //model[chain][source][segment]
+
+
   /* Load spacecraft ephemerides */
   switch(flags->orbit)
   {
@@ -95,7 +97,7 @@ int main(int argc, char *argv[])
   
 
   /* Initialize parallel chain */
-  initialize_chain(chain, flags, &data[0][0]->cseed, NC);
+  initialize_chain(chain, flags, &data[0][0]->cseed);
   
   
   /* Initialize data models */
@@ -137,9 +139,10 @@ int main(int argc, char *argv[])
           {
             struct Source *inj = data_ptr->inj;
             //map parameters to vector
+            model_ptr->source[n]->NP       = inj->NP;
             model_ptr->source[n]->f0       = inj->f0;
             model_ptr->source[n]->dfdt     = inj->dfdt;
-            model_ptr->source[n]->costheta = inj->costheta;;
+            model_ptr->source[n]->costheta = inj->costheta;
             model_ptr->source[n]->phi      = inj->phi;
             model_ptr->source[n]->amp      = inj->amp;
             model_ptr->source[n]->cosi     = inj->cosi;
@@ -157,7 +160,7 @@ int main(int argc, char *argv[])
         // Form master model & compute likelihood of starting position
         generate_noise_model(data_ptr, model_ptr);
         generate_signal_model(orbit, data_ptr, model_ptr);
-        
+
         model_ptr->logL     = gaussian_log_likelihood(orbit, data_ptr, model_ptr);
         model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data_ptr, model_ptr);
         
@@ -170,6 +173,8 @@ int main(int argc, char *argv[])
   /* The MCMC loop */
   for(int mcmc = -NBURN; mcmc < NMCMC; mcmc++)
   {
+    if(mcmc<0) flags->burnin=1;
+    else       flags->burnin=0;
 #pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags)
     for(ic=0; ic<NC; ic++)
     {
@@ -198,7 +203,7 @@ int main(int argc, char *argv[])
       }//loop over frequency segments
       
       //update start time for data segments
-      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, ic);
+      data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, ic);
       
     }// (parallel) loop over chains
     
@@ -444,10 +449,11 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
     draw_from_prior(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
   else if(draw < 0.2)
   {
-    //draw_from_prior(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
-    draw_from_spectrum(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
-    logQyx = log(data[0]->p[(int)(source_y->params[0]-data[0]->qmin)]);
-    logQxy = log(data[0]->p[(int)(source_x->params[0]-data[0]->qmin)]);
+    draw_from_prior(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
+    //TODO: Spectrum draw is not compatible with multiple sources
+//    draw_from_spectrum(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
+//    logQyx = log(data[0]->p[(int)(source_y->params[0]-data[0]->qmin)]);
+//    logQxy = log(data[0]->p[(int)(source_x->params[0]-data[0]->qmin)]);
   }
   else if(draw<0.3)
     draw_from_extrinsic_prior(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
@@ -455,9 +461,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
   /* no proposal density terms because proposal is symmetric */
     draw_from_fisher(data[0], model_x[0], source_x, source_y->params, chain->r[ic]);
   else
+  {
   /* no proposal density terms because proposal is symmetric */
     fm_shift(data[0], model_x[0], source_x, source_y->params, chain->r[ic]);
-  
+  }
   //t0_shift(model_y[0], chain->r[ic]);
   
   map_array_to_params(source_y, source_y->params, data[0]->T);

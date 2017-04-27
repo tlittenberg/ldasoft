@@ -26,11 +26,13 @@ void map_array_to_params(struct Source *source, double *params, double T);
 
 void alloc_data(struct Data ***data_vec, struct Flags *flags, int NMCMC);
 
-void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, int NC);
+void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed);
 void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP);
 void alloc_noise(struct Noise *noise, int NFFT);
 void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel);
 void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP);
+
+int compare_model(struct Model *a, struct Model *b);
 
 void copy_source(struct Source *origin, struct Source *copy);
 void copy_model(struct Model *origin, struct Model *copy);

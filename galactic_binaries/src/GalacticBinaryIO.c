@@ -38,12 +38,16 @@ void print_usage()
   fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
   fprintf(stdout,"       --noiseseed   : seed for noise RNG                  \n");
   fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
+  fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
   fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
   fprintf(stdout,"       --inj         : inject signal                       \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
+  fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
+  fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
+  fprintf(stdout,"       --prior       : sample from prior                   \n");
   fprintf(stdout,"--\n");
   fprintf(stdout,"EXAMPLE:\n");
   fprintf(stdout,"./gb_mcmc --orbit ../config/OrbitConfig1.txt --verbose --inj ../data/sources/RXJ0806.dat\n");
@@ -51,7 +55,7 @@ void print_usage()
   exit(EXIT_FAILURE);
 }
 
-void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, struct Flags *flags, int Nmax)
+void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
 {
   //Set defaults
   flags->verbose     = 0;
@@ -63,7 +67,8 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
   flags->segment     = 1;
   flags->orbit       = 0;
   flags->prior       = 0;
-  
+  chain->NC          = 20;
+
   for(int i=0; i<Nmax; i++)
   {
     for(int j=0; j<Nmax; j++)
@@ -96,6 +101,7 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
     {"start-time",required_argument, 0, 0},
     {"gap-time",  required_argument, 0, 0},
     {"orbit",     required_argument, 0, 0},
+    {"chains",    required_argument, 0, 0},
     {"chainseed", required_argument, 0, 0},
     {"noiseseed", required_argument, 0, 0},
     {"injseed",   required_argument, 0, 0},
@@ -138,6 +144,7 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
         if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
         if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0      = (double)atof(optarg);
         if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap    = (double)atof(optarg);
+        if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
         if(strcmp("chainseed",   long_options[long_index].name) == 0) data_ptr->cseed   = (long)atoi(optarg);
         if(strcmp("noiseseed",   long_options[long_index].name) == 0) data_ptr->nseed   = (long)atoi(optarg);
         if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
@@ -442,6 +449,27 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
   }
 }
 
+void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
+{
+  for(int n=0; n<data->N; n++)
+  {
+    int re = 2*n;
+    int im = re+1;
+    double f = data->fmin + (double)n/data->T;
+    fprintf(fptr,"%.12g ",f);
+    fprintf(fptr,"%.12g ",data->tdi->A[re]);
+    fprintf(fptr,"%.12g ",data->tdi->A[im]);
+    fprintf(fptr,"%.12g ",data->tdi->E[re]);
+    fprintf(fptr,"%.12g ",data->tdi->E[im]);
+    fprintf(fptr,"%.12g ",model->tdi->A[re]);
+    fprintf(fptr,"%.12g ",model->tdi->A[im]);
+    fprintf(fptr,"%.12g ",model->tdi->E[re]);
+    fprintf(fptr,"%.12g ",model->tdi->E[im]);
+    fprintf(fptr,"\n");
+  }
+
+}
+
 void print_waveform_draw(struct Data ***data, struct Model ***model, struct Flags *flags)
 {
   FILE *fptr;
@@ -453,24 +481,7 @@ void print_waveform_draw(struct Data ***data, struct Model ***model, struct Flag
     {
       sprintf(filename,"waveform_draw_%i_%i.dat",i,j);
       fptr=fopen(filename,"w");
-      for(int n=0; n<data[i][j]->N; n++)
-      {
-        int re = 2*n;
-        int im = re+1;
-        double f = data[i][j]->fmin + (double)n/data[i][j]->T;
-        fprintf(fptr,"%lg ",f);
-//        fprintf(fptr,"%lg ",model[i][j]->tdi->A[re]*model[i][j]->tdi->A[re] + model[i][j]->tdi->A[im]*model[i][j]->tdi->A[im]);
-//        fprintf(fptr,"%lg ",model[i][j]->tdi->E[re]*model[i][j]->tdi->E[re] + model[i][j]->tdi->E[im]*model[i][j]->tdi->E[im]);
-        fprintf(fptr,"%lg ",data[i][j]->tdi->A[re]);
-        fprintf(fptr,"%lg ",data[i][j]->tdi->A[im]);
-        fprintf(fptr,"%lg ",data[i][j]->tdi->E[re]);
-        fprintf(fptr,"%lg ",data[i][j]->tdi->E[im]);
-        fprintf(fptr,"%lg ",model[i][j]->tdi->A[re]);
-        fprintf(fptr,"%lg ",model[i][j]->tdi->A[im]);
-        fprintf(fptr,"%lg ",model[i][j]->tdi->E[re]);
-        fprintf(fptr,"%lg ",model[i][j]->tdi->E[im]);
-        fprintf(fptr,"\n");
-      }
+      print_waveform(data[i][j], model[i][j], fptr);
       fclose(fptr);
     }
   }
