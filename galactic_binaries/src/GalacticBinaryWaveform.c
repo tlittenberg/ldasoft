@@ -103,6 +103,17 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     map_array_to_params(wave_p, wave_p->params, data->T);
     map_array_to_params(wave_m, wave_m->params, data->T);
 
+    // clean up TDI arrays, just in case
+    for(j=0; j<N2; j++)
+    {
+      wave_p->tdi->X[j]=0.0;
+      wave_p->tdi->A[j]=0.0;
+      wave_p->tdi->E[j]=0.0;
+      wave_m->tdi->X[j]=0.0;
+      wave_m->tdi->A[j]=0.0;
+      wave_m->tdi->E[j]=0.0;
+    }
+
     // align perturbed waveforms in data array
     galactic_binary_alignment(orbit, data, wave_p);
     galactic_binary_alignment(orbit, data, wave_m);
@@ -313,8 +324,8 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   Aplus  =  amp*(1.+cosi*cosi);
   Across = -amp*(2.0*cosi);
   
-  df = PI2*(f0 - ((double)q)/T);
-  //df = PI2*(((double)q)/T);
+  //df = PI2*(f0 - ((double)q)/T);
+  df = PI2*(((double)q)/T);
   
   //Calculate constant pieces of transfer functions
   DPr =  Aplus*cosps;
@@ -418,13 +429,14 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
           arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
           
           //Argument of complex exponentials
-          arg2 = df*xi[i] + phi0 - PI2*kdotx[i]*f0;// + PI2*t0*f0;
-          
+          //arg2 = df*xi[i] + phi0 - PI2*kdotx[i]*f0;// + PI2*t0*f0;
+          arg2 = PI2*f0*xi[i] + phi0 - df*t;
+
           //First order frequency evolution
           if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
           
           //Second order frequency evolution
-          if(NP>8) arg2 += M_PI/3.0*d2fdt2*xi[i]*xi[i]*x[i];
+          if(NP>8) arg2 += (M_PI/3.0)*d2fdt2*xi[i]*xi[i]*x[i];
           
           //Transfer function
           sinc = 0.25*sin(arg1)/arg1;

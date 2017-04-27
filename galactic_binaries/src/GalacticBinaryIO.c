@@ -377,14 +377,14 @@ void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
   
   fprintf(fptr,"%.12g ",source->f0);
   fprintf(fptr,"%.12g ",source->dfdt);
-  fprintf(fptr,"%lg ",source->amp);
-  fprintf(fptr,"%lg ",source->phi);
-  fprintf(fptr,"%lg ",source->costheta);
-  fprintf(fptr,"%lg ",source->cosi);
-  fprintf(fptr,"%lg ",source->psi);
-  fprintf(fptr,"%lg ",source->phi0);
+  fprintf(fptr,"%.12g ",source->amp);
+  fprintf(fptr,"%.12g ",source->phi);
+  fprintf(fptr,"%.12g ",source->costheta);
+  fprintf(fptr,"%.12g ",source->cosi);
+  fprintf(fptr,"%.12g ",source->psi);
+  fprintf(fptr,"%.12g ",source->phi0);
   if(source->NP>8)
-    fprintf(fptr,"%lg ",source->d2fdt2);
+    fprintf(fptr,"%.12g ",source->d2fdt2);
 }
 
 void save_waveforms(struct Data *data, struct Model *model, int mcmc)

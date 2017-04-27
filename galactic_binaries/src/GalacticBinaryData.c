@@ -436,9 +436,9 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
          }
          fprintf(stdout,"\n");
          }
-         
+
          printf("\n Fisher std. errors:\n");
-         for(int j=0; j<data->NP; j++)  fprintf(stdout," %.4e\n", 1./sqrt(inj->fisher_matrix[j][j]));
+         for(int j=0; j<data->NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
 
         
         

@@ -91,6 +91,10 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
   gsl_permutation * permutation = gsl_permutation_alloc(N);
   err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
   err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
+
+  // eigenvalues destray matrix
+  for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
+
   err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
   err += gsl_linalg_LU_invert(GSLfisher, permutation, GSLcovari);
   
@@ -104,7 +108,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
       if(i==j)
       {
         evector[i][j]=1.0;
-        evalue[i]=matrix[i][j];
+        evalue[i]=1./matrix[i][j];
       }
     }
     
@@ -123,8 +127,17 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
       }
     }
     
-    for(i=0;i<N-1;i++)for(j=i+1;j<N;j++) gsl_matrix_set(GSLcovari,j,i, gsl_matrix_get(GSLcovari,i,j) );
-    
+    //for(i=0;i<N-1;i++)for(j=i+1;j<N;j++) gsl_matrix_set(GSLcovari,j,i, gsl_matrix_get(GSLcovari,i,j) );
+
+    //copy covariance matrix back into Fisher
+    for(i=0; i<N; i++)
+    {
+      for(j=0; j<N; j++)
+      {
+        matrix[i][j] = gsl_matrix_get(GSLcovari,i,j);
+      }
+    }
+
     //cap minimum size eigenvalues
     for(i=0; i<N; i++)
     {
