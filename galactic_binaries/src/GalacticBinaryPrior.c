@@ -69,8 +69,8 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   }
   if(data->NP>8)
   {
-    model->prior[8][0]=-10;
-    model->prior[8][1]= 10;
+    model->prior[8][0]=-.1;
+    model->prior[8][1]= .1;
   }
 
   //set prior volume

@@ -41,6 +41,7 @@ struct Data
   //Spectrum proposal
   double *p;
   double pmax;
+  double SNR2;
   
 };
 
@@ -68,6 +69,7 @@ struct Chain
   double *acceptance;
   double *temperature;
   double *avgLogL;
+  double annealing;
   double logLmax;
   
   //thread-safe RNG

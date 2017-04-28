@@ -45,7 +45,7 @@ void setup_frequency_proposal(struct Data *data)
     power[i] = power[data->N-BW-1];
     total += power[i];
   }
-
+  
   data->pmax = 0.0;
   for(int i=0; i<data->N; i++)
   {
@@ -54,6 +54,26 @@ void setup_frequency_proposal(struct Data *data)
   }
   fclose(temp);
   
+  
+  //also get SNR^2 of data
+  total = 0.0;
+  for(int n=0; n<data->N; n++)
+  {
+      double SnA = data->noise->SnA[n];
+      double SnE = data->noise->SnE[n];
+      
+      double AA = data->tdi->A[2*n]*data->tdi->A[2*n]+data->tdi->A[2*n+1]*data->tdi->A[2*n+1];
+      double EE = data->tdi->E[2*n]*data->tdi->E[2*n]+data->tdi->E[2*n+1]*data->tdi->E[2*n+1];
+      
+      total += AA/SnA + EE/SnE;
+  }
+
+  data->SNR2 = total - data->N;
+  printf("total=%g, N=%i\n",total, data->N);
+  if(data->SNR2<0.0)data->SNR2=0.0;
+  data->SNR2*=4.0;//why the factor of 4?
+  printf("data-based SNR^2:  %g (%g)\n", data->SNR2, sqrt(data->SNR2));
+
 }
 
 double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed)

@@ -29,6 +29,7 @@ void ptmcmc(struct Model ****model, struct Chain *chain, struct Flags *flags);
 void adapt_temperature_ladder(struct Chain *chain, int mcmc);
 
 void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, int ic);
+void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, int ic);
 void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, int ic);
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic, int Nseg);
 
@@ -175,6 +176,14 @@ int main(int argc, char *argv[])
   {
     if(mcmc<0) flags->burnin=1;
     else       flags->burnin=0;
+    
+    //set annealinging tempurature during burnin
+    if(flags->burnin)
+    {
+      chain->annealing = data[0][0]->SNR2*pow(data[0][0]->SNR2,-((double)mcmc+(double)NBURN)/((double)NBURN/(double)10));
+      if(chain->annealing<1.0)chain->annealing=1.0;
+      printf("T=%g; SNReff = %g\n",chain->annealing, sqrt(data[0][0]->SNR2/chain->annealing));
+    }
 #pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags)
     for(ic=0; ic<NC; ic++)
     {
@@ -191,6 +200,9 @@ int main(int argc, char *argv[])
           /*for(int j=0; j<flags->segment; j++)
            noise_model_mcmc(orbit, data[i], model_ptr[j], trial_ptr[j], chain, flags, ic, j);*/
         }//loop over MCMC steps
+        
+        //delayed rejection mode-hopper
+        if(mcmc<0)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         
         //update fisher matrix for each chain
         if(mcmc%100==0)
@@ -407,7 +419,10 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
      H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
      */
     if(!flags->prior)
+    {
       logH += ( (model_y->logL+model_y->logLnorm) - (model_x->logL+model_x->logLnorm) )/chain->temperature[ic]; //delta logL
+      if(flags->burnin) logH /= chain->annealing;
+    }
     logH += logPy  - logPx;                                         //priors
     
     loga = log(gsl_rng_uniform(chain->r[ic]));
@@ -465,7 +480,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
   /* no proposal density terms because proposal is symmetric */
     fm_shift(data[0], model_x[0], source_x, source_y->params, chain->r[ic]);
   }
-  //t0_shift(model_y[0], chain->r[ic]);
   
   map_array_to_params(source_y, source_y->params, data[0]->T);
   
@@ -504,13 +518,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
          H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
          */
         logH += (model_y[i]->logL - model_x[i]->logL)/chain->temperature[ic]; //delta logL
-//          if(ic==0)
-//          {
-//            fprintf(stderr,"%i %g->%g: ",i,model_x[i]->logL,model_y[i]->logL);
-//            print_source_params(data[i], model_y[i]->source[0], stderr);
-//            fprintf(stderr,"\n");
-//          }
-
+        if(flags->burnin) logH /= chain->annealing;
       }
     }
     logH += logPy  - logPx;  //priors
@@ -520,6 +528,54 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
     if(logH > loga) for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
     
   }
+}
+
+void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, int ic)
+{
+  double logH  = 0.0; //(log) Hastings ratio
+  double loga  = 1.0; //(log) transition probability
+  
+  //shorthand pointers
+  struct Data *data_ptr  = data[0];
+  struct Model **model_x = model;
+  struct Model **model_y = trial;
+  struct Model **temp = malloc(sizeof(struct Model *) * flags->segment);
+  for(int i = 0; i < flags->segment; i++)
+  {
+    temp[i] = malloc(sizeof(struct Model));
+    alloc_model(temp[i],model_x[0]->Nmax,data_ptr->N,data_ptr->Nchannel, data_ptr->NP);
+  }
+  
+  for(int i=0; i<flags->segment; i++)
+  {
+    copy_model(model_x[i],model_y[i]);
+    copy_model(model_x[i],temp[i]);
+  }
+  
+  //pick a source to update
+  int n = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x[0]->Nlive);
+  
+  //more shorthand pointers
+  struct Source *source_x = model_x[0]->source[n];
+  
+  // force fm-shift for temp model
+  fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+  
+  // do a bunch of MCMC steps to evolve from fm-shift
+  for(int i=0; i<20; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, ic);
+    
+  // test current likelihood for model y to original likelihood of model x
+  for(int i=0; i<flags->segment; i++) logH += (model_y[i]->logL - model_x[i]->logL)/chain->temperature[ic];
+  if(flags->burnin) logH /= chain->annealing;
+  loga = log(gsl_rng_uniform(chain->r[ic]));
+  if(logH > loga) for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+  
+  for(int i = 0; i < flags->segment; i++)
+  {
+    free_model(temp[i]);
+  }
+  free(temp);
+
 }
 
 void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, int ic)
@@ -589,7 +645,11 @@ void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, 
       /*
        H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
        */
-      if(!flags->prior)logH += (trial[j][i]->logL - model[j][i]->logL)/chain->temperature[ic];
+      if(!flags->prior)
+      {
+        logH += (trial[j][i]->logL - model[j][i]->logL)/chain->temperature[ic];
+        if(flags->burnin) logH /= chain->annealing;
+      }
       logH += logQ; //delta logL
     }
   }
