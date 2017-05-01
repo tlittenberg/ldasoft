@@ -21,6 +21,14 @@
  proposal prototype
  (func*)(struct, struct, struct, double, gsl_rng)
  */
+struct Proposal
+{
+  double (*function)(struct Data*,struct Model*,struct Source*,double*,gsl_rng*);
+  int *trial;
+  int *accept;
+  char name[128];
+  double weight; /* between 0 and 1 */
+};
 
 void setup_frequency_proposal(struct Data *data);
 double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed);

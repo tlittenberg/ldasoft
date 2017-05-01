@@ -811,7 +811,7 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
   return logLnorm;
 }
 
-void update_max_log_likelihood(struct Model ****model, struct Chain *chain, struct Flags *flags)
+int update_max_log_likelihood(struct Model ****model, struct Chain *chain, struct Flags *flags)
 {
   int n = chain->index[0];
   int N = flags->injection;
@@ -837,7 +837,10 @@ void update_max_log_likelihood(struct Model ****model, struct Chain *chain, stru
       {
         for(int i=0; i<N; i++) for(int j=0; j<flags->segment; j++) copy_model(model[n][i][j],model[chain->index[ic]][i][j]);
       }
+      return 1;
     }
   }
+  
+  return 0;
 }
 

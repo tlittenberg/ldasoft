@@ -28,8 +28,8 @@
 void ptmcmc(struct Model ****model, struct Chain *chain, struct Flags *flags);
 void adapt_temperature_ladder(struct Chain *chain, int mcmc);
 
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, int ic);
-void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, int ic);
+void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
 void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, int ic);
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic, int Nseg);
 
@@ -170,7 +170,61 @@ int main(int argc, char *argv[])
       }//end loop over sources
     }//end loop over segments
   }//end loop over chains
+  
+  
+  /* Initialize MCMC proposals */
+  struct Proposal **proposal = malloc(chain->NP*sizeof(struct Proposal*));
+  double check=0.0;
+  for(int i=0; i<chain->NP; i++)
+  {
+    proposal[i] = malloc(sizeof(struct Proposal));
+    proposal[i]->trial  = malloc(NC*sizeof(int));
+    proposal[i]->accept = malloc(NC*sizeof(int));
     
+    for(ic=0; ic<NC; ic++)
+    {
+      proposal[i]->trial[ic]  = 1;
+      proposal[i]->accept[ic] = 0;
+    }
+    
+    switch(i)
+    {
+      case 0:
+        sprintf(proposal[i]->name,"prior");
+        proposal[i]->function = &draw_from_prior;
+        proposal[i]->weight = 0.1;
+        break;
+      case 1:
+        sprintf(proposal[i]->name,"spectrum");
+        proposal[i]->function = &draw_from_spectrum;
+        proposal[i]->weight = 0.1;
+        break;
+      case 2:
+        sprintf(proposal[i]->name,"extrinsic prior");
+        proposal[i]->function = &draw_from_extrinsic_prior;
+        proposal[i]->weight = 0.1;
+        break;
+      case 3:
+        sprintf(proposal[i]->name,"fisher");
+        proposal[i]->function = &draw_from_fisher;
+        proposal[i]->weight = 0.5;
+        break;
+      case 4:
+        sprintf(proposal[i]->name,"fm shift");
+        proposal[i]->function = &fm_shift;
+        proposal[i]->weight = 0.2;
+        break;
+      default:
+        break;
+    }
+    check+=proposal[i]->weight;
+  }
+  if(check<0.99999)
+  {
+    fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
+    return 1;
+  }
+  
   /* The MCMC loop */
   for(int mcmc = -NBURN; mcmc < NMCMC; mcmc++)
   {
@@ -180,9 +234,8 @@ int main(int argc, char *argv[])
     //set annealinging tempurature during burnin
     if(flags->burnin)
     {
-      chain->annealing = data[0][0]->SNR2*pow(data[0][0]->SNR2,-((double)mcmc+(double)NBURN)/((double)NBURN/(double)10));
+      chain->annealing = data[0][0]->SNR2*pow(data[0][0]->SNR2,-((double)mcmc+(double)NBURN)/((double)NBURN/(double)10))/400.;
       if(chain->annealing<1.0)chain->annealing=1.0;
-      printf("T=%g; SNReff = %g\n",chain->annealing, sqrt(data[0][0]->SNR2/chain->annealing));
     }
 #pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags)
     for(ic=0; ic<NC; ic++)
@@ -195,14 +248,14 @@ int main(int argc, char *argv[])
         
         for(int steps=0; steps < 100; steps++)
         {
-          galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
+          galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
           
           /*for(int j=0; j<flags->segment; j++)
            noise_model_mcmc(orbit, data[i], model_ptr[j], trial_ptr[j], chain, flags, ic, j);*/
         }//loop over MCMC steps
         
         //delayed rejection mode-hopper
-        if(mcmc<0)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
+        if(mcmc<0)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
         
         //update fisher matrix for each chain
         if(mcmc%100==0)
@@ -215,7 +268,7 @@ int main(int argc, char *argv[])
       }//loop over frequency segments
       
       //update start time for data segments
-      data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, ic);
+      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, ic);
       
     }// (parallel) loop over chains
     
@@ -225,8 +278,10 @@ int main(int argc, char *argv[])
     print_chain_files(data[FIXME][FIXME], model, chain, flags, mcmc);
     
     //track maximum log Likelihood
-    if(mcmc%100)update_max_log_likelihood(model, chain, flags);
-    
+    if(mcmc%100)
+    {
+      if(update_max_log_likelihood(model, chain, flags)) mcmc = -NBURN;
+    }
     //store reconstructed waveform
     print_waveform_draw(data, model[chain->index[0]], flags);
     
@@ -431,7 +486,7 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
   
 }
 
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, int ic)
+void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -458,27 +513,25 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
   
   
   //choose proposal distribution
-  double draw = gsl_rng_uniform(chain->r[ic]);
-  if(draw < 0.1)
-  /* no proposal density terms because proposal is symmetric */
-    draw_from_prior(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
-  else if(draw < 0.2)
+  int trial_n;
+  double trial_w;
+  int nprop=-1;
+  
+  while(nprop<0)
   {
-    draw_from_prior(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
-    //TODO: Spectrum draw is not compatible with multiple sources
-//    draw_from_spectrum(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
-//    logQyx = log(data[0]->p[(int)(source_y->params[0]-data[0]->qmin)]);
-//    logQxy = log(data[0]->p[(int)(source_x->params[0]-data[0]->qmin)]);
+    trial_n = (int)floor(5.0*gsl_rng_uniform(chain->r[ic]));
+    trial_w = gsl_rng_uniform(chain->r[ic]);
+    if(trial_w < proposal[trial_n]->weight) nprop = trial_n;
   }
-  else if(draw<0.3)
-    draw_from_extrinsic_prior(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
-  else if(draw<0.8)
-  /* no proposal density terms because proposal is symmetric */
-    draw_from_fisher(data[0], model_x[0], source_x, source_y->params, chain->r[ic]);
-  else
+  proposal[nprop]->trial[ic]++;
+  
+  (*proposal[nprop]->function)(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
+  
+  //TODO: Fix this
+  if(nprop==1)
   {
-  /* no proposal density terms because proposal is symmetric */
-    fm_shift(data[0], model_x[0], source_x, source_y->params, chain->r[ic]);
+    logQyx = log(data[0]->p[(int)(source_y->params[0]-data[0]->qmin)]);
+    logQxy = log(data[0]->p[(int)(source_x->params[0]-data[0]->qmin)]);
   }
   
   map_array_to_params(source_y, source_y->params, data[0]->T);
@@ -525,12 +578,16 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
     logH += logQxy - logQyx; //proposals
         
     loga = log(gsl_rng_uniform(chain->r[ic]));
-    if(logH > loga) for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+    if(logH > loga)
+    {
+      proposal[nprop]->accept[ic]++;
+      for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+    }
     
   }
 }
 
-void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, int ic)
+void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -558,11 +615,25 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
   //more shorthand pointers
   struct Source *source_x = model_x[0]->source[n];
   
-  // force fm-shift for temp model
-  fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+  if(gsl_rng_uniform(chain->r[ic])<0.5)
+  {
+    // force fm-shift for temp model
+    fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+  }
+  else
+  {
+    // force extrinsic update
+    draw_from_extrinsic_prior(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+  }
+ 
+  for(int i=0; i<flags->segment; i++)
+  {
+    generate_signal_model(orbit, data[i], temp[i]);
+    temp[i]->logL = gaussian_log_likelihood(orbit, data[i], temp[i]);
+  }
   
-  // do a bunch of MCMC steps to evolve from fm-shift
-  for(int i=0; i<20; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, ic);
+  // do a bunch of MCMC steps to evolve from forced jump
+  for(int i=0; i<20; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, proposal, ic);
     
   // test current likelihood for model y to original likelihood of model x
   for(int i=0; i<flags->segment; i++) logH += (model_y[i]->logL - model_x[i]->logL)/chain->temperature[ic];

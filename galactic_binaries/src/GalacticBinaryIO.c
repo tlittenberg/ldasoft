@@ -67,7 +67,8 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
   flags->segment     = 1;
   flags->orbit       = 0;
   flags->prior       = 0;
-  chain->NC          = 20;
+  chain->NP          = 5; //number of proposals
+  chain->NC          = 20;//number of chains
 
   for(int i=0; i<Nmax; i++)
   {

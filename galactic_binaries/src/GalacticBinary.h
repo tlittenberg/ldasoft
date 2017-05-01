@@ -65,6 +65,7 @@ struct Chain
 {
   //Number of chains
   int NC;
+  int NP;
   int *index;
   double *acceptance;
   double *temperature;
@@ -167,7 +168,4 @@ struct Model
   double logLnorm;
 };
 
-struct Proposal
-{
-  
-};
+
