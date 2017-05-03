@@ -52,6 +52,15 @@ void print_usage()
   fprintf(stdout,"EXAMPLE:\n");
   fprintf(stdout,"./gb_mcmc --orbit ../config/OrbitConfig1.txt --verbose --inj ../data/sources/RXJ0806.dat\n");
   fprintf(stdout,"\n");
+  fprintf(stdout,"USEFUL TOBS:\n");
+  fprintf(stdout,"   1 wk: %.0f\n",62914560./2./52.);
+  fprintf(stdout,"   1 mo: %.0f \n",62914560./2./12.);
+  fprintf(stdout,"   2 mo: %.0f \n",62914560./2./6.);
+  fprintf(stdout,"   1 yr: %.0f \n",62914560./2.);
+  fprintf(stdout,"   2 yr: %.0f (default)\n",62914560.);
+  fprintf(stdout,"   5 yr: %.0f \n",5.*62914560./2.);
+  fprintf(stdout,"  10 yr: %.0f \n",10.*62914560./2.);
+  fprintf(stdout,"\n");
   exit(EXIT_FAILURE);
 }
 

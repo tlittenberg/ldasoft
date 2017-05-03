@@ -1,9 +1,9 @@
 # OpenMP
 CC = gcc-mp-5
-//CCFLAGS = -fopenmp
+CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m
-CCFLAGS += -g -Wall -std=gnu99
+#CCFLAGS += -g -Wall -std=gnu99
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)

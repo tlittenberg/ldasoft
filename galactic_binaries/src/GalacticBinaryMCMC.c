@@ -62,7 +62,8 @@ int main(int argc, char *argv[])
   }
   parse(argc,argv,data,orbit,flags,chain,NMAX);
   int NC = chain->NC;
-
+  if(flags->cheat) NBURN=0;
+  
   /* Allocate model structures */
   struct Model ***trial = malloc(sizeof(struct Model**)*NC);  //trial[chain][segment]
   struct Model ****model= malloc(sizeof(struct Model***)*NC); //model[chain][source][segment]
@@ -173,9 +174,13 @@ int main(int argc, char *argv[])
   
   
   /* Initialize MCMC proposals */
-  struct Proposal **proposal = malloc(chain->NP*sizeof(struct Proposal*));
+  /*
+   the +1th proposal is the delayed rejection move
+   which doesn't fit in with the others' protocal
+   */
+  struct Proposal **proposal = malloc((chain->NP+1)*sizeof(struct Proposal*));
   double check=0.0;
-  for(int i=0; i<chain->NP; i++)
+  for(int i=0; i<chain->NP+1; i++)
   {
     proposal[i] = malloc(sizeof(struct Proposal));
     proposal[i]->trial  = malloc(NC*sizeof(int));
@@ -214,6 +219,15 @@ int main(int argc, char *argv[])
         proposal[i]->function = &fm_shift;
         proposal[i]->weight = 0.2;
         break;
+      /*
+       delayed rejection proposal does not fit in with others' protocal
+       -must have zero weight
+       -must be last in the list
+       */
+      case 5:
+        sprintf(proposal[i]->name,"delayed rejection");
+        proposal[i]->weight = 0.0;
+        break;
       default:
         break;
     }
@@ -237,7 +251,7 @@ int main(int argc, char *argv[])
       chain->annealing = data[0][0]->SNR2*pow(data[0][0]->SNR2,-((double)mcmc+(double)NBURN)/((double)NBURN/(double)10))/400.;
       if(chain->annealing<1.0)chain->annealing=1.0;
     }
-#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags)
+#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags,proposal)
     for(ic=0; ic<NC; ic++)
     {
       for(int i=0; i<flags->injection; i++)
@@ -255,7 +269,7 @@ int main(int argc, char *argv[])
         }//loop over MCMC steps
         
         //delayed rejection mode-hopper
-        if(mcmc<0)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
+        //if(mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
         
         //update fisher matrix for each chain
         if(mcmc%100==0)
@@ -285,7 +299,11 @@ int main(int argc, char *argv[])
     //store reconstructed waveform
     print_waveform_draw(data, model[chain->index[0]], flags);
     
-    if(mcmc%data[FIXME][FIXME]->downsample==0)print_chain_state(data[FIXME][FIXME], chain, model[chain->index[0]][0], flags, stdout, mcmc);
+    if(mcmc%data[FIXME][FIXME]->downsample==0)
+    {
+      print_chain_state(data[FIXME][FIXME], chain, model[chain->index[0]][0], flags, stdout, mcmc);
+      print_acceptance_rates(proposal, chain->NP, 0, stdout);
+    }
     if(mcmc>0 && mcmc%data[FIXME][FIXME]->downsample==0)
     {
       for(int i=0; i<flags->injection; i++)save_waveforms(data[i][FIXME], model[chain->index[0]][i][FIXME], mcmc/data[i][FIXME]->downsample);
@@ -603,6 +621,63 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
     alloc_model(temp[i],model_x[0]->Nmax,data_ptr->N,data_ptr->Nchannel, data_ptr->NP);
   }
   
+  //keep track of DR trials for acceptance rates
+  proposal[chain->NP]->trial[ic]++;
+  
+  /* Initialize custom MCMC proposal for DR move */
+  struct Proposal **proposal_temp = malloc(chain->NP*sizeof(struct Proposal*));
+  double check=0.0;
+  for(int i=0; i<chain->NP; i++)
+  {
+    proposal_temp[i] = malloc(sizeof(struct Proposal));
+    proposal_temp[i]->trial  = malloc(chain->NC*sizeof(int));
+    proposal_temp[i]->accept = malloc(chain->NC*sizeof(int));
+    
+    for(int j=0; j<chain->NC; j++)
+    {
+      proposal_temp[i]->trial[j]  = 1;
+      proposal_temp[i]->accept[j] = 0;
+    }
+    
+    switch(i)
+    {
+      case 0:
+        sprintf(proposal_temp[i]->name,"fisher");
+        proposal_temp[i]->function = &draw_from_fisher;
+        proposal_temp[i]->weight = 0.1;
+        break;
+      case 1:
+        sprintf(proposal_temp[i]->name,"fisher");
+        proposal_temp[i]->function = &draw_from_fisher;
+        proposal_temp[i]->weight = 0.1;
+        break;
+      case 2:
+        sprintf(proposal_temp[i]->name,"fisher");
+        proposal_temp[i]->function = &draw_from_fisher;
+        proposal_temp[i]->weight = 0.1;
+        break;
+      case 3:
+        sprintf(proposal_temp[i]->name,"fisher");
+        proposal_temp[i]->function = &draw_from_fisher;
+        proposal_temp[i]->weight = 0.5;
+        break;
+      case 4:
+        sprintf(proposal_temp[i]->name,"fisher");
+        proposal_temp[i]->function = &draw_from_fisher;
+        proposal_temp[i]->weight = 0.2;
+        break;
+      default:
+        break;
+    }
+    check+=proposal_temp[i]->weight;
+  }
+  if(check<0.99999)
+  {
+    fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
+    exit(1);
+  }
+
+  
   for(int i=0; i<flags->segment; i++)
   {
     copy_model(model_x[i],model_y[i]);
@@ -615,37 +690,61 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
   //more shorthand pointers
   struct Source *source_x = model_x[0]->source[n];
   
+
+//  // force fm-shift for temp model
+//    fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+//    double jump = temp[0]->source[n]->params[0] - model_x[0]->source[n]->params[0];
+//    temp[0]->source[n]->params[0] = model_x[0]->source[n]->params[0] + jump*sqrt(chain->annealing);
+//    temp[0]->source[n]->params[7] = model_x[0]->source[n]->params[7] - 2*jump*sqrt(chain->annealing);
+//  }
+//  else if(gsl_rng_uniform(chain->r[ic])<0.7)
+//  {
+//    // force extrinsic update
+//    draw_from_extrinsic_prior(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+//  }
+
   if(gsl_rng_uniform(chain->r[ic])<0.5)
-  {
-    // force fm-shift for temp model
-    fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
-  }
+    draw_from_spectrum(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
   else
-  {
-    // force extrinsic update
-    draw_from_extrinsic_prior(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
-  }
- 
+    fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+
+
+
   for(int i=0; i<flags->segment; i++)
   {
     generate_signal_model(orbit, data[i], temp[i]);
     temp[i]->logL = gaussian_log_likelihood(orbit, data[i], temp[i]);
   }
+  //if(ic==0)printf("delayed rejection hastings ratio: %g: ",temp[0]->logL);
+
   
   // do a bunch of MCMC steps to evolve from forced jump
-  for(int i=0; i<20; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, proposal, ic);
+  for(int i=0; i<100; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, proposal_temp, ic);
     
   // test current likelihood for model y to original likelihood of model x
   for(int i=0; i<flags->segment; i++) logH += (model_y[i]->logL - model_x[i]->logL)/chain->temperature[ic];
+  //if(ic==0)printf("%g = %g - %g\n",logH,model_y[0]->logL,model_x[0]->logL);
   if(flags->burnin) logH /= chain->annealing;
   loga = log(gsl_rng_uniform(chain->r[ic]));
-  if(logH > loga) for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+  if(logH > loga)
+  {
+    proposal[chain->NP]->accept[ic]++;
+    for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+  }
   
-  for(int i = 0; i < flags->segment; i++)
+  for(int i=0; i < flags->segment; i++)
   {
     free_model(temp[i]);
   }
   free(temp);
+
+  for(int i=0; i<chain->NP; i++)
+  {
+    free(proposal_temp[i]->trial);
+    free(proposal_temp[i]->accept);
+    free(proposal_temp[i]);
+  }
+  free(proposal_temp);
 
 }
 

@@ -18,7 +18,6 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryProposal.h"
 
-
 void setup_frequency_proposal(struct Data *data)
 {
   int BW = 20;
@@ -76,6 +75,15 @@ void setup_frequency_proposal(struct Data *data)
 
 }
 
+void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr)
+{
+  fprintf(fptr,"Acceptance rates for chain %i:\n", ic);
+  for(int n=0; n<NP+1; n++)
+  {
+    fprintf(fptr,"   %.1e  [%s]\n", (double)proposal[n]->accept[ic]/(double)proposal[n]->trial[ic],proposal[n]->name);
+  }
+}
+
 double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed)
 {
   //TODO: Work in amplitude
@@ -95,7 +103,7 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
   }
   
   //random draws for other parameters
-  for(int n=1; n<8; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
 
   return 0;
 }
@@ -115,9 +123,9 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed)
 {
   for(int n=1; n<3; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  for(int n=4; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  for(int n=4; n<7; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   
-  for(int j=0; j<8; j++)
+  for(int j=0; j<source->NP; j++)
   {
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
@@ -142,17 +150,17 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
   }
   
   //decompose eigenjumps into paramter directions
-  /*
   for(i=0; i<NP; i++) for (j=0; j<NP; j++)
   {
     jump[j] += Amps[i]*source->fisher_evectr[j][i];
     if(jump[j]!=jump[j])jump[j]=0.0;
-  }*/
+  }
   
   //choose one eigenvector to jump along
+  /*
   i = (int)(gsl_rng_uniform(seed)*(double)NP);
   for (j=0; j<NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
-  
+  */
   //jump from current position
   for(i=0; i<NP; i++) params[i] = source->params[i] + jump[i];
   
@@ -171,8 +179,8 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, d
   double fm = data->T/YEAR;
   
   //update all parameters with a draw from the fisher
-  //draw_from_fisher(data, model, source, params, seed);
-  for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  if(gsl_rng_uniform(seed)<0.5) draw_from_fisher(data, model, source, params, seed);
+  else for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
 
   //perturb frequency by 1 fm
   double scale = floor(6*gsl_ran_gaussian(seed,1));

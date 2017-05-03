@@ -31,6 +31,7 @@ struct Proposal
 };
 
 void setup_frequency_proposal(struct Data *data);
+void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr);
 double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed);
 double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed);
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed);
