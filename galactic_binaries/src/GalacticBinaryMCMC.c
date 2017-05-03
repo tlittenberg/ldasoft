@@ -30,7 +30,7 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc);
 
 void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
 void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
-void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, int ic);
+void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic, int Nseg);
 
 
@@ -39,6 +39,8 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
 int main(int argc, char *argv[])
 {
   
+  int ic;
+
   time_t start, stop;
   start = time(NULL);
   
@@ -101,9 +103,74 @@ int main(int argc, char *argv[])
   /* Initialize parallel chain */
   initialize_chain(chain, flags, &data[0][0]->cseed);
   
+  /* Initialize MCMC proposals */
+  /*
+   the +1th proposal is the delayed rejection move
+   which doesn't fit in with the others' protocal
+   */
+  struct Proposal **proposal = malloc((chain->NP+1)*sizeof(struct Proposal*));
+  double check=0.0;
+  for(int i=0; i<chain->NP+1; i++)
+  {
+    proposal[i] = malloc(sizeof(struct Proposal));
+    proposal[i]->trial  = malloc(NC*sizeof(int));
+    proposal[i]->accept = malloc(NC*sizeof(int));
+    
+    for(ic=0; ic<NC; ic++)
+    {
+      proposal[i]->trial[ic]  = 1;
+      proposal[i]->accept[ic] = 0;
+    }
+    
+    switch(i)
+    {
+      case 0:
+        sprintf(proposal[i]->name,"prior");
+        proposal[i]->function = &draw_from_prior;
+        proposal[i]->weight = 0.1;
+        break;
+      case 1:
+        sprintf(proposal[i]->name,"spectrum");
+        proposal[i]->function = &draw_from_spectrum;
+        proposal[i]->weight = 0.1;
+        break;
+      case 2:
+        sprintf(proposal[i]->name,"extrinsic prior");
+        proposal[i]->function = &draw_from_extrinsic_prior;
+        proposal[i]->weight = 0.1;
+        break;
+      case 3:
+        sprintf(proposal[i]->name,"fisher");
+        proposal[i]->function = &draw_from_fisher;
+        proposal[i]->weight = 0.5;
+        break;
+      case 4:
+        sprintf(proposal[i]->name,"fm shift");
+        proposal[i]->function = &fm_shift;
+        proposal[i]->weight = 0.2;
+        break;
+        /*
+         delayed rejection proposal does not fit in with others' protocal
+         -must have zero weight
+         -must be last in the list
+         */
+      case 5:
+        sprintf(proposal[i]->name,"delayed rejection");
+        proposal[i]->weight = 0.0;
+        break;
+      default:
+        break;
+    }
+    check+=proposal[i]->weight;
+  }
+  if(check<0.99999)
+  {
+    fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
+    return 1;
+  }
+
   
   /* Initialize data models */
-  int ic;
 #pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial)
   for(ic=0; ic<NC; ic++)
   {
@@ -154,7 +221,7 @@ int main(int argc, char *argv[])
             map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
 
           }
-          else draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], model_ptr->source[n]->params, chain->r[ic]);
+          else draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
           galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise);
           map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
         }
@@ -172,72 +239,6 @@ int main(int argc, char *argv[])
     }//end loop over segments
   }//end loop over chains
   
-  
-  /* Initialize MCMC proposals */
-  /*
-   the +1th proposal is the delayed rejection move
-   which doesn't fit in with the others' protocal
-   */
-  struct Proposal **proposal = malloc((chain->NP+1)*sizeof(struct Proposal*));
-  double check=0.0;
-  for(int i=0; i<chain->NP+1; i++)
-  {
-    proposal[i] = malloc(sizeof(struct Proposal));
-    proposal[i]->trial  = malloc(NC*sizeof(int));
-    proposal[i]->accept = malloc(NC*sizeof(int));
-    
-    for(ic=0; ic<NC; ic++)
-    {
-      proposal[i]->trial[ic]  = 1;
-      proposal[i]->accept[ic] = 0;
-    }
-    
-    switch(i)
-    {
-      case 0:
-        sprintf(proposal[i]->name,"prior");
-        proposal[i]->function = &draw_from_prior;
-        proposal[i]->weight = 0.1;
-        break;
-      case 1:
-        sprintf(proposal[i]->name,"spectrum");
-        proposal[i]->function = &draw_from_spectrum;
-        proposal[i]->weight = 0.1;
-        break;
-      case 2:
-        sprintf(proposal[i]->name,"extrinsic prior");
-        proposal[i]->function = &draw_from_extrinsic_prior;
-        proposal[i]->weight = 0.1;
-        break;
-      case 3:
-        sprintf(proposal[i]->name,"fisher");
-        proposal[i]->function = &draw_from_fisher;
-        proposal[i]->weight = 0.5;
-        break;
-      case 4:
-        sprintf(proposal[i]->name,"fm shift");
-        proposal[i]->function = &fm_shift;
-        proposal[i]->weight = 0.2;
-        break;
-      /*
-       delayed rejection proposal does not fit in with others' protocal
-       -must have zero weight
-       -must be last in the list
-       */
-      case 5:
-        sprintf(proposal[i]->name,"delayed rejection");
-        proposal[i]->weight = 0.0;
-        break;
-      default:
-        break;
-    }
-    check+=proposal[i]->weight;
-  }
-  if(check<0.99999)
-  {
-    fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
-    return 1;
-  }
   
   /* The MCMC loop */
   for(int mcmc = -NBURN; mcmc < NMCMC; mcmc++)
@@ -282,7 +283,7 @@ int main(int argc, char *argv[])
       }//loop over frequency segments
       
       //update start time for data segments
-      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, ic);
+      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal, ic);
       
     }// (parallel) loop over chains
     
@@ -543,7 +544,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
   }
   proposal[nprop]->trial[ic]++;
   
-  (*proposal[nprop]->function)(data[0], model_x[0], source_y, source_y->params, chain->r[ic]);
+  (*proposal[nprop]->function)(data[0], model_x[0], source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
   //TODO: Fix this
   if(nprop==1)
@@ -704,9 +705,9 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
 //  }
 
   if(gsl_rng_uniform(chain->r[ic])<0.5)
-    draw_from_spectrum(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+    draw_from_spectrum(data[0], model_x[0], source_x, proposal[1], temp[0]->source[n]->params, chain->r[ic]);
   else
-    fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+    fm_shift(data[0], model_x[0], source_x, proposal[4], temp[0]->source[n]->params, chain->r[ic]);
 
 
 
@@ -748,7 +749,7 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
 
 }
 
-void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, int ic)
+void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -775,7 +776,7 @@ void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, 
   for(int i=1; i<flags->segment; i++)
   {
     
-    logQ += t0_shift(data[0][i], trial[0][i], trial[0][i]->source[0], trial[0][i]->source[0]->params, chain->r[ic]);
+    logQ += t0_shift(data[0][i], trial[0][i], trial[0][i]->source[0], proposal[0], trial[0][i]->source[0]->params, chain->r[ic]);
     
     for(int j=1; j<flags->injection; j++)
     {

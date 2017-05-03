@@ -84,7 +84,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fp
   }
 }
 
-double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed)
+double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
   //TODO: Work in amplitude
   
@@ -108,7 +108,7 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
   return 0;
 }
 
-double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed)
+double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
   for(int n=0; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   
@@ -120,7 +120,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
   return model->logPriorVolume;
 }
 
-double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, double *params, gsl_rng *seed)
+double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
   for(int n=1; n<3; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   for(int n=4; n<7; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
@@ -133,7 +133,7 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
   return model->logPriorVolume;
 }
 
-double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed)
+double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
   int i,j;
   int NP=source->NP;
@@ -173,13 +173,13 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
   return 0.0;
 }
 
-double fm_shift(struct Data *data, struct Model *model, struct Source *source, double *params, gsl_rng *seed)
+double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
   //doppler modulation frequency (in bins)
   double fm = data->T/YEAR;
   
   //update all parameters with a draw from the fisher
-  if(gsl_rng_uniform(seed)<0.5) draw_from_fisher(data, model, source, params, seed);
+  if(gsl_rng_uniform(seed)<0.5) draw_from_fisher(data, model, source, proposal, params, seed);
   else for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
 
   //perturb frequency by 1 fm
@@ -192,7 +192,7 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, d
   return 0.0;
 }
 
-double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED double *params, gsl_rng *seed)
+double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed)
 {
   //uniform draw
   if(gsl_rng_uniform(seed) < 0.5 )
