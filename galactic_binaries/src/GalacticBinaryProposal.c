@@ -173,6 +173,39 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
   return 0.0;
 }
 
+double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+{
+  int N = proposal->size;
+  int NP = source->NP;
+  double **cdf = proposal->matrix;
+  double logP=0.0;
+
+  for(int n=0; n<NP; n++)
+  {
+    //draw p-value
+    double p = gsl_rng_uniform(seed);
+
+    //find samples either end of p-value
+    int i = (int)floor(p*N);
+
+    //linear interpolation betweein i and i+1
+    //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
+    double x0 = (double)i/(double)N;
+    double y0;
+    if(i==0) y0 = model->prior[n][0];
+    else     y0 = cdf[n][i];
+    double x1 = (double)(i+1)/(double)N;
+    double y1;
+    if(i==N-1) y1 = model->prior[n][1];
+    else       y1 = cdf[n][i+1];
+
+    params[n] = y0 + (p-x0)*((y1-y0)/(x1-x0));
+    logP += log(p);
+  }
+
+  return logP;
+}
+
 double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
   //doppler modulation frequency (in bins)
