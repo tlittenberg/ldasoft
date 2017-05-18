@@ -57,8 +57,10 @@ struct Flags
   int prior;
   int cheat;
   int burnin;
+  int update;
   
   char **injFile;
+  char cdfFile[128];
 };
 
 struct Chain
@@ -79,6 +81,7 @@ struct Chain
   
   //chain files
   FILE **noiseFile;
+  FILE **chainFile;
   FILE **parameterFile;
   FILE *likelihoodFile;
   FILE *temperatureFile;

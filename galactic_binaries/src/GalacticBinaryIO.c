@@ -21,6 +21,22 @@
 
 #define FIXME 0
 
+static int checkfile(char filename[])
+{
+  FILE *fptr = fopen(filename, "r");
+  if(fptr)
+  {
+    fclose(fptr);
+    return 1;
+  }
+  else
+  {
+    fprintf(stderr,"File %s does not exist\n",filename);
+    fprintf(stderr,"\n");
+    exit(1);
+  }
+}
+
 void print_usage()
 {
   fprintf(stdout,"\n");
@@ -44,6 +60,7 @@ void print_usage()
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
+  fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
@@ -76,6 +93,7 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
   flags->segment     = 1;
   flags->orbit       = 0;
   flags->prior       = 0;
+  flags->update      = 0;
   chain->NP          = 5; //number of proposals
   chain->NC          = 20;//number of chains
 
@@ -117,6 +135,7 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
     {"injseed",   required_argument, 0, 0},
     {"inj",       required_argument, 0, 0},
     {"links",     required_argument, 0, 0},
+    {"update",    required_argument, 0, 0},
     
     /* These options don’t set a flag.
      We distinguish them by their indices. */
@@ -168,13 +187,15 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
           flags->knownSource = 1;
           flags->fixSky      = 1;
         }
-        if(strcmp("orbit",       long_options[long_index].name) == 0)
+        if(strcmp("orbit", long_options[long_index].name) == 0)
         {
+          checkfile(optarg);
           flags->orbit = 1;
           sprintf(orbit->OrbitFileName,"%s",optarg);
         }
-        if(strcmp("inj",       long_options[long_index].name) == 0)
+        if(strcmp("inj", long_options[long_index].name) == 0)
         {
+          checkfile(optarg);
           sprintf(flags->injFile[flags->injection],"%s",optarg);
           flags->injection++;
           if(flags->injection>Nmax)
@@ -184,6 +205,13 @@ void parse(int argc, char **argv, struct Data ***data, struct Orbit *orbit, stru
             fprintf(stderr,"Now exiting to system\n");
             exit(1);
           }
+        }
+        if(strcmp("update", long_options[long_index].name) == 0)
+        {
+          checkfile(optarg);
+          flags->update=1;
+          sprintf(flags->cdfFile,"%s",optarg);
+          chain->NP++;
         }
         if(strcmp("links",long_options[long_index].name) == 0)
         {
@@ -331,8 +359,15 @@ void print_chain_files(struct Data *data, struct Model ****model, struct Chain *
   n = chain->index[0];
   for(i=0; i<flags->injection; i++)
   {
-    print_chain_state(data, chain, model[n][i], flags, chain->parameterFile[0], step);
+    print_chain_state(data, chain, model[n][i], flags, chain->chainFile[0], step);
     print_noise_state(data, model[n][i][FIXME], chain->noiseFile[0], step);
+  }
+  
+  //Print sampling parameters
+  for(i=0; i<model[n][FIXME][FIXME]->Nlive; i++)
+  {
+    print_source_params(data,model[n][FIXME][FIXME]->source[i],chain->parameterFile[0]);
+    fprintf(chain->parameterFile[0],"\n");
   }
   
   //Print hot chains if verbose flag
@@ -341,7 +376,7 @@ void print_chain_files(struct Data *data, struct Model ****model, struct Chain *
     for(ic=1; ic<chain->NC; ic++)
     {
       n = chain->index[ic];
-      print_chain_state(data, chain, model[n][0], flags, chain->parameterFile[ic], step);
+      print_chain_state(data, chain, model[n][0], flags, chain->chainFile[ic], step);
       print_noise_state(data, model[n][0][FIXME], chain->noiseFile[ic], step);
     }//loop over chains
   }//verbose flag
@@ -351,15 +386,16 @@ void print_chain_state(struct Data *data, struct Chain *chain, struct Model **mo
 {
   double logL=0.0;
   for(int i=0; i<flags->segment; i++) logL += model[i]->logL+model[i]->logLnorm;
+  
+  fprintf(fptr, "%i ",step);
+  fprintf(fptr, "%i ",model[0]->Nlive);
+  fprintf(fptr, "%lg ",logL);
+  for(int j=0; j<flags->segment; j++)fprintf(fptr, "%.12g ",model[j]->t0);
   for(int i=0; i<model[0]->Nlive; i++)
   {
-    fprintf(fptr, "%i ",step);
-    fprintf(fptr, "%lg ",logL);
-    for(int j=0; j<flags->segment; j++)fprintf(fptr, "%.12g ",model[j]->t0);
-    //fprintf(fptr, "%lg ",data->tgap);
     print_source_params(data,model[0]->source[i],fptr);
-    fprintf(fptr, "\n");
   }
+  fprintf(fptr, "\n");
 }
 
 void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int step)
@@ -395,6 +431,25 @@ void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
   fprintf(fptr,"%.12g ",source->phi0);
   if(source->NP>8)
     fprintf(fptr,"%.12g ",source->d2fdt2);
+}
+
+void scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
+{
+  
+  fscanf(fptr,"%lg",&source->f0);
+  fscanf(fptr,"%lg",&source->dfdt);
+  fscanf(fptr,"%lg",&source->amp);
+  fscanf(fptr,"%lg",&source->phi);
+  fscanf(fptr,"%lg",&source->costheta);
+  fscanf(fptr,"%lg",&source->cosi);
+  fscanf(fptr,"%lg",&source->psi);
+  fscanf(fptr,"%lg",&source->phi0);
+  if(source->NP>8)
+    fscanf(fptr,"%lg",&source->d2fdt2);
+
+  //map to parameter names (just to make code readable)
+  map_params_to_array(source, source->params, data->T);
+
 }
 
 void save_waveforms(struct Data *data, struct Model *model, int mcmc)

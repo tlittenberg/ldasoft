@@ -44,4 +44,8 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
 double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed);
 
+double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal);
+
+void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
+
 #endif /* GalacticBinaryProposal_h */

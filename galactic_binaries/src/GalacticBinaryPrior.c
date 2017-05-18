@@ -24,6 +24,7 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   params[7] = source->dfdt*T*T;
   */
   
+  
   //TODO:  make t0 a parameter
   model->t0 = data->t0;
   model->t0_min = data->t0 - 20.0;
@@ -61,16 +62,27 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   model->prior[6][1] = PI2;
   
   //fdot (bins/Tobs)
+  
+  /* frequency derivative priors are a little trickier...*/
+  double fmin = model->prior[0][0]/data->T;
+  double fmax = model->prior[0][1]/data->T;
+  
   /* emprical envolope functions from Gijs' MLDC catalog */
+  double fdotmin = -0.000005*pow(fmin,(13./3.));
+  double fdotmax = 0.0000008*pow(fmax,(11./3.));
+  
+  double fddotmin = 11.0/3.0*fdotmin*fdotmin/fmax;
+  double fddotmax = 11.0/3.0*fdotmax*fdotmax/fmin;
+  
   if(data->NP>7)
   {
-  model->prior[7][0] = -0.000005*pow(data->qmin/data->T,(13./3.))*data->T*data->T;//-10.0;
-  model->prior[7][1] = 0.0000008*pow(data->qmin/data->T,(11./3.))*data->T*data->T;//+10.0;
+    model->prior[7][0] = fdotmin*data->T*data->T;
+    model->prior[7][1] = fdotmax*data->T*data->T;
   }
   if(data->NP>8)
   {
-    model->prior[8][0]=-.1;
-    model->prior[8][1]= .1;
+    model->prior[8][0] = fddotmin*data->T*data->T*data->T;
+    model->prior[8][1] = fddotmax*data->T*data->T*data->T;
   }
 
   //set prior volume
