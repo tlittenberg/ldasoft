@@ -137,30 +137,29 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
 {
   int i,j;
   int NP=source->NP;
-  double sqNP = 2.82842712474619; //sqrt(8)
+  double sqNP = sqrt((double)source->NP);
   double Amps[NP];
   double jump[NP];
   
   //draw the eigen-jump amplitudes from N[0,1] scaled by evalue & dimension
   for(i=0; i<NP; i++)
   {
-    //Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i])/(double)NP;
-    Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i])/sqNP;
+    //Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i])/sqNP;
+    Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i]);
     jump[i] = 0.0;
   }
   
   //decompose eigenjumps into paramter directions
-  for(i=0; i<NP; i++) for (j=0; j<NP; j++)
+  /*for(i=0; i<NP; i++) for (j=0; j<NP; j++)
   {
     jump[j] += Amps[i]*source->fisher_evectr[j][i];
     if(jump[j]!=jump[j])jump[j]=0.0;
-  }
+  }*/
   
   //choose one eigenvector to jump along
-  /*
   i = (int)(gsl_rng_uniform(seed)*(double)NP);
   for (j=0; j<NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
-  */
+  
   //jump from current position
   for(i=0; i<NP; i++) params[i] = source->params[i] + jump[i];
   

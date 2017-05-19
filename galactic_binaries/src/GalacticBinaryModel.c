@@ -72,7 +72,7 @@ void alloc_data(struct Data ***data_vec, struct Flags *flags, int NMCMC)
       data->S_pow = malloc(data->N*sizeof(double **));
       
       //number of waveform samples to save
-      data->Nwave=1000;
+      data->Nwave=100;
       
       //downsampling rate of post-burn-in samples
       data->downsample = NMCMC/data->Nwave;

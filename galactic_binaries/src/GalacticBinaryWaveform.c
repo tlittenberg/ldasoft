@@ -366,7 +366,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
       //Wave arrival time at spacecraft i
       xi[i] = t - kdotx[i];
       
-      //Zeroety order approximation to frequency at spacecraft i
+      //Zeroeth order approximation to frequency at spacecraft i
       f[i] = f0;
       
       //First order in frequency
