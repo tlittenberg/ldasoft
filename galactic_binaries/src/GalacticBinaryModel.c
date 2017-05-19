@@ -146,6 +146,9 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
   
   chain->temperatureFile = fopen("temperature_chain.dat","w");
 
+  chain->chainFile = malloc(NC*sizeof(FILE *));
+  chain->chainFile[0] = fopen("model_chain.dat.0","w");
+
   chain->parameterFile = malloc(NC*sizeof(FILE *));
   chain->parameterFile[0] = fopen("parameter_chain.dat.0","w");
 
@@ -159,6 +162,9 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
     {
       sprintf(filename,"parameter_chain.dat.%i",ic);
       chain->parameterFile[ic] = fopen(filename,"w");
+
+      sprintf(filename,"model_chain.dat.%i",ic);
+      chain->chainFile[ic] = fopen(filename,"w");
 
       sprintf(filename,"noise_chain.dat.%i",ic);
       chain->noiseFile[ic] = fopen(filename,"w");
@@ -179,10 +185,16 @@ void free_chain(struct Chain *chain, struct Flags *flags)
   
   fclose(chain->likelihoodFile);
   fclose(chain->parameterFile[0]);
+  fclose(chain->chainFile[0]);
   if(flags->verbose)
   {
-    for(int ic=1; ic<chain->NC; ic++) fclose(chain->parameterFile[ic]);
+    for(int ic=1; ic<chain->NC; ic++)
+    {
+      fclose(chain->chainFile[ic]);
+      fclose(chain->parameterFile[ic]);
+    }
   }
+  free(chain->chainFile);
   free(chain->parameterFile);
   
   free(chain);

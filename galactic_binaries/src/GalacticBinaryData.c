@@ -295,17 +295,20 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
     
 
         //set bandwidth of data segment centered on injection
-        data->fmin = f0 - (data->N/2)/data->T;
-        data->fmax = f0 + (data->N/2)/data->T;
-        data->qmin = (int)(data->fmin*data->T);
-        data->qmax = data->qmin+data->N;
-        
-        //recompute fmin and fmax so they align with a bin
-        data->fmin = data->qmin/data->T;
-        data->fmax = data->qmax/data->T;
-        
-        if(jj==0)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
-        fprintf(stdout,"   ...start time  %g\n",data->t0);
+        if(nn==0)
+        {
+          data->fmin = f0 - (data->N/2)/data->T;
+          data->fmax = f0 + (data->N/2)/data->T;
+          data->qmin = (int)(data->fmin*data->T);
+          data->qmax = data->qmin+data->N;
+          
+          //recompute fmin and fmax so they align with a bin
+          data->fmin = data->qmin/data->T;
+          data->fmax = data->qmax/data->T;
+          
+          if(jj==0)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
+          fprintf(stdout,"   ...start time  %g\n",data->t0);
+        }
         
         
         struct Source *inj = data->inj;
@@ -333,7 +336,8 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         
         //save parameters to file
         sprintf(filename,"injection_parameters_%i_%i.dat",ii,jj);
-        paramFile=fopen(filename,"w");
+        if(nn==0)paramFile=fopen(filename,"w");
+        else     paramFile=fopen(filename,"a");
         fprintf(paramFile,"%lg ",data->t0);
         print_source_params(data, inj, paramFile);
         fprintf(paramFile,"\n");
@@ -355,14 +359,14 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         {
           int i = n+inj->imin;
           
-          data->tdi->X[2*i]   = inj->tdi->X[2*n];
-          data->tdi->X[2*i+1] = inj->tdi->X[2*n+1];
+          data->tdi->X[2*i]   += inj->tdi->X[2*n];
+          data->tdi->X[2*i+1] += inj->tdi->X[2*n+1];
           
-          data->tdi->A[2*i]   = inj->tdi->A[2*n];
-          data->tdi->A[2*i+1] = inj->tdi->A[2*n+1];
+          data->tdi->A[2*i]   += inj->tdi->A[2*n];
+          data->tdi->A[2*i+1] += inj->tdi->A[2*n+1];
           
-          data->tdi->E[2*i]   = inj->tdi->E[2*n];
-          data->tdi->E[2*i+1] = inj->tdi->E[2*n+1];
+          data->tdi->E[2*i]   += inj->tdi->E[2*n];
+          data->tdi->E[2*i+1] += inj->tdi->E[2*n+1];
         }
         
         sprintf(filename,"waveform_injection_%i_%i.dat",ii,jj);
@@ -405,7 +409,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
         //Add Gaussian noise to injection
         gsl_rng_set (r, data->nseed+jj);
         
-        if(!flags->zeroNoise)
+        if(!flags->zeroNoise && nn==0)
         {
           printf("   ...adding Gaussian noise realization\n");
           
@@ -455,9 +459,9 @@ void GalacticBinaryInjectSimulatedSource(struct Data ***data_vec, struct Orbit *
           fprintf(fptr,"\n");
         }
         fclose(fptr);
-        fclose(injectionFile);
       }//end jj loop over segments
     }//end nn loop over sources in file
+    fclose(injectionFile);
     gsl_rng_free(r);
   }
   
