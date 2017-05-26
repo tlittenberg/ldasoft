@@ -26,10 +26,13 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   
   
   //TODO:  make t0 a parameter
-  model->t0 = data->t0;
-  model->t0_min = data->t0 - 20.0;
-  model->t0_max = data->t0 + 20.0;
-
+  for(int i=0; i<model->NT; i++)
+  {
+    model->t0[i] = data->t0[i];
+    model->t0_min[i] = data->t0[i] - 20.0;
+    model->t0_max[i] = data->t0[i] + 20.0;
+  }
+  
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
   
   //frequency bin

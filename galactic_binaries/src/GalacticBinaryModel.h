@@ -19,15 +19,15 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
 double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *model);
 double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model);
 
-int update_max_log_likelihood(struct Model ****model, struct Chain *chain, struct Flags *flags);
+int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags);
 
 void map_params_to_array(struct Source *source, double *params, double T);
 void map_array_to_params(struct Source *source, double *params, double T);
 
-void alloc_data(struct Data ***data_vec, struct Flags *flags, int NMCMC);
+void alloc_data(struct Data **data_vec, struct Flags *flags, int NMCMC);
 
 void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed);
-void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP);
+void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, int NT);
 void alloc_noise(struct Noise *noise, int NFFT);
 void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel);
 void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP);

@@ -20,6 +20,8 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryProposal.h"
 
+#define FIXME 0
+
 void setup_frequency_proposal(struct Data *data)
 {
   int BW = 20;
@@ -31,11 +33,11 @@ void setup_frequency_proposal(struct Data *data)
     power[i]=0.0;
     for(int n=i; n<i+BW; n++)
     {
-      double SnA = data->noise->SnA[n];
-      double SnE = data->noise->SnE[n];
+      double SnA = data->noise[FIXME]->SnA[n];
+      double SnE = data->noise[FIXME]->SnE[n];
       
-      double AA = data->tdi->A[2*n]*data->tdi->A[2*n]+data->tdi->A[2*n+1]*data->tdi->A[2*n+1];
-      double EE = data->tdi->E[2*n]*data->tdi->E[2*n]+data->tdi->E[2*n+1]*data->tdi->E[2*n+1];
+      double AA = data->tdi[FIXME]->A[2*n]*data->tdi[FIXME]->A[2*n]+data->tdi[FIXME]->A[2*n+1]*data->tdi[FIXME]->A[2*n+1];
+      double EE = data->tdi[FIXME]->E[2*n]*data->tdi[FIXME]->E[2*n]+data->tdi[FIXME]->E[2*n+1]*data->tdi[FIXME]->E[2*n+1];
       
       power[i] += AA/SnA + EE/SnE;
       total += power[i];
@@ -60,11 +62,11 @@ void setup_frequency_proposal(struct Data *data)
   total = 0.0;
   for(int n=0; n<data->N; n++)
   {
-      double SnA = data->noise->SnA[n];
-      double SnE = data->noise->SnE[n];
+      double SnA = data->noise[FIXME]->SnA[n];
+      double SnE = data->noise[FIXME]->SnE[n];
       
-      double AA = data->tdi->A[2*n]*data->tdi->A[2*n]+data->tdi->A[2*n+1]*data->tdi->A[2*n+1];
-      double EE = data->tdi->E[2*n]*data->tdi->E[2*n]+data->tdi->E[2*n+1]*data->tdi->E[2*n+1];
+      double AA = data->tdi[FIXME]->A[2*n]*data->tdi[FIXME]->A[2*n]+data->tdi[FIXME]->A[2*n+1]*data->tdi[FIXME]->A[2*n+1];
+      double EE = data->tdi[FIXME]->E[2*n]*data->tdi[FIXME]->E[2*n]+data->tdi[FIXME]->E[2*n+1]*data->tdi[FIXME]->E[2*n+1];
       
       total += AA/SnA + EE/SnE;
   }
@@ -139,7 +141,7 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
 {
   int i,j;
   int NP=source->NP;
-  double sqNP = sqrt((double)source->NP);
+  //double sqNP = sqrt((double)source->NP);
   double Amps[NP];
   double jump[NP];
   
@@ -274,18 +276,22 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
 
 double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed)
 {
-  //uniform draw
-  if(gsl_rng_uniform(seed) < 0.5 )
-    model->t0 = model->t0_min + gsl_rng_uniform(seed)*(model->t0_max - model->t0_min);
+  for(int i=0; i<model->NT; i++)
+  {
+    //uniform draw
+    if(gsl_rng_uniform(seed) < 0.5 )
+      model->t0[i] = model->t0_min[i] + gsl_rng_uniform(seed)*(model->t0_max[i] - model->t0_min[i]);
+    
+    //gaussian draw
+    else
+      model->t0[i] += 3.0*gsl_ran_gaussian(seed,1);
+    
+    
+    //t0 shift is symmetric
+    if(model->t0[i] < model->t0_min[i] || model->t0[i] >= model->t0_max[i]) return -INFINITY;
+  }
   
-  //gaussian draw
-  else
-    model->t0 += 3.0*gsl_ran_gaussian(seed,1);
-  
-  
-  //t0 shift is symmetric
-  if(model->t0 < model->t0_min || model->t0 >= model->t0_max) return -INFINITY;
-  else return 0.0;
+  return 0.0;
 }
 
 void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
@@ -366,8 +372,8 @@ void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *f
         for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
         
         struct Model *temp = malloc(sizeof(struct Model));
-        alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP);
-        
+        alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
+
         for(int n=0; n<proposal[i]->size; n++)
         {
           fscanf(fptr,"%lg",&junk);

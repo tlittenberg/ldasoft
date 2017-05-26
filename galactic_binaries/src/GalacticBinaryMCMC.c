@@ -25,14 +25,14 @@
 
 #define FIXME 0
 
-void ptmcmc(struct Model ****model, struct Chain *chain, struct Flags *flags);
+void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags);
 void adapt_temperature_ladder(struct Chain *chain, int mcmc);
 
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
-void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
-void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
 
-void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic, int Nseg);
 
 /* ============================  MAIN PROGRAM  ============================ */
@@ -45,23 +45,22 @@ int main(int argc, char *argv[])
   time_t start, stop;
   start = time(NULL);
   
-  int NMAX  = 12;   //max number of waveforms & time segments
+  int NMAX  = 12;   //max number of frequency & time segments
   int NMCMC = 10000; //number of MCMC steps
   int NBURN = 10000; //number of burn-in steps
   
   
   /* Allocate data structures */
-  struct Flags *flags   = malloc(sizeof(struct Flags));
-  struct Orbit *orbit   = malloc(sizeof(struct Orbit));
-  struct Chain *chain   = malloc(sizeof(struct Chain));
-  struct Data  ***data  = malloc(sizeof(struct Data**)*NMAX); //data[source][segment]
+  struct Flags *flags = malloc(sizeof(struct Flags));
+  struct Orbit *orbit = malloc(sizeof(struct Orbit));
+  struct Chain *chain = malloc(sizeof(struct Chain));
+  struct Data  **data = malloc(sizeof(struct Data*)*NMAX); //data[NF]
   
   
   /* Parse command line and set defaults/flags */
   for(int i=0; i<NMAX; i++)
   {
-    data[i] = malloc(sizeof(struct Data*)*NMAX);
-    for(int j=0; j<NMAX; j++) data[i][j] = malloc(sizeof(struct Data));
+    data[i] = malloc(sizeof(struct Data));
   }
   parse(argc,argv,data,orbit,flags,chain,NMAX);
   int NC = chain->NC;
@@ -69,8 +68,8 @@ int main(int argc, char *argv[])
   
   
   /* Allocate model structures */
-  struct Model ***trial = malloc(sizeof(struct Model**)*NC);  //trial[chain][segment]
-  struct Model ****model= malloc(sizeof(struct Model***)*NC); //model[chain][source][segment]
+  struct Model **trial = malloc(sizeof(struct Model*)*NC);//trial[chain]
+  struct Model ***model= malloc(sizeof(struct Model**)*NC); //model[chain][source][segment]
   
   
   /* Load spacecraft ephemerides */
@@ -99,85 +98,76 @@ int main(int argc, char *argv[])
     GalacticBinaryInjectSimulatedSource(data,orbit,flags);
   
   /* Initialize data-dependent proposal */
-  setup_frequency_proposal(data[0][0]);
-  
+  setup_frequency_proposal(data[0]);
   
   /* Initialize parallel chain */
-  initialize_chain(chain, flags, &data[0][0]->cseed);
+  initialize_chain(chain, flags, &data[0]->cseed);
   
   /* Initialize MCMC proposals */
   struct Proposal **proposal = malloc((chain->NP+1)*sizeof(struct Proposal*));
   for(int i=0; i<chain->NP+1; i++) proposal[i] = malloc(sizeof(struct Proposal));
   
-  initialize_proposal(data[0][0], chain, flags, proposal, NMAX);
+  initialize_proposal(data[0], chain, flags, proposal, NMAX);
   
   /* Initialize data models */
-#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial)
+  //#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial)
   for(ic=0; ic<NC; ic++)
   {
-    trial[ic] = malloc(sizeof(struct Model * ) * flags->segment);
-    for(int nseg = 0; nseg < flags->segment; nseg++)
+    trial[ic] = malloc(sizeof(struct Model));
+    alloc_model(trial[ic],NMAX,data[0]->N,data[0]->Nchannel,data[0]->NP, data[0]->NT);
+    
+    model[ic] = malloc(sizeof(struct Model *) * flags->NF);
+    
+    //loop over frequency segments
+    for(int i=0; i<flags->NF; i++)
     {
-      trial[ic][nseg] = malloc(sizeof(struct Model));
-      alloc_model(trial[ic][nseg],NMAX,data[0][nseg]->N,data[0][nseg]->Nchannel,data[0][nseg]->NP);
-    }
-    
-    
-    model[ic] = malloc(sizeof(struct Model **) * flags->injection);
-    
-    for(int i=0; i<flags->injection; i++)
-    {
-      model[ic][i] = malloc(sizeof(struct Model *) * flags->segment);
-      for(int nseg = 0; nseg < flags->segment; nseg++)
+      model[ic][i] = malloc(sizeof(struct Model));
+      
+      struct Model *model_ptr = model[ic][i];
+      struct Data  *data_ptr  = data[i];
+      
+      alloc_model(model_ptr,NMAX,data_ptr->N,data_ptr->Nchannel, data_ptr->NP, flags->NT);
+      
+      set_uniform_prior(model_ptr, data_ptr);
+      
+      //set noise model
+      for(int j=0; j<flags->NT; j++) copy_noise(data_ptr->noise[j], model_ptr->noise[j]);
+      
+      //set signal model
+      for(int n=0; n<NMAX; n++)
       {
-        model[ic][i][nseg] = malloc(sizeof(struct Model));
-        
-        struct Model *model_ptr = model[ic][i][nseg];
-        struct Data  *data_ptr  = data[i][nseg];
-        
-        alloc_model(model_ptr,NMAX,data_ptr->N,data_ptr->Nchannel, data_ptr->NP);
-        
-        set_uniform_prior(model_ptr, data_ptr);
-        
-        //set noise model
-        copy_noise(data_ptr->noise, model_ptr->noise);
-        
-        //set signal model
-        for(int n=0; n<NMAX; n++)
+        if(flags->cheat)
         {
-          if(flags->cheat)
-          {
-            struct Source *inj = data_ptr->inj;
-            //map parameters to vector
-            model_ptr->source[n]->NP       = inj->NP;
-            model_ptr->source[n]->f0       = inj->f0;
-            model_ptr->source[n]->dfdt     = inj->dfdt;
-            model_ptr->source[n]->costheta = inj->costheta;
-            model_ptr->source[n]->phi      = inj->phi;
-            model_ptr->source[n]->amp      = inj->amp;
-            model_ptr->source[n]->cosi     = inj->cosi;
-            model_ptr->source[n]->phi0     = inj->phi0;
-            model_ptr->source[n]->psi      = inj->psi;
-            model_ptr->source[n]->d2fdt2   = inj->d2fdt2;
-            map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
-            
-          }
-          else draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
-          galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise);
-          map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
+          struct Source *inj = data_ptr->inj;
+          //map parameters to vector
+          model_ptr->source[n]->NP       = inj->NP;
+          model_ptr->source[n]->f0       = inj->f0;
+          model_ptr->source[n]->dfdt     = inj->dfdt;
+          model_ptr->source[n]->costheta = inj->costheta;
+          model_ptr->source[n]->phi      = inj->phi;
+          model_ptr->source[n]->amp      = inj->amp;
+          model_ptr->source[n]->cosi     = inj->cosi;
+          model_ptr->source[n]->phi0     = inj->phi0;
+          model_ptr->source[n]->psi      = inj->psi;
+          model_ptr->source[n]->d2fdt2   = inj->d2fdt2;
+          map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
+          
         }
-        
-        // Form master model & compute likelihood of starting position
-        generate_noise_model(data_ptr, model_ptr);
-        generate_signal_model(orbit, data_ptr, model_ptr);
-        
-        model_ptr->logL     = gaussian_log_likelihood(orbit, data_ptr, model_ptr);
-        model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data_ptr, model_ptr);
-        
-        if(ic==0) chain->logLmax += model_ptr->logL + model_ptr->logLnorm;
-        
-      }//end loop over sources
-    }//end loop over segments
+        else draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
+        map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
+        galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[0]);
+      }
+      
+      // Form master model & compute likelihood of starting position
+      generate_noise_model(data_ptr, model_ptr);
+      generate_signal_model(orbit, data_ptr, model_ptr);
+      
+      model_ptr->logL     = gaussian_log_likelihood(orbit, data_ptr, model_ptr);
+      model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data_ptr, model_ptr);
+      
+      if(ic==0) chain->logLmax += model_ptr->logL + model_ptr->logLnorm;
+      
+    }//end loop over frequency segments
   }//end loop over chains
   
   
@@ -190,23 +180,27 @@ int main(int argc, char *argv[])
     //set annealinging tempurature during burnin
     if(flags->burnin)
     {
-      chain->annealing = data[0][0]->SNR2*pow(data[0][0]->SNR2,-((double)mcmc+(double)NBURN)/((double)NBURN/(double)10))/400.;
+      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)NBURN)/((double)NBURN/(double)10))/400.;
       if(chain->annealing<1.0)chain->annealing=1.0;
     }
-#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags,proposal)
+    
+    // (parallel) loop over chains
+    //#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags,proposal)
     for(ic=0; ic<NC; ic++)
     {
-      for(int i=0; i<flags->injection; i++)
+      
+      //loop over frequency segments
+      for(int i=0; i<flags->NF; i++)
       {
-        struct Model **model_ptr = model[chain->index[ic]][i];
-        struct Model **trial_ptr = trial[chain->index[ic]];
-        struct Data  **data_ptr  = data[i];
+        struct Model *model_ptr = model[chain->index[ic]][i];
+        struct Model *trial_ptr = trial[chain->index[ic]];
+        struct Data  *data_ptr  = data[i];
         
         for(int steps=0; steps < 100; steps++)
         {
           galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
           
-          /*for(int j=0; j<flags->segment; j++)
+          /*for(int j=0; j<flags->NT; j++)
            noise_model_mcmc(orbit, data[i], model_ptr[j], trial_ptr[j], chain, flags, ic, j);*/
         }//loop over MCMC steps
         
@@ -219,58 +213,59 @@ int main(int argc, char *argv[])
         //update fisher matrix for each chain
         if(mcmc%100==0)
         {
-          for(int n=0; n<model_ptr[0]->Nlive; n++)
+          for(int n=0; n<model_ptr->Nlive; n++)
           {
-            galactic_binary_fisher(orbit, data_ptr[0], model_ptr[0]->source[n], data_ptr[0]->noise);
-          }//loop over sources in model
+            galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[FIXME]);
+          }
         }
-      }//loop over frequency segments
+      }//end loop over frequency segments
       
       //update start time for data segments
       //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal, ic);
       
-    }// (parallel) loop over chains
+    }// end (parallel) loop over chains
     
     ptmcmc(model,chain,flags);
     adapt_temperature_ladder(chain, mcmc+NBURN);
     
-    print_chain_files(data[FIXME][FIXME], model, chain, flags, mcmc);
+    print_chain_files(data[FIXME], model, chain, flags, mcmc);
     
     //track maximum log Likelihood
     if(mcmc%100)
     {
       if(update_max_log_likelihood(model, chain, flags)) mcmc = -NBURN;
     }
+    
     //store reconstructed waveform
     print_waveform_draw(data, model[chain->index[0]], flags);
     
-    if(mcmc%data[FIXME][FIXME]->downsample==0)
+    //update run status
+    if(mcmc%data[FIXME]->downsample==0)
     {
-      print_chain_state(data[FIXME][FIXME], chain, model[chain->index[0]][0], flags, stdout, mcmc);
-      fprintf(stdout,"Sources: %i\n",model[chain->index[0]][0][0]->Nlive);
+      for(int i=0; i<flags->NF; i++)
+      {
+        print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
+        fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
+      }
       print_acceptance_rates(proposal, chain->NP, 0, stdout);
     }
-    if(mcmc>0 && mcmc%data[FIXME][FIXME]->downsample==0)
+    
+    //dump waveforms to file, update avgLogL for thermodynamic integration
+    if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
     {
-      for(int i=0; i<flags->injection; i++)save_waveforms(data[i][FIXME], model[chain->index[0]][i][FIXME], mcmc/data[i][FIXME]->downsample);
+      for(int i=0; i<flags->NF; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
       for(ic=0; ic<NC; ic++)
-      {
-        for(int i=0; i<flags->injection; i++)
-        {
-          for(int j=0; j<flags->segment; j++)
-          {
-            chain->avgLogL[ic] += model[chain->index[ic]][i][j]->logL + model[chain->index[ic]][i][j]->logLnorm;
-          }
-        }
-      }
+        for(int i=0; i<flags->NF; i++)
+          chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
     }
-  }
+    
+  }// end MCMC loop
   
   //print aggregate run files/results
-  for(int i=0; i<flags->injection; i++)print_waveforms_reconstruction(data[FIXME][i],i);
+  for(int i=0; i<flags->NF; i++)print_waveforms_reconstruction(data[i],i);
   
   FILE *chainFile = fopen("avg_log_likelihood.dat","w");
-  for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(NMCMC/data[FIXME][FIXME]->downsample));
+  for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(NMCMC/data[FIXME]->downsample));
   fclose(chainFile);
   
   //print total run time
@@ -282,8 +277,8 @@ int main(int argc, char *argv[])
   //free memory and exit cleanly
   for(ic=0; ic<NC; ic++)
   {
-    free_model(model[ic][FIXME][FIXME]);
-    free_model(trial[ic][FIXME]);
+    for(int i=0; i<flags->NF; i++) free_model(model[ic][i]);
+    free_model(trial[ic]);
   }
   if(flags->orbit)free_orbit(orbit);
   //free_noise(data[0]->noise[FIXME]);
@@ -296,7 +291,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-void ptmcmc(struct Model ****model, struct Chain *chain, struct Flags *flags)
+void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags)
 {
   int a, b;
   int olda, oldb;
@@ -324,13 +319,10 @@ void ptmcmc(struct Model ****model, struct Chain *chain, struct Flags *flags)
     
     logL1 = 0.0;
     logL2 = 0.0;
-    for(int i=0; i<flags->injection; i++)
+    for(int i=0; i<flags->NF; i++)
     {
-      for(int j=0; j<flags->segment; j++)
-      {
-        logL1 += model[olda][i][j]->logL + model[olda][i][j]->logLnorm;
-        logL2 += model[oldb][i][j]->logL + model[oldb][i][j]->logLnorm;
-      }
+      logL1 += model[olda][i]->logL + model[olda][i]->logLnorm;
+      logL2 += model[oldb][i]->logL + model[oldb][i]->logLnorm;
     }
     
     //Hot chains jump more rarely
@@ -399,27 +391,30 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
   copy_model(model_x,model_y);
   
   //choose proposal distribution
-  switch(data->Nchannel)
+  for(int i=0; i<flags->NT; i++)
   {
-    case 1:
-      model_y->noise->etaX = model_x->noise->etaX + 0.1*gsl_ran_gaussian(chain->r[ic],1);
-      break;
-    case 2:
-      model_y->noise->etaA = model_x->noise->etaA + 0.1*gsl_ran_gaussian(chain->r[ic],1);
-      model_y->noise->etaE = model_x->noise->etaE + 0.1*gsl_ran_gaussian(chain->r[ic],1);
-      break;
-  }
-  
-  //get priors for x and y
-  switch(data->Nchannel)
-  {
-    case 1:
-      if(model_y->noise->etaX < 0.1 || model_y->noise->etaX>10) logPy=-INFINITY;
-      break;
-    case 2:
-      if(model_y->noise->etaA < 0.1 || model_y->noise->etaA>10.) logPy=-INFINITY;
-      if(model_y->noise->etaE < 0.1 || model_y->noise->etaE>10.) logPy=-INFINITY;
-      break;
+    switch(data->Nchannel)
+    {
+      case 1:
+        model_y->noise[i]->etaX = model_x->noise[i]->etaX + 0.1*gsl_ran_gaussian(chain->r[ic],1);
+        break;
+      case 2:
+        model_y->noise[i]->etaA = model_x->noise[i]->etaA + 0.1*gsl_ran_gaussian(chain->r[ic],1);
+        model_y->noise[i]->etaE = model_x->noise[i]->etaE + 0.1*gsl_ran_gaussian(chain->r[ic],1);
+        break;
+    }
+    
+    //get priors for x and y
+    switch(data->Nchannel)
+    {
+      case 1:
+        if(model_y->noise[i]->etaX < 0.1 || model_y->noise[i]->etaX>10) logPy=-INFINITY;
+        break;
+      case 2:
+        if(model_y->noise[i]->etaA < 0.1 || model_y->noise[i]->etaA>10.) logPy=-INFINITY;
+        if(model_y->noise[i]->etaE < 0.1 || model_y->noise[i]->etaE>10.) logPy=-INFINITY;
+        break;
+    }
   }
   
   if(logPy > -INFINITY)
@@ -447,7 +442,7 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
   
 }
 
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -458,19 +453,17 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
   double logQxy = 0.0; //(log) proposal density from y->x
   
   //shorthand pointers
-  struct Model **model_x = model;
-  struct Model **model_y = trial;
+  struct Model *model_x = model;
+  struct Model *model_y = trial;
   
-  for(int i=0; i<flags->segment; i++)
-  {
-    copy_model(model_x[i],model_y[i]);
-  }
+  copy_model(model_x,model_y);
+  
   //pick a source to update
-  int n = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x[0]->Nlive);
+  int n = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
   
   //more shorthand pointers
-  struct Source *source_x = model_x[0]->source[n];
-  struct Source *source_y = model_y[0]->source[n];
+  struct Source *source_x = model_x->source[n];
+  struct Source *source_y = model_y->source[n];
   
   
   //choose proposal distribution
@@ -486,62 +479,56 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
   }
   proposal[nprop]->trial[ic]++;
   
-  logQyx = (*proposal[nprop]->function)(data[0], model_x[0], source_y, proposal[nprop], source_y->params, chain->r[ic]);
+  logQyx = (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
   //TODO: Fix this
   if(!strcmp(proposal[nprop]->name,"spectrum"))
   {
-    logQyx = log(data[0]->p[(int)(source_y->params[0]-data[0]->qmin)]);
-    logQxy = log(data[0]->p[(int)(source_x->params[0]-data[0]->qmin)]);
+    logQyx = log(data->p[(int)(source_y->params[0]-data->qmin)]);
+    logQxy = log(data->p[(int)(source_x->params[0]-data->qmin)]);
   }
   
   if(!strcmp(proposal[nprop]->name,"cdf draw"))
-    logQxy = cdf_density(model_x[0], source_y, proposal[nprop]);
+    logQxy = cdf_density(model_x, source_y, proposal[nprop]);
   
-  map_array_to_params(source_y, source_y->params, data[0]->T);
+  map_array_to_params(source_y, source_y->params, data->T);
   
   //hold sky position fixed to injected value
   if(flags->fixSky)
   {
-    source_y->costheta = data[0]->inj->costheta;
-    source_y->phi      = data[0]->inj->phi;
-    map_params_to_array(source_y, source_y->params, data[0]->T);
+    source_y->costheta = data->inj->costheta;
+    source_y->phi      = data->inj->phi;
+    map_params_to_array(source_y, source_y->params, data->T);
   }
   
   //copy params for segment 0 into higher segments
-  for(int i=1; i<flags->segment; i++)
-  {
-    copy_source(model_y[0]->source[n],model_y[i]->source[n]);
-    map_params_to_array(model_y[i]->source[n], model_y[i]->source[n]->params, data[i]->T);
-  }
+  copy_source(model_y->source[n],model_y->source[n]);
+  map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
   
   //get priors for x and y
-  logPx = evaluate_uniform_prior(model_x[0], source_x->params);
-  logPy = evaluate_uniform_prior(model_y[0], source_y->params);
+  logPx = evaluate_uniform_prior(model_x, source_x->params);
+  logPy = evaluate_uniform_prior(model_y, source_y->params);
   
   if(logPy > -INFINITY)
   {
     if(!flags->prior)
     {
-      for(int i=0; i<flags->segment; i++)
-      {
-        //  Form master template
-        generate_signal_model(orbit, data[i], model_y[i]);
-        
-        //get likelihood for y
-        model_y[i]->logL = gaussian_log_likelihood(orbit, data[i], model_y[i]);
-        
-        /*
-         H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
-         */
-        logH += (model_y[i]->logL - model_x[i]->logL)/chain->temperature[ic]; //delta logL
-        if(flags->burnin) logH /= chain->annealing;
-        //        if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0)
-        //        {
-        //          printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x[i]->logL , model_y[i]->logL);
-        //          printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-        //        }
-      }
+      //  Form master template
+      generate_signal_model(orbit, data, model_y);
+      
+      //get likelihood for y
+      model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
+      
+      /*
+       H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+       */
+      logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+      if(flags->burnin) logH /= chain->annealing;
+      //        if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0)
+      //        {
+      //          printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x[i]->logL , model_y[i]->logL);
+      //          printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+      //        }
     }
     logH += logPy  - logPx;  //priors
     logH += logQxy - logQyx; //proposals
@@ -550,13 +537,12 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data **data, struct Model 
     if(logH > loga)
     {
       proposal[nprop]->accept[ic]++;
-      for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+      copy_model(model_y,model_x);
     }
-    
   }
 }
 
-void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -567,72 +553,60 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data **data, struct Mode
   double logQxy = 0.0; //(log) proposal density from y->x
   
   //shorthand pointers
-  struct Model **model_x = model;
-  struct Model **model_y = trial;
+  struct Model *model_x = model;
+  struct Model *model_y = trial;
   
-  for(int i=0; i<flags->segment; i++)
-  {
-    copy_model(model_x[i],model_y[i]);
-  }
-
-  logPx = model_x[0]->Nlive*model_x[0]->logPriorVolume;
-
+  copy_model(model_x,model_y);
+  
+  logPx = model_x->Nlive*model_x->logPriorVolume;
+  
   /* pick birth or death move */
   if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
   {
     //ny=nx+1
-    for(int i=0; i<flags->segment; i++) model_y[i]->Nlive++;
+    model_y->Nlive++;
     
     //slot new source in at end of live  source array
-    int create = model_y[0]->Nlive-1;
+    int create = model_y->Nlive-1;
     
-    if(model_y[0]->Nlive<model_x[0]->Nmax)
+    if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      logQyx = draw_from_prior(data[0], model_y[0], model_y[0]->source[create], proposal[0], model_y[0]->source[create]->params, chain->r[ic]);
-      map_params_to_array(model_y[0]->source[create], model_y[0]->source[create]->params, data[0]->T);
+      logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+      map_params_to_array(model_y->source[create], model_y->source[create]->params, data->T);
       logQxy = 0;
       
       //copy params for segment 0 into higher segments
-      for(int i=1; i<flags->segment; i++)
-      {
-        copy_source(model_y[0]->source[create],model_y[i]->source[create]);
-        map_params_to_array(model_y[i]->source[create], model_y[i]->source[create]->params, data[i]->T);
-      }
+      copy_source(model_y->source[create],model_y->source[create]);
+      map_params_to_array(model_y->source[create], model_y->source[create]->params, data->T);
       
-      logPy = model_y[0]->Nlive*model_y[0]->logPriorVolume;
+      logPy = model_y->Nlive*model_y->logPriorVolume;
     }
     else logPy = -INFINITY;
   }
   else /* death move */
   {
     //ny=nx-1
-    for(int i=0; i<flags->segment; i++) model_y[i]->Nlive--;
+    model_y->Nlive--;
     
     //pick source to kill
-    int kill = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x[0]->Nlive);
-
-    if(model_y[0]->Nlive>-1)
+    int kill = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+    
+    if(model_y->Nlive>-1)
     {
       //copy params for segment 0 into higher segments
-      for(int i=1; i<flags->segment; i++)
-      {
-        copy_source(model_y[0]->source[kill],model_y[i]->source[kill]);
-        map_params_to_array(model_y[i]->source[kill], model_y[i]->source[kill]->params, data[i]->T);
-      }
-
+      copy_source(model_y->source[kill],model_y->source[kill]);
+      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
+      
       logQyx = 0;
-      logQxy = model_x[0]->logPriorVolume;
-
-      logPy = model_y[0]->Nlive*model_y[0]->logPriorVolume;
-
+      logQxy = model_x->logPriorVolume;
+      
+      logPy = model_y->Nlive*model_y->logPriorVolume;
+      
       //consolodiate parameter structure
-      for(int i=0; i<flags->segment; i++)
+      for(int j=kill; j<model_x->Nlive; j++)
       {
-        for(int j=kill; j<model_x[i]->Nlive; j++)
-        {
-          copy_source(model_x[i]->source[j+1],model_y[i]->source[j]);
-        }
+        copy_source(model_x->source[j+1],model_y->source[j]);
       }
     }
     else logPy = -INFINITY;
@@ -641,22 +615,19 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data **data, struct Mode
   /* Hasting's ratio */
   if(logPy > -INFINITY && !flags->prior)
   {
-    for(int i=0; i<flags->segment; i++)
-    {
-      //  Form master template
-      generate_signal_model(orbit, data[i], model_y[i]);
-      
-      //get likelihood for y
-      model_y[i]->logL = gaussian_log_likelihood(orbit, data[i], model_y[i]);
-      
-      /*
-       H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
-       */
-      logH += (model_y[i]->logL - model_x[i]->logL)/chain->temperature[ic]; //delta logL
-      if(flags->burnin) logH /= chain->annealing;
-    }
-  }
+    //  Form master template
+    generate_signal_model(orbit, data, model_y);
     
+    //get likelihood for y
+    model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
+    
+    /*
+     H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+     */
+    logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+    if(flags->burnin) logH /= chain->annealing;
+  }
+  
   logH += logPy  - logPx;  //priors
   logH += logQxy - logQyx; //proposals
   
@@ -664,26 +635,22 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data **data, struct Mode
   if(logH > loga)
   {
     //proposal[nprop]->accept[ic]++;
-    for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+    copy_model(model_y,model_x);
   }
   
 }
 
-void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Model **trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
   
   //shorthand pointers
-  struct Data *data_ptr  = data[0];
-  struct Model **model_x = model;
-  struct Model **model_y = trial;
-  struct Model **temp = malloc(sizeof(struct Model *) * flags->segment);
-  for(int i = 0; i < flags->segment; i++)
-  {
-    temp[i] = malloc(sizeof(struct Model));
-    alloc_model(temp[i],model_x[0]->Nmax,data_ptr->N,data_ptr->Nchannel, data_ptr->NP);
-  }
+  struct Data *data_ptr  = data;
+  struct Model *model_x = model;
+  struct Model *model_y = trial;
+  struct Model *temp = malloc(sizeof(struct Model) );
+  alloc_model(temp,model_x->Nmax,data_ptr->N,data_ptr->Nchannel, data_ptr->NP, flags->NT);
   
   //keep track of DR trials for acceptance rates
   proposal[0]->trial[ic]++;
@@ -741,18 +708,14 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
     exit(1);
   }
   
-  
-  for(int i=0; i<flags->segment; i++)
-  {
-    copy_model(model_x[i],model_y[i]);
-    copy_model(model_x[i],temp[i]);
-  }
+  copy_model(model_x,model_y);
+  copy_model(model_x,temp);
   
   //pick a source to update
-  int n = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x[0]->Nlive);
+  int n = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
   
   //more shorthand pointers
-  struct Source *source_x = model_x[0]->source[n];
+  struct Source *source_x = model_x->source[n];
   
   
   //  // force fm-shift for temp model
@@ -768,17 +731,14 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
   //  }
   
   if(gsl_rng_uniform(chain->r[ic])<0.5)
-    draw_from_spectrum(data[0], model_x[0], source_x, proposal[1], temp[0]->source[n]->params, chain->r[ic]);
+    draw_from_spectrum(data, model_x, source_x, proposal[1], temp->source[n]->params, chain->r[ic]);
   else
-    fm_shift(data[0], model_x[0], source_x, proposal[4], temp[0]->source[n]->params, chain->r[ic]);
+    fm_shift(data, model_x, source_x, proposal[4], temp->source[n]->params, chain->r[ic]);
   
   
+  generate_signal_model(orbit, data, temp);
+  temp->logL = gaussian_log_likelihood(orbit, data, temp);
   
-  for(int i=0; i<flags->segment; i++)
-  {
-    generate_signal_model(orbit, data[i], temp[i]);
-    temp[i]->logL = gaussian_log_likelihood(orbit, data[i], temp[i]);
-  }
   //if(ic==0)printf("delayed rejection hastings ratio: %g: ",temp[0]->logL);
   
   
@@ -786,20 +746,17 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
   for(int i=0; i<100; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, proposal_temp, ic);
   
   // test current likelihood for model y to original likelihood of model x
-  for(int i=0; i<flags->segment; i++) logH += (model_y[i]->logL - model_x[i]->logL)/chain->temperature[ic];
+  logH += (model_y->logL - model_x->logL)/chain->temperature[ic];
   //if(ic==0)printf("%g = %g - %g\n",logH,model_y[0]->logL,model_x[0]->logL);
   if(flags->burnin) logH /= chain->annealing;
   loga = log(gsl_rng_uniform(chain->r[ic]));
   if(logH > loga)
   {
     proposal[chain->NP]->accept[ic]++;
-    for(int i=0; i<flags->segment; i++) copy_model(model_y[i],model_x[i]);
+    copy_model(model_y,model_x);
   }
   
-  for(int i=0; i < flags->segment; i++)
-  {
-    free_model(temp[i]);
-  }
+  free_model(temp);
   free(temp);
   
   for(int i=0; i<chain->NP; i++)
@@ -812,101 +769,71 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data **data, struct Model 
   
 }
 
-void data_mcmc(struct Orbit *orbit, struct Data ***data, struct Model ***model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
   double logQ  = 0.0;
   
-  struct Model ***trial = malloc(sizeof(struct Model **) * flags->injection);
+  struct Model **trial = malloc(sizeof(struct Model *) * flags->NF);
   
-  for(int i=0; i<flags->injection; i++)
+  for(int i=0; i<flags->NF; i++)
   {
-    trial[i] = malloc(sizeof(struct Model *) * flags->segment);
-    for(int j = 0; j < flags->segment; j++)
-    {
-      trial[i][j] = malloc(sizeof(struct Model));
-      
-      alloc_model(trial[i][j],model[i][j]->Nmax,data[i][j]->N,data[i][j]->Nchannel, data[i][j]->NP);
-      
-      set_uniform_prior(trial[i][j], data[i][j]);
-      
-      copy_model(model[i][j],trial[i][j]);
-    }
+    trial[i] = malloc(sizeof(struct Model));
+    
+    
+    alloc_model(trial[i],model[i]->Nmax,data[i]->N,data[i]->Nchannel, data[i]->NP, flags->NT);
+    
+    set_uniform_prior(trial[i], data[i]);
+    
+    copy_model(model[i],trial[i]);
   }
   
   logQ = 0.0;
-  for(int i=1; i<flags->segment; i++)
+  
+  logQ += t0_shift(data[0], trial[0], trial[0]->source[0], proposal[0], trial[0]->source[0]->params, chain->r[ic]);
+  
+  for(int j=1; j<flags->NF; j++)
   {
-    
-    logQ += t0_shift(data[0][i], trial[0][i], trial[0][i]->source[0], proposal[0], trial[0][i]->source[0]->params, chain->r[ic]);
-    
-    for(int j=1; j<flags->injection; j++)
+    for(int i=0; i<flags->NT; i++)
     {
-      trial[j][i]->t0 = trial[0][i]->t0;
+      trial[j]->t0[i] = trial[0]->t0[i];
     }
   }
   
-  for(int j=0; j<flags->injection; j++)
+  for(int j=0; j<flags->NF; j++)
   {
-    for(int i=0; i<flags->segment; i++)
+    // Form master template
+    generate_signal_model(orbit, data[j], trial[j]);
+    //      generate_signal_model(orbit, data[j], model[j]);
+    
+    // get likelihood for y
+    trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);
+    
+    /*
+     H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+     */
+    if(!flags->prior)
     {
-      // Form master template
-      generate_signal_model(orbit, data[j][i], trial[j][i]);
-      //      generate_signal_model(orbit, data[j][i], model[j][i]);
-      
-      // get likelihood for y
-      trial[j][i]->logL = gaussian_log_likelihood(orbit, data[j][i], trial[j][i]);
-      
-      if(ic==0)
-      {
-        if(i==0)
-        {
-          if(trial[j][i]->logL!=model[j][i]->logL)
-          {
-            printf("%i %i %lg %lg %lg\n",i,j,trial[j][i]->t0-i*2621440, trial[j][i]->logL, model[j][i]->logL);
-            printf("%lg %lg %i: ",data[j][i]->T, model[j][i]->t0, model[j][i]->source[0]->imin);
-            print_source_params(data[j][i], model[j][i]->source[0], stdout);
-            printf("\n");
-            printf("%lg %lg %i: ",data[j][i]->T, trial[j][i]->t0, trial[j][i]->source[0]->imin);
-            print_source_params(data[j][i], trial[j][i]->source[0], stdout);
-            printf("\n");
-            
-          }
-        }
-      }
-      
-      /*
-       H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
-       */
-      if(!flags->prior)
-      {
-        logH += (trial[j][i]->logL - model[j][i]->logL)/chain->temperature[ic];
-        if(flags->burnin) logH /= chain->annealing;
-      }
-      logH += logQ; //delta logL
+      logH += (trial[j]->logL - model[j]->logL)/chain->temperature[ic];
+      if(flags->burnin) logH /= chain->annealing;
     }
+    logH += logQ; //delta logL
   }
   
   loga = log(gsl_rng_uniform(chain->r[ic]));
+  
   if(logH > loga)
   {
-    for(int j=0; j<flags->injection; j++)
+    for(int j=0; j<flags->NF; j++)
     {
-      for(int i=0; i<flags->segment; i++)
-      {
-        copy_model(trial[j][i],model[j][i]);
-      }
+      copy_model(trial[j],model[j]);
     }
   }
   
-  for(int i=0; i<flags->injection; i++)
+  for(int i=0; i<flags->NF; i++)
   {
-    for(int j = 0; j < flags->segment; j++)
-    {
-      free_model(trial[i][j]);
-    }
-    free(trial[i]);
+    free_model(trial[i]);
   }
   free(trial);
   

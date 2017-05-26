@@ -40,14 +40,13 @@ int main(int argc, char *argv[])
   /* Allocate data structures */
   struct Flags *flags       = malloc(sizeof(struct Flags));
   struct Orbit *orbit       = malloc(sizeof(struct Orbit));
-  struct Data  ***data_ptr  = malloc(sizeof(struct Data**)*NMAX);
+  struct Data  **data_ptr  = malloc(sizeof(struct Data**)*NMAX);
   struct Chain *chain       = malloc(sizeof(struct Chain));
   
   /* Parse command line and set defaults/flags */
   for(int i=0; i<NMAX; i++)
   {
-    data_ptr[i] = malloc(sizeof(struct Data*)*NMAX);
-    for(int j=0; j<NMAX; j++) data_ptr[i][j] = malloc(sizeof(struct Data));
+    data_ptr[i] = malloc(sizeof(struct Data));
   }
   parse(argc,argv,data_ptr,orbit,flags,chain,NMAX);
   
@@ -69,7 +68,7 @@ int main(int argc, char *argv[])
   /* Initialize data structures */
   alloc_data(data_ptr, flags, NMCMC);
 
-  struct Data *data = data_ptr[0][0];
+  struct Data *data = data_ptr[0];
   
   fprintf(stdout,"\n==== GalacticBinaryInjectSimulatedSource ====\n");
   
@@ -138,19 +137,19 @@ int main(int argc, char *argv[])
     galactic_binary_alignment(orbit, data, inj);
     
     //Simulate gravitational wave signal
-    double t0 = data->t0;
+    double t0 = data->t0[0];
     galactic_binary(orbit, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
     
     //Get noise spectrum for data segment
     for(int n=0; n<data->N; n++)
     {
       double f = data->fmin + (double)(n)/data->T;
-      data->noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-      data->noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+      data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+      data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
     }
     
     //Get injected SNR
-    double SNR = snr(inj, data->noise);
+    double SNR = snr(inj, data->noise[0]);
     double Mc  = galactic_binary_Mc(f0, dfdt, data->T);
     double dL  = galactic_binary_dL(f0, dfdt, amp, data->T);
     

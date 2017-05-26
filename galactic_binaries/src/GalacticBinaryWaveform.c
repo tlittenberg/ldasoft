@@ -119,8 +119,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     galactic_binary_alignment(orbit, data, wave_m);
     
     // compute perturbed waveforms
-    galactic_binary(orbit, data->T, data->t0, wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-    galactic_binary(orbit, data->T, data->t0, wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+    galactic_binary(orbit, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
+    galactic_binary(orbit, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
     
     // central differencing derivatives of waveforms w.r.t. parameters
     switch(source->tdi->Nchannel)

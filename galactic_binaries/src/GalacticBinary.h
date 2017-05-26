@@ -5,6 +5,7 @@
 struct Data
 {
   int N;        //number of frequency bins
+  int NT;       //number of time segments
   int Nchannel; //number of data channels
   
   long cseed; //seed for MCMC
@@ -19,20 +20,20 @@ struct Data
   double fmin;
   double fmax;
   
-  double t0;   //start times of segments
-  double tgap; //duration of data gap
+  double *t0;   //start times of segments
+  double *tgap; //time between segments
   
   //Response
-  struct TDI *tdi;
-  struct Noise *noise;
+  struct TDI **tdi;
+  struct Noise **noise;
   
   //Reconstructed signal
   int Nwave;
   int downsample;
-  double ***h_rec; // N x Nchannel x NMCMC 
-  double ***h_res; // N x Nchannel x NMCMC
-  double ***h_pow; // N x Nchannel x NMCMC
-  double ***S_pow; // N x Nchannel x NMCMC
+  double ****h_rec; // N x Nchannel x NT x NMCMC
+  double ****h_res; // N x Nchannel x NT x NMCMC
+  double ****h_pow; // N x Nchannel x NT x NMCMC
+  double ****S_pow; // N x Nchannel x NT x NMCMC
   
   //Injection
   int NP; //number of parameters of injection
@@ -48,8 +49,8 @@ struct Data
 struct Flags
 {
   int verbose;
-  int injection;
-  int segment;
+  int NF; //number of frequency segments;
+  int NT; //number of time segments
   int zeroNoise;
   int fixSky;
   int knownSource;
@@ -146,21 +147,22 @@ struct Noise
 struct Model
 {
   //Source parameters
+  int NT;     //number of time segments
   int NP;     //maximum number of signal parameters
   int Nmax;   //maximum number of signals in model
   int Nlive;  //current number of signals in model
   struct Source **source;
   
   //Noise parameters
-  struct Noise *noise;
+  struct Noise **noise;
   
   //TDI
-  struct TDI *tdi;
+  struct TDI **tdi;
   
   //Start time for segment for model
-  double t0;
-  double t0_min;
-  double t0_max;
+  double *t0;
+  double *t0_min;
+  double *t0_max;
   
   //Source parameter priors
   double **prior;
