@@ -54,8 +54,6 @@ void alloc_data(struct Data **data_vec, struct Flags *flags, int NMCMC)
   {
     struct Data *data = data_vec[m];
     
-    data->t0 = malloc( flags->NT * sizeof(double) );
-
     data->inj = malloc(sizeof(struct Source));
     alloc_source(data->inj,data->N,data->Nchannel,data->NP);
     

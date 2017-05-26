@@ -251,11 +251,10 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   for(int i=0; i<flags->NF; i++)
   {
     data[i]->NT = flags->NT;
-    
     for(int j=0; j<flags->NT; j++)
     {
-      data[i]->t0[j]   = data[0]->t0[j] + j*(data[0]->T + data[0]->tgap[FIXME]);
-      data[i]->tgap[j] = data[0]->tgap[FIXME];
+      data[i]->t0[j]   = data[0]->t0[0] + j*(data[0]->T + data[0]->tgap[0]);
+      data[i]->tgap[j] = data[0]->tgap[0];
     }
     data[i]->T        = data[0]->T;
     data[i]->N        = data[0]->N;

@@ -61,6 +61,8 @@ int main(int argc, char *argv[])
   for(int i=0; i<NMAX; i++)
   {
     data[i] = malloc(sizeof(struct Data));
+    data[i]->t0   = malloc( NMAX * sizeof(double) );
+    data[i]->tgap = malloc( NMAX * sizeof(double) );
   }
   parse(argc,argv,data,orbit,flags,chain,NMAX);
   int NC = chain->NC;

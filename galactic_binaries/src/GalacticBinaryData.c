@@ -259,6 +259,8 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
   for(int ii = 0; ii<flags->NF; ii++)
   {
     
+    struct Data *data  = data_vec[ii];
+
     injectionFile = fopen(flags->injFile[ii],"r");
     if(!injectionFile)
       fprintf(stderr,"Missing injection file %s\n",flags->injFile[ii]);
@@ -290,7 +292,6 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
       for(int jj=0; jj<flags->NT; jj++)
       {
         
-        struct Data *data  = data_vec[ii];
         struct TDI *tdi = data->tdi[jj];
         
         
@@ -307,7 +308,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           data->fmax = data->qmax/data->T;
           
           if(jj==0)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
-          fprintf(stdout,"   ...start time  %g\n",data->t0[jj]);
+          fprintf(stdout,"   ...start time: %g\n",data->t0[jj]);
         }
         
         
