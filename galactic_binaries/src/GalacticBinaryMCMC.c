@@ -33,7 +33,7 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
 void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
 
 void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
-void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic, int Nseg);
+void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic);
 
 /* ============================  MAIN PROGRAM  ============================ */
 
@@ -46,8 +46,6 @@ int main(int argc, char *argv[])
   start = time(NULL);
   
   int NMAX  = 12;   //max number of frequency & time segments
-  int NMCMC = 10000; //number of MCMC steps
-  int NBURN = 10000; //number of burn-in steps
   
   
   /* Allocate data structures */
@@ -66,7 +64,6 @@ int main(int argc, char *argv[])
   }
   parse(argc,argv,data,orbit,flags,chain,NMAX);
   int NC = chain->NC;
-  if(flags->cheat) NBURN=0;
   
   
   /* Allocate model structures */
@@ -90,7 +87,7 @@ int main(int argc, char *argv[])
   }
   
   /* Initialize data structures */
-  alloc_data(data, flags, NMCMC);
+  alloc_data(data, flags);
   
   
   /* Inject gravitational wave signal */
@@ -174,7 +171,7 @@ int main(int argc, char *argv[])
   
   
   /* The MCMC loop */
-  for(int mcmc = -NBURN; mcmc < NMCMC; mcmc++)
+  for(int mcmc = -flags->NBURN; mcmc < flags->NMCMC; mcmc++)
   {
     if(mcmc<0) flags->burnin=1;
     else       flags->burnin=0;
@@ -182,7 +179,7 @@ int main(int argc, char *argv[])
     //set annealinging tempurature during burnin
     if(flags->burnin)
     {
-      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)NBURN)/((double)NBURN/(double)10))/400.;
+      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/400.;
       if(chain->annealing<1.0)chain->annealing=1.0;
     }
     
@@ -202,8 +199,7 @@ int main(int argc, char *argv[])
         {
           galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
           
-          /*for(int j=0; j<flags->NT; j++)
-           noise_model_mcmc(orbit, data[i], model_ptr[j], trial_ptr[j], chain, flags, ic, j);*/
+          noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
         
         //reverse jump birth/death move
@@ -223,19 +219,19 @@ int main(int argc, char *argv[])
       }//end loop over frequency segments
       
       //update start time for data segments
-      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal, ic);
+      data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal, ic);
       
     }// end (parallel) loop over chains
     
     ptmcmc(model,chain,flags);
-    adapt_temperature_ladder(chain, mcmc+NBURN);
+    adapt_temperature_ladder(chain, mcmc+flags->NBURN);
     
     print_chain_files(data[FIXME], model, chain, flags, mcmc);
     
     //track maximum log Likelihood
     if(mcmc%100)
     {
-      if(update_max_log_likelihood(model, chain, flags)) mcmc = -NBURN;
+      if(update_max_log_likelihood(model, chain, flags)) mcmc = -flags->NBURN;
     }
     
     //store reconstructed waveform
@@ -267,7 +263,7 @@ int main(int argc, char *argv[])
   for(int i=0; i<flags->NF; i++)print_waveforms_reconstruction(data[i],i);
   
   FILE *chainFile = fopen("avg_log_likelihood.dat","w");
-  for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(NMCMC/data[FIXME]->downsample));
+  for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data[FIXME]->downsample));
   fclose(chainFile);
   
   //print total run time
@@ -378,7 +374,7 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc)
   }//end loop over ic
 }//end adapt function
 
-void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic, int Nseg)
+void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability

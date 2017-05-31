@@ -48,11 +48,14 @@ void map_params_to_array(struct Source *source, double *params, double T)
     params[8] = source->d2fdt2*T*T*T;
 }
 
-void alloc_data(struct Data **data_vec, struct Flags *flags, int NMCMC)
+void alloc_data(struct Data **data_vec, struct Flags *flags)
 {
+  int NMCMC = flags->NMCMC;
   for(int m=0; m<flags->NF; m++)
   {
     struct Data *data = data_vec[m];
+ 
+    data->NT = flags->NT;
     
     data->inj = malloc(sizeof(struct Source));
     alloc_source(data->inj,data->N,data->Nchannel,data->NP);

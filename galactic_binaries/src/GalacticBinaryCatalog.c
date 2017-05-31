@@ -31,8 +31,7 @@
 int main(int argc, char *argv[])
 {
   int NMAX   = 1;   //max number of waveforms & time segments
-  int NMCMC  = 1;   //max number of waveforms & time segments
-
+  
   time_t start, stop;
   start = time(NULL);
   
@@ -66,7 +65,7 @@ int main(int argc, char *argv[])
   }
   
   /* Initialize data structures */
-  alloc_data(data_ptr, flags, NMCMC);
+  alloc_data(data_ptr, flags);
 
   struct Data *data = data_ptr[0];
   

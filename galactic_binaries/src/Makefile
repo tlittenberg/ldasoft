@@ -1,6 +1,6 @@
 # OpenMP
 CC = gcc-mp-5
-#CCFLAGS = -fopenmp
+CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m
 CCFLAGS += -g -Wall -O3 -std=gnu99 -fmax-errors=5 -Werror

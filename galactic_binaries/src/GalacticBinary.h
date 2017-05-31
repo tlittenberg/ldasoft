@@ -49,6 +49,8 @@ struct Data
 struct Flags
 {
   int verbose;
+  int NMCMC; //number of MCMC steps
+  int NBURN; //number of Burn-in steps
   int NF; //number of frequency segments;
   int NT; //number of time segments
   int zeroNoise;

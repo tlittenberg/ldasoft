@@ -47,6 +47,7 @@ void print_usage()
   fprintf(stdout,"  -h | --help        : print help message and exit         \n");
   fprintf(stdout,"  -v | --verbose     : enable verbose output               \n");
   fprintf(stdout,"       --orbit       : orbit ephemerides file (2.5 GM MLDC)\n");
+  fprintf(stdout,"       --steps       : number of mcmc steps (10000)        \n");
   fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
   fprintf(stdout,"       --segments    : number of data segments (1)         \n");
   fprintf(stdout,"       --start-time  : initial time of segment  (0)        \n");
@@ -94,6 +95,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->orbit       = 0;
   flags->prior       = 0;
   flags->update      = 0;
+  flags->NMCMC       = 10000;
+  flags->NBURN       = 10000;
   chain->NP          = 5; //number of proposals
   chain->NC          = 20;//number of chains
 
@@ -140,18 +143,19 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"inj",       required_argument, 0, 0},
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
+    {"steps",     required_argument, 0, 0},
     
     /* These options don’t set a flag.
      We distinguish them by their indices. */
-    {"help",    no_argument,       0,  'h' },
-    {"verbose", no_argument,       0,  'v' },
-    {"zero-noise", no_argument,    0,   0  },
-    {"fix-sky", no_argument,       0,   0  },
-    {"known-source",no_argument,   0,   0  },
-    {"f-double-dot",no_argument,   0,   0  },
-    {"prior",   no_argument,       0,   0  },
-    {"cheat",   no_argument,       0,   0  },
-    {0,         0,                 0,   0  }
+    {"help",        no_argument, 0,'h'},
+    {"verbose",     no_argument, 0,'v'},
+    {"zero-noise",  no_argument, 0, 0 },
+    {"fix-sky",     no_argument, 0, 0 },
+    {"known-source",no_argument, 0, 0 },
+    {"f-double-dot",no_argument, 0, 0 },
+    {"prior",       no_argument, 0, 0 },
+    {"cheat",       no_argument, 0, 0 },
+    {0, 0, 0, 0}
   };
   
   int opt=0;
@@ -173,7 +177,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         
       case 0:
         if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
-        if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT    = atoi(optarg);
+        if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
         if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
         if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
         if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap[0] = (double)atof(optarg);
@@ -184,8 +188,13 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
-        if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
+        if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
+        if(strcmp("steps",       long_options[long_index].name) == 0)
+        {
+          flags->NMCMC = atoi(optarg);
+          flags->NBURN = flags->NMCMC;
+        }
         if(strcmp("known-source",long_options[long_index].name) == 0)
         {
           flags->knownSource = 1;
@@ -246,7 +255,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         exit(EXIT_FAILURE);
     }
   }
-  
+  if(flags->cheat) flags->NBURN = 0;
+
   // copy command line args to other data structures
   for(int i=0; i<flags->NF; i++)
   {
@@ -314,6 +324,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(stdout,"  Data duration ....... %.0f \n",data_ptr->T);
   fprintf(stdout,"  Data segments ....... %i   \n",flags->NT);
   fprintf(stdout,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
+  fprintf(stdout,"  MCMC steps............%i   \n",flags->NMCMC);
+  fprintf(stdout,"  MCMC burnin steps.....%i   \n",flags->NBURN);
   fprintf(stdout,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
   fprintf(stdout,"\n");
   fprintf(stdout,"================= RUN FLAGS ================\n");
@@ -570,9 +582,17 @@ void print_waveform_draw(struct Data **data, struct Model **model, struct Flags 
 
 void print_waveforms_reconstruction(struct Data *data, int seg)
 {
+  char filename[1024];
+  FILE *fptr_rec;
+  FILE *fptr_res;
+  FILE *fptr_Snf;
+
   //sort h reconstructions
   for(int k=0; k<data->NT; k++)
   {
+    printf("k=%i\n",k);
+
+    printf("sort h_rec\n");
     for(int n=0; n<data->N*2; n++)
     {
       for(int m=0; m<data->Nchannel; m++)
@@ -580,6 +600,8 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
         gsl_sort(data->h_rec[n][m][k],1,data->Nwave);
       }
     }
+    
+    printf("sort h_res etc.\n");
     for(int n=0; n<data->N; n++)
     {
       for(int m=0; m<data->Nchannel; m++)
@@ -590,17 +612,20 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
       }
     }
     
-    char filename[1024];
+    printf("open files\n");
+
     sprintf(filename,"power_reconstruction_t%i_f%i.dat",k,seg);
-    FILE *fptr_rec=fopen(filename,"w");
+    fptr_rec=fopen(filename,"w");
     sprintf(filename,"power_residual_t%i_f%i.dat",k,seg);
-    FILE *fptr_res=fopen(filename,"w");
+    fptr_res=fopen(filename,"w");
     sprintf(filename,"power_noise_t%i_f%i.dat",k,seg);
-    FILE *fptr_Snf=fopen(filename,"w");
+    fptr_Snf=fopen(filename,"w");
     
     //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
     double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
     double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
+    
+    printf("write stuff\n");
     for(int i=0; i<data->N; i++)
     {
       double f = (double)(i+data->qmin)/data->T;
@@ -684,6 +709,8 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
       fprintf(fptr_Snf,"\n");
       
     }
+    
+    
     fclose(fptr_res);
     fclose(fptr_rec);
     fclose(fptr_Snf);
