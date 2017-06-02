@@ -109,7 +109,6 @@ int main(int argc, char *argv[])
   initialize_proposal(data[0], chain, flags, proposal, NMAX);
   
   /* Initialize data models */
-  //#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial)
   for(ic=0; ic<NC; ic++)
   {
     trial[ic] = malloc(sizeof(struct Model));
@@ -184,7 +183,7 @@ int main(int argc, char *argv[])
     }
     
     // (parallel) loop over chains
-    //#pragma omp parallel for private(ic) shared(model,chain,data,orbit,trial,flags,proposal)
+    #pragma omp parallel for private(ic) shared(flags,model,trial,chain,orbit,proposal)
     for(ic=0; ic<NC; ic++)
     {
       
@@ -219,7 +218,7 @@ int main(int argc, char *argv[])
       }//end loop over frequency segments
       
       //update start time for data segments
-      data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal, ic);
+      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal, ic);
       
     }// end (parallel) loop over chains
     

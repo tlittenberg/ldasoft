@@ -259,10 +259,9 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   //Static quantities (Re and Im)
   double DPr, DPi, DCr, DCi;
   //Time varrying quantities (Re & Im) broken up into convenient segments
-  double tran1r, tran1i, tran2r, tran2i;
   double TR[4][4], TI[4][4];
   //Miscellaneous constants used to speed up calculations
-  double arg1, arg2, sinc, df;
+  double df;
   /*   Fourier coefficients before FFT and after convolution  */
   //Time series of slowly evolving terms at each vertex
   double *data12, *data13, *data21, *data23, *data31, *data32;
@@ -270,8 +269,6 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   double a12[BW2+3], a13[BW2+3], a21[BW2+3], a23[BW2+3], a31[BW2+3], a32[BW2+3];
   //Package cij's into proper form for TDI subroutines
   double ***d;
-  /*   Miscellaneous  */
-  double aevol;
   
   /*   Allocating Arrays   */
   x = malloc(sizeof(double)*4);//dvector(1,3);
@@ -421,42 +418,42 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
     //Calculating Transfer function
     for(i=1; i<=3; i++)
     {
+      //Argument of complex exponentials
+      //arg2 = df*xi[i] + phi0 - PI2*kdotx[i]*f0;// + PI2*t0*f0;
+      double arg2 = PI2*f0*xi[i] + phi0 - df*t;
+      
+      //First order frequency evolution
+      if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
+      
+      //Second order frequency evolution
+      if(NP>8) arg2 += (M_PI/3.0)*d2fdt2*xi[i]*xi[i]*x[i];
+      
+      //Evolution of amplitude
+      double aevol = 1.0;
+      
+      //First order amplitude evolution
+      if(NP>7) aevol += 0.66666666666666666666*dfdt/f0*xi[i];
+      
+      //Second order amplitude evolution
+      //if(NP>8) aevol += const.*d2fdt2*xi[i]*xi[i]/f0;
+
       for(j=1; j<=3; j++)
       {
         if(i!=j)
         {
           //Argument of transfer function
-          arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
-          
-          //Argument of complex exponentials
-          //arg2 = df*xi[i] + phi0 - PI2*kdotx[i]*f0;// + PI2*t0*f0;
-          arg2 = PI2*f0*xi[i] + phi0 - df*t;
-
-          //First order frequency evolution
-          if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
-          
-          //Second order frequency evolution
-          if(NP>8) arg2 += (M_PI/3.0)*d2fdt2*xi[i]*xi[i]*x[i];
+          double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
           
           //Transfer function
-          sinc = 0.25*sin(arg1)/arg1;
-          
-          //Evolution of amplitude
-          aevol = 1.0;
-          
-          //First order amplitude evolution
-          if(NP>7) aevol += 0.66666666666666666666*dfdt/f0*xi[i];
-          
-          //Second order amplitude evolution
-          //if(NP>8) aevol += const.*d2fdt2*xi[i]*xi[i]/f0;
+          double sinc = 0.25*sin(arg1)/arg1;
           
           ///Real and imaginary pieces of time series (no complex exponential)
-          tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);
-          tran1i = aevol*(dplus[i][j]*DPi + dcross[i][j]*DCi);
+          double tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);
+          double tran1i = aevol*(dplus[i][j]*DPi + dcross[i][j]*DCi);
           
           //Real and imaginry components of complex exponential
-          tran2r = cos(arg1 + arg2);
-          tran2i = sin(arg1 + arg2);
+          double tran2r = cos(arg1 + arg2);
+          double tran2i = sin(arg1 + arg2);
           
           //Real & Imaginary part of the slowly evolving signal
           TR[i][j] = sinc*(tran1r*tran2r - tran1i*tran2i);
@@ -476,21 +473,12 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   }
   
   /*   Numerical Fourier transform of slowly evolving signal   */
-//#pragma omp parallel sections
-//  {
-//#pragma omp section
-    dfour1(data12, BW, -1);
-//#pragma omp section
-    dfour1(data21, BW, -1);
-//#pragma omp section
-    dfour1(data31, BW, -1);
-//#pragma omp section
-    dfour1(data13, BW, -1);
-//#pragma omp section
-    dfour1(data23, BW, -1);
-//#pragma omp section
-    dfour1(data32, BW, -1);
-//  }
+  dfour1(data12, BW, -1);
+  dfour1(data21, BW, -1);
+  dfour1(data31, BW, -1);
+  dfour1(data13, BW, -1);
+  dfour1(data23, BW, -1);
+  dfour1(data32, BW, -1);
   
   //Unpack arrays from dfour1.c and normalize
   for(i=1; i<=BW; i++)
