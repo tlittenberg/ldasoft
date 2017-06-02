@@ -11,7 +11,7 @@ CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o
 
-all: $(OBJS) gb_mcmc gb_catalog
+all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass
 
 LISA.o : LISA.c LISA.h
 	$(CC) $(CCFLAGS) -c LISA.c 
@@ -43,8 +43,11 @@ gb_mcmc : GalacticBinaryMCMC.c $(OBJS) GalacticBinary.h
 gb_catalog : GalacticBinaryCatalog.c $(OBJS) GalacticBinary.h
 	$(CC) $(CCFLAGS) -o gb_catalog GalacticBinaryCatalog.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
 
-install : gb_mcmc gb_catalog
-	install gb_mcmc gb_catalog ${HOME}/ldasoft/master/bin/
+gb_mcmc_chirpmass : gb_mcmc_chirpmass.c 
+	$(CC) -o gb_mcmc_chirpmass gb_mcmc_chirpmass.c $(LIBS:%=-l%)
+
+install : gb_mcmc gb_catalog gb_mcmc_chirpmass
+	install gb_mcmc gb_catalog gb_mcmc_chirpmass ${HOME}/ldasoft/master/bin/
 
 clean:
-	rm *.o gb_mcmc gb_catalog
+	rm *.o gb_mcmc gb_catalog gb_mcmc_chirpmass
