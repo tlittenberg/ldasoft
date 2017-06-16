@@ -426,7 +426,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
       if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
       
       //Second order frequency evolution
-      if(NP>8) arg2 += (M_PI/3.0)*d2fdt2*xi[i]*xi[i]*x[i];
+      if(NP>8) arg2 += (M_PI/3.0)*d2fdt2*xi[i]*xi[i]*xi[i];
       
       //Evolution of amplitude
       double aevol = 1.0;
