@@ -51,8 +51,9 @@ struct Flags
   int verbose;
   int NMCMC; //number of MCMC steps
   int NBURN; //number of Burn-in steps
-  int NF; //number of frequency segments;
-  int NT; //number of time segments
+  int NF;    //number of frequency segments;
+  int NT;    //number of time segments
+  int NMAX;  //max number of sources
   int zeroNoise;
   int fixSky;
   int knownSource;
@@ -61,6 +62,7 @@ struct Flags
   int cheat;
   int burnin;
   int update;
+  int rj;
   
   char **injFile;
   char cdfFile[128];
@@ -72,6 +74,7 @@ struct Chain
   int NC;
   int NP;
   int *index;
+  int **dimension;
   double *acceptance;
   double *temperature;
   double *avgLogL;
@@ -85,6 +88,7 @@ struct Chain
   //chain files
   FILE **noiseFile;
   FILE **chainFile;
+  FILE **dimensionFile;
   FILE **parameterFile;
   FILE *likelihoodFile;
   FILE *temperatureFile;

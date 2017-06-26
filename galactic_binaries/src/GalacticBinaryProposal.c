@@ -27,7 +27,7 @@ void setup_frequency_proposal(struct Data *data)
   int BW = 20;
   double *power = data->p;
   double total  = 0.0;
-  FILE *temp = fopen("temp2.dat","w");
+  FILE *temp = fopen("data/frequency_proposal.dat","w");
   for(int i=0; i<data->N-BW; i++)
   {
     power[i]=0.0;
@@ -99,13 +99,14 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
   int count=0;
   while(check)
   {
-    params[0] = model->prior[0][0] + gsl_rng_uniform(seed)*(model->prior[0][1]-model->prior[0][0]);
+    params[0] = (double)model->prior[0][0] + gsl_rng_uniform(seed)*(double)(model->prior[0][1]-model->prior[0][0]);
     alpha     = gsl_rng_uniform(seed)*data->pmax;
     q = (int)(params[0]-data->qmin);
     if(alpha<data->p[q]) check = 0;
     count++;
+//    printf("params[0]=%.12g, q=%i, alpha=%g, p=%g, pmax=%g\n",params[0],q,alpha,data->p[q],data->pmax);
   }
-  
+//  printf("============>params[0]=%.12g, q=%i, alpha=%g, p=%g, pmax=%g\n",params[0],q,alpha,data->p[q],data->pmax);
   //random draws for other parameters
   for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
 
@@ -331,7 +332,7 @@ void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *f
       case 2:
         sprintf(proposal[i]->name,"spectrum");
         proposal[i]->function = &draw_from_spectrum;
-        proposal[i]->weight = 0.0;
+        proposal[i]->weight = 0.1;
         check+=proposal[i]->weight;
         break;
       case 3:

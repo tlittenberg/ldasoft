@@ -178,12 +178,14 @@ int main(int argc, char *argv[])
     //set annealinging tempurature during burnin
     if(flags->burnin)
     {
-      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/400.;
+      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
       if(chain->annealing<1.0)chain->annealing=1.0;
+      chain->annealing=1.0;
+      //printf("annealing=%g\n",chain->annealing);
     }
     
     // (parallel) loop over chains
-    #pragma omp parallel for private(ic) shared(flags,model,trial,chain,orbit,proposal)
+    //#pragma omp parallel for private(ic) shared(flags,model,trial,chain,orbit,proposal)
     for(ic=0; ic<NC; ic++)
     {
       
@@ -202,7 +204,7 @@ int main(int argc, char *argv[])
         }//loop over MCMC steps
         
         //reverse jump birth/death move
-        galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
+        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
         
         //delayed rejection mode-hopper
         //if(mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
@@ -252,8 +254,11 @@ int main(int argc, char *argv[])
     {
       for(int i=0; i<flags->NF; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
       for(ic=0; ic<NC; ic++)
+      {
+        chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
         for(int i=0; i<flags->NF; i++)
           chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
+      }
     }
     
   }// end MCMC loop
@@ -264,6 +269,10 @@ int main(int argc, char *argv[])
   FILE *chainFile = fopen("avg_log_likelihood.dat","w");
   for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data[FIXME]->downsample));
   fclose(chainFile);
+  
+  FILE *zFile = fopen("evidence.dat","w");
+  for(int i=0; i<flags->NMAX; i++) fprintf(zFile,"%i %i\n",i,chain->dimension[0][i]);
+  fclose(zFile);
   
   //print total run time
   stop = time(NULL);
@@ -569,13 +578,20 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
-      map_params_to_array(model_y->source[create], model_y->source[create]->params, data->T);
+//      logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+
+      logQyx = draw_from_spectrum(data, model_y, model_y->source[create], proposal[1], model_y->source[create]->params, chain->r[ic]);
+      
+      map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
+
       logQxy = 0;
+      logQyx = model_x->logPriorVolume + log(model->prior[0][1]-model->prior[1][0]);
+      logQyx += log(data->p[(int)(model_y->source[create]->params[0]-data->qmin)]);
+
       
       //copy params for segment 0 into higher segments
-      copy_source(model_y->source[create],model_y->source[create]);
-      map_params_to_array(model_y->source[create], model_y->source[create]->params, data->T);
+//      copy_source(model_y->source[create],model_y->source[create]);
+//      map_params_to_array(model_y->source[create], model_y->source[create]->params, data->T);
       
       logPy = model_y->Nlive*model_y->logPriorVolume;
     }
@@ -592,11 +608,13 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive>-1)
     {
       //copy params for segment 0 into higher segments
-      copy_source(model_y->source[kill],model_y->source[kill]);
-      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
+//      copy_source(model_y->source[kill],model_y->source[kill]);
+//      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
       
       logQyx = 0;
-      logQxy = model_x->logPriorVolume;
+      logQxy = model_x->logPriorVolume + log(model->prior[0][1]-model->prior[1][0]);
+      logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
+
       
       logPy = model_y->Nlive*model_y->logPriorVolume;
       

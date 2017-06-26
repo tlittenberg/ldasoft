@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
@@ -85,8 +86,9 @@ void print_usage()
 void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
 {
   //Set defaults
+  flags->rj          = 1;
   flags->verbose     = 0;
-  flags->NF   = 0;
+  flags->NF          = 0;
   flags->zeroNoise   = 0;
   flags->fixSky      = 0;
   flags->cheat       = 0;
@@ -95,6 +97,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->orbit       = 0;
   flags->prior       = 0;
   flags->update      = 0;
+  flags->NMAX        = Nmax;
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
   chain->NP          = 5; //number of proposals
@@ -155,18 +158,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"f-double-dot",no_argument, 0, 0 },
     {"prior",       no_argument, 0, 0 },
     {"cheat",       no_argument, 0, 0 },
+    {"no-rj",        no_argument, 0, 0 },
     {0, 0, 0, 0}
   };
   
   int opt=0;
   int long_index=0;
-  
-  //Print command line
-  FILE *out = fopen("run.sh","w");
-  fprintf(out,"#!/bin/sh\n\n");
-  for(opt=0; opt<argc; opt++) fprintf(out,"%s ",argv[opt]);
-  fprintf(out,"\n\n");
-  fclose(out);
   
   //Loop through argv string and pluck out arguments
   struct Data *data_ptr = data[0];
@@ -190,6 +187,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
+        if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("steps",       long_options[long_index].name) == 0)
         {
           flags->NMCMC = atoi(optarg);
@@ -289,7 +287,19 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
 //  else data->T = (double)atof(data->duration);
   
   if(abort>0)exit(EXIT_FAILURE);
+
+  // run looks good to go, make directories and save command line
+  mode_t process_mask = umask(0);
+  mkdir("chains",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  mkdir("data",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  umask(process_mask);
   
+  //Print command line
+  FILE *out = fopen("run.sh","w");
+  fprintf(out,"#!/bin/sh\n\n");
+  for(opt=0; opt<argc; opt++) fprintf(out,"%s ",argv[opt]);
+  fprintf(out,"\n\n");
+  fclose(out);
   
   //Report on set parameters
   fprintf(stdout,"\n");
@@ -349,6 +359,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     fprintf(stdout,"  Noise realization is. ENABLED\n");
     fprintf(stdout,"  Noise seed .......... %li  \n",data_ptr->nseed);
   }
+  if(flags->rj)       fprintf(stdout,"  RJMCMC is ........... ENABLED\n");
+  else                fprintf(stdout,"  RJMCMC is ........... DISABLED\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"\n");
   
@@ -384,10 +396,17 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   //Print sampling parameters
   for(j=0; j<flags->NF; j++)
   {
-    for(i=0; i<model[n][j]->Nlive; i++)
+    int D = model[n][j]->Nlive;
+    for(i=0; i<D; i++)
     {
       print_source_params(data,model[n][j]->source[i],chain->parameterFile[0]);
       fprintf(chain->parameterFile[0],"\n");
+
+      if(step>0)
+      {
+        print_source_params(data,model[n][j]->source[i],chain->dimensionFile[D]);
+        fprintf(chain->dimensionFile[D],"\n");
+      }
     }
   }
   
@@ -573,7 +592,7 @@ void print_waveform_draw(struct Data **data, struct Model **model, struct Flags 
   
   for(int i=0; i<flags->NF; i++)
   {
-      sprintf(filename,"waveform_draw_%i.dat",i);
+      sprintf(filename,"data/waveform_draw_%i.dat",i);
       fptr=fopen(filename,"w");
       print_waveform(data[i], model[i], fptr);
       fclose(fptr);
@@ -590,9 +609,6 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
   //sort h reconstructions
   for(int k=0; k<data->NT; k++)
   {
-    printf("k=%i\n",k);
-
-    printf("sort h_rec\n");
     for(int n=0; n<data->N*2; n++)
     {
       for(int m=0; m<data->Nchannel; m++)
@@ -612,20 +628,17 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
       }
     }
     
-    printf("open files\n");
-
-    sprintf(filename,"power_reconstruction_t%i_f%i.dat",k,seg);
+    sprintf(filename,"data/power_reconstruction_t%i_f%i.dat",k,seg);
     fptr_rec=fopen(filename,"w");
-    sprintf(filename,"power_residual_t%i_f%i.dat",k,seg);
+    sprintf(filename,"data/power_residual_t%i_f%i.dat",k,seg);
     fptr_res=fopen(filename,"w");
-    sprintf(filename,"power_noise_t%i_f%i.dat",k,seg);
+    sprintf(filename,"data/power_noise_t%i_f%i.dat",k,seg);
     fptr_Snf=fopen(filename,"w");
     
     //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
     double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
     double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
     
-    printf("write stuff\n");
     for(int i=0; i<data->N; i++)
     {
       double f = (double)(i+data->qmin)/data->T;

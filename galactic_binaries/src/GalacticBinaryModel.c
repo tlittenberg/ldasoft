@@ -133,16 +133,22 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
 {
   int ic;
   int NC = chain->NC;
+  int ND = flags->NMAX;
+  char filename[1024];
+
   chain->index = malloc(NC*sizeof(int));
   chain->acceptance = malloc(NC*sizeof(double));
   chain->temperature = malloc(NC*sizeof(double));
   chain->avgLogL     = malloc(NC*sizeof(double));
+  chain->dimension   = malloc(NC*sizeof(int *));
   for(ic=0; ic<NC; ic++)
   {
     chain->index[ic]=ic;
     chain->acceptance[ic] = 1.0;
     chain->temperature[ic] = pow(1.2,(double)ic);
     chain->avgLogL[ic] = 0.0;
+    chain->dimension[ic] = malloc(ND*sizeof(int));
+    for(int id=0; id<ND; id++) chain->dimension[ic][id] = 0;
   }
   //set hottest chain to ~infinite temperature
   chain->temperature[NC-1] = 1e12;
@@ -159,32 +165,38 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
     gsl_rng_set (chain->r[ic], *seed);
     *seed = (long)gsl_rng_get(chain->r[ic]);
   }
-
-  chain->likelihoodFile = fopen("log_likelihood_chain.dat","w");
   
-  chain->temperatureFile = fopen("temperature_chain.dat","w");
+  chain->likelihoodFile = fopen("chains/log_likelihood_chain.dat","w");
+  
+  chain->temperatureFile = fopen("chains/temperature_chain.dat","w");
 
   chain->chainFile = malloc(NC*sizeof(FILE *));
-  chain->chainFile[0] = fopen("model_chain.dat.0","w");
+  chain->chainFile[0] = fopen("chains/model_chain.dat.0","w");
 
   chain->parameterFile = malloc(NC*sizeof(FILE *));
-  chain->parameterFile[0] = fopen("parameter_chain.dat.0","w");
+  chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0","w");
 
+  chain->dimensionFile = malloc(NC*sizeof(FILE *));
+  for(int i=0; i<flags->NMAX; i++)
+  {
+    sprintf(filename,"chains/dimension_chain.dat.%i",i);
+    chain->dimensionFile[i] = fopen(filename,"w");
+  }
+  
   chain->noiseFile = malloc(NC*sizeof(FILE *));
-  chain->noiseFile[0] = fopen("noise_chain.dat.0","w");
+  chain->noiseFile[0] = fopen("chains/noise_chain.dat.0","w");
 
   if(flags->verbose)
   {
-    char filename[1024];
     for(ic=1; ic<NC; ic++)
     {
-      sprintf(filename,"parameter_chain.dat.%i",ic);
+      sprintf(filename,"chains/parameter_chain.dat.%i",ic);
       chain->parameterFile[ic] = fopen(filename,"w");
 
-      sprintf(filename,"model_chain.dat.%i",ic);
+      sprintf(filename,"chains/model_chain.dat.%i",ic);
       chain->chainFile[ic] = fopen(filename,"w");
 
-      sprintf(filename,"noise_chain.dat.%i",ic);
+      sprintf(filename,"chains/noise_chain.dat.%i",ic);
       chain->noiseFile[ic] = fopen(filename,"w");
     }
   }

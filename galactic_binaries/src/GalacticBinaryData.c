@@ -145,7 +145,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         tdi->E[2*i+1] = inj->tdi->E[2*n+1];
       }
       
-      sprintf(filename,"waveform_injection_%i_%i.dat",ii,jj);
+      sprintf(filename,"data/waveform_injection_%i_%i.dat",ii,jj);
       fptr=fopen(filename,"w");
       for(int i=0; i<data->N; i++)
       {
@@ -158,7 +158,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       }
       fclose(fptr);
       
-      sprintf(filename,"power_injection_%i_%i.dat",ii,jj);
+      sprintf(filename,"data/power_injection_%i_%i.dat",ii,jj);
       fptr=fopen(filename,"w");
       for(int i=0; i<data->N; i++)
       {
@@ -222,7 +222,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
        */
       
       
-      sprintf(filename,"power_data_%i_%i.dat",ii,jj);
+      sprintf(filename,"data/power_data_%i_%i.dat",ii,jj);
       fptr=fopen(filename,"w");
       
       for(int i=0; i<data->N; i++)
@@ -370,7 +370,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           tdi->E[2*i+1] += inj->tdi->E[2*n+1];
         }
         
-        sprintf(filename,"waveform_injection_%i_%i.dat",ii,jj);
+        sprintf(filename,"data/waveform_injection_%i_%i.dat",ii,jj);
         fptr=fopen(filename,"w");
         for(int i=0; i<data->N; i++)
         {
@@ -383,7 +383,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         }
         fclose(fptr);
         
-        sprintf(filename,"power_injection_%i_%i.dat",ii,jj);
+        sprintf(filename,"data/power_injection_%i_%i.dat",ii,jj);
         fptr=fopen(filename,"w");
         for(int i=0; i<data->N; i++)
         {
@@ -447,7 +447,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         
         
         
-        sprintf(filename,"power_data_%i_%i.dat",ii,jj);
+        sprintf(filename,"data/power_data_%i_%i.dat",ii,jj);
         fptr=fopen(filename,"w");
         
         for(int i=0; i<data->N; i++)
