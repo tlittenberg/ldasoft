@@ -204,7 +204,15 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
   if(q > 1887436) DS = 1024;
   if(q > 6291456) DS = 2048;
 
+  
+  //Rescale based on Tobs
+  double rescale = 1.;
+  while(T>62914560*rescale) rescale*=2;
+  
+  DS *= rescale;
+  
   while(p>DS) DS*=2;
+  
   
   //Sinc spreading
   double SNm  = sn/(4.*sf*sf);   //Michelson noise

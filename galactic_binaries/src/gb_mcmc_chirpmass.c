@@ -64,12 +64,12 @@ int main(int argc, char* argv[])
    12) fddot
    */
   
-  int i;
+  int i,n;
   double logL,t0,f,fdot,A,phi,theta,cosi,psi,phase,fddot;
   
   while(!feof(ifile))
   {
-    fscanf(ifile,"%i%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg",&i,&logL,&t0,&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+    fscanf(ifile,"%i%i%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg",&i,&n,&logL,&t0,&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
     if(fdot>0.0&&fddot>0.0)
     {
     fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
