@@ -1,5 +1,5 @@
 //
-//  GalacticBinaryFisher.c
+//  GalacticBinaryCatalog.c
 //  
 //
 //  Created by Littenberg, Tyson B. (MSFC-ZP12) on 4/4/17.
@@ -27,6 +27,18 @@
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
+
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
+
+void printProgress (double percentage)
+{
+  int val = (int) (percentage * 100);
+  int lpad = (int) (percentage * PBWIDTH);
+  int rpad = PBWIDTH - lpad;
+  printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+  fflush (stdout);
+}
 
 int main(int argc, char *argv[])
 {
@@ -78,10 +90,27 @@ int main(int argc, char *argv[])
   if(!injectionFile)
     fprintf(stderr,"Missing catalog file %s\n",flags->injFile[0]);
   else
-    fprintf(stdout,"Simulateing binary catalog %s\n",flags->injFile[0]);
+    fprintf(stdout,"Simulating binary catalog %s\n",flags->injFile[0]);
+  
+  /* Set up vector to store A & E data */
+  
+  int NDATA = (int)(data->T/10.); //use 1/10 Hz sampling rate
+  double *Agalaxy = malloc(NDATA*sizeof(double));
+  double *Egalaxy = malloc(NDATA*sizeof(double));
+  int *Ngalaxy = malloc(NDATA/2*sizeof(int)); //number density per bin
+  for(int n=0; n<NDATA/2; n++)
+  {
+    Agalaxy[2*n]=0.0;
+    Egalaxy[2*n]=0.0;
+    Agalaxy[2*n+1]=0.0;
+    Egalaxy[2*n+1]=0.0;
+    Ngalaxy[n] = 0;
+  }
+  
   
   //count sources in file
   int N=0;
+  fprintf(stdout,"Counting sources in catalog file:\n");
   while(!feof(injectionFile))
   {
     fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
@@ -100,9 +129,11 @@ int main(int argc, char *argv[])
   FILE *calFile = fopen("CalibrationBinaries.txt","w");
   FILE *pFile;
   char filename[128];
+  fprintf(stdout,"Generating waveforms:\n");
+
   for(int n=0; n<N; n++)
   {
-    
+    if(n%1000000==0)printProgress( (double)n / (double)N );
     fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
     
     //set bandwidth of data segment centered on injection
@@ -147,19 +178,36 @@ int main(int argc, char *argv[])
       data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
     }
     
+    //Add source to galaxy simulation
+    int q = (int)(inj->f0*data->T);
+    Ngalaxy[q]++;
+    for(int n=0; n<data->N; n++)
+    {
+      int i = data->qmin+n;
+      if(i<0)
+      {
+        Agalaxy[2*i]   += inj->tdi->A[2*n];
+        Egalaxy[2*i]   += inj->tdi->E[2*n];
+        Agalaxy[2*i+1] += inj->tdi->A[2*n+1];
+        Egalaxy[2*i+1] += inj->tdi->E[2*n+1];
+      }
+    }
+    
+    
     //Get injected SNR
     double SNR = snr(inj, data->noise[0]);
     double Mc  = galactic_binary_Mc(f0, dfdt, data->T);
     double dL  = galactic_binary_dL(f0, dfdt, amp, data->T);
     
-    fprintf(outfile,"%g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
+    
+    if(dfdt>0)fprintf(outfile,"%g %g %g %g %g %g %g %g %g\n",log10(f0),dfdt,log10(amp),cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
     
     //Check if sources meet the "good PE candidate" requirement
     double eclipse = fabs(cos(iota)/pow((f0/3.5e-3),(2./3.)));
     double fddot = (11.0/3.0)*dfdt*dfdt/f0;
     if(eclipse<0.3 && fddot*pow(5*YEAR,3.)>0.1)
     {
-      fprintf(stdout,"PE: %g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
+      //fprintf(stdout,"PE: %g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
       fprintf(peFile,"%lg %lg %lg %lg %lg %lg %lg %lg",f0,dfdt,theta,phi,amp,iota,psi,phi0);
 
       sprintf(filename,"PrecisionSource_%i.txt",goodPE);
@@ -173,7 +221,7 @@ int main(int argc, char *argv[])
     //Check if sources meet the "good standard sirens" requirement
     if(SNR>1000 && dfdt>0)
     {
-      fprintf(stdout,"Calib: %g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
+      //fprintf(stdout,"Calib: %g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
       fprintf(calFile,"%lg %lg %lg %lg %lg %lg %lg %lg\n",f0,dfdt,theta,phi,amp,iota,psi,phi0);
       
       sprintf(filename,"CalibrationSource_%i.txt",goodCal);
@@ -184,8 +232,24 @@ int main(int argc, char *argv[])
     }
   }
   
+  fprintf(stdout,"\nFinished parsing galaxy catalog\n");
+  
   printf("Good PE sources:  %i\n",goodPE);
   printf("Good Calibration soruces:  %i\n",goodCal);
+ 
+  //print full galaxy and density file
+  FILE *galaxyFile  = fopen("galaxy_data_AE.dat","w");
+  FILE *densityFile = fopen("source_density.dat","w");
+  
+  for(int n=0; n<NDATA/2; n++)
+  {
+    fprintf(galaxyFile,"%.12g ",(double)n/data->T);
+    fprintf(galaxyFile,"%.12g %.12g ",Agalaxy[2*n],Agalaxy[2*n+1]);
+    fprintf(galaxyFile,"%.12g %.12g\n",Egalaxy[2*n],Egalaxy[2*n+1]);
+    fprintf(densityFile,"%.12g %i\n",(double)n/data->T,Ngalaxy[n]);
+  }
+  fclose(galaxyFile);
+  fclose(densityFile);
   
   fclose(injectionFile);
   
