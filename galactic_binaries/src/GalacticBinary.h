@@ -44,6 +44,9 @@ struct Data
   double pmax;
   double SNR2;
   
+  //
+  char fileName[128];
+  
 };
 
 struct Flags
@@ -57,6 +60,7 @@ struct Flags
   int zeroNoise;
   int fixSky;
   int knownSource;
+  int strainData;
   int orbit;
   int prior;
   int cheat;

@@ -88,13 +88,20 @@ int main(int argc, char *argv[])
   
   /* Initialize data structures */
   alloc_data(data, flags);
-  
-  
-  /* Inject gravitational wave signal */
-  if(flags->knownSource)
-    GalacticBinaryInjectVerificationSource(data,orbit,flags);
+
+  /* Inject strain data */
+  if(flags->strainData)
+  {
+    GalacticBinaryReadData(data,orbit,flags);
+  }
   else
-    GalacticBinaryInjectSimulatedSource(data,orbit,flags);
+  {
+    /* Inject gravitational wave signal */
+    if(flags->knownSource)
+      GalacticBinaryInjectVerificationSource(data,orbit,flags);
+    else
+      GalacticBinaryInjectSimulatedSource(data,orbit,flags);
+  }
   
   /* Initialize data-dependent proposal */
   setup_frequency_proposal(data[0]);
@@ -378,7 +385,7 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc)
     
     chain->temperature[ic] = chain->temperature[ic-1] + exp(S[ic]);
     
-    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.1) chain->temperature[ic] = chain->temperature[ic-1]*1.1;
+    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.01) chain->temperature[ic] = chain->temperature[ic-1]*1.01;
   }//end loop over ic
 }//end adapt function
 
@@ -578,14 +585,15 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-//      logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+      //logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
 
       logQyx = draw_from_spectrum(data, model_y, model_y->source[create], proposal[1], model_y->source[create]->params, chain->r[ic]);
       
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
 
       logQxy = 0;
-      logQyx = model_x->logPriorVolume + log(model->prior[0][1]-model->prior[1][0]);
+      logQyx = model_x->logPriorVolume;
+      logQyx += log(model->prior[0][1]-model->prior[1][0]);
       logQyx += log(data->p[(int)(model_y->source[create]->params[0]-data->qmin)]);
 
       
@@ -612,7 +620,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
       
       logQyx = 0;
-      logQxy = model_x->logPriorVolume + log(model->prior[0][1]-model->prior[1][0]);
+      logQxy = model_x->logPriorVolume;
+      logQxy += log(model->prior[0][1]-model->prior[1][0]);
       logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
 
       

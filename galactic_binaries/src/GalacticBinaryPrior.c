@@ -36,9 +36,9 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
   
   //frequency bin
-  double qpad = 10;
-  model->prior[0][0] = data->qmin+qpad;
-  model->prior[0][1] = data->qmax-qpad;
+  //double qpad = 10;
+  model->prior[0][0] = data->qmin;//+qpad;
+  model->prior[0][1] = data->qmax;//-qpad;
   
   //colatitude
   model->prior[1][0] = -1.0;
@@ -49,8 +49,8 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   model->prior[2][1] = PI2;
   
   //log amplitude
-  model->prior[3][0] = -55.0;
-  model->prior[3][1] = -45.0;
+  model->prior[3][0] = -52.0;
+  model->prior[3][1] = -46.0;
   
   //cos inclination
   model->prior[4][0] = -1.0;
@@ -102,11 +102,12 @@ double evaluate_uniform_prior(struct Model *model, double *params)
   if(params[0]<prior[0][0] || params[0]>prior[0][1]) return -INFINITY;
   
   //colatitude (reflective)
-  while(params[1] < prior[1][0] || params[1] > prior[1][1])
-  {
-    if(params[1] < prior[1][0] ) params[1] = 2.0*prior[1][0] - params[1];
-    if(params[1] > prior[1][1] ) params[1] = 2.0*prior[1][1] - params[1];
-  }
+  if(params[1]<prior[1][0] || params[1]>prior[1][1]) return -INFINITY;
+//  while(params[1] < prior[1][0] || params[1] > prior[1][1])
+//  {
+//    if(params[1] < prior[1][0] ) params[1] = 2.0*prior[1][0] - params[1];
+//    if(params[1] > prior[1][1] ) params[1] = 2.0*prior[1][1] - params[1];
+//  }
   
   //longitude (periodic)
   while(params[2] < prior[2][0]) params[2] += prior[2][1]-prior[2][0];
@@ -116,11 +117,12 @@ double evaluate_uniform_prior(struct Model *model, double *params)
   if(params[3]<prior[3][0] || params[3]>prior[3][1]) return -INFINITY;
   
   //cosine inclination (reflective)
-  while(params[4] < prior[4][0] || params[4] > prior[4][1])
-  {
-    if(params[4] < prior[4][0] ) params[4] = 2.0*prior[4][0] - params[4];
-    if(params[4] > prior[4][1] ) params[4] = 2.0*prior[4][1] - params[4];
-  }
+  if(params[4]<prior[4][0] || params[4]>prior[4][1]) return -INFINITY;
+//  while(params[4] < prior[4][0] || params[4] > prior[4][1])
+//  {
+//    if(params[4] < prior[4][0] ) params[4] = 2.0*prior[4][0] - params[4];
+//    if(params[4] > prior[4][1] ) params[4] = 2.0*prior[4][1] - params[4];
+//  }
   
   //polarization
   while(params[5] < prior[5][0]) params[5] += prior[5][1]-prior[5][0];

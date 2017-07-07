@@ -53,12 +53,14 @@ void print_usage()
   fprintf(stdout,"       --segments    : number of data segments (1)         \n");
   fprintf(stdout,"       --start-time  : initial time of segment  (0)        \n");
   fprintf(stdout,"       --gap-time    : duration of data gaps (0)           \n");
+  fprintf(stdout,"       --fmin        : minimum frequency                   \n");
   fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
   fprintf(stdout,"       --noiseseed   : seed for noise RNG                  \n");
   fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
   fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
   fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
   fprintf(stdout,"       --inj         : inject signal                       \n");
+  fprintf(stdout,"       --data        : strain data file                    \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
@@ -85,6 +87,8 @@ void print_usage()
 
 void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
 {
+  if(argc==1) print_usage();
+  
   //Set defaults
   flags->rj          = 1;
   flags->verbose     = 0;
@@ -92,6 +96,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->zeroNoise   = 0;
   flags->fixSky      = 0;
   flags->cheat       = 0;
+  flags->strainData  = 0;
   flags->knownSource = 0;
   flags->NT          = 1;
   flags->orbit       = 0;
@@ -101,7 +106,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
   chain->NP          = 5; //number of proposals
-  chain->NC          = 20;//number of chains
+  chain->NC          = 12;//number of chains
 
   for(int i=0; i<Nmax; i++)
   {
@@ -144,6 +149,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"noiseseed", required_argument, 0, 0},
     {"injseed",   required_argument, 0, 0},
     {"inj",       required_argument, 0, 0},
+    {"data",      required_argument, 0, 0},
+    {"fmin",      required_argument, 0, 0},
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
@@ -177,6 +184,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
         if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
         if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
+        if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin    = (double)atof(optarg);
         if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap[0] = (double)atof(optarg);
         if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
         if(strcmp("chainseed",   long_options[long_index].name) == 0) data_ptr->cseed   = (long)atoi(optarg);
@@ -197,6 +205,13 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         {
           flags->knownSource = 1;
           flags->fixSky      = 1;
+        }
+        if(strcmp("data", long_options[long_index].name) == 0)
+        {
+          checkfile(optarg);
+          flags->NF++;
+          flags->strainData = 1;
+          sprintf(data_ptr->fileName,"%s",optarg);
         }
         if(strcmp("orbit", long_options[long_index].name) == 0)
         {

@@ -22,13 +22,113 @@
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
 
-void GalacticBinaryReadData(struct Data *data)
+void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
 {
+  fprintf(stdout,"\n==== GalacticBinaryReadData ====\n");
+
+  struct Data *data = data_vec[0];
+  struct TDI *tdi = data->tdi[0];
+
+  //set RNG for noise
+  const gsl_rng_type *T = gsl_rng_default;
+  gsl_rng *r = gsl_rng_alloc(T);
+  gsl_rng_env_setup();
+  gsl_rng_set (r, data->iseed);
+
+  //find first frequency bin of data segment
+  //set bandwidth of data segment centered on injection
+  data->fmax = data->fmin + data->N/data->T;
+  data->qmin = (int)(data->fmin*data->T);
+  data->qmax = data->qmin+data->N;
   
+  double f, junk;
+  char filename[128];
+  
+
+  //burn off low frequency bins
+  FILE *fptr = fopen(data->fileName,"r");
+  fprintf(stdout,"Finding starting frequency in %s...\n",data->fileName);
+  fprintf(stdout,"...Be patient, these can be big files...");
+  for(int n=0; n<data->qmin; n++) fscanf(fptr,"%lg %lg %lg %lg %lg",&f,&junk,&junk,&junk,&junk);
+  
+  //add waveform to data TDI channels
+  fprintf(stdout,"found it\n");
+  for(int n=0; n<data->N; n++)
+  {
+    fscanf(fptr,"%lg %lg %lg %lg %lg",&f,&tdi->A[2*n],&tdi->A[2*n+1],&tdi->E[2*n],&tdi->E[2*n+1]);
+  }
+  fclose(fptr);
+
+
+  sprintf(filename,"data/waveform_injection_%i_%i.dat",0,0);
+  fptr=fopen(filename,"w");
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    fprintf(fptr,"%lg %lg %lg %lg %lg",
+            f,
+            tdi->A[2*i],tdi->A[2*i+1],
+            tdi->E[2*i],tdi->E[2*i+1]);
+    fprintf(fptr,"\n");
+  }
+  fclose(fptr);
+  
+  sprintf(filename,"data/power_injection_%i_%i.dat",0,0);
+  fptr=fopen(filename,"w");
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    fprintf(fptr,"%.12g %lg %lg ",
+            f,
+            tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
+            tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+    fprintf(fptr,"\n");
+  }
+  fclose(fptr);
+  
+  //Get noise spectrum for data segment
+  for(int n=0; n<data->N; n++)
+  {
+    double f = data->fmin + (double)(n)/data->T;
+    data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+    data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+  }
+  
+  //Add Gaussian noise to injection
+  gsl_rng_set (r, data->nseed+0);
+  
+  if(!flags->zeroNoise)
+  {
+    printf("   ...adding Gaussian noise realization\n");
+    
+    for(int n=0; n<data->N; n++)
+    {
+      tdi->A[2*n]   += gsl_ran_gaussian (r, 1)*sqrt(data->noise[0]->SnA[n])/2.;
+      tdi->A[2*n+1] += gsl_ran_gaussian (r, 1)*sqrt(data->noise[0]->SnA[n])/2.;
+      
+      tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+      tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+    }
+  }
+  
+  sprintf(filename,"data/power_data_%i_%i.dat",0,0);
+  fptr=fopen(filename,"w");
+  
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    fprintf(fptr,"%.12g %lg %lg ",
+            f,
+            tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
+            tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+    fprintf(fptr,"\n");
+  }
+  fclose(fptr);
 }
+
+
 void GalacticBinarySimulateData(struct Data *data)
 {
-  
 }
 
 void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)

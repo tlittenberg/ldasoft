@@ -26,6 +26,18 @@ double M_fddot(double f, double fddot)
   return pow( fddot*pow(f,-19./3.)*(25./33792.)*pow(M_PI,-16./3.)  ,  3./10.)/TSUN;
 }
 
+double M_fdot_fddot(double f, double fdot, double fddot)
+{
+  //Eq 174 in SVN:LISA-WDWD-Test/Mathematica/with-Tyson.nb.pdf
+  return pow(5.,3./5.)*pow((-(fdot*sqrt(fddot))/(pow(f,19./6.)*(30.*sqrt(f*fddot) - 11.*sqrt(33.)*fdot))),3./5.)/8./pow(M_PI,8./5.)/TSUN;
+}
+
+double beta(double f, double fdot, double fddot)
+{
+  //Eq 175 in SVN:LISA-WDWD-Test/Mathematica/with-Tyson.nb.pdf
+  return (11.*(-3*sqrt(f*fddot)+sqrt(33.)*fdot)*pow((sqrt(fddot)*fdot)/(-30.*sqrt(f*fddot) + 11.*sqrt(33.)*fdot),2./5.)*pow(5./M_PI,2./5.))/(12.*pow(f,11./10.)*sqrt(fddot));
+}
+
 int main(int argc, char* argv[])
 {
 
@@ -73,7 +85,7 @@ int main(int argc, char* argv[])
     if(fdot>0.0&&fddot>0.0)
     {
     fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
-    fprintf(ofile,"%.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot));
+    fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
     }
   }
   

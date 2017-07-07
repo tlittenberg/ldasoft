@@ -131,9 +131,9 @@ int main(int argc, char *argv[])
   char filename[128];
   fprintf(stdout,"Generating waveforms:\n");
 
-  for(int n=0; n<N; n++)
+  for(int nn=0; nn<N; nn++)
   {
-    if(n%1000000==0)printProgress( (double)n / (double)N );
+    if(nn%1000000==0)printProgress( (double)nn / (double)N );
     fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
     
     //set bandwidth of data segment centered on injection
@@ -178,13 +178,15 @@ int main(int argc, char *argv[])
       data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
     }
     
+    if(inj->BW > data->N) printf("PROBLEM:  Bandwidth wider than N\n");
+    
     //Add source to galaxy simulation
     int q = (int)(inj->f0*data->T);
     Ngalaxy[q]++;
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<inj->BW; n++)
     {
-      int i = data->qmin+n;
-      if(i<0)
+      int i = inj->qmin+n;
+      if(i>0 && i<NDATA/2)
       {
         Agalaxy[2*i]   += inj->tdi->A[2*n];
         Egalaxy[2*i]   += inj->tdi->E[2*n];

@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-void GalacticBinaryReadData(struct Data *data);
+void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
 void GalacticBinarySimulateData(struct Data *data);
 void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
 void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
