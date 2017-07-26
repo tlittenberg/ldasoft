@@ -8,6 +8,8 @@
 
 #include <math.h>
 
+#include <sys/stat.h>
+
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -18,7 +20,9 @@
 #include "GalacticBinaryPrior.h"
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
+#include "GalacticBinaryFStatistic.h"
 #include "GalacticBinaryProposal.h"
+
 
 #define FIXME 0
 
@@ -400,3 +404,122 @@ void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *f
     exit(1);
   }
 }
+
+
+
+void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal)
+{
+  /*
+   -Step through 3D grid in frequency and sky location.
+   - frequency resolution hard-coded to 1/4 of a bin
+   - sky location resolution hard-coded to 30x30 bins
+   -Compute F-statistic in each cell of the grid
+   - cap F-statistic at SNRmax=20
+   - normalize to make it a proper proposal (this part is a pain to get right...)
+   */
+  
+  //matrix to hold maximized extrinsic parameters
+  double *Fparams = malloc(3*sizeof(double));
+  
+  //SNR cap on logL
+  double cap = 200.;
+  
+  //grid sizes
+  int n_f     = 4*data->N;
+  int n_theta = 30;
+  int n_phi   = 30;
+  
+  double d_f     = (double)data->N/(double)n_f;
+  double d_theta = 2./(double)n_theta;
+  double d_phi   = PI2/(double)n_phi;
+  
+  double fdot = 0.0; //TODO: what to do about fdot...
+  
+  //F-statistic for TDI variabls
+  double logL_X,logL_AE;
+  
+  //allocate memory in proposal structure and pack up metadata
+  /*
+   proposal->matrix is 3x2 matrix.
+   -rows are parameters {f,theta,phi}
+   -columns are bin number and width {n,d}
+   */
+  proposal->matrix = malloc(3*sizeof(double *));
+  for(int i=0; i<3; i++)
+    proposal->matrix[i] = malloc(2*sizeof(double));
+
+  proposal->matrix[0][0] = (double)n_f;
+  proposal->matrix[0][1] = d_f;
+  
+  proposal->matrix[1][0] = (double)n_theta;
+  proposal->matrix[1][1] = d_theta;
+  
+  proposal->matrix[2][0] = (double)n_phi;
+  proposal->matrix[2][1] = d_phi;
+
+  /*
+   proposal->tensor holds the proposal density
+   - n_f x n_theta x n_phi "tensor"
+   */
+  proposal->tensor = malloc(n_f*sizeof(double **));
+  for(int i=0; i<n_f; i++)
+  {
+    proposal->tensor[i] = malloc(n_theta*sizeof(double *));
+    for(int j=0; j<n_theta; j++)
+    {
+      proposal->tensor[i][j] = malloc(n_phi*sizeof(double));
+      for(int k=0; k<n_phi; k++)
+      {
+        proposal->tensor[i][j][k] = 0.0;
+      }
+    }
+  }
+  
+  //set up directory/files to store f-stat information for fun/debugging
+  if(flags->verbose)mkdir("fstat",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  char filename[128];
+  FILE *fptr=NULL;
+  
+  //loop over sub-bins
+  for(int i=0; i<n_f; i++)
+  {
+    double q = (double)(data->qmin) + (double)(i)*d_f;
+    double f = q/data->T;
+    
+    if(flags->verbose)
+    {
+      sprintf(filename,"fstat/skymap_%05d.dat",i);
+      fptr=fopen(filename,"w");
+    }
+    
+    //loop over colatitude bins
+    for (int j=0; j<n_theta; j++)
+    {
+      double theta = acos(-1. + (double)j*d_theta);
+      
+      //loop over longitude bins
+      for(int k=0; k<n_phi; k++)
+      {
+        double phi = (double)k*d_phi;
+        
+        get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
+        
+        if(flags->verbose)fprintf(fptr,"%.12g %.12g %.12g\n", cos(theta), phi, logL_AE);
+
+        if(logL_AE > cap) logL_AE = cap;
+        
+        proposal->tensor[i][j][k] = logL_AE;
+        
+      }//end loop over longitude bins
+      if(flags->verbose)fprintf(fptr,"\n");
+      
+    }//end loop over colatitude bins
+    
+    if(flags->verbose) fclose(fptr);
+    
+  }//end loop over sub-bins
+  
+  free(Fparams);
+}
+
+

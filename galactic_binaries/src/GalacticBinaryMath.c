@@ -92,7 +92,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
   err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
   err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
 
-  // eigenvalues destray matrix
+  // eigenvalues destroy matrix
   for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
 
   err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
@@ -150,6 +150,54 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
   gsl_matrix_free (GSLcovari);
   gsl_matrix_free (GSLevectr);
   gsl_eigen_symmv_free (workspace);
+  gsl_permutation_free (permutation);
+}
+
+void invert_matrix(double **matrix, int N)
+{
+  int i,j;
+  
+  // Don't let errors kill the program (yikes)
+  gsl_set_error_handler_off ();
+  int err=0;
+  
+  // Find eigenvectors and eigenvalues
+  gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
+  gsl_matrix *GSLinvrse = gsl_matrix_alloc(N,N);
+  
+  for(i=0; i<N; i++)
+  {
+    for(j=0; j<N; j++)
+    {
+      if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan matrix element, now what?\n");
+      gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
+    }
+  }
+  
+  gsl_permutation * permutation = gsl_permutation_alloc(N);
+  
+  err += gsl_linalg_LU_decomp(GSLmatrix, permutation, &i);
+  err += gsl_linalg_LU_invert(GSLmatrix, permutation, GSLinvrse);
+  
+  if(err>0)
+  {
+    fprintf(stderr,"GalacticBinaryMath.c:184: WARNING: singluar matrix\n");
+    fflush(stderr);
+  }
+  else
+  {
+    //copy covariance matrix back into Fisher
+    for(i=0; i<N; i++)
+    {
+      for(j=0; j<N; j++)
+      {
+        matrix[i][j] = gsl_matrix_get(GSLinvrse,i,j);
+      }
+    }
+  }
+  
+  gsl_matrix_free (GSLmatrix);
+  gsl_matrix_free (GSLinvrse);
   gsl_permutation_free (permutation);
 }
 

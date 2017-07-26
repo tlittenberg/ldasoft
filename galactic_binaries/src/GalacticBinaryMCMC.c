@@ -15,6 +15,7 @@
 /*************  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS  **************/
 
 #include "LISA.h"
+#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryData.h"
@@ -23,7 +24,6 @@
 #include "GalacticBinaryProposal.h"
 #include "GalacticBinaryWaveform.h"
 
-#define FIXME 0
 
 void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags);
 void adapt_temperature_ladder(struct Chain *chain, int mcmc);
@@ -167,8 +167,12 @@ int main(int argc, char *argv[])
       generate_noise_model(data_ptr, model_ptr);
       generate_signal_model(orbit, data_ptr, model_ptr);
       
-      model_ptr->logL     = gaussian_log_likelihood(orbit, data_ptr, model_ptr);
-      model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data_ptr, model_ptr);
+      if(!flags->prior)
+      {
+        model_ptr->logL     = gaussian_log_likelihood(orbit, data_ptr, model_ptr);
+        model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data_ptr, model_ptr);
+      }
+      else model_ptr->logL = model_ptr->logLnorm = 0.0;
       
       if(ic==0) chain->logLmax += model_ptr->logL + model_ptr->logLnorm;
       
@@ -203,19 +207,25 @@ int main(int argc, char *argv[])
         struct Model *trial_ptr = trial[chain->index[ic]];
         struct Data  *data_ptr  = data[i];
         
+//        if(ic==0) printf("cold likelihood at start of loop: %g\n",model_ptr->logL+model_ptr->logLnorm);
         for(int steps=0; steps < 100; steps++)
         {
           galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
           
           noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
+//        if(ic==0) printf("cold likelihood after fixed-D moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
         
         //reverse jump birth/death move
         if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
-        
+
+//        if(ic==0) printf("cold likelihood after RJ moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
+
         //delayed rejection mode-hopper
-        //if(mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
-        
+        if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
+
+//        if(ic==0) printf("cold likelihood after DR moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
+
         //update fisher matrix for each chain
         if(mcmc%100==0)
         {
@@ -432,18 +442,19 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
   
   if(logPy > -INFINITY)
   {
-    //  Form master template
-    generate_noise_model(data, model_y);
     
-    //get likelihood for y
-    model_y->logL     = gaussian_log_likelihood(orbit, data, model_y);
-    model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
-    
-    /*
-     H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
-     */
     if(!flags->prior)
     {
+      //  Form master template
+      generate_noise_model(data, model_y);
+
+      //get likelihood for y
+      model_y->logL     = gaussian_log_likelihood(orbit, data, model_y);
+      model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
+      
+      /*
+       H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+       */
       logH += ( (model_y->logL+model_y->logLnorm) - (model_x->logL+model_x->logLnorm) )/chain->temperature[ic]; //delta logL
       if(flags->burnin) logH /= chain->annealing;
     }
@@ -573,6 +584,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   
   logPx = model_x->Nlive*model_x->logPriorVolume;
   
+  int freqflag=0;
+  if(gsl_rng_uniform(chain->r[ic])<0.0) freqflag=1;
+  
   /* pick birth or death move */
   if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
   {
@@ -585,17 +599,19 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      //logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+      if(freqflag) logQyx = draw_from_spectrum(data, model_y, model_y->source[create], proposal[1], model_y->source[create]->params, chain->r[ic]);
+      else         logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
 
-      logQyx = draw_from_spectrum(data, model_y, model_y->source[create], proposal[1], model_y->source[create]->params, chain->r[ic]);
       
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
 
       logQxy = 0;
       logQyx = model_x->logPriorVolume;
-      logQyx += log(model->prior[0][1]-model->prior[1][0]);
-      logQyx += log(data->p[(int)(model_y->source[create]->params[0]-data->qmin)]);
-
+      if(freqflag)
+      {
+        logQyx += log(model->prior[0][1]-model->prior[1][0]);                         //undo uniform frequency contribution to volume
+        logQyx += log(data->p[(int)(model_y->source[create]->params[0]-data->qmin)]); //add power-based frequency proposal
+      }
       
       //copy params for segment 0 into higher segments
 //      copy_source(model_y->source[create],model_y->source[create]);
@@ -621,9 +637,11 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       
       logQyx = 0;
       logQxy = model_x->logPriorVolume;
-      logQxy += log(model->prior[0][1]-model->prior[1][0]);
-      logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
-
+      if(freqflag)
+      {
+        logQxy += log(model->prior[0][1]-model->prior[1][0]);
+        logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
+      }
       
       logPy = model_y->Nlive*model_y->logPriorVolume;
       
@@ -652,8 +670,18 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(flags->burnin) logH /= chain->annealing;
   }
   
+  
   logH += logPy  - logPx;  //priors
   logH += logQxy - logQyx; //proposals
+  
+  if(model_y->Nlive > model_x->Nlive && ic==0)
+  {
+    FILE *fptr = fopen("proposal.dat","a");
+    fprintf(fptr,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
+    print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
+    fprintf(fptr,"\n");
+    fclose(fptr);
+  }
   
   loga = log(gsl_rng_uniform(chain->r[ic]));
   if(logH > loga)
@@ -682,7 +710,7 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   /* Initialize custom MCMC proposal for DR move */
   struct Proposal **proposal_temp = malloc((chain->NP+1)*sizeof(struct Proposal*));
   double check=0.0;
-  for(int i=1; i<=chain->NP; i++)
+  for(int i=0; i<=chain->NP; i++)
   {
     proposal_temp[i] = malloc(sizeof(struct Proposal));
     proposal_temp[i]->trial  = malloc(chain->NC*sizeof(int));
@@ -722,6 +750,9 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
         proposal_temp[i]->weight = 0.2;
         break;
       default:
+        sprintf(proposal_temp[0]->name,"fisher");
+        proposal_temp[0]->function = &draw_from_fisher;
+        proposal_temp[0]->weight = 0.0;
         break;
     }
     check+=proposal_temp[i]->weight;
@@ -762,8 +793,8 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   
   generate_signal_model(orbit, data, temp);
   temp->logL = gaussian_log_likelihood(orbit, data, temp);
-  
-  //if(ic==0)printf("delayed rejection hastings ratio: %g: ",temp[0]->logL);
+
+  //if(ic==0)printf("delayed rejection hastings ratio: %g: ",temp->logL);
   
   
   // do a bunch of MCMC steps to evolve from forced jump
@@ -781,9 +812,8 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   
   free_model(temp);
-  free(temp);
   
-  for(int i=0; i<chain->NP; i++)
+  for(int i=0; i<=chain->NP; i++)
   {
     free(proposal_temp[i]->trial);
     free(proposal_temp[i]->accept);

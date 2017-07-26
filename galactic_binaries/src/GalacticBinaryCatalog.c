@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
       data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
     }
     
-    if(inj->BW > data->N) printf("PROBLEM:  Bandwidth wider than N\n");
+    if(inj->BW > data->N) printf("WARNING:  Bandwidth %i wider than N %i at f=%.2e\n",inj->BW,data->N,data->fmin);
     
     //Add source to galaxy simulation
     int q = (int)(inj->f0*data->T);
@@ -242,16 +242,23 @@ int main(int argc, char *argv[])
   //print full galaxy and density file
   FILE *galaxyFile  = fopen("galaxy_data_AE.dat","w");
   FILE *densityFile = fopen("source_density.dat","w");
-  
+  FILE *noiseFile   = fopen("lisa_noise_AE.dat","w");
   for(int n=0; n<NDATA/2; n++)
   {
-    fprintf(galaxyFile,"%.12g ",(double)n/data->T);
+    double f = (double)n/data->T;
+    fprintf(galaxyFile,"%.12g ",f);
     fprintf(galaxyFile,"%.12g %.12g ",Agalaxy[2*n],Agalaxy[2*n+1]);
     fprintf(galaxyFile,"%.12g %.12g\n",Egalaxy[2*n],Egalaxy[2*n+1]);
+    
     fprintf(densityFile,"%.12g %i\n",(double)n/data->T,Ngalaxy[n]);
+    
+    fprintf(noiseFile,"%.12g ",f);
+    fprintf(noiseFile,"%.12g ",AEnoise(orbit->L, orbit->fstar, f));
+    fprintf(noiseFile,"\n");
   }
   fclose(galaxyFile);
   fclose(densityFile);
+  fclose(noiseFile);
   
   fclose(injectionFile);
   

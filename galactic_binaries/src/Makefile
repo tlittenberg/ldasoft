@@ -9,7 +9,7 @@ CCFLAGS += -g -Wall -O3 -ftree-vectorize -std=gnu99 -fmax-errors=5 -Werror
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
-OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o
+OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o
 
 all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass
 
@@ -30,6 +30,9 @@ GalacticBinaryData.o : GalacticBinaryData.c GalacticBinaryData.h GalacticBinary.
 
 GalacticBinaryWaveform.o : GalacticBinaryWaveform.c GalacticBinaryWaveform.h GalacticBinaryMath.o Constants.h LISA.o 
 	$(CC) $(CCFLAGS) -c GalacticBinaryWaveform.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
+
+GalacticBinaryFStatistic.o : GalacticBinaryWaveform.c GalacticBinary.h Constants.h LISA.o
+	$(CC) $(CCFLAGS) -c GalacticBinaryFStatistic.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
 GalacticBinaryModel.o : GalacticBinaryModel.c GalacticBinaryModel.h LISA.o GalacticBinary.h GalacticBinaryMath.o GalacticBinaryWaveform.o
 	$(CC) $(CCFLAGS) -c GalacticBinaryModel.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)

@@ -14,4 +14,6 @@
 void set_uniform_prior(struct Model *model, struct Data *data);
 double evaluate_uniform_prior(struct Model *model, double *params);
 
+void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph);
+
 #endif /* GalacticBinaryPrior_h */

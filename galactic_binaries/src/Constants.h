@@ -9,10 +9,17 @@
 #ifndef Constants_h
 #define Constants_h
 
+#define FIXME 0
+
 /* --------------  MATHEMATICAL CONSTANTS  -------------- */
 /* Square root of 3 */
-#define SQ3 1.73205080757
-#define PI2 6.283185307179586
+#define SQ3   1.73205080757
+
+/* Pi's and frinds */
+//use math.h (M_PI) for PI
+#define PI2   6.283185307179586
+#define PIon2 1.57079632679
+#define PIon4 0.78539816339
 
 /* Natural log of 2 */
 #define LN2 0.693147180559945
@@ -34,5 +41,22 @@
 
 /* Astronomical unit (meters) */
 #define AU 1.49597870660e11
+
+/* ----------------  MILKY WAY MODEL  ------------------- */
+
+/* distance from solar BC to GC (kpc) */
+#define GALAXY_RGC 7.2
+
+/* bulge fraction */
+#define GALAXY_A  0.25
+
+/* bulge radius (kpc) */
+#define GALAXY_Rb 0.8
+
+/* disk radius (kpc) */
+#define GALAXY_Rd 2.5
+
+/* disk height (kpc) */
+#define GALAXY_Zd 0.4
 
 #endif /* Constants_h */

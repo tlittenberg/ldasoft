@@ -124,6 +124,21 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     fprintf(fptr,"\n");
   }
   fclose(fptr);
+  
+  sprintf(filename,"data/power_noise_%i_%i.dat",0,0);
+  fptr=fopen(filename,"w");
+  
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    fprintf(fptr,"%.12g %lg %lg ",
+            f,
+            data->noise[0]->SnA[i],
+            data->noise[0]->SnE[i]);
+    fprintf(fptr,"\n");
+  }
+  fclose(fptr);
+
 }
 
 
