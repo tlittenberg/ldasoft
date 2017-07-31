@@ -42,21 +42,4 @@
 /* Astronomical unit (meters) */
 #define AU 1.49597870660e11
 
-/* ----------------  MILKY WAY MODEL  ------------------- */
-
-/* distance from solar BC to GC (kpc) */
-#define GALAXY_RGC 7.2
-
-/* bulge fraction */
-#define GALAXY_A  0.25
-
-/* bulge radius (kpc) */
-#define GALAXY_Rb 0.8
-
-/* disk radius (kpc) */
-#define GALAXY_Rd 2.5
-
-/* disk height (kpc) */
-#define GALAXY_Zd 0.4
-
 #endif /* Constants_h */

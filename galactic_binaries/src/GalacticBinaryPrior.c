@@ -7,8 +7,10 @@
 //
 #include <math.h>
 
+#include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
+#include "GalacticBinaryIO.h"
 #include "GalacticBinaryPrior.h"
 
 void set_uniform_prior(struct Model *model, struct Data *data)
@@ -49,8 +51,8 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   model->prior[2][1] = PI2;
   
   //log amplitude
-  model->prior[3][0] = -51.0;//-54
-  model->prior[3][1] = -53.0;
+  model->prior[3][0] = -55.0;//-54
+  model->prior[3][1] = -45.0;
   
   //cos inclination
   model->prior[4][0] = -1.0;
@@ -94,48 +96,65 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   
 }
 
-double evaluate_uniform_prior(struct Model *model, double *params)
+double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *prior, double *params)
 {
-  double **prior = model->prior;
+  double logP=0.0;
+  double **uniform_prior = model->prior;
   
   //frequency bin (uniform)
-  if(params[0]<prior[0][0] || params[0]>prior[0][1]) return -INFINITY;
+  if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return -INFINITY;
+  else logP -= log(uniform_prior[0][1]-uniform_prior[0][0]);
   
-  //colatitude (reflective)
-  if(params[1]<prior[1][0] || params[1]>prior[1][1]) return -INFINITY;
-//  while(params[1] < prior[1][0] || params[1] > prior[1][1])
-//  {
-//    if(params[1] < prior[1][0] ) params[1] = 2.0*prior[1][0] - params[1];
-//    if(params[1] > prior[1][1] ) params[1] = 2.0*prior[1][1] - params[1];
-//  }
-  
-  //longitude (periodic)
-  while(params[2] < prior[2][0]) params[2] += prior[2][1]-prior[2][0];
-  while(params[2] > prior[2][1]) params[2] -= prior[2][1]-prior[2][0];
+  if(flags->skyPrior)
+  {
+    if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
+
+    while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
+    while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
+
+    //map costheta and phi to index of skyhist array
+    int i = (int)floor((params[1]-uniform_prior[1][0])/prior->dcostheta);
+    int j = (int)floor((params[2]-uniform_prior[2][0])/prior->dphi);
+    
+    int k = i*prior->nphi + j;
+    
+    logP += prior->skyhist[k];
+  }
+  else
+  {
+    //colatitude (reflective)
+    if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
+    else logP -= log(uniform_prior[1][1]-uniform_prior[1][0]);
+    
+    //longitude (periodic)
+    while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
+    while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
+    logP -= log(uniform_prior[2][1]-uniform_prior[2][0]);
+  }
   
   //log amplitude (step)
-  if(params[3]<prior[3][0] || params[3]>prior[3][1]) return -INFINITY;
+  if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
+  else logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
   
   //cosine inclination (reflective)
-  if(params[4]<prior[4][0] || params[4]>prior[4][1]) return -INFINITY;
-//  while(params[4] < prior[4][0] || params[4] > prior[4][1])
-//  {
-//    if(params[4] < prior[4][0] ) params[4] = 2.0*prior[4][0] - params[4];
-//    if(params[4] > prior[4][1] ) params[4] = 2.0*prior[4][1] - params[4];
-//  }
+  if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
+  else logP -= log(uniform_prior[4][1]-uniform_prior[4][0]);
   
   //polarization
-  while(params[5] < prior[5][0]) params[5] += prior[5][1]-prior[5][0];
-  while(params[5] > prior[5][1]) params[5] -= prior[5][1]-prior[5][0];
-  
-  //phase
-  while(params[6] < prior[6][0]) params[6] += prior[6][1]-prior[6][0];
-  while(params[6] > prior[6][1]) params[6] -= prior[6][1]-prior[6][0];
-  
-  //fdot (bins/Tobs)
-  if(params[7]<prior[7][0] || params[7]>prior[7][1]) return -INFINITY;
+  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
+  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
+  logP -= log(uniform_prior[5][1]-uniform_prior[5][0]);
 
-  return model->logPriorVolume;
+  //phase
+  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
+  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
+  logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+
+  //fdot (bins/Tobs)
+  if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
+  else logP -= log(uniform_prior[7][1]-uniform_prior[7][0]);
+
+  return logP;
 }
 
 static double loglike(double *x, int D)
@@ -166,12 +185,20 @@ static void rotate_galtoeclip(double *xg, double *xe)
   xe[2] = -0.09647662818*xg[0] + 0.8622858751*xg[1] + 0.4971471918*xg[2];
 }
 
-void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph)
+void setup_galaxy_prior(struct Flags *flags, struct Prior *prior)
 {
+  fprintf(stdout,"\n============ Galaxy model sky prior ============\n");
+  fprintf(stdout,"Monte carlo over galaxy model\n");
+  fprintf(stdout,"   Distance to GC = %g kpc\n",GALAXY_RGC);
+  fprintf(stdout,"   Disk Radius    = %g kpc\n",GALAXY_Rd);
+  fprintf(stdout,"   Disk Height    = %g kpc\n",GALAXY_Zd);
+  fprintf(stdout,"   Bulge Radius   = %g kpc\n",GALAXY_Rb);
+  fprintf(stdout,"   Bulge Fraction = %g\n",    GALAXY_A);
+  
   double *x, *y;  // current and proposed parameters
   int D = 3;  // number of parameters
-//  int Nth = 200;  // bins in cos theta
-//  int Nph = 200;  // bins in phi
+  int Nth = 200;  // bins in cos theta
+  int Nph = 200;  // bins in phi
   int j;
   int ith, iph, cnt;
   double H, dOmega;
@@ -179,9 +206,8 @@ void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph)
   double alpha, beta, xx, yy, zz;
   double *xe, *xg;
   double r_ec, theta, phi;
-//  double *skyhist;
   int mc;
-  FILE *chain = NULL;
+//  FILE *chain = NULL;
   
   const gsl_rng_type * T;
   gsl_rng * r;
@@ -190,18 +216,24 @@ void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph)
   T = gsl_rng_default;
   r = gsl_rng_alloc (T);
   
-  x = (double*)malloc(sizeof(double)* D);
+  x =  (double*)malloc(sizeof(double)* D);
   xe = (double*)malloc(sizeof(double)* D);
   xg = (double*)malloc(sizeof(double)* D);
-  y = (double*)malloc(sizeof(double)* D);
+  y =  (double*)malloc(sizeof(double)* D);
   
-  skyhist = (double*)malloc(sizeof(double)* (Nth*Nph));
+  prior->skyhist = (double*)malloc(sizeof(double)* (Nth*Nph));
+  
+  prior->dcostheta = 2./(double)Nth;
+  prior->dphi      = 2.*M_PI/(double)Nph;
+  
+  prior->ncostheta = Nth;
+  prior->nphi      = Nph;
   
   for(ith=0; ith< Nth; ith++)
   {
     for(iph=0; iph< Nph; iph++)
     {
-      skyhist[ith*Nph+iph] = 0.0;
+      prior->skyhist[ith*Nph+iph] = 0.0;
     }
   }
   
@@ -214,10 +246,14 @@ void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph)
   
   cnt = 0;
   
-  if(flags->verbose)chain = fopen("chain.dat", "w");
+//  if(flags->verbose)chain = fopen("chain.dat", "w");
   
-  for(mc=0; mc< 1000000000; mc++)
+  //int MCMC=1000000000;
+  int MCMC=100000000;
+  for(mc=0; mc<MCMC; mc++)
   {
+    if(mc%(MCMC/100)==0)printProgress((double)mc/(double)MCMC);
+
     alpha = gsl_rng_uniform(r);
     
     if(alpha > 0.7)  // uniform draw from a big box
@@ -282,22 +318,24 @@ void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph)
       
       if(phi<0.0) phi += 2.0*M_PI;
       
-      if(mc%1000 == 0 && flags->verbose) fprintf(chain,"%d %e %e %e %e %e %e %e\n", mc/1000, logLx, x[0], x[1], x[2], theta, phi, r_ec);
+//      if(mc%1000 == 0 && flags->verbose) fprintf(chain,"%d %e %e %e %e %e %e %e\n", mc/1000, logLx, x[0], x[1], x[2], theta, phi, r_ec);
       
-      ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
-      iph = (int)(phi/(2.0*M_PI)*(double)(Nph));
+      //ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
+      //iph = (int)(phi/(2.0*M_PI)*(double)(Nph));
+      ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
+      iph = (int)((2*M_PI-phi)/(2.0*M_PI)*(double)(Nph));
       cnt++;
       
       if(ith < 0 || ith > Nth -1) printf("%d %d\n", ith, iph);
       if(iph < 0 || iph > Nph -1) printf("%d %d\n", ith, iph);
       
-      skyhist[ith*Nph+iph] += 1.0;
+      prior->skyhist[ith*Nph+iph] += 1.0;
       
     }
     
   }
   
-  if(flags->verbose)fclose(chain);
+//  if(flags->verbose)fclose(chain);
   
   dOmega = 4.0*M_PI/(double)(Nth*Nph);
   
@@ -312,28 +350,28 @@ void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph)
   {
     for(iph=0; iph< Nph; iph++)
     {
-      xx = yy*skyhist[ith*Nph+iph];
+      xx = yy*prior->skyhist[ith*Nph+iph];
       //if(fabs(xx)  > 0.0) printf("%e %e %e\n", xx, zz, yy);
-      skyhist[ith*Nph+iph] = xx + zz;
+      prior->skyhist[ith*Nph+iph] = log(xx + zz);
     }
   }
-  
+
   if(flags->verbose)
   {
-    chain = fopen("skyprior.dat", "w");
+    FILE *fptr = fopen("skyprior.dat", "w");
     for(ith=0; ith< Nth; ith++)
     {
       xx = -1.0+2.0*((double)(ith)+0.5)/(double)(Nth);
-      xx *= -1.0;    // plotting flip?
+      //xx *= -1.0;    // plotting flip?
       for(iph=0; iph< Nph; iph++)
       {
         yy = 2.0*M_PI*((double)(iph)+0.5)/(double)(Nph);
-        yy = 2.0*M_PI - yy;  // plotting flip?
-        fprintf(chain,"%e %e %e\n", yy, xx, skyhist[ith*Nph+iph]);
+        //yy = 2.0*M_PI - yy;  // plotting flip?
+        fprintf(fptr,"%e %e %e\n", yy, xx, prior->skyhist[ith*Nph+iph]);
       }
-      fprintf(chain,"\n");
+      fprintf(fptr,"\n");
     }
-    fclose(chain);
+    fclose(fptr);
   }
   
   free(x);
@@ -341,5 +379,7 @@ void setup_galaxy_prior(struct Flags *flags, double *skyhist, int Nth, int Nph)
   free(xe);
   free(xg);
   gsl_rng_free (r);
-  
+  fprintf(stdout,"\n================================================\n\n");
+  fflush(stdout);
+
 }

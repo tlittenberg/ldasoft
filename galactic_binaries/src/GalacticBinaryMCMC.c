@@ -28,9 +28,9 @@
 void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags);
 void adapt_temperature_ladder(struct Chain *chain, int mcmc);
 
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
-void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
-void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
+void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
+void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
 
 void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic);
@@ -114,6 +114,11 @@ int main(int argc, char *argv[])
   for(int i=0; i<chain->NP+1; i++) proposal[i] = malloc(sizeof(struct Proposal));
   
   initialize_proposal(data[0], chain, flags, proposal, NMAX);
+  
+  /* Initialize priors */
+  struct Prior *prior = malloc(sizeof(struct Prior));
+  if(flags->skyPrior) setup_galaxy_prior(flags, prior);
+
   
   /* Initialize data models */
   for(ic=0; ic<NC; ic++)
@@ -210,19 +215,19 @@ int main(int argc, char *argv[])
 //        if(ic==0) printf("cold likelihood at start of loop: %g\n",model_ptr->logL+model_ptr->logLnorm);
         for(int steps=0; steps < 100; steps++)
         {
-          galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
+          galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
           
           noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
 //        if(ic==0) printf("cold likelihood after fixed-D moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
         
         //reverse jump birth/death move
-        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
+        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
 //        if(ic==0) printf("cold likelihood after RJ moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
 
         //delayed rejection mode-hopper
-        if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, proposal, ic);
+        if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
 //        if(ic==0) printf("cold likelihood after DR moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
 
@@ -466,7 +471,7 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
   
 }
 
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -530,8 +535,8 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
   
   //get priors for x and y
-  logPx = evaluate_uniform_prior(model_x, source_x->params);
-  logPy = evaluate_uniform_prior(model_y, source_y->params);
+  logPx = evaluate_prior(flags, model_x, prior, source_x->params);
+  logPy = evaluate_prior(flags, model_y, prior, source_y->params);
   
   if(logPy > -INFINITY)
   {
@@ -566,7 +571,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
 }
 
-void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -581,8 +586,6 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   struct Model *model_y = trial;
   
   copy_model(model_x,model_y);
-  
-  logPx = model_x->Nlive*model_x->logPriorVolume;
   
   int freqflag=0;
   if(gsl_rng_uniform(chain->r[ic])<0.0) freqflag=1;
@@ -617,7 +620,6 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //      copy_source(model_y->source[create],model_y->source[create]);
 //      map_params_to_array(model_y->source[create], model_y->source[create]->params, data->T);
       
-      logPy = model_y->Nlive*model_y->logPriorVolume;
     }
     else logPy = -INFINITY;
   }
@@ -643,8 +645,6 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
       }
       
-      logPy = model_y->Nlive*model_y->logPriorVolume;
-      
       //consolodiate parameter structure
       for(int j=kill; j<model_x->Nlive; j++)
       {
@@ -653,6 +653,10 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     }
     else logPy = -INFINITY;
   }
+  
+  for(int n=0; n<model_x->Nlive; n++) logPx +=  evaluate_prior(flags, model_x, prior, model_x->source[n]->params);
+  for(int n=0; n<model_y->Nlive; n++) logPy +=  evaluate_prior(flags, model_y, prior, model_y->source[n]->params);
+  
   
   /* Hasting's ratio */
   if(logPy > -INFINITY && !flags->prior)
@@ -692,7 +696,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   
 }
 
-void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
 {
   double logH  = 0.0; //(log) Hastings ratio
   double loga  = 1.0; //(log) transition probability
@@ -798,7 +802,7 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   
   
   // do a bunch of MCMC steps to evolve from forced jump
-  for(int i=0; i<100; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, proposal_temp, ic);
+  for(int i=0; i<100; i++)galactic_binary_mcmc(orbit, data, temp, model_y, chain, flags, prior, proposal_temp, ic);
   
   // test current likelihood for model y to original likelihood of model x
   logH += (model_y->logL - model_x->logL)/chain->temperature[ic];
