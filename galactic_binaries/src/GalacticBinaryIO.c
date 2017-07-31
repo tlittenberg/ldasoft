@@ -22,6 +22,26 @@
 
 #define FIXME 0
 
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
+//void printProgress (double percentage)
+//{
+//  int val = (int) (percentage * 100);
+//  int lpad = (int) (percentage * PBWIDTH);
+//  int rpad = PBWIDTH - lpad;
+//  printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+//  fflush (stdout);
+//}
+
+void printProgress (double percentage)
+{
+  int val = (int) (percentage * 100);
+  int lpad = (int) (percentage * PBWIDTH);
+  int rpad = PBWIDTH - lpad;
+  printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+  fflush (stdout);
+}
+
 static int checkfile(char filename[])
 {
   FILE *fptr = fopen(filename, "r");
@@ -62,6 +82,7 @@ void print_usage()
   fprintf(stdout,"       --inj         : inject signal                       \n");
   fprintf(stdout,"       --data        : strain data file                    \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
+  fprintf(stdout,"       --sky-prior   : use galaxy model for sky prior      \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
@@ -95,6 +116,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->NF          = 0;
   flags->zeroNoise   = 0;
   flags->fixSky      = 0;
+  flags->skyPrior    = 0;
   flags->cheat       = 0;
   flags->strainData  = 0;
   flags->knownSource = 0;
@@ -161,6 +183,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"verbose",     no_argument, 0,'v'},
     {"zero-noise",  no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
+    {"sky-prior",   no_argument, 0, 0 },
     {"known-source",no_argument, 0, 0 },
     {"f-double-dot",no_argument, 0, 0 },
     {"prior",       no_argument, 0, 0 },
@@ -192,6 +215,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
         if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
+        if(strcmp("sky-prior",   long_options[long_index].name) == 0) flags->skyPrior   = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
@@ -368,6 +392,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   else                fprintf(stdout,"  Injection is ........ DISABLED\n");
   if(flags->fixSky)   fprintf(stdout,"  Sky parameters are... DISABLED\n");
   else                fprintf(stdout,"  Sky parameters are... ENABLED\n");
+  if(flags->skyPrior) fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
+  else                fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
   if(flags->zeroNoise)fprintf(stdout,"  Noise realization is. DISABLED\n");
   else
   {

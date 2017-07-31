@@ -59,6 +59,7 @@ struct Flags
   int NMAX;  //max number of sources
   int zeroNoise;
   int fixSky;
+  int skyPrior;
   int knownSource;
   int strainData;
   int orbit;

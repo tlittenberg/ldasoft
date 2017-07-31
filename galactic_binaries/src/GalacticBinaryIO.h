@@ -9,6 +9,8 @@
 #ifndef GalacticBinaryIO_h
 #define GalacticBinaryIO_h
 
+void printProgress (double percentage);
+
 void print_usage();
 void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax);
 
