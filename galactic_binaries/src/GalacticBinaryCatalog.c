@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
     }
     
     //Check if sources meet the "good standard sirens" requirement
-    if(SNR>1000 && dfdt>0)
+    if(SNR>100 && dfdt>0)
     {
       //fprintf(stdout,"Calib: %g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
       fprintf(calFile,"%lg %lg %lg %lg %lg %lg %lg %lg\n",f0,dfdt,theta,phi,amp,iota,psi,phi0);
