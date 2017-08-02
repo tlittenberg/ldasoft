@@ -138,7 +138,8 @@ int main(int argc, char *argv[])
       
       alloc_model(model_ptr,NMAX,data_ptr->N,data_ptr->Nchannel, data_ptr->NP, flags->NT);
       
-      set_uniform_prior(model_ptr, data_ptr);
+      if(ic==0)set_uniform_prior(flags, model_ptr, data_ptr, 1);
+      else     set_uniform_prior(flags, model_ptr, data_ptr, 0);
       
       //set noise model
       for(int j=0; j<flags->NT; j++) copy_noise(data_ptr->noise[j], model_ptr->noise[j]);
@@ -212,24 +213,18 @@ int main(int argc, char *argv[])
         struct Model *trial_ptr = trial[chain->index[ic]];
         struct Data  *data_ptr  = data[i];
         
-//        if(ic==0) printf("cold likelihood at start of loop: %g\n",model_ptr->logL+model_ptr->logLnorm);
         for(int steps=0; steps < 100; steps++)
         {
           galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
           
           noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
-//        if(ic==0) printf("cold likelihood after fixed-D moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
         
         //reverse jump birth/death move
-        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-
-//        if(ic==0) printf("cold likelihood after RJ moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
+        if(flags->rj && mcmc%100)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
         //delayed rejection mode-hopper
-        if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-
-//        if(ic==0) printf("cold likelihood after DR moves: %g\n",model_ptr->logL+model_ptr->logLnorm);
+        //if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
         //update fisher matrix for each chain
         if(mcmc%100==0)
@@ -678,14 +673,16 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   logH += logPy  - logPx;  //priors
   logH += logQxy - logQyx; //proposals
   
-  if(model_y->Nlive > model_x->Nlive && ic==0)
-  {
-    FILE *fptr = fopen("proposal.dat","a");
-    fprintf(fptr,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
-    print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
-    fprintf(fptr,"\n");
-    fclose(fptr);
-  }
+  //if(model_y->Nlive > model_x->Nlive && ic==0)
+//  if(ic==0)
+//  {
+//    FILE *fptr = fopen("proposal.dat","a");
+//    fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
+//    fprintf(stdout,"%i -> %i ",model_x->Nlive, model_y->Nlive);
+//    //print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
+//    fprintf(stdout,"\n");
+//    fclose(fptr);
+//  }
   
   loga = log(gsl_rng_uniform(chain->r[ic]));
   if(logH > loga)
@@ -842,7 +839,7 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
     
     alloc_model(trial[i],model[i]->Nmax,data[i]->N,data[i]->Nchannel, data[i]->NP, flags->NT);
     
-    set_uniform_prior(trial[i], data[i]);
+    set_uniform_prior(flags, trial[i], data[i], 0);
     
     copy_model(model[i],trial[i]);
   }

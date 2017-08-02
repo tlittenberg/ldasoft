@@ -61,6 +61,7 @@ struct Flags
   int fixSky;
   int skyPrior;
   int knownSource;
+  int detached;
   int strainData;
   int orbit;
   int prior;

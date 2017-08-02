@@ -11,9 +11,10 @@
 #include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
+#include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryPrior.h"
 
-void set_uniform_prior(struct Model *model, struct Data *data)
+void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose)
 {
   /*
   params[0] = source->f0*T;
@@ -76,9 +77,28 @@ void set_uniform_prior(struct Model *model, struct Data *data)
   double fdotmin = -0.000005*pow(fmin,(13./3.));
   double fdotmax = 0.0000008*pow(fmax,(11./3.));
   
+  /* use prior on chirp mass to convert to priors on frequency evolution */
+  if(flags->detached)
+  {
+    double Mcmin = 0.15;
+    double Mcmax = 1.00;
+    
+    fdotmin = galactic_binary_fdot(Mcmin, fmin, data->T);
+    fdotmax = galactic_binary_fdot(Mcmax, fmax, data->T);
+  }
+
   double fddotmin = 11.0/3.0*fdotmin*fdotmin/fmax;
   double fddotmax = 11.0/3.0*fdotmax*fdotmax/fmin;
   
+  if(verbose)
+  {
+    fprintf(stdout,"\n============== PRIORS ==============\n");
+    if(flags->detached)fprintf(stdout,"  Assuming detached binary, Mchirp = [0.15,1]\n");
+    fprintf(stdout,"  p(fdot)  = U[%g,%g]\n",fdotmin,fdotmax);
+    fprintf(stdout,"  p(fddot) = U[%g,%g]\n",fddotmin,fddotmax);
+    fprintf(stdout,"====================================\n\n");
+  }
+
   if(data->NP>7)
   {
     model->prior[7][0] = fdotmin*data->T*data->T;
@@ -119,6 +139,10 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
     int k = i*prior->nphi + j;
     
     logP += prior->skyhist[k];
+    
+//    FILE *fptr = fopen("prior.dat","a");
+//    fprintf(fptr,"%i %i %i %g\n",i,j,k,prior->skyhist[k]);
+//    fclose(fptr);
   }
   else
   {
@@ -151,9 +175,19 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
 
   //fdot (bins/Tobs)
-  if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
-  else logP -= log(uniform_prior[7][1]-uniform_prior[7][0]);
-
+  if(model->NP>7)
+  {
+    if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
+    else logP -= log(uniform_prior[7][1]-uniform_prior[7][0]);
+  }
+  
+  //fddot
+  if(model->NP>8)
+  {
+    if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return -INFINITY;
+    else logP -= log(uniform_prior[8][1]-uniform_prior[8][0]);
+  }
+  
   return logP;
 }
 
@@ -324,6 +358,10 @@ void setup_galaxy_prior(struct Flags *flags, struct Prior *prior)
       //iph = (int)(phi/(2.0*M_PI)*(double)(Nph));
       ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
       iph = (int)((2*M_PI-phi)/(2.0*M_PI)*(double)(Nph));
+      
+      //ith = (int)floor(Nth*gsl_rng_uniform(r));
+      //iph = (int)floor(Nph*gsl_rng_uniform(r));
+      
       cnt++;
       
       if(ith < 0 || ith > Nth -1) printf("%d %d\n", ith, iph);
@@ -339,7 +377,7 @@ void setup_galaxy_prior(struct Flags *flags, struct Prior *prior)
   
   dOmega = 4.0*M_PI/(double)(Nth*Nph);
   
-  double uni = 0.1;
+  double uni = 0.0;//0.1;
   yy = (1.0-uni)/(double)(cnt);
   zz = uni/(double)(Nth*Nph);
   

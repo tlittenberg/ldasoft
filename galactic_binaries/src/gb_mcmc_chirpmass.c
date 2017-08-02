@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
     fscanf(ifile,"%i%i%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg",&i,&n,&logL,&t0,&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
     if(fdot>0.0&&fddot>0.0)
     {
-    fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
-    fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
+      fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
+      fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
     }
   }
   

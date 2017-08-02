@@ -84,11 +84,13 @@ void print_usage()
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --sky-prior   : use galaxy model for sky prior      \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
+  fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
+  fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
   fprintf(stdout,"       --prior       : sample from prior                   \n");
   fprintf(stdout,"--\n");
   fprintf(stdout,"EXAMPLE:\n");
@@ -186,6 +188,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"sky-prior",   no_argument, 0, 0 },
     {"known-source",no_argument, 0, 0 },
     {"f-double-dot",no_argument, 0, 0 },
+    {"detached",    no_argument, 0, 0 },
     {"prior",       no_argument, 0, 0 },
     {"cheat",       no_argument, 0, 0 },
     {"no-rj",        no_argument, 0, 0 },
@@ -218,6 +221,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("sky-prior",   long_options[long_index].name) == 0) flags->skyPrior   = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
+        if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("steps",       long_options[long_index].name) == 0)
@@ -402,6 +406,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   }
   if(flags->rj)       fprintf(stdout,"  RJMCMC is ........... ENABLED\n");
   else                fprintf(stdout,"  RJMCMC is ........... DISABLED\n");
+  if(flags->detached) fprintf(stdout,"  Mchirp prior is...... ENABLED\n");
+  else                fprintf(stdout,"  Mchirp prior is...... DISABLED\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"\n");
   

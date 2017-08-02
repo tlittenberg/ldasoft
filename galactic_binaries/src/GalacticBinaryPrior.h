@@ -42,7 +42,7 @@ struct Prior
   int nphi;
 };
 
-void set_uniform_prior(struct Model *model, struct Data *data);
+void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose);
 double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *prior, double *params);
 
 void setup_galaxy_prior(struct Flags *flags, struct Prior *prior);
