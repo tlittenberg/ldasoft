@@ -38,13 +38,14 @@ struct Prior
   double *skyhist;
   double dcostheta;
   double dphi;
+  double skymaxp;
   int ncostheta;
   int nphi;
 };
 
+void set_galaxy_prior(struct Flags *flags, struct Prior *prior);
 void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose);
 double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *prior, double *params);
 
-void setup_galaxy_prior(struct Flags *flags, struct Prior *prior);
 
 #endif /* GalacticBinaryPrior_h */

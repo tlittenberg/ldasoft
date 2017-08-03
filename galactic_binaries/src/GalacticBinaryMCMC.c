@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
   
   /* Initialize priors */
   struct Prior *prior = malloc(sizeof(struct Prior));
-  if(flags->skyPrior) setup_galaxy_prior(flags, prior);
+  if(flags->skyPrior) set_galaxy_prior(flags, prior);
 
   
   /* Initialize data models */
@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
         struct Model *trial_ptr = trial[chain->index[ic]];
         struct Data  *data_ptr  = data[i];
         
+        
         for(int steps=0; steps < 100; steps++)
         {
           galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
@@ -221,10 +222,10 @@ int main(int argc, char *argv[])
         }//loop over MCMC steps
         
         //reverse jump birth/death move
-        if(flags->rj && mcmc%100)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
         //delayed rejection mode-hopper
-        //if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+        if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
         //update fisher matrix for each chain
         if(mcmc%100==0)
@@ -241,7 +242,7 @@ int main(int argc, char *argv[])
       
     }// end (parallel) loop over chains
     
-    ptmcmc(model,chain,flags);
+    //ptmcmc(model,chain,flags);
     adapt_temperature_ladder(chain, mcmc+flags->NBURN);
     
     print_chain_files(data[FIXME], model, chain, flags, mcmc);
@@ -503,7 +504,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   proposal[nprop]->trial[ic]++;
   
-  logQyx = (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
+  (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
   //TODO: Fix this
   if(!strcmp(proposal[nprop]->name,"spectrum"))
@@ -513,7 +514,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   
   if(!strcmp(proposal[nprop]->name,"cdf draw"))
-    logQxy = cdf_density(model_x, source_y, proposal[nprop]);
+  {
+    logQyx = cdf_density(model_x, source_y, proposal[nprop]);
+    logQxy = cdf_density(model_x, source_x, proposal[nprop]);
+  }
   
   map_array_to_params(source_y, source_y->params, data->T);
   
@@ -632,8 +636,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //      copy_source(model_y->source[kill],model_y->source[kill]);
 //      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
       
-      logQyx = 0;
       logQxy = model_x->logPriorVolume;
+      logQyx = 0;
       if(freqflag)
       {
         logQxy += log(model->prior[0][1]-model->prior[1][0]);
