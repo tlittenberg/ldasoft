@@ -299,7 +299,7 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
   return 0.0;
 }
 
-void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
+void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
 {
   int NC = chain->NC;
   double check=0.0;
@@ -335,6 +335,10 @@ void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *f
         break;
       case 2:
         sprintf(proposal[i]->name,"spectrum");
+        
+        
+        setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
+
         proposal[i]->function = &draw_from_spectrum;
         proposal[i]->weight = 0.1;
         check+=proposal[i]->weight;

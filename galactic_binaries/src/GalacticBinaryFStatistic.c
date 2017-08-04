@@ -279,13 +279,13 @@ void get_N(struct Data *data, struct Filter *F_filter)
     F_filter->N4_X  += (XfLS[2*k]*F_filter->A4_fX[2*i-1] + XfLS[2*k+1]*F_filter->A4_fX[2*i])/data->noise[FIXME]->SnX[k];
     
     F_filter->N1_AE += (AALS[2*k]*F_filter->A1_fA[2*i-1] + AALS[2*k+1]*F_filter->A1_fA[2*i]
-                        +EELS[2*k]*F_filter->A1_fE[2*i-1] + EELS[2*k+1]*F_filter->A1_fE[2*i])/data->noise[FIXME]->SnA[k];
+                        +EELS[2*k]*F_filter->A1_fE[2*i-1] + EELS[2*k+1]*F_filter->A1_fE[2*i])/data->noise[FIXME]->SnA[k-1];
     F_filter->N2_AE += (AALS[2*k]*F_filter->A2_fA[2*i-1] + AALS[2*k+1]*F_filter->A2_fA[2*i]
-                        +EELS[2*k]*F_filter->A2_fE[2*i-1] + EELS[2*k+1]*F_filter->A2_fE[2*i])/data->noise[FIXME]->SnA[k];
+                        +EELS[2*k]*F_filter->A2_fE[2*i-1] + EELS[2*k+1]*F_filter->A2_fE[2*i])/data->noise[FIXME]->SnA[k-1];
     F_filter->N3_AE += (AALS[2*k]*F_filter->A3_fA[2*i-1] + AALS[2*k+1]*F_filter->A3_fA[2*i]
-                        +EELS[2*k]*F_filter->A3_fE[2*i-1] + EELS[2*k+1]*F_filter->A3_fE[2*i])/data->noise[FIXME]->SnA[k];
+                        +EELS[2*k]*F_filter->A3_fE[2*i-1] + EELS[2*k+1]*F_filter->A3_fE[2*i])/data->noise[FIXME]->SnA[k-1];
     F_filter->N4_AE += (AALS[2*k]*F_filter->A4_fA[2*i-1] + AALS[2*k+1]*F_filter->A4_fA[2*i]
-                        +EELS[2*k]*F_filter->A4_fE[2*i-1] + EELS[2*k+1]*F_filter->A4_fE[2*i])/data->noise[FIXME]->SnA[k];
+                        +EELS[2*k]*F_filter->A4_fE[2*i-1] + EELS[2*k+1]*F_filter->A4_fE[2*i])/data->noise[FIXME]->SnA[k-1];
   }
   
   F_filter->N1_X  *= 4.0;
@@ -297,6 +297,13 @@ void get_N(struct Data *data, struct Filter *F_filter)
   F_filter->N2_AE *= 4.0;
   F_filter->N3_AE *= 4.0;
   F_filter->N4_AE *= 4.0;
+  
+  
+  fprintf(stdout,"F=%lg\n",F_filter->N1_AE);
+  fprintf(stdout,"F=%lg\n",F_filter->N2_AE);
+  fprintf(stdout,"F=%lg\n",F_filter->N3_AE);
+  fprintf(stdout,"F=%lg\n",F_filter->N4_AE);
+  abort();
 }
 
 void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct Data *data)

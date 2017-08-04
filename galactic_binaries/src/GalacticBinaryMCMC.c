@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
   struct Proposal **proposal = malloc((chain->NP+1)*sizeof(struct Proposal*));
   for(int i=0; i<chain->NP+1; i++) proposal[i] = malloc(sizeof(struct Proposal));
   
-  initialize_proposal(data[0], chain, flags, proposal, NMAX);
+  initialize_proposal(orbit, data[0], chain, flags, proposal, NMAX);
   
   /* Initialize priors */
   struct Prior *prior = malloc(sizeof(struct Prior));

@@ -31,7 +31,7 @@ GalacticBinaryData.o : GalacticBinaryData.c GalacticBinaryData.h GalacticBinary.
 GalacticBinaryWaveform.o : GalacticBinaryWaveform.c GalacticBinaryWaveform.h GalacticBinaryMath.o Constants.h LISA.o 
 	$(CC) $(CCFLAGS) -c GalacticBinaryWaveform.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
-GalacticBinaryFStatistic.o : GalacticBinaryWaveform.c GalacticBinary.h Constants.h LISA.o
+GalacticBinaryFStatistic.o : GalacticBinaryFStatistic.c GalacticBinaryWaveform.c GalacticBinary.h Constants.h LISA.o
 	$(CC) $(CCFLAGS) -c GalacticBinaryFStatistic.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
 GalacticBinaryModel.o : GalacticBinaryModel.c GalacticBinaryModel.h LISA.o GalacticBinary.h GalacticBinaryMath.o GalacticBinaryWaveform.o

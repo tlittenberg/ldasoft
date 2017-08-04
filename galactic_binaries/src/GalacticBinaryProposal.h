@@ -47,7 +47,7 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
 
 double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal);
 
-void initialize_proposal(struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
+void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
 
