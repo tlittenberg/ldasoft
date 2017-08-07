@@ -490,6 +490,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   char filename[128];
   FILE *fptr=NULL;
   
+  double norm = 0.0;
+  
   //loop over sub-bins
   for(int i=0; i<n_f; i++)
   {
@@ -521,6 +523,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         if(logL_AE > cap) logL_AE = cap;
         
         proposal->tensor[i][j][k] = logL_AE;
+        norm += logL_AE;
         
       }//end loop over longitude bins
       if(flags->verbose)fprintf(fptr,"\n");
@@ -530,6 +533,13 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     if(flags->verbose) fclose(fptr);
     
   }//end loop over sub-bins
+  
+  //normalize
+  double volume = data->N * 2. * PI2;
+  
+  for(int i=0; i<n_f; i++) for(int j=0; j<n_theta; j++) for(int k=0; k<n_phi; k++) proposa->tensor[i][j][k] /= (norm * volume);
+  
+  
   
   free(Fparams);
   fprintf(stdout,"\n================================================\n\n");
