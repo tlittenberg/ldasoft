@@ -436,7 +436,13 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   double d_f     = (double)data->N/(double)n_f;
   double d_theta = 2./(double)n_theta;
   double d_phi   = PI2/(double)n_phi;
-  
+
+  fprintf(stdout,"\n============ F-Statistic sky proposal ============\n");
+  fprintf(stdout,"   n_f     = %i\n",n_f);
+  fprintf(stdout,"   n_theta = %i\n",n_theta);
+  fprintf(stdout,"   n_phi   = %i\n",n_phi);
+  fprintf(stdout,"   cap     = %g\n",cap);
+
   double fdot = 0.0; //TODO: what to do about fdot...
   
   //F-statistic for TDI variabls
@@ -487,6 +493,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   //loop over sub-bins
   for(int i=0; i<n_f; i++)
   {
+    if(i%(n_f/100)==0)printProgress((double)i/(double)n_f);
+
     double q = (double)(data->qmin) + (double)(i)*d_f;
     double f = q/data->T;
     
@@ -524,6 +532,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   }//end loop over sub-bins
   
   free(Fparams);
+  fprintf(stdout,"\n================================================\n\n");
+  fflush(stdout);
 }
 
 

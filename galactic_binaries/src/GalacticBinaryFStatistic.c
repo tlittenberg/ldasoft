@@ -20,7 +20,7 @@
 
 void initialize_XLS(long M, double *XLS, double *AA, double *EE)
 {
-  for (int i=1; i<=2*M; i++) // initialize arrays to zeros
+  for (int i=0; i<2*M; i++) // initialize arrays to zeros
   {
     XLS[i] = 0.0;
     AA[i]  = 0.0;
@@ -30,39 +30,27 @@ void initialize_XLS(long M, double *XLS, double *AA, double *EE)
 
 void init_A_filters(struct Orbit *orbit, struct Data *data, struct Filter *F_filter)
 {
-  long M;
-  
-  double *A1_fX, *A2_fX, *A3_fX, *A4_fX;
-  double *A1_fA, *A2_fA, *A3_fA, *A4_fA;
-  double *A1_fE, *A2_fE, *A3_fE, *A4_fE;
-  
-  M = F_filter->M_filter;
+  long M = F_filter->M_filter;
 
+  F_filter->A1_fX = malloc((2*M)*sizeof(double));
+  F_filter->A2_fX = malloc((2*M)*sizeof(double));
+  F_filter->A3_fX = malloc((2*M)*sizeof(double));
+  F_filter->A4_fX = malloc((2*M)*sizeof(double));
   
-  A1_fX = malloc((2*M+1)*sizeof(double));
-  A2_fX = malloc((2*M+1)*sizeof(double));
-  A3_fX = malloc((2*M+1)*sizeof(double));
-  A4_fX = malloc((2*M+1)*sizeof(double));
+  F_filter->A1_fA = malloc((2*M)*sizeof(double));
+  F_filter->A2_fA = malloc((2*M)*sizeof(double));
+  F_filter->A3_fA = malloc((2*M)*sizeof(double));
+  F_filter->A4_fA = malloc((2*M)*sizeof(double));
   
-  A1_fA = malloc((2*M+1)*sizeof(double));
-  A2_fA = malloc((2*M+1)*sizeof(double));
-  A3_fA = malloc((2*M+1)*sizeof(double));
-  A4_fA = malloc((2*M+1)*sizeof(double));
+  F_filter->A1_fE = malloc((2*M)*sizeof(double));
+  F_filter->A2_fE = malloc((2*M)*sizeof(double));
+  F_filter->A3_fE = malloc((2*M)*sizeof(double));
+  F_filter->A4_fE = malloc((2*M)*sizeof(double));
   
-  A1_fE = malloc((2*M+1)*sizeof(double));
-  A2_fE = malloc((2*M+1)*sizeof(double));
-  A3_fE = malloc((2*M+1)*sizeof(double));
-  A4_fE = malloc((2*M+1)*sizeof(double));
-  
-  initialize_XLS(M, A1_fX, A1_fA, A1_fE);
-  initialize_XLS(M, A2_fX, A2_fA, A2_fE);
-  initialize_XLS(M, A3_fX, A3_fA, A3_fE);
-  initialize_XLS(M, A4_fX, A4_fA, A4_fE);
-  
-  F_filter->A1_fX = A1_fX;	F_filter->A1_fA = A1_fA;	F_filter->A1_fE = A1_fE;
-  F_filter->A2_fX = A2_fX;	F_filter->A2_fA = A2_fA;	F_filter->A2_fE = A2_fE;
-  F_filter->A3_fX = A3_fX;	F_filter->A3_fA = A3_fA;	F_filter->A3_fE = A3_fE;
-  F_filter->A4_fX = A4_fX;	F_filter->A4_fA = A4_fA;	F_filter->A4_fE = A4_fE;
+  initialize_XLS(M, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE);
+  initialize_XLS(M, F_filter->A2_fX, F_filter->A2_fA, F_filter->A2_fE);
+  initialize_XLS(M, F_filter->A3_fX, F_filter->A3_fA, F_filter->A3_fE);
+  initialize_XLS(M, F_filter->A4_fX, F_filter->A4_fA, F_filter->A4_fE);
   
   get_filters(orbit, data, 1, F_filter);
   get_filters(orbit, data, 2, F_filter);
@@ -74,28 +62,22 @@ void init_M_matrix(struct Filter *F_filter, struct Data *data)
 {
   long i,j;
   
-  double **M_inv_X, **M_inv_AE;
-  
-  M_inv_X  = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
-  M_inv_AE = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
+  F_filter->M_inv_X  = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
+  F_filter->M_inv_AE = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
   for(i=0; i<4; i++)
   {
-    M_inv_X[i]  = malloc(4*sizeof(double));//dmatrix(0,3,0,3);
-    M_inv_AE[i] = malloc(4*sizeof(double));//dmatrix(0,3,0,3);
-  }
-  
-  
-  for (i=0;i<4;i++) {
-    for (j=0;j<4;j++) {
-      M_inv_X[i][j]  = 0.0;
-      M_inv_AE[i][j] = 0.0;
+    F_filter->M_inv_X[i]  = malloc(4*sizeof(double));//dmatrix(0,3,0,3);
+    F_filter->M_inv_AE[i] = malloc(4*sizeof(double));//dmatrix(0,3,0,3);
+
+    for (j=0;j<4;j++)
+    {
+      F_filter->M_inv_X[i][j]  = 0.0;
+      F_filter->M_inv_AE[i][j] = 0.0;
     }
   }
   
-  get_M(F_filter, M_inv_X, M_inv_AE, data);
+  get_M(F_filter, F_filter->M_inv_X, F_filter->M_inv_AE, data);
   
-  F_filter->M_inv_X  = M_inv_X;
-  F_filter->M_inv_AE = M_inv_AE;
 }
 
 void free_Filter(struct Filter *F_filter)
@@ -199,7 +181,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     // map to conventions for waveform generator
     params[3]=log(params[3]);
     params[4]=cos(params[4]);
-    galactic_binary(orbit, data->T, data->t0[0], params, 9, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE, M_filter, 2);
+    galactic_binary(orbit, data->T, data->t0[0], params, 9, F_filter->A2_fX, F_filter->A2_fA, F_filter->A2_fE, M_filter, 2);
     
   } else if (filter_id == 3){
     
@@ -218,7 +200,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     // map to conventions for waveform generator
     params[3]=log(params[3]);
     params[4]=cos(params[4]);
-    galactic_binary(orbit, data->T, data->t0[0], params, 9, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE, M_filter, 2);
+    galactic_binary(orbit, data->T, data->t0[0], params, 9, F_filter->A3_fX, F_filter->A3_fA, F_filter->A3_fE, M_filter, 2);
     
   } else {
     
@@ -237,7 +219,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     // map to conventions for waveform generator
     params[3]=log(params[3]);
     params[4]=cos(params[4]);
-    galactic_binary(orbit, data->T, data->t0[0], params, 9, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE, M_filter, 2);
+    galactic_binary(orbit, data->T, data->t0[0], params, 9, F_filter->A4_fX, F_filter->A4_fA, F_filter->A4_fE, M_filter, 2);
   }
   
   free(params);
@@ -260,7 +242,7 @@ void get_N(struct Data *data, struct Filter *F_filter)
   AALS = data->tdi[FIXME]->A;
   EELS = data->tdi[FIXME]->E;
   
-  q  = F_filter->q;
+  q  = F_filter->q - data->qmin;
   
   M_filter = F_filter->M_filter;
   
@@ -269,23 +251,27 @@ void get_N(struct Data *data, struct Filter *F_filter)
   F_filter->N3_X = 0.; F_filter->N3_AE = 0.;
   F_filter->N4_X = 0.; F_filter->N4_AE = 0.;
   
-  for (i=1; i<=M_filter; i++)
+  for (i=0; i<M_filter; i++)
   {
-    k = (q + i - 1 - M_filter/2);
+    k = (q + i - M_filter/2);
     
-    F_filter->N1_X  += (XfLS[2*k]*F_filter->A1_fX[2*i-1] + XfLS[2*k+1]*F_filter->A1_fX[2*i])/data->noise[FIXME]->SnX[k];
-    F_filter->N2_X  += (XfLS[2*k]*F_filter->A2_fX[2*i-1] + XfLS[2*k+1]*F_filter->A2_fX[2*i])/data->noise[FIXME]->SnX[k];
-    F_filter->N3_X  += (XfLS[2*k]*F_filter->A3_fX[2*i-1] + XfLS[2*k+1]*F_filter->A3_fX[2*i])/data->noise[FIXME]->SnX[k];
-    F_filter->N4_X  += (XfLS[2*k]*F_filter->A4_fX[2*i-1] + XfLS[2*k+1]*F_filter->A4_fX[2*i])/data->noise[FIXME]->SnX[k];
-    
-    F_filter->N1_AE += (AALS[2*k]*F_filter->A1_fA[2*i-1] + AALS[2*k+1]*F_filter->A1_fA[2*i]
-                        +EELS[2*k]*F_filter->A1_fE[2*i-1] + EELS[2*k+1]*F_filter->A1_fE[2*i])/data->noise[FIXME]->SnA[k-1];
-    F_filter->N2_AE += (AALS[2*k]*F_filter->A2_fA[2*i-1] + AALS[2*k+1]*F_filter->A2_fA[2*i]
-                        +EELS[2*k]*F_filter->A2_fE[2*i-1] + EELS[2*k+1]*F_filter->A2_fE[2*i])/data->noise[FIXME]->SnA[k-1];
-    F_filter->N3_AE += (AALS[2*k]*F_filter->A3_fA[2*i-1] + AALS[2*k+1]*F_filter->A3_fA[2*i]
-                        +EELS[2*k]*F_filter->A3_fE[2*i-1] + EELS[2*k+1]*F_filter->A3_fE[2*i])/data->noise[FIXME]->SnA[k-1];
-    F_filter->N4_AE += (AALS[2*k]*F_filter->A4_fA[2*i-1] + AALS[2*k+1]*F_filter->A4_fA[2*i]
-                        +EELS[2*k]*F_filter->A4_fE[2*i-1] + EELS[2*k+1]*F_filter->A4_fE[2*i])/data->noise[FIXME]->SnA[k-1];
+    if(k>0 && k<data->N)
+    {
+
+      F_filter->N1_X  += (XfLS[2*k]*F_filter->A1_fX[2*i] + XfLS[2*k+1]*F_filter->A1_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      F_filter->N2_X  += (XfLS[2*k]*F_filter->A2_fX[2*i] + XfLS[2*k+1]*F_filter->A2_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      F_filter->N3_X  += (XfLS[2*k]*F_filter->A3_fX[2*i] + XfLS[2*k+1]*F_filter->A3_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      F_filter->N4_X  += (XfLS[2*k]*F_filter->A4_fX[2*i] + XfLS[2*k+1]*F_filter->A4_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      
+      F_filter->N1_AE += (AALS[2*k]*F_filter->A1_fA[2*i] + AALS[2*k+1]*F_filter->A1_fA[2*i+1]
+                          +EELS[2*k]*F_filter->A1_fE[2*i] + EELS[2*k+1]*F_filter->A1_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      F_filter->N2_AE += (AALS[2*k]*F_filter->A2_fA[2*i] + AALS[2*k+1]*F_filter->A2_fA[2*i+1]
+                          +EELS[2*k]*F_filter->A2_fE[2*i] + EELS[2*k+1]*F_filter->A2_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      F_filter->N3_AE += (AALS[2*k]*F_filter->A3_fA[2*i] + AALS[2*k+1]*F_filter->A3_fA[2*i+1]
+                          +EELS[2*k]*F_filter->A3_fE[2*i] + EELS[2*k+1]*F_filter->A3_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      F_filter->N4_AE += (AALS[2*k]*F_filter->A4_fA[2*i] + AALS[2*k+1]*F_filter->A4_fA[2*i+1]
+                          +EELS[2*k]*F_filter->A4_fE[2*i] + EELS[2*k+1]*F_filter->A4_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+    }
   }
   
   F_filter->N1_X  *= 4.0;
@@ -298,12 +284,6 @@ void get_N(struct Data *data, struct Filter *F_filter)
   F_filter->N3_AE *= 4.0;
   F_filter->N4_AE *= 4.0;
   
-  
-  fprintf(stdout,"F=%lg\n",F_filter->N1_AE);
-  fprintf(stdout,"F=%lg\n",F_filter->N2_AE);
-  fprintf(stdout,"F=%lg\n",F_filter->N3_AE);
-  fprintf(stdout,"F=%lg\n",F_filter->N4_AE);
-  abort();
 }
 
 void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct Data *data)
@@ -313,86 +293,89 @@ void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct 
   long q, M_filter;
   
   M = F_filter->M_filter;
-  q = F_filter->q;
+  q = F_filter->q-data->qmin;
   M_filter = F_filter->M_filter;
   
-  for (i=1; i<=M; i++)
+  for (i=0; i<M; i++)
   {
-    k = (q + i - 1 - M_filter/2);
+    k = (q + i - M_filter/2);
     
-    M_inv_X[0][0] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A1_fX[2*i]
-                          +F_filter->A1_fX[2*i-1]*F_filter->A1_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    M_inv_X[0][1] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A2_fX[2*i]
-                          +F_filter->A1_fX[2*i-1]*F_filter->A2_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    M_inv_X[0][2] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A3_fX[2*i]
-                          +F_filter->A1_fX[2*i-1]*F_filter->A3_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    M_inv_X[0][3] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A4_fX[2*i]
-                          +F_filter->A1_fX[2*i-1]*F_filter->A4_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    
-    M_inv_X[1][1] += 4.0*(F_filter->A2_fX[2*i]  *F_filter->A2_fX[2*i]
-                          +F_filter->A2_fX[2*i-1]*F_filter->A2_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    M_inv_X[1][2] += 4.0*(F_filter->A2_fX[2*i]  *F_filter->A3_fX[2*i]
-                          +F_filter->A2_fX[2*i-1]*F_filter->A3_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    M_inv_X[1][3] += 4.0*(F_filter->A2_fX[2*i]  *F_filter->A4_fX[2*i]
-                          +F_filter->A2_fX[2*i-1]*F_filter->A4_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    
-    M_inv_X[2][2] += 4.0*(F_filter->A3_fX[2*i]  *F_filter->A3_fX[2*i]
-                          +F_filter->A3_fX[2*i-1]*F_filter->A3_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    M_inv_X[2][3] += 4.0*(F_filter->A3_fX[2*i]  *F_filter->A4_fX[2*i]
-                          +F_filter->A3_fX[2*i-1]*F_filter->A4_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    
-    M_inv_X[3][3] += 4.0*(F_filter->A4_fX[2*i]  *F_filter->A4_fX[2*i]
-                          +F_filter->A4_fX[2*i-1]*F_filter->A4_fX[2*i-1])/data->noise[FIXME]->SnX[k];
-    
-    
-    
-    
-    M_inv_AE[0][0] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A1_fA[2*i]
-                           +F_filter->A1_fA[2*i-1]*F_filter->A1_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A1_fE[2*i]  *F_filter->A1_fE[2*i]
-						 	  +F_filter->A1_fE[2*i-1]*F_filter->A1_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    M_inv_AE[0][1] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A2_fA[2*i]
-                           +F_filter->A1_fA[2*i-1]*F_filter->A2_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A1_fE[2*i]  *F_filter->A2_fE[2*i]
-          +F_filter->A1_fE[2*i-1]*F_filter->A2_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    M_inv_AE[0][2] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A3_fA[2*i]
-                           +F_filter->A1_fA[2*i-1]*F_filter->A3_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A1_fE[2*i]  *F_filter->A3_fE[2*i]
-          +F_filter->A1_fE[2*i-1]*F_filter->A3_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    M_inv_AE[0][3] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A4_fA[2*i]
-                           +F_filter->A1_fA[2*i-1]*F_filter->A4_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A1_fE[2*i]  *F_filter->A4_fE[2*i]
-          +F_filter->A1_fE[2*i-1]*F_filter->A4_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    
-    
-    M_inv_AE[1][1] += 4.0*(F_filter->A2_fA[2*i]  *F_filter->A2_fA[2*i]
-                           +F_filter->A2_fA[2*i-1]*F_filter->A2_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A2_fE[2*i]  *F_filter->A2_fE[2*i]
-          +F_filter->A2_fE[2*i-1]*F_filter->A2_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    M_inv_AE[1][2] += 4.0*(F_filter->A2_fA[2*i]  *F_filter->A3_fA[2*i]
-                           +F_filter->A2_fA[2*i-1]*F_filter->A3_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A2_fE[2*i]  *F_filter->A3_fE[2*i]
-						 	  +F_filter->A2_fE[2*i-1]*F_filter->A3_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    M_inv_AE[1][3] += 4.0*(F_filter->A2_fA[2*i]  *F_filter->A4_fA[2*i]
-                           +F_filter->A2_fA[2*i-1]*F_filter->A4_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A2_fE[2*i]  *F_filter->A4_fE[2*i]
-						 	  +F_filter->A2_fE[2*i-1]*F_filter->A4_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    
-    
-    M_inv_AE[2][2] += 4.0*(F_filter->A3_fA[2*i]  *F_filter->A3_fA[2*i]
-                           +F_filter->A3_fA[2*i-1]*F_filter->A3_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A3_fE[2*i]  *F_filter->A3_fE[2*i]
-						 	  +F_filter->A3_fE[2*i-1]*F_filter->A3_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    M_inv_AE[2][3] += 4.0*(F_filter->A3_fA[2*i]  *F_filter->A4_fA[2*i]
-                           +F_filter->A3_fA[2*i-1]*F_filter->A4_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A3_fE[2*i]  *F_filter->A4_fE[2*i]
-						 	  +F_filter->A3_fE[2*i-1]*F_filter->A4_fE[2*i-1])/data->noise[FIXME]->SnA[k];
-    
-    
-    M_inv_AE[3][3] += 4.0*(F_filter->A4_fA[2*i]  *F_filter->A4_fA[2*i]
-                           +F_filter->A4_fA[2*i-1]*F_filter->A4_fA[2*i-1])/data->noise[FIXME]->SnA[k]
-    +4.0*(F_filter->A4_fE[2*i]  *F_filter->A4_fE[2*i]
-						 	  +F_filter->A4_fE[2*i-1]*F_filter->A4_fE[2*i-1])/data->noise[FIXME]->SnA[k];
+    if(k>0 && k<data->N)
+    {
+      M_inv_X[0][0] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A1_fX[2*i]
+                            +F_filter->A1_fX[2*i+1]*F_filter->A1_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      M_inv_X[0][1] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A2_fX[2*i]
+                            +F_filter->A1_fX[2*i+1]*F_filter->A2_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      M_inv_X[0][2] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A3_fX[2*i]
+                            +F_filter->A1_fX[2*i+1]*F_filter->A3_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      M_inv_X[0][3] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A4_fX[2*i]
+                            +F_filter->A1_fX[2*i+1]*F_filter->A4_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      
+      M_inv_X[1][1] += 4.0*(F_filter->A2_fX[2*i]  *F_filter->A2_fX[2*i]
+                            +F_filter->A2_fX[2*i+1]*F_filter->A2_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      M_inv_X[1][2] += 4.0*(F_filter->A2_fX[2*i]  *F_filter->A3_fX[2*i]
+                            +F_filter->A2_fX[2*i+1]*F_filter->A3_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      M_inv_X[1][3] += 4.0*(F_filter->A2_fX[2*i]  *F_filter->A4_fX[2*i]
+                            +F_filter->A2_fX[2*i+1]*F_filter->A4_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      
+      M_inv_X[2][2] += 4.0*(F_filter->A3_fX[2*i]  *F_filter->A3_fX[2*i]
+                            +F_filter->A3_fX[2*i+1]*F_filter->A3_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      M_inv_X[2][3] += 4.0*(F_filter->A3_fX[2*i]  *F_filter->A4_fX[2*i]
+                            +F_filter->A3_fX[2*i+1]*F_filter->A4_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      
+      M_inv_X[3][3] += 4.0*(F_filter->A4_fX[2*i]  *F_filter->A4_fX[2*i]
+                            +F_filter->A4_fX[2*i+1]*F_filter->A4_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+      
+      
+      
+      
+      M_inv_AE[0][0] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A1_fA[2*i]
+                             +F_filter->A1_fA[2*i+1]*F_filter->A1_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A1_fE[2*i]  *F_filter->A1_fE[2*i]
+            +F_filter->A1_fE[2*i+1]*F_filter->A1_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      M_inv_AE[0][1] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A2_fA[2*i]
+                             +F_filter->A1_fA[2*i+1]*F_filter->A2_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A1_fE[2*i]  *F_filter->A2_fE[2*i]
+            +F_filter->A1_fE[2*i+1]*F_filter->A2_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      M_inv_AE[0][2] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A3_fA[2*i]
+                             +F_filter->A1_fA[2*i+1]*F_filter->A3_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A1_fE[2*i]  *F_filter->A3_fE[2*i]
+            +F_filter->A1_fE[2*i+1]*F_filter->A3_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      M_inv_AE[0][3] += 4.0*(F_filter->A1_fA[2*i]  *F_filter->A4_fA[2*i]
+                             +F_filter->A1_fA[2*i+1]*F_filter->A4_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A1_fE[2*i]  *F_filter->A4_fE[2*i]
+            +F_filter->A1_fE[2*i+1]*F_filter->A4_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      
+      
+      M_inv_AE[1][1] += 4.0*(F_filter->A2_fA[2*i]  *F_filter->A2_fA[2*i]
+                             +F_filter->A2_fA[2*i+1]*F_filter->A2_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A2_fE[2*i]  *F_filter->A2_fE[2*i]
+            +F_filter->A2_fE[2*i+1]*F_filter->A2_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      M_inv_AE[1][2] += 4.0*(F_filter->A2_fA[2*i]  *F_filter->A3_fA[2*i]
+                             +F_filter->A2_fA[2*i+1]*F_filter->A3_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A2_fE[2*i]  *F_filter->A3_fE[2*i]
+            +F_filter->A2_fE[2*i+1]*F_filter->A3_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      M_inv_AE[1][3] += 4.0*(F_filter->A2_fA[2*i]  *F_filter->A4_fA[2*i]
+                             +F_filter->A2_fA[2*i+1]*F_filter->A4_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A2_fE[2*i]  *F_filter->A4_fE[2*i]
+            +F_filter->A2_fE[2*i+1]*F_filter->A4_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      
+      
+      M_inv_AE[2][2] += 4.0*(F_filter->A3_fA[2*i]  *F_filter->A3_fA[2*i]
+                             +F_filter->A3_fA[2*i+1]*F_filter->A3_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A3_fE[2*i]  *F_filter->A3_fE[2*i]
+            +F_filter->A3_fE[2*i+1]*F_filter->A3_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      M_inv_AE[2][3] += 4.0*(F_filter->A3_fA[2*i]  *F_filter->A4_fA[2*i]
+                             +F_filter->A3_fA[2*i+1]*F_filter->A4_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A3_fE[2*i]  *F_filter->A4_fE[2*i]
+            +F_filter->A3_fE[2*i+1]*F_filter->A4_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+      
+      
+      M_inv_AE[3][3] += 4.0*(F_filter->A4_fA[2*i]  *F_filter->A4_fA[2*i]
+                             +F_filter->A4_fA[2*i+1]*F_filter->A4_fA[2*i+1])/data->noise[FIXME]->SnA[k]
+      +4.0*(F_filter->A4_fE[2*i]  *F_filter->A4_fE[2*i]
+            +F_filter->A4_fE[2*i+1]*F_filter->A4_fE[2*i+1])/data->noise[FIXME]->SnA[k];
+    }
   }
   
   // make use of symmetry to populate the other pieces
@@ -407,6 +390,7 @@ void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct 
   
   invert_matrix(M_inv_X,4);
   invert_matrix(M_inv_AE,4);
+
 }
 
 

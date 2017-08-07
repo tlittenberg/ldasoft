@@ -139,6 +139,12 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
   }
   fclose(fptr);
 
+  //TODO: fill X vectors with A channel for now
+  for(int n=0; n<data->N; n++)
+  {
+    tdi->X[2*n]   = tdi->A[2*n];
+    tdi->X[2*n+1] = tdi->A[2*n+1];
+  }
 }
 
 
@@ -351,6 +357,14 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       }
       fclose(fptr);
       fclose(injectionFile);
+      
+      //TODO: fill X vectors with A channel for now
+      for(int n=0; n<data->N; n++)
+      {
+        tdi->X[2*n]   = tdi->A[2*n];
+        tdi->X[2*n+1] = tdi->A[2*n+1];
+      }
+
     }//end jj loop over time segments
     gsl_rng_free(r);
   }
@@ -575,6 +589,14 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           fprintf(fptr,"\n");
         }
         fclose(fptr);
+        
+        //TODO: fill X vectors with A channel for now
+        for(int n=0; n<data->N; n++)
+        {
+          tdi->X[2*n]   = tdi->A[2*n];
+          tdi->X[2*n+1] = tdi->A[2*n+1];
+        }
+
       }//end jj loop over segments
     }//end nn loop over sources in file
     fclose(injectionFile);
