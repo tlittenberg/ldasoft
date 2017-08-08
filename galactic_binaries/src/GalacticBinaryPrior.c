@@ -56,6 +56,7 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
   int D = 3;  // number of parameters
   int Nth = 200;  // bins in cos theta
   int Nph = 200;  // bins in phi
+  int MCMC=100000000;
   int j;
   int ith, iph, cnt;
   double H, dOmega;
@@ -65,6 +66,13 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
   double r_ec, theta, phi;
   int mc;
   //  FILE *chain = NULL;
+  
+  if(flags->debug)
+  {
+    Nth /= 10;
+    Nph /= 10;
+    MCMC/=10;
+  }
   
   const gsl_rng_type * T;
   gsl_rng * r;
@@ -108,7 +116,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
   //  if(flags->verbose)chain = fopen("chain.dat", "w");
   
   //int MCMC=1000000000;
-  int MCMC=100000000;
   for(mc=0; mc<MCMC; mc++)
   {
     if(mc%(MCMC/100)==0)printProgress((double)mc/(double)MCMC);

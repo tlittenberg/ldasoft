@@ -507,10 +507,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
   //TODO: Fix this
-  if(!strcmp(proposal[nprop]->name,"spectrum"))
+  if(!strcmp(proposal[nprop]->name,"fstat"))
   {
-    logQyx = log(data->p[(int)(source_y->params[0]-data->qmin)]);
-    logQxy = log(data->p[(int)(source_x->params[0]-data->qmin)]);
+    logQyx = evaluate_fstatistic_proposal(data, proposal[nprop], source_y->params);
+    logQxy = evaluate_fstatistic_proposal(data, proposal[nprop], source_x->params);
   }
   
   if(!strcmp(proposal[nprop]->name,"cdf draw"))
@@ -587,7 +587,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   copy_model(model_x,model_y);
   
   int freqflag=0;
-  if(gsl_rng_uniform(chain->r[ic])<0.0) freqflag=1;
+  if(gsl_rng_uniform(chain->r[ic])<0.5) freqflag=1;
   
   /* pick birth or death move */
   if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
@@ -601,8 +601,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      if(freqflag) logQyx = draw_from_spectrum(data, model_y, model_y->source[create], proposal[1], model_y->source[create]->params, chain->r[ic]);
-      else         logQyx = draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+      if(freqflag) draw_from_fstatistic(data, model_y, model_y->source[create], proposal[2], model_y->source[create]->params, chain->r[ic]);
+      else         draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
 
       
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
@@ -611,8 +611,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       logQyx = model_x->logPriorVolume;
       if(freqflag)
       {
-        logQyx += log(model->prior[0][1]-model->prior[1][0]);                         //undo uniform frequency contribution to volume
-        logQyx += log(data->p[(int)(model_y->source[create]->params[0]-data->qmin)]); //add power-based frequency proposal
+//        logQyx += log(model->prior[0][1]-model->prior[1][0]);                         //undo uniform frequency contribution to volume
+//        logQyx += log(data->p[(int)(model_y->source[create]->params[0]-data->qmin)]); //add power-based frequency proposal
+        logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
       }
       
       //copy params for segment 0 into higher segments
@@ -640,8 +641,10 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       logQyx = 0;
       if(freqflag)
       {
-        logQxy += log(model->prior[0][1]-model->prior[1][0]);
-        logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
+        //logQxy += log(model->prior[0][1]-model->prior[1][0]);
+        //logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
+        logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
+
       }
       
       //consolodiate parameter structure
@@ -680,12 +683,12 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   //if(model_y->Nlive > model_x->Nlive && ic==0)
 //  if(ic==0)
 //  {
-//    FILE *fptr = fopen("proposal.dat","a");
+////    FILE *fptr = fopen("proposal.dat","a");
 //    fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
 //    fprintf(stdout,"%i -> %i ",model_x->Nlive, model_y->Nlive);
 //    //print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
 //    fprintf(stdout,"\n");
-//    fclose(fptr);
+////    fclose(fptr);
 //  }
   
   loga = log(gsl_rng_uniform(chain->r[ic]));
@@ -791,7 +794,7 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   //  }
   
   if(gsl_rng_uniform(chain->r[ic])<0.5)
-    draw_from_spectrum(data, model_x, source_x, proposal[1], temp->source[n]->params, chain->r[ic]);
+    draw_from_fstatistic(data, model_x, source_x, proposal[2], temp->source[n]->params, chain->r[ic]);
   else
     fm_shift(data, model_x, source_x, proposal[4], temp->source[n]->params, chain->r[ic]);
   

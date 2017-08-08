@@ -65,6 +65,7 @@ struct Flags
   int strainData;
   int orbit;
   int prior;
+  int debug;
   int cheat;
   int burnin;
   int update;

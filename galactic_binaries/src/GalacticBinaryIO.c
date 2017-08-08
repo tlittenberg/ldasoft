@@ -92,6 +92,7 @@ void print_usage()
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
   fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
   fprintf(stdout,"       --prior       : sample from prior                   \n");
+  fprintf(stdout,"       --debug       : leaner settings for quick running   \n");
   fprintf(stdout,"--\n");
   fprintf(stdout,"EXAMPLE:\n");
   fprintf(stdout,"./gb_mcmc --orbit ../config/OrbitConfig1.txt --verbose --inj ../data/sources/RXJ0806.dat\n");
@@ -120,6 +121,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->fixSky      = 0;
   flags->skyPrior    = 0;
   flags->cheat       = 0;
+  flags->debug       = 0;
   flags->strainData  = 0;
   flags->knownSource = 0;
   flags->NT          = 1;
@@ -191,6 +193,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"detached",    no_argument, 0, 0 },
     {"prior",       no_argument, 0, 0 },
     {"cheat",       no_argument, 0, 0 },
+    {"debug",       no_argument, 0, 0 },
     {"no-rj",        no_argument, 0, 0 },
     {0, 0, 0, 0}
   };
@@ -223,6 +226,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
         if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
+        if(strcmp("debug",       long_options[long_index].name) == 0) flags->debug      = 1;
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("steps",       long_options[long_index].name) == 0)
         {

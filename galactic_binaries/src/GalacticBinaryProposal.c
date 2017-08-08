@@ -25,6 +25,7 @@
 
 
 #define FIXME 0
+#define SNRCAP 200.0 /* SNR cap on logL */
 
 void setup_frequency_proposal(struct Data *data)
 {
@@ -168,6 +169,9 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
   //choose one eigenvector to jump along
   i = (int)(gsl_rng_uniform(seed)*(double)NP);
   for (j=0; j<NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
+  
+  //check jump value, set to small value if singular
+  for(i=0; i<NP; i++) if(jump[i]!=jump[i]) jump[i] = 0.01*source->params[i];
   
   //jump from current position
   for(i=0; i<NP; i++) params[i] = source->params[i] + jump[i];
@@ -334,12 +338,12 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         check+=proposal[i]->weight;
         break;
       case 2:
-        sprintf(proposal[i]->name,"spectrum");
+        sprintf(proposal[i]->name,"fstat");
         
         
         setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
 
-        proposal[i]->function = &draw_from_spectrum;
+        proposal[i]->function = &draw_from_fstatistic;
         proposal[i]->weight = 0.1;
         check+=proposal[i]->weight;
         break;
@@ -425,13 +429,16 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   //matrix to hold maximized extrinsic parameters
   double *Fparams = malloc(3*sizeof(double));
   
-  //SNR cap on logL
-  double cap = 200.;
-  
   //grid sizes
   int n_f     = 4*data->N;
   int n_theta = 30;
   int n_phi   = 30;
+  if(flags->debug)
+  {
+    n_f/=8;
+    n_theta/=5;
+    n_phi/=5;
+  }
   
   double d_f     = (double)data->N/(double)n_f;
   double d_theta = 2./(double)n_theta;
@@ -441,7 +448,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   fprintf(stdout,"   n_f     = %i\n",n_f);
   fprintf(stdout,"   n_theta = %i\n",n_theta);
   fprintf(stdout,"   n_phi   = %i\n",n_phi);
-  fprintf(stdout,"   cap     = %g\n",cap);
+  fprintf(stdout,"   cap     = %g\n",SNRCAP);
 
   double fdot = 0.0; //TODO: what to do about fdot...
   
@@ -491,6 +498,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   FILE *fptr=NULL;
   
   double norm = 0.0;
+  double maxLogL = -1e60;
   
   //loop over sub-bins
   for(int i=0; i<n_f; i++)
@@ -518,9 +526,11 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         
         get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
         
+        //logL_AE = 100.0;
         if(flags->verbose)fprintf(fptr,"%.12g %.12g %.12g\n", cos(theta), phi, logL_AE);
 
-        if(logL_AE > cap) logL_AE = cap;
+        if(logL_AE > maxLogL) maxLogL = logL_AE;
+        if(logL_AE > SNRCAP)  logL_AE = SNRCAP;
         
         proposal->tensor[i][j][k] = logL_AE;
         norm += logL_AE;
@@ -535,15 +545,79 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   }//end loop over sub-bins
   
   //normalize
-  double volume = data->N * 2. * PI2;
+  proposal->norm = (n_f*n_theta*n_phi)/norm;
+  double volume = 1.0;//data->N * 2. * PI2;
   
-  for(int i=0; i<n_f; i++) for(int j=0; j<n_theta; j++) for(int k=0; k<n_phi; k++) proposa->tensor[i][j][k] /= (norm * volume);
+  for(int i=0; i<n_f; i++) for(int j=0; j<n_theta; j++) for(int k=0; k<n_phi; k++) proposal->tensor[i][j][k] *= (n_f*n_theta*n_phi)/(norm * volume);
   
   
   
   free(Fparams);
+  fprintf(stdout,"\n   maxLogL = %g\n",maxLogL);
   fprintf(stdout,"\n================================================\n\n");
   fflush(stdout);
 }
 
+double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+{
+  double logP = 0.0;
+  
+  int n_f     = (int)proposal->matrix[0][0];
+  int n_theta = (int)proposal->matrix[1][0];
+  int n_phi   = (int)proposal->matrix[2][0];
+  
+  double d_f     = proposal->matrix[0][1];
+  double d_theta = proposal->matrix[1][1];
+  double d_phi   = proposal->matrix[2][1];
+
+  double q,costheta,phi,p,alpha;
+  
+  int check=1;
+
+  double i,j,k;
+  
+  //first draw from prior
+  draw_from_prior(data, model, source, proposal, params, seed);
+  
+  //now rejection sample on f,theta,phi
+  while(check)
+  {
+    i = gsl_rng_uniform(seed)*n_f;
+    j = gsl_rng_uniform(seed)*n_theta;
+    k = gsl_rng_uniform(seed)*n_phi;
+    
+    q        = (double)(data->qmin) + i*d_f;
+    costheta = -1. + j*d_theta;
+    phi      = k*d_phi;
+    
+    //printf("q=%g, costheta=%g, phi=%g --> i=%i, j=%i, k=%i\n",q,costheta,phi,(int)i,(int)j,(int)k);
+    
+    p = proposal->tensor[(int)i][(int)j][(int)k];
+    alpha = gsl_rng_uniform(seed)*SNRCAP*proposal->norm;
+    
+    if(p>alpha)check=0;
+
+  }
+  
+  params[0] = q;
+  params[1] = costheta;
+  params[2] = phi;
+  
+  logP = log(p);
+  
+  return logP;
+}
+
+double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal, double *params)
+{  
+  double d_f     = proposal->matrix[0][1];
+  double d_theta = proposal->matrix[1][1];
+  double d_phi   = proposal->matrix[2][1];
+  
+  int i = (int)floor((params[0] - data->qmin)/d_f);
+  int j = (int)floor((params[1] - -1)/d_theta);
+  int k = (int)floor((params[2])/d_phi);
+  
+  return log(proposal->tensor[i][j][k]);
+}
 
