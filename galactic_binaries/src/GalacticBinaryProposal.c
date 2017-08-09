@@ -25,7 +25,7 @@
 
 
 #define FIXME 0
-#define SNRCAP 200.0 /* SNR cap on logL */
+#define SNRCAP 10000.0 /* SNR cap on logL */
 
 void setup_frequency_proposal(struct Data *data)
 {
@@ -344,7 +344,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
 
         proposal[i]->function = &draw_from_fstatistic;
-        proposal[i]->weight = 0.1;
+        proposal[i]->weight = 0.0;
         check+=proposal[i]->weight;
         break;
       case 3:
@@ -435,9 +435,9 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   int n_phi   = 30;
   if(flags->debug)
   {
-    n_f/=8;
-    n_theta/=5;
-    n_phi/=5;
+    n_f/=4;
+    n_theta/=3;
+    n_phi/=3;
   }
   
   double d_f     = (double)data->N/(double)n_f;
@@ -487,7 +487,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
       proposal->tensor[i][j] = malloc(n_phi*sizeof(double));
       for(int k=0; k<n_phi; k++)
       {
-        proposal->tensor[i][j][k] = 0.0;
+        proposal->tensor[i][j][k] = 1.0;
       }
     }
   }
@@ -524,16 +524,18 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
       {
         double phi = (double)k*d_phi;
         
-        get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
-        
-        //logL_AE = 100.0;
-        if(flags->verbose)fprintf(fptr,"%.12g %.12g %.12g\n", cos(theta), phi, logL_AE);
+        if(i>0 && i<n_f-1)
+        {
+          get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
+                    
+          if(logL_AE > maxLogL) maxLogL = logL_AE;
+          if(logL_AE > SNRCAP)  logL_AE = SNRCAP;
+          
+          proposal->tensor[i][j][k] = logL_AE;
+        }
+        if(flags->verbose)fprintf(fptr,"%.12g %.12g %.12g\n", cos(theta), phi, proposal->tensor[i][j][k]);
 
-        if(logL_AE > maxLogL) maxLogL = logL_AE;
-        if(logL_AE > SNRCAP)  logL_AE = SNRCAP;
-        
-        proposal->tensor[i][j][k] = logL_AE;
-        norm += logL_AE;
+        norm += proposal->tensor[i][j][k];
         
       }//end loop over longitude bins
       if(flags->verbose)fprintf(fptr,"\n");
@@ -553,7 +555,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   
   
   free(Fparams);
-  fprintf(stdout,"\n   maxLogL = %g\n",maxLogL);
+  fprintf(stdout,"\n   maxLogL     = %g",maxLogL);
+  fprintf(stdout,"\n   norm'ed max = %g",SNRCAP*proposal->norm);
   fprintf(stdout,"\n================================================\n\n");
   fflush(stdout);
 }
@@ -571,8 +574,6 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   double d_phi   = proposal->matrix[2][1];
 
   double q,costheta,phi,p,alpha;
-  
-  int check=1;
 
   double i,j,k;
   
@@ -580,6 +581,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   draw_from_prior(data, model, source, proposal, params, seed);
   
   //now rejection sample on f,theta,phi
+  int check=1;
   while(check)
   {
     i = gsl_rng_uniform(seed)*n_f;
@@ -614,10 +616,17 @@ double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal
   double d_theta = proposal->matrix[1][1];
   double d_phi   = proposal->matrix[2][1];
   
+  int n_f     = (int)proposal->matrix[0][0];
+  int n_theta = (int)proposal->matrix[1][0];
+  int n_phi   = (int)proposal->matrix[2][0];
+
   int i = (int)floor((params[0] - data->qmin)/d_f);
   int j = (int)floor((params[1] - -1)/d_theta);
   int k = (int)floor((params[2])/d_phi);
   
-  return log(proposal->tensor[i][j][k]);
+  if      (i<0 || i>=n_f    ) return -INFINITY;
+  else if (j<0 || j>=n_theta) return -INFINITY;
+  else if (k<0 || k>=n_phi  ) return -INFINITY;
+  else return log(proposal->tensor[i][j][k]);
 }
 
