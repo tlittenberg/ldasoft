@@ -310,6 +310,8 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   cosi   = params[4];
   psi    = params[5];
   phi0   = params[6];
+  dfdt   = 0.0;
+  d2fdt2 = 0.0;
   if(NP>7)
     dfdt   = params[7]/(T*T);
   if(NP>8)

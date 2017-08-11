@@ -433,4 +433,33 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   return logP;
 }
 
+double evaluate_snr_prior(struct Prior *prior, struct Model *model, double *params, double *Snf, double Tobs, double fstar)
+{
+  double logP;
+  double dfac, dfac5;
+
+  double SNRpeak = 5.0;
+  
+  double f   = params[0]/Tobs;
+  double amp = exp(params[3]);
+
+  // x/a^2 exp(-x/a) prior on SNR. Peaks at x = a. Good choice is a=5
+  
+  int n = (int)floor(params[0] - model->prior[0][0]);
+  double sf = sin(f/fstar); //sin(f/f*)
+  double sn = Snf[n];
+  double sqT = sqrt(Tobs);
+  
+  //Sinc spreading
+  double SNm  = sn/(4.*sf*sf);   //Michelson noise
+  double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
+  
+  dfac = 1.+SNR/(4.*SNRpeak);
+  dfac5 = dfac*dfac*dfac*dfac*dfac;
+  
+  logP = log((3.*SNR)/(4.*SNRpeak*SNRpeak*dfac5)) + log(SNR/params[3]);
+
+  return logP;
+}
+
 

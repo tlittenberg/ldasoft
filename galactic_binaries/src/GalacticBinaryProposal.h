@@ -28,6 +28,7 @@ struct Proposal
   int *accept;
   char name[128];
   double norm;
+  double maxp;   /* maximum p for rejection sampling */
   double weight; /* between 0 and 1 */
 
   int size;
@@ -54,5 +55,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
 
 double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal, double *params);
+
+double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 #endif /* GalacticBinaryProposal_h */

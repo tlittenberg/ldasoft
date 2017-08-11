@@ -331,6 +331,8 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
   double X[BW2+1],Y[BW2+1],Z[BW2+1];
   double phiLS, cLS, sLS;
   double sqT=sqrt(T);
+  double invfstar = 1./fstar;
+  double invSQ3 = 1./SQ3;
   
   //phiLS = PI2*f0*(0.5-LonC);//1 s sampling rate
   //TODO: sampling rate is hard-coded into tdi function
@@ -345,7 +347,7 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     j = k-1;
     
     f = ((double)(q + i-1 - BWon2))/T;
-    fonfs = f/fstar;
+    fonfs = f*invfstar;
     c3 = cos(3.*fonfs);  c2 = cos(2.*fonfs);  c1 = cos(fonfs);
     s3 = sin(3.*fonfs);  s2 = sin(2.*fonfs);  s1 = sin(fonfs);
     
@@ -386,11 +388,11 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
       (d[2][3][k]-d[1][3][k]);
       
       
-      A[j] =  sqT*((2.0*X[j]-Y[j]-Z[j])*cLS-(2.0*X[k]-Y[k]-Z[k])*sLS)/3.0;
-      A[k] = -sqT*((2.0*X[j]-Y[j]-Z[j])*sLS+(2.0*X[k]-Y[k]-Z[k])*cLS)/3.0;
+      A[j] =  sqT*((2.0*X[j]-Y[j]-Z[j])*cLS-(2.0*X[k]-Y[k]-Z[k])*sLS)*0.33333333;
+      A[k] = -sqT*((2.0*X[j]-Y[j]-Z[j])*sLS+(2.0*X[k]-Y[k]-Z[k])*cLS)*0.33333333;
       
-      E[j] =  sqT*((Z[j]-Y[j])*cLS-(Z[k]-Y[k])*sLS)/SQ3;
-      E[k] = -sqT*((Z[j]-Y[j])*sLS+(Z[k]-Y[k])*cLS)/SQ3;
+      E[j] =  sqT*((Z[j]-Y[j])*cLS-(Z[k]-Y[k])*sLS)*invSQ3;
+      E[k] = -sqT*((Z[j]-Y[j])*sLS+(Z[k]-Y[k])*cLS)*invSQ3;
     }
   }
 }

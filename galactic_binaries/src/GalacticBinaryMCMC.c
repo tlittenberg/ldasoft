@@ -216,13 +216,14 @@ int main(int argc, char *argv[])
         
         for(int steps=0; steps < 100; steps++)
         {
-          galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-          
+          for(int j=0; j<model_ptr->Nlive; j++) galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+
           noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
         
+        
         //reverse jump birth/death move
-        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+        if(flags->rj && mcmc%10==0)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
         //delayed rejection mode-hopper
         //if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
@@ -589,7 +590,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   int freqflag=0;
   if(gsl_rng_uniform(chain->r[ic])<1.5) freqflag=1;
   
-  proposal[2]->trial[ic]++;
+  //proposal[2]->trial[ic]++;
 
   /* pick birth or death move */
   if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
@@ -682,21 +683,21 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   logH += logPy  - logPx;  //priors
   logH += logQxy - logQyx; //proposals
   
-  if(model_y->Nlive > model_x->Nlive && ic==0)
-    if(ic==0)
-    {
-      FILE *fptr = fopen("proposal.dat","a");
-      //    fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
-      //    fprintf(stdout,"%i -> %i ",model_x->Nlive, model_y->Nlive);
-      print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
-      fprintf(fptr,"\n");
-      fclose(fptr);
-    }
+//  if(model_y->Nlive > model_x->Nlive && ic==0)
+//    if(ic==0)
+//    {
+//      FILE *fptr = fopen("proposal.dat","a");
+//      //    fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
+//      //    fprintf(stdout,"%i -> %i ",model_x->Nlive, model_y->Nlive);
+//      print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
+//      fprintf(fptr,"\n");
+//      fclose(fptr);
+//    }
   
   loga = log(gsl_rng_uniform(chain->r[ic]));
   if(logH > loga)
   {
-    proposal[2]->accept[ic]++;
+    //proposal[2]->accept[ic]++;
     copy_model(model_y,model_x);
   }
   
