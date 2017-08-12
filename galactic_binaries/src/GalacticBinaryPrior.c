@@ -407,14 +407,16 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   else logP -= log(uniform_prior[4][1]-uniform_prior[4][0]);
   
   //polarization
-  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
-  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
-  logP -= log(uniform_prior[5][1]-uniform_prior[5][0]);
+//  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
+//  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
+  if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
+  else logP -= log(uniform_prior[5][1]-uniform_prior[5][0]);
 
   //phase
-  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
-  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
-  logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+//  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
+//  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
+  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
+  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
 
   //fdot (bins/Tobs)
   if(model->NP>7)

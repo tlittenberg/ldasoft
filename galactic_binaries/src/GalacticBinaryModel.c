@@ -924,12 +924,12 @@ int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct
     {
       chain->logLmax = logL;
 
-      fprintf(stdout,"New max logL = %.2f  Cloning chains...\n",logL);
-      for(int ic=1; ic<chain->NC; ic++)
-      {
-        int m = chain->index[ic];
-        for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
-      }
+//      fprintf(stdout,"New max logL = %.2f  Cloning chains...\n",logL);
+//      for(int ic=1; ic<chain->NC; ic++)
+//      {
+//        int m = chain->index[ic];
+//        for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
+//      }
       return 1;
     }
   }

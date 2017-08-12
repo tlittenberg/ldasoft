@@ -27,6 +27,79 @@
 #define FIXME 0
 #define SNRCAP 10000.0 /* SNR cap on logL */
 
+
+static void write_Fstat_animation(struct Proposal *proposal)
+{
+  FILE *fptr = fopen("fstat/Fstat.gpi","w");
+  
+  fprintf(fptr,"!rm Fstat.mp4\n");
+  fprintf(fptr,"set terminal pngcairo size 1024,512 enhanced font 'Verdana,12'\n");
+  
+  fprintf(fptr,"\n");
+  
+  fprintf(fptr,"# perula palette\n");
+  fprintf(fptr,"set palette defined (0 '#352a87', 1 '#0363e1', 2 '#1485d4', 3 '#06a7c6', 4 '#38b99e', 5 '#92bf73', 6 '#d9ba56', 7 '#fcce2e', 8 '#f9fb0e')\n");
+  
+  fprintf(fptr,"\n");
+  
+  fprintf(fptr,"\n");
+
+  fprintf(fptr,"unset colorbox\n");
+  fprintf(fptr,"unset key\n");
+  fprintf(fptr,"unset label\n");
+  fprintf(fptr,"set tics scale 2 font ',8'\n");
+  fprintf(fptr,"set xlabel '{/Symbol f}\n");
+  fprintf(fptr,"set ylabel 'cos({/Symbol q})' offset 1\n");
+  
+  fprintf(fptr,"\n");
+  
+  fprintf(fptr,"\n");
+  
+  fprintf(fptr,"dph = 0.5*2.*pi/%i.\n",(int)proposal->matrix[1][0]);
+  fprintf(fptr,"dth = 0.5*2./%i.\n"   ,(int)proposal->matrix[2][0]);
+  
+  fprintf(fptr,"\n");
+  
+  fprintf(fptr,"set pm3d map\n");
+  
+  fprintf(fptr,"\n");
+  
+  fprintf(fptr,"do for [ii=0:%i-1:+1]{\n",(int)proposal->matrix[0][0]);
+  fprintf(fptr,"  set output sprintf('fstat_frame%%05.0f.png',ii)\n");
+  fprintf(fptr,"  set size 1,1\n");
+  fprintf(fptr,"  set multiplot title sprintf('fstat-frame%%05.0f.png',ii)\n");
+  fprintf(fptr,"  set size 0.5,1\n");
+
+  fprintf(fptr,"\n");
+
+  fprintf(fptr,"  set origin 0,0\n");
+  fprintf(fptr,"  set cbrange [0.001:%lg]\n",proposal->maxp);
+  fprintf(fptr,"  input = sprintf('skymap_%%05.0f.dat',ii)\n");
+  fprintf(fptr,"  splot [0:2*pi] [-1:1] input u ($2+dph):($1+dth):3\n");
+  
+  fprintf(fptr,"\n");
+  
+  fprintf(fptr,"  set origin 0.5,0\n");
+  fprintf(fptr,"  set cbrange [log(0.001):log(%lg)]\n",proposal->maxp);
+  fprintf(fptr,"  input = sprintf('skymap_%%05.0f.dat',ii)\n");
+  fprintf(fptr,"  splot [0:2*pi] [-1:1] input u ($2+dph):($1+dth):(log($3))\n");
+  
+  fprintf(fptr,"  unset multiplot\n");
+  
+  fprintf(fptr,"}\n");
+
+  fprintf(fptr,"\n");
+
+  fprintf(fptr,"# Create animation\n");
+  fprintf(fptr,"CMD = 'ffmpeg -r 256 -f image2 -s 3840x1080 -start_number 0 -i fstat_frame%%05d.png -vframes %i -vcodec libx264 -crf 25  -pix_fmt yuv420p Fstat.mp4'\n",(int)proposal->matrix[0][0]);
+  fprintf(fptr,"system(CMD)\n");
+
+  fprintf(fptr,"\n");
+
+  fprintf(fptr,"!rm *.png\n");
+  fclose(fptr);
+}
+
 void setup_frequency_proposal(struct Data *data)
 {
   int BW = 20;
@@ -431,8 +504,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   
   //grid sizes
   int n_f     = 4*data->N;
-  int n_theta = 30;
-  int n_phi   = 30;
+  int n_theta = 50;
+  int n_phi   = 50;
   if(flags->debug)
   {
     n_f/=4;
@@ -492,11 +565,6 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     }
   }
   
-  //set up directory/files to store f-stat information for fun/debugging
-  if(flags->verbose)mkdir("fstat",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  char filename[128];
-  FILE *fptr=NULL;
-  
   double norm = 0.0;
   double maxLogL = -1e60;
   
@@ -508,11 +576,6 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     double q = (double)(data->qmin) + (double)(i)*d_f;
     double f = q/data->T;
     
-    if(flags->verbose)
-    {
-      sprintf(filename,"fstat/skymap_%05d.dat",i);
-      fptr=fopen(filename,"w");
-    }
     
     //loop over colatitude bins
     for (int j=0; j<n_theta; j++)
@@ -531,32 +594,48 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
           if(logL_AE > maxLogL) maxLogL = logL_AE;
           //if(logL_AE > SNRCAP)  logL_AE = SNRCAP;
           
-          proposal->tensor[i][j][k] = sqrt(2*logL_AE);
+          proposal->tensor[i][j][k] = logL_AE;//sqrt(2*logL_AE);
         }
-        if(flags->verbose)fprintf(fptr,"%.12g %.12g %.12g\n", cos(theta), phi, proposal->tensor[i][j][k]);
 
         norm += proposal->tensor[i][j][k];
         
       }//end loop over longitude bins
-      if(flags->verbose)fprintf(fptr,"\n");
-      
     }//end loop over colatitude bins
-    
-    if(flags->verbose) fclose(fptr);
-    
   }//end loop over sub-bins
   
   //normalize
   proposal->norm = (n_f*n_theta*n_phi)/norm;
-
-  proposal->maxp = sqrt(2.*maxLogL)*proposal->norm;
+  proposal->maxp = maxLogL*proposal->norm;//sqrt(2.*maxLogL)*proposal->norm;
+  
   for(int i=0; i<n_f; i++) for(int j=0; j<n_theta; j++) for(int k=0; k<n_phi; k++) proposal->tensor[i][j][k] *= proposal->norm;
   
-  
+  if(flags->verbose)
+  {
+    mkdir("fstat",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    char filename[128];
+    
+    for(int i=0; i<n_f; i++)
+    {
+      sprintf(filename,"fstat/skymap_%05d.dat",i);
+      FILE *fptr=fopen(filename,"w");
+      for (int j=0; j<n_theta; j++)
+      {
+        double theta = acos(-1. + (double)j*d_theta);
+
+        for(int k=0; k<n_phi; k++)
+        {
+          double phi = (double)k*d_phi;
+
+          fprintf(fptr,"%.12g %.12g %.12g\n", cos(theta), phi, proposal->tensor[i][j][k]);
+        }
+        fprintf(fptr,"\n");
+      }
+      fclose(fptr);
+    }
+    write_Fstat_animation(proposal);
+  }
   
   free(Fparams);
-  fprintf(stdout,"\n   maxLogL     = %g",sqrt(2*maxLogL));
-  fprintf(stdout,"\n   norm'ed max = %g",SNRCAP*proposal->norm);
   fprintf(stdout,"\n================================================\n\n");
   fflush(stdout);
 }
@@ -626,20 +705,29 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
   
   double i,j,k;
   
-  fm_shift(data, model, source, proposal, params, seed);
+  /* half the time do an fm shift, half the time completely rebott frequency */
+  int fmFlag = 0;
+  if(gsl_rng_uniform(seed)<0.5) fmFlag=1;
   
-  q = params[0];
-  i = floor((q-data->qmin)/d_f);
-
-  if(i<0 || i>n_f-1) return -INFINITY;
+  if(fmFlag)
+  {
+    fm_shift(data, model, source, proposal, params, seed);
+    
+    q = params[0];
+    i = floor((q-data->qmin)/d_f);
+    
+    if(i<0 || i>n_f-1) return -INFINITY;
+  }
   
   //now rejection sample on f,theta,phi
   int check=1;
   while(check)
   {
+    if(!fmFlag)i = gsl_rng_uniform(seed)*n_f;
     j = gsl_rng_uniform(seed)*n_theta;
     k = gsl_rng_uniform(seed)*n_phi;
     
+    q        = (double)(data->qmin) + i*d_f;
     costheta = -1. + j*d_theta;
     phi      = k*d_phi;
     
@@ -652,6 +740,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
     
   }
   
+  params[0] = q;
   params[1] = costheta;
   params[2] = phi;
   
@@ -680,4 +769,6 @@ double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal
   else if (k<0 || k>=n_phi  ) return -INFINITY;
   else return log(proposal->tensor[i][j][k]);
 }
+
+
 

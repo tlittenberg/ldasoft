@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
         
         
         //reverse jump birth/death move
-        if(flags->rj && mcmc%10==0)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
         //delayed rejection mode-hopper
         //if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
       
     }// end (parallel) loop over chains
     
-    //ptmcmc(model,chain,flags);
+    ptmcmc(model,chain,flags);
     adapt_temperature_ladder(chain, mcmc+flags->NBURN);
     
     print_chain_files(data[FIXME], model, chain, flags, mcmc);
