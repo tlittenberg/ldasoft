@@ -930,7 +930,7 @@ int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct
 //        int m = chain->index[ic];
 //        for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
 //      }
-      return 1;
+      if(flags->burnin)return 1;
     }
   }
   
