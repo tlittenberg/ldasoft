@@ -358,7 +358,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   
 }
 
-double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *prior, double *params)
+double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *prior, double *params, struct Data *data)
 {
   double logP=0.0;
   double **uniform_prior = model->prior;

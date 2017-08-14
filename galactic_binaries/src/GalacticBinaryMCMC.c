@@ -535,8 +535,8 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
   
   //get priors for x and y
-  logPx = evaluate_prior(flags, model_x, prior, source_x->params);
-  logPy = evaluate_prior(flags, model_y, prior, source_y->params);
+  logPx = evaluate_prior(flags, model_x, prior, source_x->params, data);
+  logPy = evaluate_prior(flags, model_y, prior, source_y->params, data);
   
   if(logPy > -INFINITY)
   {
@@ -659,8 +659,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     else logPy = -INFINITY;
   }
   
-  for(int n=0; n<model_x->Nlive; n++) logPx +=  evaluate_prior(flags, model_x, prior, model_x->source[n]->params);
-  for(int n=0; n<model_y->Nlive; n++) logPy +=  evaluate_prior(flags, model_y, prior, model_y->source[n]->params);
+  for(int n=0; n<model_x->Nlive; n++) logPx +=  evaluate_prior(flags, model_x, prior, model_x->source[n]->params, data);
+  for(int n=0; n<model_y->Nlive; n++) logPy +=  evaluate_prior(flags, model_y, prior, model_y->source[n]->params, data);
   
   
   /* Hasting's ratio */
