@@ -70,6 +70,7 @@ struct Flags
   int burnin;
   int update;
   int rj;
+  int psynth_fdot_prior; // 1 -> use new dfdt prior, 0 -> old uniform dfdt prior
   
   char **injFile;
   char cdfFile[128];

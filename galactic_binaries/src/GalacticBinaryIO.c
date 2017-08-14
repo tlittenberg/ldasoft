@@ -114,25 +114,26 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   if(argc==1) print_usage();
   
   //Set defaults
-  flags->rj          = 1;
-  flags->verbose     = 0;
-  flags->NF          = 0;
-  flags->zeroNoise   = 0;
-  flags->fixSky      = 0;
-  flags->skyPrior    = 0;
-  flags->cheat       = 0;
-  flags->debug       = 0;
-  flags->strainData  = 0;
-  flags->knownSource = 0;
-  flags->NT          = 1;
-  flags->orbit       = 0;
-  flags->prior       = 0;
-  flags->update      = 0;
-  flags->NMAX        = Nmax;
-  flags->NMCMC       = 10000;
-  flags->NBURN       = 10000;
-  chain->NP          = 5; //number of proposals
-  chain->NC          = 12;//number of chains
+  flags->rj          	   = 1;
+  flags->verbose     	   = 0;
+  flags->NF          	   = 0;
+  flags->zeroNoise   	   = 0;
+  flags->fixSky      	   = 0;
+  flags->skyPrior    	   = 0;
+  flags->cheat       	   = 0;
+  flags->debug       	   = 0;
+  flags->strainData  	   = 0;
+  flags->knownSource 	   = 0;
+  flags->NT          	   = 1;
+  flags->orbit       	   = 0;
+  flags->prior             = 0;
+  flags->update            = 0;
+  flags->NMAX        	   = Nmax;
+  flags->NMCMC       	   = 10000;
+  flags->NBURN             = 10000;
+  flags->psynth_fdot_prior = 0;
+  chain->NP          	   = 5; //number of proposals
+  chain->NC          	   = 12;//number of chains
 
   for(int i=0; i<Nmax; i++)
   {

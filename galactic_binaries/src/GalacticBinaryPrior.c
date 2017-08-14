@@ -14,6 +14,122 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryPrior.h"
 
+
+double get_Mc(double f, double dfdt)
+{
+	return pow( dfdt*pow(f,-11./3.)*(5./96.)*pow(M_PI,-8./3.)  ,  3./5.)/TSUN;
+}
+
+double eval_dwd_Mc_comp(double f, double dfdt)
+{
+		// Refer to Adams, Cornish, Littenberg '12
+		double Mc0, a, b, Const, apb, Mc;
+		
+		// hyper-parameters for prior
+		Mc0 = 0.205;
+		a 	= 15.;
+		b 	= 4.6;
+	
+		// Normalization constant 
+		apb = a + b;
+		Const  = Mc0*M_PI;
+		Const *= pow(b, (a+1.)/(apb) )*pow(a, -(a+1.)/(apb) );
+		Const /= apb*sin(M_PI*(b-1.)/apb);
+	
+		Mc = get_Mc(f, dfdt);
+		
+		return 1./Const/(pow(Mc/Mc0,-a) + a*pow(Mc/Mc0,b)/b);
+}
+
+double eval_dwd_comp(double f, double dfdt)
+{
+
+	double dMc_dfdot;
+
+	if (dfdt < 0.)
+	{
+		return 0.;
+	}
+	else 
+	{
+		// transform to fdot distribution, multiply by dMc_dfdot
+		dMc_dfdot = 0.125*pow(3./5.,2./5.)/pow(f,11./5.)/pow(dfdt,2./5.)/pow(M_PI,8./5.)/TSUN;
+		
+		return dMc_dfdot*eval_dwd_Mc_comp(f, dfdt);
+	}
+}
+
+double eval_lower_AMCVn_comp(double f, double dfdt)
+{
+	double model,sigma,a,b,val;
+	
+	if (dfdt > 0.)
+	{
+		return 0.;
+	}
+ 	else 
+ 	{
+		a     = 5.2;
+		b     = -4.05;
+		sigma = 0.2;
+		model = a*log10(f) + b;
+
+		val = -0.5*(log10(-dfdt) - model)*(log10(-dfdt) - model);
+		val /= sigma*sigma;
+		val = exp(val);
+		val /= sqrt(PI2)*sigma;
+
+		return val/(-dfdt)/log(10.);
+	}
+}
+
+double eval_upper_AMCVn_comp(double f, double dfdt)
+{
+	double model,sigma,a,b,val;
+	
+	if (dfdt > 0.)
+	{
+		return 0.;
+	}
+ 	else 
+ 	{
+		a     = 5.8;
+		b     = -1.65;
+		sigma = 0.13;
+		model = a*log10(f) + b;
+
+		val = -0.5*(log10(-dfdt) - model)*(log10(-dfdt) - model);
+		val /= sigma*sigma;
+		val = exp(val);
+		val /= sqrt(PI2)*sigma;
+
+		return val/(-dfdt)/log(10.);
+	}
+}
+
+double eval_fdot_prior(double *params, double T_obs)
+{	
+	double N_up_AMCVn, N_low_AMCVn, N_dwd;
+	double frac_up, frac_low, frac_dwd;
+	double f, dfdt;
+	
+	f    = params[0]/T_obs;
+	dfdt = params[7]/T_obs/T_obs;
+	
+	// divided by 10 for current AM CVn population considerations
+	N_up_AMCVn  = 11197732./10;
+	N_low_AMCVn = 23025767./10;
+	N_dwd       = 26084422.;
+	
+	frac_up  = N_up_AMCVn  /(N_up_AMCVn + N_low_AMCVn + N_dwd);
+	frac_low = N_low_AMCVn /(N_up_AMCVn + N_low_AMCVn + N_dwd);
+	frac_dwd = N_dwd	   /(N_up_AMCVn + N_low_AMCVn + N_dwd);
+	
+	return frac_up*eval_upper_AMCVn_comp(f, dfdt) + frac_low*eval_lower_AMCVn_comp(f, dfdt) 
+									 			 + frac_dwd*eval_dwd_comp(f, dfdt);
+}
+
+
 static double loglike(double *x, int D)
 {
   double u, rsq, z, s, ll;
@@ -421,8 +537,19 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   //fdot (bins/Tobs)
   if(model->NP>7)
   {
-    if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
-    else logP -= log(uniform_prior[7][1]-uniform_prior[7][0]);
+  	if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
+  	else 
+  	{
+		if(flags->psynth_fdot_prior == 1)
+		{
+			logP += log(eval_fdot_prior(params, data->T));
+		}
+		else
+		{
+		
+			logP -= log(uniform_prior[7][1]-uniform_prior[7][0]);
+		}
+    }
   }
   
   //fddot
