@@ -184,18 +184,19 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     
     /* These options don’t set a flag.
      We distinguish them by their indices. */
-    {"help",        no_argument, 0,'h'},
-    {"verbose",     no_argument, 0,'v'},
-    {"zero-noise",  no_argument, 0, 0 },
-    {"fix-sky",     no_argument, 0, 0 },
-    {"sky-prior",   no_argument, 0, 0 },
-    {"known-source",no_argument, 0, 0 },
-    {"f-double-dot",no_argument, 0, 0 },
-    {"detached",    no_argument, 0, 0 },
-    {"prior",       no_argument, 0, 0 },
-    {"cheat",       no_argument, 0, 0 },
-    {"debug",       no_argument, 0, 0 },
-    {"no-rj",        no_argument, 0, 0 },
+    {"help",        			 no_argument, 0,'h'},
+    {"verbose",     			 no_argument, 0,'v'},
+    {"zero-noise",  			 no_argument, 0, 0 },
+    {"fix-sky",     			 no_argument, 0, 0 },
+    {"sky-prior",   			 no_argument, 0, 0 },
+    {"known-source",			 no_argument, 0, 0 },
+    {"f-double-dot",			 no_argument, 0, 0 },
+    {"detached",    			 no_argument, 0, 0 },
+    {"prior",       			 no_argument, 0, 0 },
+    {"cheat",       		     no_argument, 0, 0 },
+    {"debug",       		     no_argument, 0, 0 },
+    {"no-rj",        		     no_argument, 0, 0 },
+    {"psynth_fdot_prior",        no_argument, 0, 0 },
     {0, 0, 0, 0}
   };
   
@@ -210,26 +211,27 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {
         
       case 0:
-        if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
-        if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
-        if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
-        if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
-        if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin    = (double)atof(optarg);
-        if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap[0] = (double)atof(optarg);
-        if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
-        if(strcmp("chainseed",   long_options[long_index].name) == 0) data_ptr->cseed   = (long)atoi(optarg);
-        if(strcmp("noiseseed",   long_options[long_index].name) == 0) data_ptr->nseed   = (long)atoi(optarg);
-        if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
-        if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
-        if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
-        if(strcmp("sky-prior",   long_options[long_index].name) == 0) flags->skyPrior   = 1;
-        if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
-        if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
-        if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
-        if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
-        if(strcmp("debug",       long_options[long_index].name) == 0) flags->debug      = 1;
-        if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
-        if(strcmp("steps",       long_options[long_index].name) == 0)
+        if(strcmp("samples",     	   long_options[long_index].name) == 0) data_ptr->N       		 = atoi(optarg);
+        if(strcmp("segments",    	   long_options[long_index].name) == 0) flags->NT         		 = atoi(optarg);
+        if(strcmp("duration",    	   long_options[long_index].name) == 0) data_ptr->T       		 = (double)atof(optarg);
+        if(strcmp("start-time",  	   long_options[long_index].name) == 0) data_ptr->t0[0]   		 = (double)atof(optarg);
+        if(strcmp("fmin",        	   long_options[long_index].name) == 0) data_ptr->fmin    		 = (double)atof(optarg);
+        if(strcmp("gap-time",    	   long_options[long_index].name) == 0) data_ptr->tgap[0] 		 = (double)atof(optarg);
+        if(strcmp("chains",      	   long_options[long_index].name) == 0) chain->NC         		 = atoi(optarg);
+        if(strcmp("chainseed",   	   long_options[long_index].name) == 0) data_ptr->cseed   		 = (long)atoi(optarg);
+        if(strcmp("noiseseed",   	   long_options[long_index].name) == 0) data_ptr->nseed   		 = (long)atoi(optarg);
+        if(strcmp("injseed",     	   long_options[long_index].name) == 0) data_ptr->iseed   		 = (long)atoi(optarg);
+        if(strcmp("zero-noise",  	   long_options[long_index].name) == 0) flags->zeroNoise  		 = 1;
+        if(strcmp("fix-sky",     	   long_options[long_index].name) == 0) flags->fixSky     		 = 1;
+        if(strcmp("sky-prior",   	   long_options[long_index].name) == 0) flags->skyPrior   		 = 1;
+        if(strcmp("prior",       	   long_options[long_index].name) == 0) flags->prior      		 = 1;
+        if(strcmp("f-double-dot",	   long_options[long_index].name) == 0) data_ptr->NP      		 = 9;
+        if(strcmp("detached",    	   long_options[long_index].name) == 0) flags->detached   		 = 1;
+        if(strcmp("cheat",       	   long_options[long_index].name) == 0) flags->cheat      		 = 1;
+        if(strcmp("debug",       	   long_options[long_index].name) == 0) flags->debug      		 = 1;
+        if(strcmp("no-rj",       	   long_options[long_index].name) == 0) flags->rj         		 = 0;
+        if(strcmp("psynth_fdot_prior", long_options[long_index].name) == 0) flags->psynth_fdot_prior = 1;
+        if(strcmp("steps",      	   long_options[long_index].name) == 0)
         {
           flags->NMCMC = atoi(optarg);
           flags->NBURN = flags->NMCMC;
