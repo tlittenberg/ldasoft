@@ -166,7 +166,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fp
   }
 }
 
-double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
   //TODO: Work in amplitude
   
@@ -191,9 +191,16 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
   return 0;
 }
 
-double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
-  for(int n=0; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  for(int n=0; n<source->NP; n++) 
+  {
+  	if(n==7 && flags->psynth_fdot_prior == 1) 
+  	{
+  		params[n] = draw_from_fdot_prior(params[0]/data->T, params[7]/data->T/data->T, seed);
+  	}
+  	else params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  }
   
   for(int j=0; j<source->NP; j++)
   {
@@ -203,7 +210,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
   return model->logPriorVolume;
 }
 
-double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
   for(int n=1; n<3; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   for(int n=4; n<7; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
@@ -216,7 +223,7 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
   return model->logPriorVolume;
 }
 
-double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
   int i,j;
   int NP=source->NP;
@@ -258,7 +265,7 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
   return 0.0;
 }
 
-double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
   int N = proposal->size;
   int NP = source->NP;
@@ -337,13 +344,13 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
 }
 
 
-double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
   //doppler modulation frequency (in bins)
   double fm = data->T/YEAR;
   
   //update all parameters with a draw from the fisher
-  if(gsl_rng_uniform(seed)<0.5) draw_from_fisher(data, model, source, proposal, params, seed);
+  if(gsl_rng_uniform(seed)<0.5) draw_from_fisher(data, model, source, proposal, params, seed, flags);
   else for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
 
   //perturb frequency by 1 fm
@@ -485,7 +492,6 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
     exit(1);
   }
 }
-
 
 
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal)
@@ -640,7 +646,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   fflush(stdout);
 }
 
-double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
   double logP = 0.0;
   
@@ -657,7 +663,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   double i,j,k;
   
   //first draw from prior
-  draw_from_prior(data, model, source, proposal, params, seed);
+  draw_from_prior(data, model, source, proposal, params, seed, flags);
   
   //now rejection sample on f,theta,phi
   int check=1;
@@ -689,7 +695,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   return logP;
 }
 
-double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags)
 {
   double logP = 0.0;
   
@@ -711,7 +717,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
   
   if(fmFlag)
   {
-    fm_shift(data, model, source, proposal, params, seed);
+    fm_shift(data, model, source, proposal, params, seed, flags);
     
     q = params[0];
     i = floor((q-data->qmin)/d_f);
@@ -749,7 +755,6 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
   return logP;
 }
 
-
 double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal, double *params)
 {  
   double d_f     = proposal->matrix[0][1];
@@ -770,5 +775,96 @@ double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal
   else return log(proposal->tensor[i][j][k]);
 }
 
+double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
+{
+	double N_up_AMCVn, N_low_AMCVn, N_dwd;
+	double frac_low, frac_dwd; //frac_up, 
+	double alpha;
+	int component;
+	double sample, uz, u0;
+	double mean, A, temp;//, hold;
+	
+	double a, b, sigma, model;
+	
+	// divided by 10 for current AM CVn population considerations
+	N_up_AMCVn  = 11197732./10;
+	N_low_AMCVn = 23025767./10;
+	N_dwd       = 26084422.;
+	
+	//frac_up  = N_up_AMCVn  /(N_up_AMCVn + N_low_AMCVn + N_dwd);
+	frac_low = N_low_AMCVn /(N_up_AMCVn + N_low_AMCVn + N_dwd);
+	frac_dwd = N_dwd	   /(N_up_AMCVn + N_low_AMCVn + N_dwd);
+
+	alpha = gsl_rng_uniform(seed);
+	
+	if  (alpha <= frac_dwd)
+	{	// draw from detached white dwarf component
+		component = 0;
+	}
+	else if  (alpha > frac_dwd && alpha <= frac_dwd + frac_low )
+	{	// draw from lower population of AM CVn's
+		component = 1;
+	}
+	else 
+	{	// draw from low population of AM CVn's
+		component = 2;
+	}
+	
+	
+	switch (component)
+	{
+		case 0:
+			//	DWD
+			
+			mean = log(0.32);
+			A = 4.50832;
+			sigma = 0.7;
+			temp = 0;
+			
+			// rejection sampler of DWD chirp mass distribution
+			while (temp == 0)
+			{	
+				uz = gsl_ran_lognormal(seed, mean, sigma);
+				u0 = gsl_rng_uniform(seed)*A*gsl_ran_lognormal_pdf(uz, mean, sigma);
+				dfdt = 96./5.*pow(M_PI,8./3)*pow(uz*TSUN,5./3.)*pow(f,11./3.);
+				// 15 chosen a bit ad hoc, a hack for the envelope function
+				if (u0 < eval_dwd_Mc_comp(f, dfdt) && uz < 15.)
+				{	
+					temp = 1;
+					// uz is a chirp mass sample, convert to fdot
+					sample = 96./5.*pow(M_PI,8./3)*pow(uz*TSUN,5./3.)*pow(f,11./3.);
+				}
+			}
+			break;
+			
+		case 1:
+			// upper AM CVn
+			sample =  gsl_ran_gaussian(seed,1.);
+			
+			a     = 5.2;
+			b     = -4.05;
+			sigma = 0.2;
+			model = a*log10(f) + b;
+			
+			sample = -pow(10.,model + sigma*sample);
+		
+			break;
+		
+		case 2:
+			// Lower AM CVn
+			
+			sample =  gsl_ran_gaussian(seed,1.);
+			
+			a     = 5.8;
+			b     = -1.65;
+			sigma = 0.13;
+			model = a*log10(f) + b;
+			
+			sample = -pow(10.,model + sigma*sample);
+
+			break;
+	}
+	return sample;
+}
 
 

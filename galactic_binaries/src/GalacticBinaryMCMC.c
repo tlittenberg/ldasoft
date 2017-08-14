@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
           map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
           
         }
-        else draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
+        else draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic], flags);
         map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
         galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[0]);
       }
@@ -505,7 +505,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   proposal[nprop]->trial[ic]++;
   
-  (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
+  (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic], flags);
   
   //TODO: Fix this
   if(!strcmp(proposal[nprop]->name,"fstat"))
@@ -604,8 +604,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      if(freqflag) draw_from_fstatistic(data, model_y, model_y->source[create], proposal[2], model_y->source[create]->params, chain->r[ic]);
-      else         draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+      if(freqflag) draw_from_fstatistic(data, model_y, model_y->source[create], proposal[2], model_y->source[create]->params, chain->r[ic], flags);
+      else         draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic], flags);
 
       
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
@@ -785,7 +785,7 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   
   
   //  // force fm-shift for temp model
-  //    fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+  //    fm_shift(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic], flags);
   //    double jump = temp[0]->source[n]->params[0] - model_x[0]->source[n]->params[0];
   //    temp[0]->source[n]->params[0] = model_x[0]->source[n]->params[0] + jump*sqrt(chain->annealing);
   //    temp[0]->source[n]->params[7] = model_x[0]->source[n]->params[7] - 2*jump*sqrt(chain->annealing);
@@ -793,13 +793,13 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   //  else if(gsl_rng_uniform(chain->r[ic])<0.7)
   //  {
   //    // force extrinsic update
-  //    draw_from_extrinsic_prior(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic]);
+  //    draw_from_extrinsic_prior(data[0], model_x[0], source_x, temp[0]->source[n]->params, chain->r[ic], flags);
   //  }
   
   if(gsl_rng_uniform(chain->r[ic])<0.5)
-    draw_from_fstatistic(data, model_x, source_x, proposal[2], temp->source[n]->params, chain->r[ic]);
+    draw_from_fstatistic(data, model_x, source_x, proposal[2], temp->source[n]->params, chain->r[ic], flags);
   else
-    fm_shift(data, model_x, source_x, proposal[4], temp->source[n]->params, chain->r[ic]);
+    fm_shift(data, model_x, source_x, proposal[4], temp->source[n]->params, chain->r[ic], flags);
   
   
   generate_signal_model(orbit, data, temp);
