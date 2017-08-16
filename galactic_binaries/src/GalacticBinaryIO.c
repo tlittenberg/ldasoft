@@ -135,6 +135,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->psynth_fdot_prior = 0;
   chain->NP          	   = 5; //number of proposals
   chain->NC          	   = 12;//number of chains
+  
+  flags->detached = 0;
 
   for(int i=0; i<Nmax; i++)
   {

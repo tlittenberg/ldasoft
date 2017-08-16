@@ -197,7 +197,9 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
   {
   	if(n==7 && flags->psynth_fdot_prior == 1) 
   	{
-  		params[n] = draw_from_fdot_prior(params[0]/data->T, params[7]/data->T/data->T, seed);
+  		//fprintf(stdout,"f inside [draw_from_prior]:  %e\n", model->source[n]->f0);
+  		//params[n] = draw_from_fdot_prior(params[0]/data->T, params[7]/data->T/data->T, seed)*data->T*data->T;
+  		params[n] = draw_from_fdot_prior(model->source[n]->f0, model->source[n]->dfdt, seed)*data->T*data->T;
   	}
   	else params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   }
@@ -493,7 +495,6 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
   }
 }
 
-
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal)
 {
   /*
@@ -786,6 +787,11 @@ double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
 	
 	double a, b, sigma, model;
 	
+	
+	//fprintf(stdout,"f inside [draw_from_fdot_prior]:  %e\n", f);
+	
+	if (f == 0) return 0.;
+	
 	// divided by 10 for current AM CVn population considerations
 	N_up_AMCVn  = 11197732./10;
 	N_low_AMCVn = 23025767./10;
@@ -800,22 +806,27 @@ double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
 	if  (alpha <= frac_dwd)
 	{	// draw from detached white dwarf component
 		component = 0;
+		//fprintf(stdout,"draw from pos freq, alpha: %e\n",alpha);
 	}
 	else if  (alpha > frac_dwd && alpha <= frac_dwd + frac_low )
 	{	// draw from lower population of AM CVn's
 		component = 1;
+		//fprintf(stdout,"draw from neg freq, alpha: %e\n",alpha);
 	}
 	else 
-	{	// draw from low population of AM CVn's
+	{	// draw from upper population of AM CVn's
 		component = 2;
+		//fprintf(stdout,"draw from neg freq, alpha: %e\n",alpha);
 	}
 	
+	//fprintf(stdout,"here, alpha, component: %e %i \n",alpha, component);
+	
+	//fprintf(stdout,"f:  %e\n", f);
 	
 	switch (component)
 	{
 		case 0:
 			//	DWD
-			
 			mean = log(0.32);
 			A = 4.50832;
 			sigma = 0.7;
@@ -834,16 +845,17 @@ double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
 					// uz is a chirp mass sample, convert to fdot
 					sample = 96./5.*pow(M_PI,8./3)*pow(uz*TSUN,5./3.)*pow(f,11./3.);
 				}
+				//fprintf(stdout,"uz: %e  \n",uz);
 			}
 			break;
 			
 		case 1:
-			// upper AM CVn
+			// lower AM CVn
 			sample =  gsl_ran_gaussian(seed,1.);
 			
-			a     = 5.2;
-			b     = -4.05;
-			sigma = 0.2;
+			a     = 5.18528649;
+			b     = -4.12450516;
+			sigma = 0.0713011677;
 			model = a*log10(f) + b;
 			
 			sample = -pow(10.,model + sigma*sample);
@@ -851,19 +863,21 @@ double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
 			break;
 		
 		case 2:
-			// Lower AM CVn
-			
+			// upper AM CVn
 			sample =  gsl_ran_gaussian(seed,1.);
 			
-			a     = 5.8;
-			b     = -1.65;
-			sigma = 0.13;
+			a     = 5.737174;
+			b     = -1.89984587;
+			sigma = 0.0513059605;
 			model = a*log10(f) + b;
 			
 			sample = -pow(10.,model + sigma*sample);
 
 			break;
 	}
+	
+	//fprintf(stdout,"dfdt inside [draw_from_fdot_prior]:  %e\n", sample);
+	
 	return sample;
 }
 
