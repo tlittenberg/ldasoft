@@ -199,7 +199,9 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
   	{
   		//fprintf(stdout,"f inside [draw_from_prior]:  %e\n", model->source[n]->f0);
   		//params[n] = draw_from_fdot_prior(params[0]/data->T, params[7]/data->T/data->T, seed)*data->T*data->T;
-  		params[n] = draw_from_fdot_prior(model->source[n]->f0, model->source[n]->dfdt, seed)*data->T*data->T;
+  		params[n] = draw_from_fdot_prior(0.00434173, seed)*data->T*data->T;
+  		
+  		//params[n] = draw_from_fdot_prior(model->source[n]->f0, model->source[n]->dfdt, seed)*data->T*data->T;
   	}
   	else params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   }
@@ -776,19 +778,16 @@ double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal
   else return log(proposal->tensor[i][j][k]);
 }
 
-double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
+double draw_from_fdot_prior(double f, gsl_rng *seed)
 {
 	double N_up_AMCVn, N_low_AMCVn, N_dwd;
 	double frac_low, frac_dwd; //frac_up, 
 	double alpha;
 	int component;
 	double sample, uz, u0;
-	double mean, A, temp;//, hold;
+	double mean, A, temp, dfdt;//, hold;
 	
 	double a, b, sigma, model;
-	
-	
-	//fprintf(stdout,"f inside [draw_from_fdot_prior]:  %e\n", f);
 	
 	if (f == 0) return 0.;
 	
@@ -797,7 +796,6 @@ double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
 	N_low_AMCVn = 23025767./10;
 	N_dwd       = 26084422.;
 	
-	//frac_up  = N_up_AMCVn  /(N_up_AMCVn + N_low_AMCVn + N_dwd);
 	frac_low = N_low_AMCVn /(N_up_AMCVn + N_low_AMCVn + N_dwd);
 	frac_dwd = N_dwd	   /(N_up_AMCVn + N_low_AMCVn + N_dwd);
 
@@ -851,27 +849,29 @@ double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed)
 			
 		case 1:
 			// lower AM CVn
-			sample =  gsl_ran_gaussian(seed,1.);
+			sample =  gsl_ran_ugaussian(seed);
+			
+			//fprintf(stdout,"f inside [draw_from_fdto_prior]: %e\n", f);
 			
 			a     = 5.18528649;
 			b     = -4.12450516;
 			sigma = 0.0713011677;
 			model = a*log10(f) + b;
 			
-			sample = -pow(10.,model + sigma*sample);
+			sample = -pow(10., model + sigma*sample);
 		
 			break;
 		
 		case 2:
 			// upper AM CVn
-			sample =  gsl_ran_gaussian(seed,1.);
+			sample =  gsl_ran_ugaussian(seed);
 			
 			a     = 5.737174;
 			b     = -1.89984587;
 			sigma = 0.0513059605;
 			model = a*log10(f) + b;
 			
-			sample = -pow(10.,model + sigma*sample);
+			sample = -pow(10., model + sigma*sample);
 
 			break;
 	}

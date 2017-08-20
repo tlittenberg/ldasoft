@@ -58,6 +58,6 @@ double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal
 
 double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed, struct Flags *flags);
 
-double draw_from_fdot_prior(double f, double dfdt, gsl_rng *seed);
+double draw_from_fdot_prior(double f, gsl_rng *seed);
 
 #endif /* GalacticBinaryProposal_h */

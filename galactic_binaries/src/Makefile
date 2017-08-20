@@ -1,5 +1,6 @@
 # OpenMP
-CC = gcc-mp-5
+CC = gcc-7
+#CC = gcc-mp-5
 #CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m
