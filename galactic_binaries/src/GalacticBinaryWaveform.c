@@ -114,10 +114,12 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
       wave_m->tdi->E[j]=0.0;
     }
 
+    printf("        galactic_binary_fisher.alignment\n");
     // align perturbed waveforms in data array
     galactic_binary_alignment(orbit, data, wave_p);
     galactic_binary_alignment(orbit, data, wave_m);
     
+    printf("        galactic_binary_fisher.waveform\n");
     // compute perturbed waveforms
     galactic_binary(orbit, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
     galactic_binary(orbit, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
@@ -207,12 +209,15 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
   
   //Rescale based on Tobs
   double rescale = 1.;
-  while(T>62914560*rescale) rescale*=2;
+  while(T>62914560*rescale) rescale*=2.;
+  
+  while(T<62914560*rescale) rescale/=2.;
   
   DS *= rescale;
   
-  while(p>DS) DS*=2;
+  if(DS<16)DS=16;
   
+  while(p>DS) DS*=2;
   
   //Sinc spreading
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
@@ -220,7 +225,7 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
 
   int SS = (int)(pow(2.0,(rint(log(SNRm)/LN2)+1.0)));
   if(SS > N) SS = N;
-  
+
   return (DS > SS) ? DS : SS; //return largest spread as bandwidth
 }
 

@@ -243,17 +243,20 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, 
   
   model->noise    = malloc( NT * sizeof(struct Noise*) );
   model->tdi      = malloc( NT * sizeof(struct TDI*)   );
+  model->residual = malloc( NT * sizeof(struct TDI*)   );
   model->t0       = malloc( NT * sizeof(double)        );
   model->t0_min   = malloc( NT * sizeof(double)        );
   model->t0_max   = malloc( NT * sizeof(double)        );
   
   for(n = 0; n<NT; n++)
   {
-    model->noise[n]  = malloc( sizeof(struct Noise) );
-    model->tdi[n]    = malloc( sizeof(struct TDI)   );
+    model->noise[n]    = malloc( sizeof(struct Noise) );
+    model->tdi[n]      = malloc( sizeof(struct TDI)   );
+    model->residual[n] = malloc( sizeof(struct TDI)   );
     
     alloc_noise(model->noise[n],NFFT);
     alloc_tdi(model->tdi[n],  NFFT, Nchannel);
+    alloc_tdi(model->residual[n],  NFFT, Nchannel);
   }
   
   for(n=0; n<model->Nmax; n++)
@@ -283,6 +286,9 @@ void copy_model(struct Model *origin, struct Model *copy)
     
     //TDI
     copy_tdi(origin->tdi[n],copy->tdi[n]);
+    
+    //Residual
+    //copy_tdi(origin->residual[n],copy->residual[n]);
     
     //Start time for segment for model
     copy->t0[n] = origin->t0[n];
@@ -455,6 +461,7 @@ void free_model(struct Model *model)
   for(n=0; n<model->NT; n++)
   {
     free_tdi(model->tdi[n]);
+    free_tdi(model->residual[n]);
     free_noise(model->noise[n]);
   }
   free(model->t0);
@@ -815,14 +822,20 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
   /*                        */
   /**************************/
   
-  struct TDI *residual = malloc(sizeof(struct TDI));
+  /*
+  struct TDI *residual = model->residual;
   alloc_tdi(residual, data->N, data->Nchannel);
+  */
+  
+  struct TDI *residual = NULL;
   
   double logL = 0.0;
 
   //loop over time segments
   for(int n=0; n<model->NT; n++)
   {
+    residual = model->residual[n];
+    
     for(int i=0; i<N2; i++)
     {
       residual->X[i] = data->tdi[n]->X[i] - model->tdi[n]->X[i];
@@ -844,7 +857,7 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
         exit(1);
     }
   }
-  free_tdi(residual);
+  //free_tdi(residual);
   
   return logL;
 }

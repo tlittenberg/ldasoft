@@ -171,6 +171,7 @@ struct Model
   
   //TDI
   struct TDI **tdi;
+  struct TDI **residual;
   
   //Start time for segment for model
   double *t0;

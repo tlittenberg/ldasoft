@@ -122,6 +122,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->skyPrior    = 0;
   flags->cheat       = 0;
   flags->debug       = 0;
+  flags->detached    = 0;
   flags->strainData  = 0;
   flags->knownSource = 0;
   flags->NT          = 1;
@@ -484,9 +485,12 @@ void print_chain_state(struct Data *data, struct Chain *chain, struct Model *mod
   fprintf(fptr, "%i ",model->Nlive);
   fprintf(fptr, "%lg ",logL);
   for(int j=0; j<flags->NT; j++)fprintf(fptr, "%.12g ",model->t0[j]);
-  for(int i=0; i<model->Nlive; i++)
+  if(flags->verbose)
   {
-    print_source_params(data,model->source[i],fptr);
+    for(int i=0; i<model->Nlive; i++)
+    {
+      print_source_params(data,model->source[i],fptr);
+    }
   }
   fprintf(fptr, "\n");
 }

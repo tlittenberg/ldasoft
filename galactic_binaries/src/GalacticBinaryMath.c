@@ -100,8 +100,9 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
   
   if(err>0)
   {
+    /*
     fprintf(stderr,"GalacticBinaryMath.c:98: WARNING: singluar matrix, treating matrix as diagonal\n");
-    fflush(stderr);
+    fflush(stderr);*/
     for(i=0; i<N; i++)for(j=0; j<N; j++)
     {
       evector[i][j] = 0.0;

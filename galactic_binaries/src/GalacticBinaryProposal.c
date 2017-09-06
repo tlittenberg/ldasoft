@@ -504,8 +504,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   
   //grid sizes
   int n_f     = 4*data->N;
-  int n_theta = 50;
-  int n_phi   = 50;
+  int n_theta = 30;
+  int n_phi   = 30;
   if(flags->debug)
   {
     n_f/=4;
@@ -580,12 +580,12 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     //loop over colatitude bins
     for (int j=0; j<n_theta; j++)
     {
-      double theta = acos(-1. + (double)j*d_theta);
+      double theta = acos(-1*(-1. + (double)j*d_theta));
       
       //loop over longitude bins
       for(int k=0; k<n_phi; k++)
       {
-        double phi = (double)k*d_phi;
+        double phi = PI2 - (double)k*d_phi;
         
         if(i>0 && i<n_f-1)
         {
@@ -703,7 +703,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
   
   double q,costheta,phi,p,alpha;
   
-  double i,j,k;
+  double i=0,j,k;
   
   /* half the time do an fm shift, half the time completely rebott frequency */
   int fmFlag = 0;
@@ -716,7 +716,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
     q = params[0];
     i = floor((q-data->qmin)/d_f);
     
-    if(i<0 || i>n_f-1) return -INFINITY;
+    if(i<0.0 || i>n_f-1) return -INFINITY;
   }
   
   //now rejection sample on f,theta,phi
@@ -731,9 +731,19 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
     costheta = -1. + j*d_theta;
     phi      = k*d_phi;
     
-//    printf("q=%g, costheta=%g, phi=%g --> i=%i, j=%i, k=%i\n",q,costheta,phi,(int)i,(int)j,(int)k);
-    
-    p = proposal->tensor[(int)i][(int)j][(int)k];
+    //printf("q=%g, costheta=%g, phi=%g --> i=%i, j=%i, k=%i\n",q,costheta,phi,(int)i,(int)j,(int)k);
+    if(
+       ((int)i < 0 || (int)i > n_f-1)     ||
+       ((int)j < 0 || (int)j > n_theta-1) ||
+       ((int)k < 0 || (int)k > n_phi-1)
+       )
+    {
+      fprintf(stdout,"%i (%i) %i (%i) %i (%i)\n",(int)i,n_f,(int)j,n_theta,(int)k,n_phi);
+      fflush(stdout);
+      return -INFINITY;
+    }
+    else
+      p = proposal->tensor[(int)i][(int)j][(int)k];
     alpha = gsl_rng_uniform(seed)*proposal->maxp;
     
     if(p>alpha)check=0;

@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   time_t start, stop;
   start = time(NULL);
   
-  int NMAX  = 12;   //max number of frequency & time segments
+  int NMAX  = 24;   //max number of frequency & time segments
   
   
   /* Allocate data structures */
@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
   /* Initialize data models */
   for(ic=0; ic<NC; ic++)
   {
+    printf("initialize model\n");
+
     trial[ic] = malloc(sizeof(struct Model));
     alloc_model(trial[ic],NMAX,data[0]->N,data[0]->Nchannel,data[0]->NP, data[0]->NT);
     
@@ -131,6 +133,8 @@ int main(int argc, char *argv[])
     //loop over frequency segments
     for(int i=0; i<flags->NF; i++)
     {
+      printf("frequency segment %i\n",i);
+
       model[ic][i] = malloc(sizeof(struct Model));
       
       struct Model *model_ptr = model[ic][i];
@@ -147,6 +151,8 @@ int main(int argc, char *argv[])
       //set signal model
       for(int n=0; n<NMAX; n++)
       {
+        printf("   signal model %i\n",n);
+
         if(flags->cheat)
         {
           struct Source *inj = data_ptr->inj;
@@ -164,8 +170,14 @@ int main(int argc, char *argv[])
           map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
           
         }
-        else draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
+        else
+        {
+          printf("       draw from prior\n");
+          draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
+        }
+        printf("       map\n");
         map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
+        printf("       fisher\n");
         galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[0]);
       }
       
@@ -216,7 +228,8 @@ int main(int argc, char *argv[])
         
         for(int steps=0; steps < 100; steps++)
         {
-          for(int j=0; j<model_ptr->Nlive; j++) galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+          //for(int j=0; j<model_ptr->Nlive; j++)
+            galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
 
           noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
