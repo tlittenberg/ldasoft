@@ -707,7 +707,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
   
   /* half the time do an fm shift, half the time completely rebott frequency */
   int fmFlag = 0;
-  if(gsl_rng_uniform(seed)<0.5) fmFlag=1;
+  if(gsl_rng_uniform(seed)<-0.5) fmFlag=1;
   
   if(fmFlag)
   {

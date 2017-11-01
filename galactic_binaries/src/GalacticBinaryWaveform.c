@@ -114,12 +114,10 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
       wave_m->tdi->E[j]=0.0;
     }
 
-    printf("        galactic_binary_fisher.alignment\n");
     // align perturbed waveforms in data array
     galactic_binary_alignment(orbit, data, wave_p);
     galactic_binary_alignment(orbit, data, wave_m);
     
-    printf("        galactic_binary_fisher.waveform\n");
     // compute perturbed waveforms
     galactic_binary(orbit, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
     galactic_binary(orbit, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);

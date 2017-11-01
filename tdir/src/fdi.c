@@ -12,12 +12,13 @@
 #include <time.h>
 #include <string.h>
 
+#include <fftw3.h>
 #include <gsl/gsl_sf_gamma.h>
 
 
 /*************  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS  **************/
 double binomial(double x, double y);
-double sinc(double x, double fs);
+double sinc(double n, double D);
 double func(double x);
 
 double blackman (int n, int N, double D);
@@ -25,7 +26,7 @@ double blackman3(int n, int N, double D);
 double lagrange (int n, int N, double D);
 double truncate (int n, int N, double D);
 
-void convolve(double *d, double *h, double *hg, int NMAX, int N);
+void fft(double *x, int N);
 
 void print_usage(FILE *fptr);
 
@@ -33,89 +34,81 @@ void print_usage(FILE *fptr);
 
 int main(int argc, char* argv[])
 {
-  if(argc!=4)
-  {
-    print_usage(stderr);
-    exit(1);
-  }
-  int N=atoi(argv[2]);
-  int NMAX=8192;
-  double *t  = malloc(sizeof(double)*NMAX);
-  double *d  = malloc(sizeof(double)*NMAX);
-  double *h  = malloc(sizeof(double)*N);
-  double *hg = malloc(sizeof(double)*NMAX);
-  double fs = 1.0;
-  double D = atof(argv[1]);
-  double T = N;
-  
-  double (*w)(int,int,double); //window
-  
-  FILE *fptr;
-  
-  fptr = fopen("data.dat","w");
-  
-  for(int i=0; i<NMAX; i++)
-  {
-    t[i] = (double)(i);
-    d[i] = func(t[i]);
-    fprintf(fptr,"%lg %lg %lg\n",t[i],h[i],d[i]);
-  }
-  fclose(fptr);
   
   
-  int windowFlag=-1;
+  int N = 16384*4;
+  int M = 1000;
+  double x;
+  double *h = malloc(N*sizeof(double));
+  double *w = malloc(N*sizeof(double));
+  double *H = malloc(N*sizeof(double));
   
-  if(!strcmp(argv[3],"truncate"))       windowFlag = 0;
-  else if(!strcmp(argv[3],"blackman"))  windowFlag = 1;
-  else if(!strcmp(argv[3],"blackman3")) windowFlag = 2;
-  else if(!strcmp(argv[3],"lagrange"))  windowFlag = 3;
+  double fs = 10;
+  double D  = 0.5;
+  double T = (double)N/fs;
   
-  printf("window flag for function %s = %i\n",argv[3],windowFlag);
-  switch(windowFlag)
-  {
-    case 0:
-      w = &truncate;
-      break;
-    case 1:
-      w = &blackman;
-      break;
-    case 2:
-      w = &blackman3;
-      break;
-    case 3:
-      w = &lagrange;
-      break;
-    default:
-      fprintf(stderr,"Unknown window function %s\n", argv[3]);
-      print_usage(stderr);
-      exit(1);
-      break;
-  }
+  FILE *out;
   
-  char filename[128];
-  sprintf(filename,"filter_%g_%i_%s.dat",D,N,argv[3]);
-  fptr = fopen(filename,"w");
   
   for(int i=0; i<N; i++)
   {
-    h[i] = (*w)(i-N/2,N,D)*sinc((double)(i-N/2)-D,fs);
-    fprintf(fptr,"%i %g %g %g\n",i-N/2,(*w)(i-N/2,N,D),sinc((double)(i-N/2)-D,fs),h[i]);
+    h[i] = 0.0;
+    w[i] = 0.0;
+    H[i] = 0.0;
   }
   
-  fclose(fptr);
-
-  convolve(d, h, hg, NMAX, N);
   
-  sprintf(filename,"result_%g_%i_%s.dat",D,N,argv[3]);
-  fptr = fopen(filename,"w");
-  for(int i=0; i<NMAX; i++)
-    fprintf(fptr,"%lg %lg %lg\n",t[i],hg[i],func(t[i]+D));
-  fclose(fptr);
+  /* create filters */
+  for(int i=0; i<M; i++)
+  {
+    x = (double)(i-M/2);
+    int j = N/2+(i-M/2);
+    h[j] = sinc(x,D);
+    w[j] = blackman(x,M/2,D);
+    H[j] = h[j]*w[j];
+  }
+  
+  out = fopen("sinc.dat","w");
+  for(int i=0; i<N; i++)fprintf(out,"%lg %lg %lg %lg\n",(double)(i-N/2),h[i],w[i],H[i]);
+  fclose(out);
 
   
+  /* FFT filters */
+  out = fopen("dft.dat","w");
+  fft(H,N);
+  for(int i=0; i<N/2; i++)
+  {
+    x = (double)(i/T);
+    fprintf(out,"%lg %lg %lg\n",x,H[2*i],H[2*i+1]);
+  }
+  fclose(out);
   
   
   return 0;
+}
+
+void fft(double *x, int N)
+{
+  double in[N];
+  fftw_complex out[N/2+1];
+  unsigned flags;
+  fftw_plan plan = fftw_plan_dft_r2c_1d(N,in,out,flags);
+  
+  //load data int FFTW data types
+  for(int i=0; i<N; i++)
+  {
+    in[i] = x[i];
+  }
+  
+  fftw_execute(plan);
+  
+  //export data
+  for(int i=0; i<N/2; i++)
+  {
+    x[2*i]   = out[i][0];
+    x[2*i+1] = out[i][1];
+  }
+  fftw_destroy_plan(plan);
 }
 
 double func(double x)
@@ -124,26 +117,12 @@ double func(double x)
   return 1.+sin(2.0*M_PI*f*x);
 }
 
-double sinc(double t, double fs)
+double sinc(double n, double D)
 {
-  if(fabs(t)<1e-8) return 1.0;
-  else return sin(M_PI*fs*t)/(M_PI*fs*t);
+  if(fabs(n-D)<1e-8) return 1.0;
+  else return sin(M_PI*(n-D))/(M_PI*(n-D));
 }
 
-void convolve(double *d, double *h, double *hg, int NMAX, int N)
-{
-  for(int n=0; n<NMAX; n++)
-  {
-    hg[n]=0.0;
-    for(int m=0; m<N; m++)
-    {
-      int k = n+(m-N/2);
-//      if(k>=N)k=k-N;
-//      if(k<0) k=k+N;
-      if(k>=0 && k<NMAX)hg[n] += h[m]*d[k];
-    }
-  }
-}
 
 double blackman3(int n, int N, double D)
 {
@@ -152,7 +131,7 @@ double blackman3(int n, int N, double D)
 
 double blackman(int n, int N, double D)
 {
-  return 0.42 + 0.5*cos(M_PI*(double)n/(double)(N-1)) + 0.08*cos(2.0*M_PI*(double)n/(double)(N-1));
+  return 0.42 + 0.5*cos(M_PI*(double)(n-D)/(double)(N-1)) + 0.08*cos(2.0*M_PI*(double)(n-D)/(double)(N-1));
 }
 
 double truncate(int n, int N, double D)

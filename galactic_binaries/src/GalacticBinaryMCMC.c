@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
   time_t start, stop;
   start = time(NULL);
   
-  int NMAX  = 24;   //max number of frequency & time segments
-  
+  int NMAX = 5;   //max number of frequency & time segments
+  int DMAX = 100; //max number of GB waveforms
   
   /* Allocate data structures */
   struct Flags *flags = malloc(sizeof(struct Flags));
@@ -110,10 +110,11 @@ int main(int argc, char *argv[])
   initialize_chain(chain, flags, &data[0]->cseed);
   
   /* Initialize MCMC proposals */
+  printf("chain->NP=%i\n",chain->NP);
   struct Proposal **proposal = malloc((chain->NP+1)*sizeof(struct Proposal*));
   for(int i=0; i<chain->NP+1; i++) proposal[i] = malloc(sizeof(struct Proposal));
   
-  initialize_proposal(orbit, data[0], chain, flags, proposal, NMAX);
+  initialize_proposal(orbit, data[0], chain, flags, proposal, DMAX);
   
   /* Initialize priors */
   struct Prior *prior = malloc(sizeof(struct Prior));
@@ -123,24 +124,24 @@ int main(int argc, char *argv[])
   /* Initialize data models */
   for(ic=0; ic<NC; ic++)
   {
-    printf("initialize model\n");
+    //printf("initialize model\n");
 
     trial[ic] = malloc(sizeof(struct Model));
-    alloc_model(trial[ic],NMAX,data[0]->N,data[0]->Nchannel,data[0]->NP, data[0]->NT);
+    alloc_model(trial[ic],DMAX,data[0]->N,data[0]->Nchannel,data[0]->NP, data[0]->NT);
     
     model[ic] = malloc(sizeof(struct Model *) * flags->NF);
     
     //loop over frequency segments
     for(int i=0; i<flags->NF; i++)
     {
-      printf("frequency segment %i\n",i);
+      //printf("frequency segment %i\n",i);
 
       model[ic][i] = malloc(sizeof(struct Model));
       
       struct Model *model_ptr = model[ic][i];
       struct Data  *data_ptr  = data[i];
       
-      alloc_model(model_ptr,NMAX,data_ptr->N,data_ptr->Nchannel, data_ptr->NP, flags->NT);
+      alloc_model(model_ptr,DMAX,data_ptr->N,data_ptr->Nchannel, data_ptr->NP, flags->NT);
       
       if(ic==0)set_uniform_prior(flags, model_ptr, data_ptr, 1);
       else     set_uniform_prior(flags, model_ptr, data_ptr, 0);
@@ -149,9 +150,8 @@ int main(int argc, char *argv[])
       for(int j=0; j<flags->NT; j++) copy_noise(data_ptr->noise[j], model_ptr->noise[j]);
       
       //set signal model
-      for(int n=0; n<NMAX; n++)
+      for(int n=0; n<DMAX; n++)
       {
-        printf("   signal model %i\n",n);
 
         if(flags->cheat)
         {
@@ -172,12 +172,9 @@ int main(int argc, char *argv[])
         }
         else
         {
-          printf("       draw from prior\n");
           draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
         }
-        printf("       map\n");
         map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
-        printf("       fisher\n");
         galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[0]);
       }
       
@@ -303,7 +300,7 @@ int main(int argc, char *argv[])
   fclose(chainFile);
   
   FILE *zFile = fopen("evidence.dat","w");
-  for(int i=0; i<flags->NMAX; i++) fprintf(zFile,"%i %i\n",i,chain->dimension[0][i]);
+  for(int i=0; i<DMAX; i++) fprintf(zFile,"%i %i\n",i,chain->dimension[0][i]);
   fclose(zFile);
   
   //print total run time
