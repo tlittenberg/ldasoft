@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   start = time(NULL);
   
   int NMAX = 5;   //max number of frequency & time segments
-  int DMAX = 100; //max number of GB waveforms
+  int DMAX = 5;   //100; //max number of GB waveforms
   
   /* Allocate data structures */
   struct Flags *flags = malloc(sizeof(struct Flags));
@@ -111,11 +111,15 @@ int main(int argc, char *argv[])
   
   /* Initialize MCMC proposals */
   printf("chain->NP=%i\n",chain->NP);
-  struct Proposal **proposal = malloc((chain->NP+1)*sizeof(struct Proposal*));
-  for(int i=0; i<chain->NP+1; i++) proposal[i] = malloc(sizeof(struct Proposal));
+  struct Proposal ***proposal = malloc(NMAX*sizeof(struct Proposal**));
+  for(int j=0; j<NMAX; j++)
+  {
+    proposal[j] = malloc((chain->NP+1)*sizeof(struct Proposal*));
+    for(int i=0; i<chain->NP+1; i++) proposal[j][i] = malloc(sizeof(struct Proposal));
   
-  initialize_proposal(orbit, data[0], chain, flags, proposal, DMAX);
-  
+  }
+  for(int j=0; j<flags->NF; j++) initialize_proposal(orbit, data[j], chain, flags, proposal[j], DMAX);
+
   /* Initialize priors */
   struct Prior *prior = malloc(sizeof(struct Prior));
   if(flags->skyPrior) set_galaxy_prior(flags, prior);
@@ -172,7 +176,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-          draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[0], model_ptr->source[n]->params , chain->r[ic]);
+          draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[i][0], model_ptr->source[n]->params , chain->r[ic]);
         }
         map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
         galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[0]);
@@ -202,13 +206,14 @@ int main(int argc, char *argv[])
     else       flags->burnin=0;
     
     //set annealinging tempurature during burnin
-    if(flags->burnin)
-    {
-      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
-      if(chain->annealing<1.0)chain->annealing=1.0;
-      chain->annealing=1.0;
-      //printf("annealing=%g\n",chain->annealing);
-    }
+//    if(flags->burnin)
+//    {
+//      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
+//      if(chain->annealing<1.0)chain->annealing=1.0;
+//      chain->annealing=1.0;
+//      //printf("annealing=%g\n",chain->annealing);
+//    }
+    chain->annealing=1.0;
     
     // (parallel) loop over chains
     //#pragma omp parallel for private(ic) shared(flags,model,trial,chain,orbit,proposal)
@@ -226,17 +231,17 @@ int main(int argc, char *argv[])
         for(int steps=0; steps < 100; steps++)
         {
           //for(int j=0; j<model_ptr->Nlive; j++)
-            galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+            galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
 
           noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
         
         
         //reverse jump birth/death move
-        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+        if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
 
         //delayed rejection mode-hopper
-        //if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+        //if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
 
         //update fisher matrix for each chain
         if(mcmc%100==0)
@@ -249,7 +254,7 @@ int main(int argc, char *argv[])
       }//end loop over frequency segments
       
       //update start time for data segments
-      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal, ic);
+      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal[i], ic);
       
     }// end (parallel) loop over chains
     
@@ -274,8 +279,8 @@ int main(int argc, char *argv[])
       {
         print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
         fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
+        print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
       }
-      print_acceptance_rates(proposal, chain->NP, 0, stdout);
     }
     
     //dump waveforms to file, update avgLogL for thermodynamic integration

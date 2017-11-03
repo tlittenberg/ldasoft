@@ -363,6 +363,16 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   double logP=0.0;
   double **uniform_prior = model->prior;
   
+  //guard against nan's, but do so loudly
+  for(int i=0; i<model->NP; i++)
+  {
+    if(params[i]!=params[i])
+    {
+      fprintf(stderr,"parameter %i not a number\n",i);
+      return -INFINITY;
+    }
+  }
+  
   //frequency bin (uniform)
   if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return -INFINITY;
   else logP -= log(uniform_prior[0][1]-uniform_prior[0][0]);

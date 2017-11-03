@@ -624,19 +624,18 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
     int re = 2*n;
     int im = re+1;
     double f = data->fmin + (double)n/data->T;
-    for(int i=0; i<model->NT; i++)
-    {
+//    for(int i=0; i<model->NT; i++)
+//    {
+    int i = 0;
       fprintf(fptr,"%.12g ",f);
-      fprintf(fptr,"%.12g ",data->tdi[i]->A[re]);
-      fprintf(fptr,"%.12g ",data->tdi[i]->A[im]);
-      fprintf(fptr,"%.12g ",data->tdi[i]->E[re]);
-      fprintf(fptr,"%.12g ",data->tdi[i]->E[im]);
-      fprintf(fptr,"%.12g ",model->tdi[i]->A[re]);
-      fprintf(fptr,"%.12g ",model->tdi[i]->A[im]);
-      fprintf(fptr,"%.12g ",model->tdi[i]->E[re]);
-      fprintf(fptr,"%.12g ",model->tdi[i]->E[im]);
+      fprintf(fptr,"%.12g ",data->tdi[i]->A[re]*data->tdi[i]->A[re] + data->tdi[i]->A[im]*data->tdi[i]->A[im]);
+      fprintf(fptr,"%.12g ",data->tdi[i]->E[re]*data->tdi[i]->E[re] + data->tdi[i]->E[im]*data->tdi[i]->E[im]);
+      fprintf(fptr,"%.12g ",model->tdi[i]->A[re]*model->tdi[i]->A[re] + model->tdi[i]->A[im]*model->tdi[i]->A[im]);
+      fprintf(fptr,"%.12g ",model->tdi[i]->E[re]*model->tdi[i]->E[re] + model->tdi[i]->E[im]*model->tdi[i]->E[im]);
+      fprintf(fptr,"%.12g ",(data->tdi[i]->A[re]-model->tdi[i]->A[re])*(data->tdi[i]->A[re]-model->tdi[i]->A[re]) + (data->tdi[i]->A[im]-model->tdi[i]->A[im])*(data->tdi[i]->A[im]-model->tdi[i]->A[im]) );
+      fprintf(fptr,"%.12g ",(data->tdi[i]->E[re]-model->tdi[i]->E[re])*(data->tdi[i]->E[re]-model->tdi[i]->E[re]) + (data->tdi[i]->E[im]-model->tdi[i]->E[im])*(data->tdi[i]->E[im]-model->tdi[i]->E[im]) );
       fprintf(fptr,"\n");
-    }
+//    }
   }
 }
 
