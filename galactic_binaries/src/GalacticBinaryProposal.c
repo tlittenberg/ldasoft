@@ -358,16 +358,18 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
 
 double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed)
 {
-  for(int i=0; i<model->NT; i++)
+  for(int i=1; i<model->NT; i++)
   {
     //uniform draw
     if(gsl_rng_uniform(seed) < 0.5 )
       model->t0[i] = model->t0_min[i] + gsl_rng_uniform(seed)*(model->t0_max[i] - model->t0_min[i]);
     
     //gaussian draw
+    else if (gsl_rng_uniform(seed) < 0.5 )
+      model->t0[i] += 0.1*gsl_ran_gaussian(seed,1);
     else
-      model->t0[i] += 3.0*gsl_ran_gaussian(seed,1);
-    
+      model->t0[i] += 0.01*gsl_ran_gaussian(seed,1);
+
     
     //t0 shift is symmetric
     if(model->t0[i] < model->t0_min[i] || model->t0[i] >= model->t0_max[i]) return -INFINITY;

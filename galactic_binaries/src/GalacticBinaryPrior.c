@@ -274,8 +274,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   for(int i=0; i<model->NT; i++)
   {
     model->t0[i] = data->t0[i];
-    model->t0_min[i] = data->t0[i] - 200.0;
-    model->t0_max[i] = data->t0[i] + 200.0;
+    model->t0_min[i] = data->t0[i] - 10.0;
+    model->t0_max[i] = data->t0[i] + 10.0;
   }
   
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
@@ -423,11 +423,12 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   else logP -= log(uniform_prior[5][1]-uniform_prior[5][0]);
 
   //phase
-//  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
-//  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
-  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
-  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
-
+  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
+  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
+//  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
+//  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+  logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+  
   //fdot (bins/Tobs)
   if(model->NP>7)
   {

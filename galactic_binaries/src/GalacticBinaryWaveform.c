@@ -334,8 +334,8 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   Aplus  =  amp*(1.+cosi*cosi);
   Across = -amp*(2.0*cosi);
   
-  //df = PI2*(f0 - ((double)q)/T);
-  df = PI2*(((double)q)/T);
+  df = PI2*(f0 - ((double)q)/T);
+  //df = PI2*(((double)q)/T);
   
   //Calculate constant pieces of transfer functions
   DPr =  Aplus*cosps;
@@ -432,9 +432,8 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
     for(i=1; i<=3; i++)
     {
       //Argument of complex exponentials
-      //arg2 = df*xi[i] + phi0 - PI2*kdotx[i]*f0;// + PI2*t0*f0;
-      double arg2 = PI2*f0*xi[i] + phi0 - df*t;
-      
+      double arg2 = df*t + phi0 - PI2*kdotx[i]*f0 + PI2*f0*t0;
+
       //First order frequency evolution
       if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
       

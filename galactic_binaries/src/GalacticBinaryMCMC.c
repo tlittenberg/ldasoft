@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
   time_t start, stop;
   start = time(NULL);
   
-  int NMAX = 5;   //max number of frequency & time segments
-  int DMAX = 5;   //100; //max number of GB waveforms
+  int NMAX = 10;   //max number of frequency & time segments
+  int DMAX = 100;   //100; //max number of GB waveforms
   
   /* Allocate data structures */
   struct Flags *flags = malloc(sizeof(struct Flags));
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
         for(int steps=0; steps < 100; steps++)
         {
           //for(int j=0; j<model_ptr->Nlive; j++)
-            galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
+          galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
 
           noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
         }//loop over MCMC steps
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
       }//end loop over frequency segments
       
       //update start time for data segments
-      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal[i], ic);
+      //data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal[0], ic);
       
     }// end (parallel) loop over chains
     
@@ -520,8 +520,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   proposal[nprop]->trial[ic]++;
   
+  //call proposal function to update parameters
   (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
+  //evaluate proposal densities Qxy & Qyx
   //TODO: Fix this
   if(!strcmp(proposal[nprop]->name,"fstat"))
   {
@@ -537,7 +539,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   
   map_array_to_params(source_y, source_y->params, data->T);
   
-  //hold sky position fixed to injected value
+  //hold sky position fixed to injected value?
   if(flags->fixSky)
   {
     source_y->costheta = data->inj->costheta;
@@ -885,10 +887,11 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
   {
     // Form master template
     generate_signal_model(orbit, data[j], trial[j]);
-    //      generate_signal_model(orbit, data[j], model[j]);
+    //generate_signal_model(orbit, data[j], model[j]);
     
     // get likelihood for y
     trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);
+    //model[j]->logL = gaussian_log_likelihood(orbit, data[j], model[j]);
     
     /*
      H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
@@ -899,6 +902,7 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
       if(flags->burnin) logH /= chain->annealing;
     }
     logH += logQ; //delta logL
+
   }
   
   loga = log(gsl_rng_uniform(chain->r[ic]));
