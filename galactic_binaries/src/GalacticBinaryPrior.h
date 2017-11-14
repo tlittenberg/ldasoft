@@ -45,7 +45,8 @@ struct Prior
 
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior);
 void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose);
-double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *prior, double *params);
+double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params);
+double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *model, double *params);
 
 
 #endif /* GalacticBinaryPrior_h */

@@ -358,7 +358,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   
 }
 
-double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *prior, double *params)
+double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params)
 {
   double logP=0.0;
   double **uniform_prior = model->prior;
@@ -409,8 +409,15 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   }
   
   //log amplitude (step)
-  if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
-  else logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
+  if(flags->snrPrior)
+  {
+    logP += evaluate_snr_prior(prior, data, model, params);
+  }
+  else
+  {
+    if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
+    else logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
+  }
   
   //cosine inclination (reflective)
   if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
@@ -446,22 +453,22 @@ double evaluate_prior(struct Flags *flags, struct Model *model, struct Prior *pr
   return logP;
 }
 
-double evaluate_snr_prior(struct Prior *prior, struct Model *model, double *params, double *Snf, double Tobs, double fstar)
+double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *model, double *params)
 {
   double logP;
   double dfac, dfac5;
 
   double SNRpeak = 5.0;
   
-  double f   = params[0]/Tobs;
+  //double f   = params[0]/Tobs;
   double amp = exp(params[3]);
 
   // x/a^2 exp(-x/a) prior on SNR. Peaks at x = a. Good choice is a=5
   
   int n = (int)floor(params[0] - model->prior[0][0]);
-  double sf = sin(f/fstar); //sin(f/f*)
-  double sn = Snf[n];
-  double sqT = sqrt(Tobs);
+  double sf = 1.0;//sin(f/fstar); //sin(f/f*)
+  double sn = model->noise[0]->SnA[n];
+  double sqT = sqrt(data->T);
   
   //Sinc spreading
   double SNm  = sn/(4.*sf*sf);   //Michelson noise

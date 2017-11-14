@@ -200,7 +200,11 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
 
-  return model->logPriorVolume;
+  double logQ = model->logPriorVolume;
+  
+  
+  
+  return logQ;
 }
 
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -214,6 +218,86 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
   }
   
   return model->logPriorVolume;
+}
+
+double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+{
+  int k;
+  double SNR, den=-1.0, alpha=1.0;
+  double max;
+  double invmax;
+  
+  double Tobs = data->T;
+  
+  double SNRpeak = 5.0;
+  
+  double dfac, dfac5;
+  
+  double SNR4 = 4.0*SNRpeak;
+  double SNRsq = 4.0*SNRpeak*SNRpeak;
+  
+  dfac = 1.+SNRpeak/(SNR4);
+  dfac5 = dfac*dfac*dfac*dfac*dfac;
+  max = (3.*SNRpeak)/(SNRsq*dfac5);
+  
+  int n = (int)floor(params[0] - model->prior[0][0]);
+  double sf = 1.0;//sin(f/fstar); //sin(f/f*)
+  double sn = model->noise[0]->SnA[n];
+  double sqT = sqrt(data->T);
+  
+  //Sinc spreading
+  double SNm  = sn/(4.*sf*sf);   //Michelson noise
+  double SNR1 = sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
+  
+  double SNRmin = exp(model->prior[3][0])*SNR1;
+  double SNRmax = exp(model->prior[3][0])*SNR1;
+  
+  
+  k = 0;
+  SNR = SNRmin + (SNRmax-SNRmin)*gsl_rng_uniform(seed);
+  
+  dfac = 1.+SNR/(SNR4);
+  dfac5 = dfac*dfac*dfac*dfac*dfac;
+  
+  den = (3.*SNR)/(SNRsq*dfac5);
+  
+  den *= invmax;
+  
+  alpha = gsl_rng_uniform(seed);
+  while(alpha > den)
+  {
+    
+    SNR = SNRmin + (SNRmax-SNRmin)*gsl_rng_uniform(seed);
+    
+    dfac = 1.+SNR/(SNR4);
+    dfac5 = dfac*dfac*dfac*dfac*dfac;
+    
+    den = (3.*SNR)/(SNRsq*dfac5);
+    
+    alpha = max*gsl_rng_uniform(seed);
+    
+    k++;
+    
+    //you had your chance
+    if(k>10000)
+    {
+      SNR=0.0;
+      den=0.0;
+      break;
+    }
+    
+    
+  }
+  
+  //SNR defined with Sn(f) but Snf array holdes <n_i^2>
+  params[3] = log(SNR/SNR1);
+  
+  return log(den);
+  
+  //  FILE *temp=fopen("prior.dat","a");
+  //  fprintf(temp,"%lg\n",params[3]);
+  //  fclose(temp);
+  
 }
 
 double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -366,9 +450,9 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
     
     //gaussian draw
     else if (gsl_rng_uniform(seed) < 0.5 )
-      model->t0[i] += 0.1*gsl_ran_gaussian(seed,1);
+      model->t0[i] += 1.0*gsl_ran_gaussian(seed,1);
     else
-      model->t0[i] += 0.01*gsl_ran_gaussian(seed,1);
+      model->t0[i] += 0.1*gsl_ran_gaussian(seed,1);
 
     
     //t0 shift is symmetric

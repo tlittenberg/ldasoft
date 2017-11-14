@@ -83,6 +83,7 @@ void print_usage()
   fprintf(stdout,"       --data        : strain data file                    \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --sky-prior   : use galaxy model for sky prior      \n");
+  fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
@@ -91,6 +92,7 @@ void print_usage()
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
   fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
+  fprintf(stdout,"       --fit-gap     : fit for time gaps between segments  \n");
   fprintf(stdout,"       --prior       : sample from prior                   \n");
   fprintf(stdout,"       --debug       : leaner settings for quick running   \n");
   fprintf(stdout,"--\n");
@@ -114,12 +116,14 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   if(argc==1) print_usage();
   
   //Set defaults
+  flags->rj          = 0;
   flags->rj          = 1;
   flags->verbose     = 0;
   flags->NF          = 0;
   flags->zeroNoise   = 0;
   flags->fixSky      = 0;
   flags->skyPrior    = 0;
+  flags->snrPrior    = 0;
   flags->cheat       = 0;
   flags->debug       = 0;
   flags->detached    = 0;
@@ -195,7 +199,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"prior",       no_argument, 0, 0 },
     {"cheat",       no_argument, 0, 0 },
     {"debug",       no_argument, 0, 0 },
-    {"no-rj",        no_argument, 0, 0 },
+    {"no-rj",       no_argument, 0, 0 },
+    {"fit-gap",     no_argument, 0, 0 },
     {0, 0, 0, 0}
   };
   
@@ -223,12 +228,14 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
         if(strcmp("sky-prior",   long_options[long_index].name) == 0) flags->skyPrior   = 1;
+        if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
         if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
         if(strcmp("debug",       long_options[long_index].name) == 0) flags->debug      = 1;
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
+        if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
         if(strcmp("steps",       long_options[long_index].name) == 0)
         {
           flags->NMCMC = atoi(optarg);
@@ -403,6 +410,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   else                fprintf(stdout,"  Sky parameters are... ENABLED\n");
   if(flags->skyPrior) fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
   else                fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
+  if(flags->snrPrior) fprintf(stdout,"  SNR prior is ........ ENABLED\n");
+  else                fprintf(stdout,"  SNR prior is ........ DISABLED\n");
   if(flags->zeroNoise)fprintf(stdout,"  Noise realization is. DISABLED\n");
   else
   {

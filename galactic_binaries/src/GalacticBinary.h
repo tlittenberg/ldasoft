@@ -60,6 +60,7 @@ struct Flags
   int zeroNoise;
   int fixSky;
   int skyPrior;
+  int snrPrior;
   int knownSource;
   int detached;
   int strainData;
@@ -70,6 +71,7 @@ struct Flags
   int burnin;
   int update;
   int rj;
+  int gap; //are we fitting for a time-gap in the data?
   
   char **injFile;
   char cdfFile[128];

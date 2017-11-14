@@ -20,6 +20,7 @@
 #define PI2   6.283185307179586
 #define PIon2 1.57079632679
 #define PIon4 0.78539816339
+#define RT2PI 2.5066282746310005024  // sqrt(2 Pi)
 
 /* Natural log of 2 */
 #define LN2 0.693147180559945
