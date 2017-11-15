@@ -300,7 +300,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   f0     = params[0]/T;
   costh  = params[1];
   phi    = params[2];
-  amp    = exp(params[3]);
+  amp    = params[3];//exp(params[3]);
   cosi   = params[4];
   psi    = params[5];
   phi0   = params[6];

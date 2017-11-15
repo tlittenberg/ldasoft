@@ -23,7 +23,7 @@ void map_array_to_params(struct Source *source, double *params, double T)
   source->f0       = params[0]/T;
   source->costheta = params[1];
   source->phi      = params[2];
-  source->amp      = exp(params[3]);
+  source->amp      = params[3];//exp(params[3]);
   source->cosi     = params[4];
   source->psi      = params[5];
   source->phi0     = params[6];
@@ -38,7 +38,7 @@ void map_params_to_array(struct Source *source, double *params, double T)
   params[0] = source->f0*T;
   params[1] = source->costheta;
   params[2] = source->phi;
-  params[3] = log(source->amp);
+  params[3] = source->amp;//log(source->amp);
   params[4] = source->cosi;
   params[5] = source->psi;
   params[6] = source->phi0;

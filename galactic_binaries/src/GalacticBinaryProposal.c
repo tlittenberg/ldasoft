@@ -225,9 +225,6 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
   int k;
   double SNR, den=-1.0, alpha=1.0;
   double max;
-  double invmax;
-  
-  double Tobs = data->T;
   
   double SNRpeak = 5.0;
   
@@ -245,14 +242,15 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
   double sn = model->noise[0]->SnA[n];
   double sqT = sqrt(data->T);
   
-  //Sinc spreading
+  //Estimate SNR
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
   double SNR1 = sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
   
   double SNRmin = exp(model->prior[3][0])*SNR1;
-  double SNRmax = exp(model->prior[3][0])*SNR1;
+  double SNRmax = exp(model->prior[3][1])*SNR1;
   
   
+  //Draw new SNR
   k = 0;
   SNR = SNRmin + (SNRmax-SNRmin)*gsl_rng_uniform(seed);
   
@@ -261,9 +259,8 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
   
   den = (3.*SNR)/(SNRsq*dfac5);
   
-  den *= invmax;
+  alpha = max*gsl_rng_uniform(seed);
   
-  alpha = gsl_rng_uniform(seed);
   while(alpha > den)
   {
     
@@ -290,7 +287,7 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
   }
   
   //SNR defined with Sn(f) but Snf array holdes <n_i^2>
-  params[3] = log(SNR/SNR1);
+  params[3] = SNR/SNR1;//log(SNR/SNR1);
   
   return log(den);
   

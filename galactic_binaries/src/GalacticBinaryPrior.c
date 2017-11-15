@@ -294,8 +294,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   model->prior[2][1] = PI2;
   
   //log amplitude
-  model->prior[3][0] = -55.0;//-54
-  model->prior[3][1] = -45.0;
+  model->prior[3][0] = exp(-55.0);//-54
+  model->prior[3][1] = exp(-45.0);
   
   //cos inclination
   model->prior[4][0] = -1.0;
@@ -461,7 +461,7 @@ double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *
   double SNRpeak = 5.0;
   
   //double f   = params[0]/Tobs;
-  double amp = exp(params[3]);
+  double amp = params[3];
 
   // x/a^2 exp(-x/a) prior on SNR. Peaks at x = a. Good choice is a=5
   
@@ -477,7 +477,8 @@ double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *
   dfac = 1.+SNR/(4.*SNRpeak);
   dfac5 = dfac*dfac*dfac*dfac*dfac;
   
-  logP = log((3.*SNR)/(4.*SNRpeak*SNRpeak*dfac5)) + log(SNR/params[3]);
+  //logP = log((3.*SNR)/(4.*SNRpeak*SNRpeak*dfac5)) + log(SNR/params[3]);
+  logP = log((3.*SNR)/(4.*SNRpeak*SNRpeak*dfac5)) + log(SNR/amp);
 
   return logP;
 }
