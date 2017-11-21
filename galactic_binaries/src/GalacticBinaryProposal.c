@@ -200,9 +200,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
 
-  double logQ = model->logPriorVolume;
-  
-  
+  double logQ = model->logPriorVolume + draw_signal_amplitude(data, model, source, proposal, params, seed);
   
   return logQ;
 }
@@ -246,8 +244,8 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
   double SNR1 = sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
   
-  double SNRmin = exp(model->prior[3][0])*SNR1;
-  double SNRmax = exp(model->prior[3][1])*SNR1;
+  double SNRmin = model->prior[3][0]*SNR1;
+  double SNRmax = model->prior[3][1]*SNR1;
   
   
   //Draw new SNR
@@ -280,7 +278,7 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
     {
       SNR=0.0;
       den=0.0;
-      break;
+      return -INFINITY;
     }
     
     

@@ -338,6 +338,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     if(flags->detached)fprintf(stdout,"  Assuming detached binary, Mchirp = [0.15,1]\n");
     fprintf(stdout,"  p(fdot)  = U[%g,%g]\n",fdotmin,fdotmax);
     fprintf(stdout,"  p(fddot) = U[%g,%g]\n",fddotmin,fddotmax);
+    fprintf(stdout,"  p(A)     = U[%g,%g]\n",model->prior[3][0],model->prior[3][1]);
     fprintf(stdout,"====================================\n\n");
   }
 
@@ -355,6 +356,9 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   //set prior volume
   model->logPriorVolume = 0.0;
   for(int n=0; n<data->NP; n++) model->logPriorVolume -= log(model->prior[n][1]-model->prior[n][0]);
+    
+  //undo amplitude prior if using SNR prior
+  if(flags->snrPrior) model->logPriorVolume += log(model->prior[3][1]-model->prior[3][0]);
   
 }
 
@@ -409,14 +413,13 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   }
   
   //log amplitude (step)
-  if(flags->snrPrior)
-  {
-    logP += evaluate_snr_prior(prior, data, model, params);
-  }
+  if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
   else
   {
-    if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
-    else logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
+    if(flags->snrPrior)
+      logP += evaluate_snr_prior(prior, data, model, params);
+    else
+      logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
   }
   
   //cosine inclination (reflective)
@@ -466,6 +469,7 @@ double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *
   // x/a^2 exp(-x/a) prior on SNR. Peaks at x = a. Good choice is a=5
   
   int n = (int)floor(params[0] - model->prior[0][0]);
+  if(n<0 || n>=data->N) return -INFINITY;
   double sf = 1.0;//sin(f/fstar); //sin(f/f*)
   double sn = model->noise[0]->SnA[n];
   double sqT = sqrt(data->T);

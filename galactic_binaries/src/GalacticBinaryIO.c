@@ -193,6 +193,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"zero-noise",  no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
     {"sky-prior",   no_argument, 0, 0 },
+    {"snr-prior",   no_argument, 0, 0 },
     {"known-source",no_argument, 0, 0 },
     {"f-double-dot",no_argument, 0, 0 },
     {"detached",    no_argument, 0, 0 },
@@ -453,6 +454,11 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
     print_chain_state(data, chain, model[n][i], flags, chain->chainFile[0], step);
     print_noise_state(data, model[n][i], chain->noiseFile[0], step);
   }
+    if(flags->verbose)
+    {
+        fflush(chain->chainFile[0]);
+        fflush(chain->noiseFile[0]);
+    }
   
   //Print sampling parameters
   for(j=0; j<flags->NF; j++)
@@ -462,7 +468,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
     {
       print_source_params(data,model[n][j]->source[i],chain->parameterFile[0]);
       fprintf(chain->parameterFile[0],"\n");
-
+        if(flags->verbose)fflush(chain->parameterFile[0]);
       if(step>0)
       {
         print_source_params(data,model[n][j]->source[i],chain->dimensionFile[D]);
