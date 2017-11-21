@@ -59,6 +59,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   
   double epsilon    = 1.0e-7;
   double invepsilon2= 1./(2.*epsilon);
+  double invstep;
   
   // Plus and minus parameters:
   double *params_p = malloc(NP*sizeof(double));
@@ -88,6 +89,9 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   int N2 = data->N*2;
   for(i=0; i<NP; i++)
   {
+    //step size for derivatives
+    invstep = invepsilon2/source->params[1];
+      
     // copy parameters
     for(j=0; j<NP; j++)
     {
@@ -96,8 +100,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     }
     
     // perturb parameters
-    wave_p->params[i] += epsilon;
-    wave_m->params[i] -= epsilon;
+    wave_p->params[i] += epsilon*source->params[i];
+    wave_m->params[i] -= epsilon*source->params[i];
 
     // complete info in source structure
     map_array_to_params(wave_p, wave_p->params, data->T);
@@ -128,14 +132,14 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
       case 1:
         for(n=0; n<N2; n++)
         {
-          dhdx[i]->X[n] = (wave_p->tdi->X[n] - wave_m->tdi->X[n])*invepsilon2;
+          dhdx[i]->X[n] = (wave_p->tdi->X[n] - wave_m->tdi->X[n])*invstep;
         }
         break;
       case 2:
         for(n=0; n<N2; n++)
         {
-          dhdx[i]->A[n] = (wave_p->tdi->A[n] - wave_m->tdi->A[n])*invepsilon2;
-          dhdx[i]->E[n] = (wave_p->tdi->E[n] - wave_m->tdi->E[n])*invepsilon2;
+          dhdx[i]->A[n] = (wave_p->tdi->A[n] - wave_m->tdi->A[n])*invstep;
+          dhdx[i]->E[n] = (wave_p->tdi->E[n] - wave_m->tdi->E[n])*invstep;
         }
         break;
     }

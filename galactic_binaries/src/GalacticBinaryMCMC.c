@@ -605,11 +605,11 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   copy_model(model_x,model_y);
   
   int freqflag=0;
-  if(gsl_rng_uniform(chain->r[ic])<1.5) freqflag=1;
+  if(gsl_rng_uniform(chain->r[ic])<0.5) freqflag=1;
   
   //proposal[2]->trial[ic]++;
 
-  /* pick birth or death move */
+    /* pick birth or death move */
   if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
   {
     //ny=nx+1
@@ -629,12 +629,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 
       logQxy = 0;
       logQyx = model_x->logPriorVolume;
-      if(freqflag)
-      {
-//        logQyx += log(model->prior[0][1]-model->prior[1][0]);                         //undo uniform frequency contribution to volume
-//        logQyx += log(data->p[(int)(model_y->source[create]->params[0]-data->qmin)]); //add power-based frequency proposal
-        logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
-      }
+      if(flags->snrPrior) logQyx += evaluate_snr_prior(prior, data, model, model_y->source[create]->params);
+      if(freqflag)        logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
       
       //copy params for segment 0 into higher segments
 //      copy_source(model_y->source[create],model_y->source[create]);
@@ -659,13 +655,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       
       logQxy = model_x->logPriorVolume;
       logQyx = 0;
-      if(freqflag)
-      {
-        //logQxy += log(model->prior[0][1]-model->prior[1][0]);
-        //logQxy += log(data->p[(int)(model_y->source[kill]->params[0]-data->qmin)]);
-        logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
-
-      }
+      if(flags->snrPrior) logQxy += evaluate_snr_prior(prior, data, model, model_y->source[kill]->params);
+      if(freqflag)        logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
       
       //consolodiate parameter structure
       for(int j=kill; j<model_x->Nlive; j++)
