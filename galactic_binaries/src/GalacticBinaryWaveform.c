@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "omp.h"
+//#include "omp.h"
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"

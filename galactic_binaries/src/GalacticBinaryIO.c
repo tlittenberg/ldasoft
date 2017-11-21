@@ -193,6 +193,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"zero-noise",  no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
     {"sky-prior",   no_argument, 0, 0 },
+    {"snr-prior",   no_argument, 0, 0 },
     {"known-source",no_argument, 0, 0 },
     {"f-double-dot",no_argument, 0, 0 },
     {"detached",    no_argument, 0, 0 },

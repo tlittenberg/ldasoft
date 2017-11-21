@@ -10,7 +10,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include "omp.h"
+//#include "omp.h"
 
 /*************  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS  **************/
 
