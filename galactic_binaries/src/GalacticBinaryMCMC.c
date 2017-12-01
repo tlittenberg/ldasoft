@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   struct Orbit *orbit = malloc(sizeof(struct Orbit));
   struct Chain *chain = malloc(sizeof(struct Chain));
   struct Data  **data = malloc(sizeof(struct Data*)*NMAX); //data[NF]
-  
+
   
   /* Parse command line and set defaults/flags */
   for(int i=0; i<NMAX; i++)
@@ -70,7 +70,6 @@ int main(int argc, char *argv[])
   /* Allocate model structures */
   struct Model **trial = malloc(sizeof(struct Model*)*NC);//trial[chain]
   struct Model ***model= malloc(sizeof(struct Model**)*NC); //model[chain][source][segment]
-  
   
   /* Load spacecraft ephemerides */
   switch(flags->orbit)
@@ -185,7 +184,7 @@ int main(int argc, char *argv[])
       
       // Form master model & compute likelihood of starting position
       generate_noise_model(data_ptr, model_ptr);
-      generate_signal_model(orbit, data_ptr, model_ptr);
+      generate_signal_model(orbit, data_ptr, model_ptr, -1);
       
       if(!flags->prior)
       {
@@ -561,7 +560,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     if(!flags->prior)
     {
       //  Form master template
-      generate_signal_model(orbit, data, model_y);
+      generate_signal_model(orbit, data, model_y, n);
       
       //get likelihood for y
       model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
@@ -676,7 +675,12 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   if(logPy > -INFINITY && !flags->prior)
   {
     //  Form master template
-    generate_signal_model(orbit, data, model_y);
+    /*
+     generate_signal_model is passed an integer telling it which source to update.
+     passing model_x->Nlive is a trick to skip waveform generation for kill move
+     and to only calculate new source for create move
+     */
+    generate_signal_model(orbit, data, model_y, model_x->Nlive);
     
     //get likelihood for y
     model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
@@ -811,7 +815,7 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
     fm_shift(data, model_x, source_x, proposal[4], temp->source[n]->params, chain->r[ic]);
   
   
-  generate_signal_model(orbit, data, temp);
+  generate_signal_model(orbit, data, temp, n);
   temp->logL = gaussian_log_likelihood(orbit, data, temp);
 
   //if(ic==0)printf("delayed rejection hastings ratio: %g: ",temp->logL);
@@ -878,7 +882,10 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
   for(int j=0; j<flags->NF; j++)
   {
     // Form master template
-    generate_signal_model(orbit, data[j], trial[j]);
+    /*
+     passing generate_signal_model -1 results in full recalculation of waveform model
+     */
+    generate_signal_model(orbit, data[j], trial[j], -1);
     //generate_signal_model(orbit, data[j], model[j]);
     
     // get likelihood for y
