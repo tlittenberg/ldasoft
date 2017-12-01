@@ -223,21 +223,21 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
   int k;
   double SNR, den=-1.0, alpha=1.0;
   double max;
-  
-  double SNRpeak = 5.0;
-  
+    
   double dfac, dfac5;
   
-  double SNR4 = 4.0*SNRpeak;
-  double SNRsq = 4.0*SNRpeak*SNRpeak;
+  //SNRPEAK defined in Constants.h
+    
+  double SNR4 = 4.0*SNRPEAK;
+  double SNRsq = 4.0*SNRPEAK*SNRPEAK;
   
-  dfac = 1.+SNRpeak/(SNR4);
+  dfac = 1.+SNRPEAK/(SNR4);
   dfac5 = dfac*dfac*dfac*dfac*dfac;
-  max = (3.*SNRpeak)/(SNRsq*dfac5);
+  max = (3.*SNRPEAK)/(SNRsq*dfac5);
   
   int n = (int)floor(params[0] - model->prior[0][0]);
   double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n];
+  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
   double sqT = sqrt(data->T);
   
   //Estimate SNR

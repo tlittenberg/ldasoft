@@ -16,6 +16,7 @@
 
 #include "LISA.h"
 #include "Constants.h"
+#include "BayesLine.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryData.h"
@@ -448,11 +449,11 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     switch(data->Nchannel)
     {
       case 1:
-        if(model_y->noise[i]->etaX < 0.1 || model_y->noise[i]->etaX>10) logPy=-INFINITY;
+        if(model_y->noise[i]->etaX < 0.01 || model_y->noise[i]->etaX>100) logPy=-INFINITY;
         break;
       case 2:
-        if(model_y->noise[i]->etaA < 0.1 || model_y->noise[i]->etaA>10.) logPy=-INFINITY;
-        if(model_y->noise[i]->etaE < 0.1 || model_y->noise[i]->etaE>10.) logPy=-INFINITY;
+        if(model_y->noise[i]->etaA < 0.01 || model_y->noise[i]->etaA>100.) logPy=-INFINITY;
+        if(model_y->noise[i]->etaE < 0.01 || model_y->noise[i]->etaE>100.) logPy=-INFINITY;
         break;
     }
   }

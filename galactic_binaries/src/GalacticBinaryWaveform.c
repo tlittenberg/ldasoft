@@ -90,7 +90,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   for(i=0; i<NP; i++)
   {
     //step size for derivatives
-    invstep = invepsilon2/source->params[1];
+    invstep = invepsilon2/source->params[i];
       
     // copy parameters
     for(j=0; j<NP; j++)
@@ -452,7 +452,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
           double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
           
           //Transfer function
-          double sinc = 0.25*sin(arg1)/arg1;
+          double sinc = 0.25*sinf(arg1)/arg1;
           
           ///Real and imaginary pieces of time series (no complex exponential)
           double tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);

@@ -176,7 +176,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
   chain->parameterFile = malloc(NC*sizeof(FILE *));
   chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0","w");
 
-  chain->dimensionFile = malloc(NC*sizeof(FILE *));
+  chain->dimensionFile = malloc(flags->NMAX*sizeof(FILE *));
   for(int i=0; i<flags->NMAX; i++)
   {
     sprintf(filename,"chains/dimension_chain.dat.%i",i);
