@@ -581,7 +581,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
    */
   
   //matrix to hold maximized extrinsic parameters
-  double *Fparams = malloc(3*sizeof(double));
+  double *Fparams = malloc(4*sizeof(double));
   
   //grid sizes
   int n_f     = 4*data->N;
