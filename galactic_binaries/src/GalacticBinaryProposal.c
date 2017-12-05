@@ -200,7 +200,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
 
-  double logQ = model->logPriorVolume + draw_signal_amplitude(data, model, source, proposal, params, seed);
+  double logQ = model->logPriorVolume;
   
   return logQ;
 }
@@ -740,6 +740,9 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   //first draw from prior
   draw_from_prior(data, model, source, proposal, params, seed);
   
+  //rejection sample on SNR
+  logP = evaluate_snr_prior(data, model, params);
+
   //now rejection sample on f,theta,phi
   int check=1;
   while(check)
@@ -765,7 +768,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   params[1] = costheta;
   params[2] = phi;
   
-  logP = log(p);
+  logP += log(p);
   
   return logP;
 }

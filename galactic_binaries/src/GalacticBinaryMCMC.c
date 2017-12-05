@@ -629,8 +629,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 
       logQxy = 0;
       logQyx = model_x->logPriorVolume;
-      if(flags->snrPrior) logQyx += evaluate_snr_prior(prior, data, model, model_y->source[create]->params);
-      if(freqflag)        logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
+      logQyx += evaluate_snr_prior(data, model, model_y->source[create]->params);
+      if(freqflag) logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
       
       //copy params for segment 0 into higher segments
 //      copy_source(model_y->source[create],model_y->source[create]);
@@ -655,8 +655,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       
       logQxy = model_x->logPriorVolume;
       logQyx = 0;
-      if(flags->snrPrior) logQxy += evaluate_snr_prior(prior, data, model, model_y->source[kill]->params);
-      if(freqflag)        logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
+      logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
+      if(freqflag) logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
       
       //consolodiate parameter structure
       for(int j=kill; j<model_x->Nlive; j++)

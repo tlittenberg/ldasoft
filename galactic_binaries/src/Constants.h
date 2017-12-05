@@ -10,7 +10,7 @@
 #define Constants_h
 
 #define FIXME 0
-#define SNRPEAK 20
+#define SNRPEAK 5
 
 /* --------------  MATHEMATICAL CONSTANTS  -------------- */
 /* Square root of 3 */
