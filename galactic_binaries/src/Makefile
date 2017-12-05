@@ -7,7 +7,7 @@ CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -fmax-errors=5 -
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
-CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
+# CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o
 
@@ -50,7 +50,7 @@ gb_mcmc_chirpmass : gb_mcmc_chirpmass.c
 	$(CC) -o gb_mcmc_chirpmass gb_mcmc_chirpmass.c $(LIBS:%=-l%)
 
 install : gb_mcmc gb_catalog gb_mcmc_chirpmass
-	install gb_mcmc gb_catalog gb_mcmc_chirpmass ${HOME}/ldasoft/master/bin/
+	install gb_mcmc gb_catalog gb_mcmc_chirpmass /home/ldasoft/bin/
 
 clean:
 	rm *.o gb_mcmc gb_catalog gb_mcmc_chirpmass

@@ -361,7 +361,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(stdout,"\n");
   fprintf(stdout,"=============== RUN SETTINGS ===============\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"  GalacticBinary version: %s\n", VERSION);
+//   fprintf(stdout,"  GalacticBinary version: %s\n", VERSION);
   fprintf(stdout,"  Command Line: ");
   for(opt=0; opt<argc; opt++) fprintf(stdout,"%s ",argv[opt]);
   fprintf(stdout,"\n");
