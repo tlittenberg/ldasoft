@@ -529,7 +529,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         double junk;
         while(!feof(fptr))
         {
-          fscanf(fptr,"%lg",&junk);
+          //fscanf(fptr,"%lg",&junk);
           for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
           proposal[i]->size++;
         }
@@ -543,13 +543,12 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
 
         for(int n=0; n<proposal[i]->size; n++)
         {
-          fscanf(fptr,"%lg",&junk);
+          //fscanf(fptr,"%lg",&junk);
           scan_source_params(data, temp->source[0], fptr);
           for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
           
         }
         free_model(temp);
-        free(temp);
         fclose(fptr);
         break;
         
