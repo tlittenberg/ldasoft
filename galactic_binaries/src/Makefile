@@ -1,9 +1,9 @@
 # OpenMP
-CC = gcc-mp-5
+CC = gcc
 #CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m
-CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -fmax-errors=5 -Werror 
+CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -fmax-errors=5 -fopenmp
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
