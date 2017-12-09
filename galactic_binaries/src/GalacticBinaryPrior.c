@@ -412,7 +412,10 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     //while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
     //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
     if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
+    {
       params[2] = atan2(sin(params[2]),cos(params[2]));
+      if(params[2] < 0.0) params[2] += PI2;
+    }
     logP -= log(uniform_prior[2][1]-uniform_prior[2][0]);
   }
   
@@ -440,7 +443,10 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
 //  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
 //  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
     if(params[6]<uniform_prior[6][0] || params[6]>=uniform_prior[6][1])
+    {
       params[6] = atan2(sin(params[6]),cos(params[6]));
+      if(params[6] < 0.0) params[6] += PI2;
+    }
     logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
   
   //fdot (bins/Tobs)
