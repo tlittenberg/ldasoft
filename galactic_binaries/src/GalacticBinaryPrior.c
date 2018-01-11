@@ -186,9 +186,9 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
       
       //      if(mc%1000 == 0 && flags->verbose) fprintf(chain,"%d %e %e %e %e %e %e %e\n", mc/1000, logLx, x[0], x[1], x[2], theta, phi, r_ec);
       
-      //ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
+      ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
       //iph = (int)(phi/(2.0*M_PI)*(double)(Nph));
-      ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
+      //ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
       iph = (int)((2*M_PI-phi)/(2.0*M_PI)*(double)(Nph));
       
       //ith = (int)floor(Nth*gsl_rng_uniform(r));

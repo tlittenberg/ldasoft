@@ -10,9 +10,10 @@
 #include <time.h>
 #include <string.h>
 
-/* Mass of the Sun (s) */
-#define TSUN  4.9169e-6
+#include "Constants.h"
 
+#define RAD2ARCMIN 3437.75
+#define RAD2DEGREE 57.295833313961
 
 /* ============================  MAIN PROGRAM  ============================ */
 
@@ -38,17 +39,26 @@ double beta(double f, double fdot, double fddot)
   return (11.*(-3*sqrt(f*fddot)+sqrt(33.)*fdot)*pow((sqrt(fddot)*fdot)/(-30.*sqrt(f*fddot) + 11.*sqrt(33.)*fdot),2./5.)*pow(5./M_PI,2./5.))/(12.*pow(f,11./10.)*sqrt(fddot));
 }
 
+double galactic_binary_dL(double f0, double dfdt, double A)
+{
+  double f    = f0;//T;
+  double fd = dfdt;//(T*T);
+  double amp   = A;
+  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
+}
+
 int main(int argc, char* argv[])
 {
 
-  if(argc!=2)
+  if(argc!=3)
   {
-    fprintf(stdout,"Usage: gb_mcmc_chirpmass chainfile\n");
+    fprintf(stdout,"Usage: gb_mcmc_chirpmass parameter_chain.dat.0 9\n");
     return 1;
   }
   
   FILE *ifile = fopen(argv[1],"r");
   
+  int NP = atoi(argv[2]);
   
   char filename[128];
   sprintf(filename,"mchirp_%s",argv[1]);
@@ -57,6 +67,8 @@ int main(int argc, char* argv[])
   sprintf(filename,"frequencies_%s",argv[1]);
   FILE *ofile2 = fopen(filename,"w");
 
+  sprintf(filename,"localization_%s",argv[1]);
+  FILE *ofile3 = fopen(filename,"w");
 
   //parse file
   
@@ -78,14 +90,23 @@ int main(int argc, char* argv[])
   
   int i,n;
   double logL,t0,f,fdot,A,phi,theta,cosi,psi,phase,fddot;
+  double Mc,B;
   
   while(!feof(ifile))
   {
-    fscanf(ifile,"%i%i%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg",&i,&n,&logL,&t0,&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+    if(NP==9)fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+    if(NP==8)
+    {
+      fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase);
+      fddot = 11.0/3.0*fdot*fdot/f;
+    }
     if(fdot>0.0&&fddot>0.0)
     {
+      Mc = M_fdot_fddot(f,fdot,fddot);
+      B = beta(f,fdot,fddot);
+      fprintf(ofile3,"%.12g %.12g %.12g %.12g %.12g\n",phi*RAD2ARCMIN,theta*RAD2ARCMIN,galactic_binary_dL(f,fdot,A),acos(cosi)*RAD2DEGREE,M_fdot(f,fdot));
       fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
-      fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
+      if(Mc==Mc && B==B) fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
     }
   }
   
