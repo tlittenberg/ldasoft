@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 void simualte_data(struct Data *data, struct Flags *flags, struct Source **injections, int Ninj);
-void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model);
+void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int index);
 void generate_noise_model(struct Data *data, struct Model *model);
 
 double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model);

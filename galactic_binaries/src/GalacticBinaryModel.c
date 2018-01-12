@@ -23,7 +23,7 @@ void map_array_to_params(struct Source *source, double *params, double T)
   source->f0       = params[0]/T;
   source->costheta = params[1];
   source->phi      = params[2];
-  source->amp      = params[3];//exp(params[3]);
+  source->amp      = exp(params[3]);
   source->cosi     = params[4];
   source->psi      = params[5];
   source->phi0     = params[6];
@@ -38,7 +38,7 @@ void map_params_to_array(struct Source *source, double *params, double T)
   params[0] = source->f0*T;
   params[1] = source->costheta;
   params[2] = source->phi;
-  params[3] = source->amp;//log(source->amp);
+  params[3] = log(source->amp);
   params[4] = source->cosi;
   params[5] = source->psi;
   params[6] = source->phi0;
@@ -176,7 +176,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
   chain->parameterFile = malloc(NC*sizeof(FILE *));
   chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0","w");
 
-  chain->dimensionFile = malloc(NC*sizeof(FILE *));
+  chain->dimensionFile = malloc(flags->NMAX*sizeof(FILE *));
   for(int i=0; i<flags->NMAX; i++)
   {
     sprintf(filename,"chains/dimension_chain.dat.%i",i);
@@ -722,7 +722,7 @@ void simualte_data(struct Data *data, struct Flags *flags, struct Source **injec
   
 }
 
-void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model)
+void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int index)
 {
   int i,j,n,m;
   int N2=data->N*2;
@@ -744,23 +744,26 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
   {
     source = model->source[n];
 
-    for(i=0; i<N2; i++)
+    if(index==-1 || index==n)
     {
-      source->tdi->X[i]=0.0;
-      source->tdi->A[i]=0.0;
-      source->tdi->E[i]=0.0;
+      for(i=0; i<N2; i++)
+      {
+        source->tdi->X[i]=0.0;
+        source->tdi->A[i]=0.0;
+        source->tdi->E[i]=0.0;
+      }
+      
+      map_array_to_params(source, source->params, data->T);
+      
+      //Book-keeping of injection time-frequency volume
+      galactic_binary_alignment(orbit, data, source);
     }
-
-    map_array_to_params(source, source->params, data->T);
-    
-    //Book-keeping of injection time-frequency volume
-    galactic_binary_alignment(orbit, data, source);
     
     //Loop over time segments
     for(m=0; m<NT; m++)
     {
       //Simulate gravitational wave signal
-      galactic_binary(orbit, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+      if(index==-1 || index==n) galactic_binary(orbit, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
       
       //Add waveform to model TDI channels
       for(i=0; i<source->BW; i++)

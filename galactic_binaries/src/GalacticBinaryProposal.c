@@ -200,7 +200,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
 
-  double logQ = model->logPriorVolume + draw_signal_amplitude(data, model, source, proposal, params, seed);
+  double logQ = model->logPriorVolume;
   
   return logQ;
 }
@@ -223,21 +223,21 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
   int k;
   double SNR, den=-1.0, alpha=1.0;
   double max;
-  
-  double SNRpeak = 5.0;
-  
+    
   double dfac, dfac5;
   
-  double SNR4 = 4.0*SNRpeak;
-  double SNRsq = 4.0*SNRpeak*SNRpeak;
+  //SNRPEAK defined in Constants.h
+    
+  double SNR4 = 4.0*SNRPEAK;
+  double SNRsq = 4.0*SNRPEAK*SNRPEAK;
   
-  dfac = 1.+SNRpeak/(SNR4);
+  dfac = 1.+SNRPEAK/(SNR4);
   dfac5 = dfac*dfac*dfac*dfac*dfac;
-  max = (3.*SNRpeak)/(SNRsq*dfac5);
+  max = (3.*SNRPEAK)/(SNRsq*dfac5);
   
   int n = (int)floor(params[0] - model->prior[0][0]);
   double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n];
+  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
   double sqT = sqrt(data->T);
   
   //Estimate SNR
@@ -529,7 +529,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         double junk;
         while(!feof(fptr))
         {
-          fscanf(fptr,"%lg",&junk);
+          //fscanf(fptr,"%lg",&junk);
           for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
           proposal[i]->size++;
         }
@@ -543,13 +543,12 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
 
         for(int n=0; n<proposal[i]->size; n++)
         {
-          fscanf(fptr,"%lg",&junk);
+          //fscanf(fptr,"%lg",&junk);
           scan_source_params(data, temp->source[0], fptr);
           for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
           
         }
         free_model(temp);
-        free(temp);
         fclose(fptr);
         break;
         
@@ -740,6 +739,9 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   //first draw from prior
   draw_from_prior(data, model, source, proposal, params, seed);
   
+  //rejection sample on SNR
+  logP = evaluate_snr_prior(data, model, params);
+
   //now rejection sample on f,theta,phi
   int check=1;
   while(check)
@@ -765,7 +767,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   params[1] = costheta;
   params[2] = phi;
   
-  logP = log(p);
+  logP += log(p);
   
   return logP;
 }

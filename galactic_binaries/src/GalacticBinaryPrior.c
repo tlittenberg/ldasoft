@@ -186,9 +186,9 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
       
       //      if(mc%1000 == 0 && flags->verbose) fprintf(chain,"%d %e %e %e %e %e %e %e\n", mc/1000, logLx, x[0], x[1], x[2], theta, phi, r_ec);
       
-      //ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
+      ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
       //iph = (int)(phi/(2.0*M_PI)*(double)(Nph));
-      ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
+      //ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
       iph = (int)((2*M_PI-phi)/(2.0*M_PI)*(double)(Nph));
       
       //ith = (int)floor(Nth*gsl_rng_uniform(r));
@@ -294,8 +294,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   model->prior[2][1] = PI2;
   
   //log amplitude
-  model->prior[3][0] = exp(-55.0);//-54
-  model->prior[3][1] = exp(-45.0);
+  model->prior[3][0] = -55.0;//-54
+  model->prior[3][1] = -45.0;
   
   //cos inclination
   model->prior[4][0] = -1.0;
@@ -331,6 +331,11 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
 
   double fddotmin = 11.0/3.0*fdotmin*fdotmin/fmax;
   double fddotmax = 11.0/3.0*fdotmax*fdotmax/fmin;
+
+  if(!flags->detached)
+  {
+    fddotmin = -fddotmax;
+  }
   
   if(verbose)
   {
@@ -338,7 +343,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     if(flags->detached)fprintf(stdout,"  Assuming detached binary, Mchirp = [0.15,1]\n");
     fprintf(stdout,"  p(fdot)  = U[%g,%g]\n",fdotmin,fdotmax);
     fprintf(stdout,"  p(fddot) = U[%g,%g]\n",fddotmin,fddotmax);
-    fprintf(stdout,"  p(A)     = U[%g,%g]\n",model->prior[3][0],model->prior[3][1]);
+    fprintf(stdout,"  p(lnA)   = U[%g,%g]\n",model->prior[3][0],model->prior[3][1]);
     fprintf(stdout,"====================================\n\n");
   }
 
@@ -356,9 +361,6 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   //set prior volume
   model->logPriorVolume = 0.0;
   for(int n=0; n<data->NP; n++) model->logPriorVolume -= log(model->prior[n][1]-model->prior[n][0]);
-    
-  //undo amplitude prior if using SNR prior
-  if(flags->snrPrior) model->logPriorVolume += log(model->prior[3][1]-model->prior[3][0]);
   
 }
 
@@ -407,8 +409,13 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     else logP -= log(uniform_prior[1][1]-uniform_prior[1][0]);
     
     //longitude (periodic)
-    while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
-    while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
+    //while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
+    //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
+    if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
+    {
+      params[2] = atan2(sin(params[2]),cos(params[2]));
+      if(params[2] < 0.0) params[2] += PI2;
+    }
     logP -= log(uniform_prior[2][1]-uniform_prior[2][0]);
   }
   
@@ -416,10 +423,8 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
   else
   {
-    if(flags->snrPrior)
-      logP += evaluate_snr_prior(prior, data, model, params);
-    else
-      logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
+    logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
+    logP += evaluate_snr_prior(data, model, params);
   }
   
   //cosine inclination (reflective)
@@ -433,11 +438,16 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   else logP -= log(uniform_prior[5][1]-uniform_prior[5][0]);
 
   //phase
-  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
-  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
+//  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
+//  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
 //  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
 //  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
-  logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+    if(params[6]<uniform_prior[6][0] || params[6]>=uniform_prior[6][1])
+    {
+      params[6] = atan2(sin(params[6]),cos(params[6]));
+      if(params[6] < 0.0) params[6] += PI2;
+    }
+    logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
   
   //fdot (bins/Tobs)
   if(model->NP>7)
@@ -456,12 +466,33 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   return logP;
 }
 
+/* Rejection sample on SNR < SNRPEAK */
+double evaluate_snr_prior(struct Data *data, struct Model *model, double *params)
+{
+
+  double amp = exp(params[3]);
+  
+  int n = (int)floor(params[0] - model->prior[0][0]);
+  if(n<0 || n>=data->N) return -INFINITY;
+
+  double sf = 1.0;//sin(f/fstar); //sin(f/f*)
+  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+  double sqT = sqrt(data->T);
+  
+  //Sinc spreading
+  double SNm  = sn/(4.*sf*sf);   //Michelson noise
+  double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
+  
+  //SNRPEAK defined in Constants.h
+  if(SNR < SNRPEAK) return -INFINITY;
+  return 0.0;
+}
+/*
 double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *model, double *params)
 {
   double logP;
   double dfac, dfac5;
 
-  double SNRpeak = 5.0;
   
   //double f   = params[0]/Tobs;
   double amp = params[3];
@@ -471,20 +502,22 @@ double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *
   int n = (int)floor(params[0] - model->prior[0][0]);
   if(n<0 || n>=data->N) return -INFINITY;
   double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n];
+  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
   double sqT = sqrt(data->T);
   
   //Sinc spreading
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
   double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
   
-  dfac = 1.+SNR/(4.*SNRpeak);
+  //SNRPEAK defined in Constants.h
+
+  dfac = 1.+SNR/(4.*SNRPEAK);
   dfac5 = dfac*dfac*dfac*dfac*dfac;
   
-  //logP = log((3.*SNR)/(4.*SNRpeak*SNRpeak*dfac5)) + log(SNR/params[3]);
-  logP = log((3.*SNR)/(4.*SNRpeak*SNRpeak*dfac5)) + log(SNR/amp);
+  //logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/params[3]);
+  logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/amp);
 
   return logP;
 }
-
+*/
 

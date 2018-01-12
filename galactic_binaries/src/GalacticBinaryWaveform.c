@@ -90,7 +90,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
   for(i=0; i<NP; i++)
   {
     //step size for derivatives
-    invstep = invepsilon2/source->params[1];
+    invstep = invepsilon2;///source->params[i];
       
     // copy parameters
     for(j=0; j<NP; j++)
@@ -100,8 +100,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     }
     
     // perturb parameters
-    wave_p->params[i] += epsilon*source->params[i];
-    wave_m->params[i] -= epsilon*source->params[i];
+    wave_p->params[i] += epsilon;//*source->params[i];
+    wave_m->params[i] -= epsilon;//*source->params[i];
 
     // complete info in source structure
     map_array_to_params(wave_p, wave_p->params, data->T);
@@ -304,7 +304,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   f0     = params[0]/T;
   costh  = params[1];
   phi    = params[2];
-  amp    = params[3];//exp(params[3]);
+  amp    = exp(params[3]);
   cosi   = params[4];
   psi    = params[5];
   phi0   = params[6];
@@ -452,7 +452,7 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
           double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
           
           //Transfer function
-          double sinc = 0.25*sin(arg1)/arg1;
+          double sinc = 0.25*sinf(arg1)/arg1;
           
           ///Real and imaginary pieces of time series (no complex exponential)
           double tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);
