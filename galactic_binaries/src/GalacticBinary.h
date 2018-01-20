@@ -182,7 +182,7 @@ struct Model
   
   //Source parameter priors
   double **prior;
-  double logPriorVolume;
+  double *logPriorVolume;
   
   //Model likelihood
   double logL;

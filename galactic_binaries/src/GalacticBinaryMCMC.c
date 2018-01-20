@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
   start = time(NULL);
   
   int NMAX = 10;   //max number of frequency & time segments
-  int DMAX = 100;   //100; //max number of GB waveforms
+  int DMAX = 10;   //100; //max number of GB waveforms
   
   /* Allocate data structures */
   struct Flags *flags = malloc(sizeof(struct Flags));
@@ -412,7 +412,7 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc)
     
     chain->temperature[ic] = chain->temperature[ic-1] + exp(S[ic]);
     
-    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.01) chain->temperature[ic] = chain->temperature[ic-1]*1.01;
+    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.1) chain->temperature[ic] = chain->temperature[ic-1]*1.1;
   }//end loop over ic
 }//end adapt function
 
@@ -457,29 +457,26 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     }
   }
   
-  if(logPy > -INFINITY)
+  
+  if(!flags->prior)
   {
+    //  Form master template
+    generate_noise_model(data, model_y);
     
-    if(!flags->prior)
-    {
-      //  Form master template
-      generate_noise_model(data, model_y);
-
-      //get likelihood for y
-      model_y->logL     = gaussian_log_likelihood(orbit, data, model_y);
-      model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
-      
-      /*
-       H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
-       */
-      logH += ( (model_y->logL+model_y->logLnorm) - (model_x->logL+model_x->logLnorm) )/chain->temperature[ic]; //delta logL
-      if(flags->burnin) logH /= chain->annealing;
-    }
-    logH += logPy  - logPx;                                         //priors
+    //get likelihood for y
+    model_y->logL     = gaussian_log_likelihood(orbit, data, model_y);
+    model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
     
-    loga = log(gsl_rng_uniform(chain->r[ic]));
-    if(logH > loga) copy_model(model_y,model_x);
+    /*
+     H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+     */
+    logH += ( (model_y->logL+model_y->logLnorm) - (model_x->logL+model_x->logLnorm) )/chain->temperature[ic]; //delta logL
+    if(flags->burnin) logH /= chain->annealing;
   }
+  logH += logPy  - logPx;                                         //priors
+  
+  loga = log(gsl_rng_uniform(chain->r[ic]));
+  if(logH > loga) copy_model(model_y,model_x);
   
 }
 
@@ -606,7 +603,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   
   int freqflag=0;
   if(gsl_rng_uniform(chain->r[ic])<0.5) freqflag=1;
-  
+
   //proposal[2]->trial[ic]++;
 
     /* pick birth or death move */
@@ -621,16 +618,22 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      if(freqflag) draw_from_fstatistic(data, model_y, model_y->source[create], proposal[2], model_y->source[create]->params, chain->r[ic]);
-      else         draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+      if(freqflag) logQyx = draw_from_fstatistic(data, model_y, model_y->source[create], proposal[2], model_y->source[create]->params, chain->r[ic]);
+      else
+      {
+        draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+        if(flags->skyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
 
+        logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
+      }
       
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
 
       logQxy = 0;
-      logQyx = model_x->logPriorVolume;
-      logQyx += evaluate_snr_prior(data, model, model_y->source[create]->params);
-      if(freqflag) logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
+      //logQyx += model_x->logPriorVolume;
+      //logQyx += evaluate_snr_prior(data, model, model_y->source[create]->params);
+      //logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
+      //if(freqflag) logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
       
       //copy params for segment 0 into higher segments
 //      copy_source(model_y->source[create],model_y->source[create]);
@@ -653,10 +656,18 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //      copy_source(model_y->source[kill],model_y->source[kill]);
 //      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
       
-      logQxy = model_x->logPriorVolume;
+      //logQxy = model_x->logPriorVolume;
       logQyx = 0;
-      logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
-      if(freqflag) logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
+      //logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
+      if(freqflag)
+      {
+        for(int n=0; n<model_y->source[kill]->NP; n++)
+        {
+          logQxy += model->logPriorVolume[n];
+        }
+        logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
+      }
+      else         logQxy = evaluate_prior(flags, data, model_y, prior, model_y->source[kill]->params);
       
       //consolodiate parameter structure
       for(int j=kill; j<model_x->Nlive; j++)
@@ -700,8 +711,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //    if(ic==0)
 //    {
 //      FILE *fptr = fopen("proposal.dat","a");
-//      //    fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
-//      //    fprintf(stdout,"%i -> %i ",model_x->Nlive, model_y->Nlive);
+//          fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
+//          fprintf(stdout,"%i -> %i \n",model_x->Nlive, model_y->Nlive);
 //      print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
 //      fprintf(fptr,"\n");
 //      fclose(fptr);

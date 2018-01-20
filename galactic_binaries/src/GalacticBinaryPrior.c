@@ -359,8 +359,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   }
 
   //set prior volume
-  model->logPriorVolume = 0.0;
-  for(int n=0; n<data->NP; n++) model->logPriorVolume -= log(model->prior[n][1]-model->prior[n][0]);
+  for(int n=0; n<data->NP; n++) model->logPriorVolume[n] = log(model->prior[n][1]-model->prior[n][0]);
   
 }
 
@@ -406,8 +405,8 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   {
     //colatitude (reflective)
     if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
-    else logP -= log(uniform_prior[1][1]-uniform_prior[1][0]);
-    
+    else logP += model->logPriorVolume[1];
+
     //longitude (periodic)
     //while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
     //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
@@ -416,26 +415,26 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
       params[2] = atan2(sin(params[2]),cos(params[2]));
       if(params[2] < 0.0) params[2] += PI2;
     }
-    logP -= log(uniform_prior[2][1]-uniform_prior[2][0]);
+    logP += model->logPriorVolume[2];
   }
   
   //log amplitude (step)
   if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
   else
   {
-    logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
+    logP += model->logPriorVolume[3];
     logP += evaluate_snr_prior(data, model, params);
   }
   
   //cosine inclination (reflective)
   if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
-  else logP -= log(uniform_prior[4][1]-uniform_prior[4][0]);
-  
+  else logP += model->logPriorVolume[4];
+
   //polarization
 //  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
 //  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
   if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
-  else logP -= log(uniform_prior[5][1]-uniform_prior[5][0]);
+  else logP += model->logPriorVolume[5];
 
   //phase
 //  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
@@ -447,36 +446,36 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
       params[6] = atan2(sin(params[6]),cos(params[6]));
       if(params[6] < 0.0) params[6] += PI2;
     }
-    logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
-  
+    logP += model->logPriorVolume[6];
+
   //fdot (bins/Tobs)
   if(model->NP>7)
   {
     if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
-    else logP -= log(uniform_prior[7][1]-uniform_prior[7][0]);
+    else logP += model->logPriorVolume[7];
+
   }
   
   //fddot
   if(model->NP>8)
   {
     if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return -INFINITY;
-    else logP -= log(uniform_prior[8][1]-uniform_prior[8][0]);
+    else logP += model->logPriorVolume[8];
   }
-  
+
   return logP;
 }
 
 /* Rejection sample on SNR < SNRPEAK */
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params)
 {
-
   double amp = exp(params[3]);
   
   int n = (int)floor(params[0] - model->prior[0][0]);
   if(n<0 || n>=data->N) return -INFINITY;
 
   double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+  double sn = data->noise[0]->SnA[n];
   double sqT = sqrt(data->T);
   
   //Sinc spreading

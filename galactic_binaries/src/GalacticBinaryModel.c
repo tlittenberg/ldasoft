@@ -265,6 +265,7 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, 
     alloc_source(model->source[n],NFFT,Nchannel,NP);
   }
   
+  model->logPriorVolume = malloc(NP*sizeof(double));
   model->prior = malloc(NP*sizeof(double *));
   for(n=0; n<NP; n++) model->prior[n] = malloc(2*sizeof(double));
 }
@@ -288,7 +289,7 @@ void copy_model(struct Model *origin, struct Model *copy)
     copy_tdi(origin->tdi[n],copy->tdi[n]);
     
     //Residual
-    //copy_tdi(origin->residual[n],copy->residual[n]);
+    copy_tdi(origin->residual[n],copy->residual[n]);
     
     //Start time for segment for model
     copy->t0[n] = origin->t0[n];
@@ -298,9 +299,11 @@ void copy_model(struct Model *origin, struct Model *copy)
 
   
   //Source parameter priors
-  for(int n=0; n<origin->NP; n++) for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
-  copy->logPriorVolume = origin->logPriorVolume;
-
+  for(int n=0; n<origin->NP; n++)
+  {
+    for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
+    copy->logPriorVolume[n] = origin->logPriorVolume[n];
+  }
   //Model likelihood
   copy->logL           = origin->logL;
   copy->logLnorm       = origin->logLnorm;
@@ -457,6 +460,7 @@ void free_model(struct Model *model)
   
   for(n=0; n<8; n++) free(model->prior[n]);
   free(model->prior);
+  free(model->logPriorVolume);
  
   for(n=0; n<model->NT; n++)
   {
@@ -941,11 +945,11 @@ int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct
       chain->logLmax = logL;
 
 //      fprintf(stdout,"New max logL = %.2f  Cloning chains...\n",logL);
-//      for(int ic=1; ic<chain->NC; ic++)
-//      {
-//        int m = chain->index[ic];
-//        for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
-//      }
+      for(int ic=1; ic<chain->NC; ic++)
+      {
+        int m = chain->index[ic];
+        for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
+      }
       if(flags->burnin)return 1;
     }
   }

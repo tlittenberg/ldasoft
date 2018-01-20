@@ -193,14 +193,68 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
 
 double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-  for(int n=0; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   
-  for(int j=0; j<source->NP; j++)
+  double logQ = 0.0;
+  int n;
+  
+  //frequency
+  n = 0;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //sky location
+  n = 1;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  n = 2;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //amplitude
+  n = 3;
+//  logQ += draw_signal_amplitude(data, model, source, proposal, params, seed);
+  double q=-INFINITY;
+  while(q==-INFINITY)
   {
-    if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    q = evaluate_snr_prior(data, model, params);
   }
+  logQ += model->logPriorVolume[n];
+  logQ += q;
 
-  double logQ = model->logPriorVolume;
+  
+  //inclination
+  n = 4;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //polarization
+  n = 5;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //phase
+  n = 6;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //fdot
+  if(source->NP>7)
+  {
+    n = 7;
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    logQ += model->logPriorVolume[n];
+  }
+  
+  //f-double-dot
+  if(source->NP>8)
+  {
+    n = 8;
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    logQ += model->logPriorVolume[n];
+  }
+  
   
   return logQ;
 }
@@ -215,7 +269,34 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
   
-  return model->logPriorVolume;
+  double logP = 0.0;
+  for(int j=0; j<source->NP; j++) logP += model->logPriorVolume[j];
+  
+  return logP;
+}
+
+double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed)
+{
+  double **uniform_prior = model->prior;
+  double logP=-INFINITY;
+  double alpha=prior->skymaxp;
+  
+  while(alpha>logP)
+  {
+    //sky location
+    params[1] = model->prior[1][0] + gsl_rng_uniform(seed)*(model->prior[1][1]-model->prior[1][0]);
+    params[2] = model->prior[2][0] + gsl_rng_uniform(seed)*(model->prior[2][1]-model->prior[2][0]);
+    
+    //map costheta and phi to index of skyhist array
+    int i = (int)floor((params[1]-uniform_prior[1][0])/prior->dcostheta);
+    int j = (int)floor((params[2]-uniform_prior[2][0])/prior->dphi);
+    
+    int k = i*prior->nphi + j;
+    
+    logP = prior->skyhist[k];
+    alpha = log(gsl_rng_uniform(seed)*exp(prior->skymaxp));
+  }
+  return logP;
 }
 
 double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -364,6 +445,9 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
     else       y1 = cdf[n][i+1];
 
     params[n] = y0 + (p-x0)*((y1-y0)/(x1-x0));
+    
+    if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+    
     logP += log(p);
   }
 
@@ -383,12 +467,15 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   int ii;
   for(int n=0; n<NP; n++)
   {
+    if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+
+    
     //find samples either end of p-value
     int i = 0;
     while(params[n]>cdf[n][i]) i++;
-    
+
     ii=i+1;
-    while(cdf[n][i]==cdf[n][ii])ii++;
+    while(cdf[n][i]==cdf[n][ii] && ii<N-1)ii++;
     
     //linear interpolation betweein i and i+1
     //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
@@ -737,11 +824,14 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   double i,j,k;
   
   //first draw from prior
-  draw_from_prior(data, model, source, proposal, params, seed);
+  for(int n=0; n<source->NP; n++)
+  {
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    logP += model->logPriorVolume[n];
+  }
+  //put back 
   
-  //rejection sample on SNR
-  logP = evaluate_snr_prior(data, model, params);
-
+  
   //now rejection sample on f,theta,phi
   int check=1;
   while(check)
