@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_sort.h>
 #include <gsl/gsl_randist.h>
 
 #include "LISA.h"
@@ -468,35 +469,39 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   for(int n=0; n<NP; n++)
   {
     if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
-
     
     //find samples either end of p-value
-    int i = 0;
-    while(params[n]>cdf[n][i]) i++;
-
-    ii=i+1;
-    while(cdf[n][i]==cdf[n][ii] && ii<N-1)ii++;
-    
-    //linear interpolation betweein i and i+1
-    //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
-    if(i==0) x0 = model->prior[n][0];
-    else     x0 = cdf[n][i];
-    y0 = (double)i/(double)N;
-
-    if(i>N-2)
-    {
-      x1 = model->prior[n][1];
-      y1 = 1.0;
-    }
+    if(params[n]<cdf[n][0])
+      logP += log(1./(double)N);
+    else if(params[n]>cdf[n][1])
+      logP += 0.0;//log(N/N);
     else
     {
-      x1 = cdf[n][ii];
-      y1 = (double)(ii)/(double)N;
+      int i = 0;
+      while(params[n]>cdf[n][i]) i++;
+      ii=i+1;
+      //linear interpolation betweein i and i+1
+      //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
+      if(i==0) x0 = model->prior[n][0];
+      else     x0 = cdf[n][i];
+      y0 = (double)i/(double)N;
+      
+      if(i>N-2)
+      {
+        x1 = model->prior[n][1];
+        y1 = 1.0;
+      }
+      else
+      {
+        x1 = cdf[n][ii];
+        y1 = (double)(ii)/(double)N;
+      }
+      
+      double p = y0 + (params[n]-x0)*((y1-y0)/(x1-x0));
+      
+      logP += log(p);
     }
-    
-    double p = y0 + (params[n]-x0)*((y1-y0)/(x1-x0));
-    
-    logP += log(p);
+
   }
   
   return logP;
@@ -610,7 +615,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         proposal[i]->function = &draw_from_cdf;
         proposal[i]->weight = 0.2;
         check+=proposal[i]->weight;
-        //parse cdf file
+        //parse chain file
         FILE *fptr = fopen(flags->cdfFile,"r");
         proposal[i]->size=0;
         double junk;
@@ -622,6 +627,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         }
         rewind(fptr);
         proposal[i]->size--;
+        proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
         proposal[i]->matrix = malloc(data->NP * sizeof(double*));
         for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
         
@@ -636,6 +642,23 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
           
         }
         free_model(temp);
+        
+        //now sort each row of the matrix
+        for(int j=0; j<data->NP; j++)
+        {
+          //fill up proposal vector
+          for(int n=0; n<proposal[i]->size; n++)
+            proposal[i]->vector[n] = proposal[i]->matrix[j][n];
+
+          //sort it
+          gsl_sort(proposal[i]->vector,proposal[i]->size, 1);
+          
+          //replace that row of the matrix
+          for(int n=0; n<proposal[i]->size; n++)
+            proposal[i]->matrix[j][n] = proposal[i]->vector[n];
+        }
+        
+        free(proposal[i]->vector);
         fclose(fptr);
         break;
         
