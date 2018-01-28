@@ -12,7 +12,7 @@
 void printProgress (double percentage);
 
 void print_usage();
-void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax);
+void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int Dmax);
 
 void print_chain_files(struct Data *data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step);
 void print_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int step);

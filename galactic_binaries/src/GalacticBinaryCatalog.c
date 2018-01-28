@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
   {
     data_ptr[i] = malloc(sizeof(struct Data));
   }
-  parse(argc,argv,data_ptr,orbit,flags,chain,NMAX);
+  parse(argc,argv,data_ptr,orbit,flags,chain,NMAX,NMAX);
   
   /* Load spacecraft ephemerides */
   switch(flags->orbit)

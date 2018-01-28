@@ -111,7 +111,7 @@ void print_usage()
   exit(EXIT_FAILURE);
 }
 
-void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
+void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int Dmax)
 {
   if(argc==1) print_usage();
   
@@ -134,6 +134,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->prior       = 0;
   flags->update      = 0;
   flags->NMAX        = Nmax;
+  flags->DMAX        = Dmax;
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
   chain->NP          = 5; //number of proposals

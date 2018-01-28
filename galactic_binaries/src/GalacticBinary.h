@@ -57,6 +57,7 @@ struct Flags
   int NF;    //number of frequency segments;
   int NT;    //number of time segments
   int NMAX;  //max number of sources
+  int DMAX;  //max dimension of signal model
   int zeroNoise;
   int fixSky;
   int skyPrior;
