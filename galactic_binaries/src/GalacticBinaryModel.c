@@ -133,7 +133,6 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
 {
   int ic;
   int NC = chain->NC;
-  int ND = flags->NMAX;
   char filename[1024];
 
   chain->index = malloc(NC*sizeof(int));
@@ -147,8 +146,8 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
     chain->acceptance[ic] = 1.0;
     chain->temperature[ic] = pow(1.2,(double)ic);
     chain->avgLogL[ic] = 0.0;
-    chain->dimension[ic] = malloc(ND*sizeof(int));
-    for(int id=0; id<ND; id++) chain->dimension[ic][id] = 0;
+    chain->dimension[ic] = malloc(flags->DMAX*sizeof(int));
+    for(int id=0; id<flags->DMAX; id++) chain->dimension[ic][id] = 0;
   }
   //set hottest chain to ~infinite temperature
   chain->temperature[NC-1] = 1e12;
