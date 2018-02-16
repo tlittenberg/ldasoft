@@ -592,7 +592,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
           R_re = data->tdi[i]->X[n_re] - X_re;
           R_im = data->tdi[i]->X[n_im] - X_im;
           
-          data->h_res[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
+          data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
           data->h_pow[n][0][i][mcmc] = X_re*X_re + X_im*X_im;
           
           data->S_pow[n][0][i][mcmc] = model->noise[i]->SnX[n];
@@ -616,11 +616,11 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
           
           R_re = data->tdi[i]->A[n_re] - A_re;
           R_im = data->tdi[i]->A[n_im] - A_im;
-          data->h_res[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
+          data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
           
           R_re = data->tdi[i]->E[n_re] - E_re;
           R_im = data->tdi[i]->E[n_im] - E_im;
-          data->h_res[n][1][i][mcmc] = R_re*R_re + R_im*R_im;
+          data->r_pow[n][1][i][mcmc] = R_re*R_re + R_im*R_im;
           
           data->h_pow[n][0][i][mcmc] = A_re*A_re + A_im*A_im;
           data->h_pow[n][1][i][mcmc] = E_re*E_re + E_im*E_im;
@@ -676,7 +676,27 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
   FILE *fptr_res;
   FILE *fptr_Snf;
 
-  //sort h reconstructions
+  //get variance of residual
+  double ****r_re = malloc(data->N*sizeof(double ***));
+  for(int n=0; n<data->N; n++)
+  {
+    r_re[n] = malloc(data->Nchannel*sizeof(double **));
+    for(int m=0; m<data->Nchannel; m++)
+    {
+      r_re[n][m] = malloc(data->NT*sizeof(double *));
+      for(int l=0; l<data->NT; l++)
+      {
+        r_re[n][m][l] = malloc(data->Nwave*sizeof(double));
+        for(int k=0; k<data->Nwave; k++)
+        {
+          r_re[n][m][l][k]=0.0;
+        }
+      }
+    }
+  }
+  
+  
+  
   for(int k=0; k<data->NT; k++)
   {
     for(int n=0; n<data->N*2; n++)
@@ -687,12 +707,12 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
       }
     }
     
-    printf("sort h_res etc.\n");
+
     for(int n=0; n<data->N; n++)
     {
       for(int m=0; m<data->Nchannel; m++)
       {
-        gsl_sort(data->h_res[n][m][k],1,data->Nwave);
+        gsl_sort(data->r_pow[n][m][k],1,data->Nwave);
         gsl_sort(data->h_pow[n][m][k],1,data->Nwave);
         gsl_sort(data->S_pow[n][m][k],1,data->Nwave);
       }
@@ -713,17 +733,17 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
     {
       double f = (double)(i+data->qmin)/data->T;
       
-      A_med   = gsl_stats_median_from_sorted_data   (data->h_res[i][0][k], 1, data->Nwave);
-      A_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.25);
-      A_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.75);
-      A_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.05);
-      A_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.95);
+      A_med   = gsl_stats_median_from_sorted_data   (data->r_pow[i][0][k], 1, data->Nwave);
+      A_lo_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.25);
+      A_hi_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.75);
+      A_lo_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.05);
+      A_hi_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.95);
       
-      E_med   = gsl_stats_median_from_sorted_data   (data->h_res[i][1][k], 1, data->Nwave);
-      E_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.25);
-      E_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.75);
-      E_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.05);
-      E_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.95);
+      E_med   = gsl_stats_median_from_sorted_data   (data->r_pow[i][1][k], 1, data->Nwave);
+      E_lo_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.25);
+      E_hi_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.75);
+      E_lo_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.05);
+      E_hi_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.95);
       
       fprintf(fptr_res,"%.12g ",f);
       fprintf(fptr_res,"%lg ",A_med);

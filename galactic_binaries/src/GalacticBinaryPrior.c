@@ -274,8 +274,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   for(int i=0; i<model->NT; i++)
   {
     model->t0[i] = data->t0[i];
-    model->t0_min[i] = data->t0[i] - 10.0;
-    model->t0_max[i] = data->t0[i] + 10.0;
+    model->t0_min[i] = data->t0[i] - 60;
+    model->t0_max[i] = data->t0[i] + 60;
   }
   
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)

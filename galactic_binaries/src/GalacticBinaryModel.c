@@ -75,7 +75,8 @@ void alloc_data(struct Data **data_vec, struct Flags *flags)
     //reconstructed signal model
     int i_re,i_im;
     data->h_rec = malloc(data->N*2*sizeof(double ***));
-    data->h_res = malloc(data->N*sizeof(double ***));
+    data->h_res = malloc(data->N*2*sizeof(double ***));
+    data->r_pow = malloc(data->N*sizeof(double ***));
     data->h_pow = malloc(data->N*sizeof(double ***));
     data->S_pow = malloc(data->N*sizeof(double ***));
     
@@ -92,30 +93,38 @@ void alloc_data(struct Data **data_vec, struct Flags *flags)
       
       data->S_pow[i]    = malloc(data->Nchannel*sizeof(double **));
       data->h_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-      data->h_res[i]    = malloc(data->Nchannel*sizeof(double **));
+      data->r_pow[i]    = malloc(data->Nchannel*sizeof(double **));
       data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double **));
       data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double **));
+      data->h_res[i_re] = malloc(data->Nchannel*sizeof(double **));
+      data->h_res[i_im] = malloc(data->Nchannel*sizeof(double **));
       for(int l=0; l<data->Nchannel; l++)
       {
         data->S_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
         data->h_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-        data->h_res[i][l]    = malloc(data->Nwave*sizeof(double *));
+        data->r_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
         data->h_rec[i_re][l] = malloc(data->Nwave*sizeof(double *));
         data->h_rec[i_im][l] = malloc(data->Nwave*sizeof(double *));
+        data->h_res[i_re][l] = malloc(data->Nwave*sizeof(double *));
+        data->h_res[i_im][l] = malloc(data->Nwave*sizeof(double *));
         
         for(int n=0; n<flags->NT; n++)
         {
           data->S_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
           data->h_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
-          data->h_res[i][l][n]    = malloc(data->Nwave*sizeof(double));
+          data->r_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
           data->h_rec[i_re][l][n] = malloc(data->Nwave*sizeof(double));
           data->h_rec[i_im][l][n] = malloc(data->Nwave*sizeof(double));
+          data->h_res[i_re][l][n] = malloc(data->Nwave*sizeof(double));
+          data->h_res[i_im][l][n] = malloc(data->Nwave*sizeof(double));
           for(int m=0; m<data->Nwave; m++)
           {
             
             data->h_rec[i_re][l][n][m] = 0.0;
             data->h_rec[i_im][l][n][m] = 0.0;
-            data->h_res[i][l][n][m]    = 0.0;
+            data->h_res[i_re][l][n][m] = 0.0;
+            data->h_res[i_im][l][n][m] = 0.0;
+            data->r_pow[i][l][n][m]    = 0.0;
             data->h_pow[i][l][n][m]    = 0.0;
             data->S_pow[i][l][n][m]    = 0.0;
             

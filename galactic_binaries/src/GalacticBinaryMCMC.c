@@ -887,6 +887,11 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
     for(int i=0; i<flags->NT; i++)
     {
       trial[j]->t0[i] = trial[0]->t0[i];
+      for(int n=0; n<trial[0]->Nlive; n++)
+      {
+        double dt = trial[j]->t0[i] - model[j]->t0[i];
+        trial[0]->source[n]->params[0] += -(1.e-7/5.)*dt;
+      }
     }
   }
   
