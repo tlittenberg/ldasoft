@@ -537,9 +537,9 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
     
     //gaussian draw
     else if (gsl_rng_uniform(seed) < 0.5 )
-      model->t0[i] += 0.1*gsl_ran_gaussian(seed,1);
+      model->t0[i] += 1.0*gsl_ran_gaussian(seed,1);
     else
-      model->t0[i] += 0.01*gsl_ran_gaussian(seed,1);
+      model->t0[i] += 0.1*gsl_ran_gaussian(seed,1);
 
     
     //t0 shift is symmetric
