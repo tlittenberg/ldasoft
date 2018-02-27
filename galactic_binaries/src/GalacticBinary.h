@@ -32,6 +32,7 @@ struct Data
   int downsample;
   double ****h_rec; // N x Nchannel x NT x NMCMC
   double ****h_res; // N x Nchannel x NT x NMCMC
+  double ****r_pow; // N x Nchannel x NT x NMCMC
   double ****h_pow; // N x Nchannel x NT x NMCMC
   double ****S_pow; // N x Nchannel x NT x NMCMC
   

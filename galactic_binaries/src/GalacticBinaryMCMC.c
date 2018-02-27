@@ -920,8 +920,6 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
     copy_model(model[i],trial[i]);
   }
   
-  logQ = 0.0;
-  
   logQ += t0_shift(data[0], trial[0], trial[0]->source[0], proposal[0], trial[0]->source[0]->params, chain->r[ic]);
   
   for(int j=1; j<flags->NF; j++)
@@ -929,6 +927,11 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
     for(int i=0; i<flags->NT; i++)
     {
       trial[j]->t0[i] = trial[0]->t0[i];
+//      for(int n=0; n<trial[0]->Nlive; n++)
+//      {
+//        double dt = trial[j]->t0[i] - model[j]->t0[i];
+//        trial[0]->source[n]->params[0] += -(1.e-7/5.)*dt;
+//      }
     }
   }
   
@@ -939,25 +942,17 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
      passing generate_signal_model -1 results in full recalculation of waveform model
      */
     generate_signal_model(orbit, data[j], trial[j], -1);
-    //generate_signal_model(orbit, data[j], model[j]);
-    
-    //calibration error
-    if(flags->calibration)
-    {
-      draw_calibration_parameters(data[j], trial[j], chain->r[ic]);
-      generate_calibration_model(data[j], model[j]);
-      apply_calibration_model(data[j], model[j]);
-    }
-    
-    // get likelihood for y
-    trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);
-    //model[j]->logL = gaussian_log_likelihood(orbit, data[j], model[j]);
-    
+    //generate_signal_model(orbit, data[j], model[j], -1);
+
     /*
      H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
      */
     if(!flags->prior)
     {
+      // get likelihood for y
+      trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);
+      //model[j]->logL = gaussian_log_likelihood(orbit, data[j], model[j]);
+
       logH += (trial[j]->logL - model[j]->logL)/chain->temperature[ic];
       if(flags->burnin) logH /= chain->annealing;
     }
