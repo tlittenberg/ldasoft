@@ -185,7 +185,14 @@ int main(int argc, char *argv[])
       // Form master model & compute likelihood of starting position
       generate_noise_model(data_ptr, model_ptr);
       generate_signal_model(orbit, data_ptr, model_ptr, -1);
-      
+
+      //calibration error
+      if(flags->calibration)
+      {
+        draw_calibration_parameters(data_ptr, model_ptr, chain->r[ic]);
+        generate_calibration_model(data_ptr, model_ptr);
+        apply_calibration_model(data_ptr, model_ptr);
+      }
       if(!flags->prior)
       {
         model_ptr->logL     = gaussian_log_likelihood(orbit, data_ptr, model_ptr);
@@ -517,7 +524,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   proposal[nprop]->trial[ic]++;
   
-  //call proposal function to update parameters
+  //call proposal function to update source parameters
   (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
   //evaluate proposal densities Qxy & Qyx
@@ -544,6 +551,13 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     map_params_to_array(source_y, source_y->params, data->T);
   }
   
+  //update calibration parameters
+  if(flags->calibration) draw_calibration_parameters(data, model_y, chain->r[ic]);
+  /*
+   no proposal density for calibration parameters
+   because we are always drawing from prior...for now
+   */
+  
   //copy params for segment 0 into higher segments
   copy_source(model_y->source[n],model_y->source[n]);
   map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
@@ -552,6 +566,12 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   logPx = evaluate_prior(flags, data, model_x, prior, source_x->params);
   logPy = evaluate_prior(flags, data, model_y, prior, source_y->params);
   
+  //add calibration source parameters
+  /*
+   no prior density for calibration parameters
+   because we are always drawing from prior...for now
+   */
+  
   if(logPy > -INFINITY)
   {
     if(!flags->prior)
@@ -559,6 +579,12 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
       //  Form master template
       generate_signal_model(orbit, data, model_y, n);
       
+      //calibration error
+      if(flags->calibration)
+      {
+        generate_calibration_model(data, model_y);
+        apply_calibration_model(data, model_y);
+      }
       //get likelihood for y
       model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
       
@@ -692,6 +718,13 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
      and to only calculate new source for create move
      */
     generate_signal_model(orbit, data, model_y, model_x->Nlive);
+    
+    //calibration error
+    if(flags->calibration)
+    {
+      generate_calibration_model(data, model_y);
+      apply_calibration_model(data, model_y);
+    }
     
     //get likelihood for y
     model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
@@ -827,6 +860,15 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   
   
   generate_signal_model(orbit, data, temp, n);
+
+  //calibration error
+  if(flags->calibration)
+  {
+    draw_calibration_parameters(data, temp, chain->r[ic]);
+    generate_calibration_model(data, temp);
+    apply_calibration_model(data, temp);
+  }
+  
   temp->logL = gaussian_log_likelihood(orbit, data, temp);
 
   //if(ic==0)printf("delayed rejection hastings ratio: %g: ",temp->logL);
@@ -898,6 +940,14 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
      */
     generate_signal_model(orbit, data[j], trial[j], -1);
     //generate_signal_model(orbit, data[j], model[j]);
+    
+    //calibration error
+    if(flags->calibration)
+    {
+      draw_calibration_parameters(data[j], trial[j], chain->r[ic]);
+      generate_calibration_model(data[j], model[j]);
+      apply_calibration_model(data[j], model[j]);
+    }
     
     // get likelihood for y
     trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);

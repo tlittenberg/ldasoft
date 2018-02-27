@@ -23,7 +23,7 @@ GalacticBinaryIO.o : GalacticBinaryIO.c GalacticBinaryIO.h LISA.h
 GalacticBinaryMath.o : GalacticBinaryMath.c GalacticBinaryMath.h GalacticBinary.h
 	$(CC) $(CCFLAGS) -c GalacticBinaryMath.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
-GalacticBinaryPrior.o : GalacticBinaryPrior.c GalacticBinary.h
+GalacticBinaryPrior.o : GalacticBinaryPrior.c GalacticBinaryPrior.h GalacticBinary.h
 	$(CC) $(CCFLAGS) -c GalacticBinaryPrior.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
 GalacticBinaryData.o : GalacticBinaryData.c GalacticBinaryData.h GalacticBinary.h GalacticBinaryModel.o GalacticBinaryMath.o GalacticBinaryIO.o LISA.o 

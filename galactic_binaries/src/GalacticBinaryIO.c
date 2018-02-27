@@ -84,6 +84,7 @@ void print_usage()
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --sky-prior   : use galaxy model for sky prior      \n");
   fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
+  fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
@@ -93,6 +94,7 @@ void print_usage()
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
   fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
   fprintf(stdout,"       --fit-gap     : fit for time gaps between segments  \n");
+  fprintf(stdout,"       --calibration : marginalize over calibration errors \n");
   fprintf(stdout,"       --prior       : sample from prior                   \n");
   fprintf(stdout,"       --debug       : leaner settings for quick running   \n");
   fprintf(stdout,"--\n");
@@ -116,7 +118,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   if(argc==1) print_usage();
   
   //Set defaults
-  flags->rj          = 0;
+  flags->calibration = 0;
   flags->rj          = 1;
   flags->verbose     = 0;
   flags->NF          = 0;
@@ -124,6 +126,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->fixSky      = 0;
   flags->skyPrior    = 0;
   flags->snrPrior    = 0;
+  flags->emPrior     = 0;
   flags->cheat       = 0;
   flags->debug       = 0;
   flags->detached    = 0;
@@ -186,6 +189,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
+    {"em-prior",  required_argument, 0, 0},
     
     /* These options don’t set a flag.
      We distinguish them by their indices. */
@@ -203,6 +207,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"debug",       no_argument, 0, 0 },
     {"no-rj",       no_argument, 0, 0 },
     {"fit-gap",     no_argument, 0, 0 },
+    {"calibration", no_argument, 0, 0 },
     {0, 0, 0, 0}
   };
   
@@ -238,6 +243,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("debug",       long_options[long_index].name) == 0) flags->debug      = 1;
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
+        if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
+        if(strcmp("em-prior",    long_options[long_index].name) == 0)
+        {
+          flags->emPrior = 1;
+          sprintf(flags->pdfFile,"%s",optarg);
+        }
         if(strcmp("steps",       long_options[long_index].name) == 0)
         {
           flags->NMCMC = atoi(optarg);
@@ -407,14 +418,16 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
       fprintf(stdout,"     source ........... %s\n",flags->injFile[i]);
     }
   }
-  else                fprintf(stdout,"  Injection is ........ DISABLED\n");
-  if(flags->fixSky)   fprintf(stdout,"  Sky parameters are... DISABLED\n");
-  else                fprintf(stdout,"  Sky parameters are... ENABLED\n");
-  if(flags->skyPrior) fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
-  else                fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
-  if(flags->snrPrior) fprintf(stdout,"  SNR prior is ........ ENABLED\n");
-  else                fprintf(stdout,"  SNR prior is ........ DISABLED\n");
-  if(flags->zeroNoise)fprintf(stdout,"  Noise realization is. DISABLED\n");
+  else                   fprintf(stdout,"  Injection is ........ DISABLED\n");
+  if(flags->fixSky)      fprintf(stdout,"  Sky parameters are... DISABLED\n");
+  else                   fprintf(stdout,"  Sky parameters are... ENABLED\n");
+  if(flags->calibration) fprintf(stdout,"  Calibration is....... ENABLED\n");
+  else                   fprintf(stdout,"  Calibration is....... DISABLED\n");
+  if(flags->skyPrior)    fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
+  else                   fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
+  if(flags->snrPrior)    fprintf(stdout,"  SNR prior is ........ ENABLED\n");
+  else                   fprintf(stdout,"  SNR prior is ........ DISABLED\n");
+  if(flags->zeroNoise)   fprintf(stdout,"  Noise realization is. DISABLED\n");
   else
   {
     fprintf(stdout,"  Noise realization is. ENABLED\n");
@@ -454,11 +467,14 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   {
     print_chain_state(data, chain, model[n][i], flags, chain->chainFile[0], step);
     print_noise_state(data, model[n][i], chain->noiseFile[0], step);
+    if(flags->calibration)
+      print_calibration_state(data, model[n][i], chain->calibrationFile[0], step);
   }
     if(flags->verbose)
     {
         fflush(chain->chainFile[0]);
         fflush(chain->noiseFile[0]);
+      if(flags->calibration) fflush(chain->calibrationFile[0]);
     }
   
   //Print sampling parameters
@@ -476,6 +492,12 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
         fprintf(chain->dimensionFile[D],"\n");
       }
     }
+  }
+  
+  //Print calibration parameters
+  for(j=0; j<flags->NF; j++)
+  {
+    
   }
   
   //Print hot chains if verbose flag
@@ -506,6 +528,30 @@ void print_chain_state(struct Data *data, struct Chain *chain, struct Model *mod
     for(int i=0; i<model->Nlive; i++)
     {
       print_source_params(data,model->source[i],fptr);
+    }
+  }
+  fprintf(fptr, "\n");
+}
+
+void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int step)
+{
+  fprintf(fptr, "%i ",step);
+  fprintf(fptr, "%lg ",model->logL+model->logLnorm);
+  
+  for(int i=0; i<model->NT; i++)
+  {
+    switch(data->Nchannel)
+    {
+      case 1:
+        fprintf(fptr, "%lg ", model->calibration[i]->dampX);
+        fprintf(fptr, "%lg ", model->calibration[i]->dphiX);
+        break;
+      case 2:
+        fprintf(fptr, "%lg ", model->calibration[i]->dampA);
+        fprintf(fptr, "%lg ", model->calibration[i]->dphiA);
+        fprintf(fptr, "%lg ", model->calibration[i]->dampE);
+        fprintf(fptr, "%lg ", model->calibration[i]->dphiE);
+        break;
     }
   }
   fprintf(fptr, "\n");

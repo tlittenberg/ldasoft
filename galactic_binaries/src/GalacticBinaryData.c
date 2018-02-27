@@ -15,6 +15,7 @@
 #include <gsl/gsl_randist.h>
 
 #include "LISA.h"
+#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryData.h"
@@ -448,6 +449,14 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           inj->tdi->A[n] = 0.0;
           inj->tdi->E[n] = 0.0;
           inj->tdi->X[n] = 0.0;
+        }
+        
+        //map polarization angle into [0:pi], preserving relation to phi0
+        if(psi>M_PI)
+        {
+          psi  -= M_PI;
+          phi0 += M_PI;
+          if(phi0 > PI2) phi0 -= PI2;
         }
         
         //map parameters to vector

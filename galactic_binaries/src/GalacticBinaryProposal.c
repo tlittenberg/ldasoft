@@ -300,6 +300,61 @@ double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *
   return logP;
 }
 
+double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed)
+{
+  double dA,dphi;
+  double logP = 0.0;
+  
+  //apply calibration error to full signal model
+  //loop over time segments
+  for(int m=0; m<model->NT; m++)
+  {
+    switch(data->Nchannel)
+    {
+      case 1:
+        
+        //amplitude
+        dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+        model->calibration[m]->dampX = dA;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        model->calibration[m]->dphiX = dphi;
+        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        
+        break;
+      case 2:
+        
+        //amplitude
+        dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+        model->calibration[m]->dampA = dA;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        model->calibration[m]->dphiA = dphi;
+        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+
+        //amplitude
+        dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+        model->calibration[m]->dampE = dA;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        model->calibration[m]->dphiE = dphi;
+        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+
+        break;
+      default:
+        break;
+    }//end switch
+  }//end loop over segments
+
+  return logP;
+}
+
 double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
   int k;
@@ -424,35 +479,28 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
   int N = proposal->size;
   int NP = source->NP;
   double **cdf = proposal->matrix;
-  double logP=0.0;
 
   for(int n=0; n<NP; n++)
   {
-    //draw p-value
-    double p = gsl_rng_uniform(seed);
 
-    //find samples either end of p-value
-    int i = (int)floor(p*N);
-
-    //linear interpolation betweein i and i+1
-    //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
-    double x0 = (double)i/(double)N;
-    double y0;
-    if(i==0) y0 = model->prior[n][0];
-    else     y0 = cdf[n][i];
-    double x1 = (double)(i+1)/(double)N;
-    double y1;
-    if(i==N-1) y1 = model->prior[n][1];
-    else       y1 = cdf[n][i+1];
-
-    params[n] = y0 + (p-x0)*((y1-y0)/(x1-x0));
+    //draw n from U[0,N]
+    double c_prime = gsl_rng_uniform(seed)*(double)N;
+    
+    //map to nearest sample
+    int c_minus = (int)floor(c_prime);
+    int c_plus  = c_minus+1;
+    
+    //get value of pdf at cprime
+    double p = 1./(cdf[n][c_plus] - cdf[n][c_minus]);
+    
+    //interpolate to get new parameter
+    params[n] = (c_prime - c_minus)*(1./p) + cdf[n][c_minus];
     
     if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
     
-    logP += log(p);
   }
 
-  return logP;
+  return cdf_density(model, source, proposal);
 }
 
 double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal)
@@ -463,45 +511,21 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   double logP=0.0;
   double *params = source->params;
   
-  double x0,x1,y0,y1;
+  int i;
   
-  int ii;
   for(int n=0; n<NP; n++)
   {
     if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
     
     //find samples either end of p-value
-    if(params[n]<cdf[n][0])
-      logP += log(1./(double)N);
-    else if(params[n]>cdf[n][1])
-      logP += 0.0;//log(N/N);
+    if(params[n]<cdf[n][0] || params[n]>= cdf[n][N])
+      return -INFINITY;
     else
     {
-      int i = 0;
+      i=0;
       while(params[n]>cdf[n][i]) i++;
-      ii=i+1;
-      //linear interpolation betweein i and i+1
-      //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
-      if(i==0) x0 = model->prior[n][0];
-      else     x0 = cdf[n][i];
-      y0 = (double)i/(double)N;
-      
-      if(i>N-2)
-      {
-        x1 = model->prior[n][1];
-        y1 = 1.0;
-      }
-      else
-      {
-        x1 = cdf[n][ii];
-        y1 = (double)(ii)/(double)N;
-      }
-      
-      double p = y0 + (params[n]-x0)*((y1-y0)/(x1-x0));
-      
-      logP += log(p);
+      logP += -log(cdf[n][i+1]-cdf[n][i]);
     }
-
   }
   
   return logP;

@@ -28,6 +28,18 @@
 /* disk height (kpc) */
 #define GALAXY_Zd 0.4
 
+/* ----------------  CALIBRATION MODEL  ------------------- */
+
+/* stddev in phase error (radians) */
+//#define CAL_SIGMA_PHASE 0.175 // ~10^deg
+#define CAL_SIGMA_PHASE 0.35 // ~30^deg
+
+/* stddev in fractional amplitude error */
+//#define CAL_SIGMA_AMP 0.1 // 10%
+#define CAL_SIGMA_AMP 0.20 // 20%
+
+/* ----------------  MISC  ------------------- */
+
 struct Prior
 {
   //Source parameter priors

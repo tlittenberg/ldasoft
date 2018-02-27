@@ -62,6 +62,7 @@ struct Flags
   int fixSky;
   int skyPrior;
   int snrPrior;
+  int emPrior;
   int knownSource;
   int detached;
   int strainData;
@@ -73,9 +74,11 @@ struct Flags
   int update;
   int rj;
   int gap; //are we fitting for a time-gap in the data?
+  int calibration; //are we marginalizing over calibration  uncertainty?
   
   char **injFile;
   char cdfFile[128];
+  char pdfFile[128];
 };
 
 struct Chain
@@ -98,6 +101,7 @@ struct Chain
   //chain files
   FILE **noiseFile;
   FILE **chainFile;
+  FILE **calibrationFile;
   FILE **dimensionFile;
   FILE **parameterFile;
   FILE *likelihoodFile;
@@ -160,6 +164,22 @@ struct Noise
   double *SnX;
 };
 
+struct Calibration
+{
+  double dampA;
+  double dampE;
+  double dampX;
+  double dphiA;
+  double dphiE;
+  double dphiX;
+  double real_dphiA;
+  double real_dphiE;
+  double real_dphiX;
+  double imag_dphiA;
+  double imag_dphiE;
+  double imag_dphiX;
+};
+
 struct Model
 {
   //Source parameters
@@ -171,6 +191,9 @@ struct Model
   
   //Noise parameters
   struct Noise **noise;
+  
+  //Calibration parameters
+  struct Calibration **calibration;
   
   //TDI
   struct TDI **tdi;
