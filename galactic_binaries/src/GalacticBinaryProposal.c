@@ -319,9 +319,9 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
         logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
         
         //phase
-        dphi = gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
         model->calibration[m]->dphiX = dphi;
-        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
         
         break;
       case 2:
@@ -332,9 +332,9 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
         logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
         
         //phase
-        dphi = gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
         model->calibration[m]->dphiA = dphi;
-        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
 
         //amplitude
         dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
@@ -342,9 +342,9 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
         logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
         
         //phase
-        dphi = gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
         model->calibration[m]->dphiE = dphi;
-        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
 
         break;
       default:
