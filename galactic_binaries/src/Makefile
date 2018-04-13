@@ -12,7 +12,7 @@ CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o
 
-all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass
+all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke
 
 LISA.o : LISA.c LISA.h
 	$(CC) $(CCFLAGS) -c LISA.c 
@@ -50,8 +50,11 @@ gb_catalog : GalacticBinaryCatalog.c $(OBJS) GalacticBinary.h
 gb_mcmc_chirpmass : gb_mcmc_chirpmass.c 
 	$(CC) -o gb_mcmc_chirpmass gb_mcmc_chirpmass.c $(LIBS:%=-l%)
 
-install : gb_mcmc gb_catalog gb_mcmc_chirpmass
-	install gb_mcmc gb_catalog gb_mcmc_chirpmass ${HOME}/ldasoft/master/bin/
+gb_mcmc_brans_dicke : gb_mcmc_brans_dicke.c
+	$(CC) -o gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c $(LIBS:%=-l%)
+
+install : gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke
+	install gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
 
 clean:
-	rm *.o gb_mcmc gb_catalog gb_mcmc_chirpmass
+	rm *.o gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke

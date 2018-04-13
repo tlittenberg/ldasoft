@@ -35,6 +35,9 @@
 /* Mass of the Sun (s) */
 #define TSUN  4.9169e-6
 
+/* Radius of the Sun (s) */
+#define RSUN 2.32060541029
+
 /* Number of meters in a parsec */
 #define PC 3.0856775807e16
 
