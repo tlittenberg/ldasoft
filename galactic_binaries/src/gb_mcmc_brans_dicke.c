@@ -72,6 +72,9 @@ double sensitivity(double m1, double m2, double r1, double r2)
 
 double white_dwarf_radius(double M)
 {
+  /*
+   https://www.astro.princeton.edu/~burrows/classes/403/white.dwarfs.pdf
+   */
   double mu_e = 2.00;
   double M_ch = 1.44;
   
