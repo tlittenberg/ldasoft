@@ -93,6 +93,11 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     double f = data->fmin + (double)(n)/data->T;
     data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
     data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+    if(flags->confNoise)
+    {
+      data->noise[0]->SnA[n] += GBnoise(data->T,f);
+      data->noise[0]->SnE[n] += GBnoise(data->T,f);
+    }
   }
   
   //Add Gaussian noise to injection
@@ -299,6 +304,12 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         double f = data->fmin + (double)(n)/data->T;
         data->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
         data->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+        if(flags->confNoise)
+        {
+          data->noise[0]->SnA[n] += GBnoise(data->T,f);
+          data->noise[0]->SnE[n] += GBnoise(data->T,f);
+        }
+
       }
       
       //Get injected SNR
@@ -540,6 +551,11 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           double f = data->fmin + (double)(n)/data->T;
           data->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
           data->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+          if(flags->confNoise)
+          {
+            data->noise[0]->SnA[n] += GBnoise(data->T,f);
+            data->noise[0]->SnE[n] += GBnoise(data->T,f);
+          }
         }
         
         //Get injected SNR
@@ -686,6 +702,11 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
       double f = data->fmin + (double)(n)/data->T;
       data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
       data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+      if(flags->confNoise)
+      {
+        data->noise[0]->SnA[n] += GBnoise(data->T,f);
+        data->noise[0]->SnE[n] += GBnoise(data->T,f);
+      }
     }
     
     //Get injected SNR

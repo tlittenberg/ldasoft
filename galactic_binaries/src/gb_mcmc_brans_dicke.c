@@ -41,6 +41,12 @@ double beta(double f, double fdot, double fddot)
   return (11.*(-3*sqrt(f*fddot)+sqrt(33.)*fdot)*pow((sqrt(fddot)*fdot)/(-30.*sqrt(f*fddot) + 11.*sqrt(33.)*fdot),2./5.)*pow(5./M_PI,2./5.))/(12.*pow(f,11./10.)*sqrt(fddot));
 }
 
+double beta_fdot(double f, double fdot, double Mc)
+{
+  return 5.*fdot/96./(f*f*f)/(Mc*TSUN)/M_PI/M_PI - pow(f*Mc*TSUN*M_PI,2./3.);
+}
+
+
 double galactic_binary_dL(double f0, double dfdt, double A)
 {
   double f    = f0;//T;
@@ -151,19 +157,22 @@ int main(int argc, char* argv[])
   
   //fix uncertainty on mass and radius
   sm1 = sm2 = 0.01;
-  sr1 = sr2 = 0.01;
+  sr1 = sr2 = 0.001;
   
   ifile = fopen("chains/parameter_chain.dat.0","r");
   ofile = fopen("brans_dicke.dat","w");
   
   while(!feof(ifile))
   {
-    fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+    //fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+    fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase);
+    fddot=1.;
     if(fdot>0.0&&fddot>0.0)
     {
       count_pos++;
-      Mc = M_fdot_fddot(f,fdot,fddot);
-      B = beta(f,fdot,fddot);
+      //Mc = M_fdot_fddot(f,fdot,fddot);
+      //B = beta(f,fdot,fddot);
+      Mc=1,B=1.;
       if(Mc==Mc && B==B)
       {
         count_real++;
@@ -185,7 +194,9 @@ int main(int argc, char* argv[])
           //get omega_BD
           eta = reduced_mass_ratio(mass_1, mass_2);
           S2  = sensitivity(mass_1, mass_2, radius_2, radius_2);
-          
+          Mc  = (mass_1+mass_2)*pow(eta,3./5.);
+          B   = beta_fdot(f, fdot, Mc);
+
           omega_BD = (5./48.) * S2 * pow(eta,2./5.)/B;
           
           fprintf(ofile,"%.12g %.12g %.12g %.12g %.12g %.12g\n",Mc, B, eta, S2, omega_BD, 1./omega_BD);

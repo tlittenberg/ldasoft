@@ -90,6 +90,7 @@ void print_usage()
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
+  fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
   fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
@@ -123,6 +124,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->verbose     = 0;
   flags->NF          = 0;
   flags->zeroNoise   = 0;
+  flags->confNoise   = 0;
   flags->fixSky      = 0;
   flags->skyPrior    = 0;
   flags->snrPrior    = 0;
@@ -196,6 +198,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"help",        no_argument, 0,'h'},
     {"verbose",     no_argument, 0,'v'},
     {"zero-noise",  no_argument, 0, 0 },
+    {"conf-noise",  no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
     {"sky-prior",   no_argument, 0, 0 },
     {"snr-prior",   no_argument, 0, 0 },
@@ -233,6 +236,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("noiseseed",   long_options[long_index].name) == 0) data_ptr->nseed   = (long)atoi(optarg);
         if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
         if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
+        if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
         if(strcmp("sky-prior",   long_options[long_index].name) == 0) flags->skyPrior   = 1;
         if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;

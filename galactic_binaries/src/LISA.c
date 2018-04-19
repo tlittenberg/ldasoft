@@ -434,6 +434,54 @@ double AEnoise(double L, double fstar, double f)
   
 }
 
+double GBnoise(double T, double f)
+{
+  /* Fits to confusion noise from Cornish and Robson https://arxiv.org/pdf/1703.09858.pdf */
+  double A = 1.8e-44;
+  double alpha;
+  double beta;
+  double kappa;
+  double gamma;
+  double fk;
+  
+  //map T to number of years
+  double Tyear = T/YEAR;
+  
+  if(Tyear>3)
+  {
+    alpha = 0.138;
+    beta  = -221.0;
+    kappa = 512.0;
+    gamma = 1680.0;
+    fk    = 0.00113;
+  }
+  else if(Tyear>1.5)
+  {
+    alpha = 0.165;
+    beta  = 299.;
+    kappa = 611.;
+    gamma = 1340.;
+    fk    = 0.00173;
+  }
+  else if(Tyear>0.75)
+  {
+    alpha = 0.171;
+    beta  = 292.0;
+    kappa = 1020.;
+    gamma = 1680.0;
+    fk    = 0.00215;
+  }
+  else
+  {
+    alpha = 0.133;
+    beta  = 243.0;
+    kappa = 482.0;
+    gamma = 917.0;
+    fk    = 0.00258;
+  }
+  return A*pow(f,-7./3.)*exp(-pow(f,alpha) + beta*f*sin(kappa*f))*(1. + tanh(gamma*(fk-f)));
+}
+
 //double AEnoise(double L, double fstar, double f)
 //{
 //  //Power spectral density of the detector noise and transfer frequency
