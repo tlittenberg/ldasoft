@@ -81,7 +81,7 @@ void init_A_filters(struct Orbit *orbit, struct Data *data, struct Filter *F_fil
         F_filter->A2_fA[2*i+1]    = -F_filter->A4_fA[2*i];
         F_filter->A2_fA[2*i] =  F_filter->A4_fA[2*i+1];
         
-        F_filter->A2_fE[2*i+]    = -F_filter->A4_fE[2*i];
+        F_filter->A2_fE[2*i+1]    = -F_filter->A4_fE[2*i];
         F_filter->A2_fE[2*i] =  F_filter->A4_fE[2*i+1];
     }
 
