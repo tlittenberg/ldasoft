@@ -52,10 +52,46 @@ void init_A_filters(struct Orbit *orbit, struct Data *data, struct Filter *F_fil
   initialize_XLS(M, F_filter->A3_fX, F_filter->A3_fA, F_filter->A3_fE);
   initialize_XLS(M, F_filter->A4_fX, F_filter->A4_fA, F_filter->A4_fE);
   
-  get_filters(orbit, data, 1, F_filter);
-  get_filters(orbit, data, 2, F_filter);
-  get_filters(orbit, data, 3, F_filter);
-  get_filters(orbit, data, 4, F_filter);
+//   get_filters(orbit, data, 1, F_filter);
+//   get_filters(orbit, data, 2, F_filter);
+//   get_filters(orbit, data, 2, F_filter);
+//   get_filters(orbit, data, 2, F_filter);
+  
+    // Make use of a phase shift to quickly generate other filters
+	get_filters(orbit, data, 3, F_filter);    
+	// copy  F_filter->A3_fX into F_filter->A1_fX
+    for (i=0; i<M; i++)
+    {
+        F_filter->A1_fX[2*i]   = -F_filter->A3_fX[2*i];
+        F_filter->A1_fX[2*i+1] =  F_filter->A3_fX[2*i+1];
+
+        F_filter->A1_fA[2*i]   = -F_filter->A3_fA[2*i];
+        F_filter->A1_fA[2*i+1] =  F_filter->A3_fA[2*i+1];
+
+        F_filter->A1_fE[2*i]   = -F_filter->A3_fE[2*i];
+        F_filter->A1_fE[2*i+1] =  F_filter->A3_fE[2*i+1];
+    }
+
+    swap_re_im_parts(F_filter->A1_fX, M);
+    swap_re_im_parts(F_filter->A1_fA, M);
+    swap_re_im_parts(F_filter->A1_fE, M);
+    
+    get_filters(orbit, data, 4, F_filter);
+    for (i=0; i<M; i++)
+    {
+        F_filter->A2_fX[2*i]    = -F_filter->A4_fX[2*i];
+        F_filter->A2_fX,[2*i+1] =  F_filter->A4_fX[2*i+1];
+    
+        F_filter->A2_fA[2*i]    = -F_filter->A4_fA[2*i];
+        F_filter->A2_fA,[2*i+1] =  F_filter->A4_fA[2*i+1];
+        
+        F_filter->A2_fE[2*i]    = -F_filter->A4_fE[2*i];
+        F_filter->A2_fE,[2*i+1] =  F_filter->A4_fE[2*i+1];
+    }
+    swap_re_im_parts(F_filter->A2_fX, BW);
+    swap_re_im_parts(F_filter->A2_fA, BW);
+    swap_re_im_parts(F_filter->A2_fE, BW);
+    //////////////////////
 }
 
 void init_M_matrix(struct Filter *F_filter, struct Data *data)
@@ -572,5 +608,19 @@ void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fd
   Fparams[3] = F_filter->phase_AE_Fstat;
   
   free_Filter(F_filter);
+}
+
+void swap_re_im_parts(double *v, int N)
+{
+    int i;
+    
+    double temp;
+    
+    for (i=0; i<N; i++)
+    {
+        temp    = RE(v,i);
+        RE(v,i) = IM(v,i);
+        IM(v,i) = temp;
+    }
 }
 
