@@ -62,35 +62,29 @@ void init_A_filters(struct Orbit *orbit, struct Data *data, struct Filter *F_fil
 	// copy  F_filter->A3_fX into F_filter->A1_fX
     for (i=0; i<M; i++)
     {
-        F_filter->A1_fX[2*i]   = -F_filter->A3_fX[2*i];
-        F_filter->A1_fX[2*i+1] =  F_filter->A3_fX[2*i+1];
+        F_filter->A1_fX[2*i+1]   = -F_filter->A3_fX[2*i];
+        F_filter->A1_fX[2*i] =  F_filter->A3_fX[2*i+1];
 
-        F_filter->A1_fA[2*i]   = -F_filter->A3_fA[2*i];
-        F_filter->A1_fA[2*i+1] =  F_filter->A3_fA[2*i+1];
+        F_filter->A1_fA[2*i+1]   = -F_filter->A3_fA[2*i];
+        F_filter->A1_fA[2*i] =  F_filter->A3_fA[2*i+1];
 
-        F_filter->A1_fE[2*i]   = -F_filter->A3_fE[2*i];
-        F_filter->A1_fE[2*i+1] =  F_filter->A3_fE[2*i+1];
+        F_filter->A1_fE[2*i+1]   = -F_filter->A3_fE[2*i];
+        F_filter->A1_fE[2*i] =  F_filter->A3_fE[2*i+1];
     }
-
-    swap_re_im_parts(F_filter->A1_fX, M);
-    swap_re_im_parts(F_filter->A1_fA, M);
-    swap_re_im_parts(F_filter->A1_fE, M);
     
     get_filters(orbit, data, 4, F_filter);
     for (i=0; i<M; i++)
     {
-        F_filter->A2_fX[2*i]    = -F_filter->A4_fX[2*i];
-        F_filter->A2_fX,[2*i+1] =  F_filter->A4_fX[2*i+1];
+        F_filter->A2_fX[2*i+1]    = -F_filter->A4_fX[2*i];
+        F_filter->A2_fX[2*i] =  F_filter->A4_fX[2*i+1];
     
-        F_filter->A2_fA[2*i]    = -F_filter->A4_fA[2*i];
-        F_filter->A2_fA,[2*i+1] =  F_filter->A4_fA[2*i+1];
+        F_filter->A2_fA[2*i+1]    = -F_filter->A4_fA[2*i];
+        F_filter->A2_fA[2*i] =  F_filter->A4_fA[2*i+1];
         
-        F_filter->A2_fE[2*i]    = -F_filter->A4_fE[2*i];
-        F_filter->A2_fE,[2*i+1] =  F_filter->A4_fE[2*i+1];
+        F_filter->A2_fE[2*i+]    = -F_filter->A4_fE[2*i];
+        F_filter->A2_fE[2*i] =  F_filter->A4_fE[2*i+1];
     }
-    swap_re_im_parts(F_filter->A2_fX, BW);
-    swap_re_im_parts(F_filter->A2_fA, BW);
-    swap_re_im_parts(F_filter->A2_fE, BW);
+
     //////////////////////
 }
 
@@ -610,17 +604,4 @@ void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fd
   free_Filter(F_filter);
 }
 
-void swap_re_im_parts(double *v, int N)
-{
-    int i;
-    
-    double temp;
-    
-    for (i=0; i<N; i++)
-    {
-        temp    = RE(v,i);
-        RE(v,i) = IM(v,i);
-        IM(v,i) = temp;
-    }
-}
 
