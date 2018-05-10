@@ -7,6 +7,8 @@
 //
 #include <math.h>
 #include <stdlib.h>
+#include <stdlib.h>
+#include <string.h>
 
 //#include "omp.h"
 #include "LISA.h"
@@ -123,8 +125,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     galactic_binary_alignment(orbit, data, wave_m);
     
     // compute perturbed waveforms
-    galactic_binary(orbit, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-    galactic_binary(orbit, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
     
     // central differencing derivatives of waveforms w.r.t. parameters
     switch(source->tdi->Nchannel)
@@ -233,7 +235,7 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
   source->imax = source->imin + source->BW;  
 }
 
-void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, int NP, double *X, double *A, double *E, int BW, int NI)
+void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, double *params, int NP, double *X, double *A, double *E, int BW, int NI)
 {
   /*   Indicies   */
   int i,j,n;
@@ -505,8 +507,16 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   }
   
   /*   Call subroutines for synthesizing different TDI data channels  */
-  LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
-
+  if(strcmp("phase",format) == 0)
+    LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+  else if(strcmp("frequency",format) == 0)
+    LISA_tdi_FF(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+  else
+  {
+    fprintf(stderr,"Unsupported data format %s",format);
+    exit(1);
+  }
+  
   /*   Deallocate Arrays   */
 //  free_dvector(x,1,3); free_dvector(y,1,3); free_dvector(z,1,3);
 //  free_dvector(data12,1,BW2); free_dvector(data21,1,BW2); free_dvector(data31,1,BW2);

@@ -91,12 +91,30 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
   for(int n=0; n<data->N; n++)
   {
     double f = data->fmin + (double)(n)/data->T;
-    data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-    data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
-    if(flags->confNoise)
+    if(strcmp(data->format,"phase")==0)
     {
-      data->noise[0]->SnA[n] += GBnoise(data->T,f);
-      data->noise[0]->SnE[n] += GBnoise(data->T,f);
+      data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+      data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+      if(flags->confNoise)
+      {
+        data->noise[0]->SnA[n] += GBnoise(data->T,f);
+        data->noise[0]->SnE[n] += GBnoise(data->T,f);
+      }
+    }
+    else if(strcmp(data->format,"frequency")==0)
+    {
+      data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+      data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+      if(flags->confNoise)
+      {
+        data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+        data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+      }
+    }
+    else
+    {
+      fprintf(stderr,"Unsupported data format %s",data->format);
+      exit(1);
     }
   }
   
@@ -255,7 +273,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       
       //Simulate gravitational wave signal
       //double t0 = data->t0 + jj*(data->T + data->tgap);
-      galactic_binary(orbit, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+      galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
       
       //Add waveform to data TDI channels
       for(int n=0; n<inj->BW; n++)
@@ -302,12 +320,30 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       for(int n=0; n<data->N; n++)
       {
         double f = data->fmin + (double)(n)/data->T;
-        data->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-        data->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
-        if(flags->confNoise)
+        if(strcmp(data->format,"phase")==0)
         {
-          data->noise[0]->SnA[n] += GBnoise(data->T,f);
-          data->noise[0]->SnE[n] += GBnoise(data->T,f);
+          data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+          data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+          if(flags->confNoise)
+          {
+            data->noise[0]->SnA[n] += GBnoise(data->T,f);
+            data->noise[0]->SnE[n] += GBnoise(data->T,f);
+          }
+        }
+        else if(strcmp(data->format,"frequency")==0)
+        {
+          data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+          data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+          if(flags->confNoise)
+          {
+            data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+            data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+          }
+        }
+        else
+        {
+          fprintf(stderr,"Unsupported data format %s",data->format);
+          exit(1);
         }
 
       }
@@ -502,7 +538,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         
         //Simulate gravitational wave signal
         //double t0 = data->t0 + jj*(data->T + data->tgap);
-        galactic_binary(orbit, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
         
         //Add waveform to data TDI channels
         for(int n=0; n<inj->BW; n++)
@@ -549,12 +585,30 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         for(int n=0; n<data->N; n++)
         {
           double f = data->fmin + (double)(n)/data->T;
-          data->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-          data->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
-          if(flags->confNoise)
+          if(strcmp(data->format,"phase")==0)
           {
-            data->noise[0]->SnA[n] += GBnoise(data->T,f);
-            data->noise[0]->SnE[n] += GBnoise(data->T,f);
+            data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+            data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+            if(flags->confNoise)
+            {
+              data->noise[0]->SnA[n] += GBnoise(data->T,f);
+              data->noise[0]->SnE[n] += GBnoise(data->T,f);
+            }
+          }
+          else if(strcmp(data->format,"frequency")==0)
+          {
+            data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+            data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+            if(flags->confNoise)
+            {
+              data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+              data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+            }
+          }
+          else
+          {
+            fprintf(stderr,"Unsupported data format %s",data->format);
+            exit(1);
           }
         }
         
@@ -694,19 +748,42 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
     
     //Simulate gravitational wave signal
     double t0 = data->t0[0];
-    galactic_binary(orbit, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+    galactic_binary(orbit, data->format, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
     
     //Get noise spectrum for data segment
     for(int n=0; n<data->N; n++)
     {
       double f = data->fmin + (double)(n)/data->T;
-      data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-      data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
-      if(flags->confNoise)
+
+      
+      if(strcmp(data->format,"phase")==0)
       {
-        data->noise[0]->SnA[n] += GBnoise(data->T,f);
-        data->noise[0]->SnE[n] += GBnoise(data->T,f);
+        data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+        data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+        if(flags->confNoise)
+        {
+          data->noise[0]->SnA[n] += GBnoise(data->T,f);
+          data->noise[0]->SnE[n] += GBnoise(data->T,f);
+        }
       }
+      else if(strcmp(data->format,"frequency")==0)
+      {
+        data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        if(flags->confNoise)
+        {
+          data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+          data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+        }
+      }
+      else
+      {
+        fprintf(stderr,"Unsupported data format %s",data->format);
+        exit(1);
+      }
+
+      
+      
     }
     
     //Get injected SNR

@@ -825,7 +825,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     {
       //Simulate gravitational wave signal
       /* the index = -1 condition is redundent if the model->tdi structure is up to date...*/
-      if(index==-1 || index==n) galactic_binary(orbit, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+      if(index==-1 || index==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
       
       //Add waveform to model TDI channels
       for(i=0; i<source->BW; i++)
