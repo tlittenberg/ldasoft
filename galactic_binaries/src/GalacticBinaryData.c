@@ -60,6 +60,24 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
   }
   fclose(fptr);
 
+  //TODO: LDC data needs a factor of 1/sqrt(2) normalization?
+  /*
+  if(strcmp(data->format,"frequency")==0)
+  {
+    fprintf(stdout,"\n");
+    fprintf(stdout,"!!!!!!!!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!!!\n");
+    fprintf(stdout,"Using fractional frequency data from LDC\n");
+    fprintf(stdout,"Mysterious 1/sqrt(2) being applied to A&E data\n");
+    fprintf(stdout,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    fprintf(stdout,"\n");
+    for(int n=0; n<data->N; n++)
+    {
+      tdi->A[2*n]/=sqrt(2.0);
+      tdi->A[2*n+1]/=sqrt(2.0);
+      tdi->E[2*n]/=sqrt(2.0);
+      tdi->E[2*n+1]/=sqrt(2.0);
+    }
+  }*/
 
   sprintf(filename,"data/waveform_injection_%i_%i.dat",0,0);
   fptr=fopen(filename,"w");
@@ -127,8 +145,8 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     
     for(int n=0; n<data->N; n++)
     {
-      tdi->A[2*n]   += gsl_ran_gaussian (r, 1)*sqrt(data->noise[0]->SnA[n])/2.;
-      tdi->A[2*n+1] += gsl_ran_gaussian (r, 1)*sqrt(data->noise[0]->SnA[n])/2.;
+      tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+      tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
       
       tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
       tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
@@ -148,7 +166,21 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     fprintf(fptr,"\n");
   }
   fclose(fptr);
-  
+
+  sprintf(filename,"data/data_%i_%i.dat",0,0);
+  fptr=fopen(filename,"w");
+
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    fprintf(fptr,"%.12g %lg %lg %lg %lg",
+            f,
+            tdi->A[2*i],tdi->A[2*i+1],
+            tdi->E[2*i],tdi->E[2*i+1]);
+    fprintf(fptr,"\n");
+  }
+  fclose(fptr);
+
   sprintf(filename,"data/power_noise_%i_%i.dat",0,0);
   fptr=fopen(filename,"w");
   
@@ -360,11 +392,11 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         
         for(int n=0; n<data->N; n++)
         {
-          tdi->A[2*n]   += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-          tdi->A[2*n+1] += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-          
-          tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
-          tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
+          tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+          tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+
+          tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+          tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
         }
       }
       
@@ -405,7 +437,21 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       }
       fclose(fptr);
       fclose(injectionFile);
-      
+
+      sprintf(filename,"data/data_%i_%i.dat",ii,jj);
+      fptr=fopen(filename,"w");
+
+      for(int i=0; i<data->N; i++)
+      {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%.12g %lg %lg %lg %lg",
+                f,
+                tdi->A[2*i],tdi->A[2*i+1],
+                tdi->E[2*i],tdi->E[2*i+1]);
+        fprintf(fptr,"\n");
+      }
+      fclose(fptr);
+
       //TODO: fill X vectors with A channel for now
       for(int n=0; n<data->N; n++)
       {
@@ -538,6 +584,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         
         //Simulate gravitational wave signal
         //double t0 = data->t0 + jj*(data->T + data->tgap);
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! t0 = %g\n",data->t0[jj]);
         galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
         
         //Add waveform to data TDI channels
@@ -624,11 +671,11 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           
           for(int n=0; n<data->N; n++)
           {
-            tdi->A[2*n]   += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-            tdi->A[2*n+1] += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-            
-            tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
-            tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
+            tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+            tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+
+            tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+            tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
           }
         }
         
@@ -668,7 +715,21 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           fprintf(fptr,"\n");
         }
         fclose(fptr);
-        
+
+        sprintf(filename,"data/data_%i_%i.dat",ii,jj);
+        fptr=fopen(filename,"w");
+
+        for(int i=0; i<data->N; i++)
+        {
+          double f = (double)(i+data->qmin)/data->T;
+          fprintf(fptr,"%.12g %lg %lg %lg %lg",
+                  f,
+                  tdi->A[2*i],tdi->A[2*i+1],
+                  tdi->E[2*i],tdi->E[2*i+1]);
+          fprintf(fptr,"\n");
+        }
+        fclose(fptr);
+
         //TODO: fill X vectors with A channel for now
         for(int n=0; n<data->N; n++)
         {

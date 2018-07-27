@@ -206,7 +206,7 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
   
   //Doppler spreading
   double sintheta = sin(acos(costheta));
-  double bw = 2*T*((4.+PI2*f*(AU/C)*sintheta)/YEAR + fdot*T);
+  double bw = 8*T*((4.+PI2*f*(AU/C)*sintheta)/YEAR + fdot*T);
   int DS = (int)pow(2,(int)log2(bw-1)+1);
   if(DS > Nmax) DS = Nmax;
   if(DS < Nmin) DS = Nmin;
@@ -228,7 +228,7 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
 {
   map_array_to_params(source, source->params, data->T);
   
-  source->BW   = galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->dfdt, source->costheta, source->amp, data->T, data->N);
+  source->BW   = 2*galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->dfdt, source->costheta, source->amp, data->T, data->N);
   source->qmin = (int)(source->f0*data->T) - source->BW/2;
   source->qmax = source->qmin+source->BW;
   source->imin = source->qmin - data->qmin;
@@ -324,15 +324,16 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
   sinth	= sqrt(1.0 - costh*costh); //sin(theta) >= 0 (theta -> 0,pi)
   cosph	= cos(phi);
   sinph	= sin(phi);
-  cosps	= cos(psi);
-  sinps	= sin(psi);
+  cosps	= cos(2.*psi);
+  sinps	= sin(2.*psi);
   
   //Calculate GW polarization amplitudes
   Aplus  =  amp*(1.+cosi*cosi);
   Across = -amp*(2.0*cosi);
   
-  df = PI2*(f0 - ((double)q)/T);
-  //df = PI2*(((double)q)/T);
+  //TODO: changing GB phase to match LDC, but why?
+  //df = PI2*(f0 - ((double)q)/T);
+  df = PI2*(((double)q)/T);
   
   //Calculate constant pieces of transfer functions
   DPr =  Aplus*cosps;
@@ -371,8 +372,10 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
       kdotx[i] = (x[i]*k[1]+y[i]*k[2]+z[i]*k[3])/C;
       
       //Wave arrival time at spacecraft i
+       //TODO: changed GB phase to match LDC, but why?
+      //xi[i] = t - kdotx[i];
       xi[i] = t - kdotx[i];
-      
+
       //Zeroeth order approximation to frequency at spacecraft i
       f[i] = f0;
       
@@ -429,7 +432,10 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     for(i=1; i<=3; i++)
     {
       //Argument of complex exponentials
-      double arg2 = df*t + phi0 - PI2*kdotx[i]*f0 + PI2*f0*t0;
+      //TODO: changed GB phase to match LDC, but why?
+      //double arg2 = df*t + phi0 - PI2*kdotx[i]*f0 + PI2*f0*t0;
+      double arg2 = PI2*f0*xi[i] + phi0 - df*t;
+
 
       //First order frequency evolution
       if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
@@ -451,8 +457,10 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         if(i!=j)
         {
           //Argument of transfer function
-          double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
-          
+          //TODO: changed GB phase to match LDC, but why?
+          //double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
+          double arg1 = 0.5*fonfs[i]*(1.0 + kdotr[i][j]);
+
           //Transfer function
           double sinc = 0.25*sinf(arg1)/arg1;
           

@@ -1,0 +1,70 @@
+#Create configuration file
+./Setup 0 0 2.5e9 9e-30 1.44e-22 15 8388608
+
+#Recompile using new Detector.h
+gcc OrbitFile.c arrays.c -lm -o OrbitFile
+
+#Create orbit file
+./OrbitFile 
+
+#Create Confusion noise files
+#Compiling Galaxy.c fails.  
+#Detector.h has things in it that are defined elsewhere.  
+#Separate orbit generator info into separate .h (Orbit.h)
+#Deleting them and it works fine
+gcc -O2 -o Galaxy Galaxy.c arrays.c -lm 
+
+
+#
+
+
+####################################################################
+# Create detector.h for different mission configurations
+####################################################################
+./Setup kappa, lambda, Larm (m), Sacc (m^2 s^-4 Hz^-1), Spos (m^2 Hz^-1), Cadence (s), Nsamples
+
+
+####################################################################
+# Create orbit file for mission configuration
+####################################################################
+./OrbitFile
+
+####################################################################
+# Take list of sources parameterized by 
+# (f, fdot, theta, phi, A, iota, psi, phase)
+# and create a crude list of detectable sources Bright.dat
+# and a simulation of the full galaxy Galaxy_XAE.dat with noise
+####################################################################
+./Galaxy Galaxy.dat Orbits.dat
+
+
+####################################################################
+# Take galaxy simulation and produce fit to confusion noise
+####################################################################
+./Confusion_Fit Galaxy.dat Orbit.dat
+
+####################################################################
+# Read in simulated galaxy, confusion noise?  and crude list of 
+# bright binaries, and subtract off detectable binaries to create
+# residual?
+####################################################################
+./Bright_Remove XAE.dat Noise.dat Bright.dat Orbit.dat
+
+####################################################################
+# Take list of detections and fit to confusion noise and do some parameter
+# estimation estimation, summarizing numbers of detectable and well constrained
+# sources
+####################################################################
+./Fisher_Galaxy detections.dat confusion.dat sigmasX.dat sigmasAE.dat Orbit.dat
+
+
+EXAMPLE:
+gcc -O3 -o Setup Setup.c -lm
+./Setup 0 0 2.5e9 3.e-15 1.5e-11 1 31457280
+gcc -O3 -o OrbitFile OrbitFile.c arrays.c -lm
+gcc -O3 -o Galaxy Galaxy.c arrays.c -lm 
+gcc -O3 -o Confusion_Fit Confusion_Fit.c arrays.c -lm
+gcc -O3 -o Bright_Remove Bright_Remove.c arrays.c -lm
+
+./OrbitFile
+
