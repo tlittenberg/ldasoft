@@ -1,11 +1,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "Constants.h"
 #include <stdio.h>
 #include <stddef.h>
-
-void KILL(char*);
+#include "Constants.h"
+#include "Subroutines.h"
 
 int main(int argc,char **argv)
 {
@@ -71,14 +70,4 @@ int main(int argc,char **argv)
 
   return 0;
 }
-
-void KILL(char* Message)
-{
-	printf("\a\n");
-	printf("%s",Message);
-	printf("Terminating the program.\n\n\n");
-	exit(1);
 	
-	
-	return;
-}

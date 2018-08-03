@@ -26,7 +26,7 @@
 #define year 3.15581498e7
 
  /* Newton's gravitational constant (mks) */
-#define G 6.67259e-11
+#define GNEWTON 6.67259e-11
 
  /* Astronomical unit (meters) */
 #define AU 1.49597870660e11

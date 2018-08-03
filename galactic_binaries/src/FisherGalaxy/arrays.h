@@ -17,7 +17,7 @@
 #define RNMX (1.0-eps)
 #define JMAX 40
 #define JMAXP (JMAX+1)
-#define K 5
+//#define K 5
 #define NRANSI
 #define Mnr 7
 #define NSTACK 50
