@@ -139,11 +139,11 @@ int main(int argc,char **argv)
   
   double th;// = M_PI - params[1];
   double ph;// = params[2];
-//  double r;//  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
-//  double x;// = r*sin(th)*cos(ph);// + GC;
-//  double y;// = r*sin(th)*sin(ph);
-//  double z;// = r*cos(th);
-
+  //  double r;//  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
+  //  double x;// = r*sin(th)*cos(ph);// + GC;
+  //  double y;// = r*sin(th)*sin(ph);
+  //  double z;// = r*cos(th);
+  
   
   
   
@@ -221,7 +221,7 @@ int main(int argc,char **argv)
     if(M < N) M = N;
     if(M > 8192) M = 8192;
     N = M;
-
+    
     
     N = M = 8192;
     
@@ -251,7 +251,7 @@ int main(int argc,char **argv)
       z = r*cos(th);
       fprintf(sky2,"%lg %lg %lg\n",x/1000.,y/1000.,z/1000.);
       fflush(sky2);
-
+      
       FISHER(LISAorbit, params, N, M, SXYZ, SAE, SigmaX, SigmaAE);
       
       /*
@@ -296,16 +296,16 @@ int main(int argc,char **argv)
       if((SigmaAE[1] < fix) && (SigmaAE[2] < fix))
       {
         cnt2++;   // 2D mapping
-//        if(fdot>0)
-//        {
-//        double th = M_PI - params[1];
-//        double ph = params[2];
-//        double r  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
-//        double x = r*sin(th)*cos(ph);// + GC;
-//        double y = r*sin(th)*sin(ph);
-//        double z = r*cos(th);
-//        fprintf(sky,"%lg %lg %lg\n",x/1000.,y/1000.,z/1000.);
-//        }
+        //        if(fdot>0)
+        //        {
+        //        double th = M_PI - params[1];
+        //        double ph = params[2];
+        //        double r  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
+        //        double x = r*sin(th)*cos(ph);// + GC;
+        //        double y = r*sin(th)*sin(ph);
+        //        double z = r*cos(th);
+        //        fprintf(sky,"%lg %lg %lg\n",x/1000.,y/1000.,z/1000.);
+        //        }
         if((fdot < 0.1) && (SigmaAE[3] < 0.1))
         {
           cnt3++;  // 3D mapping
@@ -532,7 +532,7 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
     
     ParamsP[i] += epsilon;
     ParamsM[i] -= epsilon;
-
+    
     
     if(i==0)
     {
@@ -632,38 +632,38 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
       Fisher2[i][j] /= (4.0*epsilon*epsilon);
     }
   }
-
+  
   /*
-  nA = d;
-  lwork = 4*d;
-  IPIV = ivector(0,(d-1));
-  work = dvector(0,lwork-1);
-  A = dvector(0,(d*d-1));
-  W = dvector(0,(d-1));
-  
-  for (i = 0; i < d; i++)
-  {
-    for (j = 0; j < d; j++)
-    {
-      A[i*d+j] = Fisher2[i][j];
-    }
-  }
-  
-  
-  nA = d; lwork = 4*d;
-  
-  dpotrf_("U", &nA, A, &nA, &info);
-  dpotri_("U", &nA, A, &nA, &info);
-  
-  
-  for (i = 0; i < d; i++)
-  {
-    for (j = 0; j < d; j++)
-    {
-      Cov2[i][j] = A[i*d+j];
-    }
-  }
-  */
+   nA = d;
+   lwork = 4*d;
+   IPIV = ivector(0,(d-1));
+   work = dvector(0,lwork-1);
+   A = dvector(0,(d*d-1));
+   W = dvector(0,(d-1));
+   
+   for (i = 0; i < d; i++)
+   {
+   for (j = 0; j < d; j++)
+   {
+   A[i*d+j] = Fisher2[i][j];
+   }
+   }
+   
+   
+   nA = d; lwork = 4*d;
+   
+   dpotrf_("U", &nA, A, &nA, &info);
+   dpotri_("U", &nA, A, &nA, &info);
+   
+   
+   for (i = 0; i < d; i++)
+   {
+   for (j = 0; j < d; j++)
+   {
+   Cov2[i][j] = A[i*d+j];
+   }
+   }
+   */
   double **evector = dmatrix(0,d-1,0,d-1);
   double *evalue = dvector(0,d-1);
   matrix_eigenstuff(Fisher2,evector,evalue,d);
@@ -672,7 +672,7 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
   free_dmatrix(evector,0,d-1,0,d-1);
   
   for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
-
+  
   SigmaAE[9] = 2.0*pi*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
   
   
@@ -683,21 +683,21 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
       SigmaAE[d-1] = 1.0e10;
       d -= 1;
       /*
-      for (i = 0; i < d; i++)
-      {
-        for (j = 0; j < d; j++)
-        {
-          Cov2[i][j] = Fisher2[i][j];
-        }
-      }
-      
-      nA = d; lwork = 4*d;
-      
-      dpotrf_("U", &nA, A, &nA, &info);
-      dpotri_("U", &nA, A, &nA, &info);
-      
-      for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
-      */
+       for (i = 0; i < d; i++)
+       {
+       for (j = 0; j < d; j++)
+       {
+       Cov2[i][j] = Fisher2[i][j];
+       }
+       }
+       
+       nA = d; lwork = 4*d;
+       
+       dpotrf_("U", &nA, A, &nA, &info);
+       dpotri_("U", &nA, A, &nA, &info);
+       
+       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
+       */
       evector = dmatrix(0,d-1,0,d-1);
       evalue = dvector(0,d-1);
       matrix_eigenstuff(Fisher2,evector,evalue,d);
@@ -706,7 +706,7 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
       free_dmatrix(evector,0,d-1,0,d-1);
       
       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
-
+      
     }
   }
   
@@ -715,54 +715,54 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
   d = 9;
   
   /*
-  for (i = 0; i < d; i++)
-  {
-    for (j = 0; j < d; j++)
-    {
-      A[i*d+j] = Fisher1[i][j];
-    }
-  }
-  
-  nA = d;
-  lwork = 4*d;
-  
-  dpotrf_("U", &nA, A, &nA, &info);
-  dpotri_("U", &nA, A, &nA, &info);
-  
-  for (i = 0; i < d; i++)
-  {
-    for (j = 0; j < d; j++)
-    {
-      Cov1[i][j] = A[i*d+j];
-    }
-  }
-  
-  for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
-  SigmaX[9] = 2.0*pi*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
-  
-  for (j = 0; j < 2; j++)
-  {
-    if(SigmaX[d-1] > 0.5)
-    {
-      SigmaX[d-1] = 1.0e10;
-      d -= 1;
-      for (i = 0; i < d; i++)
-      {
-        for (j = 0; j < d; j++)
-        {
-          A[i*d+j] = Fisher1[i][j];
-        }
-      }
-      
-      nA = d; lwork = 4*d;
-      
-      dpotrf_("U", &nA, A, &nA, &info);
-      dpotri_("U", &nA, A, &nA, &info);
-      
-      for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
-      
-    }
-  }*/
+   for (i = 0; i < d; i++)
+   {
+   for (j = 0; j < d; j++)
+   {
+   A[i*d+j] = Fisher1[i][j];
+   }
+   }
+   
+   nA = d;
+   lwork = 4*d;
+   
+   dpotrf_("U", &nA, A, &nA, &info);
+   dpotri_("U", &nA, A, &nA, &info);
+   
+   for (i = 0; i < d; i++)
+   {
+   for (j = 0; j < d; j++)
+   {
+   Cov1[i][j] = A[i*d+j];
+   }
+   }
+   
+   for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
+   SigmaX[9] = 2.0*pi*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
+   
+   for (j = 0; j < 2; j++)
+   {
+   if(SigmaX[d-1] > 0.5)
+   {
+   SigmaX[d-1] = 1.0e10;
+   d -= 1;
+   for (i = 0; i < d; i++)
+   {
+   for (j = 0; j < d; j++)
+   {
+   A[i*d+j] = Fisher1[i][j];
+   }
+   }
+   
+   nA = d; lwork = 4*d;
+   
+   dpotrf_("U", &nA, A, &nA, &info);
+   dpotri_("U", &nA, A, &nA, &info);
+   
+   for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
+   
+   }
+   }*/
   
   evector = dmatrix(0,d-1,0,d-1);
   evalue = dvector(0,d-1);
@@ -809,12 +809,12 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
       
     }
   }
-
   
-//  free_dvector(work, 0, lwork-1);
-//  free_dvector(A, 0,(d*d-1));
-//  free_dvector(W, 0,(d-1));
-//  free_ivector(IPIV, 0,(d-1));
+  
+  //  free_dvector(work, 0, lwork-1);
+  //  free_dvector(A, 0,(d*d-1));
+  //  free_dvector(W, 0,(d-1));
+  //  free_ivector(IPIV, 0,(d-1));
   
   d = 9;
   
