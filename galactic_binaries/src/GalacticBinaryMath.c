@@ -40,7 +40,6 @@ double fourier_nwip(double *a, double *b, double *Sn, int n)
     ReB = b[j]; ImB = b[k];
     product = ReA*ReB + ImA*ImB;
     arg += product/Sn[i];
-    //if(arg!=arg){printf("WTF?  %i,ReA=%g,ImA=%g,ReB=%g,ImB=%g,Sn=%g\n",i,ReA,ImA,ReB,ImB,Sn[i]);}
   }
   
   return(4.0*arg);

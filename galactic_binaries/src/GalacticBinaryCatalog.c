@@ -157,14 +157,27 @@ int main(int argc, char *argv[])
     
     //Simulate gravitational wave signal
     double t0 = data->t0[0];
-    galactic_binary(orbit, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+    galactic_binary(orbit, data->format, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
     
     //Get noise spectrum for data segment
     for(int n=0; n<data->N; n++)
     {
       double f = data->fmin + (double)(n)/data->T;
-      data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-      data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+      if(strcmp(data->format,"phase")==0)
+      {
+        data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+        data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+      }
+      else if(strcmp(data->format,"frequency")==0)
+      {
+        data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+      }
+      else
+      {
+        fprintf(stderr,"Unsupported data format %s",data->format);
+        exit(1);
+      }
     }
     
     if(inj->BW > data->N) printf("WARNING:  Bandwidth %i wider than N %i at f=%.2e\n",inj->BW,data->N,data->fmin);
@@ -242,7 +255,22 @@ int main(int argc, char *argv[])
     fprintf(densityFile,"%.12g %i\n",(double)n/data->T,Ngalaxy[n]);
     
     fprintf(noiseFile,"%.12g ",f);
-    fprintf(noiseFile,"%.12g ",AEnoise(orbit->L, orbit->fstar, f));
+    
+    if(strcmp(data->format,"phase")==0)
+    {
+      fprintf(noiseFile,"%.12g ",AEnoise(orbit->L, orbit->fstar, f));
+    }
+    else if(strcmp(data->format,"frequency")==0)
+    {
+      fprintf(noiseFile,"%.12g ",AEnoise_FF(orbit->L, orbit->fstar, f));
+    }
+    else
+    {
+      fprintf(stderr,"Unsupported data format %s",data->format);
+      exit(1);
+    }
+
+    
     fprintf(noiseFile,"\n");
   }
   fclose(galaxyFile);

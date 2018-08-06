@@ -81,6 +81,7 @@ void print_usage()
   fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
   fprintf(stdout,"       --inj         : inject signal                       \n");
   fprintf(stdout,"       --data        : strain data file                    \n");
+  fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --sky-prior   : use galaxy model for sky prior      \n");
   fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
@@ -144,9 +145,17 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->NBURN       = 10000;
   chain->NP          = 5; //number of proposals
   chain->NC          = 12;//number of chains
+  
+  
 
   for(int i=0; i<Nmax; i++)
   {
+    /*
+     default data format is 'phase' 
+     optional support for 'frequency' a la LDCs
+    */
+    sprintf(data[i]->format,"phase");
+    
     data[i]->t0   = malloc(sizeof(double)*Nmax);
     data[i]->tgap = malloc(sizeof(double)*Nmax);
     
@@ -199,6 +208,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"verbose",     no_argument, 0,'v'},
     {"zero-noise",  no_argument, 0, 0 },
     {"conf-noise",  no_argument, 0, 0 },
+    {"frac-freq",   no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
     {"sky-prior",   no_argument, 0, 0 },
     {"snr-prior",   no_argument, 0, 0 },
@@ -269,6 +279,10 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
           flags->NF++;
           flags->strainData = 1;
           sprintf(data_ptr->fileName,"%s",optarg);
+        }
+        if(strcmp("frac-freq",   long_options[long_index].name) == 0)
+        {
+          for(int i=0; i<Nmax; i++) sprintf(data[i]->format,"frequency");
         }
         if(strcmp("orbit", long_options[long_index].name) == 0)
         {
@@ -406,6 +420,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(stdout,"  Data duration ....... %.0f \n",data_ptr->T);
   fprintf(stdout,"  Data segments ....... %i   \n",flags->NT);
   fprintf(stdout,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
+  fprintf(stdout,"  Data format is........%s   \n",data_ptr->format);
   fprintf(stdout,"  MCMC steps............%i   \n",flags->NMCMC);
   fprintf(stdout,"  MCMC burnin steps.....%i   \n",flags->NBURN);
   fprintf(stdout,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);

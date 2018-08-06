@@ -48,6 +48,13 @@ struct Data
   //
   char fileName[128];
   
+  /*
+   Data format string 
+   'phase'     ==> LISA Simulator esque
+   'frequency' ==> Synthetic LISA esque
+  */
+  char format[16];
+  
 };
 
 struct Flags

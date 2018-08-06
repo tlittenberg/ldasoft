@@ -29,8 +29,9 @@ void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, dou
 void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
 {
   
-  double alpha = PI2*t/YEAR;
-  
+  //double alpha = PI2*t/YEAR;
+  double alpha = PI2*t*3.168753575e-8;
+
   /*
    double beta1 = 0.;
    double beta2 = 2.0943951023932; //2.*pi/3.;
@@ -387,7 +388,15 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
       (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
       (d[2][3][k]-d[1][3][k]);
       
-      
+      /*
+       XLS[j] =  (X[j]*cLS-X[k]*sLS);
+       XLS[k] = -(X[j]*sLS+X[k]*cLS);
+       YLS[j] =  (Y[j]*cLS-Y[k]*sLS);
+       YLS[k] = -(Y[j]*sLS+Y[k]*cLS);
+       ZLS[j] =  (Z[j]*cLS-Z[k]*sLS);
+       ZLS[k] = -(Z[j]*sLS+Z[k]*cLS);
+       */
+
       A[j] =  sqT*((2.0*X[j]-Y[j]-Z[j])*cLS-(2.0*X[k]-Y[k]-Z[k])*sLS)*0.33333333;
       A[k] = -sqT*((2.0*X[j]-Y[j]-Z[j])*sLS+(2.0*X[k]-Y[k]-Z[k])*cLS)*0.33333333;
       
@@ -396,6 +405,117 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     }
   }
 }
+
+void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
+{
+  int i,j,k;
+  int BW2   = BW*2;
+  int BWon2 = BW/2;
+  double fonfs,fonfs2;
+  double c3, s3, c2, s2, c1, s1;
+  double f;
+  double X[BW2+1],Y[BW2+1],Z[BW2+1];
+  double phiSL, cSL, sSL;
+  double sqT=sqrt(T);
+  double invfstar = 1./fstar;
+  double invSQ3 = 1./SQ3;
+  
+  phiSL = PIon2 - PI2*f0*(L/C);//15 s sampling rate
+  cSL = cos(phiSL);
+  sSL = sin(phiSL);
+  
+  for(i=1; i<=BW; i++)
+  {
+    k = 2*i;
+    j = k-1;
+    
+    f = ((double)(q + i-1 - BWon2))/T;
+    fonfs = f*invfstar;
+    fonfs2= 2.*fonfs;
+    
+    c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
+    s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
+    
+    X[j] =	(d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
+    (d[2][1][j]-d[3][1][j])*c2 + (d[2][1][k]-d[3][1][k])*s2 +
+    (d[1][3][j]-d[1][2][j])*c1 + (d[1][3][k]-d[1][2][k])*s1 +
+    (d[3][1][j]-d[2][1][j]);
+    
+    X[k] =	(d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
+    (d[2][1][k]-d[3][1][k])*c2 - (d[2][1][j]-d[3][1][j])*s2 +
+    (d[1][3][k]-d[1][2][k])*c1 - (d[1][3][j]-d[1][2][j])*s1 +
+    (d[3][1][k]-d[2][1][k]);
+    
+    M[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
+    M[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
+
+    //save some CPU time when only X-channel is needed
+    if(NI>1)
+    {
+      Y[j] =	(d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
+      (d[3][2][j]-d[1][2][j])*c2 + (d[3][2][k]-d[1][2][k])*s2+
+      (d[2][1][j]-d[2][3][j])*c1 + (d[2][1][k]-d[2][3][k])*s1+
+      (d[1][2][j]-d[3][2][j]);
+      
+      Y[k] =	(d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
+      (d[3][2][k]-d[1][2][k])*c2 - (d[3][2][j]-d[1][2][j])*s2+
+      (d[2][1][k]-d[2][3][k])*c1 - (d[2][1][j]-d[2][3][j])*s1+
+      (d[1][2][k]-d[3][2][k]);
+      
+      Z[j] =	(d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
+      (d[1][3][j]-d[2][3][j])*c2 + (d[1][3][k]-d[2][3][k])*s2+
+      (d[3][2][j]-d[3][1][j])*c1 + (d[3][2][k]-d[3][1][k])*s1+
+      (d[2][3][j]-d[1][3][j]);
+      
+      Z[k] =	(d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
+      (d[1][3][k]-d[2][3][k])*c2 - (d[1][3][j]-d[2][3][j])*s2+
+      (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
+      (d[2][3][k]-d[1][3][k]);
+
+      /*
+       XSL[j] =  fonfs2*(X[j]*cSL-X[k]*sSL);
+       XSL[k] = -fonfs2*(X[j]*sSL+X[k]*cSL);
+       YSL[j] =  fonfs2*(Y[j]*cSL-Y[k]*sSL);
+       YSL[k] = -fonfs2*(Y[j]*sSL+Y[k]*cSL);
+       ZSL[j] =  fonfs2*(Z[j]*cSL-Z[k]*sSL);
+       ZSL[k] = -fonfs2*(Z[j]*sSL+Z[k]*cSL);
+      */
+
+
+      //TODO: changed GB phase to match LDC, but why?
+      /*
+      A[j] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
+      A[k] = -sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
+      
+      E[j] =  sqT*fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
+      E[k] = -sqT*fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
+       */
+      A[j] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
+      A[k] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
+
+      E[j] =  sqT*fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
+      E[k] =  sqT*fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
+
+
+      /* TODO: HORRIBLE HACK!  PUT X,Y,Z into A,E,M arrays for checking against LDC
+      A[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
+      A[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
+      E[j] = sqT*fonfs2*(Y[j]*cSL - Y[k]*sSL);
+      E[k] = sqT*fonfs2*(Y[j]*sSL + Y[k]*cSL);
+      M[j] = sqT*fonfs2*(Z[j]*cSL - Z[k]*sSL);
+      M[k] = sqT*fonfs2*(Z[j]*sSL + Z[k]*cSL);*/
+
+      /*
+      A[j] =  fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
+      A[k] = -fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
+
+      E[j] =  fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
+      E[k] = -fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
+       */
+    }
+  }
+}
+
 
 static double ipow(double x, int n)
 {
@@ -416,6 +536,16 @@ static double ipow(double x, int n)
   return xn;
 }
 
+double AEnoise_FF(double L, double fstar, double f)
+{
+  return 4.*(f/fstar)*(f/fstar)*AEnoise(L,fstar,f);
+}
+
+double GBnoise_FF(double T, double fstar, double f)
+{
+  return 4.*(f/fstar)*(f/fstar)*GBnoise(T,f);
+}
+
 double AEnoise(double L, double fstar, double f)
 {
   //Power spectral density of the detector noise and transfer frequency
@@ -426,12 +556,17 @@ double AEnoise(double L, double fstar, double f)
   red = 16.0*(pow((2.0e-5/f), 10.0)+ ipow(1.0e-4/f,2));
   
   Sloc = 2.89e-24;
-  
+
+  double fonfstar = f/fstar;
+  double trans = ipow(sin(fonfstar),2.0);
   // Calculate the power spectral density of the detector noise at the given frequency
   
-  return  16.0/3.0*ipow(sin(f/fstar),2)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/ipow(PI2*f,4)*(1.0+red)) ) / ipow(2.0*L,2);
+  //return  16.0/3.0*ipow(sin(f/fstar),2)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/ipow(PI2*f,4)*(1.0+red)) ) / ipow(2.0*L,2);
   
-  
+
+  return (16.0/3.0)*trans*( (2.0+cos(fonfstar))*(Sps + Sloc) + 2.0*( 3.0 + 2.0*cos(fonfstar) + cos(2.0*fonfstar) ) * ( Sloc/2.0 + Sacc/ipow(PI2*f,4)*(1.0+red) ) ) / ipow(2.0*L,2);
+
+
 }
 
 double GBnoise(double T, double f)
