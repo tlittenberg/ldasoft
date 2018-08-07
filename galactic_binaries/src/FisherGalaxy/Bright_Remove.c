@@ -15,6 +15,8 @@
 #include "Detector.h"
 #include "Subroutines.h"
 
+void readGalaxyFile(const char *filename, int imax, double *XfLS, double *AALS, double *EELS);
+
 
 int main(int argc,char **argv)
 {
@@ -40,6 +42,30 @@ int main(int argc,char **argv)
   FILE* Abright;
   
   if(argc !=5) KILL("Bright_Remove XAE.dat Noise.dat Bright.dat Orbit.dat\n");
+  
+  printf("***********************************************************************\n");
+  printf("*\n");
+  printf("* FisherGalaxy: Source Subtraction Tool\n");
+  printf("*   Simulated Data:      %s\n",argv[1]);
+  printf("*   Confusion Noise Fit: %s\n",argv[2]);
+  printf("*   Candidate Sources:   %s\n",argv[3]);
+  printf("*   Orbit File:          %s\n",argv[4]);
+  
+  /* Figure out TOBS and NFFT */
+  Infile = fopen(argv[1],"r");
+  double junk;
+  double f1,f2;
+  fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f1, &junk, &junk, &junk, &junk, &junk, &junk);
+  fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f2, &junk, &junk, &junk, &junk, &junk, &junk);
+  double TOBS = 1./(f2-f1);
+  int    NFFT = (int)floor(TOBS*DT);
+  fclose(Infile);
+  /*****************************/
+
+  
+  printf("*   Observing Time:      %.1f year (%f s)\n",TOBS/year,TOBS);
+  printf("*\n");
+  printf("***********************************************************************\n");
   
   Xbright = fopen("BrightX.dat","w");
   Abright = fopen("BrightAE.dat","w");
@@ -76,13 +102,7 @@ int main(int argc,char **argv)
   imin = (long)floor(1.0e-4*TOBS);
   sqT = sqrt(TOBS);
   
-  Infile = fopen(argv[1],"r");
-  for(i=1; i< imax; i++)
-  {
-    fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f, &XfLS[2*i], &XfLS[2*i+1],
-           &AALS[2*i], &AALS[2*i+1], &EELS[2*i], &EELS[2*i+1]);
-  }
-  fclose(Infile);
+  readGalaxyFile(argv[1],imax,XfLS,AALS,EELS);
   
   XP = dvector(imin,imax);  AEP = dvector(imin,imax);
   Xnoise = dvector(imin,imax);  Xconf = dvector(imin,imax);
@@ -95,10 +115,11 @@ int main(int argc,char **argv)
     instrument_noise(f, fstar, L ,&SAE, &SXYZ);
     XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    fprintf(Outfile,"%e %e %e %e %e\n", f, XP[i], SXYZ, AEP[i], SAE);
+    fprintf(Outfile,"%.12g %e %e %e %e\n", f, XP[i], SXYZ, AEP[i], SAE);
   }
   fclose(Outfile);
   
+  printf("Reading Confusion Noise File\n");
   Outfile = fopen(argv[2],"r");
   for(i=imin; i<= imax; i++)
   {
@@ -113,8 +134,20 @@ int main(int argc,char **argv)
   cnt = 0;
   cc1 = 0;
   
+  //count lines in file
+  int NSIM = 0;
   while ( !feof(Infile) )
   {
+    fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    NSIM++;
+  }
+  rewind(Infile);
+  NSIM--;
+  
+  for(int n=0; n<NSIM; n++)
+  {
+    if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
+    
     fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
     
     params[0] = f;
@@ -127,143 +160,93 @@ int main(int argc,char **argv)
     params[7] = fdot;
     params[8] = 11.0/3.0*fdot*fdot/f;
     
-    if(f > 4.0e-2) cc1++;
+    N = 32*mult;
+    if(f > 0.001) N = 64*mult;
+    if(f > 0.01) N = 256*mult;
+    if(f > 0.03) N = 512*mult;
+    if(f > 0.1) N = 1024*mult;
     
-    if(f < 4.0e-2)
+    
+    fonfs = f/fstar;
+    
+    q = (long)(f*TOBS);
+    
+    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    
+    /*  calculate michelson noise  */
+    
+    /*inst2*/
+    Sm = SXYZ/(4.0*sin(f/fstar)*sin(f/fstar));
+    
+    Acut = A*sqrt(TOBS/Sm);
+    
+    M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
+    
+    XLS = dvector(1,2*M);
+    AA  = dvector(1,2*M);
+    EE  = dvector(1,2*M);
+    
+    FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
+    
+    /*inst2*/
+    SNX = (SXYZ+Xconf[q]);//*sin(f/fstar)*sin(f/fstar);
+    SNAE = (SAE+AEconf[q]);//*sin(f/fstar)*sin(f/fstar);
+    
+    SNRAE = 0.0;
+    SNRX = 0.0;
+    for(i=1; i<=M; i++)
     {
-      
-      N = 32*mult;
-      if(f > 0.001) N = 64*mult;
-      if(f > 0.01) N = 256*mult;
-      if(f > 0.03) N = 512*mult;
-      if(f > 0.1) N = 1024*mult;
-      
-      
-      fonfs = f/fstar;
-      
-      q = (long)(f*TOBS);
-      
-      instrument_noise(f, fstar, L, &SAE, &SXYZ);
-      
-      /*  calculate michelson noise  */
-						
-      /*inst2*/
-      if(noiseFlag==1) Sm = SXYZ/(4.0*sin(f/fstar)*sin(f/fstar));
-      if(noiseFlag==2) Sm = SXYZ/(4.0);//*sin(f/fstar)*sin(f/fstar));
-      
-      Acut = A*sqrt(TOBS/Sm);
-      
-      M = (long)(pow(2.0,(rint(log(Acut)/log(2.0))+1.0)));
-      
-      if(M < N) M = N;
-      if(N < M) N = M;
-      if(M > 8192) M = 8192;
-      
-      N = M;
-      //N = M = 2*8192;
-      
-      XLS = dvector(1,2*M);
-      AA = dvector(1,2*M);   EE = dvector(1,2*M);
-      
-      FAST_LISA(LISAorbit, params, N, M, XLS, AA, EE);
-      
-      /*inst2*/
-      if(noiseFlag==1)
-      {
-        SNX = (SXYZ+Xconf[q]);//*sin(f/fstar)*sin(f/fstar);
-        SNAE = (SAE+AEconf[q]);//*sin(f/fstar)*sin(f/fstar);
-      }
-      if(noiseFlag==2)
-      {
-        SNX = (SXYZ+Xconf[q])*sin(f/fstar)*sin(f/fstar);
-        SNAE = (SAE+AEconf[q])*sin(f/fstar)*sin(f/fstar);
-      }
-      SNRAE = 0.0;
-      SNRX = 0.0;
+      SNRX += 4.0*(XLS[2*i-1]*XLS[2*i-1]+XLS[2*i]*XLS[2*i]);
+      SNRAE += 4.0*(AA[2*i-1]*AA[2*i-1]+AA[2*i]*AA[2*i]+EE[2*i-1]*EE[2*i-1]+EE[2*i]*EE[2*i]);
+    }
+    SNRAE *= TOBS/SNAE;
+    SNRX  *= TOBS/SNX;
+    SNRAE  = sqrt(SNRAE);
+    SNRX   = sqrt(SNRX);
+    
+    if(SNRX > SNRthres)
+    {
+      fprintf(Xbright, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
       for(i=1; i<=M; i++)
       {
-        SNRX += 4.0*(XLS[2*i-1]*XLS[2*i-1]+XLS[2*i]*XLS[2*i]);
-        SNRAE += 4.0*(AA[2*i-1]*AA[2*i-1]+AA[2*i]*AA[2*i]+EE[2*i-1]*EE[2*i-1]+EE[2*i]*EE[2*i]);
-      }
-      SNRAE *= TOBS/SNAE;
-      SNRX *= TOBS/SNX;
-      SNRAE = sqrt(SNRAE);
-      SNRX = sqrt(SNRX);
-      
-      if(SNRX > SNRthres)
-      {
-        fprintf(Xbright, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
-        for(i=1; i<=M; i++)
+        k = (q + i -1 - M/2);
+        if(k>0)
         {
-          k = (q + i -1 - M/2);
-          if(k>0)
-          {
-            if(noiseFlag==1)
-            {
-              XfLS[2*k] -= sqT*XLS[2*i-1];
-              XfLS[2*k+1] -= sqT*XLS[2*i];
-            }
-            if(noiseFlag==2)
-            {
-              XfLS[2*k] -= sqT*XLS[2*i-1]/sin(f/fstar);
-              XfLS[2*k+1] -= sqT*XLS[2*i]/sin(f/fstar);
-            }
-          }
+          XfLS[2*k]   -= sqT*XLS[2*i-1];
+          XfLS[2*k+1] -= sqT*XLS[2*i];
         }
       }
-      
-      if(SNRAE > SNRthres)
-      {
-        fprintf(Abright, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
-        for(i=1; i<=M; i++)
-        {
-          k = (q + i -1 - M/2);
-          if(k>0)
-          {
-            if(noiseFlag==1)
-            {
-              AALS[2*k] -= sqT*AA[2*i-1];
-              AALS[2*k+1] -= sqT*AA[2*i];
-              EELS[2*k] -= sqT*EE[2*i-1];
-              EELS[2*k+1] -= sqT*EE[2*i];
-            }
-            if(noiseFlag==2)
-            {
-              AALS[2*k] -= sqT*AA[2*i-1]/sin(f/fstar);
-              AALS[2*k+1] -= sqT*AA[2*i]/sin(f/fstar);
-              EELS[2*k] -= sqT*EE[2*i-1]/sin(f/fstar);
-              EELS[2*k+1] -= sqT*EE[2*i]/sin(f/fstar);
-            }
-          }
-          
-        }
-      }
-      
-      
-      free_dvector(XLS,1,2*M);  free_dvector(AA,1,2*M);  free_dvector(EE,1,2*M);
-      
     }
-    else
+    
+    if(SNRAE > SNRthres)
     {
-      // all the really high f sources will be detectable
       fprintf(Abright, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
-      fprintf(Xbright, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
+      for(i=1; i<=M; i++)
+      {
+        k = (q + i -1 - M/2);
+        if(k>0)
+        {
+          AALS[2*k]   -= sqT*AA[2*i-1];
+          AALS[2*k+1] -= sqT*AA[2*i];
+          EELS[2*k]   -= sqT*EE[2*i-1];
+          EELS[2*k+1] -= sqT*EE[2*i];
+        }
+      }
     }
-    
-    
-    
+    free_dvector(XLS,1,2*M);
+    free_dvector(AA,1,2*M);
+    free_dvector(EE,1,2*M);
   }
-  
-  printf("Removal Finished\n");
-  
-  printf("Number above 1e-2 Hz = %ld\n", cc1);
+  printProgress(1.0);
+
+  printf("\nRemoval Finished\n");
   
   
   Outfile = fopen("Galaxy_XAE_R1.dat","w");
   for(i=1; i< imax; i++)
   {
     f = (double)(i)/TOBS;
-    fprintf(Outfile,"%e %e %e %e %e %e %e\n", f, XfLS[2*i], XfLS[2*i+1],
+    fprintf(Outfile,"%.12g %e %e %e %e %e %e\n", f, XfLS[2*i], XfLS[2*i+1],
             AALS[2*i], AALS[2*i+1], EELS[2*i], EELS[2*i+1]);
   }
   fclose(Outfile);
@@ -282,18 +265,20 @@ int main(int argc,char **argv)
     instrument_noise(f, fstar, L, &SAE, &SXYZ);
     XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    fprintf(Outfile,"%e %e %e %e %e\n", f, XP[i], SXYZ, AEP[i], SAE);
+    fprintf(Outfile,"%.12g %e %e %e %e\n", f, XP[i], SXYZ, AEP[i], SAE);
   }
   fclose(Outfile);
   
-  medianX(imin, imax, fstar, L, XP, Xnoise, Xconf);
-  medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf);
+  printf("Estimating Confusion Noise\n");
+
+  medianX(imin, imax, fstar, L, XP, Xnoise, Xconf, TOBS);
+  medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf, TOBS);
   
   Outfile = fopen("Confusion_XAE_1.dat","w");
   for(i=imin; i<= imax; i++)
   {
     f = (double)(i)/TOBS;
-    fprintf(Outfile,"%e %e %e %e %e\n", f, Xnoise[i], Xconf[i], AEnoise[i], AEconf[i]);
+    fprintf(Outfile,"%.12g %e %e %e %e\n", f, Xnoise[i], Xconf[i], AEnoise[i], AEconf[i]);
   }
   fclose(Outfile);
   
@@ -303,7 +288,7 @@ int main(int argc,char **argv)
     if(i%100==0)
     {
       f = (double)(i)/TOBS;
-      fprintf(Outfile,"%e %e %e %e %e\n", f, Xnoise[i], Xconf[i], AEnoise[i], AEconf[i]);
+      fprintf(Outfile,"%.12g %e %e %e %e\n", f, Xnoise[i], Xconf[i], AEnoise[i], AEconf[i]);
     }
   }
   fclose(Outfile);
@@ -313,3 +298,19 @@ int main(int argc,char **argv)
 }
 
 
+void readGalaxyFile(const char *filename, int imax, double *XfLS, double *AALS, double *EELS)
+{
+  printf("Reading Galaxy File\n");
+  FILE *Infile = fopen(filename,"r");
+  
+  double f;
+  for(int i=1; i< imax; i++)
+  {
+    if(i%(imax/100)==0)printProgress((double)i/(double)imax);
+    fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f, &XfLS[2*i], &XfLS[2*i+1],
+           &AALS[2*i], &AALS[2*i+1], &EELS[2*i], &EELS[2*i+1]);
+  }
+  printProgress(1.0);
+  printf("\n");
+  fclose(Infile);
+}

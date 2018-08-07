@@ -7,7 +7,19 @@
 #include "Detector.h"
 #include "Subroutines.h"
 
-void FAST_LISA(struct lisa_orbit *orbit, double *params, long N, long M, double *XLS, double *ALS, double *ELS)
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
+
+void printProgress (double percentage)
+{
+  int val = (int) (percentage * 100);
+  int lpad = (int) (percentage * PBWIDTH);
+  int rpad = PBWIDTH - lpad;
+  printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+  fflush (stdout);
+}
+
+void FAST_LISA(struct lisa_orbit *orbit, double TOBS, double *params, long N, long M, double *XLS, double *ALS, double *ELS)
 {
   
   /*   Indicies   */
@@ -259,7 +271,7 @@ void FAST_LISA(struct lisa_orbit *orbit, double *params, long N, long M, double 
   
   /*   Call subroutines for synthesizing different TDI data channels  */
   /*   X Y Z-Channel   */
-  XYZ(L, fstar, d, f0, q, M, XLS, ALS, ELS);
+  XYZ(L, fstar, TOBS, d, f0, q, M, XLS, ALS, ELS);
   
   
   /*   Deallocate Arrays   */
@@ -297,7 +309,40 @@ void FAST_LISA(struct lisa_orbit *orbit, double *params, long N, long M, double 
   return;
 }
 
-void XYZ(double L, double fstar, double ***d, double f0, long q, long M, double *XLS, double *ALS, double *ELS)
+int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, double costheta, double A, double T, int N)
+{
+  int Nmin = 16;
+  int Nmax = N/2;
+  
+  double sqT=sqrt(T);
+  
+  double sf = sin(f/fstar); //sin(f/f*)
+  
+  double sn,snx;
+  instrument_noise(f, fstar, L, &sn, &snx);
+  
+  //Doppler spreading
+  double sintheta = sin(acos(costheta));
+  double bw = 8*T*((4.+PI2*f*(AU/clight)*sintheta)/year + fdot*T);
+  int DS = (int)pow(2,(int)log2(bw-1)+1);
+  if(DS > Nmax) DS = Nmax;
+  if(DS < Nmin) DS = Nmin;
+  
+  
+  //Sinc spreading
+  double SNm  = sn/(4.*sf*sf);   //Michelson noise
+  double SNRm = A*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
+  
+  int SS = (int)pow(2,(int)log2(SNRm-1)+1);
+  
+  if(SS > Nmax) SS = Nmax;
+  if(SS < Nmin) SS = Nmin;
+  
+  return (DS > SS) ? DS : SS; //return largest spread as bandwidth
+}
+
+
+void XYZ(double L, double fstar, double TOBS, double ***d, double f0, long q, long M, double *XLS, double *ALS, double *ELS)
 {
   int i;
   double fonfs, sqT;
@@ -310,7 +355,7 @@ void XYZ(double L, double fstar, double ***d, double f0, long q, long M, double 
   X = dvector(1,2*M);  Y = dvector(1,2*M);  Z = dvector(1,2*M);
   YLS = dvector(1,2*M);  ZLS = dvector(1,2*M);
   
-  phiLS = 2.0*pi*f0*(dt/2.0-L/clight);
+  phiLS = 2.0*pi*f0*(DT/2.0-L/clight);
   /* phiSL = pi/2.0-2.0*pi*f0*(L/clight); */
   cLS = cos(phiLS);
   sLS = sin(phiLS);
@@ -387,37 +432,36 @@ void XYZ(double L, double fstar, double ***d, double f0, long q, long M, double 
   
 }
 
+double M_fdot(double f, double fdot)
+{
+  return pow( fdot*pow(f,-11./3.)*(5./96.)*pow(M_PI,-8./3.)  ,  3./5.)/TSUN;
+}
+
+double galactic_binary_dL(double f0, double dfdt, double A)
+{
+  double f    = f0;//T;
+  double fd = dfdt;//(T*T);
+  double amp   = A;
+  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*CLIGHT/PC); //seconds  !check notes on 02/28!
+}
+
 void instrument_noise(double f, double fstar, double L, double *SAE, double *SXYZ)
 {
   
-  // Calculate the power spectral density of the detector noise at the given frequency
-  double red = 0.0;
-  
-  //No reddening
-  if(redden==0)
-  {
-    *SAE = 16.0/3.0*pow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*(1.0/pow(2.0*pi*f,4)+ red/pow(2.0*pi*f,6))) / pow(2.0*L,2.0));
-    *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( ( 4.0*Sps + 8.0*(1.0+pow(cos(f/fstar),2.0))*Sacc*(1.0/pow(2.0*pi*f,4)+ red/pow(2.0*pi*f,6))) / pow(2.0*L,2.0));
-  }
-  
-  //NGO reddening
-  if(redden==1)
-  {
-    *SAE = 16.0/3.0*pow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*(1.+(fred/f))*(1.0/pow(2.0*pi*f,4)+ red/pow(2.0*pi*f,6))) / pow(2.0*L,2.0));
-    *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( ( 4.0*Sps + 8.0*(1.0+pow(cos(f/fstar),2.0))*Sacc*(1.+(fred/f))*(1.0/pow(2.0*pi*f,4)+ red/pow(2.0*pi*f,6))) / pow(2.0*L,2.0));
-  }
-  
-  //LAGRANGE reddening
-  if(redden==2)
-  {
-    *SAE = 16.0/3.0*pow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*pow(f,-3./2.)*(1.0/pow(2.0*pi*f,4)+ red/pow(2.0*pi*f,6))) / pow(2.0*L,2.0));
-    *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( ( 4.0*Sps + 8.0*(1.0+pow(cos(f/fstar),2.0))*Sacc*pow(f,-3./2.)*(1.0/pow(2.0*pi*f,4)+ red/pow(2.0*pi*f,6))) / pow(2.0*L,2.0));
-  }
-  
-  if(*SAE < 1e-45) *SAE = 1e-45;
-  if(*SXYZ< 1e-45) *SXYZ= 1e-45;
-}
+  double SLOC = 2.89e-24; //what is this?
 
+  double fonfstar = f/fstar;
+  double trans = pow(sin(fonfstar),2.0);
+  double red = 1.0 + 16.0*(pow((2.0e-5/f), 10.0) + pow(1.0e-4/f,2));
+  
+  double cosfstar = cos(fonfstar);
+  
+  double L4 = 4.0*L*L;
+  double f4 = 1./(pow(PI2*f,4));
+  
+  *SAE  = (16.0/3.0)*trans*( (2.0+cosfstar)*(SPS + SLOC) + 2.0*( 3.0 + 2.0*cosfstar + cos(2.0*fonfstar) ) * ( SLOC/2.0 + SACC*f4*red ) ) / L4;
+  *SXYZ =      (4.0)*trans*(          (4.0)*(SPS + SLOC) + 8.0*( 1.0 +                pow(cosfstar,2.0) ) * ( SLOC/2.0 + SACC*f4*red ) ) / L4;
+}
 
 void spacecraft(struct lisa_orbit *orbit, double tint, double *xint, double *yint, double *zint)
 {
@@ -554,7 +598,7 @@ void initialize_orbit(char OrbitFile[], struct lisa_orbit *orbit)
   }
   
   //calculate average arm length
-  printf("estimating average armlengths -- assumes evenly sampled orbits\n");
+  //printf("estimating average armlengths -- assumes evenly sampled orbits\n");
   double L12=0.0;
   double L23=0.0;
   double L31=0.0;
@@ -587,18 +631,21 @@ void initialize_orbit(char OrbitFile[], struct lisa_orbit *orbit)
   L31 /= (double)orbit->N;
   L23 /= (double)orbit->N;
   
+  /*
   printf("Average arm lengths for the constellation:\n");
   printf("  L12 = %g\n",L12);
   printf("  L31 = %g\n",L31);
   printf("  L23 = %g\n",L23);
-  
+  */
   //are the armlenghts consistent?
   double L = (L12+L31)/2.;//+L23)/3.;
+  /*
   printf("Fractional deviation from average armlength for each side:\n");
   printf("  L12 = %g\n",fabs(L12-L)/L);
   printf("  L31 = %g\n",fabs(L31-L)/L);
   printf("  L23 = %g\n",fabs(L23-L)/L);
-  
+   */
+
   //store armlenght & transfer frequency in orbit structure.
   orbit->L     = L;
   orbit->fstar = clight/(2.0*pi*L);
@@ -666,7 +713,7 @@ void dfour1(double data[], unsigned long nn, int isign)
 }
 #undef SWAP
 
-double Sum(double *AA, double *EE, long M, double SN)
+double Sum(double *AA, double *EE, long M, double SN, double TOBS)
 {
   long i;
   double sm;
@@ -685,8 +732,10 @@ double Sum(double *AA, double *EE, long M, double SN)
 }
 
 
-void medianX(long imin, long imax, double fstar, double L, double *XP, double *Xnoise, double *Xconf)
+void medianX(long imin, long imax, double fstar, double L, double *XP, double *Xnoise, double *Xconf, double TOBS)
 {
+  printf(" Fit to X-channel confusion noise\n");
+
   double f;
   double SAE, SXYZ;
   double chi;
@@ -761,6 +810,7 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
   
   for(k=0; k < 10000; k++)
   {
+    if(k%(10000/100)==0)printProgress((double)k/10000.);
     beta = pow(10.0,-0.0001*(10000.0-(double)(k))/10000.0);
     
     for(j=0; j <= Npoly; j++) pcy[j] = pcx[j];
@@ -788,10 +838,11 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
       chix = chiy;
       for(j=0; j <= Npoly; j++) pcx[j] = pcy[j];
     }
-    if(k%100==0) printf("%ld %.10e %.10e\n", k, chix, chiy);
+    //if(k%100==0) printf("%ld %.10e %.10e\n", k, chix, chiy);
   }
+  printProgress(1.0);
   
-  //printf("%ld %.10e %.10e\n", k, chix, chiy);
+  printf("\n Store X-channel results\n");
   
   Xfile = fopen("Xfit.dat","w");
   for(i=0; i < segs; i++)
@@ -841,8 +892,9 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
   return;
 }
 
-void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEnoise, double *AEconf)
+void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEnoise, double *AEconf, double TOBS)
 {
+  printf(" Fit to AE-channel confusion noise\n");
   double f;
   double SAE, SXYZ;
   double chi;
@@ -917,6 +969,7 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
   
   for(k=0; k < 10000; k++)
   {
+    if(k%(10000/100)==0)printProgress((double)k/10000.);
     beta = pow(10.0,-0.0001*(10000.0-(double)(k))/10000.0);
     
     for(j=0; j <= Npoly; j++) pcy[j] = pcx[j];
@@ -944,10 +997,11 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
       chix = chiy;
       for(j=0; j <= Npoly; j++) pcx[j] = pcy[j];
     }
-    if(k%100==0) printf("%ld %.10e %.10e\n", k, chix, chiy);
+    //if(k%100==0) printf("%ld %.10e %.10e\n", k, chix, chiy);
   }
+  printProgress(1.0);
   
-  //printf("%ld %.10e %.10e\n", k, chix, chiy);
+  printf("\n Store AE-channel results\n");
   
   Xfile = fopen("Afit.dat","w");
   for(i=0; i < segs; i++)

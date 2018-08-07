@@ -12,7 +12,7 @@
 
 /* Set the value of pi */
 #define pi 3.141592653589793
-
+#define PI2 6.28318530717959
 #define sq2pi 2.506628274631
 
 /* Square root of 3 */
@@ -21,6 +21,7 @@
 
 /* Speed of light (m/s) */
 #define clight 299792458.
+#define CLIGHT 299792458.
 
 /* Number of seconds in a sidereal year */
 #define year 3.15581498e7
@@ -33,17 +34,20 @@
 
 /* Number of meters in a parsec */
 #define pc 3.0856775807e16
+#define PC 3.0856775807e16
 
 /* Number of meters in a kiloparsec */
 #define kpc 3.0856775807e19
 
 /* Distance bewteen the Sun and the center of the galaxy (kpc) */
 #define Rsun 8.5
+#define GC 8200.0
 
 /* Mass of the Sun (kg) */
 #define Msun 1.9889e30
 
 #define GEOM 4.92569043916e-6
+#define TSUN 4.9169e-6
 
 /* Orbital radius of the guiding center */
 #define Rgc (1.0*AU)
@@ -53,3 +57,4 @@
 
 /* fraction of interacting sytems to include */
 #define downsample 0.1
+

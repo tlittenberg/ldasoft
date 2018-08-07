@@ -1,36 +1,23 @@
-/*********************************************************/
-/*                                                       */
-/*           Galaxy.c, Version 2.3, 4/28/2011            */
-/*      Written by Neil Cornish & Tyson Littenberg       */
-/*                                                       */
-/*        gcc -O2 -o Galaxy Galaxy.c arrays.c -lm        */
-/*                                                       */
-/*********************************************************/
+/***********************************************************************/
+/*                                                                     */
+/*                  Galaxy.c, Version 3.0, 8/03/2018                   */
+/*             Written by Neil Cornish & Tyson Littenberg              */
+/*                                                                     */
+/*        gcc -O2 -o Galaxy Galaxy.c Subroutines.c arrays.c -lm        */
+/*                                                                     */
+/***********************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
-
-#define C 299792458.
-#define TSUN  4.9169e-6
-#define PC 3.0856775807e16
-
-double M_fdot(double f, double fdot)
-{
-  return pow( fdot*pow(f,-11./3.)*(5./96.)*pow(M_PI,-8./3.)  ,  3./5.)/TSUN;
-}
-
-double galactic_binary_dL(double f0, double dfdt, double A)
-{
-  double f    = f0;//T;
-  double fd = dfdt;//(T*T);
-  double amp   = A;
-  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
-}
 
 int main(int argc,char **argv)
 {
@@ -42,18 +29,35 @@ int main(int argc,char **argv)
   double *XLS, *AA, *EE;
   double fonfs, Sm, Acut;
   long M, N, q;
-  long i, k, cnt, cnt2, mult, imax;
-  long rseed;
+  long i, k, count, mult, imax;
   double SAE, SXYZ, sqT;
   double XR, XI, AR, AI, ER, EI;
-  double alpha;
   
   FILE* Infile;
   FILE* Outfile;
   
-  if(argc != 3) KILL("Galaxy Galaxy.dat Orbits.dat\n");
+  if(argc != 4) KILL("Galaxy Galaxy.dat Orbits.dat TOBS\n");
+ 
+  printf("***********************************************************************\n");
+  printf("*\n");
+  printf("* FisherGalaxy: Galaxy Simulation Tool\n");
+  printf("*   Galaxy Simulation: %s\n",argv[1]);
+  printf("*   Orbit File:        %s\n",argv[2]);
+  printf("*   Observing Time:    %.1f year\n",atof(argv[3])/year);
+  printf("*\n");
+  printf("***********************************************************************\n");
   
-  params = dvector(0,9);
+  double TOBS = (double)atof(argv[3]);
+  int    NFFT = (int)floor(TOBS*DT);
+  
+  //set RNG for noise
+  const gsl_rng_type *T = gsl_rng_default;
+  gsl_rng *r = gsl_rng_alloc(T);
+  gsl_rng_env_setup();
+  gsl_rng_set (r, -924514346);
+
+  
+  params = malloc(sizeof(double)*9);
   
   if((TOBS/year) <= 8.0) mult = 8;
   if((TOBS/year) <= 4.0) mult = 4;
@@ -71,7 +75,9 @@ int main(int argc,char **argv)
   sprintf(Gfile,"%s",argv[2]);
   initialize_orbit(Gfile, LISAorbit);
 		
-  XfLS = dvector(0,NFFT-1);  AALS = dvector(0,NFFT-1);  EELS = dvector(0,NFFT-1);
+  XfLS = malloc(sizeof(double)*NFFT);
+  AALS = malloc(sizeof(double)*NFFT);
+  EELS = malloc(sizeof(double)*NFFT);
   
   
   for(i=0; i<NFFT; i++)
@@ -83,15 +89,21 @@ int main(int argc,char **argv)
   
   printf("Starting Simulation\n");
   
-  cnt = 0;
-  cnt2 = 0;
-  
-  rseed = -924514346;
-  
-  double Amax=0;
-  
+  //count lines in file
+  int NSIM = 0;
   while ( !feof(Infile) )
   {
+    fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    NSIM++;
+  }
+  rewind(Infile);
+  NSIM--;
+  
+  count=0;
+  for(int n=0; n<NSIM; n++)
+  {
+    if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
+    
     fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
     
     params[0] = f;
@@ -104,99 +116,68 @@ int main(int argc,char **argv)
     params[7] = fdot;
     params[8] = 11.0/3.0*fdot*fdot/f;
     
-    alpha = ran2(&rseed);
     
-    if((fdot > 0.0) || (alpha < 0.1))  // keep all detached and 10% of AMCVn
+    N = 32*mult;
+    if(f > 0.001) N = 64*mult;
+    if(f > 0.01) N = 256*mult;
+    if(f > 0.03) N = 512*mult;
+    if(f > 0.1) N = 1024*mult;
+    
+    
+    fonfs = f/LISAorbit->fstar;
+    
+    q = (long)(f*TOBS);
+    
+    instrument_noise(f, LISAorbit->fstar, LISAorbit->L, &SAE, &SXYZ);
+    
+    /*  calculate michelson noise  */
+    Sm = SXYZ/(4.0*sin(fonfs)*sin(fonfs));
+
+    /* rough guess at SNR */
+    Acut = A*sqrt(TOBS/Sm);
+    if(Acut > 2.0)
+    {
+      count++;
+      fprintf(Outfile, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
+    }
+    
+    M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
+    
+    XLS = dvector(1,2*M);
+    AA  = dvector(1,2*M);
+    EE  = dvector(1,2*M);
+    
+    FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
+    
+    for(i=1; i<=M; i++)
     {
       
-      cnt++;
+      k = (q + i - 1 - M/2);
       
-      if (cnt%100000 == 0) printf("%ld sources simulated, %ld bright\n", cnt, cnt2);
-      
-      N = 32*mult;
-      if(f > 0.001) N = 64*mult;
-      if(f > 0.01) N = 256*mult;
-      if(f > 0.03) N = 512*mult;
-      if(f > 0.1) N = 1024*mult;
-      
-      
-      fonfs = f/LISAorbit->fstar;
-      
-      q = (long)(f*TOBS);
-      
-      instrument_noise(f, LISAorbit->fstar, LISAorbit->L, &SAE, &SXYZ);
-      
-      /*  calculate michelson noise  */
-      
-      /*inst2*/
-      if(noiseFlag==1)Sm = SXYZ/(4.0*sin(fonfs)*sin(fonfs));
-      if(noiseFlag==2)Sm = SXYZ/(4.0);//*sin(fonfs)*sin(fonfs));
-      
-      Acut = A*sqrt(TOBS/Sm);
-      if(f>0.008)
+      if(k>0 && k<NFFT/2)
       {
-        if(Acut>Amax)
-        {
-          Amax=Acut;
-          fprintf(stdout,"New max: f=%g, Acut=%g, D=%g, M=%g\n",f,Acut,galactic_binary_dL(f, fdot, A),M_fdot(f,fdot));
-        }
-      }
-      if(Acut > 2.0)
-      {
-        cnt2++;
-        fprintf(Outfile, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
-      }
-      
-      if(f < 4.0e-2)
-      {
-        
-        M = (long)(pow(2.0,(rint(log(Acut)/log(2.0))+1.0)));
-        
-        if(M < N) M = N;
-        if(N < M) N = M;
-        if(M > 8192) M = 8192;
-        //N=M=2*8192;
-        N=M;
-        
-        XLS = dvector(1,2*M);
-        AA = dvector(1,2*M);   EE = dvector(1,2*M);
-        
-        //added orbit structure to FAST_LISA function call -- TBL
-        FAST_LISA(LISAorbit, params, N, M, XLS, AA, EE);
-        
-        for(i=1; i<=M; i++)
-        {
-          
-          k = (q + i -1 - M/2);
-          
-          //if(2*k+1 > NFFT) printf("bad\n");
-          if(k>0)
-          {
-            XfLS[2*k] += XLS[2*i-1];
-            XfLS[2*k+1] += XLS[2*i];
-            AALS[2*k] += AA[2*i-1];
-            AALS[2*k+1] += AA[2*i];
-            EELS[2*k] += EE[2*i-1];
-            EELS[2*k+1] += EE[2*i];
-          }
-          
-        }
-        
-        
-        free_dvector(XLS,1,2*M);  free_dvector(AA,1,2*M);  free_dvector(EE,1,2*M);
-        
+        XfLS[2*k]   += XLS[2*i-1];
+        XfLS[2*k+1] += XLS[2*i];
+        AALS[2*k]   += AA[2*i-1];
+        AALS[2*k+1] += AA[2*i];
+        EELS[2*k]   += EE[2*i-1];
+        EELS[2*k+1] += EE[2*i];
       }
       
     }
     
+    
+    free_dvector(XLS,1,2*M);
+    free_dvector(AA,1,2*M);
+    free_dvector(EE,1,2*M);
   }
-  
-  printf("Simulation Finished\n");
+  fclose(Infile);
+  printProgress(1.0);
+
+  printf("\nSimulation Finished\n");
   
   imax = (long)ceil(4.0e-2*TOBS);
   sqT = sqrt(TOBS);
-  
-  rseed = -7584529636;
   
   Outfile = fopen("Galaxy_XAE.dat","w");
   for(i=1; i< imax; i++)
@@ -204,19 +185,23 @@ int main(int argc,char **argv)
     f = (double)(i)/TOBS;
     fonfs = f/LISAorbit->fstar;
     instrument_noise(f, LISAorbit->fstar, LISAorbit->L, &SAE, &SXYZ);
-    XR = 0.5*sqrt(SXYZ) * gasdev2(&rseed);
-    XI = 0.5*sqrt(SXYZ) * gasdev2(&rseed);
-    AR = 0.5*sqrt(SAE) * gasdev2(&rseed);
-    AI = 0.5*sqrt(SAE) * gasdev2(&rseed);
-    ER = 0.5*sqrt(SAE) * gasdev2(&rseed);
-    EI = 0.5*sqrt(SAE) * gasdev2(&rseed);
-    if(noiseFlag==1)fprintf(Outfile,"%e %e %e %e %e %e %e\n", f, sqT*XfLS[2*i]+XR, sqT*XfLS[2*i+1]+XI,
-                            sqT*AALS[2*i]+AR, sqT*AALS[2*i+1]+AI, sqT*EELS[2*i]+ER, sqT*EELS[2*i+1]+EI);
-    if(noiseFlag==2)fprintf(Outfile,"%e %e %e %e %e %e %e\n", f, (sqT/sin(fonfs))*XfLS[2*i]+XR, (sqT/sin(fonfs))*XfLS[2*i+1]+XI,
-                            (sqT/sin(fonfs))*AALS[2*i]+AR, (sqT/sin(fonfs))*AALS[2*i+1]+AI, (sqT/sin(fonfs))*EELS[2*i]+ER, (sqT/sin(fonfs))*EELS[2*i+1]+EI);
+    XR = 0.5 * sqrt(SXYZ) * gsl_ran_ugaussian(r);
+    XI = 0.5 * sqrt(SXYZ) * gsl_ran_ugaussian(r);
+    AR = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
+    AI = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
+    ER = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
+    EI = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
+    fprintf(Outfile,"%.12g %.12g %.12g %.12g %.12g %.12g %.12g\n", f, sqT*XfLS[2*i]+XR, sqT*XfLS[2*i+1]+XI, sqT*AALS[2*i]+AR, sqT*AALS[2*i+1]+AI, sqT*EELS[2*i]+ER, sqT*EELS[2*i+1]+EI);
   }
   fclose(Outfile);
   
+  
+  
+  
+  free(XfLS);
+  free(AALS);
+  free(EELS);
+
   return 0;
   
 }

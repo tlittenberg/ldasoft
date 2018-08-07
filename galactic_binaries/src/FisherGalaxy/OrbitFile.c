@@ -29,22 +29,22 @@ void analytic_orbits(double t, double *x, double *y, double *z)
   
   sb = sin(beta1);
   cb = cos(beta1);
-  x[1] = AU*ca + AU*ec*(sa*ca*sb - (1. + sa*sa)*cb);
-  y[1] = AU*sa + AU*ec*(sa*ca*cb - (1. + ca*ca)*sb);
-  z[1] = -sq3*AU*ec*(ca*cb + sa*sb);
+  x[1] = AU*ca + AU*ECC*(sa*ca*sb - (1. + sa*sa)*cb);
+  y[1] = AU*sa + AU*ECC*(sa*ca*cb - (1. + ca*ca)*sb);
+  z[1] = -sq3*AU*ECC*(ca*cb + sa*sb);
   
   
   sb = sin(beta2);
   cb = cos(beta2);
-  x[2] = AU*ca + AU*ec*(sa*ca*sb - (1. + sa*sa)*cb);
-  y[2] = AU*sa + AU*ec*(sa*ca*cb - (1. + ca*ca)*sb);
-  z[2] = -sq3*AU*ec*(ca*cb + sa*sb);
+  x[2] = AU*ca + AU*ECC*(sa*ca*sb - (1. + sa*sa)*cb);
+  y[2] = AU*sa + AU*ECC*(sa*ca*cb - (1. + ca*ca)*sb);
+  z[2] = -sq3*AU*ECC*(ca*cb + sa*sb);
   
   sb = sin(beta3);
   cb = cos(beta3);
-  x[3] = AU*ca + AU*ec*(sa*ca*sb - (1. + sa*sa)*cb);
-  y[3] = AU*sa + AU*ec*(sa*ca*cb - (1. + ca*ca)*sb);
-  z[3] = -sq3*AU*ec*(ca*cb + sa*sb);
+  x[3] = AU*ca + AU*ECC*(sa*ca*sb - (1. + sa*sa)*cb);
+  y[3] = AU*sa + AU*ECC*(sa*ca*cb - (1. + ca*ca)*sb);
+  z[3] = -sq3*AU*ECC*(ca*cb + sa*sb);
   
 }
 /*************************************************************************/
@@ -65,7 +65,7 @@ int main(int argc,char **argv)
   x=dvector(1,3);
   y=dvector(1,3);
   z=dvector(1,3);
-  for(i=0; i<366*5; i++)
+  for(i=0; i<366*10; i++)
   {
     t = (double)i*24.*60.*60.;
     analytic_orbits(t,x,y,z);

@@ -16,27 +16,17 @@
 #include "Detector.h"
 #include "Subroutines.h"
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sf.h>
 
-#define C 299792458.
-#define TSUN  4.9169e-6
-#define PC 3.0856775807e16
-#define GC 8200.0
 
-
-double galactic_binary_dL(double f0, double dfdt, double A, double T)
-{
-  double f    = f0;//T;
-  double fd = dfdt;//(T*T);
-  double amp   = A;
-  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
-}
-
-void FISHER(struct lisa_orbit *orbit, double *params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE);
+void FISHER(struct lisa_orbit *orbit, double TOBS, double *params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE);
 void indexx(unsigned long n, double *arr, unsigned long *indx);
 void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N);
 
@@ -69,6 +59,29 @@ int main(int argc,char **argv)
   
   
   if(argc != 6) KILL("Fisher_Galaxy detections.dat confusion.dat sigmasX.dat sigmasAE.dat Orbit.dat\n");
+
+  printf("***********************************************************************\n");
+  printf("*\n");
+  printf("* Fisher Parameter Estimation Tool\n");
+  printf("*   Candidate Sources:   %s\n",argv[1]);
+  printf("*   Confusion Noise Fit: %s\n",argv[2]);
+  printf("*   X-Channel Results:   %s\n",argv[3]);
+  printf("*   AE-Channel Results:  %s\n",argv[4]);
+  printf("*   Orbit File:          %s\n",argv[5]);
+  
+  /* Figure out TOBS and NFFT */
+  FILE *Infile = fopen(argv[2],"r");
+  double junk;
+  double f1,f2;
+  fscanf(Infile,"%lf%lf%lf%lf%lf\n", &f1, &junk, &junk, &junk, &junk);
+  fscanf(Infile,"%lf%lf%lf%lf%lf\n", &f2, &junk, &junk, &junk, &junk);
+  double TOBS = 1./(f2-f1);
+  fclose(Infile);
+  /*****************************/
+
+  printf("*   Observing Time:      %.1f year (%f s)\n",TOBS/year,TOBS);
+  printf("*\n");
+  printf("***********************************************************************\n");
   
   vfile = fopen(argv[1],"r");
   
@@ -139,18 +152,26 @@ int main(int argc,char **argv)
   
   double th;// = M_PI - params[1];
   double ph;// = params[2];
-  //  double r;//  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
+  //  double r;//  = galactic_binary_dL(params[0], params[7], params[3]);
   //  double x;// = r*sin(th)*cos(ph);// + GC;
   //  double y;// = r*sin(th)*sin(ph);
   //  double z;// = r*cos(th);
   
   
-  
-  
-  
+  //count lines in file
+  int NSIM = 0;
   while ( !feof(vfile) )
   {
-    
+    fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    NSIM++;
+  }
+  rewind(vfile);
+  NSIM--;
+  
+  for(int n=0; n<NSIM; n++)
+  {
+    if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
+
     fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
     
     params[0] = f;
@@ -182,8 +203,6 @@ int main(int argc,char **argv)
      */
     cntx++;
     
-    if(cntx%1000 == 0) printf("%d/%d processed\n", cntx, COUNT);
-    
     N = 32*mult;
     if(f > 0.001) N = 64*mult;
     if(f > 0.01) N = 256*mult;
@@ -198,16 +217,8 @@ int main(int argc,char **argv)
     
     if(q <= imax)
     {
-      if(noiseFlag==1)
-      {
-        SAE += AEc[q];
-        SXYZ += Xc[q];
-      }
-      if(noiseFlag==2)
-      {
-        SAE += AEc[q]*sin(f/fstar)*sin(f/fstar);
-        SXYZ += Xc[q]*sin(f/fstar)*sin(f/fstar);
-      }
+      SAE  += AEc[q];
+      SXYZ += Xc[q];
     }
     
     
@@ -216,27 +227,20 @@ int main(int argc,char **argv)
     
     Acut = A*sqrt(TOBS/Sm);
     
-    M = (long)(pow(2.0,(rint(log(Acut)/log(2.0))+1.0)) + fdot*TOBS*TOBS);
-    
-    if(M < N) M = N;
-    if(M > 8192) M = 8192;
-    N = M;
-    
-    
-    N = M = 8192;
+    M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
     XLS = dvector(1,2*M);
-    AA = dvector(1,2*M);   EE = dvector(1,2*M);
+    AA  = dvector(1,2*M);
+    EE  = dvector(1,2*M);
     
-    FAST_LISA(LISAorbit, params, N, M, XLS, AA, EE);
+    FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
     
-    SNRX = sqrt(Sum(XLS,XLS,M,SXYZ));
-    SNR = sqrt(Sum(AA,AA,M,SAE)+Sum(EE,EE,M,SAE));
-    
-    // printf("SNR_X = %f  SNR_in = %f SNR_AE = %f\n", SNRX, SNRin, SNR);
+    SNRX = sqrt(Sum(XLS,XLS,M,SXYZ,TOBS));
+    SNR  = sqrt(Sum(AA,AA,M,SAE,TOBS)+Sum(EE,EE,M,SAE,TOBS));
     
     free_dvector(XLS,1,2*M);
-    free_dvector(AA,1,2*M);  free_dvector(EE,1,2*M);
+    free_dvector(AA,1,2*M);
+    free_dvector(EE,1,2*M);
     
     if(SNR > 7.0)
     {
@@ -245,14 +249,14 @@ int main(int argc,char **argv)
       
       th = M_PI - params[1];
       ph = params[2];
-      r  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
+      r  = galactic_binary_dL(params[0], params[7], params[3]);
       x = r*sin(th)*cos(ph);// + GC;
       y = r*sin(th)*sin(ph);
       z = r*cos(th);
       fprintf(sky2,"%lg %lg %lg\n",x/1000.,y/1000.,z/1000.);
       fflush(sky2);
       
-      FISHER(LISAorbit, params, N, M, SXYZ, SAE, SigmaX, SigmaAE);
+      FISHER(LISAorbit, TOBS, params, N, M, SXYZ, SAE, SigmaX, SigmaAE);
       
       /*
        loudSNR[0][loudSNRcount] = SNR;
@@ -285,7 +289,7 @@ int main(int argc,char **argv)
       fddot = SigmaAE[8]/(fabs(params[8]*TOBS*TOBS*TOBS));  // fraction uncertainity in fddot
       fprintf(afile, "%e ", SigmaAE[0]/TOBS);  // convert back to Hz
       fprintf(afile, "%e %e ", fdot, fddot);
-      //SigmaAE[3];// *= Amp;
+
       for(i = 1; i < 7; i++)
       {
         fprintf(afile, "%e ", SigmaAE[i]);
@@ -300,7 +304,7 @@ int main(int argc,char **argv)
         //        {
         //        double th = M_PI - params[1];
         //        double ph = params[2];
-        //        double r  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
+        //        double r  = galactic_binary_dL(params[0], params[7], params[3]);
         //        double x = r*sin(th)*cos(ph);// + GC;
         //        double y = r*sin(th)*sin(ph);
         //        double z = r*cos(th);
@@ -311,27 +315,17 @@ int main(int argc,char **argv)
           cnt3++;  // 3D mapping
           th = M_PI - params[1];
           ph = params[2];
-          r  = galactic_binary_dL(params[0], params[7], params[3], TOBS);
+          r  = galactic_binary_dL(params[0], params[7], params[3]);
           x = r*sin(th)*cos(ph);// + GC;
           y = r*sin(th)*sin(ph);
           z = r*cos(th);
           fprintf(sky,"%lg %lg %lg\n",x/1000.,y/1000.,z/1000.);
           fflush(sky);
         }
-      }
+      } //less than 1 sq degree
       
-      if(fdot < 0.2)
-      {
-        cnt4++;  // measure fdot to 20%
-      }
-      
-      if(fddot < 0.2)
-      {
-        cnt5++;  // measure fddot to 20%
-        //printf("%e %f\n", f, SNR);
-      }
-      
-      
+      if(fdot  < 0.2) cnt4++;  // measure fdot to 20%
+      if(fddot < 0.2) cnt5++;  // measure fddot to 20%
       
       if(SNRX > 7.0)
       {
@@ -396,17 +390,10 @@ int main(int argc,char **argv)
           cnt10++;  // measure fddot to 20%
           // printf("%e %f\n", f, SNRX);
         }
-        
-      }
-      
-      
-      
-      
-    }
-    
-    
+      } // Michelson SNR > 7
+    } //AE SNR>7
   }
-  
+  printf("\n");
   printf("*************** AE *****************\n");
   printf("SNR > 7  = %d\n", cnt1);
   printf("2D sky mapping = %d\n", cnt2);
@@ -454,7 +441,7 @@ int main(int argc,char **argv)
 }
 
 
-void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE)
+void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE)
 {
   
   int i, j;
@@ -557,11 +544,11 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
     
     //       printf("Constructing plus template");
     
-    FAST_LISA(orbit, ParamsP, N, M, XP, templateP1, templateP2);
+    FAST_LISA(orbit, TOBS, ParamsP, N, M, XP, templateP1, templateP2);
     
     //       printf("Constructing minus template");
     
-    FAST_LISA(orbit, ParamsM, N, M, XM, templateM1, templateM2);
+    FAST_LISA(orbit, TOBS, ParamsM, N, M, XM, templateM1, templateM2);
     
     for (j = 1 ; j <= 2*M ; j++)
     {
@@ -587,7 +574,7 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
     
     for (j = i ; j < d ; j++)
     {
-      Fisher1[i][j] =  Sum(XD[i],XD[j],M,SXYZ);
+      Fisher1[i][j] =  Sum(XD[i],XD[j],M,SXYZ,TOBS);
     }
   }
   
@@ -612,7 +599,7 @@ void FISHER(struct lisa_orbit *orbit, double *Params, long N, long M, double SXY
   {
     for (j = i ; j < d ; j++)
     {
-      Fisher2[i][j] =  Sum(temD1[i],temD1[j],M,SAE)+Sum(temD2[i],temD2[j],M,SAE);
+      Fisher2[i][j] =  Sum(temD1[i],temD1[j],M,SAE,TOBS)+Sum(temD2[i],temD2[j],M,SAE,TOBS);
     }
   }
   
