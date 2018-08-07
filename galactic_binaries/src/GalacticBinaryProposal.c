@@ -29,7 +29,7 @@
 #define SNRCAP 10000.0 /* SNR cap on logL */
 
 
-static void write_Fstat_animation(struct Proposal *proposal)
+static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal)
 {
   FILE *fptr = fopen("fstat/Fstat.gpi","w");
   
@@ -56,6 +56,7 @@ static void write_Fstat_animation(struct Proposal *proposal)
   
   fprintf(fptr,"\n");
   
+  fprintf(fptr,"df0 = %g\n",proposal->matrix[0][1]/T);
   fprintf(fptr,"dph = 0.5*2.*pi/%i.\n",(int)proposal->matrix[1][0]);
   fprintf(fptr,"dth = 0.5*2./%i.\n"   ,(int)proposal->matrix[2][0]);
   
@@ -68,7 +69,8 @@ static void write_Fstat_animation(struct Proposal *proposal)
   fprintf(fptr,"do for [ii=0:%i-1:+1]{\n",(int)proposal->matrix[0][0]);
   fprintf(fptr,"  set output sprintf('fstat_frame%%05.0f.png',ii)\n");
   fprintf(fptr,"  set size 1,1\n");
-  fprintf(fptr,"  set multiplot title sprintf('fstat-frame%%05.0f.png',ii)\n");
+//  fprintf(fptr,"  set multiplot title sprintf('fstat-frame%%05.0f.png',ii)\n");
+  fprintf(fptr,"  set multiplot title sprintf('f = %%f ',(ii*df0+%g)*1000)\n",fmin);
   fprintf(fptr,"  set size 0.5,1\n");
 
   fprintf(fptr,"\n");
@@ -484,7 +486,7 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
   {
 
     //draw n from U[0,N]
-    double c_prime = gsl_rng_uniform(seed)*(double)N;
+    double c_prime = gsl_rng_uniform(seed)*(double)(N-1);
     
     //map to nearest sample
     int c_minus = (int)floor(c_prime);
@@ -518,13 +520,14 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
     if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
     
     //find samples either end of p-value
-    if(params[n]<cdf[n][0] || params[n]>= cdf[n][N])
+    if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
       return -INFINITY;
+    }
     else
     {
       i=0;
       while(params[n]>cdf[n][i]) i++;
-      logP += -log(cdf[n][i+1]-cdf[n][i]);
+      logP += log(  (1./N) /  (cdf[n][i+1]-cdf[n][i])  );
     }
   }
   
@@ -675,7 +678,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
             proposal[i]->vector[n] = proposal[i]->matrix[j][n];
 
           //sort it
-          gsl_sort(proposal[i]->vector,proposal[i]->size, 1);
+          gsl_sort(proposal[i]->vector,1, proposal[i]->size);
           
           //replace that row of the matrix
           for(int n=0; n<proposal[i]->size; n++)
@@ -846,7 +849,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
       }
       fclose(fptr);
     }
-    write_Fstat_animation(proposal);
+    write_Fstat_animation(data->qmin/data->T, data->T,proposal);
   }
   
   free(Fparams);

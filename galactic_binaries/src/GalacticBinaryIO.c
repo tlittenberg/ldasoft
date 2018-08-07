@@ -602,7 +602,7 @@ void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
   //map to parameter names (just to make code readable)
   map_array_to_params(source, source->params, data->T);
   
-  fprintf(fptr,"%.12g ",source->f0);
+  fprintf(fptr,"%.16g ",source->f0);
   fprintf(fptr,"%.12g ",source->dfdt);
   fprintf(fptr,"%.12g ",source->amp);
   fprintf(fptr,"%.12g ",source->phi);

@@ -174,6 +174,10 @@ int main(int argc, char *argv[])
           map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
           
         }
+        else if(flags->update)
+        {
+          draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+        }
         else
         {
           draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[i][0], model_ptr->source[n]->params , chain->r[ic]);
@@ -593,11 +597,11 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
        */
       logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
       if(flags->burnin) logH /= chain->annealing;
-      //        if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0)
-      //        {
-      //          printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x[i]->logL , model_y[i]->logL);
-      //          printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-      //        }
+              //if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+              //{
+              //  printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x[i]->logL , model_y[i]->logL);
+              //  printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+             // }
     }
     logH += logPy  - logPx;  //priors
     logH += logQxy - logQyx; //proposals
@@ -605,6 +609,15 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(logH > loga)
     {
+              if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+              {
+                printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
+                printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+                exit(1);
+              }
+
+
+
       proposal[nprop]->accept[ic]++;
       copy_model(model_y,model_x);
     }
