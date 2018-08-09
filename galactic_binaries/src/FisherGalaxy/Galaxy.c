@@ -91,10 +91,16 @@ int main(int argc,char **argv)
   
   //count lines in file
   int NSIM = 0;
+  int decade = 1;
   while ( !feof(Infile) )
   {
     fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
     NSIM++;
+    if(NSIM%decade==0)
+    {
+      decade*=10;
+      printf("read %i lines of file\n");
+    }
   }
   rewind(Infile);
   NSIM--;

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
@@ -26,7 +27,7 @@
 #include <gsl/gsl_sf.h>
 
 
-void FISHER(struct lisa_orbit *orbit, double TOBS, double *params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE);
+void FISHER(struct lisa_orbit *orbit, double TOBS, double *params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE, double *DrawAE);
 void indexx(unsigned long n, double *arr, unsigned long *indx);
 void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N);
 
@@ -34,7 +35,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
 int main(int argc,char **argv)
 {
   char Gfile[50];
-  double *params;
+  double *params, *DrawAE;
   double *XLS;
   double *AA, *EE;
   double *SigmaX, *SigmaAE;
@@ -51,6 +52,7 @@ int main(int argc,char **argv)
   double *Xc, *AEc, *Xnoise, *AEnoise;
   FILE* vfile;
   FILE* afile;
+  FILE* pfile;
   FILE* xfile;
   FILE* sky;
   FILE* sky2;
@@ -58,7 +60,7 @@ int main(int argc,char **argv)
   
   
   
-  if(argc != 6) KILL("Fisher_Galaxy detections.dat confusion.dat sigmasX.dat sigmasAE.dat Orbit.dat\n");
+  if(argc != 7) KILL("Fisher_Galaxy detections.dat confusion.dat sigmasX.dat sigmasAE.dat DrawAE.dat Orbit.dat\n");
 
   printf("***********************************************************************\n");
   printf("*\n");
@@ -67,7 +69,8 @@ int main(int argc,char **argv)
   printf("*   Confusion Noise Fit: %s\n",argv[2]);
   printf("*   X-Channel Results:   %s\n",argv[3]);
   printf("*   AE-Channel Results:  %s\n",argv[4]);
-  printf("*   Orbit File:          %s\n",argv[5]);
+  printf("*   Perturbed Params:    %s\n",argv[5]);
+  printf("*   Orbit File:          %s\n",argv[6]);
   
   /* Figure out TOBS and NFFT */
   FILE *Infile = fopen(argv[2],"r");
@@ -114,6 +117,7 @@ int main(int argc,char **argv)
   params = dvector(0,8);
   SigmaX = dvector(0,8+1);
   SigmaAE = dvector(0,8+1);
+  DrawAE = dvector(0,8+1);
   
   
   fix = pi/180.0;  /* one degree in radians */
@@ -127,6 +131,7 @@ int main(int argc,char **argv)
   
   xfile = fopen(argv[3], "w");
   afile = fopen(argv[4], "w");
+  pfile = fopen(argv[5], "w");
   sky = fopen("sky_3d.dat","w");
   sky2 = fopen("sky_all.dat","w");
   
@@ -256,7 +261,7 @@ int main(int argc,char **argv)
       fprintf(sky2,"%lg %lg %lg\n",x/1000.,y/1000.,z/1000.);
       fflush(sky2);
       
-      FISHER(LISAorbit, TOBS, params, N, M, SXYZ, SAE, SigmaX, SigmaAE);
+      FISHER(LISAorbit, TOBS, params, N, M, SXYZ, SAE, SigmaX, SigmaAE, DrawAE);
       
       /*
        loudSNR[0][loudSNRcount] = SNR;
@@ -278,6 +283,12 @@ int main(int argc,char **argv)
        loudSNR[16][loudSNRcount] = SigmaAE[6];
        loudSNRcount++;
        */
+      
+      for(i = 0; i < 8; i++)
+      {
+        fprintf(pfile, "%.16g ", DrawAE[i]);
+      }
+      fprintf(pfile,"\n");
       
       fprintf(afile, "%e %e %e ", params[0], params[7], params[8]);
       for(i = 1; i < 7; i++)
@@ -441,7 +452,7 @@ int main(int argc,char **argv)
 }
 
 
-void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE)
+void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE, double *DrawAE)
 {
   
   int i, j;
@@ -486,6 +497,15 @@ void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long 
   Fisher2 = dmatrix(0, d-1, 0, d-1);
   Cov1 = dmatrix(0, d-1, 0, d-1);
   Cov2 = dmatrix(0, d-1, 0, d-1);
+  
+  // Random draw to perturb params by Fisher
+  const gsl_rng_type *T = gsl_rng_default;
+  gsl_rng *r = gsl_rng_alloc(T);
+  gsl_rng_env_setup();
+  gsl_rng_set (r, time(0));
+  
+  double *u = malloc(d*sizeof(double));
+  for (i=0; i<d; i++) u[i] = gsl_ran_ugaussian(r);
   
   for (i = 0 ; i < d ; i++)
   {
@@ -658,6 +678,20 @@ void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long 
   free_dvector(evalue,0,d-1);
   free_dmatrix(evector,0,d-1,0,d-1);
   
+  
+  //get perturbed params (ignoring fddot)
+  for (i = 0; i < 8; i++)
+  {
+    DrawAE[i] = 0.0;
+    for (j = 0; j < 8; j++)
+    {
+      DrawAE[i] += Cov2[i][j]*u[j];
+    }
+    DrawAE[i] += Params[i];
+  }
+  
+  
+  //get Fisher estimated errors
   for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
   
   SigmaAE[9] = 2.0*pi*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
