@@ -93,7 +93,7 @@ int main(int argc,char **argv)
   LISAorbit = &orbit;
   
   //Set up orbit structure (allocate memory, read file, cubic spline)
-  sprintf(Gfile,"%s",argv[5]);
+  sprintf(Gfile,"%s",argv[6]);
   initialize_orbit(Gfile, LISAorbit);
   
   double L    = LISAorbit->L;
@@ -284,11 +284,21 @@ int main(int argc,char **argv)
        loudSNRcount++;
        */
       
-      for(i = 0; i < 8; i++)
-      {
-        fprintf(pfile, "%.16g ", DrawAE[i]);
-      }
-      fprintf(pfile,"\n");
+      f     = DrawAE[0];
+      fdot  = DrawAE[7];
+      theta = 0.5*M_PI - DrawAE[1];
+      phi   = DrawAE[2];
+      A     = DrawAE[3];
+      iota  = DrawAE[4];
+      psi   = DrawAE[5];
+      phase = DrawAE[6];
+      fprintf(pfile, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
+
+//      for(i = 0; i < 8; i++)
+//      {
+//        fprintf(pfile, "%.16g ", DrawAE[i]);
+//      }
+//      fprintf(pfile,"\n");
       
       fprintf(afile, "%e %e %e ", params[0], params[7], params[8]);
       for(i = 1; i < 7; i++)
@@ -675,20 +685,41 @@ void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long 
   double *evalue = dvector(0,d-1);
   matrix_eigenstuff(Fisher2,evector,evalue,d);
   for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov2[i][j] = Fisher2[i][j];
-  free_dvector(evalue,0,d-1);
-  free_dmatrix(evector,0,d-1,0,d-1);
-  
   
   //get perturbed params (ignoring fddot)
+  
+  //are evectors normalized?
+//  double df = 0.0;
+//  for (i = 0; i < 8; i++)
+//  {
+//    double norm = 0.0;
+//    for (j = 0; j < 8; j++)
+//    {
+//      norm += evector[i][j]*evector[i][j];
+//    }
+////    printf("f-component[%i]: %g * %g / %g\n",i, u[i], evector[0][i], sqrt(evalue[i]) );
+//    df+=evector[0][i]/sqrt(evalue[i]);
+//    //printf("|evector[%i]| = %g\n",i,sqrt(norm));
+//  }
+//  printf("df = %g\n",df);
+  
   for (i = 0; i < 8; i++)
   {
     DrawAE[i] = 0.0;
     for (j = 0; j < 8; j++)
     {
-      DrawAE[i] += Cov2[i][j]*u[j];
+      DrawAE[i] += evector[i][j]*u[j]/sqrt(evalue[j])/sqrt(8.);
     }
-    DrawAE[i] += Params[i];
+    if(i==0)DrawAE[i] = DrawAE[i]/TOBS + Params[i];
+    else if(i==3)DrawAE[i] = exp(DrawAE[i] + log(Params[i]));
+    else if(i==7)DrawAE[i] = DrawAE[i]/TOBS/TOBS + Params[i];
+    else DrawAE[i] = DrawAE[i] + Params[i];
+    
   }
+  
+  free_dvector(evalue,0,d-1);
+  free_dmatrix(evector,0,d-1,0,d-1);
+  
   
   
   //get Fisher estimated errors
