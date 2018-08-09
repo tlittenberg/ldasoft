@@ -99,7 +99,7 @@ int main(int argc,char **argv)
     if(NSIM%decade==0)
     {
       decade*=10;
-      printf("read %i lines of file\n");
+      printf("read %i lines of file\n",NSIM);
     }
   }
   rewind(Infile);
