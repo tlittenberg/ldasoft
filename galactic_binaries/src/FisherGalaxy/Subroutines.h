@@ -61,5 +61,6 @@ void spline(double *x, double *y, int n, double yp1, double ypn, double *y2);
 void splint(double *xa, double *ya, double *y2a, int n, double x, double *y);
 
 
-
+double confusion_fit(double f, double logA, double alpha, double beta, double kappa, double gamma, double fk);
+void confusion_mcmc(double *data, double *noise, double *conf, int imin, int imax, double T);
 

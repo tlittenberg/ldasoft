@@ -26,7 +26,7 @@ int main(int argc,char **argv)
   double *XLS, *AA, *EE;
   long M, N, q;
   long i, k, cnt, cc1, mult, imax, imin;
-  double SAE, SXYZ, sqT;
+  double sqT;
   double *Xnoise, *Xconf;
   double *AEnoise, *AEconf;
   double *XP, *AEP;
@@ -191,23 +191,16 @@ int main(int argc,char **argv)
   }
   fclose(Outfile);
   
-  XP = dvector(imin,imax);  AEP = dvector(imin,imax);
-  Xnoise = dvector(imin,imax);  Xconf = dvector(imin,imax);
-  AEnoise = dvector(imin,imax);  AEconf = dvector(imin,imax);
+  XP = dvector(0,NFFT/2);  AEP = dvector(0,NFFT/2);
+  Xnoise = dvector(0,NFFT/2);  Xconf = dvector(0,NFFT/2);
+  AEnoise = dvector(0,NFFT/2);  AEconf = dvector(0,NFFT/2);
   
-  for(i=imin; i< imax; i++)
+  for(i=0; i<NFFT/2; i++)
   {
     XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
+    instrument_noise((double)i/TOBS, LISAorbit->fstar, LISAorbit->L, &AEnoise[i], &Xnoise[i]);
   }
-  
-  for(i=imin; i< imax; i++)
-  {
-    f = (double)(i)/TOBS;
-    instrument_noise(f, LISAorbit->fstar, LISAorbit->L, &SAE, &SXYZ);
-    AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-  }
-  
   printf("Estimate Confusion Noise\n");
 
   //medianAE(imin, imax, LISAorbit->fstar, LISAorbit->L, AEP, AEnoise, AEconf, TOBS);
@@ -216,7 +209,9 @@ int main(int argc,char **argv)
   if(divs/2+1 > imin) imin = divs/2+1;
   if(imax > NFFT/2-divs/2-1) imax =  NFFT/2-divs/2-1;
   
-  spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, LISAorbit->fstar,LISAorbit->L);
+  //spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, LISAorbit->fstar,LISAorbit->L);
+  
+  confusion_mcmc(AEP, AEnoise, AEconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
 
   printf("Writing Residual File\n");
 

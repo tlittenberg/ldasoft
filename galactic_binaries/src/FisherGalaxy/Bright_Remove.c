@@ -259,6 +259,7 @@ int main(int argc,char **argv)
   {
     XP[i]  = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
+    instrument_noise((double)i/TOBS, LISAorbit->fstar, LISAorbit->L, &AEnoise[i], &Xnoise[i]);
   }
   
   printf("Estimating Confusion Noise\n");
@@ -268,14 +269,15 @@ int main(int argc,char **argv)
   if(divs/2+1 > imin) imin = divs/2+1;
   if(imax > NFFT/2-divs/2-1) imax =  NFFT/2-divs/2-1;
 
-  spline_fit(0, divs, imin, imax, XP, Xnoise, Xconf, TOBS, fstar, L);
-  spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, fstar, L);
+  //spline_fit(0, divs, imin, imax, XP, Xnoise, Xconf, TOBS, fstar, L);
+  //spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, fstar, L);
+  //confusion_mcmc(AEP, AEnoise, AEconf, imin, imax, TOBS);
+  confusion_mcmc(AEP, AEnoise, AEconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
+
   
-  
-  /*
   medianX(imin, imax, fstar, L, XP, Xnoise, Xconf, TOBS);
-  medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf, TOBS);
-  */
+  //medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf, TOBS);
+  
   
   Outfile = fopen("Confusion_XAE_1.dat","w");
   for(i=imin; i<= imax; i++)

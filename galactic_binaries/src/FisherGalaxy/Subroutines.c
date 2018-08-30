@@ -1300,7 +1300,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   
   N = 100000;   // number of MCMC steps
   
-  Nf = 100; // maximum number of spline control points
+  Nf = 20; // maximum number of spline control points
   
   seed = -946673524;
   
@@ -1338,12 +1338,12 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   activey = ivector(1,Nf);
   
   // only start with 3 active points
-  Nx = Ny = 5;
+  Nx = Ny = Nf;
   
   for(i=1; i<= Nf; i++)
   {
-    activex[i] = 0;
-    activey[i] = 0;
+    activex[i] = 1;
+    activey[i] = 1;
   }
   
   activex[1] = 1;
@@ -1432,9 +1432,9 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   
   
   // set this flag to 1 if you want to do a fixed dimension run
-  fixedD = 0;
+  fixedD = 1;
   
-  
+  double logLmax=-1e60;
   if(ltest == 1)
   {
     logLx = 0.0;
@@ -1679,14 +1679,31 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
         sdatax[i] = sdatay[i];
         activex[i] = activey[i];
       }
+      
+      if(fixedD == 1)
+      {
+        if(logLx > logLmax)
+        {
+          logLmax=logLx;
+          i = 0;
+          for(ii=1; ii<= Nf; ii++)
+          {
+            if(activex[ii] == 1)  // only use active points
+            {
+              i++;
+              tpoints[i] = spoints[ii];
+              tdata[i] = sdatax[ii];
+            }
+          }        }
+      }
     }
-    
     if(mc%(N/100)==0)printProgress((double)mc/(double)N);
   }
   printProgress(1);
   printf("\n");
   
-  
+  if(fixedD == 0)
+  {
   i = 0;
   for(ii=1; ii<= Nf; ii++)
   {
@@ -1696,6 +1713,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
       tpoints[i] = spoints[ii];
       tdata[i] = sdatax[ii];
     }
+  }
   }
   
   spline(tpoints, tdata, Nx, 1.0e31, 1.0e31, sderiv);
@@ -1774,6 +1792,155 @@ void spline(double *x, double *y, int n, double yp1, double ypn, double *y2)
   free_dvector(u,1,n-1);
 }
 #undef NRANSI
+
+
+
+
+
+
+/*****************************************************/
+/*                                                   */
+/*         tanh-based Confusion Noise Fitting        */
+/*                                                   */
+/*****************************************************/
+
+double confusion_fit(double f, double logA, double alpha, double beta, double kappa, double gamma, double fk)
+{
+  return pow(f,-5./3.) * exp( logA - pow(f,alpha) + beta*f*sin(kappa*f)) * (1.0 + tanh(gamma*(fk - f)));
+}
+
+void confusion_mcmc(double *data, double *noise, double *conf, int imin, int imax, double T)
+{
+  printf(" Parameterized fit to AE-channel confusion noise\n");
+  double logA = log(1e-45);
+  double alpha = 0.138;
+  double beta = -221;
+  double kappa = 521;
+  double gamma = 1680;
+  double fk = 0.00113;
+
+  double logA_y = log(1e-45);
+  double alpha_y = 0.1;
+  double beta_y = 200;
+  double kappa_y = 500;
+  double gamma_y = 1000;
+  double fk_y = 0.001;
+
+  
+  double logL,logL_y,logLmax;
+  
+  double *Sc   = malloc(imax*sizeof(double));
+  double *Sc_y = malloc(imax*sizeof(double));
+
+  
+  long seed = -123456;
+  
+  //gasdev2(&seed)
+  //ran2(&seed)
+  
+  
+  logL = 0.0;
+  for(int i=imin; i<imax; i++) Sc[i] = confusion_fit((double)i/T, logA, alpha, beta, kappa, gamma, fk);
+  for(int i=imin; i<imax; i++) logL += -0.5*data[i]/(noise[i]+Sc[i]) - 0.5*log(Sc[i]+noise[i]);
+  logLmax = logL;
+  
+  
+//  FILE *testfile = fopen("testchain.dat","w");
+//  FILE *testfile2;
+
+  double fk_min = (double)imin/T;
+  double fk_max = (double)imax/T;
+  
+  double gamma_min = 900;
+  double gamma_max = 2000;
+  
+  double beta_min = -400;
+  double beta_max = 400;
+  
+  int N = 50000;
+  for(int n=0; n<N; n++)
+  {
+    if(n%(N/100)==0)printProgress((double)n/(double)N);
+
+//    fprintf(testfile,"%lg %lg %lg %lg %lg %lg %lg\n",logL-(double)imax,logA, alpha,beta,kappa,gamma,fk);
+//    fflush(testfile);
+//
+//    if(n%100==0)
+//    {
+//      testfile2 = fopen("testfit.dat","w");
+//
+//      for(int i=imin; i<imax; i++)
+//      {
+//        fprintf(testfile2,"%lg %lg %lg %lg\n",(double)i/T, data[i], noise[i], Sc[i]);
+//      }
+//
+//      fclose(testfile2);
+//    }
+
+
+    double scale = 1.0;
+    double draw = ran2(&seed);
+    if(draw<0.3) scale = 10.0;
+    else if (draw<0.6) scale = 1.0;
+    else scale = 0.1;
+    
+    logA_y  = logA  + gasdev2(&seed)*1.0*scale;
+    alpha_y = alpha + gasdev2(&seed)*0.01*scale;
+    beta_y  = beta  + gasdev2(&seed)*100*scale;
+    kappa_y = kappa + gasdev2(&seed)*10*scale;
+    gamma_y = gamma + gasdev2(&seed)*200*scale;
+    fk_y    = fk    + gasdev2(&seed)*.0001*scale;
+    
+    //check priors
+    if(fk_y < fk_min || fk_y > fk_max) continue;
+    if(gamma_y < gamma_min || gamma_y > gamma_max) continue;
+    if(beta_y < beta_min || beta_y > beta_max) continue;
+
+    
+    //if still in the loop, calculate the likelihood
+    logL_y = 0.0;
+    for(int i=imin; i<imax; i++) Sc_y[i] = confusion_fit((double)i/T, logA_y, alpha_y, beta_y, kappa_y, gamma_y, fk_y);
+    for(int i=imin; i<imax; i++)
+    {
+      logL_y += -0.5*data[i]/(noise[i]+Sc_y[i]) - 0.5*log(Sc_y[i]+noise[i]);
+    }
+    
+    
+    if(logL_y - logL > log(ran2(&seed)))
+    {
+      logL  = logL_y;
+      logA  = logA_y;
+      alpha = alpha_y;
+      beta  = beta_y;
+      kappa = kappa_y;
+      gamma = gamma_y;
+      fk    = fk_y;
+      
+      for(int i=imin; i<imax; i++) Sc[i] = Sc_y[i];
+    }
+    
+    //store maxL
+    if(logL>logLmax)
+    {
+      logLmax = logL;
+      for(int i=imin; i<imax; i++) conf[i] = Sc[i];
+    }
+    
+    
+  }
+
+  
+  for(int i=imin; i<imax; i++) noise[i] += Sc[i];
+
+  printProgress(1);
+  printf("\n");
+
+  
+  free(Sc);
+  free(Sc_y);
+  
+  
+}
 
 
 
