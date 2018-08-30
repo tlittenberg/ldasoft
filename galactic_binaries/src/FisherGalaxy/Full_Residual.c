@@ -210,8 +210,14 @@ int main(int argc,char **argv)
   
   printf("Estimate Confusion Noise\n");
 
-  medianAE(imin, imax, LISAorbit->fstar, LISAorbit->L, AEP, AEnoise, AEconf, TOBS);
+  //medianAE(imin, imax, LISAorbit->fstar, LISAorbit->L, AEP, AEnoise, AEconf, TOBS);
+  int divs = 100;  // must be even - used to compute median
   
+  if(divs/2+1 > imin) imin = divs/2+1;
+  if(imax > NFFT/2-divs/2-1) imax =  NFFT/2-divs/2-1;
+  
+  spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, LISAorbit->fstar,LISAorbit->L);
+
   printf("Writing Residual File\n");
 
   Outfile = fopen("Confusion_AE_Residual.dat","w");
