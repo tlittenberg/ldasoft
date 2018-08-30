@@ -89,7 +89,9 @@ int main(int argc,char **argv)
   if((TOBS/year) <= 2.0) mult = 2;
   if((TOBS/year) <= 1.0) mult = 1;
   
-  XfLS = dvector(0,NFFT-1);  AALS = dvector(0,NFFT-1);  EELS = dvector(0,NFFT-1);
+  XfLS = dvector(0,NFFT-1);
+  AALS = dvector(0,NFFT-1);
+  EELS = dvector(0,NFFT-1);
   
   for(i=0; i<NFFT; i++)
   {
@@ -104,20 +106,15 @@ int main(int argc,char **argv)
   
   readGalaxyFile(argv[1],imax,XfLS,AALS,EELS);
   
-  XP = dvector(imin,imax);  AEP = dvector(imin,imax);
-  Xnoise = dvector(imin,imax);  Xconf = dvector(imin,imax);
-  AEnoise = dvector(imin,imax);  AEconf = dvector(imin,imax);
+  XP = dvector(0,NFFT/2);  AEP = dvector(0,NFFT/2);
+  Xnoise = dvector(0,NFFT/2);  Xconf = dvector(0,NFFT/2);
+  AEnoise = dvector(0,NFFT/2);  AEconf = dvector(0,NFFT/2);
   
-  Outfile = fopen("Power_0.dat","w");
-  for(i=imin; i< imax; i++)
+  for(i=0; i< NFFT/2; i++)
   {
-    f = (double)(i)/TOBS;
-    instrument_noise(f, fstar, L ,&SAE, &SXYZ);
-    XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
+    XP[i]  = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    fprintf(Outfile,"%.12g %e %e %e %e\n", f, XP[i], SXYZ, AEP[i], SAE);
   }
-  fclose(Outfile);
   
   printf("Reading Confusion Noise File\n");
   Outfile = fopen(argv[2],"r");
@@ -252,27 +249,33 @@ int main(int argc,char **argv)
   fclose(Outfile);
   
   
-  for(i=imin; i< imax; i++)
+  for(i=1; i< NFFT/2; i++)
   {
     XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
   }
   
-  Outfile = fopen("Power_1.dat","w");
-  for(i=imin; i< imax; i++)
+  for(i=1; i< NFFT/2; i++)
   {
-    f = (double)(i)/TOBS;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
-    XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
+    XP[i]  = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    fprintf(Outfile,"%.12g %e %e %e %e\n", f, XP[i], SXYZ, AEP[i], SAE);
   }
-  fclose(Outfile);
   
   printf("Estimating Confusion Noise\n");
+  
+  int divs = 100;  // must be even - used to compute median
+  
+  if(divs/2+1 > imin) imin = divs/2+1;
+  if(imax > NFFT/2-divs/2-1) imax =  NFFT/2-divs/2-1;
 
+  spline_fit(0, divs, imin, imax, XP, Xnoise, Xconf, TOBS, fstar, L);
+  spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, fstar, L);
+  
+  
+  /*
   medianX(imin, imax, fstar, L, XP, Xnoise, Xconf, TOBS);
   medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf, TOBS);
+  */
   
   Outfile = fopen("Confusion_XAE_1.dat","w");
   for(i=imin; i<= imax; i++)

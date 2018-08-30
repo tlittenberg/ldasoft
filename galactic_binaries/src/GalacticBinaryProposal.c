@@ -521,6 +521,7 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
     
     //find samples either end of p-value
     if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
+    {
       return -INFINITY;
     else
     {

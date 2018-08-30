@@ -97,7 +97,7 @@ void FAST_LISA(struct lisa_orbit *orbit, double TOBS, double *params, long N, lo
   /*   Gravitational Wave source parameters   */
   
   f0 = params[0];
-  costh =cos(params[1]);
+  costh = cos(params[1]);
   phi = params[2];
   Amp = params[3];
   cosi = cos(params[4]);
@@ -732,9 +732,17 @@ double Sum(double *AA, double *EE, long M, double SN, double TOBS)
 }
 
 
+/*****************************************************/
+/*                                                   */
+/*        Median-based Confusion Noise Fitting       */
+/*                                                   */
+/*****************************************************/
+
+
+
 void medianX(long imin, long imax, double fstar, double L, double *XP, double *Xnoise, double *Xconf, double TOBS)
 {
-  printf(" Fit to X-channel confusion noise\n");
+  printf(" Median fit to X-channel confusion noise\n");
 
   double f;
   double SAE, SXYZ;
@@ -894,7 +902,7 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
 
 void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEnoise, double *AEconf, double TOBS)
 {
-  printf(" Fit to AE-channel confusion noise\n");
+  printf(" Median fit to AE-channel confusion noise\n");
   double f;
   double SAE, SXYZ;
   double chi;
@@ -1154,3 +1162,618 @@ double quickselect(double *arr, int n, int k)
     }
   }
 }
+
+/*****************************************************/
+/*                                                   */
+/*        Spline-based Confusion Noise Fitting       */
+/*                                                   */
+/*****************************************************/
+
+void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xnoise, double *Xconf, double T, double fstar, double L)
+{
+  double f;
+  double SAE, SXYZ;
+  double chi;
+  long i, j;
+  long segs;
+  long rseed;
+  int Npoly;
+  double *XX;
+  double *fdata, *mdata, *pcx, *pcy, *inst;
+  double *adata, *sdata;
+  double conf;
+  double lfmin, lfmax, x, dlf, ln4;
+  int divsp, divh;
+  double mean, var;
+  
+  divsp = divs+1;
+  divh = divs/2;
+  
+  XX = dvector(0,divs);
+  
+  rseed = -546214;
+  
+  segs = (int)((double)(imax-imin)/(double)(divsp));
+  
+  lfmin = log((double)(imin)/T);
+  lfmax = log((double)(imin+divs*(segs))/T);
+  
+  Npoly = 20;
+  
+  dlf = (lfmax-lfmin)/(double)(Npoly);
+  ln4 = log(1.0e-4);
+  
+  fdata = dvector(0,segs-1);
+  mdata = dvector(0,segs-1);
+  adata = dvector(0,segs-1);
+  sdata = dvector(0,segs-1);
+  inst = dvector(0,segs-1);
+  pcx = dvector(0,Npoly);
+  pcy = dvector(0,Npoly);
+  
+  if(flag==0)   printf(" Spline fit to X-channel confusion noise\n");
+  if(flag==1)   printf(" Spline fit to AE-channel confusion noise\n");
+
+  for(i=0; i < segs; i++)
+  {
+    for(j=0; j<=divs; j++)
+    {
+      XX[j] = XP[imin-divh+divsp*i+j]*1.0e40;
+    }
+
+    mean = 0.0;
+    var = 0.0;
+    for(j=0; j<=divs; j++)
+    {
+      x = log(XX[j]);
+      mean += x;
+      var += x*x;
+    }
+    mean /= (double)(divs+1);
+    var /= (double)(divs+1);
+    var = sqrt(var-mean*mean);
+    var /= sqrt((double)(divs+1));  // deviation of mean
+    mean += 0.57721566490153286060;  // have to add Euler's constant since taking average of log
+    adata[i] = mean;
+    sdata[i] = var;
+    f = (double)(imin+divsp*i)/T;
+    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    if(flag == 0) inst[i] = log(SXYZ*1.0e40);
+    if(flag == 1) inst[i] = log(SAE*1.0e40);
+    
+    chi=quickselect(XX, divsp, (divh+1));
+    fdata[i] = log(f);
+    mdata[i] = log(chi/0.72);
+  }
+
+  splineMCMC(imin, imax, segs, fdata, mdata, sdata, Xnoise, T);
+
+  for(i=imin; i <= imax; i++)
+  {
+    f = (double)(i)/T;
+    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    if(flag == 0)
+    {
+      conf = Xnoise[i] -SXYZ;
+      if(conf < SXYZ/30.0) conf = 1.0e-46;
+    }
+    if(flag == 1)
+    {
+      conf = Xnoise[i] -SAE;
+      if(conf < SAE/30.0) conf = 1.0e-46;
+    }
+    
+    Xconf[i] = conf;
+  }
+  
+  
+  return;
+}
+
+void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double *sigma, double *Xnoise, double T)
+{
+  
+  
+  int N, Nf, Nx, Ny;
+  int mc, i, j, ii, test;
+  long seed;
+  int ltest;
+  int fixedD;
+  double logLx, logLy;
+  double logpx, logpy;
+  double *ref;
+  int *activex, *activey;
+  double alpha, beta, H, av;
+  double model;
+  double sh;
+  double max, min;
+  double fmin, fmax;
+  double rmin, rmax;
+  double maxy, miny;
+  double x, y;
+  double q;
+  double f;
+  double *mdl;
+  double lmax, lmin;
+  double lambdax, lambday;
+  int acc=0;
+  
+  N = 100000;   // number of MCMC steps
+  
+  Nf = 100; // maximum number of spline control points
+  
+  seed = -946673524;
+  
+  // log likelihood fixed test. set this flag = 1 to fix likelihood
+  ltest = 0;
+  
+  
+  maxy = -1.0e60;
+  miny = 1.0e60;
+  
+  lmax = 100.0;
+  lmin = -100.0;
+  
+  lambdax = lambday = 1.0;
+  
+  
+  max = datax[ND-1];
+  min = datax[0];
+  
+  // printf("min %e max %e\n", min, max);
+  
+  double *sdatay, *sderiv;
+  double *spoints, *sdatax, *tdata, *tpoints;
+  
+  mdl = dvector(0,ND);
+  ref = dvector(1,Nf);
+  spoints = dvector(1,Nf);
+  tdata = dvector(1,Nf);
+  tpoints = dvector(1,Nf);
+  sdatax = dvector(1,Nf);
+  sdatay = dvector(1,Nf);
+  sderiv = dvector(1,Nf);
+  
+  activex = ivector(1,Nf);
+  activey = ivector(1,Nf);
+  
+  // only start with 3 active points
+  Nx = Ny = 5;
+  
+  for(i=1; i<= Nf; i++)
+  {
+    activex[i] = 0;
+    activey[i] = 0;
+  }
+  
+  activex[1] = 1;
+  activey[1] = 1;
+  activex[Nf] = 1;
+  activey[Nf] = 1;
+  activex[Nf/4] = 1;
+  activey[Nf/4] = 1;
+  activex[Nf/2] = 1;
+  activey[Nf/2] = 1;
+  activex[3*Nf/4] = 1;
+  activey[3*Nf/4] = 1;
+  
+  rmin = 1.0e10;
+  rmax = -1.0e10;
+  for(j=0; j< ND; j++)
+  {
+    if(datay[j] > rmax) rmax = datay[j];
+    if(datay[j] < rmin) rmin = datay[j];
+  }
+  
+  x = 0.2*(rmax-rmin);
+  
+  rmin -= x;
+  rmax += x;
+  
+  
+  
+  
+  // inititate fit
+  for(i=1; i<= Nf; i++)
+  {
+    spoints[i]= min + (max-min)/(double)(Nf-1)*(double)(i-1);
+    j = -1;
+    do
+    {
+      j++;
+      //printf("fucking do while loops: %d %d %f %f\n", i, j, spoints[i], datax[j]);
+    }while(spoints[i] > datax[j]);
+    
+    sdatax[i] = datay[j];
+    if(j > 0)
+    {
+      sdatax[i] = datay[j-1] +(datay[j]-datay[j-1])/(datax[j]-datax[j-1])*(spoints[i]-datax[j-1]);
+    }
+  }
+  
+  
+  fmin = exp(spoints[1]);
+  fmax = exp(spoints[Nf]);
+  
+  
+  i = 0;
+  for(ii=1; ii<= Nf; ii++)
+  {
+    if(activey[ii] == 1)  // only use active points
+    {
+      i++;
+      tpoints[i] = spoints[ii];
+      tdata[i] = sdatax[ii];
+    }
+  }
+  
+  spline(tpoints, tdata, Nx, 1.0e31, 1.0e31, sderiv);
+  
+  av = 0.0;
+  for(j=0; j< ND; j++)
+  {
+    splint(tpoints, tdata, sderiv, Nx, datax[j], &model);
+    mdl[j] = model;
+    y = (datay[j]-model)/sigma[j];
+    av -= y*y;
+  }
+  logLx = av/2.0;
+  
+  beta = exp(lambdax);
+  y = 0.0;
+  for(i=2; i< ND; i++)
+  {
+    x = ((mdl[i]-mdl[i-1])/(datax[i]-datax[i-1])- (mdl[i-1]-mdl[i-2])/(datax[i-1]-datax[i-2]))/(datax[i]-datax[i-2]);
+    x /= beta;
+    y += x*x;
+  }
+  // 1/(sqrt(2Pi) beta) exp(-x*x/(2 beta^2))
+  logpx = -y/2.0-(double)(ND)*lambdax;
+  
+  
+  // set this flag to 1 if you want to do a fixed dimension run
+  fixedD = 0;
+  
+  
+  if(ltest == 1)
+  {
+    logLx = 0.0;
+    logpx = 0.0;
+  }
+  
+  // start the RJMCMC
+  for(mc=0; mc< N; mc++)
+  {
+    
+    sh = 1.0/sqrt((double)(Nx));
+    
+    lambday = lambdax;
+    Ny = Nx;
+    
+    test = 0;
+    
+    for(i=1; i<= Nf; i++)
+    {
+      sdatay[i] = sdatax[i];
+      activey[i] = activex[i];
+    }
+    
+    alpha = ran2(&seed);
+    
+    q = 0.5;
+    if(fixedD == 1) q = 10.0;
+    
+    if(alpha > q)   // propose a dimension change
+    {
+      // Note that the spline points at the ends are never added or subtracted
+      
+      
+      alpha = ran2(&seed);
+      
+      if(alpha < 0.5)
+      {
+        Ny = Nx + 1;
+      }
+      else
+      {
+        Ny = Nx - 1;
+      }
+      
+      if(Ny < Nx) // propose a kill
+      {
+        if(Ny > 1 && Ny <= Nf)
+        {
+          
+          do
+          {
+            i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to kill
+          } while(activex[i] == 0);  // can't kill it if already dead
+          activey[i] = 0;
+        }
+        else
+        {
+          test = 1;
+        }
+      }
+      else
+      {
+        if(Ny >= 1 && Ny < Nf)
+        {
+          
+          do
+          {
+            i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to add
+          } while(activex[i] == 1);  // can't add if already in use
+          activey[i] = 1;
+          
+          sdatay[i] = rmin + (rmax-rmin)*ran2(&seed);  // draw from prior
+          
+        }
+        else
+        {
+          test = 1;
+        }
+        
+        
+      }
+      
+      
+    }
+    else     // within dimension update
+    {
+      
+      Ny = Nx;
+      
+      alpha = ran2(&seed);
+      
+      if(alpha > 0.6)  // update all points
+      {
+        
+        for(ii=1; ii<= Nf; ii++)
+        {
+          // variety of jump sizes
+          if(alpha > 0.8)
+          {
+            sdatay[ii] += sh*1.0e-1*gasdev2(&seed);
+          }
+          else if (alpha > 0.5)
+          {
+            sdatay[ii] += sh*1.0e-2*gasdev2(&seed);
+          }
+          else if (alpha > 0.3)
+          {
+            sdatay[ii] += sh*1.0e-3*gasdev2(&seed);
+          }
+          else
+          {
+            sdatay[ii] += sh*1.0e-4*gasdev2(&seed);
+          }
+          
+        }
+        
+      }
+      else  if(alpha > 0.1) // just update one
+      {
+        
+        do
+        {
+          ii = (int)(ran2(&seed)*(double)(Nf));
+        }while(activey[ii] == 0);
+        
+        sdatay[ii] += sh*1.0e-1*gasdev2(&seed);
+        
+      }
+      else  // birth/death
+      {
+        do
+        {
+          i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to kill
+        } while(activex[i] == 0);  // can't kill it if already dead
+        activey[i] = 0;
+        
+        do
+        {
+          i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to add
+        } while(activey[i] == 1);  // can't add if already in use
+        activey[i] = 1;
+        
+        sdatay[i] = rmin + (rmax-rmin)*ran2(&seed);  // draw from prior
+        
+        
+      }
+      
+      
+    }
+    
+    
+    alpha = ran2(&seed);
+    if(alpha > 0.9)
+    {
+      lambday = lmin+(lmax-lmin)*ran2(&seed);  // uniform draw from the prior
+    }
+    else if (alpha > 0.7)
+    {
+      lambday = lambdax + 0.1*gasdev2(&seed);
+    }
+    else if (alpha > 0.3)
+    {
+      lambday = lambdax + 0.01*gasdev2(&seed);
+    }
+    else
+    {
+      lambday = lambdax + 0.001*gasdev2(&seed);
+    }
+    
+    
+    // check that proposed values are within the prior range
+    if(Ny < 2 || Ny > Nf) test = 1;
+    if(lambday < lmin || lambday > lmax) test = 1;
+    
+    
+    
+    logLy = 0.0;
+    
+    if(test == 0)
+    {
+      
+      if(ltest == 0)
+      {
+        i = 0;
+        for(ii=1; ii<= Nf; ii++)
+        {
+          if(activey[ii] == 1)  // only use active points
+          {
+            i++;
+            tpoints[i] = spoints[ii];
+            tdata[i] = sdatay[ii];
+          }
+        }
+        
+        
+        spline(tpoints, tdata, Ny, 1.0e31, 1.0e31, sderiv);
+        av = 0.0;
+        for(j=0; j< ND; j++)
+        {
+          splint(tpoints, tdata, sderiv, Ny, datax[j], &model);
+          mdl[j] = model;
+          y = (datay[j]-model)/sigma[j];
+          av -= y*y;
+        }
+        logLy = av/2.0;
+        
+        beta = exp(lambday);
+        y = 0.0;
+        for(i=2; i< ND; i++)
+        {
+          x = ((mdl[i]-mdl[i-1])/(datax[i]-datax[i-1])- (mdl[i-1]-mdl[i-2])/(datax[i-1]-datax[i-2]))/(datax[i]-datax[i-2]);
+          x /= beta;
+          y += x*x;
+        }
+        // 1/(sqrt(2Pi) beta) exp(-x*x/(2 beta^2))
+        logpy = -y/2.0-(double)(ND)*lambday;
+        
+      }
+      else
+      {
+        logLy = 0.0;
+        logpy = 0.0;
+      }
+      
+    }
+    
+    
+    
+    H = (logLy-logLx) +logpy  - logpx;
+    
+    alpha = log(ran2(&seed));
+    
+    if((H > alpha) && (test==0))
+    {
+      acc++;
+      logLx = logLy;
+      logpx = logpy;
+      lambdax = lambday;
+      Nx = Ny;
+      for(i=1; i<= Nf; i++)
+      {
+        sdatax[i] = sdatay[i];
+        activex[i] = activey[i];
+      }
+    }
+    
+    if(mc%(N/100)==0)printProgress((double)mc/(double)N);
+  }
+  printProgress(1);
+  printf("\n");
+  
+  
+  i = 0;
+  for(ii=1; ii<= Nf; ii++)
+  {
+    if(activex[ii] == 1)  // only use active points
+    {
+      i++;
+      tpoints[i] = spoints[ii];
+      tdata[i] = sdatax[ii];
+    }
+  }
+  
+  spline(tpoints, tdata, Nx, 1.0e31, 1.0e31, sderiv);
+  
+  for(i=imin; i <= imax; i++)
+  {
+    f = (double)(i)/T;
+    splint(tpoints, tdata, sderiv, Nx, log(f), &model);
+    Xnoise[i] = exp(model)*1.0e-40;
+  }
+  
+  
+  free_dvector(mdl,0,ND);
+  free_dvector(ref,1,Nf);
+  free_dvector(spoints,1,Nf);
+  free_dvector(tdata,1,Nf);
+  free_dvector(tpoints,1,Nf);
+  free_dvector(sdatax,1,Nf);
+  free_dvector(sdatay,1,Nf);
+  free_dvector(sderiv,1,Nf);
+  free_ivector(activex,1,Nf);
+  free_ivector(activey, 1,Nf);
+  
+  
+}
+
+void splint(double *xa, double *ya, double *y2a, int n, double x, double *y)
+{
+  int klo,khi,k;
+  double h,b,a;
+  
+  klo=1;
+  khi=n;
+  while (khi-klo > 1) {
+    k=(khi+klo) >> 1;
+    if (xa[k] > x) khi=k;
+    else klo=k;
+  }
+  h=xa[khi]-xa[klo];
+  a=(xa[khi]-x)/h;
+  b=(x-xa[klo])/h;
+  *y=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.0;
+}
+
+#define NRANSI
+void spline(double *x, double *y, int n, double yp1, double ypn, double *y2)
+{
+  int i,k;
+  double p,qn,sig,un;
+  double *u;
+  
+  u=dvector(1,n-1);
+  if (yp1 > 0.99e30)
+    y2[1]=u[1]=0.0;
+  else {
+    y2[1] = -0.5;
+    u[1]=(3.0/(x[2]-x[1]))*((y[2]-y[1])/(x[2]-x[1])-yp1);
+  }
+  for (i=2;i<=n-1;i++) {
+    sig=(x[i]-x[i-1])/(x[i+1]-x[i-1]);
+    p=sig*y2[i-1]+2.0;
+    y2[i]=(sig-1.0)/p;
+    u[i]=(y[i+1]-y[i])/(x[i+1]-x[i]) - (y[i]-y[i-1])/(x[i]-x[i-1]);
+    u[i]=(6.0*u[i]/(x[i+1]-x[i-1])-sig*u[i-1])/p;
+  }
+  if (ypn > 0.99e30)   qn=un=0.0;
+  
+  else {
+    qn=0.5;
+    un=(3.0/(x[n]-x[n-1]))*(ypn-(y[n]-y[n-1])/(x[n]-x[n-1]));
+  }
+  y2[n]=(un-qn*u[n-1])/(qn*y2[n-1]+1.0);
+  
+  for (k=n-1;k>=1;k--) y2[k]=y2[k]*y2[k+1]+u[k];
+  
+  free_dvector(u,1,n-1);
+}
+#undef NRANSI
+
+
+
