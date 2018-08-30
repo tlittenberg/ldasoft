@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -87,19 +88,26 @@ int main(int argc,char **argv)
     EELS[i] = 0.0;
   }
   
-  printf("Starting Simulation\n");
+  time_t rawtime;
+  struct tm * timeinfo;
   
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  printf ( "Starting Simulation at: %s", asctime (timeinfo) );
+
   //count lines in file
   int NSIM = 0;
   int decade = 1;
+  long time0 = time(0);
   while ( !feof(Infile) )
   {
-    fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    if(fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase)!=8) break;
     NSIM++;
     if(NSIM%decade==0)
     {
       decade*=10;
-      printf("read %i lines of file\n",NSIM);
+      fprintf(stdout,"\r read %i lines of file at t=%li s",NSIM, time(0)-time0);
+      fflush(stdout);
     }
   }
   rewind(Infile);
@@ -111,6 +119,9 @@ int main(int argc,char **argv)
     if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
     
     fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    
+    // hack for astrid simulation
+    theta-=0.5*M_PI;
     
     params[0] = f;
     params[1] = 0.5*pi-theta;

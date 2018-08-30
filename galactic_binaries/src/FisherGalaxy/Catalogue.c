@@ -59,7 +59,7 @@ int main(int argc,char **argv)
   {
     if(n%(NS/100)==0)printf("Converting Binaries: %i/%i\n",n,NS);
     
-    /* aCOSMIC files */
+    /* COSMIC files */
     // index mass1 mass2 porb ecc xGx yGx zGx dist inc OMEGA omega
     fscanf(Infile, "%i%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg\n", &index, &m1, &m2, &Porb, &ecc, &xgc, &ygc, &zgc, &rec, &iota,&psi,&phi0);
     
