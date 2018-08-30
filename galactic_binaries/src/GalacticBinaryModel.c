@@ -51,7 +51,7 @@ void map_params_to_array(struct Source *source, double *params, double T)
 void alloc_data(struct Data **data_vec, struct Flags *flags)
 {
   int NMCMC = flags->NMCMC;
-  for(int m=0; m<flags->NF; m++)
+  for(int m=0; m<flags->NDATA; m++)
   {
     struct Data *data = data_vec[m];
  
@@ -1070,13 +1070,13 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
 int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags)
 {
   int n = chain->index[0];
-  int N = flags->NF;
+  int N = flags->NDATA;
   
   double logL = 0.0;
   double dlogL= 0.0;
   
   // get full likelihood
-  for(int i=0; i<flags->NF; i++) logL += model[n][i]->logL + model[n][i]->logLnorm;
+  for(int i=0; i<flags->NDATA; i++) logL += model[n][i]->logL + model[n][i]->logLnorm;
   
   // update max
   if(logL > chain->logLmax)

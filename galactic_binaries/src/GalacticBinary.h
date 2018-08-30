@@ -62,7 +62,8 @@ struct Flags
   int verbose;
   int NMCMC; //number of MCMC steps
   int NBURN; //number of Burn-in steps
-  int NF;    //number of frequency segments;
+  int NINJ; //number of frequency segments;
+  int NDATA;  //number of frequency segments;
   int NT;    //number of time segments
   int NMAX;  //max number of sources
   int DMAX;  //max dimension of signal model

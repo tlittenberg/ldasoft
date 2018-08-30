@@ -123,7 +123,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->calibration = 0;
   flags->rj          = 1;
   flags->verbose     = 0;
-  flags->NF          = 0;
+  flags->NDATA       = 1;
+  flags->NINJ        = 0;
   flags->zeroNoise   = 0;
   flags->confNoise   = 0;
   flags->fixSky      = 0;
@@ -276,7 +277,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("data", long_options[long_index].name) == 0)
         {
           checkfile(optarg);
-          flags->NF++;
+          //flags->NDATA++;
           flags->strainData = 1;
           sprintf(data_ptr->fileName,"%s",optarg);
         }
@@ -293,12 +294,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("inj", long_options[long_index].name) == 0)
         {
           checkfile(optarg);
-          sprintf(flags->injFile[flags->NF],"%s",optarg);
-          flags->NF++;
-          if(flags->NF>Nmax)
+          sprintf(flags->injFile[flags->NINJ],"%s",optarg);
+          flags->NINJ++;
+          if(flags->NINJ>Nmax)
           {
-            fprintf(stderr,"Requested number of injections is too large (%i/%i)\n",flags->NF,Nmax);
-            fprintf(stderr,"Remove at least %i --inj arguments\n",flags->NF-Nmax);
+            fprintf(stderr,"WARNING: Requested number of injections is too large (%i/%i)\n",flags->NINJ,Nmax);
+            fprintf(stderr,"Should you remove at least %i --inj arguments?\n",flags->NINJ-Nmax);
             fprintf(stderr,"Now exiting to system\n");
             exit(1);
           }
@@ -342,7 +343,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   if(flags->cheat) flags->NBURN = 0;
 
   // copy command line args to other data structures
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NDATA; i++)
   {
     data[i]->NT = flags->NT;
     for(int j=0; j<flags->NT; j++)
@@ -356,9 +357,9 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     data[i]->NP       = data[0]->NP;
     data[i]->Nchannel = data[0]->Nchannel;
     
-    data[i]->cseed = data[0]->cseed+i*flags->NF;
-    data[i]->nseed = data[0]->nseed+i*flags->NF;
-    data[i]->iseed = data[0]->iseed+i*flags->NF;
+    data[i]->cseed = data[0]->cseed+i*flags->NDATA;
+    data[i]->nseed = data[0]->nseed+i*flags->NDATA;
+    data[i]->iseed = data[0]->iseed+i*flags->NDATA;
   }
 
   
@@ -428,11 +429,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(stdout,"================= RUN FLAGS ================\n");
   if(flags->verbose)  fprintf(stdout,"  Verbose flag ........ ENABLED \n");
   else                fprintf(stdout,"  Verbose flag ........ DISABLED\n");
-  if(flags->NF>0)
+  if(flags->NINJ>0)
   {
-    fprintf(stdout,"  Injected sources..... %i\n",flags->NF);
+    fprintf(stdout,"  Injected sources..... %i\n",flags->NINJ);
     fprintf(stdout,"     seed ............. %li\n",data_ptr->iseed);
-    for(int i=0; i<flags->NF; i++)
+    for(int i=0; i<flags->NINJ; i++)
     {
       fprintf(stdout,"     source ........... %s\n",flags->injFile[i]);
     }
@@ -473,7 +474,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   {
     n = chain->index[ic];
     logL=0.0;
-    for(i=0; i<flags->NF; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
+    for(i=0; i<flags->NINJ; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
     fprintf(chain->likelihoodFile,  "%lg ",logL);
     fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
   }
@@ -482,7 +483,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   
   //Always print cold chain
   n = chain->index[0];
-  for(i=0; i<flags->NF; i++)
+  for(i=0; i<flags->NDATA; i++)
   {
     print_chain_state(data, chain, model[n][i], flags, chain->chainFile[0], step);
     print_noise_state(data, model[n][i], chain->noiseFile[0], step);
@@ -497,7 +498,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
     }
   
   //Print sampling parameters
-  for(j=0; j<flags->NF; j++)
+  for(j=0; j<flags->NDATA; j++)
   {
     int D = model[n][j]->Nlive;
     for(i=0; i<D; i++)
@@ -514,7 +515,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   }
   
   //Print calibration parameters
-  for(j=0; j<flags->NF; j++)
+  for(j=0; j<flags->NDATA; j++)
   {
     
   }
@@ -522,7 +523,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   //Print hot chains if verbose flag
   if(flags->verbose)
   {
-    for(j=0; j<flags->NF; j++)
+    for(j=0; j<flags->NDATA; j++)
     {
       for(ic=1; ic<chain->NC; ic++)
       {
@@ -736,7 +737,7 @@ void print_waveform_draw(struct Data **data, struct Model **model, struct Flags 
   FILE *fptr;
   char filename[128];
   
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NINJ; i++)
   {
       sprintf(filename,"data/waveform_draw_%i.dat",i);
       fptr=fopen(filename,"w");

@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     for(int i=0; i<chain->NP+1; i++) proposal[j][i] = malloc(sizeof(struct Proposal));
   
   }
-  for(int j=0; j<flags->NF; j++) initialize_proposal(orbit, data[j], chain, flags, proposal[j], DMAX);
+  for(int j=0; j<flags->NDATA; j++) initialize_proposal(orbit, data[j], chain, flags, proposal[j], DMAX);
 
   /* Initialize priors */
   struct Prior *prior = malloc(sizeof(struct Prior));
@@ -133,10 +133,10 @@ int main(int argc, char *argv[])
     trial[ic] = malloc(sizeof(struct Model));
     alloc_model(trial[ic],DMAX,data[0]->N,data[0]->Nchannel,data[0]->NP, data[0]->NT);
     
-    model[ic] = malloc(sizeof(struct Model *) * flags->NF);
+    model[ic] = malloc(sizeof(struct Model *) * flags->NDATA);
     
     //loop over frequency segments
-    for(int i=0; i<flags->NF; i++)
+    for(int i=0; i<flags->NDATA; i++)
     {
       //printf("frequency segment %i\n",i);
 
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
     {
       
       //loop over frequency segments
-      for(int i=0; i<flags->NF; i++)
+      for(int i=0; i<flags->NDATA; i++)
       {
         struct Model *model_ptr = model[chain->index[ic]][i];
         struct Model *trial_ptr = trial[chain->index[ic]];
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
     //update run status
     if(mcmc%data[FIXME]->downsample==0)
     {
-      for(int i=0; i<flags->NF; i++)
+      for(int i=0; i<flags->NDATA; i++)
       {
         print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
         fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
@@ -297,11 +297,11 @@ int main(int argc, char *argv[])
     //dump waveforms to file, update avgLogL for thermodynamic integration
     if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
     {
-      for(int i=0; i<flags->NF; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
+      for(int i=0; i<flags->NDATA; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
       for(ic=0; ic<NC; ic++)
       {
         chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
-        for(int i=0; i<flags->NF; i++)
+        for(int i=0; i<flags->NDATA; i++)
           chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
       }
     }
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
   }// end MCMC loop
   
   //print aggregate run files/results
-  for(int i=0; i<flags->NF; i++)print_waveforms_reconstruction(data[i],i);
+  for(int i=0; i<flags->NDATA; i++)print_waveforms_reconstruction(data[i],i);
   
   FILE *chainFile = fopen("avg_log_likelihood.dat","w");
   for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data[FIXME]->downsample));
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
   //free memory and exit cleanly
   for(ic=0; ic<NC; ic++)
   {
-    for(int i=0; i<flags->NF; i++) free_model(model[ic][i]);
+    for(int i=0; i<flags->NDATA; i++) free_model(model[ic][i]);
     free_model(trial[ic]);
   }
   if(flags->orbit)free_orbit(orbit);
@@ -370,7 +370,7 @@ void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags)
     
     logL1 = 0.0;
     logL2 = 0.0;
-    for(int i=0; i<flags->NF; i++)
+    for(int i=0; i<flags->NDATA; i++)
     {
       logL1 += model[olda][i]->logL + model[olda][i]->logLnorm;
       logL2 += model[oldb][i]->logL + model[oldb][i]->logLnorm;
@@ -919,9 +919,9 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
   double loga  = 1.0; //(log) transition probability
   double logQ  = 0.0;
   
-  struct Model **trial = malloc(sizeof(struct Model *) * flags->NF);
+  struct Model **trial = malloc(sizeof(struct Model *) * flags->NDATA);
   
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NDATA; i++)
   {
     trial[i] = malloc(sizeof(struct Model));
     
@@ -935,7 +935,7 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
   
   logQ += t0_shift(data[0], trial[0], trial[0]->source[0], proposal[0], trial[0]->source[0]->params, chain->r[ic]);
   
-  for(int j=1; j<flags->NF; j++)
+  for(int j=1; j<flags->NDATA; j++)
   {
     for(int i=0; i<flags->NT; i++)
     {
@@ -948,7 +948,7 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
     }
   }
   
-  for(int j=0; j<flags->NF; j++)
+  for(int j=0; j<flags->NDATA; j++)
   {
     // Form master template
     /*
@@ -977,13 +977,13 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
   
   if(logH > loga)
   {
-    for(int j=0; j<flags->NF; j++)
+    for(int j=0; j<flags->NDATA; j++)
     {
       copy_model(trial[j],model[j]);
     }
   }
   
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NDATA; i++)
   {
     free_model(trial[i]);
   }

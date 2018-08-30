@@ -19,16 +19,21 @@
 #define LAMBDA 0.000000
 
 /* Mean arm length of the LISA detector (meters) */
-#define LARM 2.500000e+09
+#define LARM 2.5e+09 //L3 LISA
+//#define LARM 5.0e9 //Classic LISA
 
 /* Photon shot noise power */
-#define SPS 8.321000e-23
+#define SPS 8.321000e-23 // L3 LISA
+//#define SPS 3.24e-22 // Classic LISA
 
 /* Acceleration noise power */
-#define SACC 9.000000e-30
+#define SACC 9.000000e-30 // L3 LISA
+//#define SACC 9.000000e-30 // Classic LISA
 
-/* Transfer frequency */
-#define FSTAR 0.0190853806
+/* Transfer frequency = c/2piL */
+#define FSTAR 0.0190853806 // L3 LISA
+//#define FSTAR 0.00954269031847388 // Classic LISA
 
-/* LISA orbital eccentricity */
-#define ECC 0.0048241852
+/* LISA orbital eccentricity = L/(2 sqrt(3) R)*/
+#define ECC 0.0048241852 // L3 LISA
+//#define ECC 0.0096483704387378 // Classic LISA

@@ -224,14 +224,14 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
   FILE *paramFile;
   char filename[1024];
   
-  for(int ii = 0; ii<flags->NF; ii++)
+  for(int ii = 0; ii<flags->NINJ; ii++)
   {
     
     injectionFile = fopen(flags->injFile[ii],"r");
     if(!injectionFile)
       fprintf(stderr,"Missing injection file %s\n",flags->injFile[ii]);
     else
-      fprintf(stdout,"Injecting verification binary %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NF);
+      fprintf(stdout,"Injecting verification binary %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NINJ);
     
     fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&D);
     
@@ -479,7 +479,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
   FILE *paramFile;
   char filename[1024];
   
-  for(int ii = 0; ii<flags->NF; ii++)
+  for(int ii = 0; ii<flags->NINJ; ii++)
   {
     
     struct Data *data  = data_vec[ii];
@@ -488,7 +488,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
     if(!injectionFile)
       fprintf(stderr,"Missing injection file %s\n",flags->injFile[ii]);
     else
-      fprintf(stdout,"Injecting simulated source %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NF);
+      fprintf(stdout,"Injecting simulated source %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NINJ);
     
     
     //count sources in file
