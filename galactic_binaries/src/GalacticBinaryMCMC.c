@@ -10,7 +10,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include "omp.h"
+//#include "omp.h"
 
 /*************  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS  **************/
 
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
   start = time(NULL);
   
   int NMAX = 10;   //max number of frequency & time segments
-  int DMAX = 100;   //100; //max number of GB waveforms
+  int DMAX = 20;   //100; //max number of GB waveforms
   
   /* Allocate data structures */
   struct Flags *flags = malloc(sizeof(struct Flags));
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     data[i]->t0   = malloc( NMAX * sizeof(double) );
     data[i]->tgap = malloc( NMAX * sizeof(double) );
   }
-  parse(argc,argv,data,orbit,flags,chain,NMAX);
+  parse(argc,argv,data,orbit,flags,chain,NMAX,DMAX);
   int NC = chain->NC;
   
   
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     for(int i=0; i<chain->NP+1; i++) proposal[j][i] = malloc(sizeof(struct Proposal));
   
   }
-  for(int j=0; j<flags->NF; j++) initialize_proposal(orbit, data[j], chain, flags, proposal[j], DMAX);
+  for(int j=0; j<flags->NDATA; j++) initialize_proposal(orbit, data[j], chain, flags, proposal[j], DMAX);
 
   /* Initialize priors */
   struct Prior *prior = malloc(sizeof(struct Prior));
@@ -133,10 +133,10 @@ int main(int argc, char *argv[])
     trial[ic] = malloc(sizeof(struct Model));
     alloc_model(trial[ic],DMAX,data[0]->N,data[0]->Nchannel,data[0]->NP, data[0]->NT);
     
-    model[ic] = malloc(sizeof(struct Model *) * flags->NF);
+    model[ic] = malloc(sizeof(struct Model *) * flags->NDATA);
     
     //loop over frequency segments
-    for(int i=0; i<flags->NF; i++)
+    for(int i=0; i<flags->NDATA; i++)
     {
       //printf("frequency segment %i\n",i);
 
@@ -174,6 +174,10 @@ int main(int argc, char *argv[])
           map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
           
         }
+        else if(flags->update)
+        {
+          draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+        }
         else
         {
           draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[i][0], model_ptr->source[n]->params , chain->r[ic]);
@@ -185,7 +189,14 @@ int main(int argc, char *argv[])
       // Form master model & compute likelihood of starting position
       generate_noise_model(data_ptr, model_ptr);
       generate_signal_model(orbit, data_ptr, model_ptr, -1);
-      
+
+      //calibration error
+      if(flags->calibration)
+      {
+        draw_calibration_parameters(data_ptr, model_ptr, chain->r[ic]);
+        generate_calibration_model(data_ptr, model_ptr);
+        apply_calibration_model(data_ptr, model_ptr);
+      }
       if(!flags->prior)
       {
         model_ptr->logL     = gaussian_log_likelihood(orbit, data_ptr, model_ptr);
@@ -221,7 +232,7 @@ int main(int argc, char *argv[])
     {
       
       //loop over frequency segments
-      for(int i=0; i<flags->NF; i++)
+      for(int i=0; i<flags->NDATA; i++)
       {
         struct Model *model_ptr = model[chain->index[ic]][i];
         struct Model *trial_ptr = trial[chain->index[ic]];
@@ -275,7 +286,7 @@ int main(int argc, char *argv[])
     //update run status
     if(mcmc%data[FIXME]->downsample==0)
     {
-      for(int i=0; i<flags->NF; i++)
+      for(int i=0; i<flags->NDATA; i++)
       {
         print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
         fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
@@ -286,11 +297,11 @@ int main(int argc, char *argv[])
     //dump waveforms to file, update avgLogL for thermodynamic integration
     if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
     {
-      for(int i=0; i<flags->NF; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
+      for(int i=0; i<flags->NDATA; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
       for(ic=0; ic<NC; ic++)
       {
         chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
-        for(int i=0; i<flags->NF; i++)
+        for(int i=0; i<flags->NDATA; i++)
           chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
       }
     }
@@ -298,7 +309,7 @@ int main(int argc, char *argv[])
   }// end MCMC loop
   
   //print aggregate run files/results
-  for(int i=0; i<flags->NF; i++)print_waveforms_reconstruction(data[i],i);
+  for(int i=0; i<flags->NDATA; i++)print_waveforms_reconstruction(data[i],i);
   
   FILE *chainFile = fopen("avg_log_likelihood.dat","w");
   for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data[FIXME]->downsample));
@@ -317,7 +328,7 @@ int main(int argc, char *argv[])
   //free memory and exit cleanly
   for(ic=0; ic<NC; ic++)
   {
-    for(int i=0; i<flags->NF; i++) free_model(model[ic][i]);
+    for(int i=0; i<flags->NDATA; i++) free_model(model[ic][i]);
     free_model(trial[ic]);
   }
   if(flags->orbit)free_orbit(orbit);
@@ -359,7 +370,7 @@ void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags)
     
     logL1 = 0.0;
     logL2 = 0.0;
-    for(int i=0; i<flags->NF; i++)
+    for(int i=0; i<flags->NDATA; i++)
     {
       logL1 += model[olda][i]->logL + model[olda][i]->logLnorm;
       logL2 += model[oldb][i]->logL + model[oldb][i]->logLnorm;
@@ -412,7 +423,7 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc)
     
     chain->temperature[ic] = chain->temperature[ic-1] + exp(S[ic]);
     
-    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.01) chain->temperature[ic] = chain->temperature[ic-1]*1.01;
+    if(chain->temperature[ic]/chain->temperature[ic-1] < 1.1) chain->temperature[ic] = chain->temperature[ic-1]*1.1;
   }//end loop over ic
 }//end adapt function
 
@@ -457,29 +468,26 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     }
   }
   
-  if(logPy > -INFINITY)
+  
+  if(!flags->prior)
   {
+    //  Form master template
+    generate_noise_model(data, model_y);
     
-    if(!flags->prior)
-    {
-      //  Form master template
-      generate_noise_model(data, model_y);
-
-      //get likelihood for y
-      model_y->logL     = gaussian_log_likelihood(orbit, data, model_y);
-      model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
-      
-      /*
-       H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
-       */
-      logH += ( (model_y->logL+model_y->logLnorm) - (model_x->logL+model_x->logLnorm) )/chain->temperature[ic]; //delta logL
-      if(flags->burnin) logH /= chain->annealing;
-    }
-    logH += logPy  - logPx;                                         //priors
+    //get likelihood for y
+    model_y->logL     = gaussian_log_likelihood(orbit, data, model_y);
+    model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
     
-    loga = log(gsl_rng_uniform(chain->r[ic]));
-    if(logH > loga) copy_model(model_y,model_x);
+    /*
+     H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+     */
+    logH += ( (model_y->logL+model_y->logLnorm) - (model_x->logL+model_x->logLnorm) )/chain->temperature[ic]; //delta logL
+    if(flags->burnin) logH /= chain->annealing;
   }
+  logH += logPy  - logPx;                                         //priors
+  
+  loga = log(gsl_rng_uniform(chain->r[ic]));
+  if(logH > loga) copy_model(model_y,model_x);
   
 }
 
@@ -520,7 +528,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   proposal[nprop]->trial[ic]++;
   
-  //call proposal function to update parameters
+  //call proposal function to update source parameters
   (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
   //evaluate proposal densities Qxy & Qyx
@@ -547,6 +555,13 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     map_params_to_array(source_y, source_y->params, data->T);
   }
   
+  //update calibration parameters
+  if(flags->calibration) draw_calibration_parameters(data, model_y, chain->r[ic]);
+  /*
+   no proposal density for calibration parameters
+   because we are always drawing from prior...for now
+   */
+  
   //copy params for segment 0 into higher segments
   copy_source(model_y->source[n],model_y->source[n]);
   map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
@@ -555,6 +570,12 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   logPx = evaluate_prior(flags, data, model_x, prior, source_x->params);
   logPy = evaluate_prior(flags, data, model_y, prior, source_y->params);
   
+  //add calibration source parameters
+  /*
+   no prior density for calibration parameters
+   because we are always drawing from prior...for now
+   */
+  
   if(logPy > -INFINITY)
   {
     if(!flags->prior)
@@ -562,6 +583,12 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
       //  Form master template
       generate_signal_model(orbit, data, model_y, n);
       
+      //calibration error
+      if(flags->calibration)
+      {
+        generate_calibration_model(data, model_y);
+        apply_calibration_model(data, model_y);
+      }
       //get likelihood for y
       model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
       
@@ -570,11 +597,11 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
        */
       logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
       if(flags->burnin) logH /= chain->annealing;
-      //        if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0)
-      //        {
-      //          printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x[i]->logL , model_y[i]->logL);
-      //          printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-      //        }
+              //if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+              //{
+              //  printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x[i]->logL , model_y[i]->logL);
+              //  printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+             // }
     }
     logH += logPy  - logPx;  //priors
     logH += logQxy - logQyx; //proposals
@@ -582,6 +609,15 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(logH > loga)
     {
+              if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+              {
+                printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
+                printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+                exit(1);
+              }
+
+
+
       proposal[nprop]->accept[ic]++;
       copy_model(model_y,model_x);
     }
@@ -606,7 +642,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   
   int freqflag=0;
   if(gsl_rng_uniform(chain->r[ic])<0.5) freqflag=1;
-  
+
   //proposal[2]->trial[ic]++;
 
     /* pick birth or death move */
@@ -621,16 +657,22 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      if(freqflag) draw_from_fstatistic(data, model_y, model_y->source[create], proposal[2], model_y->source[create]->params, chain->r[ic]);
-      else         draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+      if(freqflag) logQyx = draw_from_fstatistic(data, model_y, model_y->source[create], proposal[2], model_y->source[create]->params, chain->r[ic]);
+      else
+      {
+        draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+        if(flags->skyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
 
+        logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
+      }
       
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
 
       logQxy = 0;
-      logQyx = model_x->logPriorVolume;
-      logQyx += evaluate_snr_prior(data, model, model_y->source[create]->params);
-      if(freqflag) logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
+      //logQyx += model_x->logPriorVolume;
+      //logQyx += evaluate_snr_prior(data, model, model_y->source[create]->params);
+      //logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
+      //if(freqflag) logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
       
       //copy params for segment 0 into higher segments
 //      copy_source(model_y->source[create],model_y->source[create]);
@@ -653,10 +695,18 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //      copy_source(model_y->source[kill],model_y->source[kill]);
 //      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
       
-      logQxy = model_x->logPriorVolume;
+      //logQxy = model_x->logPriorVolume;
       logQyx = 0;
-      logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
-      if(freqflag) logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
+      //logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
+      if(freqflag)
+      {
+        for(int n=0; n<model_y->source[kill]->NP; n++)
+        {
+          logQxy += model->logPriorVolume[n];
+        }
+        logQxy += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[kill]->params);
+      }
+      else         logQxy = evaluate_prior(flags, data, model_y, prior, model_y->source[kill]->params);
       
       //consolodiate parameter structure
       for(int j=kill; j<model_x->Nlive; j++)
@@ -682,6 +732,13 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
      */
     generate_signal_model(orbit, data, model_y, model_x->Nlive);
     
+    //calibration error
+    if(flags->calibration)
+    {
+      generate_calibration_model(data, model_y);
+      apply_calibration_model(data, model_y);
+    }
+    
     //get likelihood for y
     model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
     
@@ -700,8 +757,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //    if(ic==0)
 //    {
 //      FILE *fptr = fopen("proposal.dat","a");
-//      //    fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
-//      //    fprintf(stdout,"%i -> %i ",model_x->Nlive, model_y->Nlive);
+//          fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
+//          fprintf(stdout,"%i -> %i \n",model_x->Nlive, model_y->Nlive);
 //      print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
 //      fprintf(fptr,"\n");
 //      fclose(fptr);
@@ -816,6 +873,15 @@ void galactic_binary_drmc(struct Orbit *orbit, struct Data *data, struct Model *
   
   
   generate_signal_model(orbit, data, temp, n);
+
+  //calibration error
+  if(flags->calibration)
+  {
+    draw_calibration_parameters(data, temp, chain->r[ic]);
+    generate_calibration_model(data, temp);
+    apply_calibration_model(data, temp);
+  }
+  
   temp->logL = gaussian_log_likelihood(orbit, data, temp);
 
   //if(ic==0)printf("delayed rejection hastings ratio: %g: ",temp->logL);
@@ -853,9 +919,9 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
   double loga  = 1.0; //(log) transition probability
   double logQ  = 0.0;
   
-  struct Model **trial = malloc(sizeof(struct Model *) * flags->NF);
+  struct Model **trial = malloc(sizeof(struct Model *) * flags->NDATA);
   
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NDATA; i++)
   {
     trial[i] = malloc(sizeof(struct Model));
     
@@ -867,36 +933,39 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
     copy_model(model[i],trial[i]);
   }
   
-  logQ = 0.0;
-  
   logQ += t0_shift(data[0], trial[0], trial[0]->source[0], proposal[0], trial[0]->source[0]->params, chain->r[ic]);
   
-  for(int j=1; j<flags->NF; j++)
+  for(int j=1; j<flags->NDATA; j++)
   {
     for(int i=0; i<flags->NT; i++)
     {
       trial[j]->t0[i] = trial[0]->t0[i];
+//      for(int n=0; n<trial[0]->Nlive; n++)
+//      {
+//        double dt = trial[j]->t0[i] - model[j]->t0[i];
+//        trial[0]->source[n]->params[0] += -(1.e-7/5.)*dt;
+//      }
     }
   }
   
-  for(int j=0; j<flags->NF; j++)
+  for(int j=0; j<flags->NDATA; j++)
   {
     // Form master template
     /*
      passing generate_signal_model -1 results in full recalculation of waveform model
      */
     generate_signal_model(orbit, data[j], trial[j], -1);
-    //generate_signal_model(orbit, data[j], model[j]);
-    
-    // get likelihood for y
-    trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);
-    //model[j]->logL = gaussian_log_likelihood(orbit, data[j], model[j]);
-    
+    //generate_signal_model(orbit, data[j], model[j], -1);
+
     /*
      H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
      */
     if(!flags->prior)
     {
+      // get likelihood for y
+      trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);
+      //model[j]->logL = gaussian_log_likelihood(orbit, data[j], model[j]);
+
       logH += (trial[j]->logL - model[j]->logL)/chain->temperature[ic];
       if(flags->burnin) logH /= chain->annealing;
     }
@@ -908,13 +977,13 @@ void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, st
   
   if(logH > loga)
   {
-    for(int j=0; j<flags->NF; j++)
+    for(int j=0; j<flags->NDATA; j++)
     {
       copy_model(trial[j],model[j]);
     }
   }
   
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NDATA; i++)
   {
     free_model(trial[i]);
   }

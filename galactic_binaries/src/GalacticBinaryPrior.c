@@ -6,6 +6,8 @@
 //
 //
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "LISA.h"
 #include "Constants.h"
@@ -186,9 +188,9 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
       
       //      if(mc%1000 == 0 && flags->verbose) fprintf(chain,"%d %e %e %e %e %e %e %e\n", mc/1000, logLx, x[0], x[1], x[2], theta, phi, r_ec);
       
-      //ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
+      ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
       //iph = (int)(phi/(2.0*M_PI)*(double)(Nph));
-      ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
+      //ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
       iph = (int)((2*M_PI-phi)/(2.0*M_PI)*(double)(Nph));
       
       //ith = (int)floor(Nth*gsl_rng_uniform(r));
@@ -259,23 +261,23 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
 void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose)
 {
   /*
-  params[0] = source->f0*T;
-  params[1] = source->costheta;
-  params[2] = source->phi;
-  params[3] = log(source->amp);
-  params[4] = source->cosi;
-  params[5] = source->psi;
-  params[6] = source->phi0;
-  params[7] = source->dfdt*T*T;
-  */
+   params[0] = source->f0*T;
+   params[1] = source->costheta;
+   params[2] = source->phi;
+   params[3] = log(source->amp);
+   params[4] = source->cosi;
+   params[5] = source->psi;
+   params[6] = source->phi0;
+   params[7] = source->dfdt*T*T;
+   */
   
   
   //TODO:  make t0 a parameter
   for(int i=0; i<model->NT; i++)
   {
     model->t0[i] = data->t0[i];
-    model->t0_min[i] = data->t0[i] - 10.0;
-    model->t0_max[i] = data->t0[i] + 10.0;
+    model->t0_min[i] = data->t0[i] - 20;
+    model->t0_max[i] = data->t0[i] + 20;
   }
   
   //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
@@ -300,11 +302,11 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   //cos inclination
   model->prior[4][0] = -1.0;
   model->prior[4][1] =  1.0;
-
+  
   //polarization
   model->prior[5][0] = 0.0;
-  model->prior[5][1] = PI2;
-
+  model->prior[5][1] = M_PI;
+  
   //phase
   model->prior[6][0] = 0.0;
   model->prior[6][1] = PI2;
@@ -328,10 +330,10 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     fdotmin = galactic_binary_fdot(Mcmin, fmin, data->T);
     fdotmax = galactic_binary_fdot(Mcmax, fmax, data->T);
   }
-
+  
   double fddotmin = 11.0/3.0*fdotmin*fdotmin/fmax;
   double fddotmax = 11.0/3.0*fdotmax*fdotmax/fmin;
-
+  
   if(!flags->detached)
   {
     fddotmin = -fddotmax;
@@ -346,7 +348,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     fprintf(stdout,"  p(lnA)   = U[%g,%g]\n",model->prior[3][0],model->prior[3][1]);
     fprintf(stdout,"====================================\n\n");
   }
-
+  
   if(data->NP>7)
   {
     model->prior[7][0] = fdotmin*data->T*data->T;
@@ -357,10 +359,89 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     model->prior[8][0] = fddotmin*data->T*data->T*data->T;
     model->prior[8][1] = fddotmax*data->T*data->T*data->T;
   }
+  
+  /******************************************************
+   
+   Learn to parse prior files with flexible format and
+   reset uniform priors accordingly (doing the naive thing
+   of setting a uniform distribution over the ~90% credible
+   interval for exammple.  Will need to expand to at least
+   gaussian priors.
+   
+   What to do about intervals so small that they are
+   effectively delta functions?  Might anger some proposals...
+   
+   GAIA distance accuracy < 20%
+  
+  ******************************************************/
+  if(flags->emPrior)
+  {
+    FILE *priorFile = fopen(flags->pdfFile,"r");
+    char name[16];
+    double min,max;
+    
+    while(fscanf(priorFile,"%s %lg %lg",name,&min,&max) != EOF)
+    {
 
+      if(strcmp("f0",name) == 0)
+      {
+        model->prior[0][0] = min*data->T;
+        model->prior[0][1] = max*data->T;
+      }
+      
+      else if(strcmp("dfdt",name) == 0)
+      {
+        model->prior[7][0] = min*data->T*data->T;
+        model->prior[7][1] = max*data->T*data->T;
+      }
+
+      else if(strcmp("amp",name) == 0)
+      {
+        model->prior[3][0] = log(min);
+        model->prior[3][1] = log(max);
+      }
+
+      else if(strcmp("phi",name) == 0)
+      {
+        model->prior[2][0] = min;
+        model->prior[2][1] = max;
+      }
+
+      else if(strcmp("costheta",name) == 0)
+      {
+        model->prior[1][0] = min;
+        model->prior[1][1] = max;
+      }
+      
+      else if(strcmp("cosi",name) == 0)
+      {
+        model->prior[4][0] = min;
+        model->prior[4][1] = max;
+      }
+
+      else if(strcmp("psi",name) == 0)
+      {
+        model->prior[5][0] = min;
+        model->prior[5][1] = max;
+      }
+
+      else if(strcmp("phi0",name) == 0)
+      {
+        model->prior[6][0] = min;
+        model->prior[6][1] = max;
+      }
+
+      else
+      {
+        fprintf(stdout, "unrecognized parameter in prior file: %s\n",name);
+      }      
+    }
+    
+    fclose(priorFile);
+  }
+  
   //set prior volume
-  model->logPriorVolume = 0.0;
-  for(int n=0; n<data->NP; n++) model->logPriorVolume -= log(model->prior[n][1]-model->prior[n][0]);
+  for(int n=0; n<data->NP; n++) model->logPriorVolume[n] = log(model->prior[n][1]-model->prior[n][0]);
   
 }
 
@@ -386,10 +467,18 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   if(flags->skyPrior)
   {
     if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
-
-    while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
-    while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
-
+    
+    if(uniform_prior[2][0] > 0.0 || uniform_prior[2][1] < PI2)
+    {
+      //rejection sample on reduced prior range
+      if(params[2]<uniform_prior[2][0] || params[2]>uniform_prior[2][1]) return -INFINITY;
+    }
+    else
+    {
+      //periodic boundary conditions for full range
+      while(params[2] < 0  ) params[2] += PI2;
+      while(params[2] > PI2) params[2] -= PI2;
+    }
     //map costheta and phi to index of skyhist array
     int i = (int)floor((params[1]-uniform_prior[1][0])/prior->dcostheta);
     int j = (int)floor((params[2]-uniform_prior[2][0])/prior->dphi);
@@ -398,69 +487,86 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     
     logP += prior->skyhist[k];
     
-//    FILE *fptr = fopen("prior.dat","a");
-//    fprintf(fptr,"%i %i %i %g\n",i,j,k,prior->skyhist[k]);
-//    fclose(fptr);
+    //    FILE *fptr = fopen("prior.dat","a");
+    //    fprintf(fptr,"%i %i %i %g\n",i,j,k,prior->skyhist[k]);
+    //    fclose(fptr);
   }
   else
   {
     //colatitude (reflective)
     if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
-    else logP -= log(uniform_prior[1][1]-uniform_prior[1][0]);
+    else logP += model->logPriorVolume[1];
     
     //longitude (periodic)
-    //while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
-    //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
-    if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
+    if(uniform_prior[2][0] > 0.0 || uniform_prior[2][1] < PI2)
     {
-      params[2] = atan2(sin(params[2]),cos(params[2]));
-      if(params[2] < 0.0) params[2] += PI2;
+      //rejection sample on reduced prior range
+      if(params[2]<uniform_prior[2][0] || params[2]>uniform_prior[2][1]) return -INFINITY;
     }
-    logP -= log(uniform_prior[2][1]-uniform_prior[2][0]);
+    else
+    {
+      //while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
+      //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
+      if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
+      {
+        params[2] = atan2(sin(params[2]),cos(params[2]));
+        if(params[2] < 0.0) params[2] += PI2;
+      }
+    }
+    logP += model->logPriorVolume[2];
   }
   
   //log amplitude (step)
   if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
   else
   {
-    logP -= log(uniform_prior[3][1]-uniform_prior[3][0]);
+    logP += model->logPriorVolume[3];
     logP += evaluate_snr_prior(data, model, params);
   }
   
   //cosine inclination (reflective)
   if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
-  else logP -= log(uniform_prior[4][1]-uniform_prior[4][0]);
+  else logP += model->logPriorVolume[4];
   
   //polarization
-//  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
-//  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
+  //  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
+  //  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
   if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
-  else logP -= log(uniform_prior[5][1]-uniform_prior[5][0]);
-
+  else logP += model->logPriorVolume[5];
+  
   //phase
-//  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
-//  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
-//  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
-//  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+  //  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
+  //  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
+  //  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
+  //  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+  if(uniform_prior[6][0] > 0.0 || uniform_prior[6][1] < PI2)
+  {
+    //rejection sample on reduced prior range
+    if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
+  }
+  else
+  {
     if(params[6]<uniform_prior[6][0] || params[6]>=uniform_prior[6][1])
     {
       params[6] = atan2(sin(params[6]),cos(params[6]));
       if(params[6] < 0.0) params[6] += PI2;
     }
-    logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
+  }
+  logP += model->logPriorVolume[6];
   
   //fdot (bins/Tobs)
   if(model->NP>7)
   {
     if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
-    else logP -= log(uniform_prior[7][1]-uniform_prior[7][0]);
+    else logP += model->logPriorVolume[7];
+    
   }
   
   //fddot
   if(model->NP>8)
   {
     if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return -INFINITY;
-    else logP -= log(uniform_prior[8][1]-uniform_prior[8][0]);
+    else logP += model->logPriorVolume[8];
   }
   
   return logP;
@@ -469,14 +575,13 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
 /* Rejection sample on SNR < SNRPEAK */
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params)
 {
-
   double amp = exp(params[3]);
   
   int n = (int)floor(params[0] - model->prior[0][0]);
   if(n<0 || n>=data->N) return -INFINITY;
-
+  
   double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+  double sn = data->noise[0]->SnA[n];
   double sqT = sqrt(data->T);
   
   //Sinc spreading
@@ -488,36 +593,87 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
   return 0.0;
 }
 /*
-double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *model, double *params)
+ double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *model, double *params)
+ {
+ double logP;
+ double dfac, dfac5;
+ 
+ 
+ //double f   = params[0]/Tobs;
+ double amp = params[3];
+ 
+ // x/a^2 exp(-x/a) prior on SNR. Peaks at x = a. Good choice is a=5
+ 
+ int n = (int)floor(params[0] - model->prior[0][0]);
+ if(n<0 || n>=data->N) return -INFINITY;
+ double sf = 1.0;//sin(f/fstar); //sin(f/f*)
+ double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+ double sqT = sqrt(data->T);
+ 
+ //Sinc spreading
+ double SNm  = sn/(4.*sf*sf);   //Michelson noise
+ double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
+ 
+ //SNRPEAK defined in Constants.h
+ 
+ dfac = 1.+SNR/(4.*SNRPEAK);
+ dfac5 = dfac*dfac*dfac*dfac*dfac;
+ 
+ //logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/params[3]);
+ logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/amp);
+ 
+ return logP;
+ }
+ */
+
+double evaluate_calibration_prior(struct Data *data, struct Model *model)
 {
-  double logP;
-  double dfac, dfac5;
 
+  double dA,dphi;
+  double logP = 0.0;
   
-  //double f   = params[0]/Tobs;
-  double amp = params[3];
-
-  // x/a^2 exp(-x/a) prior on SNR. Peaks at x = a. Good choice is a=5
+  //apply calibration error to full signal model
+  //loop over time segments
+  for(int m=0; m<model->NT; m++)
+  {
+    switch(data->Nchannel)
+    {
+      case 1:
+        
+        //amplitude
+        dA   = model->calibration[m]->dampX;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = model->calibration[m]->dphiX;
+        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        
+        break;
+      case 2:
+        
+        //amplitude
+        dA   = model->calibration[m]->dampA;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = model->calibration[m]->dphiA;
+        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        
+        //amplitude
+        dA   = model->calibration[m]->dampE;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = model->calibration[m]->dphiE;
+        logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        
+      default:
+        break;
+    }//end switch
+  }//end loop over segments
   
-  int n = (int)floor(params[0] - model->prior[0][0]);
-  if(n<0 || n>=data->N) return -INFINITY;
-  double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
-  double sqT = sqrt(data->T);
-  
-  //Sinc spreading
-  double SNm  = sn/(4.*sf*sf);   //Michelson noise
-  double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
-  
-  //SNRPEAK defined in Constants.h
-
-  dfac = 1.+SNR/(4.*SNRPEAK);
-  dfac5 = dfac*dfac*dfac*dfac*dfac;
-  
-  //logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/params[3]);
-  logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/amp);
-
   return logP;
 }
-*/
+
+
 

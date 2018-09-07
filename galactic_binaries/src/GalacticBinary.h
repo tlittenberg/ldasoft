@@ -32,6 +32,7 @@ struct Data
   int downsample;
   double ****h_rec; // N x Nchannel x NT x NMCMC
   double ****h_res; // N x Nchannel x NT x NMCMC
+  double ****r_pow; // N x Nchannel x NT x NMCMC
   double ****h_pow; // N x Nchannel x NT x NMCMC
   double ****S_pow; // N x Nchannel x NT x NMCMC
   
@@ -47,6 +48,13 @@ struct Data
   //
   char fileName[128];
   
+  /*
+   Data format string 
+   'phase'     ==> LISA Simulator esque
+   'frequency' ==> Synthetic LISA esque
+  */
+  char format[16];
+  
 };
 
 struct Flags
@@ -54,13 +62,16 @@ struct Flags
   int verbose;
   int NMCMC; //number of MCMC steps
   int NBURN; //number of Burn-in steps
-  int NF;    //number of frequency segments;
+  int NINJ; //number of frequency segments;
+  int NDATA;  //number of frequency segments;
   int NT;    //number of time segments
   int NMAX;  //max number of sources
+  int DMAX;  //max dimension of signal model
   int zeroNoise;
   int fixSky;
   int skyPrior;
   int snrPrior;
+  int emPrior;
   int knownSource;
   int detached;
   int strainData;
@@ -72,9 +83,12 @@ struct Flags
   int update;
   int rj;
   int gap; //are we fitting for a time-gap in the data?
+  int calibration; //are we marginalizing over calibration  uncertainty?
+  int confNoise; //include model of confusion noise in Sn(f)
   
   char **injFile;
   char cdfFile[128];
+  char pdfFile[128];
 };
 
 struct Chain
@@ -97,6 +111,7 @@ struct Chain
   //chain files
   FILE **noiseFile;
   FILE **chainFile;
+  FILE **calibrationFile;
   FILE **dimensionFile;
   FILE **parameterFile;
   FILE *likelihoodFile;
@@ -159,6 +174,22 @@ struct Noise
   double *SnX;
 };
 
+struct Calibration
+{
+  double dampA;
+  double dampE;
+  double dampX;
+  double dphiA;
+  double dphiE;
+  double dphiX;
+  double real_dphiA;
+  double real_dphiE;
+  double real_dphiX;
+  double imag_dphiA;
+  double imag_dphiE;
+  double imag_dphiX;
+};
+
 struct Model
 {
   //Source parameters
@@ -171,6 +202,9 @@ struct Model
   //Noise parameters
   struct Noise **noise;
   
+  //Calibration parameters
+  struct Calibration **calibration;
+  
   //TDI
   struct TDI **tdi;
   struct TDI **residual;
@@ -182,7 +216,7 @@ struct Model
   
   //Source parameter priors
   double **prior;
-  double logPriorVolume;
+  double *logPriorVolume;
   
   //Model likelihood
   double logL;

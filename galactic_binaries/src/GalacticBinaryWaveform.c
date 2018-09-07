@@ -7,8 +7,9 @@
 //
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "omp.h"
+//#include "omp.h"
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
@@ -123,8 +124,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     galactic_binary_alignment(orbit, data, wave_m);
     
     // compute perturbed waveforms
-    galactic_binary(orbit, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-    galactic_binary(orbit, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
     
     // central differencing derivatives of waveforms w.r.t. parameters
     switch(source->tdi->Nchannel)
@@ -204,7 +205,7 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
   
   //Doppler spreading
   double sintheta = sin(acos(costheta));
-  double bw = 2*T*((4.+PI2*f*(AU/C)*sintheta)/YEAR + fdot*T);
+  double bw = 8*T*((4.+PI2*f*(AU/C)*sintheta)/YEAR + fdot*T);
   int DS = (int)pow(2,(int)log2(bw-1)+1);
   if(DS > Nmax) DS = Nmax;
   if(DS < Nmin) DS = Nmin;
@@ -226,14 +227,14 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
 {
   map_array_to_params(source, source->params, data->T);
   
-  source->BW   = galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->dfdt, source->costheta, source->amp, data->T, data->N);
+  source->BW   = 2*galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->dfdt, source->costheta, source->amp, data->T, data->N);
   source->qmin = (int)(source->f0*data->T) - source->BW/2;
   source->qmax = source->qmin+source->BW;
   source->imin = source->qmin - data->qmin;
   source->imax = source->imin + source->BW;  
 }
 
-void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, int NP, double *X, double *A, double *E, int BW, int NI)
+void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, double *params, int NP, double *X, double *A, double *E, int BW, int NI)
 {
   /*   Indicies   */
   int i,j,n;
@@ -322,15 +323,16 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   sinth	= sqrt(1.0 - costh*costh); //sin(theta) >= 0 (theta -> 0,pi)
   cosph	= cos(phi);
   sinph	= sin(phi);
-  cosps	= cos(psi);
-  sinps	= sin(psi);
+  cosps	= cos(2.*psi);
+  sinps	= sin(2.*psi);
   
   //Calculate GW polarization amplitudes
   Aplus  =  amp*(1.+cosi*cosi);
   Across = -amp*(2.0*cosi);
   
-  df = PI2*(f0 - ((double)q)/T);
-  //df = PI2*(((double)q)/T);
+  //TODO: changing GB phase to match LDC, but why?
+  //df = PI2*(f0 - ((double)q)/T);
+  df = PI2*(((double)q)/T);
   
   //Calculate constant pieces of transfer functions
   DPr =  Aplus*cosps;
@@ -369,8 +371,10 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
       kdotx[i] = (x[i]*k[1]+y[i]*k[2]+z[i]*k[3])/C;
       
       //Wave arrival time at spacecraft i
+       //TODO: changed GB phase to match LDC, but why?
+      //xi[i] = t - kdotx[i];
       xi[i] = t - kdotx[i];
-      
+
       //Zeroeth order approximation to frequency at spacecraft i
       f[i] = f0;
       
@@ -427,7 +431,10 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
     for(i=1; i<=3; i++)
     {
       //Argument of complex exponentials
-      double arg2 = df*t + phi0 - PI2*kdotx[i]*f0 + PI2*f0*t0;
+      //TODO: changed GB phase to match LDC, but why?
+      //double arg2 = df*t + phi0 - PI2*kdotx[i]*f0 + PI2*f0*t0;
+      double arg2 = PI2*f0*xi[i] + phi0 - df*t;
+
 
       //First order frequency evolution
       if(NP>7) arg2 += M_PI*dfdt*xi[i]*xi[i];
@@ -449,8 +456,10 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
         if(i!=j)
         {
           //Argument of transfer function
-          double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
-          
+          //TODO: changed GB phase to match LDC, but why?
+          //double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
+          double arg1 = 0.5*fonfs[i]*(1.0 + kdotr[i][j]);
+
           //Transfer function
           double sinc = 0.25*sinf(arg1)/arg1;
           
@@ -505,8 +514,16 @@ void galactic_binary(struct Orbit *orbit, double T, double t0, double *params, i
   }
   
   /*   Call subroutines for synthesizing different TDI data channels  */
-  LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
-
+  if(strcmp("phase",format) == 0)
+    LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+  else if(strcmp("frequency",format) == 0)
+    LISA_tdi_FF(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+  else
+  {
+    fprintf(stderr,"Unsupported data format %s",format);
+    exit(1);
+  }
+  
   /*   Deallocate Arrays   */
 //  free_dvector(x,1,3); free_dvector(y,1,3); free_dvector(z,1,3);
 //  free_dvector(data12,1,BW2); free_dvector(data21,1,BW2); free_dvector(data31,1,BW2);

@@ -15,6 +15,7 @@
 #include <gsl/gsl_randist.h>
 
 #include "LISA.h"
+#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryData.h"
@@ -59,6 +60,24 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
   }
   fclose(fptr);
 
+  //TODO: LDC data needs a factor of 1/sqrt(2) normalization?
+  /*
+  if(strcmp(data->format,"frequency")==0)
+  {
+    fprintf(stdout,"\n");
+    fprintf(stdout,"!!!!!!!!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!!!\n");
+    fprintf(stdout,"Using fractional frequency data from LDC\n");
+    fprintf(stdout,"Mysterious 1/sqrt(2) being applied to A&E data\n");
+    fprintf(stdout,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    fprintf(stdout,"\n");
+    for(int n=0; n<data->N; n++)
+    {
+      tdi->A[2*n]/=sqrt(2.0);
+      tdi->A[2*n+1]/=sqrt(2.0);
+      tdi->E[2*n]/=sqrt(2.0);
+      tdi->E[2*n+1]/=sqrt(2.0);
+    }
+  }*/
 
   sprintf(filename,"data/waveform_injection_%i_%i.dat",0,0);
   fptr=fopen(filename,"w");
@@ -90,8 +109,31 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
   for(int n=0; n<data->N; n++)
   {
     double f = data->fmin + (double)(n)/data->T;
-    data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-    data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+    if(strcmp(data->format,"phase")==0)
+    {
+      data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+      data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+      if(flags->confNoise)
+      {
+        data->noise[0]->SnA[n] += GBnoise(data->T,f);
+        data->noise[0]->SnE[n] += GBnoise(data->T,f);
+      }
+    }
+    else if(strcmp(data->format,"frequency")==0)
+    {
+      data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+      data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+      if(flags->confNoise)
+      {
+        data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+        data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+      }
+    }
+    else
+    {
+      fprintf(stderr,"Unsupported data format %s",data->format);
+      exit(1);
+    }
   }
   
   //Add Gaussian noise to injection
@@ -103,8 +145,8 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     
     for(int n=0; n<data->N; n++)
     {
-      tdi->A[2*n]   += gsl_ran_gaussian (r, 1)*sqrt(data->noise[0]->SnA[n])/2.;
-      tdi->A[2*n+1] += gsl_ran_gaussian (r, 1)*sqrt(data->noise[0]->SnA[n])/2.;
+      tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+      tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
       
       tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
       tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
@@ -124,7 +166,21 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     fprintf(fptr,"\n");
   }
   fclose(fptr);
-  
+
+  sprintf(filename,"data/data_%i_%i.dat",0,0);
+  fptr=fopen(filename,"w");
+
+  for(int i=0; i<data->N; i++)
+  {
+    double f = (double)(i+data->qmin)/data->T;
+    fprintf(fptr,"%.12g %lg %lg %lg %lg",
+            f,
+            tdi->A[2*i],tdi->A[2*i+1],
+            tdi->E[2*i],tdi->E[2*i+1]);
+    fprintf(fptr,"\n");
+  }
+  fclose(fptr);
+
   sprintf(filename,"data/power_noise_%i_%i.dat",0,0);
   fptr=fopen(filename,"w");
   
@@ -168,14 +224,14 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
   FILE *paramFile;
   char filename[1024];
   
-  for(int ii = 0; ii<flags->NF; ii++)
+  for(int ii = 0; ii<flags->NINJ; ii++)
   {
     
     injectionFile = fopen(flags->injFile[ii],"r");
     if(!injectionFile)
       fprintf(stderr,"Missing injection file %s\n",flags->injFile[ii]);
     else
-      fprintf(stdout,"Injecting verification binary %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NF);
+      fprintf(stdout,"Injecting verification binary %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NINJ);
     
     fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&D);
     
@@ -249,7 +305,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       
       //Simulate gravitational wave signal
       //double t0 = data->t0 + jj*(data->T + data->tgap);
-      galactic_binary(orbit, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+      galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
       
       //Add waveform to data TDI channels
       for(int n=0; n<inj->BW; n++)
@@ -296,8 +352,32 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       for(int n=0; n<data->N; n++)
       {
         double f = data->fmin + (double)(n)/data->T;
-        data->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-        data->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+        if(strcmp(data->format,"phase")==0)
+        {
+          data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+          data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+          if(flags->confNoise)
+          {
+            data->noise[0]->SnA[n] += GBnoise(data->T,f);
+            data->noise[0]->SnE[n] += GBnoise(data->T,f);
+          }
+        }
+        else if(strcmp(data->format,"frequency")==0)
+        {
+          data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+          data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+          if(flags->confNoise)
+          {
+            data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+            data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+          }
+        }
+        else
+        {
+          fprintf(stderr,"Unsupported data format %s",data->format);
+          exit(1);
+        }
+
       }
       
       //Get injected SNR
@@ -312,11 +392,11 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         
         for(int n=0; n<data->N; n++)
         {
-          tdi->A[2*n]   += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-          tdi->A[2*n+1] += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-          
-          tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
-          tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
+          tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+          tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+
+          tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+          tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
         }
       }
       
@@ -357,7 +437,21 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
       }
       fclose(fptr);
       fclose(injectionFile);
-      
+
+      sprintf(filename,"data/data_%i_%i.dat",ii,jj);
+      fptr=fopen(filename,"w");
+
+      for(int i=0; i<data->N; i++)
+      {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%.12g %lg %lg %lg %lg",
+                f,
+                tdi->A[2*i],tdi->A[2*i+1],
+                tdi->E[2*i],tdi->E[2*i+1]);
+        fprintf(fptr,"\n");
+      }
+      fclose(fptr);
+
       //TODO: fill X vectors with A channel for now
       for(int n=0; n<data->N; n++)
       {
@@ -385,7 +479,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
   FILE *paramFile;
   char filename[1024];
   
-  for(int ii = 0; ii<flags->NF; ii++)
+  for(int ii = 0; ii<flags->NINJ; ii++)
   {
     
     struct Data *data  = data_vec[ii];
@@ -394,7 +488,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
     if(!injectionFile)
       fprintf(stderr,"Missing injection file %s\n",flags->injFile[ii]);
     else
-      fprintf(stdout,"Injecting simulated source %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NF);
+      fprintf(stdout,"Injecting simulated source %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NINJ);
     
     
     //count sources in file
@@ -450,6 +544,14 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           inj->tdi->X[n] = 0.0;
         }
         
+        //map polarization angle into [0:pi], preserving relation to phi0
+        if(psi>M_PI)
+        {
+          psi  -= M_PI;
+          phi0 += M_PI;
+          if(phi0 > PI2) phi0 -= PI2;
+        }
+        
         //map parameters to vector
         inj->f0       = f0;
         inj->dfdt     = dfdt;
@@ -482,7 +584,8 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         
         //Simulate gravitational wave signal
         //double t0 = data->t0 + jj*(data->T + data->tgap);
-        galactic_binary(orbit, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! t0 = %g\n",data->t0[jj]);
+        galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
         
         //Add waveform to data TDI channels
         for(int n=0; n<inj->BW; n++)
@@ -529,8 +632,31 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         for(int n=0; n<data->N; n++)
         {
           double f = data->fmin + (double)(n)/data->T;
-          data->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-          data->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+          if(strcmp(data->format,"phase")==0)
+          {
+            data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+            data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+            if(flags->confNoise)
+            {
+              data->noise[0]->SnA[n] += GBnoise(data->T,f);
+              data->noise[0]->SnE[n] += GBnoise(data->T,f);
+            }
+          }
+          else if(strcmp(data->format,"frequency")==0)
+          {
+            data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+            data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+            if(flags->confNoise)
+            {
+              data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+              data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+            }
+          }
+          else
+          {
+            fprintf(stderr,"Unsupported data format %s",data->format);
+            exit(1);
+          }
         }
         
         //Get injected SNR
@@ -545,11 +671,11 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           
           for(int n=0; n<data->N; n++)
           {
-            tdi->A[2*n]   += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-            tdi->A[2*n+1] += gsl_ran_gaussian (r, 1)*sqrt(data->noise[jj]->SnA[n])/2.;
-            
-            tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
-            tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[jj]->SnE[n])/2.);
+            tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+            tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+
+            tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+            tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
           }
         }
         
@@ -589,7 +715,21 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
           fprintf(fptr,"\n");
         }
         fclose(fptr);
-        
+
+        sprintf(filename,"data/data_%i_%i.dat",ii,jj);
+        fptr=fopen(filename,"w");
+
+        for(int i=0; i<data->N; i++)
+        {
+          double f = (double)(i+data->qmin)/data->T;
+          fprintf(fptr,"%.12g %lg %lg %lg %lg",
+                  f,
+                  tdi->A[2*i],tdi->A[2*i+1],
+                  tdi->E[2*i],tdi->E[2*i+1]);
+          fprintf(fptr,"\n");
+        }
+        fclose(fptr);
+
         //TODO: fill X vectors with A channel for now
         for(int n=0; n<data->N; n++)
         {
@@ -669,14 +809,42 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
     
     //Simulate gravitational wave signal
     double t0 = data->t0[0];
-    galactic_binary(orbit, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+    galactic_binary(orbit, data->format, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
     
     //Get noise spectrum for data segment
     for(int n=0; n<data->N; n++)
     {
       double f = data->fmin + (double)(n)/data->T;
-      data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-      data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+
+      
+      if(strcmp(data->format,"phase")==0)
+      {
+        data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+        data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+        if(flags->confNoise)
+        {
+          data->noise[0]->SnA[n] += GBnoise(data->T,f);
+          data->noise[0]->SnE[n] += GBnoise(data->T,f);
+        }
+      }
+      else if(strcmp(data->format,"frequency")==0)
+      {
+        data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        if(flags->confNoise)
+        {
+          data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+          data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+        }
+      }
+      else
+      {
+        fprintf(stderr,"Unsupported data format %s",data->format);
+        exit(1);
+      }
+
+      
+      
     }
     
     //Get injected SNR

@@ -45,9 +45,12 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
 double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed);
+
+double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed);
 
 double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal);
 

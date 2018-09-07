@@ -25,6 +25,6 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
 
 int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, double costheta, double A, double T, int N);
 
-void galactic_binary(struct Orbit *orbit, double T, double t0, double params[], int NP, double *X, double *A, double *E, int BW, int NI);
+void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, double params[], int NP, double *X, double *A, double *E, int BW, int NI);
 
 #endif /* GalacticBinaryWaveform_h */

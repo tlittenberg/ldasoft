@@ -81,18 +81,22 @@ void print_usage()
   fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
   fprintf(stdout,"       --inj         : inject signal                       \n");
   fprintf(stdout,"       --data        : strain data file                    \n");
+  fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --sky-prior   : use galaxy model for sky prior      \n");
   fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
+  fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
+  fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
   fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
   fprintf(stdout,"       --fit-gap     : fit for time gaps between segments  \n");
+  fprintf(stdout,"       --calibration : marginalize over calibration errors \n");
   fprintf(stdout,"       --prior       : sample from prior                   \n");
   fprintf(stdout,"       --debug       : leaner settings for quick running   \n");
   fprintf(stdout,"--\n");
@@ -111,19 +115,22 @@ void print_usage()
   exit(EXIT_FAILURE);
 }
 
-void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
+void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int Dmax)
 {
   if(argc==1) print_usage();
   
   //Set defaults
-  flags->rj          = 0;
+  flags->calibration = 0;
   flags->rj          = 1;
   flags->verbose     = 0;
-  flags->NF          = 0;
+  flags->NDATA       = 1;
+  flags->NINJ        = 0;
   flags->zeroNoise   = 0;
+  flags->confNoise   = 0;
   flags->fixSky      = 0;
   flags->skyPrior    = 0;
   flags->snrPrior    = 0;
+  flags->emPrior     = 0;
   flags->cheat       = 0;
   flags->debug       = 0;
   flags->detached    = 0;
@@ -134,13 +141,22 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->prior       = 0;
   flags->update      = 0;
   flags->NMAX        = Nmax;
+  flags->DMAX        = Dmax;
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
   chain->NP          = 5; //number of proposals
   chain->NC          = 12;//number of chains
+  
+  
 
   for(int i=0; i<Nmax; i++)
   {
+    /*
+     default data format is 'phase' 
+     optional support for 'frequency' a la LDCs
+    */
+    sprintf(data[i]->format,"phase");
+    
     data[i]->t0   = malloc(sizeof(double)*Nmax);
     data[i]->tgap = malloc(sizeof(double)*Nmax);
     
@@ -185,12 +201,15 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
+    {"em-prior",  required_argument, 0, 0},
     
     /* These options don’t set a flag.
      We distinguish them by their indices. */
     {"help",        no_argument, 0,'h'},
     {"verbose",     no_argument, 0,'v'},
     {"zero-noise",  no_argument, 0, 0 },
+    {"conf-noise",  no_argument, 0, 0 },
+    {"frac-freq",   no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
     {"sky-prior",   no_argument, 0, 0 },
     {"snr-prior",   no_argument, 0, 0 },
@@ -202,6 +221,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"debug",       no_argument, 0, 0 },
     {"no-rj",       no_argument, 0, 0 },
     {"fit-gap",     no_argument, 0, 0 },
+    {"calibration", no_argument, 0, 0 },
     {0, 0, 0, 0}
   };
   
@@ -227,6 +247,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("noiseseed",   long_options[long_index].name) == 0) data_ptr->nseed   = (long)atoi(optarg);
         if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
         if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
+        if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
         if(strcmp("sky-prior",   long_options[long_index].name) == 0) flags->skyPrior   = 1;
         if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
@@ -237,6 +258,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("debug",       long_options[long_index].name) == 0) flags->debug      = 1;
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
+        if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
+        if(strcmp("em-prior",    long_options[long_index].name) == 0)
+        {
+          flags->emPrior = 1;
+          sprintf(flags->pdfFile,"%s",optarg);
+        }
         if(strcmp("steps",       long_options[long_index].name) == 0)
         {
           flags->NMCMC = atoi(optarg);
@@ -250,9 +277,13 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("data", long_options[long_index].name) == 0)
         {
           checkfile(optarg);
-          flags->NF++;
+          //flags->NDATA++;
           flags->strainData = 1;
           sprintf(data_ptr->fileName,"%s",optarg);
+        }
+        if(strcmp("frac-freq",   long_options[long_index].name) == 0)
+        {
+          for(int i=0; i<Nmax; i++) sprintf(data[i]->format,"frequency");
         }
         if(strcmp("orbit", long_options[long_index].name) == 0)
         {
@@ -263,12 +294,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("inj", long_options[long_index].name) == 0)
         {
           checkfile(optarg);
-          sprintf(flags->injFile[flags->NF],"%s",optarg);
-          flags->NF++;
-          if(flags->NF>Nmax)
+          sprintf(flags->injFile[flags->NINJ],"%s",optarg);
+          flags->NINJ++;
+          if(flags->NINJ>Nmax)
           {
-            fprintf(stderr,"Requested number of injections is too large (%i/%i)\n",flags->NF,Nmax);
-            fprintf(stderr,"Remove at least %i --inj arguments\n",flags->NF-Nmax);
+            fprintf(stderr,"WARNING: Requested number of injections is too large (%i/%i)\n",flags->NINJ,Nmax);
+            fprintf(stderr,"Should you remove at least %i --inj arguments?\n",flags->NINJ-Nmax);
             fprintf(stderr,"Now exiting to system\n");
             exit(1);
           }
@@ -312,7 +343,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   if(flags->cheat) flags->NBURN = 0;
 
   // copy command line args to other data structures
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NDATA; i++)
   {
     data[i]->NT = flags->NT;
     for(int j=0; j<flags->NT; j++)
@@ -326,9 +357,9 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     data[i]->NP       = data[0]->NP;
     data[i]->Nchannel = data[0]->Nchannel;
     
-    data[i]->cseed = data[0]->cseed+i*flags->NF;
-    data[i]->nseed = data[0]->nseed+i*flags->NF;
-    data[i]->iseed = data[0]->iseed+i*flags->NF;
+    data[i]->cseed = data[0]->cseed+i*flags->NDATA;
+    data[i]->nseed = data[0]->nseed+i*flags->NDATA;
+    data[i]->iseed = data[0]->iseed+i*flags->NDATA;
   }
 
   
@@ -390,6 +421,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(stdout,"  Data duration ....... %.0f \n",data_ptr->T);
   fprintf(stdout,"  Data segments ....... %i   \n",flags->NT);
   fprintf(stdout,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
+  fprintf(stdout,"  Data format is........%s   \n",data_ptr->format);
   fprintf(stdout,"  MCMC steps............%i   \n",flags->NMCMC);
   fprintf(stdout,"  MCMC burnin steps.....%i   \n",flags->NBURN);
   fprintf(stdout,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
@@ -397,23 +429,25 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(stdout,"================= RUN FLAGS ================\n");
   if(flags->verbose)  fprintf(stdout,"  Verbose flag ........ ENABLED \n");
   else                fprintf(stdout,"  Verbose flag ........ DISABLED\n");
-  if(flags->NF>0)
+  if(flags->NINJ>0)
   {
-    fprintf(stdout,"  Injected sources..... %i\n",flags->NF);
+    fprintf(stdout,"  Injected sources..... %i\n",flags->NINJ);
     fprintf(stdout,"     seed ............. %li\n",data_ptr->iseed);
-    for(int i=0; i<flags->NF; i++)
+    for(int i=0; i<flags->NINJ; i++)
     {
       fprintf(stdout,"     source ........... %s\n",flags->injFile[i]);
     }
   }
-  else                fprintf(stdout,"  Injection is ........ DISABLED\n");
-  if(flags->fixSky)   fprintf(stdout,"  Sky parameters are... DISABLED\n");
-  else                fprintf(stdout,"  Sky parameters are... ENABLED\n");
-  if(flags->skyPrior) fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
-  else                fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
-  if(flags->snrPrior) fprintf(stdout,"  SNR prior is ........ ENABLED\n");
-  else                fprintf(stdout,"  SNR prior is ........ DISABLED\n");
-  if(flags->zeroNoise)fprintf(stdout,"  Noise realization is. DISABLED\n");
+  else                   fprintf(stdout,"  Injection is ........ DISABLED\n");
+  if(flags->fixSky)      fprintf(stdout,"  Sky parameters are... DISABLED\n");
+  else                   fprintf(stdout,"  Sky parameters are... ENABLED\n");
+  if(flags->calibration) fprintf(stdout,"  Calibration is....... ENABLED\n");
+  else                   fprintf(stdout,"  Calibration is....... DISABLED\n");
+  if(flags->skyPrior)    fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
+  else                   fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
+  if(flags->snrPrior)    fprintf(stdout,"  SNR prior is ........ ENABLED\n");
+  else                   fprintf(stdout,"  SNR prior is ........ DISABLED\n");
+  if(flags->zeroNoise)   fprintf(stdout,"  Noise realization is. DISABLED\n");
   else
   {
     fprintf(stdout,"  Noise realization is. ENABLED\n");
@@ -440,7 +474,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   {
     n = chain->index[ic];
     logL=0.0;
-    for(i=0; i<flags->NF; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
+    for(i=0; i<flags->NINJ; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
     fprintf(chain->likelihoodFile,  "%lg ",logL);
     fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
   }
@@ -449,19 +483,22 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   
   //Always print cold chain
   n = chain->index[0];
-  for(i=0; i<flags->NF; i++)
+  for(i=0; i<flags->NDATA; i++)
   {
     print_chain_state(data, chain, model[n][i], flags, chain->chainFile[0], step);
     print_noise_state(data, model[n][i], chain->noiseFile[0], step);
+    if(flags->calibration)
+      print_calibration_state(data, model[n][i], chain->calibrationFile[0], step);
   }
     if(flags->verbose)
     {
         fflush(chain->chainFile[0]);
         fflush(chain->noiseFile[0]);
+      if(flags->calibration) fflush(chain->calibrationFile[0]);
     }
   
   //Print sampling parameters
-  for(j=0; j<flags->NF; j++)
+  for(j=0; j<flags->NDATA; j++)
   {
     int D = model[n][j]->Nlive;
     for(i=0; i<D; i++)
@@ -477,10 +514,16 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
     }
   }
   
+  //Print calibration parameters
+  for(j=0; j<flags->NDATA; j++)
+  {
+    
+  }
+  
   //Print hot chains if verbose flag
   if(flags->verbose)
   {
-    for(j=0; j<flags->NF; j++)
+    for(j=0; j<flags->NDATA; j++)
     {
       for(ic=1; ic<chain->NC; ic++)
       {
@@ -505,6 +548,30 @@ void print_chain_state(struct Data *data, struct Chain *chain, struct Model *mod
     for(int i=0; i<model->Nlive; i++)
     {
       print_source_params(data,model->source[i],fptr);
+    }
+  }
+  fprintf(fptr, "\n");
+}
+
+void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int step)
+{
+  fprintf(fptr, "%i ",step);
+  fprintf(fptr, "%lg ",model->logL+model->logLnorm);
+  
+  for(int i=0; i<model->NT; i++)
+  {
+    switch(data->Nchannel)
+    {
+      case 1:
+        fprintf(fptr, "%lg ", model->calibration[i]->dampX);
+        fprintf(fptr, "%lg ", model->calibration[i]->dphiX);
+        break;
+      case 2:
+        fprintf(fptr, "%lg ", model->calibration[i]->dampA);
+        fprintf(fptr, "%lg ", model->calibration[i]->dphiA);
+        fprintf(fptr, "%lg ", model->calibration[i]->dampE);
+        fprintf(fptr, "%lg ", model->calibration[i]->dphiE);
+        break;
     }
   }
   fprintf(fptr, "\n");
@@ -536,7 +603,7 @@ void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
   //map to parameter names (just to make code readable)
   map_array_to_params(source, source->params, data->T);
   
-  fprintf(fptr,"%.12g ",source->f0);
+  fprintf(fptr,"%.16g ",source->f0);
   fprintf(fptr,"%.12g ",source->dfdt);
   fprintf(fptr,"%.12g ",source->amp);
   fprintf(fptr,"%.12g ",source->phi);
@@ -590,8 +657,11 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
           
           R_re = data->tdi[i]->X[n_re] - X_re;
           R_im = data->tdi[i]->X[n_im] - X_im;
-          
-          data->h_res[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
+
+          data->h_res[n_re][0][i][mcmc] = R_re;
+          data->h_res[n_im][0][i][mcmc] = R_im;
+
+          data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
           data->h_pow[n][0][i][mcmc] = X_re*X_re + X_im*X_im;
           
           data->S_pow[n][0][i][mcmc] = model->noise[i]->SnX[n];
@@ -615,11 +685,19 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
           
           R_re = data->tdi[i]->A[n_re] - A_re;
           R_im = data->tdi[i]->A[n_im] - A_im;
-          data->h_res[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
+
+          data->h_res[n_re][0][i][mcmc] = R_re;
+          data->h_res[n_im][0][i][mcmc] = R_im;
+
+          data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
           
           R_re = data->tdi[i]->E[n_re] - E_re;
           R_im = data->tdi[i]->E[n_im] - E_im;
-          data->h_res[n][1][i][mcmc] = R_re*R_re + R_im*R_im;
+
+          data->h_res[n_re][1][i][mcmc] = R_re;
+          data->h_res[n_im][1][i][mcmc] = R_im;
+
+          data->r_pow[n][1][i][mcmc] = R_re*R_re + R_im*R_im;
           
           data->h_pow[n][0][i][mcmc] = A_re*A_re + A_im*A_im;
           data->h_pow[n][1][i][mcmc] = E_re*E_re + E_im*E_im;
@@ -659,7 +737,7 @@ void print_waveform_draw(struct Data **data, struct Model **model, struct Flags 
   FILE *fptr;
   char filename[128];
   
-  for(int i=0; i<flags->NF; i++)
+  for(int i=0; i<flags->NINJ; i++)
   {
       sprintf(filename,"data/waveform_draw_%i.dat",i);
       fptr=fopen(filename,"w");
@@ -673,9 +751,22 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
   char filename[1024];
   FILE *fptr_rec;
   FILE *fptr_res;
+  FILE *fptr_var;
   FILE *fptr_Snf;
 
-  //sort h reconstructions
+  //get variance of residual
+  double ***res_var = malloc(data->N*sizeof(double **));
+  for(int n=0; n<data->N; n++)
+  {
+    res_var[n] = malloc(data->Nchannel*sizeof(double *));
+    for(int m=0; m<data->Nchannel; m++)
+    {
+      res_var[n][m] =  malloc(data->NT*sizeof(double));
+      for(int k=0; k<data->NT; k++) res_var[n][m][k] = 0.0;
+    }
+  }
+
+  
   for(int k=0; k<data->NT; k++)
   {
     for(int n=0; n<data->N*2; n++)
@@ -685,15 +776,15 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
         gsl_sort(data->h_rec[n][m][k],1,data->Nwave);
       }
     }
-    
-    printf("sort h_res etc.\n");
+
     for(int n=0; n<data->N; n++)
     {
       for(int m=0; m<data->Nchannel; m++)
       {
-        gsl_sort(data->h_res[n][m][k],1,data->Nwave);
+        gsl_sort(data->r_pow[n][m][k],1,data->Nwave);
         gsl_sort(data->h_pow[n][m][k],1,data->Nwave);
         gsl_sort(data->S_pow[n][m][k],1,data->Nwave);
+        res_var[n][m][k] = gsl_stats_variance(data->h_rec[2*n][m][k], 1, data->Nwave)+gsl_stats_variance(data->h_rec[2*n+1][m][k], 1, data->Nwave);
       }
     }
     
@@ -703,7 +794,9 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
     fptr_res=fopen(filename,"w");
     sprintf(filename,"data/power_noise_t%i_f%i.dat",k,seg);
     fptr_Snf=fopen(filename,"w");
-    
+    sprintf(filename,"data/variance_residual_t%i_f%i.dat",k,seg);
+    fptr_var=fopen(filename,"w");
+
     //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
     double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
     double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
@@ -711,18 +804,19 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
     for(int i=0; i<data->N; i++)
     {
       double f = (double)(i+data->qmin)/data->T;
+      fprintf(fptr_var,"%.12g %.12g %.12g\n",f,res_var[i][0][k],res_var[i][1][k]);
       
-      A_med   = gsl_stats_median_from_sorted_data   (data->h_res[i][0][k], 1, data->Nwave);
-      A_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.25);
-      A_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.75);
-      A_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.05);
-      A_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][0][k], 1, data->Nwave, 0.95);
+      A_med   = gsl_stats_median_from_sorted_data   (data->r_pow[i][0][k], 1, data->Nwave);
+      A_lo_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.25);
+      A_hi_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.75);
+      A_lo_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.05);
+      A_hi_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][0][k], 1, data->Nwave, 0.95);
       
-      E_med   = gsl_stats_median_from_sorted_data   (data->h_res[i][1][k], 1, data->Nwave);
-      E_lo_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.25);
-      E_hi_50 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.75);
-      E_lo_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.05);
-      E_hi_90 = gsl_stats_quantile_from_sorted_data (data->h_res[i][1][k], 1, data->Nwave, 0.95);
+      E_med   = gsl_stats_median_from_sorted_data   (data->r_pow[i][1][k], 1, data->Nwave);
+      E_lo_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.25);
+      E_hi_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.75);
+      E_lo_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.05);
+      E_hi_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][1][k], 1, data->Nwave, 0.95);
       
       fprintf(fptr_res,"%.12g ",f);
       fprintf(fptr_res,"%lg ",A_med);
@@ -792,7 +886,7 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
       
     }
     
-    
+    fclose(fptr_var);
     fclose(fptr_res);
     fclose(fptr_rec);
     fclose(fptr_Snf);

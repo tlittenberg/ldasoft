@@ -1,17 +1,23 @@
 # OpenMP
+#CC = gcc-mp-5
 CC = gcc
 #CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m
-CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -fmax-errors=5 -fopenmp
+CCFLAGS += -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror 
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
-# CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
+CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o
 
-all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass
+<<<<<<< HEAD
+all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb.so gb_residual
+=======
+all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke 
+#all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb.so
+>>>>>>> df34650d67513cb36e65910db82b42f60d4d9d0a
 
 LISA.o : LISA.c LISA.h
 	$(CC) $(CCFLAGS) -c LISA.c 
@@ -22,7 +28,7 @@ GalacticBinaryIO.o : GalacticBinaryIO.c GalacticBinaryIO.h LISA.h
 GalacticBinaryMath.o : GalacticBinaryMath.c GalacticBinaryMath.h GalacticBinary.h
 	$(CC) $(CCFLAGS) -c GalacticBinaryMath.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
-GalacticBinaryPrior.o : GalacticBinaryPrior.c GalacticBinary.h
+GalacticBinaryPrior.o : GalacticBinaryPrior.c GalacticBinaryPrior.h GalacticBinary.h
 	$(CC) $(CCFLAGS) -c GalacticBinaryPrior.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
 GalacticBinaryData.o : GalacticBinaryData.c GalacticBinaryData.h GalacticBinary.h GalacticBinaryModel.o GalacticBinaryMath.o GalacticBinaryIO.o LISA.o 
@@ -46,11 +52,20 @@ gb_mcmc : GalacticBinaryMCMC.c $(OBJS) GalacticBinary.h
 gb_catalog : GalacticBinaryCatalog.c $(OBJS) GalacticBinary.h
 	$(CC) $(CCFLAGS) -o gb_catalog GalacticBinaryCatalog.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
 
+gb_residual : GalacticBinaryResidual.c $(OBJS) GalacticBinary.h
+	$(CC) $(CCFLAGS) -o gb_residual GalacticBinaryResidual.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
+
 gb_mcmc_chirpmass : gb_mcmc_chirpmass.c 
 	$(CC) -o gb_mcmc_chirpmass gb_mcmc_chirpmass.c $(LIBS:%=-l%)
 
-install : gb_mcmc gb_catalog gb_mcmc_chirpmass
-	install gb_mcmc gb_catalog gb_mcmc_chirpmass /home/ldasoft/bin/
+gb_mcmc_brans_dicke : gb_mcmc_brans_dicke.c
+	$(CC) -o gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c $(LIBS:%=-l%)
+
+#gb.so : $(OBJS)
+#	$(CC) -shared -o libgb.so $(OBJS) $(LIBS:%=-l%)
+
+install : gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
+	install gb_mcmc gb_catalog gb_residual gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
 
 clean:
-	rm *.o gb_mcmc gb_catalog gb_mcmc_chirpmass
+	rm *.o *.so gb_mcmc gb_catalog gb.so gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual

@@ -74,5 +74,12 @@ void LISA_spline(double *x, double *y, int n, double yp1, double ypn, double *y2
 void LISA_splint(double *xa, double *ya, double *y2a, int n, double x, double *y);
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
 double AEnoise(double L, double fstar, double f);
+double GBnoise(double T, double f);
+
+/* Fractional frequency versions of TDI & Sn(f) codes */
+void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
+double AEnoise_FF(double L, double fstar, double f);
+double GBnoise_FF(double T, double fstar, double f);
+
 
 #endif /* LISA_h */

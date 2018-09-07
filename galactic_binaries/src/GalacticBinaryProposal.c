@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_sort.h>
 #include <gsl/gsl_randist.h>
 
 #include "LISA.h"
@@ -28,7 +29,7 @@
 #define SNRCAP 10000.0 /* SNR cap on logL */
 
 
-static void write_Fstat_animation(struct Proposal *proposal)
+static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal)
 {
   FILE *fptr = fopen("fstat/Fstat.gpi","w");
   
@@ -55,6 +56,7 @@ static void write_Fstat_animation(struct Proposal *proposal)
   
   fprintf(fptr,"\n");
   
+  fprintf(fptr,"df0 = %g\n",proposal->matrix[0][1]/T);
   fprintf(fptr,"dph = 0.5*2.*pi/%i.\n",(int)proposal->matrix[1][0]);
   fprintf(fptr,"dth = 0.5*2./%i.\n"   ,(int)proposal->matrix[2][0]);
   
@@ -67,7 +69,8 @@ static void write_Fstat_animation(struct Proposal *proposal)
   fprintf(fptr,"do for [ii=0:%i-1:+1]{\n",(int)proposal->matrix[0][0]);
   fprintf(fptr,"  set output sprintf('fstat_frame%%05.0f.png',ii)\n");
   fprintf(fptr,"  set size 1,1\n");
-  fprintf(fptr,"  set multiplot title sprintf('fstat-frame%%05.0f.png',ii)\n");
+//  fprintf(fptr,"  set multiplot title sprintf('fstat-frame%%05.0f.png',ii)\n");
+  fprintf(fptr,"  set multiplot title sprintf('f = %%f ',(ii*df0+%g)*1000)\n",fmin);
   fprintf(fptr,"  set size 0.5,1\n");
 
   fprintf(fptr,"\n");
@@ -193,14 +196,68 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
 
 double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-  for(int n=0; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
   
-  for(int j=0; j<source->NP; j++)
+  double logQ = 0.0;
+  int n;
+  
+  //frequency
+  n = 0;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //sky location
+  n = 1;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  n = 2;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //amplitude
+  n = 3;
+//  logQ += draw_signal_amplitude(data, model, source, proposal, params, seed);
+  double q=-INFINITY;
+  while(q==-INFINITY)
   {
-    if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    q = evaluate_snr_prior(data, model, params);
   }
+  logQ += model->logPriorVolume[n];
+  logQ += q;
 
-  double logQ = model->logPriorVolume;
+  
+  //inclination
+  n = 4;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //polarization
+  n = 5;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //phase
+  n = 6;
+  params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+  logQ += model->logPriorVolume[n];
+  
+  //fdot
+  if(source->NP>7)
+  {
+    n = 7;
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    logQ += model->logPriorVolume[n];
+  }
+  
+  //f-double-dot
+  if(source->NP>8)
+  {
+    n = 8;
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    logQ += model->logPriorVolume[n];
+  }
+  
   
   return logQ;
 }
@@ -215,7 +272,89 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
   
-  return model->logPriorVolume;
+  double logP = 0.0;
+  for(int j=0; j<source->NP; j++) logP += model->logPriorVolume[j];
+  
+  return logP;
+}
+
+double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed)
+{
+  double **uniform_prior = model->prior;
+  double logP=-INFINITY;
+  double alpha=prior->skymaxp;
+  
+  while(alpha>logP)
+  {
+    //sky location
+    params[1] = model->prior[1][0] + gsl_rng_uniform(seed)*(model->prior[1][1]-model->prior[1][0]);
+    params[2] = model->prior[2][0] + gsl_rng_uniform(seed)*(model->prior[2][1]-model->prior[2][0]);
+    
+    //map costheta and phi to index of skyhist array
+    int i = (int)floor((params[1]-uniform_prior[1][0])/prior->dcostheta);
+    int j = (int)floor((params[2]-uniform_prior[2][0])/prior->dphi);
+    
+    int k = i*prior->nphi + j;
+    
+    logP = prior->skyhist[k];
+    alpha = log(gsl_rng_uniform(seed)*exp(prior->skymaxp));
+  }
+  return logP;
+}
+
+double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed)
+{
+  double dA,dphi;
+  double logP = 0.0;
+  
+  //apply calibration error to full signal model
+  //loop over time segments
+  for(int m=0; m<model->NT; m++)
+  {
+    switch(data->Nchannel)
+    {
+      case 1:
+        
+        //amplitude
+        dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+        model->calibration[m]->dampX = dA;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        model->calibration[m]->dphiX = dphi;
+        logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+        
+        break;
+      case 2:
+        
+        //amplitude
+        dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+        model->calibration[m]->dampA = dA;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        model->calibration[m]->dphiA = dphi;
+        logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+
+        //amplitude
+        dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+        model->calibration[m]->dampE = dA;
+        logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+        
+        //phase
+        dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+        model->calibration[m]->dphiE = dphi;
+        logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+
+        break;
+      default:
+        break;
+    }//end switch
+  }//end loop over segments
+
+  return logP;
 }
 
 double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -342,32 +481,28 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
   int N = proposal->size;
   int NP = source->NP;
   double **cdf = proposal->matrix;
-  double logP=0.0;
 
   for(int n=0; n<NP; n++)
   {
-    //draw p-value
-    double p = gsl_rng_uniform(seed);
 
-    //find samples either end of p-value
-    int i = (int)floor(p*N);
-
-    //linear interpolation betweein i and i+1
-    //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
-    double x0 = (double)i/(double)N;
-    double y0;
-    if(i==0) y0 = model->prior[n][0];
-    else     y0 = cdf[n][i];
-    double x1 = (double)(i+1)/(double)N;
-    double y1;
-    if(i==N-1) y1 = model->prior[n][1];
-    else       y1 = cdf[n][i+1];
-
-    params[n] = y0 + (p-x0)*((y1-y0)/(x1-x0));
-    logP += log(p);
+    //draw n from U[0,N]
+    double c_prime = gsl_rng_uniform(seed)*(double)(N-1);
+    
+    //map to nearest sample
+    int c_minus = (int)floor(c_prime);
+    int c_plus  = c_minus+1;
+    
+    //get value of pdf at cprime
+    double p = 1./(cdf[n][c_plus] - cdf[n][c_minus]);
+    
+    //interpolate to get new parameter
+    params[n] = (c_prime - c_minus)*(1./p) + cdf[n][c_minus];
+    
+    if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+    
   }
 
-  return logP;
+  return cdf_density(model, source, proposal);
 }
 
 double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal)
@@ -378,38 +513,22 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   double logP=0.0;
   double *params = source->params;
   
-  double x0,x1,y0,y1;
+  int i;
   
-  int ii;
   for(int n=0; n<NP; n++)
   {
+    if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+    
     //find samples either end of p-value
-    int i = 0;
-    while(params[n]>cdf[n][i]) i++;
-    
-    ii=i+1;
-    while(cdf[n][i]==cdf[n][ii])ii++;
-    
-    //linear interpolation betweein i and i+1
-    //y = y0 + (x - x0)*((y1-y0)/(x1-x0))
-    if(i==0) x0 = model->prior[n][0];
-    else     x0 = cdf[n][i];
-    y0 = (double)i/(double)N;
-
-    if(i>N-2)
+    if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
     {
-      x1 = model->prior[n][1];
-      y1 = 1.0;
-    }
+      return -INFINITY;
     else
     {
-      x1 = cdf[n][ii];
-      y1 = (double)(ii)/(double)N;
+      i=0;
+      while(params[n]>cdf[n][i]) i++;
+      logP += log(  (1./N) /  (cdf[n][i+1]-cdf[n][i])  );
     }
-    
-    double p = y0 + (params[n]-x0)*((y1-y0)/(x1-x0));
-    
-    logP += log(p);
   }
   
   return logP;
@@ -523,7 +642,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         proposal[i]->function = &draw_from_cdf;
         proposal[i]->weight = 0.2;
         check+=proposal[i]->weight;
-        //parse cdf file
+        //parse chain file
         FILE *fptr = fopen(flags->cdfFile,"r");
         proposal[i]->size=0;
         double junk;
@@ -535,6 +654,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         }
         rewind(fptr);
         proposal[i]->size--;
+        proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
         proposal[i]->matrix = malloc(data->NP * sizeof(double*));
         for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
         
@@ -549,6 +669,23 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
           
         }
         free_model(temp);
+        
+        //now sort each row of the matrix
+        for(int j=0; j<data->NP; j++)
+        {
+          //fill up proposal vector
+          for(int n=0; n<proposal[i]->size; n++)
+            proposal[i]->vector[n] = proposal[i]->matrix[j][n];
+
+          //sort it
+          gsl_sort(proposal[i]->vector,1, proposal[i]->size);
+          
+          //replace that row of the matrix
+          for(int n=0; n<proposal[i]->size; n++)
+            proposal[i]->matrix[j][n] = proposal[i]->vector[n];
+        }
+        
+        free(proposal[i]->vector);
         fclose(fptr);
         break;
         
@@ -712,7 +849,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
       }
       fclose(fptr);
     }
-    write_Fstat_animation(proposal);
+    write_Fstat_animation(data->qmin/data->T, data->T,proposal);
   }
   
   free(Fparams);
@@ -737,11 +874,14 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   double i,j,k;
   
   //first draw from prior
-  draw_from_prior(data, model, source, proposal, params, seed);
+  for(int n=0; n<source->NP; n++)
+  {
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    logP += model->logPriorVolume[n];
+  }
+  //put back 
   
-  //rejection sample on SNR
-  logP = evaluate_snr_prior(data, model, params);
-
+  
   //now rejection sample on f,theta,phi
   int check=1;
   while(check)

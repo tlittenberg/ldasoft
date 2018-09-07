@@ -51,7 +51,7 @@ void map_params_to_array(struct Source *source, double *params, double T)
 void alloc_data(struct Data **data_vec, struct Flags *flags)
 {
   int NMCMC = flags->NMCMC;
-  for(int m=0; m<flags->NF; m++)
+  for(int m=0; m<flags->NDATA; m++)
   {
     struct Data *data = data_vec[m];
  
@@ -75,7 +75,8 @@ void alloc_data(struct Data **data_vec, struct Flags *flags)
     //reconstructed signal model
     int i_re,i_im;
     data->h_rec = malloc(data->N*2*sizeof(double ***));
-    data->h_res = malloc(data->N*sizeof(double ***));
+    data->h_res = malloc(data->N*2*sizeof(double ***));
+    data->r_pow = malloc(data->N*sizeof(double ***));
     data->h_pow = malloc(data->N*sizeof(double ***));
     data->S_pow = malloc(data->N*sizeof(double ***));
     
@@ -92,30 +93,38 @@ void alloc_data(struct Data **data_vec, struct Flags *flags)
       
       data->S_pow[i]    = malloc(data->Nchannel*sizeof(double **));
       data->h_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-      data->h_res[i]    = malloc(data->Nchannel*sizeof(double **));
+      data->r_pow[i]    = malloc(data->Nchannel*sizeof(double **));
       data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double **));
       data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double **));
+      data->h_res[i_re] = malloc(data->Nchannel*sizeof(double **));
+      data->h_res[i_im] = malloc(data->Nchannel*sizeof(double **));
       for(int l=0; l<data->Nchannel; l++)
       {
         data->S_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
         data->h_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-        data->h_res[i][l]    = malloc(data->Nwave*sizeof(double *));
+        data->r_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
         data->h_rec[i_re][l] = malloc(data->Nwave*sizeof(double *));
         data->h_rec[i_im][l] = malloc(data->Nwave*sizeof(double *));
+        data->h_res[i_re][l] = malloc(data->Nwave*sizeof(double *));
+        data->h_res[i_im][l] = malloc(data->Nwave*sizeof(double *));
         
         for(int n=0; n<flags->NT; n++)
         {
           data->S_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
           data->h_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
-          data->h_res[i][l][n]    = malloc(data->Nwave*sizeof(double));
+          data->r_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
           data->h_rec[i_re][l][n] = malloc(data->Nwave*sizeof(double));
           data->h_rec[i_im][l][n] = malloc(data->Nwave*sizeof(double));
+          data->h_res[i_re][l][n] = malloc(data->Nwave*sizeof(double));
+          data->h_res[i_im][l][n] = malloc(data->Nwave*sizeof(double));
           for(int m=0; m<data->Nwave; m++)
           {
             
             data->h_rec[i_re][l][n][m] = 0.0;
             data->h_rec[i_im][l][n][m] = 0.0;
-            data->h_res[i][l][n][m]    = 0.0;
+            data->h_res[i_re][l][n][m] = 0.0;
+            data->h_res[i_im][l][n][m] = 0.0;
+            data->r_pow[i][l][n][m]    = 0.0;
             data->h_pow[i][l][n][m]    = 0.0;
             data->S_pow[i][l][n][m]    = 0.0;
             
@@ -133,7 +142,6 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
 {
   int ic;
   int NC = chain->NC;
-  int ND = flags->NMAX;
   char filename[1024];
 
   chain->index = malloc(NC*sizeof(int));
@@ -147,8 +155,8 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
     chain->acceptance[ic] = 1.0;
     chain->temperature[ic] = pow(1.2,(double)ic);
     chain->avgLogL[ic] = 0.0;
-    chain->dimension[ic] = malloc(ND*sizeof(int));
-    for(int id=0; id<ND; id++) chain->dimension[ic][id] = 0;
+    chain->dimension[ic] = malloc(flags->DMAX*sizeof(int));
+    for(int id=0; id<flags->DMAX; id++) chain->dimension[ic][id] = 0;
   }
   //set hottest chain to ~infinite temperature
   chain->temperature[NC-1] = 1e12;
@@ -169,15 +177,15 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
   chain->likelihoodFile = fopen("chains/log_likelihood_chain.dat","w");
   
   chain->temperatureFile = fopen("chains/temperature_chain.dat","w");
-
+  
   chain->chainFile = malloc(NC*sizeof(FILE *));
   chain->chainFile[0] = fopen("chains/model_chain.dat.0","w");
 
   chain->parameterFile = malloc(NC*sizeof(FILE *));
   chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0","w");
 
-  chain->dimensionFile = malloc(flags->NMAX*sizeof(FILE *));
-  for(int i=0; i<flags->NMAX; i++)
+  chain->dimensionFile = malloc(flags->DMAX*sizeof(FILE *));
+  for(int i=0; i<flags->DMAX; i++)
   {
     sprintf(filename,"chains/dimension_chain.dat.%i",i);
     chain->dimensionFile[i] = fopen(filename,"w");
@@ -185,6 +193,12 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
   
   chain->noiseFile = malloc(NC*sizeof(FILE *));
   chain->noiseFile[0] = fopen("chains/noise_chain.dat.0","w");
+
+  if(flags->calibration)
+  {
+    chain->calibrationFile = malloc(NC*sizeof(FILE *));
+    chain->calibrationFile[0] = fopen("chains/calibration_chain.dat.0","w");
+  }
 
   if(flags->verbose)
   {
@@ -241,22 +255,24 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, 
   
   model->source = malloc(model->Nmax*sizeof(struct Source *));
   
-  model->noise    = malloc( NT * sizeof(struct Noise*) );
-  model->tdi      = malloc( NT * sizeof(struct TDI*)   );
-  model->residual = malloc( NT * sizeof(struct TDI*)   );
-  model->t0       = malloc( NT * sizeof(double)        );
-  model->t0_min   = malloc( NT * sizeof(double)        );
-  model->t0_max   = malloc( NT * sizeof(double)        );
+  model->calibration = malloc( NT * sizeof(struct Calibration *) );
+  model->noise       = malloc( NT * sizeof(struct Noise *)       );
+  model->tdi         = malloc( NT * sizeof(struct TDI *)         );
+  model->residual    = malloc( NT * sizeof(struct TDI *)         );
+  model->t0          = malloc( NT * sizeof(double)               );
+  model->t0_min      = malloc( NT * sizeof(double)               );
+  model->t0_max      = malloc( NT * sizeof(double)               );
   
   for(n = 0; n<NT; n++)
   {
-    model->noise[n]    = malloc( sizeof(struct Noise) );
-    model->tdi[n]      = malloc( sizeof(struct TDI)   );
-    model->residual[n] = malloc( sizeof(struct TDI)   );
-    
+    model->noise[n]       = malloc( sizeof(struct Noise)       );
+    model->tdi[n]         = malloc( sizeof(struct TDI)         );
+    model->residual[n]    = malloc( sizeof(struct TDI)         );
+    model->calibration[n] = malloc( sizeof(struct Calibration) );
     alloc_noise(model->noise[n],NFFT);
     alloc_tdi(model->tdi[n],  NFFT, Nchannel);
     alloc_tdi(model->residual[n],  NFFT, Nchannel);
+    alloc_calibration(model->calibration[n]);
   }
   
   for(n=0; n<model->Nmax; n++)
@@ -265,6 +281,7 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, 
     alloc_source(model->source[n],NFFT,Nchannel,NP);
   }
   
+  model->logPriorVolume = malloc(NP*sizeof(double));
   model->prior = malloc(NP*sizeof(double *));
   for(n=0; n<NP; n++) model->prior[n] = malloc(2*sizeof(double));
 }
@@ -287,8 +304,11 @@ void copy_model(struct Model *origin, struct Model *copy)
     //TDI
     copy_tdi(origin->tdi[n],copy->tdi[n]);
     
+    //Calibration parameters
+    copy_calibration(origin->calibration[n],copy->calibration[n]);
+    
     //Residual
-    //copy_tdi(origin->residual[n],copy->residual[n]);
+    copy_tdi(origin->residual[n],copy->residual[n]);
     
     //Start time for segment for model
     copy->t0[n] = origin->t0[n];
@@ -298,9 +318,11 @@ void copy_model(struct Model *origin, struct Model *copy)
 
   
   //Source parameter priors
-  for(int n=0; n<origin->NP; n++) for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
-  copy->logPriorVolume = origin->logPriorVolume;
-
+  for(int n=0; n<origin->NP; n++)
+  {
+    for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
+    copy->logPriorVolume[n] = origin->logPriorVolume[n];
+  }
   //Model likelihood
   copy->logL           = origin->logL;
   copy->logLnorm       = origin->logLnorm;
@@ -457,12 +479,14 @@ void free_model(struct Model *model)
   
   for(n=0; n<8; n++) free(model->prior[n]);
   free(model->prior);
+  free(model->logPriorVolume);
  
   for(n=0; n<model->NT; n++)
   {
     free_tdi(model->tdi[n]);
     free_tdi(model->residual[n]);
     free_noise(model->noise[n]);
+    free_calibration(model->calibration[n]);
   }
   free(model->t0);
   free(model->t0_min);
@@ -569,6 +593,43 @@ void free_noise(struct Noise *noise)
   free(noise->SnE);
   free(noise->SnX);
   free(noise);
+}
+
+void alloc_calibration(struct Calibration *calibration)
+{
+  calibration->dampA = 0.0;
+  calibration->dampE = 0.0;
+  calibration->dampX = 0.0;
+  calibration->dphiA = 0.0;
+  calibration->dphiE = 0.0;
+  calibration->dphiX = 0.0;
+  calibration->real_dphiA = 1.0;
+  calibration->real_dphiE = 1.0;
+  calibration->real_dphiX = 1.0;
+  calibration->imag_dphiA = 0.0;
+  calibration->imag_dphiE = 0.0;
+  calibration->imag_dphiX = 0.0;
+}
+
+void copy_calibration(struct Calibration *origin, struct Calibration *copy)
+{
+  copy->dampA   = origin->dampA;
+  copy->dampE   = origin->dampE;
+  copy->dampX   = origin->dampX;
+  copy->dphiA = origin->dphiA;
+  copy->dphiE = origin->dphiE;
+  copy->dphiX = origin->dphiX;
+  copy->real_dphiA = origin->real_dphiA;
+  copy->real_dphiE = origin->real_dphiE;
+  copy->real_dphiX = origin->real_dphiX;
+  copy->imag_dphiA = origin->imag_dphiA;
+  copy->imag_dphiE = origin->imag_dphiE;
+  copy->imag_dphiX = origin->imag_dphiX;
+}
+
+void free_calibration(struct Calibration *calibration)
+{
+  free(calibration);
 }
 
 void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP)
@@ -763,7 +824,8 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     for(m=0; m<NT; m++)
     {
       //Simulate gravitational wave signal
-      if(index==-1 || index==n) galactic_binary(orbit, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+      /* the index = -1 condition is redundent if the model->tdi structure is up to date...*/
+      if(index==-1 || index==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
       
       //Add waveform to model TDI channels
       for(i=0; i<source->BW; i++)
@@ -811,6 +873,92 @@ void generate_noise_model(struct Data *data, struct Model *model)
         break;
     }
   }
+}
+
+void generate_calibration_model(struct Data *data, struct Model *model)
+{
+  for(int m=0; m<model->NT; m++)
+  {
+    struct Calibration *calibration = model->calibration[m];
+    switch(data->Nchannel)
+    {
+      case 1:
+        calibration->real_dphiX = cos(calibration->dphiX);
+        calibration->imag_dphiX = sin(calibration->dphiX);
+        break;
+      case 2:
+        calibration->real_dphiA = cos(calibration->dphiA);
+        calibration->imag_dphiA = sin(calibration->dphiA);
+        
+        calibration->real_dphiE = cos(calibration->dphiE);
+        calibration->imag_dphiE = sin(calibration->dphiE);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+void apply_calibration_model(struct Data *data, struct Model *model)
+{
+  double dA;
+  double cal_re;
+  double cal_im;
+  double h_re;
+  double h_im;
+  int i_re;
+  int i_im;
+  int i,m;
+  
+  //apply calibration error to full signal model
+  //loop over time segments
+  for(m=0; m<model->NT; m++)
+  {
+    for(i=0; i<data->N; i++)
+    {
+      i_re = 2*i;
+      i_im = i_re+1;
+      
+      switch(data->Nchannel)
+      {
+        case 1:
+          h_re = model->tdi[m]->X[i_re];
+          h_im = model->tdi[m]->X[i_im];
+     
+          dA     = (1.0 + model->calibration[m]->dampX);
+          cal_re = model->calibration[m]->real_dphiX;
+          cal_im = model->calibration[m]->imag_dphiX;
+
+          model->tdi[m]->X[i_re] = dA*(h_re*cal_re - h_im*cal_im);
+          model->tdi[m]->X[i_im] = dA*(h_re*cal_im + h_im*cal_re);
+          break;
+        case 2:
+          h_re = model->tdi[m]->A[i_re];
+          h_im = model->tdi[m]->A[i_im];
+          
+          dA     = (1.0 + model->calibration[m]->dampA);
+          cal_re = model->calibration[m]->real_dphiA;
+          cal_im = model->calibration[m]->imag_dphiA;
+          
+          model->tdi[m]->A[i_re] = dA*(h_re*cal_re - h_im*cal_im);
+          model->tdi[m]->A[i_im] = dA*(h_re*cal_im + h_im*cal_re);
+
+          
+          h_re = model->tdi[m]->E[i_re];
+          h_im = model->tdi[m]->E[i_im];
+          
+          dA     = (1.0 + model->calibration[m]->dampE);
+          cal_re = model->calibration[m]->real_dphiE;
+          cal_im = model->calibration[m]->imag_dphiE;
+          
+          model->tdi[m]->E[i_re] = dA*(h_re*cal_re - h_im*cal_im);
+          model->tdi[m]->E[i_im] = dA*(h_re*cal_im + h_im*cal_re);
+          break;
+        default:
+          break;
+      }//end switch
+    }//end loop over data
+  }//end loop over segments
 }
 
 double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
@@ -922,13 +1070,13 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
 int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags)
 {
   int n = chain->index[0];
-  int N = flags->NF;
+  int N = flags->NDATA;
   
   double logL = 0.0;
   double dlogL= 0.0;
   
   // get full likelihood
-  for(int i=0; i<flags->NF; i++) logL += model[n][i]->logL + model[n][i]->logLnorm;
+  for(int i=0; i<flags->NDATA; i++) logL += model[n][i]->logL + model[n][i]->logLnorm;
   
   // update max
   if(logL > chain->logLmax)
@@ -941,11 +1089,11 @@ int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct
       chain->logLmax = logL;
 
 //      fprintf(stdout,"New max logL = %.2f  Cloning chains...\n",logL);
-//      for(int ic=1; ic<chain->NC; ic++)
-//      {
-//        int m = chain->index[ic];
-//        for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
-//      }
+      for(int ic=1; ic<chain->NC; ic++)
+      {
+        int m = chain->index[ic];
+        for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
+      }
       if(flags->burnin)return 1;
     }
   }
