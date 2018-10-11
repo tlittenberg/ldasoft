@@ -447,6 +447,8 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     (d[3][1][k]-d[2][1][k]);
     
     M[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
+    //TODO: changed GB phase to match LDC, but why?
+    //M[k] =-sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
     M[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
 
     //save some CPU time when only X-channel is needed
@@ -505,13 +507,6 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
       M[j] = sqT*fonfs2*(Z[j]*cSL - Z[k]*sSL);
       M[k] = sqT*fonfs2*(Z[j]*sSL + Z[k]*cSL);*/
 
-      /*
-      A[j] =  fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
-      A[k] = -fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
-
-      E[j] =  fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
-      E[k] = -fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
-       */
     }
   }
 }

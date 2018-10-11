@@ -60,7 +60,7 @@ gb_mcmc_brans_dicke : gb_mcmc_brans_dicke.c
 #	$(CC) -shared -o libgb.so $(OBJS) $(LIBS:%=-l%)
 
 install : gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
-	install gb_mcmc gb_catalog gb_residual gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
+	install gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
 
 clean:
 	rm *.o *.so gb_mcmc gb_catalog gb.so gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
