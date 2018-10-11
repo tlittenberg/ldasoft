@@ -468,11 +468,14 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
 void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
 {
   //TODO: support Michelson-only injection
-  fprintf(stdout,"\n==== GalacticBinaryInjectSimulatedSource ====\n");
-  
+//  fprintf(stdout,"\n==== GalacticBinaryInjectSimulatedSource ====\n");
+//  fprintf(stdout,"==== !!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!====\n");
+//  fprintf(stdout,"==== HACKED CODE TO READ fddot FROM FILE ====\n");
+//  fprintf(stdout,"====    INCOMPATABLE WITH EVERYTHING     ====\n");
   FILE *fptr;
   
   /* Get injection parameters */
+  //double f0,dfdt,theta,phi,amp,iota,phi0,psi,fddot;//read from injection file
   double f0,dfdt,theta,phi,amp,iota,phi0,psi;//read from injection file
   
   FILE *injectionFile;
@@ -496,6 +499,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
     while(!feof(injectionFile))
     {
       fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+      //fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0,&fddot);
       N++;
     }
     rewind(injectionFile);
@@ -510,6 +514,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
     for(int nn=0; nn<N; nn++)
     {
       fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+      //fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0,&fddot);
       
       
       for(int jj=0; jj<flags->NT; jj++)
@@ -563,6 +568,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         inj->psi      = psi;
         if(data->NP>8)
           inj->d2fdt2 = 11.0/3.0*dfdt*dfdt/f0;
+        //inj->d2fdt2 = fddot;
         
         map_params_to_array(inj, inj->params, data->T);
         

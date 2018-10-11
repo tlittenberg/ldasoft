@@ -737,7 +737,9 @@ void print_waveform_draw(struct Data **data, struct Model **model, struct Flags 
   FILE *fptr;
   char filename[128];
   
-  for(int i=0; i<flags->NINJ; i++)
+  int N = 1;
+  if(flags->NINJ>1) N = flags->NINJ;
+  for(int i=0; i<N; i++)
   {
       sprintf(filename,"data/waveform_draw_%i.dat",i);
       fptr=fopen(filename,"w");

@@ -4,7 +4,7 @@ CC = gcc
 #CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m
-CCFLAGS += -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror 
+CCFLAGS += -O3 -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror 
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
@@ -12,12 +12,7 @@ CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o
 
-<<<<<<< HEAD
 all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb.so gb_residual
-=======
-all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke 
-#all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb.so
->>>>>>> df34650d67513cb36e65910db82b42f60d4d9d0a
 
 LISA.o : LISA.c LISA.h
 	$(CC) $(CCFLAGS) -c LISA.c 

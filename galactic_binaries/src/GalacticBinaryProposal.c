@@ -523,6 +523,7 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
     if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
     {
       return -INFINITY;
+    }
     else
     {
       i=0;
