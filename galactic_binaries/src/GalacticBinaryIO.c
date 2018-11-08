@@ -6,6 +6,7 @@
 //
 //
 
+#include <math.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -360,6 +361,9 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     data[i]->cseed = data[0]->cseed+i*flags->NDATA;
     data[i]->nseed = data[0]->nseed+i*flags->NDATA;
     data[i]->iseed = data[0]->iseed+i*flags->NDATA;
+
+    //map fmin to nearest bin
+    data[i]->fmin = floor(data[i]->fmin*data[i]->T)/data[i]->T;
   }
 
   

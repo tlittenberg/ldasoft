@@ -550,13 +550,9 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         }
         
         //map polarization angle into [0:pi], preserving relation to phi0
-        if(psi>M_PI)
-        {
-          psi  -= M_PI;
-          phi0 += M_PI;
-          if(phi0 > PI2) phi0 -= PI2;
-        }
-        
+        if(psi>M_PI) psi  -= M_PI;
+        if(phi0>PI2) phi0 -= PI2;
+
         //map parameters to vector
         inj->f0       = f0;
         inj->dfdt     = dfdt;
