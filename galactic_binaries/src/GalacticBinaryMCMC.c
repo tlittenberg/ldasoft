@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
   /* Initialize priors */
   struct Prior *prior = malloc(sizeof(struct Prior));
-  if(flags->skyPrior) set_galaxy_prior(flags, prior);
+  if(flags->galaxyPrior) set_galaxy_prior(flags, prior);
 
   
   /* Initialize data models */
@@ -217,13 +217,15 @@ int main(int argc, char *argv[])
     else       flags->burnin=0;
     
     //set annealinging tempurature during burnin
-//    if(flags->burnin)
-//    {
-//      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
-//      if(chain->annealing<1.0)chain->annealing=1.0;
-//      chain->annealing=1.0;
-//      //printf("annealing=%g\n",chain->annealing);
-//    }
+    /*
+    if(flags->burnin)
+    {
+      chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
+      if(chain->annealing<1.0)chain->annealing=1.0;
+      chain->annealing=1.0;
+      //printf("annealing=%g\n",chain->annealing);
+    }
+     */
     chain->annealing=1.0;
     
     // (parallel) loop over chains
@@ -252,7 +254,9 @@ int main(int argc, char *argv[])
         if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
 
         //delayed rejection mode-hopper
-        //if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
+        /*
+         if(model_ptr->Nlive>0 && mcmc<0 && ic<NC/2)galactic_binary_drmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
+         */
 
         //update fisher matrix for each chain
         if(mcmc%100==0)
@@ -589,6 +593,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         generate_calibration_model(data, model_y);
         apply_calibration_model(data, model_y);
       }
+
       //get likelihood for y
       model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
       
@@ -609,15 +614,12 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(logH > loga)
     {
-              if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
-              {
-                printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
-                printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-                exit(1);
-              }
-
-
-
+      if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+      {
+        printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
+        printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+        //exit(1);
+      }
       proposal[nprop]->accept[ic]++;
       copy_model(model_y,model_x);
     }
@@ -661,7 +663,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       else
       {
         draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
-        if(flags->skyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
+        if(flags->galaxyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
 
         logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
       }

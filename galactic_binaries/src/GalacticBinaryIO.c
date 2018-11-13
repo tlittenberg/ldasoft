@@ -84,7 +84,7 @@ void print_usage()
   fprintf(stdout,"       --data        : strain data file                    \n");
   fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
-  fprintf(stdout,"       --sky-prior   : use galaxy model for sky prior      \n");
+  fprintf(stdout,"       --galaxy-prior: use galaxy model for sky prior      \n");
   fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
   fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
@@ -129,7 +129,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->zeroNoise   = 0;
   flags->confNoise   = 0;
   flags->fixSky      = 0;
-  flags->skyPrior    = 0;
+  flags->galaxyPrior = 0;
   flags->snrPrior    = 0;
   flags->emPrior     = 0;
   flags->cheat       = 0;
@@ -212,7 +212,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"conf-noise",  no_argument, 0, 0 },
     {"frac-freq",   no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
-    {"sky-prior",   no_argument, 0, 0 },
+    {"galaxy-prior",no_argument, 0, 0 },
     {"snr-prior",   no_argument, 0, 0 },
     {"known-source",no_argument, 0, 0 },
     {"f-double-dot",no_argument, 0, 0 },
@@ -250,7 +250,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
         if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
-        if(strcmp("sky-prior",   long_options[long_index].name) == 0) flags->skyPrior   = 1;
+        if(strcmp("galaxy-prior",long_options[long_index].name) == 0) flags->galaxyPrior= 1;
         if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
@@ -447,7 +447,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   else                   fprintf(stdout,"  Sky parameters are... ENABLED\n");
   if(flags->calibration) fprintf(stdout,"  Calibration is....... ENABLED\n");
   else                   fprintf(stdout,"  Calibration is....... DISABLED\n");
-  if(flags->skyPrior)    fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
+  if(flags->galaxyPrior) fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
   else                   fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
   if(flags->snrPrior)    fprintf(stdout,"  SNR prior is ........ ENABLED\n");
   else                   fprintf(stdout,"  SNR prior is ........ DISABLED\n");
