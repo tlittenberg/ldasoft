@@ -464,7 +464,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return -INFINITY;
   else logP -= log(uniform_prior[0][1]-uniform_prior[0][0]);
   
-  if(flags->skyPrior)
+  if(flags->galaxyPrior)
   {
     if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
     

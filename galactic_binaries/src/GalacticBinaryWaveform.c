@@ -330,7 +330,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
   Aplus  =  amp*(1.+cosi*cosi);
   Across = -amp*(2.0*cosi);
   
-  //TODO: changing GB phase to match LDC, but why?
+  //TODO: changed GB phase to match LDC, but why?
   //df = PI2*(f0 - ((double)q)/T);
   df = PI2*(((double)q)/T);
   
@@ -371,10 +371,8 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
       kdotx[i] = (x[i]*k[1]+y[i]*k[2]+z[i]*k[3])/C;
       
       //Wave arrival time at spacecraft i
-       //TODO: changed GB phase to match LDC, but why?
-      //xi[i] = t - kdotx[i];
       xi[i] = t - kdotx[i];
-
+      
       //Zeroeth order approximation to frequency at spacecraft i
       f[i] = f0;
       
