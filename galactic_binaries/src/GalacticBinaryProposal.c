@@ -513,21 +513,22 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   double logP=0.0;
   double *params = source->params;
   
-  int i;
+  int i,j;
   
   for(int n=0; n<NP; n++)
   {
     if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
-    
+
     //find samples either end of p-value
     if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
-    {
       return -INFINITY;
     else
     {
       i=0;
       while(params[n]>cdf[n][i]) i++;
-      logP += log(  (1./N) /  (cdf[n][i+1]-cdf[n][i])  );
+      j=i+1;
+      while(cdf[n][j]==cdf[n][i]) j++;
+      logP += log(  ((double)(j-i)/N) /  (cdf[n][j]-cdf[n][i])  );
     }
   }
   

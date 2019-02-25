@@ -69,7 +69,7 @@ struct Flags
   int DMAX;  //max dimension of signal model
   int zeroNoise;
   int fixSky;
-  int skyPrior;
+  int galaxyPrior;
   int snrPrior;
   int emPrior;
   int knownSource;
