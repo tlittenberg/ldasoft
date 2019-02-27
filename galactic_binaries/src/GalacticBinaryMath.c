@@ -202,6 +202,7 @@ void invert_matrix(double **matrix, int N)
 }
 void cholesky_decomp(double **matrix, int N)
 {
+    int i,j;
     // Don't let errors kill the program (yikes)
     gsl_set_error_handler_off ();
     int err=0;
@@ -231,7 +232,7 @@ void cholesky_decomp(double **matrix, int N)
         {
             for(j=0; j<N; j++)
             {
-                matrix[i][j] = gsl_matrix_get(GSLinvrse,i,j);
+                matrix[i][j] = gsl_matrix_get(GSLmatrix,i,j);
             }
         }
     }
