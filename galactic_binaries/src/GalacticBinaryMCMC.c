@@ -174,9 +174,12 @@ int main(int argc, char *argv[])
           map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
           
         }
-        else if(flags->update)
+        else if(flags->update || flags->updateCov)
         {
-          draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+          if(flags->update)
+            draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+          if(flags->updateCov)
+            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
         }
         else
         {
@@ -548,6 +551,12 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     logQyx = cdf_density(model_x, source_y, proposal[nprop]);
     logQxy = cdf_density(model_x, source_x, proposal[nprop]);
   }
+  if(!strcmp(proposal[nprop]->name,"cov draw"))
+  {
+    logQyx = cov_density(model_x, source_y, proposal[nprop]);
+    logQxy = cov_density(model_x, source_x, proposal[nprop]);
+  }
+
   
   map_array_to_params(source_y, source_y->params, data->T);
   
@@ -614,6 +623,9 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(logH > loga)
     {
+      
+      //KAL? Print something for cov draw here??
+     
       if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
       {
         printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);

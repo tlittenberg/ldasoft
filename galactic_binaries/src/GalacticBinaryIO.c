@@ -91,6 +91,7 @@ void print_usage()
   fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
+  fprintf(stdout,"       --update-cov  : use cov mtrx proposal [filename]    \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
   fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
@@ -141,6 +142,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->orbit       = 0;
   flags->prior       = 0;
   flags->update      = 0;
+  flags->updateCov   = 0;
   flags->NMAX        = Nmax;
   flags->DMAX        = Dmax;
   flags->NMCMC       = 10000;
@@ -201,6 +203,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"fmin",      required_argument, 0, 0},
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
+    {"update-cov",required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
     {"em-prior",  required_argument, 0, 0},
     
@@ -312,6 +315,14 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
           sprintf(flags->cdfFile,"%s",optarg);
           chain->NP++;
         }
+        if(strcmp("update-cov", long_options[long_index].name) == 0)
+        {
+          checkfile(optarg);
+          flags->updateCov=1;
+          sprintf(flags->covFile,"%s",optarg);
+          chain->NP++;
+        }
+            
         if(strcmp("links",long_options[long_index].name) == 0)
         {
           int Nlinks = (int)atoi(optarg);

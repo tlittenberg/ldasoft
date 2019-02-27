@@ -504,7 +504,6 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
 
   return cdf_density(model, source, proposal);
 }
-
 double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal)
 {
   int N = proposal->size;
@@ -534,7 +533,16 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   
   return logP;
 }
-
+double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+{
+  return cov_density(model, source, proposal);
+}
+double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal)
+{
+  double logP=0.0;
+    
+  return logP;
+}
 
 double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
@@ -689,7 +697,21 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         free(proposal[i]->vector);
         fclose(fptr);
         break;
+      case 7:
+        sprintf(proposal[i]->name,"cov draw");
+        proposal[i]->function = &draw_from_cov;
+        proposal[i]->weight = 0.0;
+        check+=proposal[i]->weight;
+        //parse covariance file
+            
+            
+        // KAL: need to insert new code here!
+        FILE *fptr2 = fopen(flags->covFile,"r");
+
         
+            
+        fclose(fptr2);
+        break;
       default:
         break;
     }
