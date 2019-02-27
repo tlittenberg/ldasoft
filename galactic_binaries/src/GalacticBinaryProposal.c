@@ -703,11 +703,13 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         proposal[i]->weight = 0.0;
         check+=proposal[i]->weight;
         //parse covariance file
-            
-            
         // KAL: need to insert new code here!
         FILE *fptr2 = fopen(flags->covFile,"r");
-
+            
+//        proposal[i]->tensor[0] =
+//        proposal[i]->tensor[1] =
+//        cholesky_decomp(proposal[i]->tensor[0],8);
+//        cholesky_decomp(proposal[i]->tensor[1],8);
         
             
         fclose(fptr2);
