@@ -320,7 +320,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
           checkfile(optarg);
           flags->updateCov=1;
           sprintf(flags->covFile,"%s",optarg);
-          chain->NP++;  
+          chain->NP++;
         }
             
         if(strcmp("links",long_options[long_index].name) == 0)

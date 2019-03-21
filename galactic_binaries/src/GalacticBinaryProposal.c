@@ -593,10 +593,10 @@ double cov_density(struct Model *model, struct Source *source, struct Proposal *
 //  double logP=0.0;
    
     double logP=0.0;
-    double x[2][8],scalar1,scalar2;
+    double x[2][8],scalar1,scalar2,c1[8],c2[8];
     double *params = source->params;
-    double alpha = 1.0;
-    double beta = 0.0;
+//    double alpha = 1.0;
+//    double beta = 0.0;
     int NP=8;
     long double det1 = proposal->vector[1];
     long double det2 = proposal->vector[3];
@@ -612,38 +612,56 @@ double cov_density(struct Model *model, struct Source *source, struct Proposal *
     }
 
 
-    double c1[] = { 0.00, 0.00,
-        0.00, 0.00,
-        0.00, 0.00,
-        0.00, 0.00};
-
-    gsl_matrix_view A1 = gsl_matrix_view_array(*proposal->tensor[2], 8, 8);
-    gsl_matrix_view B1 = gsl_matrix_view_array(x[0], 8, 1);
-    gsl_matrix_view C1 = gsl_matrix_view_array(c1, 8, 1);
-
-    /* Compute C = A B */
-
-     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
-                    alpha, &A1.matrix, &B1.matrix,
-                    beta, &C1.matrix);
-
-
-    double c2[] = { 0.00, 0.00,
-        0.00, 0.00,
-        0.00, 0.00,
-        0.00, 0.00};
-
-    gsl_matrix_view A2 = gsl_matrix_view_array(*proposal->tensor[2], 8, 8);
-    gsl_matrix_view B2 = gsl_matrix_view_array(x[1], 8, 1);
-    gsl_matrix_view C2 = gsl_matrix_view_array(c2, 8, 1);
-
-    /* Compute C = A B */
-
-     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
-                    alpha, &A2.matrix, &B2.matrix,
-                    beta, &C2.matrix);
-
-
+    //    double c1[] = { 0.00, 0.00,
+    //                   0.00, 0.00,
+    //                   0.00, 0.00,
+    //                   0.00, 0.00};
+    //
+    //    gsl_matrix_view A1 = gsl_matrix_view_array(*proposal->tensor[2], 8, 8);
+    //    gsl_matrix_view B1 = gsl_matrix_view_array(x[0], 8, 1);
+    //    gsl_matrix_view C1 = gsl_matrix_view_array(c1, 8, 1);
+    //
+    //    /* Compute C = A B */
+    //
+    //    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
+    //                    1.0, &A1.matrix, &B1.matrix,
+    //                    0.0, &C1.matrix);
+    //
+    //
+    
+    for(int n=0; n<NP; n++)
+    {
+        c1[n]=0;
+        for(int k=0; k<NP; k++)
+        {
+            c1[n]+=x[0][k]*proposal->tensor[2][k][n];
+        }
+    }
+    
+    //    double c2[] = { 0.00, 0.00,
+    //                    0.00, 0.00,
+    //                    0.00, 0.00,
+    //                    0.00, 0.00};
+    //
+    //    gsl_matrix_view A2 = gsl_matrix_view_array(*proposal->tensor[3], 8, 8);
+    //    gsl_matrix_view B2 = gsl_matrix_view_array(x[1], 8, 1);
+    //    gsl_matrix_view C2 = gsl_matrix_view_array(c2, 8, 1);
+    //
+    //    /* Compute C = A B */
+    //
+    //    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
+    //                    1.0, &A2.matrix, &B2.matrix,
+    //                    0.0, &C2.matrix);
+    
+    for(int n=0; n<NP; n++)
+    {
+        c2[n]=0;
+        for(int k=0; k<NP; k++)
+        {
+            c2[n]+=x[1][k]*proposal->tensor[3][k][n];
+        }
+    }
+    
 
 
     scalar1=0.0;
@@ -660,16 +678,17 @@ double cov_density(struct Model *model, struct Source *source, struct Proposal *
     b2=exp(-0.5*scalar2);
 //    printf ("logP1 %g logP2 %g\n", log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1))),log(b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2))));
 //    printf ("term1 %g term2 %g\n", scalar1,scalar2);
-//    if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))<100)
+//    if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))>1000)
 //    {
-//        if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))>-10)
+////        if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))>-10)
 //        {
-//            printf ("c0 %g c1 %g c2 %g c3 %g c4 %g c5 %g c6 %g c7 %g\n", c1[0], c1[1], c1[2], c1[3], c1[4], c1[5], c1[6], c1[7]);
-//            printf ("x0 %g x1 %g x2 %g x3 %g x4 %g x5 %g x6 %g x7 %g\n", x[0][0], x[0][1], x[0][2], x[0][3], x[0][4], x[0][5], x[0][6], x[0][7]);
+//    printf ("c0 %g c1 %g c2 %g c3 %g c4 %g c5 %g c6 %g c7 %g\n", c1[0], c1[1], c1[2], c1[3], c1[4], c1[5], c1[6], c1[7]);
+//    printf ("x0 %g x1 %g x2 %g x3 %g x4 %g x5 %g x6 %g x7 %g\n", x[0][0], x[0][1], x[0][2], x[0][3], x[0][4], x[0][5], x[0][6], x[0][7]);
+//    printf("\nscalar1 %g, scalar2 %g\n", scalar1, scalar2);
 //        }
 //    }
     p=(proposal->vector[0])*b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1))+(1-proposal->vector[0])*b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2));
-
+//    printf("\n p = %g\n",log(p));
 
     logP=log(p);
 
@@ -938,13 +957,13 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
             
         ptr_params=params;
         ptr_ten_out=proposal[i]->tensor[0];
-        cholesky_decomp(ten,ptr_ten_out,data->NP);
+        cholesky_decomp(ten[0],ptr_ten_out,data->NP);
         ptr_ten_out=proposal[i]->tensor[1];
-        cholesky_decomp(ten,ptr_ten_out,data->NP);
+        cholesky_decomp(ten[1],ptr_ten_out,data->NP);
         ptr_ten_out=proposal[i]->tensor[2];
-        invert_matrix2(ten,ptr_ten_out,data->NP);
+        invert_matrix2(ten[0],ptr_ten_out,data->NP);
         ptr_ten_out=proposal[i]->tensor[3];
-        invert_matrix2(ten,ptr_ten_out,data->NP);
+        invert_matrix2(ten[1],ptr_ten_out,data->NP);
 
             
             

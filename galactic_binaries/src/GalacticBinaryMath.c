@@ -200,7 +200,7 @@ void invert_matrix(double **matrix, int N)
     gsl_matrix_free (GSLinvrse);
     gsl_permutation_free (permutation);
 }
-void invert_matrix2(double matrix[2][8][8], double **tensor_out, int N)
+void invert_matrix2(double matrix[8][8], double **tensor_out, int N)
 {
     int i,j;
     
@@ -216,8 +216,8 @@ void invert_matrix2(double matrix[2][8][8], double **tensor_out, int N)
     {
         for(j=0; j<N; j++)
         {
-            if(matrix[0][i][j]!=matrix[0][i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan matrix element, now what?\n");
-            gsl_matrix_set(GSLmatrix,i,j,matrix[0][i][j]);
+            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan matrix element, now what?\n");
+            gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
         }
     }
     
@@ -253,7 +253,7 @@ void invert_matrix2(double matrix[2][8][8], double **tensor_out, int N)
     
 }
 
-void cholesky_decomp(double matrix[2][8][8], double **tensor_out, int N)
+void cholesky_decomp(double matrix[8][8], double **tensor_out, int N)
 {
     int i,j;
     // Don't let errors kill the program (yikes)
@@ -265,8 +265,8 @@ void cholesky_decomp(double matrix[2][8][8], double **tensor_out, int N)
     {
         for(j=0; j<N; j++)
         {
-            if(matrix[0][i][j]!=matrix[0][i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan covariance matrix element, now what?\n");
-            gsl_matrix_set(GSLmatrix,i,j,matrix[0][i][j]);
+            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan covariance matrix element, now what?\n");
+            gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
         }
     }
     
