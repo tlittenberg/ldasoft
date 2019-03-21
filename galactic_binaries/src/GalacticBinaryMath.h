@@ -24,7 +24,8 @@ double snr(struct Source *source, struct Noise *noise);
 
 void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N);
 void invert_matrix(double **matrix, int N);
-void cholesky_decomp(double **matrix, int N);
+void cholesky_decomp(double matrix[2][8][8], double **tensor_out, int N);
+void invert_matrix2(double matrix[2][8][8], double **tensor_out, int N);
 
 /* ********************************************************************************** */
 /*                                                                                      */

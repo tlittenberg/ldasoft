@@ -450,6 +450,13 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   double logP=0.0;
   double **uniform_prior = model->prior;
   
+//
+//    for(int n=0; n<data->NP; n++)
+//    {
+//        printf("\ncandidate value %.13lg\n", params[n]);
+//    }
+
+    
   //guard against nan's, but do so loudly
   for(int i=0; i<model->NP; i++)
   {
