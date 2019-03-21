@@ -55,7 +55,7 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
 
 double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal);
 
-double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal);
+double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal, double choose_dist);
 
 void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 

@@ -8,11 +8,17 @@
 
 #include <math.h>
 
+#include <gsl/gsl_blas.h>
+
 #include <sys/stat.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_eigen.h>
 
 #include "LISA.h"
 #include "Constants.h"
@@ -23,6 +29,7 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryFStatistic.h"
 #include "GalacticBinaryProposal.h"
+#include "GalacticBinaryMath.h"
 
 
 #define FIXME 0
@@ -163,6 +170,7 @@ void setup_frequency_proposal(struct Data *data)
 void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr)
 {
   fprintf(fptr,"Acceptance rates for chain %i:\n", ic);
+  
   for(int n=0; n<NP+1; n++)
   {
     fprintf(fptr,"   %.1e  [%s]\n", (double)proposal[n]->accept[ic]/(double)proposal[n]->trial[ic],proposal[n]->name);
@@ -535,11 +543,136 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
 }
 double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-  return cov_density(model, source, proposal);
+    double ran_no[8],x,choose_dist;
+    
+    
+    x=0.0;
+    choose_dist=gsl_rng_uniform(seed);
+    
+    
+    
+    for(int n=0; n<8; n++)
+    {
+        ran_no[n] = gsl_rng_uniform(seed);
+    }
+    
+    
+    if (choose_dist >= (1.0-proposal->vector[0]))
+    {
+        for(int n=0; n<8; n++)
+        {
+            for(int k=0; k<8; k++)
+            {
+                x += ran_no[k]*proposal->tensor[0][n][k];
+            }
+            params[n]= x + proposal->matrix[0][n];
+//            printf("\ncandidate value %d = %.13lg, prior values %.13lg %.13lg \n",n, params[n],model->prior[n][0],model->prior[n][1]);
+            if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+            x=0.0;
+        }
+    }
+    else
+    {
+        for(int n=0; n<8; n++)
+        {
+            for(int k=0; k<8; k++)
+            {
+                x += ran_no[k]*proposal->tensor[1][n][k];
+            }
+            params[n]= x + proposal->matrix[1][n];
+//            printf("\ncandidate value %d = %.13lg\n",n, params[n]);
+            if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+            x=0.0;
+        }
+    }
+
+  return cov_density(model, source, proposal, choose_dist);
 }
-double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal)
+double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal, double choose_dist)
 {
-  double logP=0.0;
+//  double logP=0.0;
+   
+    double logP=0.0;
+    double x[2][8],scalar1,scalar2;
+    double *params = source->params;
+    double alpha = 1.0;
+    double beta = 0.0;
+    int NP=8;
+    long double det1 = proposal->vector[1];
+    long double det2 = proposal->vector[3];
+    long double b1,b2,p;
+
+
+
+    for(int n=0; n<NP; n++)
+    {
+        if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+        x[0][n]=params[n]-proposal->matrix[0][n];
+        x[1][n]=params[n]-proposal->matrix[1][n];
+    }
+
+
+    double c1[] = { 0.00, 0.00,
+        0.00, 0.00,
+        0.00, 0.00,
+        0.00, 0.00};
+
+    gsl_matrix_view A1 = gsl_matrix_view_array(*proposal->tensor[2], 8, 8);
+    gsl_matrix_view B1 = gsl_matrix_view_array(x[0], 8, 1);
+    gsl_matrix_view C1 = gsl_matrix_view_array(c1, 8, 1);
+
+    /* Compute C = A B */
+
+     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
+                    alpha, &A1.matrix, &B1.matrix,
+                    beta, &C1.matrix);
+
+
+    double c2[] = { 0.00, 0.00,
+        0.00, 0.00,
+        0.00, 0.00,
+        0.00, 0.00};
+
+    gsl_matrix_view A2 = gsl_matrix_view_array(*proposal->tensor[2], 8, 8);
+    gsl_matrix_view B2 = gsl_matrix_view_array(x[1], 8, 1);
+    gsl_matrix_view C2 = gsl_matrix_view_array(c2, 8, 1);
+
+    /* Compute C = A B */
+
+     gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
+                    alpha, &A2.matrix, &B2.matrix,
+                    beta, &C2.matrix);
+
+
+
+
+    scalar1=0.0;
+    scalar2=0.0;
+    for(int n=0; n<NP; n++)
+    {
+        scalar1+=x[0][n]*c1[n];
+        scalar2+=x[1][n]*c2[n];
+    }
+
+
+
+    b1=exp(-0.5*scalar1);
+    b2=exp(-0.5*scalar2);
+//    printf ("logP1 %g logP2 %g\n", log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1))),log(b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2))));
+//    printf ("term1 %g term2 %g\n", scalar1,scalar2);
+//    if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))<100)
+//    {
+//        if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))>-10)
+//        {
+//            printf ("c0 %g c1 %g c2 %g c3 %g c4 %g c5 %g c6 %g c7 %g\n", c1[0], c1[1], c1[2], c1[3], c1[4], c1[5], c1[6], c1[7]);
+//            printf ("x0 %g x1 %g x2 %g x3 %g x4 %g x5 %g x6 %g x7 %g\n", x[0][0], x[0][1], x[0][2], x[0][3], x[0][4], x[0][5], x[0][6], x[0][7]);
+//        }
+//    }
+    p=(proposal->vector[0])*b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1))+(1-proposal->vector[0])*b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2));
+
+
+    logP=log(p);
+
     
   return logP;
 }
@@ -588,7 +721,14 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
 void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
 {
   int NC = chain->NC;
+  int nl=0;
+  int Ncov=2;
   double check=0.0;
+  double junk, ten[2][8][8],params[8],*ptr_params,(**ptr_ten_out);
+  double f1,f2,f3,f4,f5,f6,f7,f8;
+  FILE *fptr;
+  struct Model *temp;
+    
   for(int i=0; i<chain->NP+1; i++)
   {
     
@@ -649,12 +789,11 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 6:
         sprintf(proposal[i]->name,"cdf draw");
         proposal[i]->function = &draw_from_cdf;
-        proposal[i]->weight = 0.2;
+        proposal[i]->weight = 0.1;
         check+=proposal[i]->weight;
         //parse chain file
-        FILE *fptr = fopen(flags->cdfFile,"r");
+        fptr = fopen(flags->cdfFile,"r");
         proposal[i]->size=0;
-        double junk;
         while(!feof(fptr))
         {
           //fscanf(fptr,"%lg",&junk);
@@ -667,7 +806,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         proposal[i]->matrix = malloc(data->NP * sizeof(double*));
         for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
         
-        struct Model *temp = malloc(sizeof(struct Model));
+        temp = malloc(sizeof(struct Model));
         alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
 
         for(int n=0; n<proposal[i]->size; n++)
@@ -700,19 +839,123 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 7:
         sprintf(proposal[i]->name,"cov draw");
         proposal[i]->function = &draw_from_cov;
-        proposal[i]->weight = 0.0;
+        proposal[i]->weight = 0.1;
         check+=proposal[i]->weight;
         //parse covariance file
-        // KAL: need to insert new code here!
-        FILE *fptr2 = fopen(flags->covFile,"r");
             
-//        proposal[i]->tensor[0] =
-//        proposal[i]->tensor[1] =
-//        cholesky_decomp(proposal[i]->tensor[0],8);
-//        cholesky_decomp(proposal[i]->tensor[1],8);
+            
+//        printf("\ndata->NP is %d \n",data->NP);
+        proposal[i]->vector = malloc(4*sizeof(double));
+        
+        proposal[i]->matrix = malloc(Ncov*sizeof(double*));
+        for(int j=0; j<Ncov; j++) proposal[i]->matrix[j] = malloc(data->NP * sizeof(double));
+        
+        proposal[i]->tensor = malloc((Ncov+2)*sizeof(double**));
+        for(int j=0; j<Ncov+2; j++) proposal[i]->tensor[j] = malloc(data->NP * sizeof(double**));
+        for(int k=0; k<data->NP; k++) proposal[i]->tensor[0][k] = malloc(data->NP * sizeof(double*));
+        for(int k=0; k<data->NP; k++) proposal[i]->tensor[1][k] = malloc(data->NP * sizeof(double*));
+        
+        for(int k=0; k<data->NP; k++) proposal[i]->tensor[2][k] = malloc(data->NP * sizeof(double*));
+        for(int k=0; k<data->NP; k++) proposal[i]->tensor[3][k] = malloc(data->NP * sizeof(double*));
+        
+        
+        FILE *fptr;
+        fptr = fopen(flags->covFile,"r");
+        printf("reading covariance.txt...\n");
+        
+        
+        while(!feof(fptr))
+        {
+            for(int j=0; j<8; j++) fscanf(fptr,"%lg",&junk);
+            nl++;
+        }
+        rewind(fptr);
+        nl--;
+        
+        for(int n=0; n<nl; n++)
+        {
+            fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg\n", &f1, &f2, &f3, &f4, &f5, &f6, &f7, &f8);
+            if(n == 0)
+            {
+                //alpha
+                proposal[i]->vector[0]=f1;
+                //det(cov(Sigma1))
+                proposal[i]->vector[1]=f2;
+            }
+            if(n == 1)
+            {
+                proposal[i]->matrix[0][0]=f1;
+                proposal[i]->matrix[0][1]=f2;
+                proposal[i]->matrix[0][2]=f3;
+                proposal[i]->matrix[0][3]=f4;
+                proposal[i]->matrix[0][4]=f5;
+                proposal[i]->matrix[0][5]=f6;
+                proposal[i]->matrix[0][6]=f7;
+                proposal[i]->matrix[0][7]=f8;
+            }
+            if(n>1 && n<=9)
+            {
+                ten[0][n-2][0]=f1;
+                ten[0][n-2][1]=f2;
+                ten[0][n-2][2]=f3;
+                ten[0][n-2][3]=f4;
+                ten[0][n-2][4]=f5;
+                ten[0][n-2][5]=f6;
+                ten[0][n-2][6]=f7;
+                ten[0][n-2][7]=f8;
+            }
+            if(n == 10)
+            {
+                //(1-alpha)
+                proposal[i]->vector[2]=f1;
+                //det(cov(Sigma2))
+                proposal[i]->vector[3]=f2;
+            }
+            if(n == 11)
+            {
+                proposal[i]->matrix[1][0]=f1;
+                proposal[i]->matrix[1][1]=f2;
+                proposal[i]->matrix[1][2]=f3;
+                proposal[i]->matrix[1][3]=f4;
+                proposal[i]->matrix[1][4]=f5;
+                proposal[i]->matrix[1][5]=f6;
+                proposal[i]->matrix[1][6]=f7;
+                proposal[i]->matrix[1][7]=f8;
+            }
+            if(n>11 && n<=19)
+            {
+                ten[1][n-12][0]=f1;
+                ten[1][n-12][1]=f2;
+                ten[1][n-12][2]=f3;
+                ten[1][n-12][3]=f4;
+                ten[1][n-12][4]=f5;
+                ten[1][n-12][5]=f6;
+                ten[1][n-12][6]=f7;
+                ten[1][n-12][7]=f8;
+            }
+        }
+            
+            
+        ptr_params=params;
+        ptr_ten_out=proposal[i]->tensor[0];
+        cholesky_decomp(ten,ptr_ten_out,data->NP);
+        ptr_ten_out=proposal[i]->tensor[1];
+        cholesky_decomp(ten,ptr_ten_out,data->NP);
+        ptr_ten_out=proposal[i]->tensor[2];
+        invert_matrix2(ten,ptr_ten_out,data->NP);
+        ptr_ten_out=proposal[i]->tensor[3];
+        invert_matrix2(ten,ptr_ten_out,data->NP);
+
+            
+            
+            
+            
+            
+            
+            
         
             
-        fclose(fptr2);
+        fclose(fptr);
         break;
       default:
         break;
