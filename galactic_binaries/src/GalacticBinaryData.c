@@ -503,19 +503,18 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
       N++;
     }
     rewind(injectionFile);
-    N--;
+//    N--;
     
     //set RNG for injection
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
     gsl_rng_env_setup();
     gsl_rng_set (r, data_vec[ii]->iseed);
-    
+      
     for(int nn=0; nn<N; nn++)
     {
       fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
       //fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0,&fddot);
-      
       
       for(int jj=0; jj<flags->NT; jj++)
       {

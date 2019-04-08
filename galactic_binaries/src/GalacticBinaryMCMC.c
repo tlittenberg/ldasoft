@@ -177,9 +177,9 @@ int main(int argc, char *argv[])
         else if(flags->update || flags->updateCov)
         {
 //          if(flags->update)
-//            draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+//            draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
           if(flags->updateCov)
-            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
+            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
         }
         else
         {
@@ -507,7 +507,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   double logPy  = 0.0; //(log) prior density for model y (proposed state)
   double logQyx = 0.0; //(log) proposal denstiy from x->y
   double logQxy = 0.0; //(log) proposal density from y->x
-  double choose_dist;
   //shorthand pointers
   struct Model *model_x = model;
   struct Model *model_y = trial;
@@ -553,10 +552,8 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   }
   if(!strcmp(proposal[nprop]->name,"cov draw"))
   {
-    //kal ??
-    choose_dist=gsl_rng_uniform(chain->r[ic]);
-    logQyx = cov_density(model_x, source_y, proposal[nprop], choose_dist);
-    logQxy = cov_density(model_x, source_x, proposal[nprop], choose_dist);
+    logQyx = cov_density(model_x, source_y, proposal[nprop]);
+    logQxy = cov_density(model_x, source_x, proposal[nprop]);
 
   }
 
@@ -629,6 +626,8 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     
     loga = log(gsl_rng_uniform(chain->r[ic]));
       
+
+      
     if(logH > loga)
     {
       
@@ -640,12 +639,21 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
         //exit(1);
       }
-//      if(!strcmp(proposal[nprop]->name,"cov draw") && ic==0  && model_y->logL - model_x->logL < -20.)
-//      {
-////        printf("cov logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
-////        printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-//        //exit(1);
-//      }
+      if(!strcmp(proposal[nprop]->name,"cov draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+      {
+        printf("cov logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
+        printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+//        exit(1);
+      }
+//        if(!strcmp(proposal[nprop]->name,"cov draw"))
+//        {
+//            //kal 
+//            printf(" \n logPy=%g, logPx=%g\n",logPy,logPx);
+//            printf("  logH > loga: %d\n",logH > loga);
+//            printf("  logH=%g, loga=%g\n",logH,loga);
+//            printf("  logQxy=%g, logQyx=%g\n",logQxy,logQyx);
+//        }
+
       proposal[nprop]->accept[ic]++;
       copy_model(model_y,model_x);
     }
