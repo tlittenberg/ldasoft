@@ -1074,7 +1074,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 7:
         sprintf(proposal[i]->name,"cdf draw");
         proposal[i]->function = &draw_from_cdf;
-        proposal[i]->weight = 0.1;
+        proposal[i]->weight = 0.2;
 //        proposal[i]->weight = 0.0;
         check+=proposal[i]->weight;
         //parse chain file
