@@ -173,6 +173,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fp
   
   for(int n=0; n<NP+1; n++)
   {
+
     fprintf(fptr,"   %.1e  [%s]\n", (double)proposal[n]->accept[ic]/(double)proposal[n]->trial[ic],proposal[n]->name);
   }
 }
@@ -524,11 +525,18 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   
   for(int n=0; n<NP; n++)
   {
-    if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
+    if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1])
+      {
+       return -INFINITY;
+
+      }
 
     //find samples either end of p-value
     if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
-      return -INFINITY;
+      {
+          return -INFINITY;
+          
+      }
     else
     {
       i=0;
@@ -538,7 +546,6 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
       logP += log(  ((double)(j-i)/N) /  (cdf[n][j]-cdf[n][i])  );
     }
   }
-  
   return logP;
 }
 double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -557,7 +564,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
     }
     
     
-    if (choose_dist >= (1.0-proposal->vector[0]))
+    if (choose_dist > (1.0-proposal->vector[0]))
     {
         for(int n=0; n<8; n++)
         {
@@ -566,7 +573,6 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
                 x += ran_no[k]*proposal->tensor[0][n][k];
             }
             params[n]= x + proposal->matrix[0][n];
-//            printf("\ncandidate value %d = %.13lg, prior values %.13lg %.13lg \n",n, params[n],model->prior[n][0],model->prior[n][1]);
             if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
             x=0.0;
         }
@@ -580,54 +586,216 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
                 x += ran_no[k]*proposal->tensor[1][n][k];
             }
             params[n]= x + proposal->matrix[1][n];
-//            printf("\ncandidate value %d = %.13lg\n",n, params[n]);
             if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
             x=0.0;
         }
     }
 
-  return cov_density(model, source, proposal, choose_dist);
+  return cov_density(model, source, proposal);
 }
-double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal, double choose_dist)
+double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal)
 {
 //  double logP=0.0;
    
     double logP=0.0;
     double x[2][8],scalar1,scalar2,c1[8],c2[8];
-    double *params = source->params;
-//    double alpha = 1.0;
-//    double beta = 0.0;
+    double *params = source->params,tmp_x_min;
     int NP=8;
     long double det1 = proposal->vector[1];
     long double det2 = proposal->vector[3];
     long double b1,b2,p;
 
-
+    if(params[2]>2*acos(-1))
+    {
+        params[2]-=2*acos(-1);
+    }
+    if(params[2]<0.0)
+    {
+        params[2]+=2*acos(-1);
+    }
+    if(params[6]>2*acos(-1))
+    {
+        params[6]-=2*acos(-1);
+    }
+    if(params[6]<0.0)
+    {
+        params[6]+=2*acos(-1);
+    }
+    if(params[5]>acos(-1))
+    {
+        params[5]-=acos(-1);
+    }
+    if(params[5]<0)
+    {
+        params[5]+=acos(-1);
+    }
 
     for(int n=0; n<NP; n++)
     {
-        if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
-        x[0][n]=params[n]-proposal->matrix[0][n];
-        x[1][n]=params[n]-proposal->matrix[1][n];
+        if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1])
+        {
+            printf(" \n n=%d and params[n]=%g\n",n,params[n]);
+            return -INFINITY;
+        }
+        
+        //////////////////////
+        
+        
+            if (n == 2 || n == 5 || n == 6)
+            {
+                if (n == 2)
+                {
+                    double tmp_x[3]={fabs(params[n]-proposal->matrix[0][n]),fabs(params[n]-2*acos(-1)-proposal->matrix[0][n]),fabs(params[n]+2*acos(-1)-proposal->matrix[0][n])};
+                    tmp_x_min=tmp_x[0];
+                    for(int h=1; h<3; h++)
+                    {
+                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
+                    }
+                    if(tmp_x_min == fabs(params[n]-proposal->matrix[0][n]))x[0][n]=params[n]-proposal->matrix[0][n];
+                    
+                    else if(tmp_x_min == fabs(params[n]-2*acos(-1)-proposal->matrix[0][n]))
+                    {
+                        x[0][n]=params[n]-2*acos(-1)-proposal->matrix[0][n];
+                    }
+                    
+                    else
+                    {
+                        x[0][n]=params[n]+2*acos(-1)-proposal->matrix[0][n];
+                    }
+                    
+                }
+                if (n == 5)
+                {
+                    double tmp_x[3]={fabs(params[n]-proposal->matrix[0][n]),fabs(params[n]-acos(-1)-proposal->matrix[0][n]),fabs(params[n]+acos(-1)-proposal->matrix[0][n])};
+                    tmp_x_min=tmp_x[0];
+                    for(int h=1; h<3; h++)
+                    {
+                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
+                    }
+                    if(tmp_x_min == fabs(params[n]-proposal->matrix[0][n]))x[0][n]=params[n]-proposal->matrix[0][n];
+                    
+                    else if(tmp_x_min == fabs(params[n]-acos(-1)-proposal->matrix[0][n]))
+                    {
+                        x[0][n]=params[n]-acos(-1)-proposal->matrix[0][n];
+                    }
+                    
+                    else
+                    {
+                        x[0][n]=params[n]+acos(-1)-proposal->matrix[0][n];
+                    }
+                    
+                }
+                if (n == 6)
+                {
+                    double tmp_x[3]={fabs(params[n]-proposal->matrix[0][n]),fabs(params[n]-2*acos(-1)-proposal->matrix[0][n]),fabs(params[n]+2*acos(-1)-proposal->matrix[0][n])};
+                    tmp_x_min=tmp_x[0];
+                    for(int h=1; h<3; h++)
+                    {
+                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
+                    }
+                    if(tmp_x_min == fabs(params[n]-proposal->matrix[0][n]))x[0][n]=params[n]-proposal->matrix[0][n];
+                    
+                    else if(tmp_x_min == fabs(params[n]-2*acos(-1)-proposal->matrix[0][n]))
+                    {
+                        x[0][n]=params[n]-2*acos(-1)-proposal->matrix[0][n];
+                    }
+                    
+                    else
+                    {
+                        x[0][n]=params[n]+2*acos(-1)-proposal->matrix[0][n];
+                    }
+                    
+                }
+            }
+            else
+            {
+                x[0][n]=params[n]-proposal->matrix[0][n];
+            }
+        
+
+        
+        
+        //////////////////////
+        
+        if(proposal->vector[0] != 1.0)
+        {
+            
+            
+            
+            if (n == 2 || n == 5 || n == 6)
+            {
+                if (n == 2)
+                {
+                    double tmp_x[3]={fabs(params[n]-proposal->matrix[1][n]),fabs(params[n]-2*acos(-1)-proposal->matrix[1][n]),fabs(params[n]+2*acos(-1)-proposal->matrix[1][n])};
+                    tmp_x_min=tmp_x[0];
+                    for(int h=1; h<3; h++)
+                    {
+                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
+                    }
+                    if(tmp_x_min == fabs(params[n]-proposal->matrix[1][n]))x[1][n]=params[n]-proposal->matrix[1][n];
+                    
+                    else if(tmp_x_min == fabs(params[n]-2*acos(-1)-proposal->matrix[1][n]))
+                    {
+                        x[1][n]=params[n]-2*acos(-1)-proposal->matrix[1][n];
+                    }
+                    
+                    else
+                    {
+                        x[1][n]=params[n]+2*acos(-1)-proposal->matrix[1][n];
+                    }
+                    
+                }
+                if (n == 5)
+                {
+                    double tmp_x[3]={fabs(params[n]-proposal->matrix[1][n]),fabs(params[n]-acos(-1)-proposal->matrix[1][n]),fabs(params[n]+acos(-1)-proposal->matrix[1][n])};
+                    tmp_x_min=tmp_x[0];
+                    for(int h=1; h<3; h++)
+                    {
+                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
+                    }
+                    if(tmp_x_min == fabs(params[n]-proposal->matrix[1][n]))x[1][n]=params[n]-proposal->matrix[1][n];
+                    
+                    else if(tmp_x_min == fabs(params[n]-acos(-1)-proposal->matrix[1][n]))
+                    {
+                        x[1][n]=params[n]-acos(-1)-proposal->matrix[1][n];
+                    }
+                    
+                    else
+                    {
+                        x[1][n]=params[n]+acos(-1)-proposal->matrix[1][n];
+                    }
+                    
+                }
+                if (n == 6)
+                {
+                    double tmp_x[3]={fabs(params[n]-proposal->matrix[1][n]),fabs(params[n]-2*acos(-1)-proposal->matrix[1][n]),fabs(params[n]+2*acos(-1)-proposal->matrix[1][n])};
+                    tmp_x_min=tmp_x[0];
+                    for(int h=1; h<3; h++)
+                    {
+                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
+                    }
+                    if(tmp_x_min == fabs(params[n]-proposal->matrix[1][n]))x[1][n]=params[n]-proposal->matrix[1][n];
+                    
+                    else if(tmp_x_min == fabs(params[n]-2*acos(-1)-proposal->matrix[1][n]))
+                    {
+                        x[1][n]=params[n]-2*acos(-1)-proposal->matrix[1][n];
+                    }
+                    
+                    else
+                    {
+                        x[1][n]=params[n]+2*acos(-1)-proposal->matrix[1][n];
+                    }
+                    
+                }
+            }
+            else
+            {
+                x[1][n]=params[n]-proposal->matrix[1][n];
+            }
+        }
     }
+    
 
-
-    //    double c1[] = { 0.00, 0.00,
-    //                   0.00, 0.00,
-    //                   0.00, 0.00,
-    //                   0.00, 0.00};
-    //
-    //    gsl_matrix_view A1 = gsl_matrix_view_array(*proposal->tensor[2], 8, 8);
-    //    gsl_matrix_view B1 = gsl_matrix_view_array(x[0], 8, 1);
-    //    gsl_matrix_view C1 = gsl_matrix_view_array(c1, 8, 1);
-    //
-    //    /* Compute C = A B */
-    //
-    //    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
-    //                    1.0, &A1.matrix, &B1.matrix,
-    //                    0.0, &C1.matrix);
-    //
-    //
     
     for(int n=0; n<NP; n++)
     {
@@ -637,60 +805,41 @@ double cov_density(struct Model *model, struct Source *source, struct Proposal *
             c1[n]+=x[0][k]*proposal->tensor[2][k][n];
         }
     }
-    
-    //    double c2[] = { 0.00, 0.00,
-    //                    0.00, 0.00,
-    //                    0.00, 0.00,
-    //                    0.00, 0.00};
-    //
-    //    gsl_matrix_view A2 = gsl_matrix_view_array(*proposal->tensor[3], 8, 8);
-    //    gsl_matrix_view B2 = gsl_matrix_view_array(x[1], 8, 1);
-    //    gsl_matrix_view C2 = gsl_matrix_view_array(c2, 8, 1);
-    //
-    //    /* Compute C = A B */
-    //
-    //    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
-    //                    1.0, &A2.matrix, &B2.matrix,
-    //                    0.0, &C2.matrix);
-    
-    for(int n=0; n<NP; n++)
-    {
-        c2[n]=0;
-        for(int k=0; k<NP; k++)
-        {
-            c2[n]+=x[1][k]*proposal->tensor[3][k][n];
-        }
-    }
-    
-
-
     scalar1=0.0;
-    scalar2=0.0;
+    
+    
+    if(proposal->vector[0] != 1.0)
+    {
+        for(int n=0; n<NP; n++)
+        {
+            c2[n]=0;
+            for(int k=0; k<NP; k++)
+            {
+                c2[n]+=x[1][k]*proposal->tensor[3][k][n];
+            }
+        }
+        scalar2=0.0;
+    }
+
+
+    
+    
     for(int n=0; n<NP; n++)
     {
         scalar1+=x[0][n]*c1[n];
-        scalar2+=x[1][n]*c2[n];
+        if(proposal->vector[0] != 1.0)scalar2+=x[1][n]*c2[n];
     }
 
 
 
     b1=exp(-0.5*scalar1);
-    b2=exp(-0.5*scalar2);
-//    printf ("logP1 %g logP2 %g\n", log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1))),log(b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2))));
-//    printf ("term1 %g term2 %g\n", scalar1,scalar2);
-//    if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))>1000)
-//    {
-////        if(log(b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1)))>-10)
-//        {
-//    printf ("c0 %g c1 %g c2 %g c3 %g c4 %g c5 %g c6 %g c7 %g\n", c1[0], c1[1], c1[2], c1[3], c1[4], c1[5], c1[6], c1[7]);
-//    printf ("x0 %g x1 %g x2 %g x3 %g x4 %g x5 %g x6 %g x7 %g\n", x[0][0], x[0][1], x[0][2], x[0][3], x[0][4], x[0][5], x[0][6], x[0][7]);
-//    printf("\nscalar1 %g, scalar2 %g\n", scalar1, scalar2);
-//        }
-//    }
-    p=(proposal->vector[0])*b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1))+(1-proposal->vector[0])*b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2));
-//    printf("\n p = %g\n",log(p));
-
-    logP=log(p);
+    if(proposal->vector[0] != 1.0)b2=exp(-0.5*scalar2);
+    p=(proposal->vector[0])*b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1));
+    if(proposal->vector[0] != 1.0)
+    {
+        p+=(1-proposal->vector[0])*b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2));
+    }
+    logP += log(p);
 
     
   return logP;
@@ -786,6 +935,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
 
         proposal[i]->function = &jump_from_fstatistic;
         proposal[i]->weight = 0.2;
+//        proposal[i]->weight = 0.0;
         check+=proposal[i]->weight;
         break;
       case 3:
@@ -803,67 +953,19 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         sprintf(proposal[i]->name,"fm shift");
         proposal[i]->function = &fm_shift;
         proposal[i]->weight = 0.2;
+//        proposal[i]->weight = 0.0;
         check+=proposal[i]->weight;
         break;
       case 6:
-        sprintf(proposal[i]->name,"cdf draw");
-        proposal[i]->function = &draw_from_cdf;
-        proposal[i]->weight = 0.1;
-        check+=proposal[i]->weight;
-        //parse chain file
-        fptr = fopen(flags->cdfFile,"r");
-        proposal[i]->size=0;
-        while(!feof(fptr))
-        {
-          //fscanf(fptr,"%lg",&junk);
-          for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
-          proposal[i]->size++;
-        }
-        rewind(fptr);
-        proposal[i]->size--;
-        proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
-        proposal[i]->matrix = malloc(data->NP * sizeof(double*));
-        for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
-        
-        temp = malloc(sizeof(struct Model));
-        alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
-
-        for(int n=0; n<proposal[i]->size; n++)
-        {
-          //fscanf(fptr,"%lg",&junk);
-          scan_source_params(data, temp->source[0], fptr);
-          for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
-          
-        }
-        free_model(temp);
-        
-        //now sort each row of the matrix
-        for(int j=0; j<data->NP; j++)
-        {
-          //fill up proposal vector
-          for(int n=0; n<proposal[i]->size; n++)
-            proposal[i]->vector[n] = proposal[i]->matrix[j][n];
-
-          //sort it
-          gsl_sort(proposal[i]->vector,1, proposal[i]->size);
-          
-          //replace that row of the matrix
-          for(int n=0; n<proposal[i]->size; n++)
-            proposal[i]->matrix[j][n] = proposal[i]->vector[n];
-        }
-        
-        free(proposal[i]->vector);
-        fclose(fptr);
-        break;
-      case 7:
         sprintf(proposal[i]->name,"cov draw");
         proposal[i]->function = &draw_from_cov;
         proposal[i]->weight = 0.1;
+//        proposal[i]->weight = 1.0;
         check+=proposal[i]->weight;
         //parse covariance file
-            
-            
-//        printf("\ndata->NP is %d \n",data->NP);
+        
+        
+        //        printf("\ndata->NP is %d \n",data->NP);
         proposal[i]->vector = malloc(4*sizeof(double));
         
         proposal[i]->matrix = malloc(Ncov*sizeof(double*));
@@ -878,7 +980,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         for(int k=0; k<data->NP; k++) proposal[i]->tensor[3][k] = malloc(data->NP * sizeof(double*));
         
         
-        FILE *fptr;
+        
         fptr = fopen(flags->covFile,"r");
         printf("reading covariance.txt...\n");
         
@@ -923,14 +1025,14 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
                 ten[0][n-2][6]=f7;
                 ten[0][n-2][7]=f8;
             }
-            if(n == 10)
+            if(n == 10 && proposal[i]->vector[0] != 1.0)
             {
                 //(1-alpha)
                 proposal[i]->vector[2]=f1;
                 //det(cov(Sigma2))
                 proposal[i]->vector[3]=f2;
             }
-            if(n == 11)
+            if(n == 11 && proposal[i]->vector[0] != 1.0)
             {
                 proposal[i]->matrix[1][0]=f1;
                 proposal[i]->matrix[1][1]=f2;
@@ -941,7 +1043,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
                 proposal[i]->matrix[1][6]=f7;
                 proposal[i]->matrix[1][7]=f8;
             }
-            if(n>11 && n<=19)
+            if(n>11 && n<=19 && proposal[i]->vector[0] != 1.0)
             {
                 ten[1][n-12][0]=f1;
                 ten[1][n-12][1]=f2;
@@ -953,29 +1055,73 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
                 ten[1][n-12][7]=f8;
             }
         }
-            
-            
+        
         ptr_params=params;
         ptr_ten_out=proposal[i]->tensor[0];
         cholesky_decomp(ten[0],ptr_ten_out,data->NP);
-        ptr_ten_out=proposal[i]->tensor[1];
-        cholesky_decomp(ten[1],ptr_ten_out,data->NP);
         ptr_ten_out=proposal[i]->tensor[2];
         invert_matrix2(ten[0],ptr_ten_out,data->NP);
-        ptr_ten_out=proposal[i]->tensor[3];
-        invert_matrix2(ten[1],ptr_ten_out,data->NP);
 
-            
-            
-            
-            
-            
-            
-            
-        
-            
+        if(proposal[i]->vector[0] != 1.0)
+        {
+            ptr_ten_out=proposal[i]->tensor[1];
+            cholesky_decomp(ten[1],ptr_ten_out,data->NP);
+            ptr_ten_out=proposal[i]->tensor[3];
+            invert_matrix2(ten[1],ptr_ten_out,data->NP);
+        }
         fclose(fptr);
         break;
+      case 7:
+        sprintf(proposal[i]->name,"cdf draw");
+        proposal[i]->function = &draw_from_cdf;
+        proposal[i]->weight = 0.1;
+//        proposal[i]->weight = 0.0;
+        check+=proposal[i]->weight;
+        //parse chain file
+        fptr = fopen(flags->cdfFile,"r");
+        proposal[i]->size=0;
+        while(!feof(fptr))
+        {
+            //fscanf(fptr,"%lg",&junk);
+            for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
+            proposal[i]->size++;
+        }
+        rewind(fptr);
+        proposal[i]->size--;
+        proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
+        proposal[i]->matrix = malloc(data->NP * sizeof(double*));
+        for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
+        
+        temp = malloc(sizeof(struct Model));
+        alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
+        
+        for(int n=0; n<proposal[i]->size; n++)
+        {
+            //fscanf(fptr,"%lg",&junk);
+            scan_source_params(data, temp->source[0], fptr);
+            for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
+        }
+        free_model(temp);
+        
+        //now sort each row of the matrix
+        for(int j=0; j<data->NP; j++)
+        {
+            //fill up proposal vector
+            for(int n=0; n<proposal[i]->size; n++)
+                proposal[i]->vector[n] = proposal[i]->matrix[j][n];
+            
+            //sort it
+            gsl_sort(proposal[i]->vector,1, proposal[i]->size);
+            
+            //replace that row of the matrix
+            for(int n=0; n<proposal[i]->size; n++)
+                proposal[i]->matrix[j][n] = proposal[i]->vector[n];
+        }
+        
+        free(proposal[i]->vector);
+        fclose(fptr);
+        break;
+            
       default:
         break;
     }
