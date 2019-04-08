@@ -957,73 +957,10 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         check+=proposal[i]->weight;
         break;
       case 6:
-        
-        sprintf(proposal[i]->name,"cdf draw");
-        proposal[i]->function = &draw_from_cdf;
-        proposal[i]->weight = 0.2;
-        //        proposal[i]->weight = 0.0;
-        check+=proposal[i]->weight;
-        //parse chain file
-        fptr = fopen(flags->cdfFile,"r");
-        proposal[i]->size=0;
-        while(!feof(fptr))
-        {
-            //fscanf(fptr,"%lg",&junk);
-            for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
-            proposal[i]->size++;
-        }
-        rewind(fptr);
-        proposal[i]->size--;
-        proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
-        proposal[i]->matrix = malloc(data->NP * sizeof(double*));
-        for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
-        
-        temp = malloc(sizeof(struct Model));
-        alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
-        
-        for(int n=0; n<proposal[i]->size; n++)
-        {
-            //fscanf(fptr,"%lg",&junk);
-            scan_source_params(data, temp->source[0], fptr);
-            for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
-        }
-        free_model(temp);
-        
-        //now sort each row of the matrix
-        for(int j=0; j<data->NP; j++)
-        {
-            //fill up proposal vector
-            for(int n=0; n<proposal[i]->size; n++)
-            proposal[i]->vector[n] = proposal[i]->matrix[j][n];
-            
-            //sort it
-            gsl_sort(proposal[i]->vector,1, proposal[i]->size);
-            
-            //replace that row of the matrix
-            for(int n=0; n<proposal[i]->size; n++)
-            proposal[i]->matrix[j][n] = proposal[i]->vector[n];
-        }
-        
-        free(proposal[i]->vector);
-        fclose(fptr);
-        break;
-        
-        default:
-        break;
-
-        
-      case 7:
-        
-        
-        
-        
-        
-        
-        
         sprintf(proposal[i]->name,"cov draw");
         proposal[i]->function = &draw_from_cov;
-        proposal[i]->weight = 0.0;
-        //        proposal[i]->weight = 1.0;
+        proposal[i]->weight = 0.2;
+//        proposal[i]->weight = 1.0;
         check+=proposal[i]->weight;
         //parse covariance file
         
@@ -1124,7 +1061,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         cholesky_decomp(ten[0],ptr_ten_out,data->NP);
         ptr_ten_out=proposal[i]->tensor[2];
         invert_matrix2(ten[0],ptr_ten_out,data->NP);
-        
+
         if(proposal[i]->vector[0] != 1.0)
         {
             ptr_ten_out=proposal[i]->tensor[1];
@@ -1134,16 +1071,60 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         }
         fclose(fptr);
         break;
-
         
+      case 7:
+        sprintf(proposal[i]->name,"cdf draw");
+        proposal[i]->function = &draw_from_cdf;
+        proposal[i]->weight = 0.0;
+//        proposal[i]->weight = 0.0;
+        check+=proposal[i]->weight;
+        //parse chain file
+        fptr = fopen(flags->cdfFile,"r");
+        proposal[i]->size=0;
+        while(!feof(fptr))
+        {
+            //fscanf(fptr,"%lg",&junk);
+            for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
+            proposal[i]->size++;
+        }
+        rewind(fptr);
+        proposal[i]->size--;
+        proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
+        proposal[i]->matrix = malloc(data->NP * sizeof(double*));
+        for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
         
+        temp = malloc(sizeof(struct Model));
+        alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
         
+        for(int n=0; n<proposal[i]->size; n++)
+        {
+            //fscanf(fptr,"%lg",&junk);
+            scan_source_params(data, temp->source[0], fptr);
+            for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
+        }
+        free_model(temp);
         
+        //now sort each row of the matrix
+        for(int j=0; j<data->NP; j++)
+        {
+            //fill up proposal vector
+            for(int n=0; n<proposal[i]->size; n++)
+                proposal[i]->vector[n] = proposal[i]->matrix[j][n];
+            
+            //sort it
+            gsl_sort(proposal[i]->vector,1, proposal[i]->size);
+            
+            //replace that row of the matrix
+            for(int n=0; n<proposal[i]->size; n++)
+                proposal[i]->matrix[j][n] = proposal[i]->vector[n];
+        }
         
-        
-        
-        
-        
+        free(proposal[i]->vector);
+        fclose(fptr);
+        break;
+            
+      default:
+        break;
     }
   }
   //Fisher proposal fills in the cracks
