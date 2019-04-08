@@ -959,7 +959,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 6:
         sprintf(proposal[i]->name,"cov draw");
         proposal[i]->function = &draw_from_cov;
-        proposal[i]->weight = 0.1;
+        proposal[i]->weight = 0.0;
 //        proposal[i]->weight = 1.0;
         check+=proposal[i]->weight;
         //parse covariance file
