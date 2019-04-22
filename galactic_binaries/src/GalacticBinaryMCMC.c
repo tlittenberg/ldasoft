@@ -176,10 +176,11 @@ int main(int argc, char *argv[])
         }
         else if(flags->update || flags->updateCov)
         {
-//          if(flags->update)
-//            draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
-          if(flags->updateCov)
+          if(flags->update && flags->updateCov)
             draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+         else
+            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+//            draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
         }
         else
         {
@@ -533,7 +534,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     if(trial_w < proposal[trial_n]->weight) nprop = trial_n;
   }
   proposal[nprop]->trial[ic]++;
-  
+//    printf("\n nprop=%d \n",nprop);
   //call proposal function to update source parameters
   (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
@@ -647,7 +648,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
       }
 //        if(!strcmp(proposal[nprop]->name,"cov draw"))
 //        {
-//            //kal 
+            //kal
 //            printf(" \n logPy=%g, logPx=%g\n",logPy,logPx);
 //            printf("  logH > loga: %d\n",logH > loga);
 //            printf("  logH=%g, loga=%g\n",logH,loga);
@@ -657,6 +658,17 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
       proposal[nprop]->accept[ic]++;
       copy_model(model_y,model_x);
     }
+//    else
+//    {
+//        if(!strcmp(proposal[nprop]->name,"cov draw"))
+//        {
+////            kal
+//            printf(" \n model_y->logL=%g, model_x->logL=%g\n",model_y->logL/chain->temperature[ic], model_x->logL/chain->temperature[ic]);
+//            printf("  logH > loga: %d\n",logH > loga);
+//            printf("  logH=%g, loga=%g\n",logH,loga);
+//            printf("  logQxy=%g, logQyx=%g\n",logQxy,logQyx);
+//        }
+//    }
   }
 }
 
