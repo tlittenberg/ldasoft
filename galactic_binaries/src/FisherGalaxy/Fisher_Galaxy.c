@@ -53,7 +53,7 @@ int main(int argc,char **argv)
   FILE* vfile;
   FILE* afile;
   FILE* pfile;
-  FILE* xfile;
+  //FILE* xfile;
   FILE* sky;
   FILE* sky2;
   FILE* amps;
@@ -67,7 +67,7 @@ int main(int argc,char **argv)
   printf("* Fisher Parameter Estimation Tool\n");
   printf("*   Candidate Sources:   %s\n",argv[1]);
   printf("*   Confusion Noise Fit: %s\n",argv[2]);
-  printf("*   X-Channel Results:   %s\n",argv[3]);
+  //printf("*   X-Channel Results:   %s\n",argv[3]);
   printf("*   AE-Channel Results:  %s\n",argv[4]);
   printf("*   Perturbed Params:    %s\n",argv[5]);
   printf("*   Orbit File:          %s\n",argv[6]);
@@ -129,7 +129,7 @@ int main(int argc,char **argv)
   if((TOBS/year) <= 1.0) mult = 1;
   
   
-  xfile = fopen(argv[3], "w");
+  //xfile = fopen(argv[3], "w");
   afile = fopen(argv[4], "w");
   pfile = fopen(argv[5], "w");
   sky = fopen("sky_3d.dat","w");
@@ -140,8 +140,7 @@ int main(int argc,char **argv)
   while ( !feof(vfile) )
   {
     
-    //fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
-    fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &Amp, &iota, &psi, &phase, &f, &fdot, &theta, &phi);
+    fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
     cntx++;
   }
   
@@ -167,7 +166,7 @@ int main(int argc,char **argv)
   int NSIM = 0;
   while ( !feof(vfile) )
   {
-    fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
     NSIM++;
   }
   rewind(vfile);
@@ -177,7 +176,7 @@ int main(int argc,char **argv)
   {
     if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
 
-    fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
+    fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
     
     params[0] = f;
     params[1] = 0.5*pi-theta;
@@ -233,6 +232,11 @@ int main(int argc,char **argv)
     Acut = A*sqrt(TOBS/Sm);
     
     M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
+    if(M>N)
+    {
+      printf("bandwidth=%li, max size=%li\n",M,N);
+      exit(0);
+    }
     
     XLS = dvector(1,2*M);
     AA  = dvector(1,2*M);
@@ -263,26 +267,24 @@ int main(int argc,char **argv)
       
       FISHER(LISAorbit, TOBS, params, N, M, SXYZ, SAE, SigmaX, SigmaAE, DrawAE);
       
-      /*
-       loudSNR[0][loudSNRcount] = SNR;
-       loudSNR[1][loudSNRcount] = f;
-       loudSNR[2][loudSNRcount] = fdot;
-       loudSNR[3][loudSNRcount] = 0.5*pi-theta;
-       loudSNR[4][loudSNRcount] = phi;
-       loudSNR[5][loudSNRcount] = Amp;
-       loudSNR[6][loudSNRcount] = iota;
-       loudSNR[7][loudSNRcount] = psi;
-       loudSNR[8][loudSNRcount] = phase;
-       loudSNR[9][loudSNRcount]  = SigmaAE[0]/T;
-       loudSNR[10][loudSNRcount] = SigmaAE[7];
-       loudSNR[11][loudSNRcount] = SigmaAE[1];
-       loudSNR[12][loudSNRcount] = SigmaAE[2];
-       loudSNR[13][loudSNRcount] = SigmaAE[3]*Amp;
-       loudSNR[14][loudSNRcount] = SigmaAE[4];
-       loudSNR[15][loudSNRcount] = SigmaAE[5];
-       loudSNR[16][loudSNRcount] = SigmaAE[6];
-       loudSNRcount++;
-       */
+      loudSNR[0][loudSNRcount] = log10(SNR);        //1:2
+      loudSNR[1][loudSNRcount] = params[0];        //3:4
+      loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);      //5:6
+      loudSNR[3][loudSNRcount] = 0.5*pi-theta;  //7:8
+      loudSNR[4][loudSNRcount] = phi;        //9:10
+      loudSNR[5][loudSNRcount] = Amp;        //11:12
+      loudSNR[6][loudSNRcount] = iota;      //13:14
+      loudSNR[7][loudSNRcount] = psi;        //15:16
+      loudSNR[8][loudSNRcount] = phase;      //17:18
+      loudSNR[9][loudSNRcount]  = log10(SigmaAE[0]/TOBS/params[0]);  //19:20
+      loudSNR[10][loudSNRcount] = log10(SigmaAE[7]/fabs(params[7]*TOBS*TOBS)); //21:22
+      loudSNR[11][loudSNRcount] = log10(SigmaAE[1]);    //23:24
+      loudSNR[12][loudSNRcount] = log10(SigmaAE[2]);    //25:26
+      loudSNR[13][loudSNRcount] = log10(SigmaAE[3]);  //27:28
+      loudSNR[14][loudSNRcount] = SigmaAE[4];    //29:30
+      loudSNR[15][loudSNRcount] = SigmaAE[5];    //31:32
+      loudSNR[16][loudSNRcount] = SigmaAE[6];    //33:34
+      loudSNRcount++;
       
       f     = DrawAE[0];
       fdot  = DrawAE[7];
@@ -348,70 +350,70 @@ int main(int argc,char **argv)
       if(fdot  < 0.2) cnt4++;  // measure fdot to 20%
       if(fddot < 0.2) cnt5++;  // measure fddot to 20%
       
-      if(SNRX > 7.0)
-      {
-        cnt6++;  /* SNR > 7 with just Michelson */
-        
-        loudSNR[0][loudSNRcount] = log10(SNR);				//1:2
-        loudSNR[1][loudSNRcount] = params[0];				//3:4
-        loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);			//5:6
-        loudSNR[3][loudSNRcount] = 0.5*pi-theta;	//7:8
-        loudSNR[4][loudSNRcount] = phi;				//9:10
-        loudSNR[5][loudSNRcount] = Amp;				//11:12
-        loudSNR[6][loudSNRcount] = iota;			//13:14
-        loudSNR[7][loudSNRcount] = psi;				//15:16
-        loudSNR[8][loudSNRcount] = phase;			//17:18
-        loudSNR[9][loudSNRcount]  = log10(SigmaX[0]/TOBS/params[0]);	//19:20
-        loudSNR[10][loudSNRcount] = log10(SigmaX[7]/fabs(params[7]*TOBS*TOBS)); //21:22
-        loudSNR[11][loudSNRcount] = log10(SigmaX[1]);		//23:24
-        loudSNR[12][loudSNRcount] = log10(SigmaX[2]);		//25:26
-        loudSNR[13][loudSNRcount] = log10(SigmaX[3]);	//27:28
-        loudSNR[14][loudSNRcount] = SigmaX[4];		//29:30
-        loudSNR[15][loudSNRcount] = SigmaX[5];		//31:32
-        loudSNR[16][loudSNRcount] = SigmaX[6];		//33:34
-        loudSNRcount++;
-        
-        
-        
-        fprintf(xfile, "%e %e %e ", params[0], params[7], params[8]);
-        for(i = 1; i < 7; i++)
-        {
-          fprintf(xfile, "%e ", params[i]);
-        }
-        
-        fdot = SigmaX[7]/(fabs(params[7]*TOBS*TOBS));  // fraction uncertainity in fdot
-        fddot = SigmaX[8]/(fabs(params[8]*TOBS*TOBS*TOBS));  // fraction uncertainity in fddot
-        fprintf(xfile, "%e ", SigmaX[0]/TOBS);  // convert back to Hz
-        fprintf(xfile, "%e %e ", fdot, fddot);
-        //SigmaX[3] *= Amp;
-        
-        for(i = 1; i < 7; i++)
-        {
-          fprintf(xfile, "%e ", SigmaX[i]);
-        }
-        fprintf(xfile, "%e ", SigmaX[9]/fix/fix);
-        fprintf(xfile, "%f\n", SNRX);
-        
-        if((SigmaX[1] < fix) && (SigmaX[2] < fix))
-        {
-          cnt7++;   // 2D mapping
-          if((fdot < 0.1) && (SigmaAE[3] < 0.1))
-          {
-            cnt8++;  // 3D mapping
-          }
-        }
-        
-        if(fdot < 0.2)
-        {
-          cnt9++;  // measure fdot to 20%
-        }
-        
-        if(fddot < 0.2)
-        {
-          cnt10++;  // measure fddot to 20%
-          // printf("%e %f\n", f, SNRX);
-        }
-      } // Michelson SNR > 7
+//      if(SNRX > 7.0)
+//      {
+//        cnt6++;  /* SNR > 7 with just Michelson */
+//
+//        loudSNR[0][loudSNRcount] = log10(SNR);        //1:2
+//        loudSNR[1][loudSNRcount] = params[0];        //3:4
+//        loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);      //5:6
+//        loudSNR[3][loudSNRcount] = 0.5*pi-theta;  //7:8
+//        loudSNR[4][loudSNRcount] = phi;        //9:10
+//        loudSNR[5][loudSNRcount] = Amp;        //11:12
+//        loudSNR[6][loudSNRcount] = iota;      //13:14
+//        loudSNR[7][loudSNRcount] = psi;        //15:16
+//        loudSNR[8][loudSNRcount] = phase;      //17:18
+//        loudSNR[9][loudSNRcount]  = log10(SigmaX[0]/TOBS/params[0]);  //19:20
+//        loudSNR[10][loudSNRcount] = log10(SigmaX[7]/fabs(params[7]*TOBS*TOBS)); //21:22
+//        loudSNR[11][loudSNRcount] = log10(SigmaX[1]);    //23:24
+//        loudSNR[12][loudSNRcount] = log10(SigmaX[2]);    //25:26
+//        loudSNR[13][loudSNRcount] = log10(SigmaX[3]);  //27:28
+//        loudSNR[14][loudSNRcount] = SigmaX[4];    //29:30
+//        loudSNR[15][loudSNRcount] = SigmaX[5];    //31:32
+//        loudSNR[16][loudSNRcount] = SigmaX[6];    //33:34
+//        loudSNRcount++;
+//
+//
+//
+//        fprintf(xfile, "%e %e %e ", params[0], params[7], params[8]);
+//        for(i = 1; i < 7; i++)
+//        {
+//          fprintf(xfile, "%e ", params[i]);
+//        }
+//
+//        fdot = SigmaX[7]/(fabs(params[7]*TOBS*TOBS));  // fraction uncertainity in fdot
+//        fddot = SigmaX[8]/(fabs(params[8]*TOBS*TOBS*TOBS));  // fraction uncertainity in fddot
+//        fprintf(xfile, "%e ", SigmaX[0]/TOBS);  // convert back to Hz
+//        fprintf(xfile, "%e %e ", fdot, fddot);
+//        //SigmaX[3] *= Amp;
+//
+//        for(i = 1; i < 7; i++)
+//        {
+//          fprintf(xfile, "%e ", SigmaX[i]);
+//        }
+//        fprintf(xfile, "%e ", SigmaX[9]/fix/fix);
+//        fprintf(xfile, "%f\n", SNRX);
+//
+//        if((SigmaX[1] < fix) && (SigmaX[2] < fix))
+//        {
+//          cnt7++;   // 2D mapping
+//          if((fdot < 0.1) && (SigmaAE[3] < 0.1))
+//          {
+//            cnt8++;  // 3D mapping
+//          }
+//        }
+//
+//        if(fdot < 0.2)
+//        {
+//          cnt9++;  // measure fdot to 20%
+//        }
+//
+//        if(fddot < 0.2)
+//        {
+//          cnt10++;  // measure fddot to 20%
+//          // printf("%e %f\n", f, SNRX);
+//        }
+//      } // Michelson SNR > 7
     } //AE SNR>7
   }
   printf("\n");
@@ -422,18 +424,17 @@ int main(int argc,char **argv)
   printf("fdot measured to 20 percent = %d\n", cnt4);
   printf("fddot measured to 20 percent = %d\n", cnt5);
   
-  printf("*************** X *****************\n");
-  printf("SNR > 7  = %d\n", cnt6);
-  printf("2D sky mapping = %d\n", cnt7);
-  printf("3D sky mapping = %d\n", cnt8);
-  printf("fdot measured to 20 percent = %d\n", cnt9);
-  printf("fddot measured to 20 percent = %d\n", cnt10);
-  
+//  printf("*************** X *****************\n");
+//  printf("SNR > 7  = %d\n", cnt6);
+//  printf("2D sky mapping = %d\n", cnt7);
+//  printf("3D sky mapping = %d\n", cnt8);
+//  printf("fdot measured to 20 percent = %d\n", cnt9);
+//  printf("fddot measured to 20 percent = %d\n", cnt10);
   
   
   
   fclose(afile);
-  fclose(xfile);
+  //fclose(xfile);
   
   
   //sort cell->occupancy so I search from most occupied to least occupied cell
@@ -478,7 +479,7 @@ void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long 
   
   d = 9;
   
-  epsilon = 1.0e-6;
+  epsilon = 1.0e-5;
   
   // Plus and minus parameters:
   
@@ -728,39 +729,39 @@ void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long 
   SigmaAE[9] = 2.0*pi*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
   
   
-  for (j = 0; j < 2; j++)
-  {
-    if(SigmaAE[d-1] > 0.5)
-    {
-      SigmaAE[d-1] = 1.0e10;
-      d -= 1;
-      /*
-       for (i = 0; i < d; i++)
-       {
-       for (j = 0; j < d; j++)
-       {
-       Cov2[i][j] = Fisher2[i][j];
-       }
-       }
-       
-       nA = d; lwork = 4*d;
-       
-       dpotrf_("U", &nA, A, &nA, &info);
-       dpotri_("U", &nA, A, &nA, &info);
-       
-       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
-       */
-      evector = dmatrix(0,d-1,0,d-1);
-      evalue = dvector(0,d-1);
-      matrix_eigenstuff(Fisher2,evector,evalue,d);
-      for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov2[i][j] = Fisher2[i][j];
-      free_dvector(evalue,0,d-1);
-      free_dmatrix(evector,0,d-1,0,d-1);
-      
-      for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
-      
-    }
-  }
+//  for (j = 0; j < 2; j++)
+//  {
+//    if(SigmaAE[d-1] > 0.5)
+//    {
+//      SigmaAE[d-1] = 1.0e10;
+//      d -= 1;
+//      /*
+//       for (i = 0; i < d; i++)
+//       {
+//       for (j = 0; j < d; j++)
+//       {
+//       Cov2[i][j] = Fisher2[i][j];
+//       }
+//       }
+//       
+//       nA = d; lwork = 4*d;
+//       
+//       dpotrf_("U", &nA, A, &nA, &info);
+//       dpotri_("U", &nA, A, &nA, &info);
+//       
+//       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
+//       */
+//      evector = dmatrix(0,d-1,0,d-1);
+//      evalue = dvector(0,d-1);
+//      matrix_eigenstuff(Fisher2,evector,evalue,d);
+//      for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov2[i][j] = Fisher2[i][j];
+//      free_dvector(evalue,0,d-1);
+//      free_dmatrix(evector,0,d-1,0,d-1);
+//      
+//      for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
+//      
+//    }
+//  }
   
   // printf("%d %f %f\n", d, SigmaAE[7], SigmaAE[8]);
   
