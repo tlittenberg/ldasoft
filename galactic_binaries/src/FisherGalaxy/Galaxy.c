@@ -121,7 +121,7 @@ int main(int argc,char **argv)
     fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
     
     // hack for astrid simulation
-    theta-=0.5*M_PI;
+    //theta-=0.5*M_PI;
     
     params[0] = f;
     params[1] = 0.5*pi-theta;
