@@ -1266,57 +1266,6 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
                 check+=proposal[i]->weight;
                 break;
             case 6:
-                sprintf(proposal[i]->name,"cdf draw");
-                proposal[i]->function = &draw_from_cdf;
-                //            proposal[i]->weight = 0.0;
-                proposal[i]->weight = 0.1;
-                //        proposal[i]->weight = 0.0;
-                check+=proposal[i]->weight;
-                //parse chain file
-                fptr = fopen(flags->cdfFile,"r");
-                proposal[i]->size=0;
-                while(!feof(fptr))
-            {
-                //fscanf(fptr,"%lg",&junk);
-                for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
-                proposal[i]->size++;
-            }
-                rewind(fptr);
-                proposal[i]->size--;
-                proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
-                proposal[i]->matrix = malloc(data->NP * sizeof(double*));
-                for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
-                
-                temp = malloc(sizeof(struct Model));
-                alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
-                
-                for(int n=0; n<proposal[i]->size; n++)
-            {
-                //fscanf(fptr,"%lg",&junk);
-                scan_source_params(data, temp->source[0], fptr);
-                for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
-            }
-                free_model(temp);
-                
-                //now sort each row of the matrix
-                for(int j=0; j<data->NP; j++)
-            {
-                //fill up proposal vector
-                for(int n=0; n<proposal[i]->size; n++)
-                proposal[i]->vector[n] = proposal[i]->matrix[j][n];
-                
-                //sort it
-                gsl_sort(proposal[i]->vector,1, proposal[i]->size);
-                
-                //replace that row of the matrix
-                for(int n=0; n<proposal[i]->size; n++)
-                proposal[i]->matrix[j][n] = proposal[i]->vector[n];
-            }
-                
-                free(proposal[i]->vector);
-                fclose(fptr);
-                break;
-            case 7:
                 sprintf(proposal[i]->name,"cov draw");
                 proposal[i]->function = &draw_from_cov;
                 //            proposal[i]->weight = 1.0;
@@ -1347,115 +1296,166 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
                 
                 
                 while(!feof(fptr))
-            {
-                for(int j=0; j<8; j++) fscanf(fptr,"%lg",&junk);
-                nl++;
-            }
-            
+                {
+                    for(int j=0; j<8; j++) fscanf(fptr,"%lg",&junk);
+                    nl++;
+                }
+                
                 rewind(fptr);
                 nl--;
                 
                 for(int n=0; n<nl; n++)
-            {
-                fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg\n", &f1, &f2, &f3, &f4, &f5, &f6, &f7, &f8);
-                if(n == 0)
                 {
-                    //alpha
-                    proposal[i]->vector[0]=f1;
-                    //det(cov(Sigma1))
-                    proposal[i]->vector[1]=f2;
-                    
+                    fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg\n", &f1, &f2, &f3, &f4, &f5, &f6, &f7, &f8);
+                    if(n == 0)
+                    {
+                        //alpha
+                        proposal[i]->vector[0]=f1;
+                        //det(cov(Sigma1))
+                        proposal[i]->vector[1]=f2;
+                        
+                    }
+                    if(n == 1)
+                    {
+                        proposal[i]->matrix[0][0]=f1;
+                        proposal[i]->matrix[0][1]=f2;
+                        proposal[i]->matrix[0][2]=f3;
+                        proposal[i]->matrix[0][3]=f4;
+                        proposal[i]->matrix[0][4]=f5;
+                        proposal[i]->matrix[0][5]=f6;
+                        proposal[i]->matrix[0][6]=f7;
+                        proposal[i]->matrix[0][7]=f8;
+                        
+                    }
+                    if(n>1 && n<=9)
+                    {
+                        ten[0][n-2][0]=f1;
+                        ten[0][n-2][1]=f2;
+                        ten[0][n-2][2]=f3;
+                        ten[0][n-2][3]=f4;
+                        ten[0][n-2][4]=f5;
+                        ten[0][n-2][5]=f6;
+                        ten[0][n-2][6]=f7;
+                        ten[0][n-2][7]=f8;
+                    }
+                    if(n>9 && n<=17)
+                    {
+                        proposal[i]->tensor[0][n-10][0]=f1;
+                        proposal[i]->tensor[0][n-10][1]=f2;
+                        proposal[i]->tensor[0][n-10][2]=f3;
+                        proposal[i]->tensor[0][n-10][3]=f4;
+                        proposal[i]->tensor[0][n-10][4]=f5;
+                        proposal[i]->tensor[0][n-10][5]=f6;
+                        proposal[i]->tensor[0][n-10][6]=f7;
+                        proposal[i]->tensor[0][n-10][7]=f8;
+                    }
+                    if(n == 18 && proposal[i]->vector[0] != 1.0)
+                    {
+                        //(1-alpha)
+                        proposal[i]->vector[2]=f1;
+                        //det(cov(Sigma2))
+                        proposal[i]->vector[3]=f2;
+                    }
+                    if(n == 19 && proposal[i]->vector[0] != 1.0)
+                    {
+                        proposal[i]->matrix[1][0]=f1;
+                        proposal[i]->matrix[1][1]=f2;
+                        proposal[i]->matrix[1][2]=f3;
+                        proposal[i]->matrix[1][3]=f4;
+                        proposal[i]->matrix[1][4]=f5;
+                        proposal[i]->matrix[1][5]=f6;
+                        proposal[i]->matrix[1][6]=f7;
+                        proposal[i]->matrix[1][7]=f8;
+                    }
+                    if(n>19 && n<=27 && proposal[i]->vector[0] != 1.0)
+                    {
+                        ten[1][n-20][0]=f1;
+                        ten[1][n-20][1]=f2;
+                        ten[1][n-20][2]=f3;
+                        ten[1][n-20][3]=f4;
+                        ten[1][n-20][4]=f5;
+                        ten[1][n-20][5]=f6;
+                        ten[1][n-20][6]=f7;
+                        ten[1][n-20][7]=f8;
+                    }
+                    if(n>27 && n<=35 && proposal[i]->vector[0] != 1.0)
+                    {
+                        proposal[i]->tensor[1][n-28][0]=f1;
+                        proposal[i]->tensor[1][n-28][1]=f2;
+                        proposal[i]->tensor[1][n-28][2]=f3;
+                        proposal[i]->tensor[1][n-28][3]=f4;
+                        proposal[i]->tensor[1][n-28][4]=f5;
+                        proposal[i]->tensor[1][n-28][5]=f6;
+                        proposal[i]->tensor[1][n-28][6]=f7;
+                        proposal[i]->tensor[1][n-28][7]=f8;
+                    }
                 }
-                if(n == 1)
-                {
-                    proposal[i]->matrix[0][0]=f1;
-                    proposal[i]->matrix[0][1]=f2;
-                    proposal[i]->matrix[0][2]=f3;
-                    proposal[i]->matrix[0][3]=f4;
-                    proposal[i]->matrix[0][4]=f5;
-                    proposal[i]->matrix[0][5]=f6;
-                    proposal[i]->matrix[0][6]=f7;
-                    proposal[i]->matrix[0][7]=f8;
-                    
-                }
-                if(n>1 && n<=9)
-                {
-                    ten[0][n-2][0]=f1;
-                    ten[0][n-2][1]=f2;
-                    ten[0][n-2][2]=f3;
-                    ten[0][n-2][3]=f4;
-                    ten[0][n-2][4]=f5;
-                    ten[0][n-2][5]=f6;
-                    ten[0][n-2][6]=f7;
-                    ten[0][n-2][7]=f8;
-                }
-                if(n>9 && n<=17)
-                {
-                    proposal[i]->tensor[0][n-10][0]=f1;
-                    proposal[i]->tensor[0][n-10][1]=f2;
-                    proposal[i]->tensor[0][n-10][2]=f3;
-                    proposal[i]->tensor[0][n-10][3]=f4;
-                    proposal[i]->tensor[0][n-10][4]=f5;
-                    proposal[i]->tensor[0][n-10][5]=f6;
-                    proposal[i]->tensor[0][n-10][6]=f7;
-                    proposal[i]->tensor[0][n-10][7]=f8;
-                }
-                if(n == 18 && proposal[i]->vector[0] != 1.0)
-                {
-                    //(1-alpha)
-                    proposal[i]->vector[2]=f1;
-                    //det(cov(Sigma2))
-                    proposal[i]->vector[3]=f2;
-                }
-                if(n == 19 && proposal[i]->vector[0] != 1.0)
-                {
-                    proposal[i]->matrix[1][0]=f1;
-                    proposal[i]->matrix[1][1]=f2;
-                    proposal[i]->matrix[1][2]=f3;
-                    proposal[i]->matrix[1][3]=f4;
-                    proposal[i]->matrix[1][4]=f5;
-                    proposal[i]->matrix[1][5]=f6;
-                    proposal[i]->matrix[1][6]=f7;
-                    proposal[i]->matrix[1][7]=f8;
-                }
-                if(n>19 && n<=27 && proposal[i]->vector[0] != 1.0)
-                {
-                    ten[1][n-20][0]=f1;
-                    ten[1][n-20][1]=f2;
-                    ten[1][n-20][2]=f3;
-                    ten[1][n-20][3]=f4;
-                    ten[1][n-20][4]=f5;
-                    ten[1][n-20][5]=f6;
-                    ten[1][n-20][6]=f7;
-                    ten[1][n-20][7]=f8;
-                }
-                if(n>27 && n<=35 && proposal[i]->vector[0] != 1.0)
-                {
-                    proposal[i]->tensor[1][n-28][0]=f1;
-                    proposal[i]->tensor[1][n-28][1]=f2;
-                    proposal[i]->tensor[1][n-28][2]=f3;
-                    proposal[i]->tensor[1][n-28][3]=f4;
-                    proposal[i]->tensor[1][n-28][4]=f5;
-                    proposal[i]->tensor[1][n-28][5]=f6;
-                    proposal[i]->tensor[1][n-28][6]=f7;
-                    proposal[i]->tensor[1][n-28][7]=f8;
-                }
-            }
                 
                 
                 ptr_params=params;
-//                ptr_ten_out=proposal[i]->tensor[0];
-//                cholesky_decomp(ten[0],ptr_ten_out,data->NP);
+                //                ptr_ten_out=proposal[i]->tensor[0];
+                //                cholesky_decomp(ten[0],ptr_ten_out,data->NP);
                 ptr_ten_out=proposal[i]->tensor[2];
                 invert_matrix2(ten[0],ptr_ten_out,data->NP);
                 
                 if(proposal[i]->vector[0] != 1.0)
-            {
-//                ptr_ten_out=proposal[i]->tensor[1];
-//                cholesky_decomp(ten[1],ptr_ten_out,data->NP);
-                ptr_ten_out=proposal[i]->tensor[3];
-                invert_matrix2(ten[1],ptr_ten_out,data->NP);
-            }
+                {
+                    //                ptr_ten_out=proposal[i]->tensor[1];
+                    //                cholesky_decomp(ten[1],ptr_ten_out,data->NP);
+                    ptr_ten_out=proposal[i]->tensor[3];
+                    invert_matrix2(ten[1],ptr_ten_out,data->NP);
+                }
+                fclose(fptr);
+                break;
+            case 7:
+                sprintf(proposal[i]->name,"cdf draw");
+                proposal[i]->function = &draw_from_cdf;
+                //            proposal[i]->weight = 0.0;
+                proposal[i]->weight = 0.1;
+                //        proposal[i]->weight = 0.0;
+                check+=proposal[i]->weight;
+                //parse chain file
+                fptr = fopen(flags->cdfFile,"r");
+                proposal[i]->size=0;
+                while(!feof(fptr))
+                {
+                    //fscanf(fptr,"%lg",&junk);
+                    for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
+                    proposal[i]->size++;
+                }
+                rewind(fptr);
+                proposal[i]->size--;
+                proposal[i]->vector = malloc(proposal[i]->size * sizeof(double));
+                proposal[i]->matrix = malloc(data->NP * sizeof(double*));
+                for(int j=0; j<data->NP; j++) proposal[i]->matrix[j] = malloc(proposal[i]->size * sizeof(double));
+                
+                temp = malloc(sizeof(struct Model));
+                alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
+                
+                for(int n=0; n<proposal[i]->size; n++)
+                {
+                    //fscanf(fptr,"%lg",&junk);
+                    scan_source_params(data, temp->source[0], fptr);
+                    for(int j=0; j<data->NP; j++) proposal[i]->matrix[j][n] = temp->source[0]->params[j];
+                }
+                free_model(temp);
+                
+                //now sort each row of the matrix
+                for(int j=0; j<data->NP; j++)
+                {
+                    //fill up proposal vector
+                    for(int n=0; n<proposal[i]->size; n++)
+                        proposal[i]->vector[n] = proposal[i]->matrix[j][n];
+                    
+                    //sort it
+                    gsl_sort(proposal[i]->vector,1, proposal[i]->size);
+                    
+                    //replace that row of the matrix
+                    for(int n=0; n<proposal[i]->size; n++)
+                        proposal[i]->matrix[j][n] = proposal[i]->vector[n];
+                }
+                
+                free(proposal[i]->vector);
                 fclose(fptr);
                 break;
             default:
