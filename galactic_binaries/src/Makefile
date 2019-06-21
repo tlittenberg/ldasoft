@@ -12,7 +12,7 @@ CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o
 
-all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb.so gb_residual
+all: $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
 
 LISA.o : LISA.c LISA.h
 	$(CC) $(CCFLAGS) -c LISA.c 
