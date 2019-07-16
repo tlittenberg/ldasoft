@@ -174,9 +174,18 @@ int main(int argc, char *argv[])
           map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
           
         }
-        else if(flags->update)
+        else if(flags->update || flags->updateCov)
         {
-          draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+          if(flags->update && flags->updateCov)
+          {
+              draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+//            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
+          }
+         else
+         {
+//            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
+            draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
+         }
         }
         else
         {
@@ -504,7 +513,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   double logPy  = 0.0; //(log) prior density for model y (proposed state)
   double logQyx = 0.0; //(log) proposal denstiy from x->y
   double logQxy = 0.0; //(log) proposal density from y->x
-  
   //shorthand pointers
   struct Model *model_x = model;
   struct Model *model_y = trial;
@@ -531,7 +539,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     if(trial_w < proposal[trial_n]->weight) nprop = trial_n;
   }
   proposal[nprop]->trial[ic]++;
-  
+//    printf("\n nprop=%d \n",nprop);
   //call proposal function to update source parameters
   (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
   
@@ -548,7 +556,13 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     logQyx = cdf_density(model_x, source_y, proposal[nprop]);
     logQxy = cdf_density(model_x, source_x, proposal[nprop]);
   }
-  
+  if(!strcmp(proposal[nprop]->name,"cov draw"))
+  {
+    logQyx = cov_density(model_x, source_y, proposal[nprop]);
+    logQxy = cov_density(model_x, source_x, proposal[nprop]);
+
+  }
+
   map_array_to_params(source_y, source_y->params, data->T);
   
   //hold sky position fixed to injected value?
@@ -574,6 +588,11 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   logPx = evaluate_prior(flags, data, model_x, prior, source_x->params);
   logPy = evaluate_prior(flags, data, model_y, prior, source_y->params);
   
+//  printf("\n%d,logPx=%f,logPy=%f\n",nprop,logPx,logPy);
+//  printf("\nlogPx=%f\n",logPx);
+//  printf("\nlogPy=%f\n",logPy);
+
+    
   //add calibration source parameters
   /*
    no prior density for calibration parameters
@@ -612,17 +631,47 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     logH += logQxy - logQyx; //proposals
     
     loga = log(gsl_rng_uniform(chain->r[ic]));
+      
+
+      
     if(logH > loga)
     {
+      
+      //KAL? Print something for cov draw here??
+     
       if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
       {
         printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
         printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
         //exit(1);
       }
+      if(!strcmp(proposal[nprop]->name,"cov draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+      {
+        printf("cov logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
+        printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+//        exit(1);
+      }
+//        if(!strcmp(proposal[nprop]->name,"cov draw"))
+//        {
+//            printf(" \n logPy=%g, logPx=%g\n",logPy,logPx);
+//            printf("  logH > loga: %d\n",logH > loga);
+//            printf("  logH=%g, loga=%g\n",logH,loga);
+//            printf("  logQxy=%g, logQyx=%g\n",logQxy,logQyx);
+//        }
+
       proposal[nprop]->accept[ic]++;
       copy_model(model_y,model_x);
     }
+//    else
+//    {
+//        if(!strcmp(proposal[nprop]->name,"cov draw"))
+//        {
+//            printf(" \n model_y->logL=%g, model_x->logL=%g\n",model_y->logL/chain->temperature[ic], model_x->logL/chain->temperature[ic]);
+//            printf("  logH > loga: %d\n",logH > loga);
+//            printf("  logH=%g, loga=%g\n",logH,loga);
+//            printf("  logQxy=%g, logQyx=%g\n",logQxy,logQyx);
+//        }
+//    }
   }
 }
 

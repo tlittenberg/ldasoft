@@ -47,12 +47,15 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
 double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
 double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed);
 
 double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed);
 
 double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal);
+
+double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal);
 
 void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 
