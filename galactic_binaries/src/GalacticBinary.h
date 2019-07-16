@@ -81,6 +81,7 @@ struct Flags
   int cheat;
   int burnin;
   int update;
+  int updateCov;
   int rj;
   int gap; //are we fitting for a time-gap in the data?
   int calibration; //are we marginalizing over calibration  uncertainty?
@@ -88,6 +89,7 @@ struct Flags
   
   char **injFile;
   char cdfFile[128];
+  char covFile[128];
   char pdfFile[128];
 };
 
