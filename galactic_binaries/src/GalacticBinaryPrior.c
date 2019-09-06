@@ -449,13 +449,6 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   double logP=0.0;
   double **uniform_prior = model->prior;
   
-//
-//    for(int n=0; n<data->NP; n++)
-//    {
-//        printf("\ncandidate value %.13lg\n", params[n]);
-//    }
-
-    
   //guard against nan's, but do so loudly
   for(int i=0; i<model->NP; i++)
   {
@@ -507,11 +500,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     if(uniform_prior[2][0] > 0.0 || uniform_prior[2][1] < PI2)
     {
       //rejection sample on reduced prior range
-      if(params[2]<uniform_prior[2][0] || params[2]>uniform_prior[2][1])
-        {
-//            printf(" \n 2 REJECTED****************************************************** \n");
-            return -INFINITY;
-        }
+      if(params[2]<uniform_prior[2][0] || params[2]>uniform_prior[2][1]) return -INFINITY;
     }
     else
     {
@@ -519,7 +508,6 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
       //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
       if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
       {
-//          printf(" \n 2 altered \n");
         params[2] = atan2(sin(params[2]),cos(params[2]));
         if(params[2] < 0.0) params[2] += PI2;
       }
@@ -528,11 +516,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   }
   
   //log amplitude (step)
-  if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1])
-    {
-//        printf(" \n 3 REJECTED****************************************************** \n");
-        return -INFINITY;
-    }
+  if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
   else
   {
     logP += model->logPriorVolume[3];
@@ -546,11 +530,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   //polarization
   //  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
   //  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
-  if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1])
-    {
-//        printf(" \n 5 REJECTED****************************************************** \n");
-        return -INFINITY;
-    }
+  if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
   else logP += model->logPriorVolume[5];
   
   //phase
@@ -561,17 +541,12 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   if(uniform_prior[6][0] > 0.0 || uniform_prior[6][1] < PI2)
   {
     //rejection sample on reduced prior range
-    if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1])
-      {
-//          printf(" \n 6 REJECTED****************************************************** \n");
-          return -INFINITY;
-      }
+    if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
   }
   else
   {
     if(params[6]<uniform_prior[6][0] || params[6]>=uniform_prior[6][1])
     {
-//        printf(" \n 6 altered \n");
       params[6] = atan2(sin(params[6]),cos(params[6]));
       if(params[6] < 0.0) params[6] += PI2;
     }
@@ -581,13 +556,9 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   //fdot (bins/Tobs)
   if(model->NP>7)
   {
-    if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1])
-      {
-//          printf(" \n param 7, %g, REJECTED****************************************************** \n", params[7]);
-//          printf(" \n min = %g, max = %g \n",uniform_prior[7][0], uniform_prior[7][1]);
-          return -INFINITY;
-      }
+    if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
     else logP += model->logPriorVolume[7];
+    
   }
   
   //fddot
