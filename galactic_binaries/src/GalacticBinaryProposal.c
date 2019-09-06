@@ -549,360 +549,115 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
   }
   return logP;
 }
+
 double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-    double ran_no[8],x,choose_dist;
+  int NP = source->NP;
+  double ran_no[NP];
+  
+  //pick which mode to propose to
+  int mode;
+  if (gsl_rng_uniform(seed) > (1.0-proposal->vector[0])) mode = 0;
+  else mode = 1;
+  
+  //define some helper pointers for ease of reading
+  double *mean  = proposal->matrix[mode];
+  double **invC = proposal->tensor[mode];
+  
+  
+  //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Cij^-1 * n_j
+  for(int n=0; n<NP; n++)
+  {
+    ran_no[n] = gsl_ran_gaussian(seed,1.0);
+  }
+  
+  //the matrix multiplication...
+  for(int n=0; n<NP; n++)
+  {
+    //start at mean
+    params[n] = mean[n];
     
+    //add contribution from each row of invC
+    for(int k=0; k<NP; k++)  params[n] += ran_no[k]*invC[n][k];
     
-    x=0.0;
-    choose_dist=gsl_rng_uniform(seed);
-    
-    
-    
-    for(int n=0; n<8; n++)
-    {
-        ran_no[n] = gsl_ran_gaussian(seed,1.0);
-    }
-//    printf("\nran_no %lg %lg %lg %lg %lg %lg %lg %lg\n", ran_no[0], ran_no[1], ran_no[2], ran_no[3], ran_no[4], ran_no[5], ran_no[6], ran_no[7]);
-
-    if (choose_dist > (1.0-proposal->vector[0]))
-    {
-        for(int n=0; n<8; n++)
-        {
-            for(int k=0; k<8; k++)
-            {
-                x += ran_no[k]*proposal->tensor[0][n][k];
-            }
-            params[n]= x + proposal->matrix[0][n];
-            if(n==2 && params[n]>PI2)
-            {
-                params[n]-=PI2;
-            }
-            if(n==2 && params[n]<0.0)
-            {
-                params[n]+=PI2;
-            }
-            if(n==6 && params[n]>PI2)
-            {
-                params[n]-=PI2;
-            }
-            if(n==6 && params[n]<0.0)
-            {
-                params[n]+=PI2;
-            }
-            if(n==5 && params[n]>PI2/2.0)
-            {
-                params[n]-=PI2/2.0;
-            }
-            if(n==5 && params[n]<0)
-            {
-                params[n]-=PI2/2.0;
-            }
-
-            
-            if(params[n]<model->prior[n][0] || params[n]>model->prior[n][1])
-            {
-                    return -INFINITY;
-            }
-            x=0.0;
-        }
-    }
-    else
-    {
-        for(int n=0; n<8; n++)
-        {
-            for(int k=0; k<8; k++)
-            {
-                x += ran_no[k]*proposal->tensor[1][n][k];
-            }
-            params[n]= x + proposal->matrix[1][n];
-            if(n==2 && params[n]>PI2)
-            {
-                params[n]-=PI2;
-            }
-            if(n==2 && params[n]<0.0)
-            {
-                params[n]+=PI2;
-            }
-            if(n==6 && params[n]>PI2)
-            {
-                params[n]-=PI2;
-            }
-            if(n==6 && params[n]<0.0)
-            {
-                params[n]+=PI2;
-            }
-            if(n==5 && params[n]>PI2/2.0)
-            {
-                params[n]-=PI2/2.0;
-            }
-            if(n==5 && params[n]<0)
-            {
-                params[n]+=PI2/2.0;
-            }
-            if(params[n]<model->prior[n][0] || params[n]>model->prior[n][1])
-            {
-                    return -INFINITY;
-            }
-            x=0.0;
-        }
-    }
+  }
   return cov_density(model, source, proposal);
 }
+
 double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal)
 {
-//  double logP=0.0;
-    
-    double logP=0.0;
-    double x[2][8],scalar1,scalar2,c1[8],c2[8];
-    double *params = source->params;
-//    double logpp;
-    double tmp_x_min;
-    int NP=8;
-    long double det1 = proposal->vector[1];
-    long double det2 = proposal->vector[3];
-    long double b1,b2,p;
+  
+  int NP=source->NP;
+  int Nmodes = 2;
+  double delta_x[NP];
+  
+  double *params = source->params;
+  
+  double arg[Nmodes];
+  double det[Nmodes];
+  for(int i=0; i<Nmodes; i++)
+  {
+    arg[i] = 0.0;
+    det[i] = proposal->vector[2*i+1];
+  }
+  
+  
+  //TODO: Only support for two modes!
+  double norm[Nmodes];
+  norm[0] = proposal->vector[0];
+  norm[1] = 1.-proposal->vector[0];
+  
+  //map angles over periodic boundary conditions
+  //longitude
+  if(params[2]>PI2)  params[2]-=PI2;
+  if(params[2]<0.0)  params[2]+=PI2;
+  
+  //phase
+  if(params[6]>PI2)  params[6]-=PI2;
+  if(params[6]<0.0)  params[6]+=PI2;
+  
+  //psi
+  if(params[5]>M_PI) params[5]-=M_PI;
+  if(params[5]<0.0)  params[5]+=M_PI;
+  
+  
+  //rejection sample everything else
+  for(int n=0; n< NP; n++)
+  {
+    if(params[n]<model->prior[n][0] || params[n]>model->prior[n][1])
+    return -INFINITY;
+  }
+  
+  /* if everything is in bounds, evaluate the proposal */
+  for(int i=0; i<Nmodes; i++)
+  {
 
-    if(params[2]>PI2)
-    {
-        params[2]-=PI2;
-    }
-    if(params[2]<0.0)
-    {
-        params[2]+=PI2;
-    }
-    if(params[6]>PI2)
-    {
-        params[6]-=PI2;
-    }
-    if(params[6]<0.0)
-    {
-        params[6]+=PI2;
-    }
-    if(params[5]>PI2/2.0)
-    {
-        params[5]-=PI2/2.0;
-    }
-    if(params[5]<0)
-    {
-        params[5]+=PI2/2.0;
-    }
-
+    //compute distances between mode and current params
     for(int n=0; n<NP; n++)
     {
-        if(params[n]<model->prior[n][0] || params[n]>model->prior[n][1])
-        {
-                return -INFINITY;
-        }
-        
-        //////////////////////
-        
-        
-            if (n == 2 || n == 5 || n == 6)
-            {
-                if (n == 2)
-                {
-                    double tmp_x[3]={fabs(params[n]-proposal->matrix[0][n]),fabs(params[n]-PI2-proposal->matrix[0][n]),fabs(params[n]+PI2-proposal->matrix[0][n])};
-                    tmp_x_min=tmp_x[0];
-                    for(int h=1; h<3; h++)
-                    {
-                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
-                    }
-                    if(tmp_x_min == fabs(params[n]-proposal->matrix[0][n]))x[0][n]=params[n]-proposal->matrix[0][n];
-
-                    else if(tmp_x_min == fabs(params[n]-PI2-proposal->matrix[0][n]))
-                    {
-                        x[0][n]=params[n]-PI2-proposal->matrix[0][n];
-                    }
-
-                    else
-                    {
-                        x[0][n]=params[n]+PI2-proposal->matrix[0][n];
-                    }
-
-                }
-                if (n == 5)
-                {
-                    double tmp_x[3]={fabs(params[n]-proposal->matrix[0][n]),fabs(params[n]-PI2/2.0-proposal->matrix[0][n]),fabs(params[n]+PI2/2.0-proposal->matrix[0][n])};
-                    tmp_x_min=tmp_x[0];
-                    for(int h=1; h<3; h++)
-                    {
-                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
-                    }
-                    if(tmp_x_min == fabs(params[n]-proposal->matrix[0][n]))x[0][n]=params[n]-proposal->matrix[0][n];
-
-                    else if(tmp_x_min == fabs(params[n]-PI2/2.0-proposal->matrix[0][n]))
-                    {
-                        x[0][n]=params[n]-PI2/2.0-proposal->matrix[0][n];
-                    }
-
-                    else
-                    {
-                        x[0][n]=params[n]+PI2/2.0-proposal->matrix[0][n];
-                    }
-
-                }
-                if (n == 6)
-                {
-                    double tmp_x[3]={fabs(params[n]-proposal->matrix[0][n]),fabs(params[n]-PI2-proposal->matrix[0][n]),fabs(params[n]+PI2-proposal->matrix[0][n])};
-                    tmp_x_min=tmp_x[0];
-                    for(int h=1; h<3; h++)
-                    {
-                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
-                    }
-                    if(tmp_x_min == fabs(params[n]-proposal->matrix[0][n]))x[0][n]=params[n]-proposal->matrix[0][n];
-
-                    else if(tmp_x_min == fabs(params[n]-PI2-proposal->matrix[0][n]))
-                    {
-                        x[0][n]=params[n]-PI2-proposal->matrix[0][n];
-                    }
-
-                    else
-                    {
-                        x[0][n]=params[n]+PI2-proposal->matrix[0][n];
-                    }
-
-                }
-            }
-            else
-            {
-                x[0][n]=params[n]-proposal->matrix[0][n];
-            }
-        
-
-        
-        
-        //////////////////////
-        
-        if(proposal->vector[0] != 1.0)
-        {
-            
-            
-            
-            if (n == 2 || n == 5 || n == 6)
-            {
-                if (n == 2)
-                {
-                    double tmp_x[3]={fabs(params[n]-proposal->matrix[1][n]),fabs(params[n]-PI2-proposal->matrix[1][n]),fabs(params[n]+PI2-proposal->matrix[1][n])};
-                    tmp_x_min=tmp_x[0];
-                    for(int h=1; h<3; h++)
-                    {
-                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
-                    }
-                    if(tmp_x_min == fabs(params[n]-proposal->matrix[1][n]))x[1][n]=params[n]-proposal->matrix[1][n];
-
-                    else if(tmp_x_min == fabs(params[n]-PI2-proposal->matrix[1][n]))
-                    {
-                        x[1][n]=params[n]-PI2-proposal->matrix[1][n];
-                    }
-
-                    else
-                    {
-                        x[1][n]=params[n]+PI2-proposal->matrix[1][n];
-                    }
-
-                }
-                if (n == 5)
-                {
-                    double tmp_x[3]={fabs(params[n]-proposal->matrix[1][n]),fabs(params[n]-PI2/2.0-proposal->matrix[1][n]),fabs(params[n]+PI2/2.0-proposal->matrix[1][n])};
-                    tmp_x_min=tmp_x[0];
-                    for(int h=1; h<3; h++)
-                    {
-                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
-                    }
-                    if(tmp_x_min == fabs(params[n]-proposal->matrix[1][n]))x[1][n]=params[n]-proposal->matrix[1][n];
-
-                    else if(tmp_x_min == fabs(params[n]-PI2/2.0-proposal->matrix[1][n]))
-                    {
-                        x[1][n]=params[n]-PI2/2.0-proposal->matrix[1][n];
-                    }
-
-                    else
-                    {
-                        x[1][n]=params[n]+PI2/2.0-proposal->matrix[1][n];
-                    }
-
-                }
-                if (n == 6)
-                {
-                    double tmp_x[3]={fabs(params[n]-proposal->matrix[1][n]),fabs(params[n]-PI2-proposal->matrix[1][n]),fabs(params[n]+PI2-proposal->matrix[1][n])};
-                    tmp_x_min=tmp_x[0];
-                    for(int h=1; h<3; h++)
-                    {
-                        if (tmp_x[h]<tmp_x_min)tmp_x_min=tmp_x[h];
-                    }
-                    if(tmp_x_min == fabs(params[n]-proposal->matrix[1][n]))x[1][n]=params[n]-proposal->matrix[1][n];
-
-                    else if(tmp_x_min == fabs(params[n]-PI2-proposal->matrix[1][n]))
-                    {
-                        x[1][n]=params[n]-PI2-proposal->matrix[1][n];
-                    }
-
-                    else
-                    {
-                        x[1][n]=params[n]+PI2-proposal->matrix[1][n];
-                    }
-
-                }
-            }
-            else
-            {
-                x[1][n]=params[n]-proposal->matrix[1][n];
-            }
-        }
+      delta_x[n] = params[n]-proposal->matrix[i][n];
+      
+      //map parameters periodic on U[0,2pi]
+      if(n==2) delta_x[n] = acos(cos(delta_x[n])); //longitude
+      if(n==6) delta_x[n] = acos(cos(delta_x[n])); //phase
+      
+      //map parameters periodic on U[0,pi]
+      if(n==5) delta_x[n] = asin(sin(delta_x[n])); //psi
+      
     }
     
+    //compute argument of multivariate Gaussians
+    double **inverse_matrix = proposal->tensor[2*i];
     
-    for(int n=0; n<NP; n++)
-    {
-        c1[n]=0;
-        for(int k=0; k<NP; k++)
-        {
-            c1[n]+=proposal->tensor[2][n][k]*x[0][k];
-        }
-    }
-    scalar1=0.0;
-    
-    
-    if(proposal->vector[0] != 1.0)
-    {
-        for(int n=0; n<NP; n++)
-        {
-            c2[n]=0;
-            for(int k=0; k<NP; k++)
-            {
-                c2[n]+=proposal->tensor[3][n][k]*x[1][k];
-            }
-        }
-        scalar2=0.0;
-    }
-
-
-    
-    
-    for(int n=0; n<NP; n++)
-    {
-        scalar1+=x[0][n]*c1[n];
-        if(proposal->vector[0] != 1.0)scalar2+=x[1][n]*c2[n];
-    }
-
-
-
-    b1=exp(-0.5*scalar1);
-    if(proposal->vector[0] != 1.0)b2=exp(-0.5*scalar2);
-    p=(proposal->vector[0])*b1/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det1));
-    if(proposal->vector[0] != 1.0)
-    {
-        p+=(1-proposal->vector[0])*b2/(sqrt((2*acos(-1.0))*(2*acos(-1.0))*det2));
-    }
-    logP += log(p);
-    
-//    for(int kn=0; kn<NP; kn++)
-//    {
-//        printf("\nparam %d = %lg, p=%Lg\n", kn, params[kn],p);
-//    }
-
-  return logP;
+    for(int n=0; n<NP; n++) for(int m=0; m<NP; m++) arg[i] += delta_x[n] * inverse_matrix[n][m] * delta_x[m];
+  }
+  
+  //assemble the pdf
+  //TODO: Absorb factors of 2pi into determinant, calls to pow() are bad
+  long double p = 0.0;
+  for(int i=0; i<Nmodes; i++) p += norm[i] * exp(-0.5*arg[i]) / (pow(PI2,0.5*NP)*sqrt(det[i]));
+  
+  return log(p);
 }
 
 double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
