@@ -1228,6 +1228,7 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
       x = log(XX[j]);
       mean += x;
       var += x*x;
+//        printf("\nsegs=%ld,i=%ld,j=%ld,x=%lg,mean=%lg\n",segs,i,j,x,mean);
     }
     mean /= (double)(divs+1);
     var /= (double)(divs+1);
@@ -1240,7 +1241,7 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
     instrument_noise(f, fstar, L, &SAE, &SXYZ);
     if(flag == 0) inst[i] = log(SXYZ*1.0e40);
     if(flag == 1) inst[i] = log(SAE*1.0e40);
-    
+      
     chi=quickselect(XX, divsp, (divh+1));
     fdata[i] = log(f);
     mdata[i] = log(chi/0.72);
