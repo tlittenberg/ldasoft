@@ -130,6 +130,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->zeroNoise   = 0;
   flags->confNoise   = 0;
   flags->fixSky      = 0;
+  flags->fixFreq     = 0;
   flags->galaxyPrior = 0;
   flags->snrPrior    = 0;
   flags->emPrior     = 0;
@@ -215,6 +216,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"conf-noise",  no_argument, 0, 0 },
     {"frac-freq",   no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
+    {"fix-freq",    no_argument, 0, 0 },
     {"galaxy-prior",no_argument, 0, 0 },
     {"snr-prior",   no_argument, 0, 0 },
     {"known-source",no_argument, 0, 0 },
@@ -253,6 +255,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
         if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
+        if(strcmp("fix-freq",     long_options[long_index].name) == 0) flags->fixFreq    = 1;
         if(strcmp("galaxy-prior",long_options[long_index].name) == 0) flags->galaxyPrior= 1;
         if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
@@ -455,6 +458,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   }
   else                   fprintf(stdout,"  Injection is ........ DISABLED\n");
   if(flags->fixSky)      fprintf(stdout,"  Sky parameters are... DISABLED\n");
+  if(flags->fixFreq)     fprintf(stdout,"  Freq paramseters are. DISABLED\n");
   else                   fprintf(stdout,"  Sky parameters are... ENABLED\n");
   if(flags->calibration) fprintf(stdout,"  Calibration is....... ENABLED\n");
   else                   fprintf(stdout,"  Calibration is....... DISABLED\n");

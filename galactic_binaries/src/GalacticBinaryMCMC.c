@@ -565,14 +565,22 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
 
   map_array_to_params(source_y, source_y->params, data->T);
   
-  //hold sky position fixed to injected value?
+  //hold sky position fixed to injected value
   if(flags->fixSky)
   {
     source_y->costheta = data->inj->costheta;
     source_y->phi      = data->inj->phi;
     map_params_to_array(source_y, source_y->params, data->T);
   }
-  
+
+  //hold frequencies fixed to injected value
+  if(flags->fixFreq)
+  {
+    source_y->f0   = data->inj->f0;
+    source_y->dfdt = data->inj->dfdt;
+    map_params_to_array(source_y, source_y->params, data->T);
+  }
+
   //update calibration parameters
   if(flags->calibration) draw_calibration_parameters(data, model_y, chain->r[ic]);
   /*

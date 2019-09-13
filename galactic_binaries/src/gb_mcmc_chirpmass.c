@@ -10,6 +10,9 @@
 #include <time.h>
 #include <string.h>
 
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_randist.h>
+
 #include "Constants.h"
 
 #define RAD2ARCMIN 3437.75
@@ -50,15 +53,39 @@ double galactic_binary_dL(double f0, double dfdt, double A)
 int main(int argc, char* argv[])
 {
 
-  if(argc!=3)
+  if(argc<3)
   {
-    fprintf(stdout,"Usage: gb_mcmc_chirpmass parameter_chain.dat.0 9\n");
+    fprintf(stdout,"Usage: gb_mcmc_chirpmass parameter_chain.dat.0 9 [alpha] [dalpha]\n");
     return 1;
   }
   
   FILE *ifile = fopen(argv[1],"r");
   
   int NP = atoi(argv[2]);
+  
+  int tideFlag   = 0;
+  double alpha0  = 0.0;
+  double dalpha0 = 0.0;
+  double alpha   = 0.0;
+  if(argc>3)
+  {
+    alpha0 = atof(argv[3]);
+    dalpha0=alpha0*.1; //10% error
+    tideFlag = 1;
+  }
+  if(argc>4)
+  {
+    dalpha0 = atof(argv[4]);
+  }
+  
+  //set up RNG in case tidal params are used
+  const gsl_rng_type * T;
+  gsl_rng * r;
+  gsl_rng_env_setup();
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
+  
+  
   
   char filename[128];
   sprintf(filename,"mchirp_%s",argv[1]);
@@ -100,11 +127,23 @@ int main(int argc, char* argv[])
       fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase);
       fddot = 11.0/3.0*fdot*fdot/f;
     }
+    
+    //get tides
+    if(tideFlag)
+    {
+      do
+      {
+        alpha = alpha0+dalpha0*gsl_ran_gaussian(r,1.0);
+      }while(alpha < 0.0);
+    }
+    else alpha = 0.0;
+    
+    
     if(fdot>0.0&&fddot>0.0)
     {
       Mc = M_fdot_fddot(f,fdot,fddot);
       B = beta(f,fdot,fddot);
-      fprintf(ofile3,"%.12g %.12g %.12g %.12g %.12g\n",phi*RAD2ARCMIN,theta*RAD2ARCMIN,galactic_binary_dL(f,fdot,A),acos(cosi)*RAD2DEGREE,M_fdot(f,fdot));
+      fprintf(ofile3,"%.12g %.12g %.12g %.12g %.12g\n",phi*RAD2ARCMIN,theta*RAD2ARCMIN,galactic_binary_dL(f,fdot,A)/(1.+alpha),acos(cosi)*RAD2DEGREE,M_fdot(f,fdot));
       fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
       if(Mc==Mc && B==B) fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
     }
