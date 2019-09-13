@@ -25,14 +25,6 @@
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
-//void printProgress (double percentage)
-//{
-//  int val = (int) (percentage * 100);
-//  int lpad = (int) (percentage * PBWIDTH);
-//  int rpad = PBWIDTH - lpad;
-//  printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-//  fflush (stdout);
-//}
 
 void printProgress (double percentage)
 {
@@ -147,7 +139,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->DMAX        = Dmax;
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
-  chain->NP          = 5; //number of proposals
+  chain->NP          = 8; //number of proposals
   chain->NC          = 12;//number of chains
   
   
@@ -313,14 +305,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
           checkfile(optarg);
           flags->update=1;
           sprintf(flags->cdfFile,"%s",optarg);
-          chain->NP++;
         }
         if(strcmp("update-cov", long_options[long_index].name) == 0)
         {
           checkfile(optarg);
           flags->updateCov=1;
           sprintf(flags->covFile,"%s",optarg);
-          chain->NP++;
         }
             
         if(strcmp("links",long_options[long_index].name) == 0)
@@ -489,7 +479,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   {
     n = chain->index[ic];
     logL=0.0;
-    for(i=0; i<flags->NINJ; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
+    for(i=0; i<flags->NDATA; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
     fprintf(chain->likelihoodFile,  "%lg ",logL);
     fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
   }
