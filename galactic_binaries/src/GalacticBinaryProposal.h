@@ -61,6 +61,10 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
 
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
 
+void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, int NMAX);
+
+void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal);
+
 double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal, double *params);
 
 double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
