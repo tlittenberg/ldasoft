@@ -139,7 +139,7 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     //Add Gaussian noise to injection
     gsl_rng_set (r, data->nseed+0);
     
-    if(!flags->zeroNoise)
+    if(flags->simNoise)
     {
         printf("   ...adding Gaussian noise realization\n");
         
@@ -386,7 +386,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
             //Add Gaussian noise to injection
             gsl_rng_set (r, data->nseed+jj);
             
-            if(!flags->zeroNoise)
+            if(flags->simNoise)
             {
                 printf("   ...adding Gaussian noise realization\n");
                 
@@ -667,7 +667,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
                 //Add Gaussian noise to injection
                 gsl_rng_set (r, data->nseed+jj);
                 
-                if(!flags->zeroNoise && nn==0)
+                if(flags->simNoise && nn==0)
                 {
                     printf("   ...adding Gaussian noise realization\n");
                     
