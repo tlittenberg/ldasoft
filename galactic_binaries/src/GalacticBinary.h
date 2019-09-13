@@ -7,7 +7,8 @@ struct Data
   int N;        //number of frequency bins
   int NT;       //number of time segments
   int Nchannel; //number of data channels
-  
+  int DMAX;     //max dimension of signal model
+
   long cseed; //seed for MCMC
   long nseed; //seed for noise realization
   long iseed; //seed for injection parameters
@@ -65,9 +66,8 @@ struct Flags
   int NINJ; //number of frequency segments;
   int NDATA;  //number of frequency segments;
   int NT;    //number of time segments
-  int NMAX;  //max number of sources
-  int DMAX;  //max dimension of signal model
-  int zeroNoise;
+  int DMAX;  //max number of sources
+  int simNoise;
   int fixSky;
   int fixFreq;
   int galaxyPrior;
@@ -99,6 +99,7 @@ struct Chain
   //Number of chains
   int NC;
   int NP;
+  int NS;
   int *index;
   int **dimension;
   double *acceptance;

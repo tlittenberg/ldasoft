@@ -64,6 +64,7 @@ void print_usage()
   fprintf(stdout,"       --steps       : number of mcmc steps (10000)        \n");
   fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
   fprintf(stdout,"       --segments    : number of data segments (1)         \n");
+  fprintf(stdout,"       --sources     : maximum number of sources (10)      \n");
   fprintf(stdout,"       --start-time  : initial time of segment  (0)        \n");
   fprintf(stdout,"       --gap-time    : duration of data gaps (0)           \n");
   fprintf(stdout,"       --fmin        : minimum frequency                   \n");
@@ -84,7 +85,7 @@ void print_usage()
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --update-cov  : use cov mtrx proposal [filename]    \n");
-  fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
+  fprintf(stdout,"       --sim-noise   : data w/out noise realization        \n");
   fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
@@ -109,9 +110,11 @@ void print_usage()
   exit(EXIT_FAILURE);
 }
 
-void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int Dmax)
+void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
 {
   if(argc==1) print_usage();
+  
+  int DMAX_default = 10;
   
   //Set defaults
   flags->calibration = 0;
@@ -119,7 +122,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->verbose     = 0;
   flags->NDATA       = 1;
   flags->NINJ        = 0;
-  flags->zeroNoise   = 0;
+  flags->simNoise    = 0;
   flags->confNoise   = 0;
   flags->fixSky      = 0;
   flags->fixFreq     = 0;
@@ -136,8 +139,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->prior       = 0;
   flags->update      = 0;
   flags->updateCov   = 0;
-  flags->NMAX        = Nmax;
-  flags->DMAX        = Dmax;
+  flags->DMAX        = DMAX_default;
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
   chain->NP          = 8; //number of proposals
@@ -166,6 +168,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     data[i]->N        = 1024;
     data[i]->NP       = 8; //default includes fdot
     data[i]->Nchannel = 2; //1=X, 2=AE
+    data[i]->DMAX     = DMAX_default;//maximum number of sources
     
     data[i]->cseed = 150914+i*Nmax;
     data[i]->nseed = 151226+i*Nmax;
@@ -244,10 +247,10 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("chainseed",   long_options[long_index].name) == 0) data_ptr->cseed   = (long)atoi(optarg);
         if(strcmp("noiseseed",   long_options[long_index].name) == 0) data_ptr->nseed   = (long)atoi(optarg);
         if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
-        if(strcmp("zero-noise",  long_options[long_index].name) == 0) flags->zeroNoise  = 1;
+        if(strcmp("sim-noise",   long_options[long_index].name) == 0) flags->simNoise   = 1;
         if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
         if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
-        if(strcmp("fix-freq",     long_options[long_index].name) == 0) flags->fixFreq    = 1;
+        if(strcmp("fix-freq",    long_options[long_index].name) == 0) flags->fixFreq    = 1;
         if(strcmp("galaxy-prior",long_options[long_index].name) == 0) flags->galaxyPrior= 1;
         if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
         if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
@@ -258,6 +261,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
         if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
+        if(strcmp("sources",     long_options[long_index].name) == 0)
+        {
+          data_ptr->DMAX    = atoi(optarg);
+          flags->DMAX       = atoi(optarg);
+        }
         if(strcmp("em-prior",    long_options[long_index].name) == 0)
         {
           flags->emPrior = 1;
@@ -361,6 +369,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     data[i]->NT       = data[0]->N;
     data[i]->NP       = data[0]->NP;
     data[i]->Nchannel = data[0]->Nchannel;
+    data[i]->DMAX     = data[0]->DMAX;
     
     data[i]->cseed = data[0]->cseed+i*flags->NDATA;
     data[i]->nseed = data[0]->nseed+i*flags->NDATA;
@@ -430,6 +439,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(stdout,"  Data segments ....... %i   \n",flags->NT);
   fprintf(stdout,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
   fprintf(stdout,"  Data format is........%s   \n",data_ptr->format);
+  fprintf(stdout,"  Max # of sources......%i   \n",flags->DMAX);
   fprintf(stdout,"  MCMC steps............%i   \n",flags->NMCMC);
   fprintf(stdout,"  MCMC burnin steps.....%i   \n",flags->NBURN);
   fprintf(stdout,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
@@ -456,12 +466,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   else                   fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
   if(flags->snrPrior)    fprintf(stdout,"  SNR prior is ........ ENABLED\n");
   else                   fprintf(stdout,"  SNR prior is ........ DISABLED\n");
-  if(flags->zeroNoise)   fprintf(stdout,"  Noise realization is. DISABLED\n");
-  else
+  if(flags->simNoise)
   {
-    fprintf(stdout,"  Noise realization is. ENABLED\n");
+    fprintf(stdout,"  Noise simulation is.. ENABLED\n");
     fprintf(stdout,"  Noise seed .......... %li  \n",data_ptr->nseed);
   }
+  else                fprintf(stdout,"  Noise simulation is.. DISABLED\n");
   if(flags->rj)       fprintf(stdout,"  RJMCMC is ........... ENABLED\n");
   else                fprintf(stdout,"  RJMCMC is ........... DISABLED\n");
   if(flags->detached) fprintf(stdout,"  Mchirp prior is...... ENABLED\n");

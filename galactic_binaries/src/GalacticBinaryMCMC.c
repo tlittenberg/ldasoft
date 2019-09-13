@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
   start = time(NULL);
   
   int NMAX = 10;   //max number of frequency & time segments
-  int DMAX = 10;   //100; //max number of GB waveforms
   
   /* Allocate data structures */
   struct Flags *flags = malloc(sizeof(struct Flags));
@@ -62,8 +61,10 @@ int main(int argc, char *argv[])
     data[i]->t0   = malloc( NMAX * sizeof(double) );
     data[i]->tgap = malloc( NMAX * sizeof(double) );
   }
-  parse(argc,argv,data,orbit,flags,chain,NMAX,DMAX);
+  parse(argc,argv,data,orbit,flags,chain,NMAX);
   int NC = chain->NC;
+  int DMAX = flags->DMAX;
+
   
   
   /* Allocate model structures */
