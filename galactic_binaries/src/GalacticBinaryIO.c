@@ -20,11 +20,13 @@
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryModel.h"
+#include "gitversion.h"
 
 #define FIXME 0
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
+
 
 void printProgress (double percentage)
 {
@@ -33,6 +35,93 @@ void printProgress (double percentage)
   int rpad = PBWIDTH - lpad;
   printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
   fflush (stdout);
+}
+
+
+void print_version(FILE *fptr)
+{
+  fprintf(fptr, "\n");
+  fprintf(fptr, "============== GBMCMC Version: =============\n\n");
+  //fprintf(fptr, "  Git remote origin: %s\n", GIT_URL);
+  //fprintf(fptr, "  Git version: %s\n", GIT_VER);
+  fprintf(fptr, "  Git commit: %s\n", gitversion);
+  //fprintf(fptr, "  Git commit author: %s\n",GIT_AUTHOR);
+  //fprintf(fptr, "  Git commit date: %s\n", GIT_DATE);
+}
+
+void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orbit *orbit, struct Flags *flags, FILE *fptr)
+{
+  fprintf(fptr,"\n");
+  fprintf(fptr,"=============== RUN SETTINGS ===============\n");
+  fprintf(fptr,"\n");
+  fprintf(fptr,"  Command Line: ");
+  for(int opt=0; opt<argc; opt++) fprintf(fptr,"%s ",argv[opt]);
+  fprintf(fptr,"\n");
+  fprintf(fptr,"\n");
+  switch(flags->orbit)
+  {
+    case 0:
+      fprintf(fptr,"  Orbit model is ...... EccentricInclined \n");
+      break;
+    case 1:
+      fprintf(fptr,"  Orbit file .......... %s   \n",orbit->OrbitFileName);
+      break;
+  }
+  fprintf(fptr,"  Data channels ........");
+  switch(data_ptr->Nchannel)
+  {
+    case 1:
+      fprintf(fptr,"X\n");
+      break;
+    case 2:
+      fprintf(fptr,"AE\n");
+      break;
+  }
+  fprintf(fptr,"  Data sample size .... %i   \n",data_ptr->N);
+  fprintf(fptr,"  Data start time ..... %.0f \n",data_ptr->t0[0]);
+  fprintf(fptr,"  Data duration ....... %.0f \n",data_ptr->T);
+  fprintf(fptr,"  Data segments ....... %i   \n",flags->NT);
+  fprintf(fptr,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
+  fprintf(fptr,"  Data format is........%s   \n",data_ptr->format);
+  fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX);
+  fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
+  fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
+  fprintf(fptr,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
+  fprintf(fptr,"\n");
+  fprintf(fptr,"================= RUN FLAGS ================\n");
+  if(flags->verbose)  fprintf(fptr,"  Verbose flag ........ ENABLED \n");
+  else                fprintf(fptr,"  Verbose flag ........ DISABLED\n");
+  if(flags->NINJ>0)
+  {
+    fprintf(fptr,"  Injected sources..... %i\n",flags->NINJ);
+    fprintf(fptr,"     seed ............. %li\n",data_ptr->iseed);
+    for(int i=0; i<flags->NINJ; i++)
+    {
+      fprintf(fptr,"     source ........... %s\n",flags->injFile[i]);
+    }
+  }
+  else                   fprintf(fptr,"  Injection is ........ DISABLED\n");
+  if(flags->fixSky)      fprintf(fptr,"  Sky parameters are... DISABLED\n");
+  if(flags->fixFreq)     fprintf(fptr,"  Freq paramseters are. DISABLED\n");
+  else                   fprintf(fptr,"  Sky parameters are... ENABLED\n");
+  if(flags->calibration) fprintf(fptr,"  Calibration is....... ENABLED\n");
+  else                   fprintf(fptr,"  Calibration is....... DISABLED\n");
+  if(flags->galaxyPrior) fprintf(fptr,"  Galaxy prior is ..... ENABLED\n");
+  else                   fprintf(fptr,"  Galaxy prior is ..... DISABLED\n");
+  if(flags->snrPrior)    fprintf(fptr,"  SNR prior is ........ ENABLED\n");
+  else                   fprintf(fptr,"  SNR prior is ........ DISABLED\n");
+  if(flags->simNoise)
+  {
+    fprintf(fptr,"  Noise simulation is.. ENABLED\n");
+    fprintf(fptr,"  Noise seed .......... %li  \n",data_ptr->nseed);
+  }
+  else                fprintf(fptr,"  Noise simulation is.. DISABLED\n");
+  if(flags->rj)       fprintf(fptr,"  RJMCMC is ........... ENABLED\n");
+  else                fprintf(fptr,"  RJMCMC is ........... DISABLED\n");
+  if(flags->detached) fprintf(fptr,"  Mchirp prior is...... ENABLED\n");
+  else                fprintf(fptr,"  Mchirp prior is...... DISABLED\n");
+  fprintf(fptr,"\n");
+  fprintf(fptr,"\n");
 }
 
 static int checkfile(char filename[])
@@ -405,80 +494,17 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   fprintf(out,"\n\n");
   fclose(out);
   
-  //Report on set parameters
-  fprintf(stdout,"\n");
-  fprintf(stdout,"=============== RUN SETTINGS ===============\n");
-  fprintf(stdout,"\n");
-//   fprintf(stdout,"  GalacticBinary version: %s\n", VERSION);
-  fprintf(stdout,"  Command Line: ");
-  for(opt=0; opt<argc; opt++) fprintf(stdout,"%s ",argv[opt]);
-  fprintf(stdout,"\n");
-  fprintf(stdout,"\n");
-  switch(flags->orbit)
-  {
-    case 0:
-      fprintf(stdout,"  Orbit model is ...... EccentricInclined \n");
-      break;
-    case 1:
-      fprintf(stdout,"  Orbit file .......... %s   \n",orbit->OrbitFileName);
-      break;
-  }
-  fprintf(stdout,"  Data channels ........");
-  switch(data_ptr->Nchannel)
-  {
-    case 1:
-      fprintf(stdout,"X\n");
-      break;
-    case 2:
-      fprintf(stdout,"AE\n");
-      break;
-  }
-  fprintf(stdout,"  Data sample size .... %i   \n",data_ptr->N);
-  fprintf(stdout,"  Data start time ..... %.0f \n",data_ptr->t0[0]);
-  fprintf(stdout,"  Data duration ....... %.0f \n",data_ptr->T);
-  fprintf(stdout,"  Data segments ....... %i   \n",flags->NT);
-  fprintf(stdout,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
-  fprintf(stdout,"  Data format is........%s   \n",data_ptr->format);
-  fprintf(stdout,"  Max # of sources......%i   \n",flags->DMAX);
-  fprintf(stdout,"  MCMC steps............%i   \n",flags->NMCMC);
-  fprintf(stdout,"  MCMC burnin steps.....%i   \n",flags->NBURN);
-  fprintf(stdout,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
-  fprintf(stdout,"\n");
-  fprintf(stdout,"================= RUN FLAGS ================\n");
-  if(flags->verbose)  fprintf(stdout,"  Verbose flag ........ ENABLED \n");
-  else                fprintf(stdout,"  Verbose flag ........ DISABLED\n");
-  if(flags->NINJ>0)
-  {
-    fprintf(stdout,"  Injected sources..... %i\n",flags->NINJ);
-    fprintf(stdout,"     seed ............. %li\n",data_ptr->iseed);
-    for(int i=0; i<flags->NINJ; i++)
-    {
-      fprintf(stdout,"     source ........... %s\n",flags->injFile[i]);
-    }
-  }
-  else                   fprintf(stdout,"  Injection is ........ DISABLED\n");
-  if(flags->fixSky)      fprintf(stdout,"  Sky parameters are... DISABLED\n");
-  if(flags->fixFreq)     fprintf(stdout,"  Freq paramseters are. DISABLED\n");
-  else                   fprintf(stdout,"  Sky parameters are... ENABLED\n");
-  if(flags->calibration) fprintf(stdout,"  Calibration is....... ENABLED\n");
-  else                   fprintf(stdout,"  Calibration is....... DISABLED\n");
-  if(flags->galaxyPrior) fprintf(stdout,"  Galaxy prior is ..... ENABLED\n");
-  else                   fprintf(stdout,"  Galaxy prior is ..... DISABLED\n");
-  if(flags->snrPrior)    fprintf(stdout,"  SNR prior is ........ ENABLED\n");
-  else                   fprintf(stdout,"  SNR prior is ........ DISABLED\n");
-  if(flags->simNoise)
-  {
-    fprintf(stdout,"  Noise simulation is.. ENABLED\n");
-    fprintf(stdout,"  Noise seed .......... %li  \n",data_ptr->nseed);
-  }
-  else                fprintf(stdout,"  Noise simulation is.. DISABLED\n");
-  if(flags->rj)       fprintf(stdout,"  RJMCMC is ........... ENABLED\n");
-  else                fprintf(stdout,"  RJMCMC is ........... DISABLED\n");
-  if(flags->detached) fprintf(stdout,"  Mchirp prior is...... ENABLED\n");
-  else                fprintf(stdout,"  Mchirp prior is...... DISABLED\n");
-  fprintf(stdout,"\n");
-  fprintf(stdout,"\n");
+  //Print version control
+  FILE *runlog = fopen("gb_mcmc.log","w");
+  print_version(stdout);
+  print_version(runlog);
   
+  //Report on set parameters
+  print_run_settings(argc, argv, data_ptr, orbit, flags, stdout);
+  print_run_settings(argc, argv, data_ptr, orbit, flags, runlog);
+  
+  fclose(runlog);
+
 }
 
 void print_chain_files(struct Data *data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step)
