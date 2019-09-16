@@ -26,4 +26,5 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr);
 void print_waveforms_reconstruction(struct Data *data, int seg);
 void print_waveform_draw(struct Data **data, struct Model **model, struct Flags *flags);
 
+
 #endif /* GalacticBinaryIO_h */
