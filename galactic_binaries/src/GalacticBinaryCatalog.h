@@ -22,6 +22,9 @@ struct Entry
   struct Source **source; //source structure contains parameters, defined in GalacticBinary.h
 };
 
+void alloc_entry(struct Entry *entry, int IMAX);
+void create_new_source(struct Catalog *catalog, struct Source *sample, int IMAX, int NFFT, int Nchannel, int NP);
+void append_sample_to_entry(struct Entry *entry, struct Source *sample, int IMAX, int NFFT, int Nchannel, int NP);
 
 
 #endif /* GalacticBinaryCatalog_h */
