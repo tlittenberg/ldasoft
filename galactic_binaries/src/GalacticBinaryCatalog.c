@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
    -open chain files
    -figure out size of things
    */
+  
+  //selection criteria for catalog entries
   int matchFlag;          //track if sample matches any entries
   double Match = 0.0;     //match between pairs of waveforms
   double tolerance = 0.9; //tolerance on match to be considered associated
@@ -144,7 +146,35 @@ int main(int argc, char *argv[])
   /******************************************************************/
   /*             Select entries that have enough weight             */
   /******************************************************************/
-
+  double weight;
+  double weight_threshold = .2; //how many samples must an entry have to any hope of counting?
+  
+  int detections = 0;           //number of entries that meet the weight threshold
+  int detection_index[NMAX];    //list of entry indicies for detected sources
+  
+  for(int n=0; n<catalog->N; n++)
+  {
+    weight = (double)catalog->entry[n]->I/(double)IMAX;
+    
+    if(weight > weight_threshold)
+    {
+      //record index of catalog entry for detected source
+      detection_index[detections] = n;
+      
+      //increment the number of detections
+      detections++;
+    }
+  }
+  
+  
+  /******************************************************************/
+  /*           Format selected entries as L4 data products          */
+  /******************************************************************/
+  for(int d=0; d<detections; d++)
+  {
+    int n = detection_index[d];
+    entry = catalog->entry[n];
+  }
   
   
   return 0;
