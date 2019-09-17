@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
   start = time(NULL);
   
   int NMAX = 10;   //max number of frequency & time segments
-  int DMAX = 20;   //100; //max number of GB waveforms
+  int DMAX = 30;   //100; //max number of GB waveforms
   
   /* Allocate data structures */
   struct Flags *flags = malloc(sizeof(struct Flags));
