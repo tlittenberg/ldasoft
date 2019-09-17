@@ -171,7 +171,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fp
 {
   fprintf(fptr,"Acceptance rates for chain %i:\n", ic);
   
-  for(int n=0; n<NP+1; n++)
+  for(int n=0; n<NP; n++)
   {
     
     fprintf(fptr,"   %.1e  [%s]\n", (double)proposal[n]->accept[ic]/(double)proposal[n]->trial[ic],proposal[n]->name);
