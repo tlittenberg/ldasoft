@@ -276,6 +276,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"samples",   required_argument, 0, 0},
     {"duration",  required_argument, 0, 0},
     {"segments",  required_argument, 0, 0},
+    {"sources",   required_argument, 0, 0},
     {"start-time",required_argument, 0, 0},
     {"gap-time",  required_argument, 0, 0},
     {"orbit",     required_argument, 0, 0},
@@ -459,6 +460,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     data[i]->NP       = data[0]->NP;
     data[i]->Nchannel = data[0]->Nchannel;
     data[i]->DMAX     = data[0]->DMAX;
+      
     
     data[i]->cseed = data[0]->cseed+i*flags->NDATA;
     data[i]->nseed = data[0]->nseed+i*flags->NDATA;
