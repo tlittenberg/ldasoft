@@ -28,8 +28,9 @@ struct Proposal
   int *accept;
   char name[128];
   double norm;
-  double maxp;   /* maximum p for rejection sampling */
-  double weight; /* between 0 and 1 */
+  double maxp;     /* maximum p for rejection sampling */
+  double weight;   /* between 0 and 1 */
+  double rjweight; /* weight for RJ moves */
 
   int size;
   double *vector;

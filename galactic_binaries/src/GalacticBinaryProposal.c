@@ -170,11 +170,15 @@ void setup_frequency_proposal(struct Data *data)
 void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr)
 {
   fprintf(fptr,"Acceptance rates for chain %i:\n", ic);
-  
+  fprintf(fptr," MCMC\n");
   for(int n=0; n<NP; n++)
   {
-    
-    fprintf(fptr,"   %.1e  [%s]\n", (double)proposal[n]->accept[ic]/(double)proposal[n]->trial[ic],proposal[n]->name);
+    if(proposal[n]->weight > 0) fprintf(fptr,"   %.1e  [%s]\n", (double)proposal[n]->accept[ic]/(double)proposal[n]->trial[ic],proposal[n]->name);
+  }
+  fprintf(fptr," RJMCMC\n");
+  for(int n=0; n<NP; n++)
+  {
+    if(proposal[n]->rjweight > 0) fprintf(fptr,"   %.1e  [%s]\n", (double)proposal[n]->accept[ic]/(double)proposal[n]->trial[ic],proposal[n]->name);
   }
 }
 
@@ -707,7 +711,8 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
 void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
 {
   int NC = chain->NC;
-  double check=0.0;
+  double check  =0.0;
+  double rjcheck=0.0;
   
   for(int i=0; i<chain->NP; i++)
   {
@@ -724,76 +729,93 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
     switch(i)
     {
       case 0:
-        /*
-         DEPRICATED
-         DEPRICATED delayed rejection proposal does not fit in with others' protocal
-         DEPRICATED -must have zero weight
-         DEPRICATED -must be last in the list
-         */
-        sprintf(proposal[i]->name,"delayed rejection");
-        proposal[i]->weight = 0.0;
+        sprintf(proposal[i]->name,"fstat draw");
+        setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
+        proposal[i]->function = &draw_from_fstatistic;
+        proposal[i]->weight   = 0.0;
+        proposal[i]->rjweight = 1.0; //that's a 1 all right.  don't panic
+        check   += proposal[i]->weight;
         break;
-        
       case 1:
         sprintf(proposal[i]->name,"prior");
         proposal[i]->function = &draw_from_prior;
-        proposal[i]->weight = 0.0;
-        check+=proposal[i]->weight;
+        proposal[i]->weight   = 0.1;
+        proposal[i]->rjweight = 0.1;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
         break;
       case 2:
         sprintf(proposal[i]->name,"fstat");
         setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
         proposal[i]->function = &jump_from_fstatistic;
-        proposal[i]->weight = 0.2;
-        check+=proposal[i]->weight;
+        proposal[i]->weight   = 0.2;
+        proposal[i]->rjweight = 0.0;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
         break;
       case 3:
         sprintf(proposal[i]->name,"extrinsic prior");
         proposal[i]->function = &draw_from_extrinsic_prior;
-        proposal[i]->weight = 0.0;
-        check+=proposal[i]->weight;
+        proposal[i]->weight   = 0.0;
+        proposal[i]->rjweight = 0.0;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
         break;
       case 4:
         sprintf(proposal[i]->name,"fisher");
         proposal[i]->function = &draw_from_fisher;
         proposal[i]->weight = 1.0; //that's a 1 all right.  don't panic
+        proposal[i]->rjweight = 0.0;
+        //check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
         break;
       case 5:
         sprintf(proposal[i]->name,"fm shift");
         proposal[i]->function = &fm_shift;
-        proposal[i]->weight = 0.2;
-        check+=proposal[i]->weight;
+        proposal[i]->weight   = 0.2;
+        proposal[i]->rjweight = 0.0;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
         break;
       case 6:
         sprintf(proposal[i]->name,"cdf draw");
         proposal[i]->function = &draw_from_cdf;
-        proposal[i]->weight = 0.0;
+        proposal[i]->weight   = 0.0;
+        proposal[i]->rjweight = 0.0;
         if(flags->update)
         {
           setup_cdf_proposal(data, flags, proposal[i], NMAX);
-          proposal[i]->weight = 0.1;
+          proposal[i]->weight   = 0.1;
+          proposal[i]->rjweight = 0.2;
         }
-        check+=proposal[i]->weight;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
         break;
       case 7:
         sprintf(proposal[i]->name,"cov draw");
         proposal[i]->function = &draw_from_cov;
-        proposal[i]->weight = 0.0;
+        proposal[i]->weight  = 0.0;
+        proposal[i]->rjweight = 0.0;
         if(flags->updateCov)
         {
           setup_covariance_proposal(data, flags, proposal[i]);
-          proposal[i]->weight = 0.1;
+          proposal[i]->weight   = 0.1;
+          proposal[i]->rjweight = 0.2;
         }
-        check+=proposal[i]->weight;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
         break;
       default:
         break;
     }
   }
-  //Fisher proposal fills in the cracks
+  //Fisher proposal fills in the cracks for fixed D moves
   proposal[4]->weight -= check;
   
-  if(proposal[4]->weight<0.0)
+  //Fstat proposal fills in the cracks for trans D moves
+  proposal[0]->rjweight -= rjcheck;
+  
+  if(proposal[4]->weight<0.0 || proposal[0]->rjweight < 0.0)
   {
     fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
     exit(1);

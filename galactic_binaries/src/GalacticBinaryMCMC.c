@@ -524,9 +524,9 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   //choose proposal distribution
   int trial_n;
   double trial_w;
-  int nprop=0;
+  int nprop=-1;
   
-  while(nprop<1)
+  while(nprop<0)
   {
     trial_n = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
     trial_w = gsl_rng_uniform(chain->r[ic]);
@@ -692,36 +692,18 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   
   copy_model(model_x,model_y);
   
-  int nprop;
-  int pick_proposal = (int)floor(4.0*gsl_rng_uniform(chain->r[ic]));
-  switch(pick_proposal)
+  int nprop = -1;
+  int trial_n;
+  double trial_w;
+  while(nprop<0)
   {
-    case 0:
-      //proposal[1] = prior
-      nprop = 1;
-      break;
-    case 1:
-      //proposal[2] = fstat
-      nprop = 2;
-      break;
-    case 2:
-      //proposal[6] = cdf_draw
-      if(flags->update)
-        nprop = 6;
-      else
-        nprop = 2;
-      break;
-    case 3:
-      //proposal[7] = cov_draw
-      if(flags->updateCov)
-        nprop = 7;
-      else
-        nprop = 2;
-      break;
-    default:
-      break;
+    trial_n = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
+    trial_w = gsl_rng_uniform(chain->r[ic]);
+    if(trial_w < proposal[trial_n]->rjweight) nprop = trial_n;
   }
-  
+
+  proposal[nprop]->trial[ic]++;
+
   /* pick birth or death move */
   if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
   {
@@ -734,7 +716,14 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
+      if(!strcmp(proposal[nprop]->name,"prior"))
+      {
+        draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+        if(flags->galaxyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
+        logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
+
+      }
+      else logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
       
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
 
@@ -843,7 +832,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
   loga = log(gsl_rng_uniform(chain->r[ic]));
   if(logH > loga)
   {
-    //proposal[2]->accept[ic]++;
+    proposal[nprop]->accept[ic]++;
     copy_model(model_y,model_x);
   }
   
