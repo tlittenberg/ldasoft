@@ -216,16 +216,16 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
   //frequency
   n = 0;
   params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  logQ += model->logPriorVolume[n];
+  logQ -= model->logPriorVolume[n];
   
   //sky location
   n = 1;
   params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  logQ += model->logPriorVolume[n];
+  logQ -= model->logPriorVolume[n];
   
   n = 2;
   params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  logQ += model->logPriorVolume[n];
+  logQ -= model->logPriorVolume[n];
   
   //amplitude
   n = 3;
@@ -236,31 +236,31 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
     params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
     q = evaluate_snr_prior(data, model, params);
   }
-  logQ += model->logPriorVolume[n];
+  logQ -= model->logPriorVolume[n];
   logQ += q;
   
   
   //inclination
   n = 4;
   params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  logQ += model->logPriorVolume[n];
+  logQ -= model->logPriorVolume[n];
   
   //polarization
   n = 5;
   params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  logQ += model->logPriorVolume[n];
+  logQ -= model->logPriorVolume[n];
   
   //phase
   n = 6;
   params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  logQ += model->logPriorVolume[n];
+  logQ -= model->logPriorVolume[n];
   
   //fdot
   if(source->NP>7)
   {
     n = 7;
     params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-    logQ += model->logPriorVolume[n];
+    logQ -= model->logPriorVolume[n];
   }
   
   //f-double-dot
@@ -268,7 +268,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
   {
     n = 8;
     params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-    logQ += model->logPriorVolume[n];
+    logQ -= model->logPriorVolume[n];
   }
   
   
@@ -286,7 +286,7 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
   }
   
   double logP = 0.0;
-  for(int j=0; j<source->NP; j++) logP += model->logPriorVolume[j];
+  for(int j=0; j<source->NP; j++) logP -= model->logPriorVolume[j];
   
   return logP;
 }
@@ -729,6 +729,14 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
     switch(i)
     {
       case 0:
+        sprintf(proposal[i]->name,"prior");
+        proposal[i]->function = &draw_from_prior;
+        proposal[i]->weight   = 0.1;
+        proposal[i]->rjweight = 0.2;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
+        break;
+      case 1:
         sprintf(proposal[i]->name,"fstat draw");
         setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
         proposal[i]->function = &draw_from_fstatistic;
@@ -736,17 +744,17 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         proposal[i]->rjweight = 1.0; //that's a 1 all right.  don't panic
         check   += proposal[i]->weight;
         break;
-      case 1:
-        sprintf(proposal[i]->name,"prior");
-        proposal[i]->function = &draw_from_prior;
-        proposal[i]->weight   = 0.1;
-        proposal[i]->rjweight = 0.1;
-        check   += proposal[i]->weight;
-        rjcheck += proposal[i]->rjweight;
-        break;
       case 2:
-        sprintf(proposal[i]->name,"fstat");
-        setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
+        sprintf(proposal[i]->name,"fstat jump");
+
+        //re-use setup of fstat proposal from case 0
+        proposal[i]->size   = proposal[1]->size;
+        proposal[i]->norm   = proposal[1]->norm;
+        proposal[i]->maxp   = proposal[1]->maxp;
+        proposal[i]->vector = proposal[1]->vector;
+        proposal[i]->matrix = proposal[1]->matrix;
+        proposal[i]->tensor = proposal[1]->tensor;
+        
         proposal[i]->function = &jump_from_fstatistic;
         proposal[i]->weight   = 0.2;
         proposal[i]->rjweight = 0.0;
@@ -813,9 +821,9 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
   proposal[4]->weight -= check;
   
   //Fstat proposal fills in the cracks for trans D moves
-  proposal[0]->rjweight -= rjcheck;
+  proposal[1]->rjweight -= rjcheck;
   
-  if(proposal[4]->weight<0.0 || proposal[0]->rjweight < 0.0)
+  if(proposal[4]->weight<0.0 || proposal[1]->rjweight < 0.0)
   {
     fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
     exit(1);
@@ -1192,7 +1200,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   for(int n=0; n<source->NP; n++)
   {
     params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-    logP += model->logPriorVolume[n];
+    logP -= model->logPriorVolume[n];
   }
   //put back
   

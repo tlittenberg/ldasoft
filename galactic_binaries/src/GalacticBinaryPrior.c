@@ -494,7 +494,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   {
     //colatitude (reflective)
     if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
-    else logP += model->logPriorVolume[1];
+    else logP -= model->logPriorVolume[1];
     
     //longitude (periodic)
     if(uniform_prior[2][0] > 0.0 || uniform_prior[2][1] < PI2)
@@ -512,26 +512,26 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
         if(params[2] < 0.0) params[2] += PI2;
       }
     }
-    logP += model->logPriorVolume[2];
+    logP -= model->logPriorVolume[2];
   }
   
   //log amplitude (step)
   if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
   else
   {
-    logP += model->logPriorVolume[3];
+    logP -= model->logPriorVolume[3];
     logP += evaluate_snr_prior(data, model, params);
   }
   
   //cosine inclination (reflective)
   if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
-  else logP += model->logPriorVolume[4];
+  else logP -= model->logPriorVolume[4];
   
   //polarization
   //  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
   //  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
   if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
-  else logP += model->logPriorVolume[5];
+  else logP -= model->logPriorVolume[5];
   
   //phase
   //  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
@@ -551,13 +551,13 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
       if(params[6] < 0.0) params[6] += PI2;
     }
   }
-  logP += model->logPriorVolume[6];
+  logP -= model->logPriorVolume[6];
   
   //fdot (bins/Tobs)
   if(model->NP>7)
   {
     if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
-    else logP += model->logPriorVolume[7];
+    else logP -= model->logPriorVolume[7];
     
   }
   
@@ -565,7 +565,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   if(model->NP>8)
   {
     if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return -INFINITY;
-    else logP += model->logPriorVolume[8];
+    else logP -= model->logPriorVolume[8];
   }
   
   return logP;
