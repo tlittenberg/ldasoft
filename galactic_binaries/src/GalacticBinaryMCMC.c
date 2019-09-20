@@ -757,11 +757,11 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       //logQxy = model_x->logPriorVolume;
       logQyx = 0;
       //logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
-      if(!strcmp(proposal[nprop]->name,"fstat"))
+      if(!strcmp(proposal[nprop]->name,"fstat draw"))
       {
         for(int n=0; n<model_y->source[kill]->NP; n++)
         {
-          logQxy += model->logPriorVolume[n];
+          logQxy -= model->logPriorVolume[n];
         }
         logQxy += evaluate_fstatistic_proposal(data, proposal[nprop],  model_y->source[kill]->params);
       }
