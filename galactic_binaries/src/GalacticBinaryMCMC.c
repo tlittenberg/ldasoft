@@ -533,31 +533,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     if(trial_w < proposal[trial_n]->weight) nprop = trial_n;
   }
   proposal[nprop]->trial[ic]++;
-//    printf("\n nprop=%d \n",nprop);
+
   //call proposal function to update source parameters
   (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
-  
-  //evaluate proposal densities Qxy & Qyx
-  //TODO: Fix this
-  if(!strcmp(proposal[nprop]->name,"fstat"))
-  {
-    logQyx = evaluate_fstatistic_proposal(data, proposal[nprop], source_y->params);
-    logQxy = evaluate_fstatistic_proposal(data, proposal[nprop], source_x->params);
-  }
-  
-  if(!strcmp(proposal[nprop]->name,"cdf draw"))
-  {
-    logQyx = cdf_density(model_x, source_y, proposal[nprop]);
-    logQxy = cdf_density(model_x, source_x, proposal[nprop]);
-  }
-  if(!strcmp(proposal[nprop]->name,"cov draw"))
-  {
-    logQyx = cov_density(model_x, source_y, proposal[nprop]);
-    logQxy = cov_density(model_x, source_x, proposal[nprop]);
-  }
 
-  map_array_to_params(source_y, source_y->params, data->T);
-  
   //hold sky position fixed to injected value
   if(flags->fixSky)
   {
@@ -573,6 +552,13 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     source_y->dfdt = data->inj->dfdt;
     map_params_to_array(source_y, source_y->params, data->T);
   }
+
+  //call associated proposal density functions
+  logQyx = (*proposal[nprop]->density)(data, model_x, source_y, proposal[nprop], source_y->params);
+  logQxy = (*proposal[nprop]->density)(data, model_x, source_x, proposal[nprop], source_x->params);
+
+  map_array_to_params(source_y, source_y->params, data->T);
+  
 
   //update calibration parameters
   if(flags->calibration) draw_calibration_parameters(data, model_y, chain->r[ic]);
@@ -716,15 +702,18 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     if(model_y->Nlive<model_x->Nmax)
     {
       //draw new parameters
-      if(!strcmp(proposal[nprop]->name,"prior"))
-      {
-        draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
-        if(flags->galaxyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
-        logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
+      //TODO: insert draw fro galaxy prior into draw_from_prior()
+//      if(!strcmp(proposal[nprop]->name,"prior"))
+//      {
+//        draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
+//        if(flags->galaxyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
+//        logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
+//
+//      }
+//      else logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
 
-      }
-      else logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
-      
+      logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
+
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
 
       logQxy = 0;
@@ -757,22 +746,26 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
       //logQxy = model_x->logPriorVolume;
       logQyx = 0;
       //logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
-      if(!strcmp(proposal[nprop]->name,"fstat draw"))
-      {
-        for(int n=0; n<model_y->source[kill]->NP; n++)
-        {
-          logQxy -= model->logPriorVolume[n];
-        }
-        logQxy += evaluate_fstatistic_proposal(data, proposal[nprop],  model_y->source[kill]->params);
-      }
-      
-      else if(!strcmp(proposal[nprop]->name,"cdf draw"))
-        logQxy = cdf_density(model_y, model_y->source[kill], proposal[nprop]);
-      else if(!strcmp(proposal[nprop]->name,"cov draw"))
-        logQxy = cov_density(model_y, model_y->source[kill], proposal[nprop]);
-      else
-        logQxy = evaluate_prior(flags, data, model_y, prior, model_y->source[kill]->params);
-      
+
+      //TODO: insert prior volume sum into evaluate_fstatistic_proposal()
+//      if(!strcmp(proposal[nprop]->name,"fstat draw"))
+//      {
+//        for(int n=0; n<model_y->source[kill]->NP; n++)
+//        {
+//          logQxy -= model->logPriorVolume[n];
+//        }
+//        logQxy += evaluate_fstatistic_proposal(data, proposal[nprop],  model_y->source[kill]->params);
+//      }
+//
+//      else if(!strcmp(proposal[nprop]->name,"cdf draw"))
+//        logQxy = cdf_density(model_y, model_y->source[kill], proposal[nprop]);
+//      else if(!strcmp(proposal[nprop]->name,"cov draw"))
+//        logQxy = cov_density(model_y, model_y->source[kill], proposal[nprop]);
+//      else
+//        logQxy = evaluate_prior(flags, data, model_y, prior, model_y->source[kill]->params);
+
+      logQxy = (*proposal[nprop]->density)(data, model_y, model_y->source[kill], proposal[nprop], model_y->source[kill]->params);
+
       //consolodiate parameter structure
       for(int j=kill; j<model_x->Nlive; j++)
       {
