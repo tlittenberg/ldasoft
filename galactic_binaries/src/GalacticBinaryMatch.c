@@ -34,11 +34,11 @@ void hallowelt(struct Flags *flags);
 int main(int argc, char *argv[])
 {
     
-//    galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
 
 //    int ic;
-    FILE *match_file;
+//    FILE *match_file;
     FILE *chain_file;
+//    FILE *chain_file2;
     int NMAX = 10;   //max number of frequency & time segments
     int DMAX = 30;   //100; //max number of GB waveforms
     
@@ -77,36 +77,29 @@ int main(int argc, char *argv[])
     /* Initialize data structures */
     alloc_data(data, flags);
     
-//    if(argc!=3)
-//    {
-//        fprintf(stdout,"Usage: gb_match chain_file match_file\n");
-//        return 0;
-//    }
     
 //    FILE *chain_file = fopen(argv[1],"r");
     chain_file = fopen(flags->matchInfile,"r");
+//    chain_file2 = fopen(flags->matchInfile,"r");
 //    FILE *match_file = fopen(argv[2],"w");
-    match_file = fopen("/Users/klackeos/Desktop/match_out.dat","w");
+//    match_file = fopen("/Users/klackeos/Desktop/match_out.dat","w");
 
     if ( chain_file == NULL )
     {
         printf("infile is null\n");
     }
 
-    if ( match_file == NULL )
-    {
-        printf("outfile is null\n");
-    }
-    
-    
-    double f0,dfdt,costheta,phi,amp,cosi,phi0,psi;//read parameters from chain file
-    int n;
-    //count sources in file
+//    if ( match_file == NULL )
+//    {
+//        printf("outfile is null\n");
+//    }
+    int i;
+    double *f0,*dfdt,*costheta,*phi,*amp,*cosi,*phi0,*psi,junk;
+
     int N=0;
     while(!feof(chain_file))
     {
-        fscanf(chain_file,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
-        
+        fscanf(chain_file,"%lg %lg %lg %lg %lg %lg %lg %lg",&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk);
         N++;
     }
     
@@ -114,147 +107,125 @@ int main(int argc, char *argv[])
     
     N--;
     
-    for(n=0; n<N; n++)
+    f0 = malloc(N * sizeof(double));
+    dfdt = malloc(N * sizeof(double));
+    costheta = malloc(N * sizeof(double));
+    phi = malloc(N * sizeof(double));
+    amp = malloc(N * sizeof(double));
+    cosi = malloc(N * sizeof(double));
+    phi0 = malloc(N * sizeof(double));
+    psi = malloc(N * sizeof(double));
+    
+    for(i=0; i < N; i++)
+        fscanf(chain_file,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0[i],&dfdt[i],&amp[i],&phi[i],&costheta[i],&cosi[i],&psi[i],&phi0[i]);
+    
+    
+    
+//    double *f0,*dfdt,*costheta,*phi,*amp,*cosi,*phi0,*psi,junk;//read parameters from chain file
+//    int n;
+    //count sources in file
+//    for(n=0; n<N; n++)
+//    {
+//        fprintf(match_file,"%lg %lg %lg %lg %lg %lg %lg %lg\n",f0,dfdt,amp,phi,costheta,cosi,psi,phi0);
+//    }
+    
+    
+    
+    
+    for(int kk=0; kk<N; kk++)
     {
-        fprintf(match_file,"%lg %lg %lg %lg %lg %lg %lg %lg\n",f0,dfdt,amp,phi,costheta,cosi,psi,phi0);
-    }
-    
-    
-    
-    
-    
-    
-    
-    struct Data **data_vec = data;
-    
-    struct Data *data2  = data_vec[0];
-    
-//    sprintf(data2->format,"frequency");
-    
-    const gsl_rng_type *T = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, data_vec[0]->iseed);
+//    while(!feof(chain_file))
+//    {
+//      scanf(chain_file,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0[kk],&dfdt[kk],&amp[kk],&phi[kk],&costheta[kk],&cosi[kk],&psi[kk],&phi0[kk]);
+        fprintf(stdout,"\n%d %lg %lg %lg %lg %lg %lg %lg %lg\n",kk, f0[kk],dfdt[kk],amp[kk],phi[kk],costheta[kk],cosi[kk],psi[kk],phi0[kk]);
+        struct Data **data_vec = data;
+        struct Data *data2  = data_vec[0];
+        
+        const gsl_rng_type *T = gsl_rng_default;
+        gsl_rng *r = gsl_rng_alloc(T);
+        gsl_rng_env_setup();
+        gsl_rng_set (r, data_vec[0]->iseed);
 
     
-    for(int nn=0; nn<N; nn++)
-    {
-//        fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&amp,&cosi,&psi,&phi0);
-//        //fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&amp,&cosi,&psi,&phi0,&fddot);
+    
         
-        for(int jj=0; jj<flags->NT; jj++)
-        {
-            
+//        for(int jj=0; jj<flags->NT; jj++)
+//        {
+            int jj=0;
             struct TDI *tdi = data2->tdi[jj];
             
             
             //set bandwidth of data segment centered on injection
-            if(nn==0)
-            {
-                data2->fmin = f0 - (data2->N/2)/data2->T;
-                data2->fmax = f0 + (data2->N/2)/data2->T;
+                data2->fmin = f0[kk] - (data2->N/2)/data2->T;
+                data2->fmax = f0[kk] + (data2->N/2)/data2->T;
                 data2->qmin = (int)(data2->fmin*data2->T);
                 data2->qmax = data2->qmin+data2->N;
                 
                 //recompute fmin and fmax so they align with a bin
                 data2->fmin = data2->qmin/data2->T;
                 data2->fmax = data2->qmax/data2->T;
-                
-                if(jj==0)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data2->qmin,data2->qmax);
-                fprintf(stdout,"   ...start time: %g\n",data2->t0[jj]);
-            }
+        
             
-            
-            struct Source *inj = data2->inj;
-            
+//            struct Source *src1 = data2->inj;
+            struct Source *src1 = NULL;
+            alloc_source(...);
+            struct Source *src2 = NULL;
+            alloc_source(...);
+
             for(int n=0; n<2*data2->N; n++)
             {
-                inj->tdi->A[n] = 0.0;
-                inj->tdi->E[n] = 0.0;
-                inj->tdi->X[n] = 0.0;
+                src1->tdi->A[n] = 0.0;
+                src1->tdi->E[n] = 0.0;
+                src1->tdi->X[n] = 0.0;
             }
             
             //map polarization angle into [0:pi], preserving relation to phi0
-            if(psi>M_PI) psi  -= M_PI;
-            if(phi0>PI2) phi0 -= PI2;
+            if(psi[kk]>M_PI) psi[kk]  -= M_PI;
+            if(phi0[kk]>PI2) phi0[kk] -= PI2;
             
             //map parameters to vector
-            inj->f0       = f0;
-            inj->dfdt     = dfdt;
-            inj->costheta = costheta;
-            inj->phi      = phi;
-            inj->amp      = amp;
-            inj->cosi     = cosi;
-            inj->phi0     = phi0;
-            inj->psi      = psi;
+            src1->f0       = f0[kk];
+            src1->dfdt     = dfdt[kk];
+            src1->costheta = costheta[kk];
+            src1->phi      = phi[kk];
+            src1->amp      = amp[kk];
+            src1->cosi     = cosi[kk];
+            src1->phi0     = phi0[kk];
+            src1->psi      = psi[kk];
             if(data2->NP>8)
-            inj->d2fdt2 = 11.0/3.0*dfdt*dfdt/f0;
-            //inj->d2fdt2 = fddot;
-            
-            map_params_to_array(inj, inj->params, data2->T);
-            
-//            //save parameters to file
-//            sprintf(filename,"injection_parameters_%i_%i.dat",ii,jj);
-//            if(nn==0)paramFile=fopen(filename,"w");
-//            else     paramFile=fopen(filename,"a");
-//            fprintf(paramFile,"%lg ",data->t0[jj]);
-//            print_source_params(data, inj, paramFile);
-//            fprintf(paramFile,"\n");
-//            fclose(paramFile);
-            
+            src1->d2fdt2 = 11.0/3.0*dfdt[kk]*dfdt[kk]/f0[kk];
+            //src1->d2fdt2 = fddot;
+        
+            map_params_to_array(src1, src1->params, data2->T);
+        
             //Book-keeping of injection time-frequency volume
-            galactic_binary_alignment(orbit, data2, inj);
+            galactic_binary_alignment(orbit, data2, src1);
+        
+            galactic_binary(orbit, data2->format, data2->T, data2->t0[jj], src1->params, data2->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
             
-            printf("   ...bandwidth : %i\n",inj->BW);
-            printf("   ...fdot      : %g\n",inj->dfdt*data2->T*data2->T);
-            printf("   ...fddot     : %g\n",inj->d2fdt2*data2->T*data2->T*data2->T);
             
-            //Simulate gravitational wave signal
-            //double t0 = data->t0 + jj*(data->T + data->tgap);
-            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! t0 = %g\n",data2->t0[jj]);
-            galactic_binary(orbit, data2->format, data2->T, data2->t0[jj], inj->params, data2->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
-//            fprintf(stdout,"%s",data2->format);
-
             //Add waveform to data TDI channels
-            for(int n=0; n<inj->BW; n++)
+            for(int n=0; n<src1->BW; n++)
             {
-                int i = n+inj->imin;
+                int i = n+src1->imin;
+
+                tdi->X[2*i]=0.0;
+                tdi->X[2*i+1]=0.0;
+                tdi->A[2*i]=0.0;
+                tdi->A[2*i+1]=0.0;
+                tdi->E[2*i]=0.0;
+                tdi->E[2*i+1]=0.0;
                 
-                tdi->X[2*i]   += inj->tdi->X[2*n];
-                tdi->X[2*i+1] += inj->tdi->X[2*n+1];
+                tdi->X[2*i]   += src1->tdi->X[2*n];
+                tdi->X[2*i+1] += src1->tdi->X[2*n+1];
                 
-                tdi->A[2*i]   += inj->tdi->A[2*n];
-                tdi->A[2*i+1] += inj->tdi->A[2*n+1];
+                tdi->A[2*i]   += src1->tdi->A[2*n];
+                tdi->A[2*i+1] += src1->tdi->A[2*n+1];
                 
-                tdi->E[2*i]   += inj->tdi->E[2*n];
-                tdi->E[2*i+1] += inj->tdi->E[2*n+1];
+                tdi->E[2*i]   += src1->tdi->E[2*n];
+                tdi->E[2*i+1] += src1->tdi->E[2*n+1];
             }
             
-//            sprintf(filename,"data/waveform_injection_%i_%i.dat",ii,jj);
-//            fptr=fopen(filename,"w");
-//            for(int i=0; i<data->N; i++)
-//            {
-//                double f = (double)(i+data->qmin)/data->T;
-//                fprintf(fptr,"%lg %lg %lg %lg %lg",
-//                        f,
-//                        tdi->A[2*i],tdi->A[2*i+1],
-//                        tdi->E[2*i],tdi->E[2*i+1]);
-//                fprintf(fptr,"\n");
-//            }
-//            fclose(fptr);
-            
-//            sprintf(filename,"data/power_injection_%i_%i.dat",ii,jj);
-//            fptr=fopen(filename,"w");
-//            for(int i=0; i<data->N; i++)
-//            {
-//                double f = (double)(i+data->qmin)/data->T;
-//                fprintf(fptr,"%.12g %lg %lg ",
-//                        f,
-//                        tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-//                        tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-//                fprintf(fptr,"\n");
-//            }
-//            fclose(fptr);
             
             //Get noise spectrum for data segment
             for(int n=0; n<data2->N; n++)
@@ -262,23 +233,13 @@ int main(int argc, char *argv[])
                 double f = data2->fmin + (double)(n)/data2->T;
                 if(strcmp(data2->format,"phase")==0)
                 {
-                    data2->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-                    data2->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
-                    if(flags->confNoise)
-                    {
-                        data2->noise[0]->SnA[n] += GBnoise(data2->T,f);
-                        data2->noise[0]->SnE[n] += GBnoise(data2->T,f);
-                    }
+                    data2->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+                    data2->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
                 }
                 else if(strcmp(data2->format,"frequency")==0)
                 {
-                    data2->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                    data2->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                    if(flags->confNoise)
-                    {
-                        data2->noise[0]->SnA[n] += GBnoise_FF(data2->T, orbit->fstar, f);
-                        data2->noise[0]->SnE[n] += GBnoise_FF(data2->T, orbit->fstar, f);
-                    }
+                    data2->noise[jj]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                    data2->noise[jj]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
                 }
                 else
                 {
@@ -287,87 +248,158 @@ int main(int argc, char *argv[])
                 }
             }
             
-            //Get injected SNR
-            fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data2->noise[jj]));
-            
-            //Add Gaussian noise to injection
-            gsl_rng_set (r, data2->nseed+jj);
-            
-            if(!flags->zeroNoise && nn==0)
+//            Get injected SNR
+            fprintf(stdout,"   ...injected SNR=%g\n",snr(src1, data2->noise[jj]));
+        
+//            struct Data  **data_b = malloc(sizeof(struct Data*)*NMAX); //data[NF]
+            for(int k=0; k<N; k++)
             {
-                printf("   ...adding Gaussian noise realization\n");
+//                scanf(chain_file2,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0[k],&dfdt[k],&amp[k],&phi[k],&costheta[k],&cosi[k],&psi[k],&phi0[k]);
+//                fprintf(stdout,"\n%lg %lg %lg %lg %lg %lg %lg %lg %d\n",f0,dfdt,amp,phi,costheta,cosi,psi,phi0,k);
+                fprintf(stdout,"\n%lg %lg %lg %lg %lg %lg %lg %lg\n",f0[k],dfdt[k],amp[k],phi[k],costheta[k],cosi[k],psi[k],phi0[k]);
                 
-                for(int n=0; n<data2->N; n++)
-                {
-                    tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data2->noise[0]->SnA[n])/2.);
-                    tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data2->noise[0]->SnA[n])/2.);
-                    
-                    tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data2->noise[0]->SnE[n])/2.);
-                    tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data2->noise[0]->SnE[n])/2.);
-                }
-            }
-            
-            //Compute fisher information matrix of injection
-//            printf("   ...computing Fisher Information Matrix of injection\n");
-//
-//            galactic_binary_fisher(orbit, data2, inj, data2->noise[jj]);
-            
-            
-//            printf("\n Fisher Matrix:\n");
-//            for(int i=0; i<data2->NP; i++)
-//            {
-//                fprintf(stdout," ");
-//                for(int j=0; j<data2->NP; j++)
-//                {
-//                    if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
-//                    else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
-//                }
-//                fprintf(stdout,"\n");
-//            }
-            
-//            printf("\n Fisher std. errors:\n");
-//            for(int j=0; j<data2->NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
-            
-            
-            
-//            sprintf(filename,"data/power_data_%i_%i.dat",ii,jj);
-//            fptr=fopen(filename,"w");
-//
-//            for(int i=0; i<data->N; i++)
-//            {
-//                double f = (double)(i+data->qmin)/data->T;
-//                fprintf(fptr,"%.12g %lg %lg ",
-//                        f,
-//                        tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-//                        tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-//                fprintf(fptr,"\n");
-//            }
-//            fclose(fptr);
-            
-//            sprintf(filename,"data/data_%i_%i.dat",ii,jj);
-//            fptr=fopen(filename,"w");
-//
-//            for(int i=0; i<data->N; i++)
-//            {
-//                double f = (double)(i+data->qmin)/data->T;
-//                fprintf(fptr,"%.12g %lg %lg %lg %lg",
-//                        f,
-//                        tdi->A[2*i],tdi->A[2*i+1],
-//                        tdi->E[2*i],tdi->E[2*i+1]);
-//                fprintf(fptr,"\n");
-//            }
-//            fclose(fptr);
-            
-            //TODO: fill X vectors with A channel for now
-            for(int n=0; n<data2->N; n++)
-            {
-                tdi->X[2*n]   = tdi->A[2*n];
-                tdi->X[2*n+1] = tdi->A[2*n+1];
-            }
-            
-        }//end jj loop over segments
-    }//end nn loop over sources in file
+                fprintf(stdout,"\nf01=%lg\n",f0[kk]);
+                fprintf(stdout,"\nf02=%lg\n",f0[k]);
 
+//                /* Parse command line and set defaults/flags */
+//                for(int i=0; i<NMAX; i++)
+//                {
+//                    data_b[i] = malloc(sizeof(struct Data));
+//                    data_b[i]->t0   = malloc( NMAX * sizeof(double) );
+//                    data_b[i]->tgap = malloc( NMAX * sizeof(double) );
+//                }
+//
+                
+                struct Data **data_vec2 = data;
+                struct Data *data3  = data_vec2[0];
+                struct Source *src2 = data3->inj;
+                int jj=0;
+                struct TDI *tdi2 = data3->tdi[jj];
+
+                const gsl_rng_type *T = gsl_rng_default;
+                gsl_rng *r = gsl_rng_alloc(T);
+                gsl_rng_env_setup();
+                gsl_rng_set (r, data_vec2[0]->iseed);
+                
+
+                
+                //        for(int jj=0; jj<flags->NT; jj++)
+                //        {
+                
+                
+                //set bandwidth of data segment centered on injection
+                data3->fmin = f0[k] - (data3->N/2)/data3->T;
+                data3->fmax = f0[k] + (data3->N/2)/data3->T;
+                data3->qmin = (int)(data3->fmin*data3->T);
+                data3->qmax = data3->qmin+data3->N;
+                
+                
+                //recompute fmin and fmax so they align with a bin
+                data3->fmin = data3->qmin/data3->T;
+                data3->fmax = data3->qmax/data3->T;
+                
+                
+                
+                
+                for(int n=0; n<2*data3->N; n++)
+                {
+                    src2->tdi->A[n] = 0.0;
+                    src2->tdi->E[n] = 0.0;
+                    src2->tdi->X[n] = 0.0;
+                }
+                
+                //map polarization angle into [0:pi], preserving relation to phi0
+                if(psi[k]>M_PI) psi[k]  -= M_PI;
+                if(phi0[k]>PI2) phi0[k] -= PI2;
+                
+                //map parameters to vector
+                src2->f0       = f0[k];
+                src2->dfdt     = dfdt[k];
+                src2->costheta = costheta[k];
+                src2->phi      = phi[k];
+                src2->amp      = amp[k];
+                src2->cosi     = cosi[k];
+                src2->phi0     = phi0[k];
+                src2->psi      = psi[k];
+                
+                if(data3->NP>8)
+                    src2->d2fdt2 = 11.0/3.0*dfdt[k]*dfdt[k]/f0[k];
+                //src2->d2fdt2 = fddot;
+                
+                map_params_to_array(src2, src2->params, data3->T);
+                
+                //Book-keeping of injection time-frequency volume
+                galactic_binary_alignment(orbit, data3, src2);
+                
+                galactic_binary(orbit, data3->format, data3->T, data3->t0[jj], src2->params, data3->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
+                
+                
+                //Add waveform to data TDI channels
+                for(int n=0; n<src2->BW; n++)
+                {
+                    int i = n+src2->imin;
+                    
+                    tdi2->X[2*i]=0.0;
+                    tdi2->X[2*i+1]=0.0;
+                    tdi2->A[2*i]=0.0;
+                    tdi2->A[2*i+1]=0.0;
+                    tdi2->E[2*i]=0.0;
+                    tdi2->E[2*i+1]=0.0;
+                    
+                    tdi2->X[2*i]   += src2->tdi->X[2*n];
+                    tdi2->X[2*i+1] += src2->tdi->X[2*n+1];
+                    
+                    tdi2->A[2*i]   += src2->tdi->A[2*n];
+                    tdi2->A[2*i+1] += src2->tdi->A[2*n+1];
+                    
+                    tdi2->E[2*i]   += src2->tdi->E[2*n];
+                    tdi2->E[2*i+1] += src2->tdi->E[2*n+1];
+                }
+                
+                
+                //Get noise spectrum for data segment
+                for(int n=0; n<data3->N; n++)
+                {
+                    double f = data3->fmin + (double)(n)/data3->T;
+                    if(strcmp(data3->format,"phase")==0)
+                    {
+                        data3->noise[jj]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+                        data3->noise[jj]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+                    }
+                    else if(strcmp(data3->format,"frequency")==0)
+                    {
+                        data3->noise[jj]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                        data3->noise[jj]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                    }
+                    else
+                    {
+                        fprintf(stderr,"Unsupported data format %s",data3->format);
+                        exit(1);
+                    }
+                }
+                
+                
+                double match;
+                //COMPUTE MATCH:
+                
+                double snr2=0;
+                fprintf(stdout,"\nf01=%lg\n",src1->f0);
+                fprintf(stdout,"\nf02=%lg\n",src2->f0);
+                snr2 = fourier_nwip(tdi->A,tdi2->A,data2->noise[jj]->SnA,tdi->N)/(snr(src1, data2->noise[jj])*snr(src2, data3->noise[jj]));
+                //            fprintf(stdout,"\nsnr2=%lg\n",fourier_nwip(tdi->A,tdi->A,data2->noise[jj]->SnA,tdi->N));
+                snr2 += fourier_nwip(tdi->E,tdi2->E,data2->noise[jj]->SnA,tdi->N)/(snr(src1, data2->noise[jj])*snr(src2, data3->noise[jj]));
+                //            fprintf(stdout,"\nsnr2=%lg\n",fourier_nwip(tdi->E,tdi->E,data2->noise[jj]->SnA,tdi->N));
+                
+                match=snr2;
+                fprintf(stdout,"\noverlap=%lg\n",match);
+//                free_source(src2);
+            }
+//            free_source(src1);
+        
+        
+        
+//        }//end jj loop over segments
+    }//end nn loop over sources in file
     
     
     
@@ -391,13 +423,21 @@ int main(int argc, char *argv[])
     
     printf("\n");
     fclose(chain_file);
-    fclose(match_file);
+//    fclose(chain_file2);
+//    fclose(match_file);
     
     
     
-    hallowelt(flags);
-    
+//    hallowelt(flags);
     if(flags->orbit)free_orbit(orbit);
+    free(f0);
+    free(dfdt);
+    free(costheta);
+    free(phi);
+    free(amp);
+    free(cosi);
+    free(phi0);
+    free(psi);
     
     return 0;
 }

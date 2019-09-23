@@ -3,7 +3,7 @@
 //
 //
 //  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
-//
+// usage: ../../gb_match --match-in ~/test.dat --frac-freq --fmin 0.00350876 --samples 512 --duration 62914560 --zero-noise
 //
 
 #include <math.h>
