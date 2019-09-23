@@ -458,15 +458,65 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
       return -INFINITY;
     }
   }
+
+  //sky location prior
+  logP += evalaute_sky_location_prior(params, uniform_prior, model->logPriorVolume, flags->galaxyPrior, prior->skyhist, prior->dcostheta, prior->dphi, prior->nphi);
+
+  //amplitude prior
+  logP += evaluate_snr_prior(data, model, params);
+
+  //everything else uses simple uniform priors
+  logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume, model->NP);
+
   
+  return logP;
+}
+
+double evaluate_uniform_priors(double *params, double **uniform_prior, double *logPriorVolume, int NP)
+{
+  double logP = 0.0;
   //frequency bin (uniform)
   if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return -INFINITY;
+  //TODO: is frequency logPriorVolume up to date?
   else logP -= log(uniform_prior[0][1]-uniform_prior[0][0]);
-  
-  if(flags->galaxyPrior)
+
+  //cosine inclination
+  if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
+  else logP -= logPriorVolume[4];
+
+  //polarization
+  //TODO: polarization prior should be periodic
+  if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
+  else logP -= logPriorVolume[5];
+
+  //phase
+  //TODO: phase prior should be periodic
+  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
+  else logP -= logPriorVolume[5];
+
+  //fdot (bins/Tobs)
+  if(NP>7)
+  {
+    if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
+    else logP -= logPriorVolume[7];
+  }
+
+  //fddot
+  if(NP>8)
+  {
+    if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return -INFINITY;
+    else logP -= logPriorVolume[8];
+  }
+  return logP;
+}
+
+double evalaute_sky_location_prior(double *params, double **uniform_prior, double *logPriorVolume, int galaxyFlag, double *skyhist, double dcostheta, double dphi, int nphi)
+{
+  double logP = 0.0;
+  if(galaxyFlag)
   {
     if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
-    
+
     if(uniform_prior[2][0] > 0.0 || uniform_prior[2][1] < PI2)
     {
       //rejection sample on reduced prior range
@@ -479,13 +529,13 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
       while(params[2] > PI2) params[2] -= PI2;
     }
     //map costheta and phi to index of skyhist array
-    int i = (int)floor((params[1]-uniform_prior[1][0])/prior->dcostheta);
-    int j = (int)floor((params[2]-uniform_prior[2][0])/prior->dphi);
-    
-    int k = i*prior->nphi + j;
-    
-    logP += prior->skyhist[k];
-    
+    int i = (int)floor((params[1]-uniform_prior[1][0])/dcostheta);
+    int j = (int)floor((params[2]-uniform_prior[2][0])/dphi);
+
+    int k = i*nphi + j;
+
+    logP += skyhist[k];
+
     //    FILE *fptr = fopen("prior.dat","a");
     //    fprintf(fptr,"%i %i %i %g\n",i,j,k,prior->skyhist[k]);
     //    fclose(fptr);
@@ -494,8 +544,8 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
   {
     //colatitude (reflective)
     if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return -INFINITY;
-    else logP -= model->logPriorVolume[1];
-    
+    else logP -= logPriorVolume[1];
+
     //longitude (periodic)
     if(uniform_prior[2][0] > 0.0 || uniform_prior[2][1] < PI2)
     {
@@ -512,70 +562,20 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
         if(params[2] < 0.0) params[2] += PI2;
       }
     }
-    logP -= model->logPriorVolume[2];
+    logP -= logPriorVolume[2];
   }
-  
-  //log amplitude (step)
-  if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
-  else
-  {
-    logP -= model->logPriorVolume[3];
-    logP += evaluate_snr_prior(data, model, params);
-  }
-  
-  //cosine inclination (reflective)
-  if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
-  else logP -= model->logPriorVolume[4];
-  
-  //polarization
-  //  while(params[5] < uniform_prior[5][0]) params[5] += uniform_prior[5][1]-uniform_prior[5][0];
-  //  while(params[5] > uniform_prior[5][1]) params[5] -= uniform_prior[5][1]-uniform_prior[5][0];
-  if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
-  else logP -= model->logPriorVolume[5];
-  
-  //phase
-  //  while(params[6] < uniform_prior[6][0]) params[6] += uniform_prior[6][1]-uniform_prior[6][0];
-  //  while(params[6] > uniform_prior[6][1]) params[6] -= uniform_prior[6][1]-uniform_prior[6][0];
-  //  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
-  //  else logP -= log(uniform_prior[6][1]-uniform_prior[6][0]);
-  if(uniform_prior[6][0] > 0.0 || uniform_prior[6][1] < PI2)
-  {
-    //rejection sample on reduced prior range
-    if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
-  }
-  else
-  {
-    if(params[6]<uniform_prior[6][0] || params[6]>=uniform_prior[6][1])
-    {
-      params[6] = atan2(sin(params[6]),cos(params[6]));
-      if(params[6] < 0.0) params[6] += PI2;
-    }
-  }
-  logP -= model->logPriorVolume[6];
-  
-  //fdot (bins/Tobs)
-  if(model->NP>7)
-  {
-    if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
-    else logP -= model->logPriorVolume[7];
-    
-  }
-  
-  //fddot
-  if(model->NP>8)
-  {
-    if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return -INFINITY;
-    else logP -= model->logPriorVolume[8];
-  }
-  
   return logP;
 }
+
 
 /* Rejection sample on SNR < SNRPEAK */
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params)
 {
-  double amp = exp(params[3]);
-  
+
+  //check that amplitude is in range
+  if(params[3]<model->prior[3][0] || params[3]>model->prior[3][1]) return -INFINITY;
+
+  //check that frequency is in range
   int n = (int)floor(params[0] - model->prior[0][0]);
   if(n<0 || n>=data->N) return -INFINITY;
   
@@ -584,12 +584,15 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
   double sqT = sqrt(data->T);
   
   //Sinc spreading
+  double amp = exp(params[3]);
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
   double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
   
   //SNRPEAK defined in Constants.h
   if(SNR < SNRPEAK) return -INFINITY;
-  return 0.0;
+
+  //return amplitude prior
+  return -model->logPriorVolume[3];
 }
 /*
  double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *model, double *params)
