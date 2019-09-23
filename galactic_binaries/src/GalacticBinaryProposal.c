@@ -544,8 +544,7 @@ double cdf_density(struct Model *model, struct Source *source, struct Proposal *
     }
     else
     {
-      i=0;
-      while(params[n]>cdf[n][i]) i++;
+      i=binary_search(cdf[n],0,N,params[n]);
       j=i+1;
       while(cdf[n][j]==cdf[n][i]) j++;
       logP += log(  ((double)(j-i)/N) /  (cdf[n][j]-cdf[n][i])  );

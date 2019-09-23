@@ -62,6 +62,40 @@ double snr(struct Source *source, struct Noise *noise)
     return(sqrt(snr2));
 }
 
+// Recursive binary search function.
+// Return nearest smaller neighbor of x in array[nmin,nmax] is present,
+// otherwise -1
+int binary_search(double *array, int nmin, int nmax, double x)
+{
+  int next;
+  if(nmax>nmin)
+  {
+    int mid = nmin + (nmax - nmin) / 2;
+
+    //find next unique element of array
+    next = mid;
+    while(array[mid]==array[next]) next++;
+    
+    // If the element is present at the middle
+    // itself
+    if (x > array[mid])
+    {
+      if(x < array[next]) return mid;
+    }
+    
+    // the element is in the lower half
+    if (array[mid] > x)
+      return binary_search(array, nmin, mid, x);
+    
+    // the element is in upper half
+    return binary_search(array, next, nmax, x);
+  }
+  
+  // We reach here when element is not
+  // present in array
+  return -1;
+}
+
 void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
 {
     int i,j;
@@ -405,3 +439,5 @@ double power_spectrum(double *data, int n)
     
     return (Re*Re + Im*Im);
 }
+
+
