@@ -519,13 +519,12 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
 }
 
 //double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal)
-double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source * source, struct Proposal *proposal, double *params);
+double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source * source, struct Proposal *proposal, double *params)
 {
   int N = proposal->size;
   int NP = source->NP;
   double **cdf = proposal->matrix;
   double logP=0.0;
-  double *params = source->params;
   
   int i,j;
   
@@ -711,7 +710,7 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
   return 0.0;
 }
 
-void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
+void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
 {
   int NC = chain->NC;
   double check  =0.0;
@@ -737,7 +736,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
         proposal[i]->density  = &prior_density;
         proposal[i]->weight   = 0.1;
         proposal[i]->rjweight = 0.2;
-        setup_prior_proposal(flags, prior, proposal[i])
+        setup_prior_proposal(flags, prior, proposal[i]);
         check   += proposal[i]->weight;
         rjcheck += proposal[i]->rjweight;
         break;
@@ -771,7 +770,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 3:
         sprintf(proposal[i]->name,"extrinsic prior");
         proposal[i]->function = &draw_from_extrinsic_prior;
-        proposal[i]->density  = &evaluate_prior;
+        proposal[i]->density  = &prior_density;
         proposal[i]->weight   = 0.0;
         proposal[i]->rjweight = 0.0;
         check   += proposal[i]->weight;
@@ -780,6 +779,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 4:
         sprintf(proposal[i]->name,"fisher");
         proposal[i]->function = &draw_from_fisher;
+        proposal[i]->density  = &symmetric_density;
         proposal[i]->weight = 1.0; //that's a 1 all right.  don't panic
         proposal[i]->rjweight = 0.0;
         //check   += proposal[i]->weight;
@@ -788,6 +788,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 5:
         sprintf(proposal[i]->name,"fm shift");
         proposal[i]->function = &fm_shift;
+        proposal[i]->density  = &symmetric_density;
         proposal[i]->weight   = 0.2;
         proposal[i]->rjweight = 0.0;
         check   += proposal[i]->weight;
@@ -796,7 +797,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Chain *c
       case 6:
         sprintf(proposal[i]->name,"cdf draw");
         proposal[i]->function = &draw_from_cdf;
-        proposal[i]->function = &cdf_density;
+        proposal[i]->density  = &cdf_density;
         proposal[i]->weight   = 0.0;
         proposal[i]->rjweight = 0.0;
         if(flags->update)
@@ -1005,7 +1006,7 @@ void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Propo
   proposal->matrix       = malloc(2*sizeof(double *));
   proposal->matrix[0]    = malloc(3*sizeof(double));
   proposal->matrix[0][0] = prior->dcostheta;
-  proposal->matrix[0][1] = prior->dcosphi;
+  proposal->matrix[0][1] = prior->dphi;
   proposal->matrix[0][2] = (double)prior->nphi;
   proposal->matrix[1]    = prior->skyhist;
 }
@@ -1372,7 +1373,7 @@ double prior_density(struct Data *data, struct Model *model, UNUSED struct Sourc
   //unpack (obtuse) proposal structure
   int galaxyPriorFlag =      proposal->size;
   double dcostheta    =      proposal->matrix[0][0];
-  double dcosphi      =      proposal->matrix[0][1];
+  double dphi         =      proposal->matrix[0][1];
   int nphi            = (int)proposal->matrix[0][2];
   double *skyhist     =      proposal->matrix[1];
 
@@ -1383,10 +1384,15 @@ double prior_density(struct Data *data, struct Model *model, UNUSED struct Sourc
   logP += evaluate_snr_prior(data, model, params);
 
   //everything else uses simple uniform priors
-  logP += evaluate_uniform_priors(params, uniform_prior, model->NP);
+  logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume, model->NP);
 
 
   return logP;
 
+}
+
+double symmetric_density(UNUSED struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params)
+{
+  return 0.0;
 }
 

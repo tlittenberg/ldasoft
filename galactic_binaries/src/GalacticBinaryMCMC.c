@@ -109,6 +109,10 @@ int main(int argc, char *argv[])
   /* Initialize parallel chain */
   initialize_chain(chain, flags, &data[0]->cseed);
   
+  /* Initialize priors */
+  struct Prior *prior = malloc(sizeof(struct Prior));
+  if(flags->galaxyPrior) set_galaxy_prior(flags, prior);
+
   /* Initialize MCMC proposals */
   printf("chain->NP=%i\n",chain->NP);
   struct Proposal ***proposal = malloc(NMAX*sizeof(struct Proposal**));
@@ -116,14 +120,8 @@ int main(int argc, char *argv[])
   {
     proposal[j] = malloc((chain->NP)*sizeof(struct Proposal*));
     for(int i=0; i<chain->NP; i++) proposal[j][i] = malloc(sizeof(struct Proposal));
-  
   }
-  for(int j=0; j<flags->NDATA; j++) initialize_proposal(orbit, data[j], chain, flags, proposal[j], DMAX);
-
-  /* Initialize priors */
-  struct Prior *prior = malloc(sizeof(struct Prior));
-  if(flags->galaxyPrior) set_galaxy_prior(flags, prior);
-
+  for(int j=0; j<flags->NDATA; j++) initialize_proposal(orbit, data[j], prior, chain, flags, proposal[j], DMAX);
   
   /* Initialize data models */
   for(ic=0; ic<NC; ic++)
