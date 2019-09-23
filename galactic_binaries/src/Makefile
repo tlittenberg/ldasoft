@@ -4,7 +4,7 @@ CC = gcc
 #CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m
-CCFLAGS += -O3 -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
+CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)

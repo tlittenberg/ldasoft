@@ -573,8 +573,7 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
 {
 
   //check that amplitude is in range
-  double amp = exp(params[3]);
-  if(amp<model->prior[3][0] || amp>model->prior[3][1]) return -INFINITY;
+  if(params[3]<model->prior[3][0] || params[3]>model->prior[3][1]) return -INFINITY;
 
   //check that frequency is in range
   int n = (int)floor(params[0] - model->prior[0][0]);
@@ -585,6 +584,7 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
   double sqT = sqrt(data->T);
   
   //Sinc spreading
+  double amp = exp(params[3]);
   double SNm  = sn/(4.*sf*sf);   //Michelson noise
   double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
   
