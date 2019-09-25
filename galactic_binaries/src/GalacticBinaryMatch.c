@@ -274,12 +274,12 @@ void hallowelt(struct Flags *flags, double match)
 {
     if(match > 0.999)
     {
-        fprintf(stdout,"These are the same soure.\n");
+        fprintf(stdout,"These are the same source.\n");
         fprintf(stdout,"overlap = %lg > 0.999\n",match);
     }
     else
     {
-        fprintf(stdout,"Different soures.\n");
+        fprintf(stdout,"Different sources.\n");
         fprintf(stdout,"overlap = %lg < 0.999\n",match);
     }
 }
