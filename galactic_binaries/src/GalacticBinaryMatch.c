@@ -28,7 +28,7 @@
 
 
 
-void hallowelt(struct Flags *flags);
+void hallowelt(struct Flags *flags, double match);
 /* ============================  MAIN PROGRAM  ============================ */
 
 int main(int argc, char *argv[])
@@ -117,16 +117,16 @@ int main(int argc, char *argv[])
             src1 = malloc(sizeof(struct Source));
             alloc_source(src1, data2->N,2,data2->NP);
             double *SnA1 = NULL;
-            SnA1 = malloc(sizeof(data2->N));
+            SnA1 = malloc(data2->N*sizeof(double));
             double *SnE1 = NULL;
-            SnE1 = malloc(sizeof(data2->N));
+            SnE1 = malloc(data2->N*sizeof(double));
             struct Source *src2 = NULL;
             src2 = malloc(sizeof(struct Source));
             alloc_source(src2, data2->N,2,data2->NP);
             double *SnA2 = NULL;
-            SnA2 = malloc(sizeof(data2->N));
+            SnA2 = malloc(data2->N*sizeof(double));
             double *SnE2 = NULL;
-            SnE2 = malloc(sizeof(data2->N));
+            SnE2 = malloc(data2->N*sizeof(double));
 
             for(int n=0; n<2*data2->N; n++)
             {
@@ -246,23 +246,22 @@ int main(int argc, char *argv[])
                 //COMPUTE MATCH:
                 double match;
                 double snr1=0;
-                double snrx=0;
                 double snr2=0;
+                double snrx=0;
     
-                snr1 += fourier_nwip(src2->tdi->A,src2->tdi->A,SnA2,src2->tdi->N);
-                snr1 += fourier_nwip(src2->tdi->E,src2->tdi->E,SnE2,src2->tdi->N);
-                snr2 += fourier_nwip(src1->tdi->A,src1->tdi->A,SnA2,src2->tdi->N);
-                snr2 += fourier_nwip(src1->tdi->E,src1->tdi->E,SnE2,src2->tdi->N);
+                snr2 += fourier_nwip(src2->tdi->A,src2->tdi->A,SnA2,src2->tdi->N);
+                snr2 += fourier_nwip(src2->tdi->E,src2->tdi->E,SnE2,src2->tdi->N);
+                snr1 += fourier_nwip(src1->tdi->A,src1->tdi->A,SnA1,src1->tdi->N);
+                snr1 += fourier_nwip(src1->tdi->E,src1->tdi->E,SnE1,src1->tdi->N);
 
     
-                snrx = fourier_nwip(src1->tdi->A,src2->tdi->A,SnA2,src2->tdi->N)/sqrt(snr1*snr2);
-                snrx += fourier_nwip(src1->tdi->E,src2->tdi->E,SnE2,src2->tdi->N)/sqrt(snr1*snr2);
+                snrx = fourier_nwip(src1->tdi->A,src2->tdi->A,SnA1,src2->tdi->N)/sqrt(snr1*snr2);
+                snrx += fourier_nwip(src1->tdi->E,src2->tdi->E,SnE1,src2->tdi->N)/sqrt(snr1*snr2);
                 match=snrx;
-                fprintf(stdout,"\noverlap=%lg\n",match);
     
     
     
-    hallowelt(flags);
+    hallowelt(flags,match);
     if(flags->orbit)free_orbit(orbit);
     printf("\n");
     fclose(chain_file1);
@@ -271,7 +270,16 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void hallowelt(struct Flags *flags)
+void hallowelt(struct Flags *flags, double match)
 {
-    fprintf(stdout,"Done!\n");
+    if(match > 0.999)
+    {
+        fprintf(stdout,"These are the same soure.\n");
+        fprintf(stdout,"overlap = %lg > 0.999\n",match);
+    }
+    else
+    {
+        fprintf(stdout,"Different soures.\n");
+        fprintf(stdout,"overlap = %lg < 0.999\n",match);
+    }
 }
