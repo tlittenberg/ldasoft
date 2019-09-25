@@ -175,6 +175,8 @@ void print_usage()
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --update-cov  : use cov mtrx proposal [filename]    \n");
   fprintf(stdout,"       --sim-noise   : data w/out noise realization        \n");
+  fprintf(stdout,"       --match-in1      : input paramaters for overlap [filename] \n");
+  fprintf(stdout,"       --match-in2      : output match values [filename] \n");
   fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
@@ -228,6 +230,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->prior       = 0;
   flags->update      = 0;
   flags->updateCov   = 0;
+  flags->match       = 0;
   flags->DMAX        = DMAX_default;
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
@@ -290,6 +293,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
     {"update-cov",required_argument, 0, 0},
+    {"match-in1",  required_argument, 0, 0},
+    {"match-in2", required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
     {"em-prior",  required_argument, 0, 0},
     
@@ -412,6 +417,16 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
           checkfile(optarg);
           flags->updateCov=1;
           sprintf(flags->covFile,"%s",optarg);
+        }
+        if(strcmp("match-in1", long_options[long_index].name) == 0)
+        {
+            checkfile(optarg);
+            flags->match=1;
+            sprintf(flags->matchInfile1,"%s",optarg);
+        }
+            if(strcmp("match-in2", long_options[long_index].name) == 0)
+        {
+            sprintf(flags->matchInfile2,"%s",optarg);
         }
             
         if(strcmp("links",long_options[long_index].name) == 0)
