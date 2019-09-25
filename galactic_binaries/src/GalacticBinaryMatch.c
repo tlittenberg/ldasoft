@@ -6,7 +6,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -16,26 +15,22 @@
 
 #include "LISA.h"
 #include "Constants.h"
-#include "BayesLine.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
-#include "GalacticBinaryData.h"
 #include "GalacticBinaryMath.h"
-#include "GalacticBinaryPrior.h"
 #include "GalacticBinaryModel.h"
-#include "GalacticBinaryProposal.h"
 #include "GalacticBinaryWaveform.h"
 
+// CODE USAGE:
+// ~/gb_match --match-in1 ~/input1.dat --match-in2 ~/input2.dat --frac-freq --fmin 0.001249 --samples 512 --duration 62914560
 
-
-void hallowelt(struct Flags *flags, double match);
+void print_match(struct Flags *flags, double match);
 /* ============================  MAIN PROGRAM  ============================ */
 
 int main(int argc, char *argv[])
 {
-    
 
-//    FILE *match_file;
+//  FILE *match_file;
     FILE *chain_file1;
     FILE *chain_file2;
     int NMAX = 10;   //max number of frequency & time segments
@@ -74,9 +69,6 @@ int main(int argc, char *argv[])
             break;
     }
     
-    /* Initialize data structures */
-    
-    
     chain_file1 = fopen(flags->matchInfile1,"r");
     chain_file2 = fopen(flags->matchInfile2,"r");
 
@@ -90,7 +82,6 @@ int main(int argc, char *argv[])
         printf("match-in2 is null\n");
     }
 
-//    int i;
     double f0,dfdt,costheta,phi,amp,cosi,phi0,psi;
     double f02,dfdt2,costheta2,phi2,amp2,cosi2,phi02,psi2;
     double junk;
@@ -106,13 +97,14 @@ int main(int argc, char *argv[])
     
     N--;
     
+    // Read data from input files
     for(int i=0; i < N; i++)
         fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
     
     for(int i=0; i < N; i++)
         fscanf(chain_file2,"%lg %lg %lg %lg %lg %lg %lg %lg",&f02,&dfdt2,&amp2,&phi2,&costheta2,&cosi2,&psi2,&phi02);
     
-    
+            //allocate memory for two sources and noise
             struct Source *src1 = NULL;
             src1 = malloc(sizeof(struct Source));
             alloc_source(src1, data2->N,2,data2->NP);
@@ -163,23 +155,20 @@ int main(int argc, char *argv[])
 //            if(src1->NP>8)src1->d2fdt2 = 11.0/3.0*dfdt*dfdt/f0;
             //src1->d2fdt2 = fddot;
 
-    
-    
-
             map_params_to_array(src1, src1->params, data2->T);
             map_params_to_array(src2, src2->params, data2->T);
-//
-//            //Book-keeping of injection time-frequency volume
+
+            //Book-keeping of injection time-frequency volume
             galactic_binary_alignment(orbit, data2, src1);
-//
+
             galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src1->params, data2->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
     
             galactic_binary_alignment(orbit, data2, src2);
-            //
+            
             galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src2->params, data2->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
 
-//
-//            //Add waveform to data TDI channels
+
+            //Add waveform to data TDI channels
             for(int n=0; n<data2->N; n++)
             {
                 int i = n+src1->imin;
@@ -216,9 +205,9 @@ int main(int argc, char *argv[])
                 src2->tdi->E[2*i]   += src2->tdi->E[2*n];
                 src2->tdi->E[2*i+1] += src2->tdi->E[2*n+1];
             }
-//
-//
-//            //Get noise spectrum for data segment
+
+
+            //Get noise spectrum for data segment
             for(int n=0; n<data2->N; n++)
             {
                 double f = data2->fmin + (double)(n)/data2->T;
@@ -243,25 +232,23 @@ int main(int argc, char *argv[])
                 }
             }
     
-                //COMPUTE MATCH:
+                //COMPUTE OVERLAP:
                 double match;
                 double snr1=0;
                 double snr2=0;
                 double snrx=0;
     
-                snr2 += fourier_nwip(src2->tdi->A,src2->tdi->A,SnA2,src2->tdi->N);
-                snr2 += fourier_nwip(src2->tdi->E,src2->tdi->E,SnE2,src2->tdi->N);
                 snr1 += fourier_nwip(src1->tdi->A,src1->tdi->A,SnA1,src1->tdi->N);
                 snr1 += fourier_nwip(src1->tdi->E,src1->tdi->E,SnE1,src1->tdi->N);
+                snr2 += fourier_nwip(src2->tdi->A,src2->tdi->A,SnA2,src2->tdi->N);
+                snr2 += fourier_nwip(src2->tdi->E,src2->tdi->E,SnE2,src2->tdi->N);
 
-    
                 snrx = fourier_nwip(src1->tdi->A,src2->tdi->A,SnA1,src2->tdi->N)/sqrt(snr1*snr2);
                 snrx += fourier_nwip(src1->tdi->E,src2->tdi->E,SnE1,src2->tdi->N)/sqrt(snr1*snr2);
                 match=snrx;
     
-    
-    
-    hallowelt(flags,match);
+    //Print results of overlap calc.
+    print_match(flags,match);
     if(flags->orbit)free_orbit(orbit);
     printf("\n");
     fclose(chain_file1);
@@ -270,7 +257,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void hallowelt(struct Flags *flags, double match)
+void print_match(struct Flags *flags, double match)
 {
     if(match > 0.999)
     {
