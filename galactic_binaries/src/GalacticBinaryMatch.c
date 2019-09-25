@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
 {
     
 
-//    int ic;
 //    FILE *match_file;
     FILE *chain_file1;
     FILE *chain_file2;
@@ -49,7 +48,7 @@ int main(int argc, char *argv[])
     struct Data  **data = malloc(sizeof(struct Data*)*NMAX); //data[NF]
     
     
-//     Parse command line and set defaults/flags
+//   Parse command line and set defaults/flags
     for(int i=0; i<NMAX; i++)
     {
         data[i] = malloc(sizeof(struct Data));
@@ -128,7 +127,7 @@ int main(int argc, char *argv[])
             SnA2 = malloc(sizeof(data2->N));
             double *SnE2 = NULL;
             SnE2 = malloc(sizeof(data2->N));
-////
+
             for(int n=0; n<2*data2->N; n++)
             {
                 src1->tdi->A[n] = 0.0;
@@ -138,8 +137,8 @@ int main(int argc, char *argv[])
                 src2->tdi->E[n] = 0.0;
                 src2->tdi->X[n] = 0.0;
             }
-////
-//            //map polarization angle into [0:pi], preserving relation to phi0
+
+            //map polarization angle into [0:pi], preserving relation to phi0
             if(psi>M_PI) psi  -= M_PI;
             if(phi0>PI2) phi0 -= PI2;
             if(psi2>M_PI) psi2  -= M_PI;
@@ -244,10 +243,8 @@ int main(int argc, char *argv[])
                 }
             }
     
-//
+                //COMPUTE MATCH:
                 double match;
-//                //COMPUTE MATCH:
-//
                 double snr1=0;
                 double snrx=0;
                 double snr2=0;
@@ -271,7 +268,6 @@ int main(int argc, char *argv[])
     fclose(chain_file1);
     fclose(chain_file2);
 
-    
     return 0;
 }
 
