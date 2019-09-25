@@ -329,16 +329,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         }
         if(strcmp("match-in1", long_options[long_index].name) == 0)
         {
-//            fprintf(stdout,"oy vey!\n");
             checkfile(optarg);
             flags->match=1;
             sprintf(flags->matchInfile1,"%s",optarg);
         }
             if(strcmp("match-in2", long_options[long_index].name) == 0)
         {
-            //            fprintf(stdout,"oy vey!\n");
-            checkfile(optarg);
-            flags->match=1;
             sprintf(flags->matchInfile2,"%s",optarg);
         }
 
