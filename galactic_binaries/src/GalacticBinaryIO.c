@@ -3,7 +3,7 @@
 //
 //
 //  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
-// usage: ../../gb_match --match-in ~/test.dat --frac-freq --fmin 0.00350876 --samples 512 --duration 62914560 --zero-noise
+// usage: ../../gb_match --match-in1 ~/test.dat --frac-freq --fmin 0.00350876 --samples 512 --duration 62914560 --zero-noise
 //
 
 #include <math.h>
@@ -92,8 +92,8 @@ void print_usage()
   fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --update-cov  : use cov mtrx proposal [filename]    \n");
-  fprintf(stdout,"       --match-in      : input paramaters for overlap [filename] \n");
-  fprintf(stdout,"       --match-out      : output match values [filename] \n");
+  fprintf(stdout,"       --match-in1      : input paramaters for overlap [filename] \n");
+  fprintf(stdout,"       --match-in2      : output match values [filename] \n");
   fprintf(stdout,"       --zero-noise  : data w/out noise realization        \n");
   fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
@@ -207,8 +207,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
     {"update-cov",required_argument, 0, 0},
-    {"match-in",  required_argument, 0, 0},
-    {"match-out", required_argument, 0, 0},
+    {"match-in1",  required_argument, 0, 0},
+    {"match-in2", required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
     {"em-prior",  required_argument, 0, 0},
     
@@ -327,22 +327,21 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
           sprintf(flags->covFile,"%s",optarg);
           chain->NP++;
         }
-        if(strcmp("match-in", long_options[long_index].name) == 0)
+        if(strcmp("match-in1", long_options[long_index].name) == 0)
         {
 //            fprintf(stdout,"oy vey!\n");
             checkfile(optarg);
             flags->match=1;
-            sprintf(flags->matchInfile,"%s",optarg);
-            
-//            if(strcmp("match-out", long_options[long_index].name) == 0)
-//            {
-//                checkfile(optarg);
-//                sprintf(flags->matchOutfile,"%s",optarg);
-//            }
-//         
+            sprintf(flags->matchInfile1,"%s",optarg);
+        }
+            if(strcmp("match-in2", long_options[long_index].name) == 0)
+        {
+            //            fprintf(stdout,"oy vey!\n");
+            checkfile(optarg);
+            flags->match=1;
+            sprintf(flags->matchInfile2,"%s",optarg);
         }
 
-            
         if(strcmp("links",long_options[long_index].name) == 0)
         {
           int Nlinks = (int)atoi(optarg);

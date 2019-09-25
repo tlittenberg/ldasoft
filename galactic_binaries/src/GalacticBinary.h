@@ -91,8 +91,8 @@ struct Flags
   char **injFile;
   char cdfFile[128];
   char covFile[128];
-  char matchInfile[128];
-  char matchOutfile[128];
+  char matchInfile1[128];
+  char matchInfile2[128];
   char pdfFile[128];
 };
 
