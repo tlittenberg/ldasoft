@@ -110,10 +110,11 @@ int main(int argc, char *argv[])
   int NP       = 8;     //number of parameters
 
   //Book-keeping
-  int DMAX = 9;         //maximum number of sources per chain sample (needs to be read in from above)
+  int DMAX = data2->DMAX;         //maximum number of sources per chain sample (needs to be read in from above)
   int IMAX = 10000;     //maximum number of chain samples (needs to be read in from above)
   int NMAX = DMAX*IMAX; //(absurd) upper limit on total number of catalog entries
   
+//  fprintf(stdout,"\nDMAX=%d.\n",DMAX);
   //Allocate memory and initialize structures
   struct Catalog *catalog = NULL;
   catalog = malloc(sizeof(struct Catalog));
@@ -141,23 +142,24 @@ int main(int argc, char *argv[])
 //  //What else?
 //
 //
+    double *SnA1 = NULL;
+    SnA1 = malloc(data2->N*sizeof(double));
+    double *SnE1 = NULL;
+    SnE1 = malloc(data2->N*sizeof(double));
 //  /******************************************************************/
 //  /*        First sample of the chain initializes entry list        */
 //  /******************************************************************/
-//  for(int d=0; d<DMAX; d++)
-//  {
+  for(int d=0; d<data2->DMAX; d++)
+  {
+      fprintf(stdout,"d=%d.\n",d);
 //    //parse source in first sample of chain file
-        for(int i=0; i < 2; i++)
-            fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
+//        for(int i=0; i < 2; i++)
+    fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
 //
 //    //populate source structure
 //        struct Source *src1 = NULL;
 //        src1 = malloc(sizeof(struct Source));
 //        alloc_source(src1, data2->N,2,data2->NP);
-        double *SnA1 = NULL;
-        SnA1 = malloc(data2->N*sizeof(double));
-        double *SnE1 = NULL;
-        SnE1 = malloc(data2->N*sizeof(double));
 
         for(int n=0; n<2*data2->N; n++)
         {
@@ -239,7 +241,7 @@ int main(int argc, char *argv[])
 //
     //add new source to catalog
     create_new_source(catalog, sample, IMAX, data2->N, 2, data2->NP);
-//  }
+  }
 //
 //
 //  /******************************************************************/
@@ -248,7 +250,7 @@ int main(int argc, char *argv[])
 //  for(int i=1; i<IMAX; i++)
 //  {
 //    //check each source in chain sample
-//    for(int d=0; d<DMAX; d++)
+//    for(int d=0; d<data2->DMAX; d++)
 //    {
 //      //parse source parameters
 //
@@ -345,14 +347,16 @@ void create_new_source(struct Catalog *catalog, struct Source *sample, int IMAX,
   struct Entry *entry = catalog->entry[N];
   entry = malloc(sizeof(struct Entry));
   alloc_entry(entry,IMAX);
-  entry->source[entry->I] = malloc(sizeof(struct Source));
-  alloc_source(entry->source[entry->I], NFFT, Nchannel, NP);
+//  entry->source[entry->I] = malloc(sizeof(struct Source));
+//  alloc_source(entry->source[entry->I], NFFT, Nchannel, NP);
 //  //add sample to the catalog as the new entry
-  copy_source(sample, entry->source[0]);
-  entry->I++; //increment number of samples for entry
+//  copy_source(sample, entry->source[0]);
+//  entry->I++; //increment number of samples for entry
+    fprintf(stdout,"catalog->N=%d.\n",catalog->N);
+
   catalog->N++;//increment number of entries for catalog
     
-  fprintf(stdout,"psi=%lg.\n",entry->source[0]->psi);
+//  fprintf(stdout,"psi=%lg.\n",entry->source[0]->psi);
 }
 
 void append_sample_to_entry(struct Entry *entry, struct Source *sample, int IMAX, int NFFT, int Nchannel, int NP)
