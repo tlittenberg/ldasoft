@@ -566,13 +566,15 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
   
   //define some helper pointers for ease of reading
   double *mean  = proposal->matrix[mode];
-  double **invC = proposal->tensor[mode];
+  double **Lij  = proposal->tensor[mode];
   
-  
-  //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Cij^-1 * n_j
+  //scale NP-dimensional jump to 1-sigma of the joint distribution
+  double scale = 1./sqrt((double)NP);
+
+  //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
   for(int n=0; n<NP; n++)
   {
-    ran_no[n] = gsl_ran_gaussian(seed,1.0);
+    ran_no[n] = gsl_ran_gaussian(seed,scale);
   }
   
   //the matrix multiplication...
@@ -582,9 +584,20 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
     params[n] = mean[n];
     
     //add contribution from each row of invC
-    for(int k=0; k<NP; k++)  params[n] += ran_no[k]*invC[n][k];
+    for(int k=0; k<NP; k++) params[n] += ran_no[k]*Lij[n][k];
     
   }
+  
+//  printf("mode %i:{",mode);
+//  for(int k=0; k<NP; k++)printf("%.12g ",params[k]);
+//  printf("}\n");
+  /*
+  FILE *fptr = fopen("proposal.dat","a");
+  for(int k=0; k<NP; k++)fprintf(fptr,"%.12g ",params[k]);
+  fprintf(fptr,"\n");
+  fclose(fptr);
+  */
+  
   return cov_density(data, model, source, proposal, params);
 }
 
@@ -593,24 +606,10 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
 {
   
   int NP=source->NP;
-  int Nmodes = 2;
-  double delta_x[NP];
-  
-  //double *params = source->params;
-  
-  double arg[Nmodes];
-  double det[Nmodes];
-  for(int i=0; i<Nmodes; i++)
-  {
-    arg[i] = 0.0;
-    det[i] = proposal->vector[2*i+1];
-  }
-  
-  
-  //TODO: Only support for two modes!
-  double norm[Nmodes];
-  norm[0] = proposal->vector[0];
-  norm[1] = 1.-proposal->vector[0];
+
+  /*
+   Check that parameters are inside the prior range
+   */
   
   //map angles over periodic boundary conditions
   //longitude
@@ -629,18 +628,37 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
   //rejection sample everything else
   for(int n=0; n< NP; n++)
   {
-    if(params[n]<model->prior[n][0] || params[n]>model->prior[n][1])
-      return -INFINITY;
+    if(params[n]<model->prior[n][0] || params[n]>model->prior[n][1])  return -INFINITY;
   }
   
-  /* if everything is in bounds, evaluate the proposal */
+  /*
+   if everything is in bounds, evaluate the probability (density)
+   */
+  int Nmodes = 2;
+  double delta_x[NP];
+  
+  //helper pointers
+  double *mean    = NULL;
+  double **invCij = NULL;
+  
+  double weight; //contribution of mode
+  double norm;   //normalization of multivariate Gaussian
+  double arg;    //argument of exponential
+
+  long double p = 0.0;
+
   for(int i=0; i<Nmodes; i++)
   {
-    
+    //unpack proposal structure
+    weight = proposal->vector[i*Nmodes];
+    norm   = proposal->vector[i*Nmodes+1];
+    mean   = proposal->matrix[i];
+    invCij = proposal->tensor[Nmodes+i];
+
     //compute distances between mode and current params
     for(int n=0; n<NP; n++)
     {
-      delta_x[n] = params[n]-proposal->matrix[i][n];
+      delta_x[n] = params[n]-mean[n];
       
       //map parameters periodic on U[0,2pi]
       if(n==2) delta_x[n] = acos(cos(delta_x[n])); //longitude
@@ -651,19 +669,12 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
       
     }
     
-    //compute argument of multivariate Gaussians
-    double **inverse_matrix = proposal->tensor[2*i];
+    //assemble argument of exponential
+    arg = 0.0;
+    for(int n=0; n<NP; n++) for(int m=0; m<NP; m++) arg += delta_x[n] * invCij[n][m] * delta_x[m];
     
-    for(int n=0; n<NP; n++) for(int m=0; m<NP; m++) arg[i] += delta_x[n] * inverse_matrix[n][m] * delta_x[m];
+    p += weight * norm * exp(-0.5*arg);
   }
-  
-  //assemble the pdf
-  //TODO: Absorb factors of 2pi into determinant, calls to pow() are bad
-  long double p = 0.0;
-  
-  //TODO: norm[i] = 1/(pow(PI2,0.5*NP)*sqrt(det[i])), rename norm[i] -> weight[i], weight * exp * norm;
-  
-  for(int i=0; i<Nmodes; i++) p += norm[i] * exp(-0.5*arg[i]) / (pow(PI2,0.5*NP)*sqrt(det[i]));
   
   return log(p);
 }
@@ -818,7 +829,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         {
           setup_covariance_proposal(data, flags, proposal[i]);
           proposal[i]->weight   = 0.1;
-          proposal[i]->rjweight = 0.2;
+          proposal[i]->rjweight = 0.5;
         }
         check   += proposal[i]->weight;
         rjcheck += proposal[i]->rjweight;
@@ -871,7 +882,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   double d_theta = 2./(double)n_theta;
   double d_phi   = PI2/(double)n_phi;
   
-  fprintf(stdout,"\n============ F-Statistic sky proposal ============\n");
+  fprintf(stdout,"\n============ F-statistic sky proposal ============\n");
   fprintf(stdout,"   n_f     = %i\n",n_f);
   fprintf(stdout,"   n_theta = %i\n",n_theta);
   fprintf(stdout,"   n_phi   = %i\n",n_phi);
@@ -990,7 +1001,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   }
   
   free(Fparams);
-  fprintf(stdout,"\n================================================\n\n");
+  fprintf(stdout,"\n==============================================\n\n");
   fflush(stdout);
 }
 
@@ -1067,144 +1078,72 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
 
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal)
 {
-  int nl=0;
+  fprintf(stdout,"\n========== Covariance matrix proposal ==========\n\n");
+
   int Ncov=2;
-  double junk, ten[2][8][8],params[8],*ptr_params,(**ptr_ten_out);
-  double f1,f2,f3,f4,f5,f6,f7,f8;
+  int NP = data->NP;
+  double junk;
+  double alpha, detCij;
   FILE *fptr;
 
-  //        printf("\ndata->NP is %d \n",data->NP);
-  proposal->vector = malloc(4*sizeof(double));
+  //book keeping (weights and determinants
+  proposal->vector = malloc(Ncov*2*sizeof(double));
   
+  //centroids
   proposal->matrix = malloc(Ncov*sizeof(double*));
-  for(int j=0; j<Ncov; j++) proposal->matrix[j] = malloc(data->NP * sizeof(double));
+  for(int j=0; j<Ncov; j++) proposal->matrix[j] = malloc(NP * sizeof(double));
   
-  proposal->tensor = malloc((Ncov+2)*sizeof(double**));
-  for(int j=0; j<Ncov+2; j++) proposal->tensor[j] = malloc(data->NP * sizeof(double**));
-  for(int k=0; k<data->NP; k++) proposal->tensor[0][k] = malloc(data->NP * sizeof(double*));
-  for(int k=0; k<data->NP; k++) proposal->tensor[1][k] = malloc(data->NP * sizeof(double*));
+  //covariance matrix and friends
+  proposal->tensor = malloc((Ncov*2)*sizeof(double**));
+  for(int j=0; j<Ncov*2; j++)
+  {
+    proposal->tensor[j] = malloc(NP * sizeof(double**));
+    for(int k=0; k<NP; k++)
+    {
+      proposal->tensor[j][k] = malloc(NP * sizeof(double*));
+    }
+  }
   
-  for(int k=0; k<data->NP; k++) proposal->tensor[2][k] = malloc(data->NP * sizeof(double*));
-  for(int k=0; k<data->NP; k++) proposal->tensor[3][k] = malloc(data->NP * sizeof(double*));
+  //create some aliases to make the code more readable
+  double *mean    = NULL; //centroids of multivariate
+  double **Cij    = NULL; //covariance matrix
+  double **Lij    = NULL; //lower triangle of cholesky decomp. of Cij
   
-  
-  
+  fprintf(stdout,"   reading covariance matrix %s...\n",flags->covFile);
   fptr = fopen(flags->covFile,"r");
-  printf("reading covariance.txt...\n");
   
-  
-  
-  while(!feof(fptr))
+  //repeat for every covariance matrix in file
+  for(int n=0; n<Ncov; n++)
   {
-    for(int j=0; j<8; j++) fscanf(fptr,"%lg",&junk);
-    nl++;
+    
+    //first row has the weight, determinant, and then a bunch of zeroes
+    fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg", &alpha, &detCij, &junk, &junk, &junk, &junk, &junk, &junk);
+
+    //relative weighting of mode
+    proposal->vector[n*Ncov  ]=alpha;
+    //absorb normalization constants into stored determinant
+    proposal->vector[n*Ncov+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));//detCij;
+    
+    //second row has the centroids
+    mean = proposal->matrix[n];
+    for(int i=0; i<NP; i++) fscanf(fptr, "%lg", &mean[i]);
+
+    //next NP rows have the covariance matrix
+    Cij = proposal->tensor[Ncov+n];
+    for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) fscanf(fptr, "%lg", &Cij[i][j]);
+    
+    //next NP rows are the lower half of the cholesky decomp.
+    Lij = proposal->tensor[n];
+    for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) fscanf(fptr, "%lg", &Lij[i][j]);
+    
+    //get inverse of Cij (invert_matrix writes over contents of input)
+    invert_matrix(Cij,NP);
+    
   }
   
-  rewind(fptr);
-  nl--;
-  
-  for(int n=0; n<nl; n++)
-  {
-    fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg\n", &f1, &f2, &f3, &f4, &f5, &f6, &f7, &f8);
-    if(n == 0)
-    {
-      //alpha
-      proposal->vector[0]=f1;
-      //det(cov(Sigma1))
-      proposal->vector[1]=f2;
-      
-    }
-    if(n == 1)
-    {
-      proposal->matrix[0][0]=f1;
-      proposal->matrix[0][1]=f2;
-      proposal->matrix[0][2]=f3;
-      proposal->matrix[0][3]=f4;
-      proposal->matrix[0][4]=f5;
-      proposal->matrix[0][5]=f6;
-      proposal->matrix[0][6]=f7;
-      proposal->matrix[0][7]=f8;
-      
-    }
-    if(n>1 && n<=9)
-    {
-      ten[0][n-2][0]=f1;
-      ten[0][n-2][1]=f2;
-      ten[0][n-2][2]=f3;
-      ten[0][n-2][3]=f4;
-      ten[0][n-2][4]=f5;
-      ten[0][n-2][5]=f6;
-      ten[0][n-2][6]=f7;
-      ten[0][n-2][7]=f8;
-    }
-    if(n>9 && n<=17)
-    {
-      proposal->tensor[0][n-10][0]=f1;
-      proposal->tensor[0][n-10][1]=f2;
-      proposal->tensor[0][n-10][2]=f3;
-      proposal->tensor[0][n-10][3]=f4;
-      proposal->tensor[0][n-10][4]=f5;
-      proposal->tensor[0][n-10][5]=f6;
-      proposal->tensor[0][n-10][6]=f7;
-      proposal->tensor[0][n-10][7]=f8;
-    }
-    if(n == 18 && proposal->vector[0] != 1.0)
-    {
-      //(1-alpha)
-      proposal->vector[2]=f1;
-      //det(cov(Sigma2))
-      proposal->vector[3]=f2;
-    }
-    if(n == 19 && proposal->vector[0] != 1.0)
-    {
-      proposal->matrix[1][0]=f1;
-      proposal->matrix[1][1]=f2;
-      proposal->matrix[1][2]=f3;
-      proposal->matrix[1][3]=f4;
-      proposal->matrix[1][4]=f5;
-      proposal->matrix[1][5]=f6;
-      proposal->matrix[1][6]=f7;
-      proposal->matrix[1][7]=f8;
-    }
-    if(n>19 && n<=27 && proposal->vector[0] != 1.0)
-    {
-      ten[1][n-20][0]=f1;
-      ten[1][n-20][1]=f2;
-      ten[1][n-20][2]=f3;
-      ten[1][n-20][3]=f4;
-      ten[1][n-20][4]=f5;
-      ten[1][n-20][5]=f6;
-      ten[1][n-20][6]=f7;
-      ten[1][n-20][7]=f8;
-    }
-    if(n>27 && n<=35 && proposal->vector[0] != 1.0)
-    {
-      proposal->tensor[1][n-28][0]=f1;
-      proposal->tensor[1][n-28][1]=f2;
-      proposal->tensor[1][n-28][2]=f3;
-      proposal->tensor[1][n-28][3]=f4;
-      proposal->tensor[1][n-28][4]=f5;
-      proposal->tensor[1][n-28][5]=f6;
-      proposal->tensor[1][n-28][6]=f7;
-      proposal->tensor[1][n-28][7]=f8;
-    }
-  }
-  
-  
-  ptr_params=params;
-  //                ptr_ten_out=proposal->tensor[0];
-  //                cholesky_decomp(ten[0],ptr_ten_out,data->NP);
-  ptr_ten_out=proposal->tensor[2];
-  invert_matrix2(ten[0],ptr_ten_out,data->NP);
-  
-  if(proposal->vector[0] != 1.0)
-  {
-    //                ptr_ten_out=proposal->tensor[1];
-    //                cholesky_decomp(ten[1],ptr_ten_out,data->NP);
-    ptr_ten_out=proposal->tensor[3];
-    invert_matrix2(ten[1],ptr_ten_out,data->NP);
-  }
   fclose(fptr);
+  
+  fprintf(stdout,"\n================================================\n");
 }
 
 double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
