@@ -26,8 +26,8 @@ int binary_search(double *array, int nmin, int nmax, double x);
 
 void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N);
 void invert_matrix(double **matrix, int N);
+void matrix_multiply(double **A, double **B, double **AB, int N);
 void cholesky_decomp(double matrix[8][8], double **tensor_out, int N);
-void invert_matrix2(double matrix[8][8], double **tensor_out, int N);
 
 /* ********************************************************************************** */
 /*                                                                                    */
