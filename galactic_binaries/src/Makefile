@@ -12,7 +12,7 @@ CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o 
 
-all: gitversion.h $(OBJS) gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual 
+all: gitversion.h $(OBJS) gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
 
 gitversion.h: ../../.git/HEAD ../../.git/index
 	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
@@ -56,15 +56,18 @@ gb_residual : GalacticBinaryResidual.c $(OBJS) GalacticBinary.h
 gb_mcmc_chirpmass : gb_mcmc_chirpmass.c 
 	$(CC) -o gb_mcmc_chirpmass gb_mcmc_chirpmass.c $(LIBS:%=-l%)
 
+gb_match : GalacticBinaryMatch.c $(OBJS) GalacticBinary.h
+	$(CC) $(CCFLAGS) -o gb_match GalacticBinaryMatch.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
+
 gb_mcmc_brans_dicke : gb_mcmc_brans_dicke.c
 	$(CC) -o gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c $(LIBS:%=-l%)
 
 #gb.so : $(OBJS)
 #	$(CC) -shared -o libgb.so $(OBJS) $(LIBS:%=-l%)
 
-install : gitversion.h gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual 
-	install gb_mcmc gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
+install : gitversion.h gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
+	install gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
 
 clean:
-	rm *.o *.so gb_mcmc gb_catalog gb.so gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual gitversion.h
+	rm *.o *.so gb_mcmc gb_match gb_catalog gb.so gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual gitversion.h
 
