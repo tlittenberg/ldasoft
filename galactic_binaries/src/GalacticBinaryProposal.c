@@ -1120,9 +1120,10 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg", &alpha, &detCij, &junk, &junk, &junk, &junk, &junk, &junk);
 
     //relative weighting of mode
-    proposal->vector[n*Ncov  ]=alpha;
-    //absorb normalization constants into stored determinant
-    proposal->vector[n*Ncov+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));//detCij;
+    proposal->vector[n*Ncov]=alpha;
+    
+    //absorb normalization constants into stored determinant detCij
+    proposal->vector[n*Ncov+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));
     
     //second row has the centroids
     mean = proposal->matrix[n];
@@ -1131,6 +1132,13 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     //next NP rows have the covariance matrix
     Cij = proposal->tensor[Ncov+n];
     for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) fscanf(fptr, "%lg", &Cij[i][j]);
+    
+    //use gsl cholesky decomposition, preserving Cij
+    /*
+     this gives identical results to what is in the cov files
+     */
+    //Lij = proposal->tensor[n];
+    //cholesky_decomp(Cij, Lij, NP);
     
     //next NP rows are the lower half of the cholesky decomp.
     Lij = proposal->tensor[n];
