@@ -30,7 +30,6 @@ void print_match(struct Flags *flags, double match);
 int main(int argc, char *argv[])
 {
 
-//  FILE *match_file;
     FILE *chain_file1;
     FILE *chain_file2;
     int NMAX = 10;   //max number of frequency & time segments
@@ -115,10 +114,6 @@ int main(int argc, char *argv[])
             struct Source *src2 = NULL;
             src2 = malloc(sizeof(struct Source));
             alloc_source(src2, data2->N,2,data2->NP);
-            double *SnA2 = NULL;
-            SnA2 = malloc(data2->N*sizeof(double));
-            double *SnE2 = NULL;
-            SnE2 = malloc(data2->N*sizeof(double));
 
             for(int n=0; n<2*data2->N; n++)
             {
@@ -168,43 +163,6 @@ int main(int argc, char *argv[])
             galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src2->params, data2->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
 
 
-            //Add waveform to data TDI channels
-            for(int n=0; n<data2->N; n++)
-            {
-                int i = n+src1->imin;
-
-                src1->tdi->X[2*i]=0.0;
-                src1->tdi->X[2*i+1]=0.0;
-                src1->tdi->A[2*i]=0.0;
-                src1->tdi->A[2*i+1]=0.0;
-                src1->tdi->E[2*i]=0.0;
-                src1->tdi->E[2*i+1]=0.0;
-
-                src1->tdi->X[2*i]   += src1->tdi->X[2*n];
-                src1->tdi->X[2*i+1] += src1->tdi->X[2*n+1];
-
-                src1->tdi->A[2*i]   += src1->tdi->A[2*n];
-                src1->tdi->A[2*i+1] += src1->tdi->A[2*n+1];
-
-                src1->tdi->E[2*i]   += src1->tdi->E[2*n];
-                src1->tdi->E[2*i+1] += src1->tdi->E[2*n+1];
-                
-                src2->tdi->X[2*i]=0.0;
-                src2->tdi->X[2*i+1]=0.0;
-                src2->tdi->A[2*i]=0.0;
-                src2->tdi->A[2*i+1]=0.0;
-                src2->tdi->E[2*i]=0.0;
-                src2->tdi->E[2*i+1]=0.0;
-
-                src2->tdi->X[2*i]   += src2->tdi->X[2*n];
-                src2->tdi->X[2*i+1] += src2->tdi->X[2*n+1];
-
-                src2->tdi->A[2*i]   += src2->tdi->A[2*n];
-                src2->tdi->A[2*i+1] += src2->tdi->A[2*n+1];
-
-                src2->tdi->E[2*i]   += src2->tdi->E[2*n];
-                src2->tdi->E[2*i+1] += src2->tdi->E[2*n+1];
-            }
 
 
             //Get noise spectrum for data segment
@@ -215,15 +173,11 @@ int main(int argc, char *argv[])
                 {
                     SnA1[n] = AEnoise(orbit->L, orbit->fstar, f);
                     SnE1[n] = AEnoise(orbit->L, orbit->fstar, f);
-                    SnA2[n] = AEnoise(orbit->L, orbit->fstar, f);
-                    SnE2[n] = AEnoise(orbit->L, orbit->fstar, f);
                 }
                 else if(strcmp(data2->format,"frequency")==0)
                 {
                     SnA1[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
                     SnE1[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                    SnA2[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                    SnE2[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
                 }
                 else
                 {
@@ -231,8 +185,8 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
             }
-    
-                //COMPUTE OVERLAP:
+    //SHOULD BE A FUNCTION: INPUT SNA and SRC1 AND SRC2, return match double. lives in gb_waveform or *math*... `waveform_match'
+    //COMPUTE OVERLAP:
                 double match;
                 double snr1=0;
                 double snr2=0;
@@ -240,8 +194,8 @@ int main(int argc, char *argv[])
     
                 snr1 += fourier_nwip(src1->tdi->A,src1->tdi->A,SnA1,src1->tdi->N);
                 snr1 += fourier_nwip(src1->tdi->E,src1->tdi->E,SnE1,src1->tdi->N);
-                snr2 += fourier_nwip(src2->tdi->A,src2->tdi->A,SnA2,src2->tdi->N);
-                snr2 += fourier_nwip(src2->tdi->E,src2->tdi->E,SnE2,src2->tdi->N);
+                snr2 += fourier_nwip(src2->tdi->A,src2->tdi->A,SnA1,src2->tdi->N);
+                snr2 += fourier_nwip(src2->tdi->E,src2->tdi->E,SnE1,src2->tdi->N);
 
                 snrx = fourier_nwip(src1->tdi->A,src2->tdi->A,SnA1,src2->tdi->N)/sqrt(snr1*snr2);
                 snrx += fourier_nwip(src1->tdi->E,src2->tdi->E,SnE1,src2->tdi->N)/sqrt(snr1*snr2);
