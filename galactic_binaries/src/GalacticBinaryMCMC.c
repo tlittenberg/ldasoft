@@ -172,18 +172,13 @@ int main(int argc, char *argv[])
           map_params_to_array(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
           
         }
-        else if(flags->update || flags->updateCov)
+        else if(flags->updateCov)
         {
-          if(flags->update && flags->updateCov)
-          {
-              draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
-//            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
-          }
-         else
-         {
-//            draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
-            draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][6], model_ptr->source[n]->params , chain->r[ic]);
-         }
+          draw_from_cov(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
+        }
+        else if(flags->update)
+        {
+          draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
         }
         else
         {
@@ -573,11 +568,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   logPx = evaluate_prior(flags, data, model_x, prior, source_x->params);
   logPy = evaluate_prior(flags, data, model_y, prior, source_y->params);
   
-//  printf("\n%d,logPx=%f,logPy=%f\n",nprop,logPx,logPy);
-//  printf("\nlogPx=%f\n",logPx);
-//  printf("\nlogPy=%f\n",logPy);
-
-    
   //add calibration source parameters
   /*
    no prior density for calibration parameters
@@ -606,57 +596,39 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
        */
       logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
       if(flags->burnin) logH /= chain->annealing;
-              //if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
-              //{
-              //  printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x[i]->logL , model_y[i]->logL);
-              //  printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-             // }
     }
     logH += logPy  - logPx;  //priors
     logH += logQxy - logQyx; //proposals
     
     loga = log(gsl_rng_uniform(chain->r[ic]));
       
-
-      
-    if(logH > loga)
+    
+    if(isfinite(logH) && logH > loga)
     {
       
       //KAL? Print something for cov draw here??
      
-      if(!strcmp(proposal[nprop]->name,"cdf draw") && ic==0  && model_y->logL - model_x->logL < -20.)
+      if(ic==0  && model_y->logL - model_x->logL < -20.)
       {
-        printf("cdf logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
+        
+        printf("%s logH=%g, logLx=%g, logLy=%g\n",proposal[nprop]->name,logH,model_x->logL , model_y->logL);
         printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+        
+        /*
+        FILE *fptr = fopen("crazyhop.dat","a");
+        for(int k=0; k<data->NP; k++)fprintf(fptr,"%.12g ",source_x->params[k]);
+        for(int k=0; k<data->NP; k++)fprintf(fptr,"%.12g ",source_y->params[k]);
+        fprintf(fptr,"\n");
+        fclose(fptr);
+        */
+        
         //exit(1);
       }
-      if(!strcmp(proposal[nprop]->name,"cov draw") && ic==0  && model_y->logL - model_x->logL < -20.)
-      {
-        printf("cov logH=%g, logLx=%g, logLy=%g\n",logH,model_x->logL , model_y->logL);
-        printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-//        exit(1);
-      }
-//        if(!strcmp(proposal[nprop]->name,"cov draw"))
-//        {
-//            printf(" \n logPy=%g, logPx=%g\n",logPy,logPx);
-//            printf("  logH > loga: %d\n",logH > loga);
-//            printf("  logH=%g, loga=%g\n",logH,loga);
-//            printf("  logQxy=%g, logQyx=%g\n",logQxy,logQyx);
-//        }
+
 
       proposal[nprop]->accept[ic]++;
       copy_model(model_y,model_x);
     }
-//    else
-//    {
-//        if(!strcmp(proposal[nprop]->name,"cov draw"))
-//        {
-//            printf(" \n model_y->logL=%g, model_x->logL=%g\n",model_y->logL/chain->temperature[ic], model_x->logL/chain->temperature[ic]);
-//            printf("  logH > loga: %d\n",logH > loga);
-//            printf("  logH=%g, loga=%g\n",logH,loga);
-//            printf("  logQxy=%g, logQyx=%g\n",logQxy,logQyx);
-//        }
-//    }
   }
 }
 
@@ -701,29 +673,10 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     {
       //draw new parameters
       //TODO: insert draw fro galaxy prior into draw_from_prior()
-//      if(!strcmp(proposal[nprop]->name,"prior"))
-//      {
-//        draw_from_prior(data, model_y, model_y->source[create], proposal[0], model_y->source[create]->params, chain->r[ic]);
-//        if(flags->galaxyPrior) draw_from_galaxy_prior(model_y, prior, model_y->source[create]->params, chain->r[ic]);
-//        logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
-//
-//      }
-//      else logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
-
       logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
+      logQxy = 0;
 
       map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
-
-      logQxy = 0;
-      //logQyx += model_x->logPriorVolume;
-      //logQyx += evaluate_snr_prior(data, model, model_y->source[create]->params);
-      //logQyx = evaluate_prior(flags, data, model_y, prior, model_y->source[create]->params);
-      //if(freqflag) logQyx += evaluate_fstatistic_proposal(data, proposal[2], model_y->source[create]->params);
-      
-      //copy params for segment 0 into higher segments
-//      copy_source(model_y->source[create],model_y->source[create]);
-//      map_params_to_array(model_y->source[create], model_y->source[create]->params, data->T);
-      
     }
     else logPy = -INFINITY;
   }
@@ -737,31 +690,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     
     if(model_y->Nlive>-1)
     {
-      //copy params for segment 0 into higher segments
-//      copy_source(model_y->source[kill],model_y->source[kill]);
-//      map_params_to_array(model_y->source[kill], model_y->source[kill]->params, data->T);
-      
-      //logQxy = model_x->logPriorVolume;
       logQyx = 0;
-      //logQxy += evaluate_snr_prior(data, model, model_y->source[kill]->params);
-
-      //TODO: insert prior volume sum into evaluate_fstatistic_proposal()
-//      if(!strcmp(proposal[nprop]->name,"fstat draw"))
-//      {
-//        for(int n=0; n<model_y->source[kill]->NP; n++)
-//        {
-//          logQxy -= model->logPriorVolume[n];
-//        }
-//        logQxy += evaluate_fstatistic_proposal(data, proposal[nprop],  model_y->source[kill]->params);
-//      }
-//
-//      else if(!strcmp(proposal[nprop]->name,"cdf draw"))
-//        logQxy = cdf_density(model_y, model_y->source[kill], proposal[nprop]);
-//      else if(!strcmp(proposal[nprop]->name,"cov draw"))
-//        logQxy = cov_density(model_y, model_y->source[kill], proposal[nprop]);
-//      else
-//        logQxy = evaluate_prior(flags, data, model_y, prior, model_y->source[kill]->params);
-
       logQxy = (*proposal[nprop]->density)(data, model_y, model_y->source[kill], proposal[nprop], model_y->source[kill]->params);
 
       //consolodiate parameter structure
@@ -821,8 +750,17 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
 //    }
   
   loga = log(gsl_rng_uniform(chain->r[ic]));
-  if(logH > loga)
+  if(isfinite(logH) && logH > loga)
   {
+    
+    if(ic==0  && model_y->logL - model_x->logL < -20.)
+    {
+      
+      printf("RJ%s logH=%g, logLx=%g, logLy=%g\n",proposal[nprop]->name,logH,model_x->logL , model_y->logL);
+      printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
+      //exit(1);
+    }
+
     proposal[nprop]->accept[ic]++;
     copy_model(model_y,model_x);
   }

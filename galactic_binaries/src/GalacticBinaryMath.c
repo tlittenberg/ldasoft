@@ -234,100 +234,52 @@ void invert_matrix(double **matrix, int N)
     gsl_matrix_free (GSLinvrse);
     gsl_permutation_free (permutation);
 }
-void invert_matrix2(double matrix[8][8], double **tensor_out, int N)
+
+void matrix_multiply(double **A, double **B, double **AB, int N)
 {
-    int i,j;
-    
-    // Don't let errors kill the program (yikes)
-    gsl_set_error_handler_off ();
-    int err=0;
-    
-    // Find eigenvectors and eigenvalues
-    gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
-    gsl_matrix *GSLinvrse = gsl_matrix_alloc(N,N);
-    
-    for(i=0; i<N; i++)
+  //AB = A*B
+  
+  int i,j,k;
+  
+  for(i=0; i<N; i++)
+  {
+    for(j=0; j<N; j++)
     {
-        for(j=0; j<N; j++)
-        {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan matrix element, now what?\n");
-            gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
-        }
+      AB[i][j] = 0.0;
+      for(k=0; k<N; k++)
+      {
+        AB[i][j] += A[i][k]*B[k][j];
+      }
     }
-    
-    gsl_permutation * permutation = gsl_permutation_alloc(N);
-    
-    err += gsl_linalg_LU_decomp(GSLmatrix, permutation, &i);
-    err += gsl_linalg_LU_invert(GSLmatrix, permutation, GSLinvrse);
-    
-    if(err>0)
-    {
-        fprintf(stderr,"GalacticBinaryMath.c:184: WARNING: singluar matrix\n");
-        fflush(stderr);
-    }
-    else
-    {
-        //copy covariance matrix back into Fisher
-        for(i=0; i<N; i++)
-        {
-            for(j=0; j<N; j++)
-            {
-                tensor_out[i][j] = gsl_matrix_get(GSLinvrse,i,j);
-            }
-        }
-    }
-    
-    gsl_matrix_free (GSLmatrix);
-    gsl_matrix_free (GSLinvrse);
-    gsl_permutation_free (permutation);
-    
-    
-    
-    
-    
+  }
+  
 }
 
-void cholesky_decomp(double matrix[8][8], double **tensor_out, int N)
+
+void cholesky_decomp(double **A, double **L, int N)
 {
-    int i,j;
-    // Don't let errors kill the program (yikes)
-    gsl_set_error_handler_off ();
-    int err=0;
-    //decompose covariance matrix
-    gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
-    for(i=0; i<N; i++)
-    {
-        for(j=0; j<N; j++)
-        {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan covariance matrix element, now what?\n");
-            gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
-        }
-    }
-    
-    err += gsl_linalg_cholesky_decomp1(GSLmatrix);
-    
-    if(err>0)
-    {
-        fprintf(stderr,"GalacticBinaryMath.c:184: WARNING: singluar matrix\n");
-        fflush(stderr);
-    }
-    else
-    {
-        //copy cholesky decomposition matrix back into matrix
-        for(i=0; i<N; i++)
-        {
-            for(j=0; j<N; j++)
-            {
-                tensor_out[i][j] = gsl_matrix_get(GSLmatrix,i,j);
-            }
-        }
-    }
-    
-    gsl_matrix_free (GSLmatrix);
-    
-    
-    
-    
+  /*
+   factorize matrix A into cholesky decomposition L.
+   GSL overwrites the original matrix which we want
+   to preserve
+   */
+  int i,j;
+  gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
+
+  //copy covariance matrix into workspace
+  for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLmatrix,i,j,A[i][j]);
+  
+  //make the magic happen
+  gsl_linalg_cholesky_decomp1(GSLmatrix);
+  
+  //copy cholesky decomposition into output matrix
+  for(i=0; i<N; i++) for(j=0; j<N; j++)  L[i][j] = gsl_matrix_get(GSLmatrix,i,j);
+  
+  //zero upper half of matrix (copy of A)
+  for(i=0; i<N; i++) for(j=i+1; j<N; j++) L[i][j] = 0.0;
+  
+  gsl_matrix_free (GSLmatrix);
+  
 }
 
 
