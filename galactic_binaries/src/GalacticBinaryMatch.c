@@ -22,7 +22,7 @@
 #include "GalacticBinaryWaveform.h"
 
 // CODE USAGE:
-// ~/gb_match --match-in1 ~/input1.dat --match-in2 ~/input2.dat --frac-freq --fmin 0.001249 --samples 512 --duration 62914560
+// ./gb_match --match-in1 /Users/klackeos/Desktop/input1.dat --match-in2 /Users/klackeos/Desktop/input2.dat --frac-freq --fmin 0.001249 --samples 512 --duration 62914560
 
 void print_match(struct Flags *flags, double match);
 /* ============================  MAIN PROGRAM  ============================ */
@@ -107,10 +107,14 @@ int main(int argc, char *argv[])
             struct Source *src1 = NULL;
             src1 = malloc(sizeof(struct Source));
             alloc_source(src1, data2->N,2,data2->NP);
-            double *SnA1 = NULL;
-            SnA1 = malloc(data2->N*sizeof(double));
-            double *SnE1 = NULL;
-            SnE1 = malloc(data2->N*sizeof(double));
+    
+            struct Noise *noise = NULL;
+            noise = malloc(flags->NT*sizeof(struct Noise));
+            alloc_noise(noise, data2->N);
+//            double *SnA = NULL;
+//            SnA = malloc(data2->N*sizeof(double));
+//            double *SnE = NULL;
+//            SnE = malloc(data2->N*sizeof(double));
             struct Source *src2 = NULL;
             src2 = malloc(sizeof(struct Source));
             alloc_source(src2, data2->N,2,data2->NP);
@@ -171,13 +175,13 @@ int main(int argc, char *argv[])
                 double f = data2->fmin + (double)(n)/data2->T;
                 if(strcmp(data2->format,"phase")==0)
                 {
-                    SnA1[n] = AEnoise(orbit->L, orbit->fstar, f);
-                    SnE1[n] = AEnoise(orbit->L, orbit->fstar, f);
+                    noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+                    noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
                 }
                 else if(strcmp(data2->format,"frequency")==0)
                 {
-                    SnA1[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                    SnE1[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                    noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                    noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
                 }
                 else
                 {
@@ -187,19 +191,21 @@ int main(int argc, char *argv[])
             }
     //SHOULD BE A FUNCTION: INPUT SNA and SRC1 AND SRC2, return match double. lives in gb_waveform or *math*... `waveform_match'
     //COMPUTE OVERLAP:
-                double match;
-                double snr1=0;
-                double snr2=0;
-                double snrx=0;
+//                double match;
+//                double snr1=0;
+//                double snr2=0;
+//                double snrx=0;
+//    
+//                snr1 += fourier_nwip(src1->tdi->A,src1->tdi->A,noise->SnA,src1->tdi->N);
+//                snr1 += fourier_nwip(src1->tdi->E,src1->tdi->E,noise->SnE,src1->tdi->N);
+//                snr2 += fourier_nwip(src2->tdi->A,src2->tdi->A,noise->SnA,src2->tdi->N);
+//                snr2 += fourier_nwip(src2->tdi->E,src2->tdi->E,noise->SnE,src2->tdi->N);
+//
+//                snrx = fourier_nwip(src1->tdi->A,src2->tdi->A,noise->SnA,src2->tdi->N)/sqrt(snr1*snr2);
+//                snrx += fourier_nwip(src1->tdi->E,src2->tdi->E,noise->SnE,src2->tdi->N)/sqrt(snr1*snr2);
+//                match=snrx;
     
-                snr1 += fourier_nwip(src1->tdi->A,src1->tdi->A,SnA1,src1->tdi->N);
-                snr1 += fourier_nwip(src1->tdi->E,src1->tdi->E,SnE1,src1->tdi->N);
-                snr2 += fourier_nwip(src2->tdi->A,src2->tdi->A,SnA1,src2->tdi->N);
-                snr2 += fourier_nwip(src2->tdi->E,src2->tdi->E,SnE1,src2->tdi->N);
-
-                snrx = fourier_nwip(src1->tdi->A,src2->tdi->A,SnA1,src2->tdi->N)/sqrt(snr1*snr2);
-                snrx += fourier_nwip(src1->tdi->E,src2->tdi->E,SnE1,src2->tdi->N)/sqrt(snr1*snr2);
-                match=snrx;
+    double match = waveform_match(src1, src2, noise);
     
     //Print results of overlap calc.
     print_match(flags,match);

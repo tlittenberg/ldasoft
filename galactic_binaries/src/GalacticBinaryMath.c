@@ -62,6 +62,23 @@ double snr(struct Source *source, struct Noise *noise)
     return(sqrt(snr2));
 }
 
+double waveform_match(struct Source *source, struct Source *src_test, struct Noise *noise)
+{
+    double match=0;
+    double snr1=0;
+    double snr2=0;
+
+    snr1 += fourier_nwip(src_test->tdi->A,src_test->tdi->A,noise->SnA,src_test->tdi->N);
+    snr1 += fourier_nwip(src_test->tdi->E,src_test->tdi->E,noise->SnE,src_test->tdi->N);
+    snr2 += fourier_nwip(source->tdi->A,source->tdi->A,noise->SnA,source->tdi->N);
+    snr2 += fourier_nwip(source->tdi->E,source->tdi->E,noise->SnE,source->tdi->N);
+
+    match = fourier_nwip(src_test->tdi->A,source->tdi->A,noise->SnA,source->tdi->N)/sqrt(snr1*snr2);
+    match += fourier_nwip(src_test->tdi->E,source->tdi->E,noise->SnE,source->tdi->N)/sqrt(snr1*snr2);
+    
+    return(match);
+}
+
 // Recursive binary search function.
 // Return nearest smaller neighbor of x in array[nmin,nmax] is present,
 // otherwise -1
