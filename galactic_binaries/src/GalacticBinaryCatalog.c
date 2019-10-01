@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 //    struct Data **data_vec = data;//don't need
     struct Data *data  = data_tmp[0];
     
-    
+    //Orbits
     /* Load spacecraft ephemerides */
     switch(flags->orbit)
     {
@@ -100,10 +100,10 @@ int main(int argc, char *argv[])
 
   
   //selection criteria for catalog entries
-//  int matchFlag;          //track if sample matches any entries
-//  double Match = 0.0;     //match between pairs of waveforms
-//  double tolerance = 0.9; //tolerance on match to be considered associated
-//  double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
+    int matchFlag;          //track if sample matches any entries
+    double Match;     //match between pairs of waveforms
+    double tolerance = 0.9; //tolerance on match to be considered associated
+    double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
   
   //data volume (needs to be read in somehow)
 //  int NFFT     = 2048;  //maximum number of samples for waveform model
@@ -115,7 +115,6 @@ int main(int argc, char *argv[])
   int IMAX = N/DMAX;     //maximum number of chain samples (needs to be read in from above)
   int NMAX = DMAX*IMAX; //(absurd) upper limit on total number of catalog entries
   
-//  fprintf(stdout,"\nDMAX=%d.\n",DMAX);
   //Allocate memory and initialize structures
   struct Catalog *catalog = NULL;
   catalog = malloc(sizeof(struct Catalog));
@@ -128,56 +127,67 @@ int main(int argc, char *argv[])
 
     
   //shortcut to entry pointer in catalog structure
-//  struct Entry *entry = NULL;
+    struct Entry *entry = NULL;
+    entry = malloc(sizeof(struct Entry));
+    alloc_entry(entry,IMAX);
+
 
 //
 //  /******************************************************************/
 //  /*             Allocate & Initialize Instrument Model             */
 //  /******************************************************************/
 //
-//  //Orbits
 //
-//  //Noise model
-//
-//  //What else?
 //
     struct Source *sample = NULL;
     sample = malloc(sizeof *sample);
     alloc_source(sample, data->N,2,data->NP);
-    double *SnA1 = NULL;
-    SnA1 = malloc(data->N*sizeof(double));
-    double *SnE1 = NULL;
-    SnE1 = malloc(data->N*sizeof(double));
+    
+    struct Noise *noise = NULL;
+    noise = malloc(flags->NT*sizeof(struct Noise));
+    alloc_noise(noise, data->N);
+//    double *SnA1 = NULL;
+//    SnA1 = malloc(data->N*sizeof(double));
+//    double *SnE1 = NULL;
+//    SnE1 = malloc(data->N*sizeof(double));
     struct TDI *tdi = NULL;
     tdi = malloc(data->NP*sizeof(struct TDI));
     alloc_tdi(tdi, data->N, data->Nchannel);
     
-//    struct TDI *tdi = NULL;
+    //Noise model
+    //Get noise spectrum for data segment
+    for(int n=0; n<data->N; n++)
+    {
+        double f = data->fmin + (double)(n)/data->T;
+        if(strcmp(data->format,"phase")==0)
+        {
+            noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+            noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+        }
+        else if(strcmp(data->format,"frequency")==0)
+        {
+            noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+            noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        }
+        else
+        {
+            fprintf(stderr,"Unsupported data format %s",data->format);
+            exit(1);
+        }
+    }
+
+    
 //  /******************************************************************/
 //  /*        First sample of the chain initializes entry list        */
 //  /******************************************************************/
   for(int d=0; d<DMAX; d++)
   {
       
-//      fprintf(stdout,"catalog->N=%d.\n",catalog->N);
 //    //parse source in first sample of chain file
-//
-//      fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
-        
-//        for(int g=0; g < N; g++)
-//        {
-            fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
-//        }
-      //DONT NEED TO DO THIS AGAIN
-        for(int n=0; n<2*data->N; n++)
-        {
-            sample->tdi->A[n] = 0.0;
-            sample->tdi->E[n] = 0.0;
-            sample->tdi->X[n] = 0.0;
-        }
+      fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
 //        //map polarization angle into [0:pi], preserving relation to phi0//DON'T DO AGAIN, already done
-        if(psi>M_PI) psi  -= M_PI;
-        if(phi0>PI2) phi0 -= PI2;//DON'T DO AGAIN, already done
+//        if(psi>M_PI) psi  -= M_PI;
+//        if(phi0>PI2) phi0 -= PI2;//DON'T DO AGAIN, already done
       
         //map parameters to vector
         sample->f0       = f0;
@@ -191,88 +201,91 @@ int main(int argc, char *argv[])
         if(sample->NP>8)sample->d2fdt2 = 11.0/3.0*dfdt*dfdt/f0;
 //        //sample->d2fdt2 = fddot;
         map_params_to_array(sample, sample->params, data->T);
-//
-//        //Book-keeping of injection time-frequency volume
+
+        //Book-keeping of injection time-frequency volume
         galactic_binary_alignment(orbit, data, sample);
-//
+
+       //calculate waveform model of sample
         galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, 2);
         
-        //Get noise spectrum for data segment ONLY DO ONCE, IS IT ALREADY DONE??
-        for(int n=0; n<data->N; n++)
-        {
-            double f = data->fmin + (double)(n)/data->T;
-            if(strcmp(data->format,"phase")==0)
-            {
-                SnA1[n] = AEnoise(orbit->L, orbit->fstar, f);
-                SnE1[n] = AEnoise(orbit->L, orbit->fstar, f);
-            }
-            else if(strcmp(data->format,"frequency")==0)
-            {
-                SnA1[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                SnE1[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-            }
-            else
-            {
-                fprintf(stderr,"Unsupported data format %s",data->format);
-                exit(1);
-            }
-        }
 
-        //calculate waveform model of sample
 
-//    add new source to catalog
+//  add new source to catalog
     create_new_source(catalog, sample, IMAX, data->N, 2, data->NP);
-    
+    append_sample_to_entry(entry, sample, IMAX, data->N, 2, data->NP);
   }
 
-    fprintf(stdout,"hi\n");
-//
-//
+
 //  /******************************************************************/
 //  /*            Now loop over the rest of the chain file            */
 //  /******************************************************************/
   for(int i=1; i<IMAX; i++)
   {
-      fprintf(stdout,"i=%d.\n",i);
+    fprintf(stdout,"\n%d.\n",i);
     //check each source in chain sample
     for(int d=0; d<DMAX; d++)
     {
-        fprintf(stdout,"i=%d, d=%d.\n",i,d);
-//      //parse source parameters
-//
-//      //populate sample structure with current parameters
-//
-//      //calculate waveform model of sample
-//
-//      //calculate match of sample and all entries
-//      matchFlag = 0;
-//      for(int n=0; n<catalog->N; n++)
-//      {
-//        entry = catalog->entry[n];
-//
-//        //check frequency separation
-//        double q_entry  = entry->source[0]->params[0];
-//        double q_sample = sample->params[0];
-//        if( fabs(q_entry-q_sample) < dqmax ) continue;
-//
-//        //calculate match
-//        //Match = waveform_match(sample, entry, noise);
-//
-//        if(Match > tolerance)
+        
+        //parse source parameters
+        fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
+        //populate sample structure with current parameters
+        sample->f0       = f0;
+        sample->dfdt     = dfdt;
+        sample->costheta = costheta;
+        sample->phi      = phi;
+        sample->amp      = amp;
+        sample->cosi     = cosi;
+        sample->phi0     = phi0;
+        sample->psi      = psi;
+        if(sample->NP>8)sample->d2fdt2 = 11.0/3.0*dfdt*dfdt/f0;
+        //sample->d2fdt2 = fddot;
+        map_params_to_array(sample, sample->params, data->T);
+
+        //calculate waveform model of sample
+        //Book-keeping of injection time-frequency volume
+        galactic_binary_alignment(orbit, data, sample);
+
+        //calculate waveform model of sample
+        galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, 2);
+        
+      //calculate match of sample and all entries
+      matchFlag = 0;
+      for(int n=0; n<catalog->N; n++)
+      {
+//        entry->source[d] = catalog->entry[n];
+
+
+        //check frequency separation
+        double q_entry  = entry->source[d]->f0;
+        double q_sample = sample->f0;
+        if( fabs(q_entry-q_sample) > dqmax ) continue;
+
+        //calculate match
+        Match = waveform_match(sample, entry->source[d], noise);
+
+          
+        if(Match > tolerance)
+        {
+//          fprintf(stdout,"\n%d %d %d.\n",i,d,n);
+          matchFlag = 1;
+//          fprintf(stdout,"\nThese are the same source.\n");
+//          fprintf(stdout,"overlap = %lg > 0.9\n",Match);
+          //append sample to entry
+          append_sample_to_entry(entry, sample, IMAX, data->N, 2, data->NP);
+
+          //stop looping over entries in catalog
+          break;
+        }
+//        else
 //        {
-//          matchFlag = 1;
-//
-//          //append sample to entry
-//          append_sample_to_entry(entry, sample, IMAX, NFFT, Nchannel, NP);
-//
-//          //stop looping over entries in catalog
-//          break;
+//          fprintf(stdout,"\nDifferent sources.\n");
+//          fprintf(stdout,"overlap = %lg < 0.9\n",Match);
 //        }
 //
-//      }//end loop over catalog entries
+      }//end loop over catalog entries
 //
 //      //if the match tolerence is never met, add as new source
-//      if(!matchFlag)create_new_source(catalog, sample, IMAX, NFFT, Nchannel, NP);
+      if(!matchFlag)create_new_source(catalog, sample, IMAX, data->N, 2, data->NP);
 //
     }//end loop over sources in chain sample
 
@@ -339,6 +352,7 @@ void create_new_source(struct Catalog *catalog, struct Source *sample, int IMAX,
   copy_source(sample, entry->source[entry->I]);
   entry->I++; //increment number of samples for entry
   catalog->N++;//increment number of entries for catalog
+  fprintf(stdout,"\nNew source created. Total number of sources is now %d\n",catalog->N);
     
 }
 
