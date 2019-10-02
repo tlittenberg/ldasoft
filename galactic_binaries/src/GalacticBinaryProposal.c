@@ -829,7 +829,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         {
           setup_covariance_proposal(data, flags, proposal[i]);
           proposal[i]->weight   = 0.1;
-          proposal[i]->rjweight = 0.5;
+          proposal[i]->rjweight = 0.2;
         }
         check   += proposal[i]->weight;
         rjcheck += proposal[i]->rjweight;
