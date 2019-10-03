@@ -30,12 +30,6 @@
 int main(int argc, char *argv[])
 {
 
-  //Load posterior samples
-  /*
-   -get chain file names
-   -open chain files
-   -figure out size of things
-   */
     
     FILE *chain_file1;
     int NMAXa = 1;   //max number of frequency & time segments
@@ -56,7 +50,6 @@ int main(int argc, char *argv[])
     }
     parse(argc,argv,data_tmp,orbit,flags,chain,NMAXa);
     alloc_data(data_tmp, flags);
-//    struct Data **data_vec = data;//don't need
     struct Data *data  = data_tmp[0];
     
     //Orbits
@@ -84,7 +77,6 @@ int main(int argc, char *argv[])
     
 
     double f0,dfdt,costheta,phi,amp,cosi,phi0,psi;
-//    double f02,dfdt2,costheta2,phi2,amp2,cosi2,phi02,psi2;
     double junk;
 
     int N=0;
@@ -97,59 +89,52 @@ int main(int argc, char *argv[])
     rewind(chain_file1);
     
     N--;
-
   
   //selection criteria for catalog entries
     int matchFlag;          //track if sample matches any entries
     double Match;     //match between pairs of waveforms
-    double tolerance = 0.9; //tolerance on match to be considered associated
-    double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
+    double tolerance = 0.900; //tolerance on match to be considered associated
+    double dqmax = 1e-6;      //maximum frequency separation to try match calculation (in frequency bins)
   
-  //data volume (needs to be read in somehow)
-//  int NFFT     = 2048;  //maximum number of samples for waveform model
-//  int Nchannel = 2;     //number of data channels (2 == A,e)
-//  int NP       = 8;     //number of parameters
 
   //Book-keeping
-  int DMAX = data->DMAX;         //maximum number of sources per chain sample (needs to be read in from above)
+  int DMAX = data->DMAX; //maximum number of sources per chain sample (needs to be read in from above)
   int IMAX = N/DMAX;     //maximum number of chain samples (needs to be read in from above)
-  int NMAX = DMAX*IMAX; //(absurd) upper limit on total number of catalog entries
+  int NMAX = N; //(absurd) upper limit on total number of catalog entries
   
-  //Allocate memory and initialize structures
-  struct Catalog *catalog = NULL;
-  catalog = malloc(sizeof(struct Catalog));
-  
-  catalog->N = 0; //start with 0 sources in catalog
-  catalog->entry = malloc(NMAX*sizeof(struct Entry*));
-  
-  //for holding current state of chain
-//  struct Source *sample = NULL;
 
     
-  //shortcut to entry pointer in catalog structure
+    struct Catalog *catalog = NULL;
+    catalog = malloc(sizeof(struct Catalog));
+    catalog->N = 0; //start with 0 sources in catalog
+    catalog->entry = malloc(NMAX*sizeof(struct Entry*));
     struct Entry *entry = NULL;
     entry = malloc(sizeof(struct Entry));
     alloc_entry(entry,IMAX);
+    entry->source[0] = malloc(sizeof(struct Source));
+    alloc_source(entry->source[0], data->N,2,data->NP);
 
+    
+    //shortcut to entry pointer in catalog structure
+//    struct Entry *entry = NULL;
+//    entry = malloc(sizeof(struct Entry));
+//    alloc_entry(entry,IMAX);
+//    entry->source[0] = malloc(sizeof(struct Source));
+//    alloc_source(entry->source[0], data->N,2,data->NP);
 
-//
-//  /******************************************************************/
-//  /*             Allocate & Initialize Instrument Model             */
-//  /******************************************************************/
-//
-//
-//
+    
     struct Source *sample = NULL;
     sample = malloc(sizeof *sample);
     alloc_source(sample, data->N,2,data->NP);
+
+//  /******************************************************************/
+//  /*             Allocate & Initialize Instrument Model             */
+//  /******************************************************************/
     
     struct Noise *noise = NULL;
     noise = malloc(flags->NT*sizeof(struct Noise));
     alloc_noise(noise, data->N);
-//    double *SnA1 = NULL;
-//    SnA1 = malloc(data->N*sizeof(double));
-//    double *SnE1 = NULL;
-//    SnE1 = malloc(data->N*sizeof(double));
+    
     struct TDI *tdi = NULL;
     tdi = malloc(data->NP*sizeof(struct TDI));
     alloc_tdi(tdi, data->N, data->Nchannel);
@@ -183,7 +168,7 @@ int main(int argc, char *argv[])
   for(int d=0; d<DMAX; d++)
   {
       
-//    //parse source in first sample of chain file
+      //parse source in first sample of chain file
       fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
 //        //map polarization angle into [0:pi], preserving relation to phi0//DON'T DO AGAIN, already done
 //        if(psi>M_PI) psi  -= M_PI;
@@ -212,7 +197,6 @@ int main(int argc, char *argv[])
 
 //  add new source to catalog
     create_new_source(catalog, sample, IMAX, data->N, 2, data->NP);
-    append_sample_to_entry(entry, sample, IMAX, data->N, 2, data->NP);
   }
 
 
@@ -221,11 +205,9 @@ int main(int argc, char *argv[])
 //  /******************************************************************/
   for(int i=1; i<IMAX; i++)
   {
-    fprintf(stdout,"\n%d.\n",i);
     //check each source in chain sample
     for(int d=0; d<DMAX; d++)
     {
-        
         //parse source parameters
         fscanf(chain_file1,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&costheta,&cosi,&psi,&phi0);
         //populate sample structure with current parameters
@@ -252,68 +234,60 @@ int main(int argc, char *argv[])
       matchFlag = 0;
       for(int n=0; n<catalog->N; n++)
       {
-//        entry->source[d] = catalog->entry[n];
-
-
+        entry = catalog->entry[n];
+        
         //check frequency separation
-        double q_entry  = entry->source[d]->f0;
+        double q_entry  = entry->source[0]->f0;
         double q_sample = sample->f0;
         if( fabs(q_entry-q_sample) > dqmax ) continue;
 
         //calculate match
-        Match = waveform_match(sample, entry->source[d], noise);
+        Match = waveform_match(sample, entry->source[0], noise);
 
-          
+
         if(Match > tolerance)
         {
-//          fprintf(stdout,"\n%d %d %d.\n",i,d,n);
           matchFlag = 1;
-//          fprintf(stdout,"\nThese are the same source.\n");
-//          fprintf(stdout,"overlap = %lg > 0.9\n",Match);
           //append sample to entry
           append_sample_to_entry(entry, sample, IMAX, data->N, 2, data->NP);
 
           //stop looping over entries in catalog
           break;
         }
-//        else
-//        {
-//          fprintf(stdout,"\nDifferent sources.\n");
-//          fprintf(stdout,"overlap = %lg < 0.9\n",Match);
-//        }
 //
       }//end loop over catalog entries
 //
-//      //if the match tolerence is never met, add as new source
+      //if the match tolerence is never met, add as new source
       if(!matchFlag)create_new_source(catalog, sample, IMAX, data->N, 2, data->NP);
 //
     }//end loop over sources in chain sample
 
   }//end loop over chain
-//
-//
+  fclose(chain_file1);
+
 //  /******************************************************************/
 //  /*             Select entries that have enough weight             */
 //  /******************************************************************/
-//  double weight;
-//  double weight_threshold = .2; //how many samples must an entry have to any hope of counting?
-//
-//  int detections = 0;           //number of entries that meet the weight threshold
-//  int detection_index[NMAX];    //list of entry indicies for detected sources
-//
-//  for(int n=0; n<catalog->N; n++)
-//  {
-//    weight = (double)catalog->entry[n]->I/(double)IMAX;
-//
-//    if(weight > weight_threshold)
-//    {
-//      //record index of catalog entry for detected source
-//      detection_index[detections] = n;
-//
-//      //increment the number of detections
-//      detections++;
-//    }
-//  }
+  double weight;
+  double weight_threshold = .2; //how many samples must an entry have to any hope of counting?
+
+  int detections = 0;           //number of entries that meet the weight threshold
+  int detection_index[NMAX];    //list of entry indicies for detected sources
+
+  for(int n=0; n<catalog->N; n++)
+  {
+
+    weight = (double)catalog->entry[n]->I/(double)IMAX;
+    if(weight > weight_threshold)
+    {
+      //record index of catalog entry for detected source
+      detection_index[detections] = n;
+
+      //increment the number of detections
+      detections++;
+    }
+  }
+  fprintf(stdout,"\nNumber of detections is %d.\n",detections);
 //
 //
 //  /******************************************************************/
@@ -325,8 +299,8 @@ int main(int argc, char *argv[])
 //    entry = catalog->entry[n];
 //  }
   
-//  if(flags->orbit)free_orbit(orbit);
-  fclose(chain_file1);
+  if(flags->orbit)free_orbit(orbit);
+  
   return 0;
 }
 
@@ -343,13 +317,14 @@ void create_new_source(struct Catalog *catalog, struct Source *sample, int IMAX,
 {
   int N = catalog->N;
   //allocate memory for new entry in catalog
-  struct Entry *entry = catalog->entry[N];
+  struct Entry *entry = NULL;
   entry = malloc(sizeof(struct Entry));
   alloc_entry(entry,IMAX);
   entry->source[entry->I] = malloc(sizeof(struct Source));
   alloc_source(entry->source[entry->I], NFFT, Nchannel, NP);
   //add sample to the catalog as the new entry
   copy_source(sample, entry->source[entry->I]);
+  catalog->entry[N] = entry;
   entry->I++; //increment number of samples for entry
   catalog->N++;//increment number of entries for catalog
   fprintf(stdout,"\nNew source created. Total number of sources is now %d\n",catalog->N);
