@@ -1024,6 +1024,8 @@ void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Propo
 
 void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, int NMAX)
 {
+  fprintf(stdout,"\n============== Chain CDF proposal ==============\n\n");
+
   /*
    Use posterior samples from previous run to setup
    8x1D proposals from the marginalized posteriors
@@ -1033,6 +1035,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
   FILE *fptr=NULL;
   
   //parse chain file
+  fprintf(stdout,"  reading chain file %s...\n",flags->cdfFile);
   fptr = fopen(flags->cdfFile,"r");
   proposal->size=0;
   while(!feof(fptr))
@@ -1042,6 +1045,9 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
   }
   rewind(fptr);
   proposal->size--;
+
+  fprintf(stdout, "  samples in chain: %i\n",proposal->size);
+  
   proposal->vector = malloc(proposal->size * sizeof(double));
   proposal->matrix = malloc(data->NP * sizeof(double*));
   for(int j=0; j<data->NP; j++) proposal->matrix[j] = malloc(proposal->size * sizeof(double));
@@ -1074,6 +1080,8 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
   free(proposal->vector);
   
   fclose(fptr);
+
+  fprintf(stdout,"\n================================================\n");
 }
 
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal)
