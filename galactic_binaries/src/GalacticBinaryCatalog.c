@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
   //selection criteria for catalog entries
     int matchFlag;          //track if sample matches any entries
     double Match;     //match between pairs of waveforms
-    double tolerance = 8.0; //tolerance on match to be considered associated
+    double tolerance = 0.88; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
   
 
@@ -256,6 +256,35 @@ int main(int argc, char *argv[])
     fprintf(catalogFile,"%lg %i %lg\n",entry->source[0]->f0, entry->I, (double)entry->I/(double)IMAX);
   }
   
+    
+    /* *************************************************************** */
+    /*           Save source detection parameters to file              */
+    /* *************************************************************** */
+    
+    for(int d=0; d<detections; d++)
+    {
+      //open file for detection
+      char a[30];
+      sprintf(a,"%d",d);
+
+      char filename[100];
+      FILE *out;
+      sprintf(filename, "detection_%s.dat", a);
+      out = fopen( filename, "w");
+        
+      int n = detection_index[d];
+        entry = catalog->entry[n];
+      //add parameters to file
+
+        for(int k=0; k<entry->I; k++)
+        {
+          fprintf(out,"%.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g\n",entry->source[k]->f0,entry->source[k]->dfdt,entry->source[k]->amp,entry->source[k]->phi,entry->source[k]->costheta,entry->source[k]->cosi,entry->source[k]->psi,entry->source[k]->phi0);
+        }
+      // close detection file
+      fclose(out);
+    }
+
+
   if(flags->orbit)free_orbit(orbit);
   
   return 0;
