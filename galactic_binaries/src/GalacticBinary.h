@@ -1,6 +1,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#define MAXSTRINGSIZE 1024
 
 struct Data
 {

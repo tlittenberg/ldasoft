@@ -10,6 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <sys/stat.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -248,7 +249,14 @@ int main(int argc, char *argv[])
   /* *************************************************************** */
   /*           Format selected entries as L4 data products           */
   /* *************************************************************** */
-  FILE *catalogFile = fopen("catalog.dat","w");
+  
+  char outdir[MAXSTRINGSIZE];
+  sprintf(outdir,"post");
+  mkdir(outdir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+  FILE *catalogFile = fopen("post/catalog.dat","w");
+
+  
   for(int d=0; d<detections; d++)
   {
     int n = detection_index[d];
