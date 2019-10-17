@@ -433,6 +433,7 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     fonfs = f*invfstar;
     fonfs2= 2.*fonfs;
     
+    //TODO: make use of recursion relationships to get rid of trig calls
     c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
     s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
     
