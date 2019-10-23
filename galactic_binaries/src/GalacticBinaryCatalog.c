@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
     parse(argc,argv,data_tmp,orbit,flags,chain,NTEMP);
     alloc_data(data_tmp, flags);
     struct Data *data  = data_tmp[0];
-    
+    data->qmin = (int)(data->fmin*data->T);
+  
     //Orbits
     /* Load spacecraft ephemerides */
     switch(flags->orbit)
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
   //selection criteria for catalog entries
     int matchFlag;          //track if sample matches any entries
     double Match;     //match between pairs of waveforms
-    double tolerance = 0.88; //tolerance on match to be considered associated
+    double tolerance = 0.9; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
   
 
@@ -193,8 +194,8 @@ int main(int argc, char *argv[])
         //check frequency separation
         double q_entry  = entry->source[0]->f0 * data->T;
         double q_sample = sample->f0 * data->T;
-                
-        if( fabs(q_entry-q_sample) > dqmax ) Match = 0.0;
+        
+        if( fabs(q_entry-q_sample) > dqmax ) Match = -1.0;
         
         //calculate match
         else Match = waveform_match(sample, entry->source[0], noise);

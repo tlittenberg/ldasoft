@@ -62,21 +62,79 @@ double snr(struct Source *source, struct Noise *noise)
     return(sqrt(snr2));
 }
 
-double waveform_match(struct Source *source, struct Source *src_test, struct Noise *noise)
+double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
 {
-    double match=0;
-    double snr1=0;
-    double snr2=0;
+  int N = a->tdi->N;
+  int NFFT = 2*N;
+  double match=0;
 
-    snr1 += fourier_nwip(src_test->tdi->A,src_test->tdi->A,noise->SnA,src_test->tdi->N);
-    snr1 += fourier_nwip(src_test->tdi->E,src_test->tdi->E,noise->SnE,src_test->tdi->N);
-    snr2 += fourier_nwip(source->tdi->A,source->tdi->A,noise->SnA,source->tdi->N);
-    snr2 += fourier_nwip(source->tdi->E,source->tdi->E,noise->SnE,source->tdi->N);
+  double *a_A = malloc(NFFT*sizeof(double));
+  double *a_E = malloc(NFFT*sizeof(double));
+  double *b_A = malloc(NFFT*sizeof(double));
+  double *b_E = malloc(NFFT*sizeof(double));
+  for(int i=0; i<NFFT; i++)
+  {
+    a_A[i] = 0.0;
+    a_E[i] = 0.0;
+    b_A[i] = 0.0;
+    b_E[i] = 0.0;
+  }
 
-    match = fourier_nwip(src_test->tdi->A,source->tdi->A,noise->SnA,source->tdi->N)/sqrt(snr1*snr2);
-    match += fourier_nwip(src_test->tdi->E,source->tdi->E,noise->SnE,source->tdi->N)/sqrt(snr1*snr2);
+  int qmin = a->qmin - a->imin;
+
+
+  //Align waveforms into arrays for summing
+  for(int i=0; i<a->BW; i++)
+  {
+    int j = i+a->qmin-qmin;
+   // printf("data->qmin=%i,i=%i, imin=%i, qmin=%i, j=%i\n",qmin,i,a->imin,a->qmin,j);
     
-    return(match);
+    if(j>-1 && j<N)
+    {
+      int i_re = 2*i;
+      int i_im = i_re+1;
+      int j_re = 2*j;
+      int j_im = j_re+1;
+      
+      a_A[j_re] = a->tdi->A[i_re];
+      a_A[j_im] = a->tdi->A[i_im];
+      a_E[j_re] = a->tdi->E[i_re];
+      a_E[j_im] = a->tdi->E[i_im];
+    }//check that index is in range
+  }//loop over waveform bins
+
+  //Align waveforms into arrays for summing
+  for(int i=0; i<b->BW; i++)
+  {
+    int j = i+b->qmin-qmin;
+    
+    if(j>-1 && j<N)
+    {
+      int i_re = 2*i;
+      int i_im = i_re+1;
+      int j_re = 2*j;
+      int j_im = j_re+1;
+      
+      b_A[j_re] = b->tdi->A[i_re];
+      b_A[j_im] = b->tdi->A[i_im];
+      b_E[j_re] = b->tdi->E[i_re];
+      b_E[j_im] = b->tdi->E[i_im];
+    }//check that index is in range
+  }//loop over waveform bins
+
+  
+  double aa = fourier_nwip(a_A,a_A,noise->SnA,N) + fourier_nwip(a_E,a_E,noise->SnE,N);
+  double bb = fourier_nwip(b_A,b_A,noise->SnA,N) + fourier_nwip(b_E,b_E,noise->SnE,N);
+  double ab = fourier_nwip(a_A,b_A,noise->SnA,N) + fourier_nwip(a_E,b_E,noise->SnE,N);
+  
+  match = ab/sqrt(aa*bb);
+
+  free(a_A);
+  free(a_E);
+  free(b_A);
+  free(b_E);
+  
+  return match;
 }
 
 // Recursive binary search function.
