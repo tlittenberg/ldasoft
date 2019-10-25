@@ -20,6 +20,7 @@ struct Entry
 {
   int I;                  //number of chain samples
   struct Source **source; //source structure contains parameters, defined in GalacticBinary.h
+  char name[64];
 };
 
 void alloc_entry(struct Entry *entry, int IMAX);
