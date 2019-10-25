@@ -11,6 +11,26 @@
 #include "LISA.h"
 #include "Constants.h"
 
+void print_LISA_ASCII_art(FILE *fptr)
+{
+  fprintf(fptr,"                                          \n");
+  fprintf(fptr,"                                OOOOO     \n");
+  fprintf(fptr,"                               OOOOOOO    \n");
+  fprintf(fptr,"                             #####OOOOO   \n");
+  fprintf(fptr,"  OOOOO            ########    O#OOOOO    \n");
+  fprintf(fptr," OOOOOOO  #######             ##OOOO      \n");
+  fprintf(fptr," OOOOOOOO                    ##           \n");
+  fprintf(fptr," OOOOO####                 ###            \n");
+  fprintf(fptr,"   OOOO ####             ###              \n");
+  fprintf(fptr,"           ####    OOOOOO##               \n");
+  fprintf(fptr,"              ###OOOOOOOOOO               \n");
+  fprintf(fptr,"                OOOOOOOOOOOO              \n");
+  fprintf(fptr,"                OOOOOOOOOOOO              \n");
+  fprintf(fptr,"                OOOOOOOOOOOO              \n");
+  fprintf(fptr,"                 OOOOOOOOOO               \n");
+  fprintf(fptr,"                   OOOOOO                 \n");
+}
+
 void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
 {
   int i;

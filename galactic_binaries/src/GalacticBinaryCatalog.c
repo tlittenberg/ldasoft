@@ -12,6 +12,8 @@
 #include <time.h>
 #include <sys/stat.h>
 
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_statistics.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -93,7 +95,7 @@ int main(int argc, char *argv[])
   //selection criteria for catalog entries
     int matchFlag;          //track if sample matches any entries
     double Match;     //match between pairs of waveforms
-    double tolerance = 0.9; //tolerance on match to be considered associated
+    double tolerance = 0.8; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
   
 
@@ -169,10 +171,11 @@ int main(int argc, char *argv[])
   /*            Now loop over the rest of the chain file            */
   /* ****************************************************************/
   
-  FILE *matchFile = fopen("match.dat","w");
-  
+  printf("Looping over chain file\n");
   for(int i=1; i<IMAX; i++)
   {
+    if(i%(IMAX/100)==0)printProgress((double)i/(double)IMAX);
+
     //check each source in chain sample
     for(int d=0; d<DMAX; d++)
     {
@@ -200,8 +203,6 @@ int main(int argc, char *argv[])
         //calculate match
         else Match = waveform_match(sample, entry->source[0], noise);
 
-        fprintf(matchFile,"%lg\n",Match);
-
         if(Match > tolerance)
         {
           matchFlag = 1;
@@ -221,7 +222,9 @@ int main(int argc, char *argv[])
     }//end loop over sources in chain sample
 
   }//end loop over chain
+  printf("\n");
   fclose(chain_file1);
+  
 
   /* ****************************************************************/
   /*             Select entries that have enough weight             */
@@ -252,47 +255,60 @@ int main(int argc, char *argv[])
   /* *************************************************************** */
   
   char outdir[MAXSTRINGSIZE];
-  sprintf(outdir,"post");
+  sprintf(outdir,"catalog");
   mkdir(outdir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-  FILE *catalogFile = fopen("post/catalog.dat","w");
+  FILE *catalogFile = fopen("post/entries.dat","w");
 
-  
+  double *f_vec;
+  double f_med;
   for(int d=0; d<detections; d++)
   {
     int n = detection_index[d];
     entry = catalog->entry[n];
-    fprintf(catalogFile,"%lg %i %lg\n",entry->source[0]->f0, entry->I, (double)entry->I/(double)IMAX);
+    
+    //get median frequency as identifier of source
+    f_vec = malloc(entry->I*sizeof(double));
+    for(int i=0; i<entry->I; i++) f_vec[i] = entry->source[i]->f0;
+    f_med = gsl_stats_median(f_vec, 1, entry->I);
+
+    //name source based on median frequency
+    sprintf(entry->name,"GW%08d",(int)(f_med*1e8));
+    
+    //evidence for source related to number of visits in the chain
+    entry->evidence = (double)entry->I/(double)IMAX;
+
+    fprintf(catalogFile,"%s %lg\n",entry->name, entry->evidence);
   }
   
     
-    /* *************************************************************** */
-    /*           Save source detection parameters to file              */
-    /* *************************************************************** */
+  /* *************************************************************** */
+  /*           Save source detection parameters to file              */
+  /* *************************************************************** */
+  
+  for(int d=0; d<detections; d++)
+  {
+    //open file for detection
     
-    for(int d=0; d<detections; d++)
+    char filename[100];
+    FILE *out;
+    
+    int n = detection_index[d];
+    entry = catalog->entry[n];
+    
+    sprintf(filename, "catalog/%s_chain.dat", entry->name);
+    out = fopen( filename, "w");
+    
+    
+    //add parameters to file
+    
+    for(int k=0; k<entry->I; k++)
     {
-      //open file for detection
-      char a[30];
-      sprintf(a,"%d",d);
-
-      char filename[100];
-      FILE *out;
-      sprintf(filename, "detection_%s.dat", a);
-      out = fopen( filename, "w");
-        
-      int n = detection_index[d];
-        entry = catalog->entry[n];
-      //add parameters to file
-
-        for(int k=0; k<entry->I; k++)
-        {
-          fprintf(out,"%.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g\n",entry->source[k]->f0,entry->source[k]->dfdt,entry->source[k]->amp,entry->source[k]->phi,entry->source[k]->costheta,entry->source[k]->cosi,entry->source[k]->psi,entry->source[k]->phi0);
-        }
-      // close detection file
-      fclose(out);
+      fprintf(out,"%.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g\n",entry->source[k]->f0,entry->source[k]->dfdt,entry->source[k]->amp,entry->source[k]->phi,entry->source[k]->costheta,entry->source[k]->cosi,entry->source[k]->psi,entry->source[k]->phi0);
     }
-
+    // close detection file
+    fclose(out);
+  }
 
   if(flags->orbit)free_orbit(orbit);
   
@@ -311,19 +327,20 @@ void alloc_entry(struct Entry *entry, int IMAX)
 void create_new_source(struct Catalog *catalog, struct Source *sample, int IMAX, int NFFT, int Nchannel, int NP)
 {
   int N = catalog->N;
+  
   //allocate memory for new entry in catalog
-  struct Entry *entry = NULL;
-  entry = malloc(sizeof(struct Entry));
+  catalog->entry[N] = malloc(sizeof(struct Entry));
+  struct Entry *entry = catalog->entry[N];
+  
   alloc_entry(entry,IMAX);
   entry->source[entry->I] = malloc(sizeof(struct Source));
   alloc_source(entry->source[entry->I], NFFT, Nchannel, NP);
+
   //add sample to the catalog as the new entry
   copy_source(sample, entry->source[entry->I]);
-  catalog->entry[N] = entry;
+
   entry->I++; //increment number of samples for entry
   catalog->N++;//increment number of entries for catalog
-  //fprintf(stdout,"\nNew source created. Total number of sources is now %d\n",catalog->N);
-    
 }
 
 void append_sample_to_entry(struct Entry *entry, struct Source *sample, int IMAX, int NFFT, int Nchannel, int NP)
