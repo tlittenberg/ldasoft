@@ -63,6 +63,8 @@ struct TDI
 };
 
 
+void print_LISA_ASCII_art(FILE *fptr);
+
 void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z);
 void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z);
 

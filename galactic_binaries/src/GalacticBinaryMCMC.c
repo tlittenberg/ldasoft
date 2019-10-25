@@ -39,26 +39,8 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
 
 int main(int argc, char *argv[])
 {
-  printf("                                       \n");
-  printf("               .::::::::               \n");
-  printf("              ::::::::::::::           \n");
-  printf("           .:??????:::::::::::  8OOOO~ \n");
-  printf("           ????::????::::::::??8OZZZOO \n");
-  printf("          :?::??:::+??????.?8888+Z$ZOO.\n");
-  printf("  .8888  ?::?::??. $$$ZZO?.:+??88OOOO8 \n");
-  printf(" .OOZZOOO =88OOOZ. ???:::????:OO+.8?   \n");
-  printf(" 8OZ$$,=8 ::???::??::::::::+.ZZ:??     \n");
-  printf(" ?OOZZO888::???::??::::???:$$$,::?     \n");
-  printf("   88O8 :OZZI??::::::::???ZZZ,?::?     \n");
-  printf("        :??Z$$Z.??:.8888 OOO.?::??     \n");
-  printf("         ::??ZZOO.8OOOOOO8..:::??.     \n");
-  printf("         .?::??O+8OOZZZZOO8.::???      \n");
-  printf("           ::~??.8OZZ$$ZZOO7????       \n");
-  printf("            ::::.8OZZZZZZOO.?:.        \n");
-  printf("              ::=88OOOOOOO8:.          \n");
-  printf("                .:.88OO88.             \n");
-
-
+  
+  print_LISA_ASCII_art(stdout);
   
   int ic;
   

@@ -19,8 +19,9 @@ struct Catalog
 struct Entry
 {
   int I;                  //number of chain samples
+  char name[128];         //source name
   struct Source **source; //source structure contains parameters, defined in GalacticBinary.h
-  char name[64];
+  double evidence;        //source evidence
 };
 
 void alloc_entry(struct Entry *entry, int IMAX);
