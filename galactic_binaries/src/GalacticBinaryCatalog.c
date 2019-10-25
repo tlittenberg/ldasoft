@@ -270,7 +270,8 @@ int main(int argc, char *argv[])
     //get median frequency as identifier of source
     f_vec = malloc(entry->I*sizeof(double));
     for(int i=0; i<entry->I; i++) f_vec[i] = entry->source[i]->f0;
-    f_med = gsl_stats_median(f_vec, 1, entry->I);
+    gsl_sort(f_vec, 1, entry->I);
+    f_med = gsl_stats_median_from_sorted_data(f_vec, 1, entry->I);
 
     //name source based on median frequency
     sprintf(entry->name,"GW%08d",(int)(f_med*1e8));
