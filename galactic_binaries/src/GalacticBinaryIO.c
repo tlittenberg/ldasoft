@@ -124,7 +124,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
   fprintf(fptr,"\n");
 }
 
-static int checkfile(char filename[])
+int checkfile(char filename[])
 {
   FILE *fptr = fopen(filename, "r");
   if(fptr)
@@ -143,7 +143,7 @@ static int checkfile(char filename[])
 void print_usage()
 {
   fprintf(stdout,"\n");
-  fprintf(stdout,"Usage: \n");
+  fprintf(stdout,"=============== GBMCMC Usage: ============== \n");
   fprintf(stdout,"REQUIRED:\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"OPTIONAL:\n");
@@ -203,6 +203,9 @@ void print_usage()
 
 void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
 {
+  print_LISA_ASCII_art(stdout);
+  print_version(stdout);
+
   if(argc==1) print_usage();
   
   int DMAX_default = 10;
@@ -513,7 +516,6 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   
   //Print version control
   FILE *runlog = fopen("gb_mcmc.log","w");
-  print_version(stdout);
   print_version(runlog);
   
   //Report on set parameters
