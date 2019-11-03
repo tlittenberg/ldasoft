@@ -776,9 +776,9 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
         proposal[i]->function = &draw_from_fstatistic;
         proposal[i]->density  = &evaluate_fstatistic_proposal;
-        proposal[i]->weight   = 0.0;
+        proposal[i]->weight   = 0.2;
         proposal[i]->rjweight = 1.0; //that's a 1 all right.  don't panic
-        check   += proposal[i]->weight;
+        check += proposal[i]->weight;
         break;
       case 2:
         sprintf(proposal[i]->name,"fstat jump");
@@ -793,7 +793,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         
         proposal[i]->function = &jump_from_fstatistic;
         proposal[i]->density  = &evaluate_fstatistic_proposal;
-        proposal[i]->weight   = 0.2;
+        proposal[i]->weight   = 0.0;
         proposal[i]->rjweight = 0.0;
         check   += proposal[i]->weight;
         rjcheck += proposal[i]->rjweight;
@@ -1224,13 +1224,8 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   
   //first draw from prior
   for(int n=0; n<source->NP; n++)
-  {
     params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-    logP -= model->logPriorVolume[n];
-  }
-  //put back
-  
-  
+
   //now rejection sample on f,theta,phi
   int check=1;
   while(check)
@@ -1256,7 +1251,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   params[1] = costheta;
   params[2] = phi;
   
-  logP += log(p);
+  logP = evaluate_fstatistic_proposal(data, model, source, proposal, params);
   
   return logP;
 }
@@ -1277,7 +1272,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
   
   double i=0,j,k;
   
-  /* half the time do an fm shift, half the time completely rebott frequency */
+  /* half the time do an fm shift, half the time completely reboot frequency */
   int fmFlag = 0;
   if(gsl_rng_uniform(seed)<-0.5) fmFlag=1;
   
@@ -1326,7 +1321,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
   params[1] = costheta;
   params[2] = phi;
   
-  logP = log(p);
+  logP = evaluate_fstatistic_proposal(data, model, source, proposal, params);
   
   return logP;
 }
@@ -1334,7 +1329,11 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
 
 //double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal, double *params)
 double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *model, UNUSED struct Source * source, struct Proposal *proposal, double *params)
-{  
+{
+  double logP = 0.0;
+  
+  for(int n=0; n<source->NP; n++) logP -= model->logPriorVolume[n];
+  
   double d_f     = proposal->matrix[0][1];
   double d_theta = proposal->matrix[1][1];
   double d_phi   = proposal->matrix[2][1];
@@ -1350,7 +1349,9 @@ double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *mode
   if      (i<0 || i>=n_f    ) return -INFINITY;
   else if (j<0 || j>=n_theta) return -INFINITY;
   else if (k<0 || k>=n_phi  ) return -INFINITY;
-  else return log(proposal->tensor[i][j][k]);
+  else logP += log(proposal->tensor[i][j][k]);
+    
+  return logP;
 }
 
 double prior_density(struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params)

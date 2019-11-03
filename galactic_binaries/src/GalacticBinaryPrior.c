@@ -485,14 +485,14 @@ double evaluate_uniform_priors(double *params, double **uniform_prior, double *l
   else logP -= logPriorVolume[4];
 
   //polarization
-  //TODO: polarization prior should be periodic
-  if(params[5]<uniform_prior[5][0] || params[5]>uniform_prior[5][1]) return -INFINITY;
-  else logP -= logPriorVolume[5];
+  while(params[5]<uniform_prior[5][0]) params[5] += M_PI;
+  while(params[5]>uniform_prior[5][1]) params[5] -= M_PI;
+  logP -= logPriorVolume[5];
 
   //phase
-  //TODO: phase prior should be periodic
-  if(params[6]<uniform_prior[6][0] || params[6]>uniform_prior[6][1]) return -INFINITY;
-  else logP -= logPriorVolume[5];
+  while(params[6]<uniform_prior[6][0]) params[6] += PI2;
+  while(params[6]>uniform_prior[6][1]) params[6] -= PI2;
+  logP -= logPriorVolume[6];
 
   //fdot (bins/Tobs)
   if(NP>7)

@@ -380,7 +380,6 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
         if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
-        if(strcmp("debug",       long_options[long_index].name) == 0) flags->debug      = 1;
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
         if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
@@ -475,6 +474,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
               exit(1);
           }
         }
+        break;
+      case 'd' : flags->debug = 1;
         break;
       case 'h' :
         print_usage();
