@@ -262,7 +262,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->DMAX        = DMAX_default;
   flags->NMCMC       = 10000;
   flags->NBURN       = 10000;
-  chain->NP          = 8; //number of proposals
+  chain->NP          = 9; //number of proposals
   chain->NC          = 12;//number of chains
   
   

@@ -698,6 +698,27 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
   return 0.0;
 }
 
+double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+{
+  //proposal taking advantage of degeneracy between {psi,phi_0} -> {psi+/-pi/2,phi_0+/-pi}
+  double scale = gsl_rng_uniform(seed)*PI2;
+  double d_phi = scale;
+  double d_psi = 0.5*scale;
+  
+  if(gsl_rng_uniform(seed) < 0.5 ) d_phi *= -1.;
+  if(gsl_rng_uniform(seed) < 0.5 ) d_psi *= -1.;
+  
+  //jump from current position
+  for(int i=0; i<source->NP; i++) params[i] = source->params[i];
+  
+  params[5] += d_psi;
+  params[6] += d_phi;
+  
+  //psi-phi jump is symmetric
+  return 0.0;
+
+}
+
 double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed)
 {
   for(int i=1; i<model->NT; i++)
@@ -799,12 +820,21 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         sprintf(proposal[i]->name,"fm shift");
         proposal[i]->function = &fm_shift;
         proposal[i]->density  = &symmetric_density;
-        proposal[i]->weight   = 0.2;
+        proposal[i]->weight   = 0.1;
         proposal[i]->rjweight = 0.0;
         check   += proposal[i]->weight;
         rjcheck += proposal[i]->rjweight;
         break;
       case 6:
+        sprintf(proposal[i]->name,"psi-phi jump");
+        proposal[i]->function = &psi_phi_jump;
+        proposal[i]->density  = &symmetric_density;
+        proposal[i]->weight   = 0.1;
+        proposal[i]->rjweight = 0.0;
+        check   += proposal[i]->weight;
+        rjcheck += proposal[i]->rjweight;
+        break;
+      case 7:
         sprintf(proposal[i]->name,"cdf draw");
         proposal[i]->function = &draw_from_cdf;
         proposal[i]->density  = &cdf_density;
@@ -819,7 +849,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         check   += proposal[i]->weight;
         rjcheck += proposal[i]->rjweight;
         break;
-      case 7:
+      case 8:
         sprintf(proposal[i]->name,"cov draw");
         proposal[i]->function = &draw_from_cov;
         proposal[i]->density  = &cov_density;
@@ -849,6 +879,20 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
     fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
     exit(1);
   }
+  
+  fprintf(stdout,"\n============== Proposal Cocktail ==============\n");
+  fprintf(stdout,"   MCMC proposals:\n");
+  for(int i=0; i<chain->NP; i++)
+  {
+    if(proposal[i]->weight>0.0)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->weight);
+  }
+  fprintf(stdout,"   RJMCMC proposals:\n");
+  for(int i=0; i<chain->NP; i++)
+  {
+    if(proposal[i]->rjweight)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->rjweight);
+  }
+  fprintf(stdout,"===============================================\n");
+
 }
 
 
@@ -882,7 +926,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
   double d_theta = 2./(double)n_theta;
   double d_phi   = PI2/(double)n_phi;
   
-  fprintf(stdout,"\n============ F-statistic sky proposal ============\n");
+  fprintf(stdout,"\n============ F-statistic proposal ============\n");
   fprintf(stdout,"   n_f     = %i\n",n_f);
   fprintf(stdout,"   n_theta = %i\n",n_theta);
   fprintf(stdout,"   n_phi   = %i\n",n_phi);
