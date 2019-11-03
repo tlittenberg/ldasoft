@@ -149,42 +149,67 @@ void print_usage()
   fprintf(stdout,"OPTIONAL:\n");
   fprintf(stdout,"  -h | --help        : print help message and exit         \n");
   fprintf(stdout,"  -v | --verbose     : enable verbose output               \n");
+  fprintf(stdout,"  -d | --debug       : leaner settings for quick running   \n");
+  fprintf(stdout,"\n");
+
+  //LISA
+  fprintf(stdout,"       =========== LISA =========== \n");
   fprintf(stdout,"       --orbit       : orbit ephemerides file (2.5 GM MLDC)\n");
-  fprintf(stdout,"       --steps       : number of mcmc steps (10000)        \n");
+  fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
+  fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
+  fprintf(stdout,"\n");
+
+  //Data
+  fprintf(stdout,"       =========== Data =========== \n");
+  fprintf(stdout,"       --data        : strain data file                    \n");
   fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
   fprintf(stdout,"       --segments    : number of data segments (1)         \n");
-  fprintf(stdout,"       --sources     : maximum number of sources (10)      \n");
   fprintf(stdout,"       --start-time  : initial time of segment  (0)        \n");
   fprintf(stdout,"       --gap-time    : duration of data gaps (0)           \n");
   fprintf(stdout,"       --fmin        : minimum frequency                   \n");
   fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
+  fprintf(stdout,"       --sim-noise   : data w/out noise realization        \n");
+  fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
   fprintf(stdout,"       --noiseseed   : seed for noise RNG                  \n");
+  fprintf(stdout,"       --inj         : inject signal                       \n");
+  fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
+  fprintf(stdout,"\n");
+
+  //Chain
+  fprintf(stdout,"       ========== Chains ========== \n");
+  fprintf(stdout,"       --steps       : number of mcmc steps (10000)        \n");
   fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
   fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
-  fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
-  fprintf(stdout,"       --inj         : inject signal                       \n");
-  fprintf(stdout,"       --data        : strain data file                    \n");
-  fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
+  fprintf(stdout,"\n");
+
+  //Model
+  fprintf(stdout,"       ========== Model =========== \n");
+  fprintf(stdout,"       --sources     : maximum number of sources (10)      \n");
+  fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
+  fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
+  fprintf(stdout,"       --prior       : sample from prior                   \n");
+  fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
+  fprintf(stdout,"       --calibration : marginalize over calibration errors \n");
+  fprintf(stdout,"       --fit-gap     : fit for time gaps between segments  \n");
+  fprintf(stdout,"\n");
+
+  //Priors & Proposals
+  fprintf(stdout,"       ==== Priors & Proposals ==== \n");
   fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
   fprintf(stdout,"       --galaxy-prior: use galaxy model for sky prior      \n");
   fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
   fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
   fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
   fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
-  fprintf(stdout,"       --cheat       : start chain at injection parameters \n");
   fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
   fprintf(stdout,"       --update-cov  : use cov mtrx proposal [filename]    \n");
-  fprintf(stdout,"       --sim-noise   : data w/out noise realization        \n");
+  fprintf(stdout,"\n");
+  
+  //Misc.
+  fprintf(stdout,"       =========== Misc =========== \n");
   fprintf(stdout,"       --match-in1      : input paramaters for overlap [filename] \n");
   fprintf(stdout,"       --match-in2      : output match values [filename] \n");
-  fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
-  fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
-  fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
-  fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
-  fprintf(stdout,"       --fit-gap     : fit for time gaps between segments  \n");
-  fprintf(stdout,"       --calibration : marginalize over calibration errors \n");
-  fprintf(stdout,"       --prior       : sample from prior                   \n");
-  fprintf(stdout,"       --debug       : leaner settings for quick running   \n");
+  
   fprintf(stdout,"--\n");
   fprintf(stdout,"EXAMPLE:\n");
   fprintf(stdout,"./gb_mcmc --orbit ../config/OrbitConfig1.txt --verbose --inj ../data/sources/RXJ0806.dat\n");
@@ -305,6 +330,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
      We distinguish them by their indices. */
     {"help",        no_argument, 0,'h'},
     {"verbose",     no_argument, 0,'v'},
+    {"debug",       no_argument, 0,'d'},
     {"zero-noise",  no_argument, 0, 0 },
     {"conf-noise",  no_argument, 0, 0 },
     {"frac-freq",   no_argument, 0, 0 },
@@ -317,7 +343,6 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"detached",    no_argument, 0, 0 },
     {"prior",       no_argument, 0, 0 },
     {"cheat",       no_argument, 0, 0 },
-    {"debug",       no_argument, 0, 0 },
     {"no-rj",       no_argument, 0, 0 },
     {"fit-gap",     no_argument, 0, 0 },
     {"calibration", no_argument, 0, 0 },

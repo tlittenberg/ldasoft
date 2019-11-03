@@ -37,6 +37,10 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
 int main(int argc, char *argv[])
 {
 
+  /* ************************************************************** */
+  /*             Allocate & Initialize Data Structures              */
+  /* ************************************************************** */
+
     int NTEMP = 1;   //needed size of data structure
 
     
@@ -168,7 +172,7 @@ int main(int argc, char *argv[])
   /*            Now loop over the rest of the chain file            */
   /* ****************************************************************/
   
-  fprintf(stdout,"Looping over chain file\n");
+  fprintf(stdout,"\nLooping over chain file\n");
   for(int i=1; i<IMAX; i++)
   {
     if(i%(IMAX/100)==0)printProgress((double)i/(double)IMAX);
@@ -249,7 +253,7 @@ int main(int argc, char *argv[])
   fprintf(stdout,"\nNumber of discrete sources is %d.\n",detections);
 
   /* *************************************************************** */
-  /*           Format selected entries as L4 data products           */
+  /*           Format selected entries as L3 data products           */
   /* *************************************************************** */
   
   char outdir[MAXSTRINGSIZE];
