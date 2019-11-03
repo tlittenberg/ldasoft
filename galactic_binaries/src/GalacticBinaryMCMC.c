@@ -40,10 +40,6 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
 int main(int argc, char *argv[])
 {
   
-  print_LISA_ASCII_art(stdout);
-  
-  int ic;
-  
   time_t start, stop;
   start = time(NULL);
   
@@ -126,7 +122,7 @@ int main(int argc, char *argv[])
   for(int j=0; j<flags->NDATA; j++) initialize_proposal(orbit, data[j], prior, chain, flags, proposal[j], DMAX);
   
   /* Initialize data models */
-  for(ic=0; ic<NC; ic++)
+  for(int ic=0; ic<NC; ic++)
   {
     //printf("initialize model\n");
 
@@ -234,7 +230,7 @@ int main(int argc, char *argv[])
     
     // (parallel) loop over chains
     //#pragma omp parallel for private(ic) shared(flags,model,trial,chain,orbit,proposal)
-    for(ic=0; ic<NC; ic++)
+    for(int ic=0; ic<NC; ic++)
     {
       
       //loop over frequency segments
@@ -300,7 +296,7 @@ int main(int argc, char *argv[])
     if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
     {
       for(int i=0; i<flags->NDATA; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
-      for(ic=0; ic<NC; ic++)
+      for(int ic=0; ic<NC; ic++)
       {
         chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
         for(int i=0; i<flags->NDATA; i++)
@@ -314,7 +310,7 @@ int main(int argc, char *argv[])
   for(int i=0; i<flags->NDATA; i++)print_waveforms_reconstruction(data[i],i);
   
   FILE *chainFile = fopen("avg_log_likelihood.dat","w");
-  for(ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data[FIXME]->downsample));
+  for(int ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data[FIXME]->downsample));
   fclose(chainFile);
   
   FILE *zFile = fopen("evidence.dat","w");
@@ -328,7 +324,7 @@ int main(int argc, char *argv[])
   
   
   //free memory and exit cleanly
-  for(ic=0; ic<NC; ic++)
+  for(int ic=0; ic<NC; ic++)
   {
     for(int i=0; i<flags->NDATA; i++) free_model(model[ic][i]);
     free_model(trial[ic]);
