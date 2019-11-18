@@ -558,12 +558,15 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
 {
   int NP = source->NP;
   double ran_no[NP];
-  
+  int ns=0;
+//  proposal->size = 1;
+  ns=(int)floor(gsl_rng_uniform(seed)*proposal->size);
+//  printf("\nproposing from from ns=%d\n",ns);
   //pick which mode to propose to
   int mode;
-  if (gsl_rng_uniform(seed) > (1.0-proposal->vector[0])) mode = 0;
-  else mode = 1;
-  
+  if (gsl_rng_uniform(seed) > (1.0-proposal->vector[4*ns])) mode = 2*ns;
+  else mode = 2*ns+1;
+    
   //define some helper pointers for ease of reading
   double *mean  = proposal->matrix[mode];
   double **Lij  = proposal->tensor[mode];
@@ -634,7 +637,7 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
   /*
    if everything is in bounds, evaluate the probability (density)
    */
-  int Nmodes = 2;
+  int Nmodes = proposal->size*2;
   double delta_x[NP];
   
   //helper pointers
@@ -650,8 +653,8 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
   for(int i=0; i<Nmodes; i++)
   {
     //unpack proposal structure
-    weight = proposal->vector[i*Nmodes];
-    norm   = proposal->vector[i*Nmodes+1];
+    weight = proposal->vector[i*2];
+    norm   = proposal->vector[i*2+1];
     mean   = proposal->matrix[i];
     invCij = proposal->tensor[Nmodes+i];
 
@@ -1132,11 +1135,19 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
 {
   fprintf(stdout,"\n========== Covariance matrix proposal ==========\n\n");
 
-  int Ncov=2;
-  int NP = data->NP;
-  double junk;
-  double alpha, detCij;
+    
+  fprintf(stdout,"   reading covariance matrix %s...\n",flags->covFile);
   FILE *fptr;
+  fptr = fopen(flags->covFile,"r");
+  int no_sources;
+  double junk;
+  fscanf(fptr, "%d%lg%lg%lg%lg%lg%lg%lg", &no_sources, &junk, &junk, &junk, &junk, &junk, &junk , &junk);
+  proposal->size = no_sources;
+  printf("\nproposal->size=%d\n",proposal->size);
+    int Ncov=proposal->size*2;
+  int NP = data->NP;
+  double alpha, detCij;
+  
 
   //book keeping (weights and determinants
   proposal->vector = malloc(Ncov*2*sizeof(double));
@@ -1161,22 +1172,21 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
   double **Cij    = NULL; //covariance matrix
   double **Lij    = NULL; //lower triangle of cholesky decomp. of Cij
   
-  fprintf(stdout,"   reading covariance matrix %s...\n",flags->covFile);
-  fptr = fopen(flags->covFile,"r");
   
   //repeat for every covariance matrix in file
   for(int n=0; n<Ncov; n++)
   {
     
-    //first row has the weight, determinant, and then a bunch of zeroes
+    //second row has the weight, determinant, and then a bunch of zeroes
     fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg", &alpha, &detCij, &junk, &junk, &junk, &junk, &junk, &junk);
 
     //relative weighting of mode
     proposal->vector[n*Ncov]=alpha;
     
     //absorb normalization constants into stored determinant detCij
-    proposal->vector[n*Ncov+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));
-    
+//    proposal->vector[n*Ncov+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));
+    proposal->vector[n*2+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));
+
     //second row has the centroids
     mean = proposal->matrix[n];
     for(int i=0; i<NP; i++) fscanf(fptr, "%lg", &mean[i]);
