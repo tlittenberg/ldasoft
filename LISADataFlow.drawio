@@ -1,6 +1,6 @@
-<mxfile modified="2019-11-15T22:34:03.346Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="KYrKRvd060DFfuzC31D8" version="12.2.6" type="github" pages="3">
+<mxfile modified="2019-11-18T15:19:54.149Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="5ySB_od6t6H7k0aGCqKw" version="12.2.6" type="github" pages="3">
   <diagram id="nEb7vlC1iJB3Md7GIFur" name="Overview">
-    <mxGraphModel dx="4424" dy="2704" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+    <mxGraphModel dx="2212" dy="1352" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
@@ -659,7 +659,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="maw5QJAgZs0E4DX1hk_s" name="Low Latency">
-    <mxGraphModel dx="4787" dy="3103" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+    <mxGraphModel dx="2680" dy="1816" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="3XuAEK8ueRrN9_x_EUcA-0"/>
         <mxCell id="3XuAEK8ueRrN9_x_EUcA-1" parent="3XuAEK8ueRrN9_x_EUcA-0"/>
@@ -1059,7 +1059,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="eudohnYF3d1JdbeArwqK" name="Global Fit">
-    <mxGraphModel dx="4787" dy="1403" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+    <mxGraphModel dx="6630" dy="2530" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="JTwieSXLjlI79sAsuV_H-0"/>
         <mxCell id="JTwieSXLjlI79sAsuV_H-1" parent="JTwieSXLjlI79sAsuV_H-0"/>
@@ -1096,7 +1096,7 @@
           <mxGeometry x="780" y="1318" width="350" height="350" as="geometry"/>
         </mxCell>
         <mxCell id="JTwieSXLjlI79sAsuV_H-32" value="GW Bursts" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;verticalAlign=top;fontSize=20;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
-          <mxGeometry x="1787" y="2350" width="350" height="350" as="geometry"/>
+          <mxGeometry x="1942" y="2330" width="350" height="350" as="geometry"/>
         </mxCell>
         <mxCell id="ghmHJoBTKwSTSRhx4yNf-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=17;" edge="1" parent="JTwieSXLjlI79sAsuV_H-1" source="JTwieSXLjlI79sAsuV_H-37" target="ghmHJoBTKwSTSRhx4yNf-28">
           <mxGeometry relative="1" as="geometry"/>
@@ -1108,7 +1108,7 @@
           <mxGeometry x="2305" y="2330" width="350" height="350" as="geometry"/>
         </mxCell>
         <mxCell id="JTwieSXLjlI79sAsuV_H-47" value="TDI" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;verticalAlign=top;fontSize=20;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
-          <mxGeometry x="2625" y="2410" width="350" height="350" as="geometry"/>
+          <mxGeometry x="2661" y="2330" width="350" height="350" as="geometry"/>
         </mxCell>
         <mxCell id="JTwieSXLjlI79sAsuV_H-50" value="Sample Collector" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;verticalAlign=top;fontSize=20;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
           <mxGeometry x="1438" y="1864" width="350" height="350" as="geometry"/>
