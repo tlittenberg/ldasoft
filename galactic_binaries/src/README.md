@@ -57,10 +57,6 @@ For example, to analyze 1.5 months of data for the lowest frequency VGB source, 
 
 # Use GalacticBinaryCatalog.c (gb_catalog) to produce catalog data with the gb_mcmc output 
 
-1. A numbered list
-    1. A nested numbered list
-    2. Which is numbered
-2. Which is numbered
 
 
 
