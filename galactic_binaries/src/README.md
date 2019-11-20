@@ -19,9 +19,12 @@ Filename: LDC1-4_GB_v1.hdf5
 # FFT LDC data with fft_ldc_data.py
 The output of fft_ldc_data.py is LDC data in the `frequency domain', which is used as input to gb_mcmc
 
-    Enter fft_ldc_data.py -h, for usage.
+Enter the following for usage.
+    
+    fft_ldc_data.py -h
 
-    For example, to FFT 1.5 months of LDC1-3_VGB_v1.hdf5 data and save the output as output.dat, run from terminal the following. 
+For example, to FFT 1.5 months of LDC1-3_VGB_v1.hdf5 data and save the output as output.dat, run from terminal the following. 
+
     python3 fft_ldc_data.py -i LDC1-3_VGB_v1.hdf5 -o output.dat -m 1.5
 
 Specifying an output file (with the -o flag) is optional. If the output file is not specified, the code's default (output file) nameing system is the following: The input file name is affixed with the number of months that were Fourier transformed, e.g. LDC1-3_VGB_v1_1.5mo.dat.
