@@ -66,7 +66,7 @@ For example, to analyze 1.5 months of data for the lowest frequency VGB source, 
 
     ~/gb_mcmc --data ~/LDC1-3_VGB_v1_1.5_months.dat --frac-freq --fmin 0.001249 --samples 32 --duration 3932160 --chainseed 1234 --verbose
     
-Here is another example showing how to analyze 1.5 months of data for three LDC Galaxy sources found in frequency range [0.0099706, 0.0099785].
+Here is another example showing how to analyze 1.5 months of data for three LDC Galaxy GB sources found in frequency range [0.0099706, 0.0099785].
 
     ~/gb_mcmc --data ~/LDC1-4_GB_v1_1.5mo.dat --frac-freq --fmin 0.0099706 --samples 32 --duration 3932160 --chainseed 5678 --verbose
 
@@ -78,9 +78,13 @@ Enter the following for usage.
     gb_catalog -h
 
 
-Here we produce catalog output for the VGB example give above (the lowest frequency VGB source).
+Here we produce catalog output for the VGB example give above (the lowest frequency VGB source). The ouput will be saved in directory ./catalog_1
 
     gb_catalog --fmin 0.001249 --samples 32 --duration 3932160 --sources 1 --chain-file ./chains/dimension_chain.dat.1
+    
+Here we produce catalog output for the Galaxy example give above (three GB sources). The output will be saved in directory ./catalog_3
+
+    gb_catalog --fmin 0.0099706 --samples 32 --duration 3932160 --sources 3 --chain-file ./chains/dimension_chain.dat.3
 
 
 Next we show how to use the catalog output to build covariance matrix proposals for gb_mcmc.
