@@ -38,17 +38,22 @@ One can also FFT the LDC Galaxy data timeseries:
 In that case, the output filename is LDC1-4_GB_v1_1.5mo.dat
 
 # Access LDC VGB key parameters with python
-The user inputs ~/LDC1-3_VGB_v1.hdf5 to the code, and the output is LDC key information, in order of increasing source frequency. Output is saved to the user's working directory. 
+The user inputs ~/LDC1-3_VGB_v1.hdf5 to the code, and the output is LDC key information, in order of increasing source frequency. 
+(Output is saved to the user's working directory. )
 
     ldc_vgb_key.py
 
 # Access LDC Galaxy key parameters, with python
-The user inputs ~/LDC1-4_GB_v1.hdf5 to the code, and the code outputs key parameters corresponding to a specific frequency range. For example, one could input the frequency range analyzed by gb_mcmc, described next. Output is saved to the user's working directory. 
+The user inputs ~/LDC1-4_GB_v1.hdf5 to the code, and the code outputs key parameters corresponding to a specific frequency range. 
+For example, one could input the frequency range analyzed by gb_mcmc, described next. (Output is saved to the user's working directory.)
 
     ldc_radler_key.py
 
 
 # Run gb_mcmc on Fourier transformed LDC data.
+
+The user's working directory should be where they want the output of gb_mcmc to be saved.
+
 The following assumes the user is analyzing a frequency segment of LDC1-3_VGB_v1_{n}mo.dat, or LDC1-4_GB_v1_{n}mo.dat, 
 where n = {1.5, 3, 6, 12, 24}. The input data are obtained from fft_ldc_data.py, described above.
 
@@ -78,21 +83,25 @@ Enter the following for usage.
     gb_catalog -h
 
 
-Here we produce catalog output for the VGB example give above (the lowest frequency VGB source). The ouput will be saved in directory ./catalog_1
+Here we produce catalog output for the VGB example given above (the lowest frequency VGB source). The ouput will be saved in directory ./catalog_1
+(We assume the user's working directory contains the chains directory, output from gb_mcmc.)
 
-    gb_catalog --fmin 0.001249 --samples 32 --duration 3932160 --sources 1 --chain-file ./chains/dimension_chain.dat.1
+    ~/gb_catalog --fmin 0.001249 --samples 32 --duration 3932160 --sources 1 --chain-file ./chains/dimension_chain.dat.1
     
-Here we produce catalog output for the Galaxy example give above (three GB sources). The output will be saved in directory ./catalog_3
+Here we produce catalog output for the Galaxy example given above (three GB sources). The output will be saved in directory ./catalog_3
+(We assume the user's working directory contains the chains directory, output from gb_mcmc.)
 
-    gb_catalog --fmin 0.0099706 --samples 32 --duration 3932160 --sources 3 --chain-file ./chains/dimension_chain.dat.3
+    ~/gb_catalog --fmin 0.0099706 --samples 32 --duration 3932160 --sources 3 --chain-file ./chains/dimension_chain.dat.3
 
 
 Next we show how to use the catalog output to build covariance matrix proposals for gb_mcmc.
 
 # Build covariance matrix proposal from catalog output
 
-under construction 
+currently being updated 
 
 
 # Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices
+
+currently being updated 
 
