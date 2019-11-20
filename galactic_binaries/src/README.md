@@ -30,7 +30,10 @@ For example, to FFT 1.5 months of LDC1-3_VGB_v1.hdf5 data and save the output as
 Specifying an output file (with the -o flag) is optional. If the output file is not specified, the code's default (output file) nameing system is the following: The input file name is affixed with the number of months that were Fourier transformed, e.g. LDC1-3_VGB_v1_1.5mo.dat.
 (If -m flag is left unspecified, the code's default is to FT 24 months of data.)
 
-One can also FFT the LDC Galaxy data timeseries: python3 fft_ldc_data.py -i LDC1-4_GB_v1.hdf5 -o output.dat -m 1.5
+One can also FFT the LDC Galaxy data timeseries: 
+    
+    python3 fft_ldc_data.py -i LDC1-4_GB_v1.hdf5 -o output.dat -m 1.5
+    
 In that case, the output filename is LDC1-4_GB_v1_1.5mo.dat
 
 # Access LDC VGB key parameters with python
@@ -68,8 +71,6 @@ For example, to analyze 1.5 months of data for the lowest frequency VGB source, 
 under construction 
 
 
-
-
 Below we show how to use the catalog output to build covariance matrix proposals for gb_mcmc.
 
 # Build covariance matrix proposal from catalog output
@@ -77,4 +78,5 @@ Below we show how to use the catalog output to build covariance matrix proposals
 under construction 
 
 
+# Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices
 
