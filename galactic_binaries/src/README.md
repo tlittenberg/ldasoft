@@ -83,8 +83,8 @@ Enter the following for usage.
     gb_catalog -h
 
 
-Here we produce catalog output for the VGB example given above (the lowest frequency VGB source). The ouput will be saved in directory ./catalog_1
-(We assume the user's working directory contains the chains directory, output from gb_mcmc.)
+Here we produce catalog output for the VGB example (the lowest frequency VGB source). The ouput will be saved in directory ./catalog_1
+(The following assumes the user's working directory contains the chains directory, output from gb_mcmc.)
 
     ~/gb_catalog --fmin 0.001249 --samples 32 --duration 3932160 --sources 1 --chain-file ./chains/dimension_chain.dat.1
     
@@ -98,8 +98,13 @@ Next we show how to use the catalog output to build covariance matrix proposals 
 
 # Build covariance matrix proposal from catalog output
 
-currently being updated 
+Here we use the catalog output produced for the VGB example (the lowest frequency VGB source). 
+We assume the user's *working directory is catalog_1*, which was created with the gb_catalog code.
+The code asks for user input on where to save the covariance proposal output and what to name it. 
+The code also asks the user to "enter observation time for covariance matrix". Options are listed.
+For example, if we want to use the 1.5 month chain as a proposal for a 3 month run, we would enter 7864320.
 
+    covariance_proposal_maker.py
 
 # Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices
 
