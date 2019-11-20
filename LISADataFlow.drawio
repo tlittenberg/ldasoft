@@ -1,4 +1,4 @@
-<mxfile modified="2019-11-20T20:06:57.094Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="kYKiwqg97yaDsPXXCoOt" version="12.2.7" type="github" pages="3">
+<mxfile modified="2019-11-20T20:09:31.658Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="oottZ-s9eWS2MdVWavU1" version="12.2.7" type="github" pages="3">
   <diagram id="nEb7vlC1iJB3Md7GIFur" name="Overview">
     <mxGraphModel dx="5884" dy="2068" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
@@ -1059,7 +1059,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="eudohnYF3d1JdbeArwqK" name="Global Fit">
-    <mxGraphModel dx="3858" dy="688" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+    <mxGraphModel dx="1357" dy="-707" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="JTwieSXLjlI79sAsuV_H-0"/>
         <mxCell id="JTwieSXLjlI79sAsuV_H-1" parent="JTwieSXLjlI79sAsuV_H-0"/>
@@ -2126,7 +2126,7 @@
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="3849.000000000001" y="3113.0000000000005" as="sourcePoint"/>
             <Array as="points">
-              <mxPoint x="3847" y="2757"/>
+              <mxPoint x="3849" y="2765"/>
             </Array>
           </mxGeometry>
         </mxCell>
