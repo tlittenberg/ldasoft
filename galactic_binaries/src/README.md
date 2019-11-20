@@ -62,7 +62,7 @@ For example, to analyze 1.5 months of data for the lowest frequency VGB source, 
 # Use GalacticBinaryCatalog.c (gb_catalog) to produce catalog data with the gb_mcmc output 
 
 
-
+under construction 
 
 
 
@@ -71,6 +71,7 @@ Below we show how to use the catalog output to build covariance matrix proposals
 
 # Build covariance matrix proposal from catalog output
 
+under construction 
 
 
 
