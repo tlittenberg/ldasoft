@@ -98,8 +98,9 @@ Next we show how to use the catalog output to build covariance matrix proposals 
 
 # Build covariance matrix proposal from catalog output
 
-Here we use the catalog output produced for the VGB example (the lowest frequency VGB source). 
-We assume the user's *working directory is catalog_1*, which was created with the gb_catalog code.
+Here we use the catalog output produced for the VGB example or the Galaxy example above. 
+
+We assume the user's *working directory is catalog_1 or catalog_3*, which were created with the gb_catalog code steps above.
 The code asks for user input on where to save the covariance proposal output and what to name it. 
 The code also asks the user to "enter observation time for covariance matrix". Options are listed.
 For example, if we want to use the 1.5 month chain as a proposal for a 3 month run, we would enter 7864320.
