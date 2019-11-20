@@ -104,6 +104,8 @@ The code asks for user input on where to save the covariance proposal output and
 The code also asks the user to "enter observation time for covariance matrix". Options are listed.
 For example, if we want to use the 1.5 month chain as a proposal for a 3 month run, we would enter 7864320.
 
+NB: The following code is still under development. 
+
     covariance_proposal_maker.py
 
 # Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices
