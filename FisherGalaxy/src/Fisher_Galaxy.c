@@ -17,6 +17,11 @@
 #include "Detector.h"
 #include "Subroutines.h"
 
+#include <LISA.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryMath.h>
+#include <GalacticBinaryWaveform.h>
+
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -27,14 +32,12 @@
 #include <gsl/gsl_sf.h>
 
 
-void FISHER(struct lisa_orbit *orbit, double TOBS, double *params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE, double *DrawAE);
+void FISHER(struct Orbit *orbit, double TOBS, double *params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE, double *DrawAE);
 void indexx(unsigned long n, double *arr, unsigned long *indx);
-void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N);
 
 
 int main(int argc,char **argv)
 {
-  char Gfile[50];
   double *params, *DrawAE;
   double *XLS;
   double *AA, *EE;
@@ -89,13 +92,12 @@ int main(int argc,char **argv)
   vfile = fopen(argv[1],"r");
   
   //Data structure for interpolating orbits from file
-  struct lisa_orbit *LISAorbit;
-  LISAorbit = &orbit;
-  
+  struct Orbit *LISAorbit = malloc(sizeof(struct Orbit));
+
   //Set up orbit structure (allocate memory, read file, cubic spline)
-  sprintf(Gfile,"%s",argv[6]);
-  initialize_orbit(Gfile, LISAorbit);
-  
+  sprintf(LISAorbit->OrbitFileName,"%s",argv[6]);
+  initialize_numeric_orbit(LISAorbit);
+
   double L    = LISAorbit->L;
   double fstar= LISAorbit->fstar;
   
@@ -242,8 +244,9 @@ int main(int argc,char **argv)
     AA  = dvector(1,2*M);
     EE  = dvector(1,2*M);
     
-    FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
-    
+    //FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
+    galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
+
     SNRX = sqrt(Sum(XLS,XLS,M,SXYZ,TOBS));
     SNR  = sqrt(Sum(AA,AA,M,SAE,TOBS)+Sum(EE,EE,M,SAE,TOBS));
     
@@ -463,7 +466,7 @@ int main(int argc,char **argv)
 }
 
 
-void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE, double *DrawAE)
+void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE, double *DrawAE)
 {
   
   int i, j;
@@ -575,12 +578,14 @@ void FISHER(struct lisa_orbit *orbit, double TOBS, double *Params, long N, long 
     
     //       printf("Constructing plus template");
     
-    FAST_LISA(orbit, TOBS, ParamsP, N, M, XP, templateP1, templateP2);
-    
+    //FAST_LISA(orbit, TOBS, ParamsP, N, M, XP, templateP1, templateP2);
+    galactic_binary(orbit, "phase", TOBS, 0, ParamsP, 9, XP, templateP1, templateP2, M, 2);
+
     //       printf("Constructing minus template");
     
-    FAST_LISA(orbit, TOBS, ParamsM, N, M, XM, templateM1, templateM2);
-    
+    //FAST_LISA(orbit, TOBS, ParamsM, N, M, XM, templateM1, templateM2);
+    galactic_binary(orbit, "phase", TOBS, 0, ParamsM, 9, XP, templateM1, templateM2, M, 2);
+
     for (j = 1 ; j <= 2*M ; j++)
     {
       XD[i][j] = XP[j] - XM[j];
@@ -1004,95 +1009,5 @@ void indexx(unsigned long n, double *arr, unsigned long *indx)
   free_ivector(istack,1,NSTACK);
 }
 
-void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
-{
-  int i,j;
-  
-  // Don't let errors kill the program (yikes)
-  gsl_set_error_handler_off ();
-  int err=0;
-  
-  // Find eigenvectors and eigenvalues
-  gsl_matrix *GSLfisher = gsl_matrix_alloc(N,N);
-  gsl_matrix *GSLcovari = gsl_matrix_alloc(N,N);
-  gsl_matrix *GSLevectr = gsl_matrix_alloc(N,N);
-  gsl_vector *GSLevalue = gsl_vector_alloc(N);
-  
-  for(i=0; i<N; i++)
-  {
-    for(j=0; j<N; j++)
-    {
-      if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:83: WARNING: nan matrix element, now what?\n");
-      gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
-    }
-  }
-  
-  // sort and put them into evec
-  gsl_eigen_symmv_workspace * workspace = gsl_eigen_symmv_alloc (N);
-  gsl_permutation * permutation = gsl_permutation_alloc(N);
-  
-  err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
-  err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
-  
-  // eigenvalues destroy matrix
-  for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
-  
-  err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
-  err += gsl_linalg_LU_invert(GSLfisher, permutation, GSLcovari);
-  
-  if(err>0)
-  {
-    /*
-     fprintf(stderr,"GalacticBinaryMath.c:98: WARNING: singluar matrix, treating matrix as diagonal\n");
-     fflush(stderr);*/
-    for(i=0; i<N; i++)for(j=0; j<N; j++)
-    {
-      evector[i][j] = 0.0;
-      if(i==j)
-      {
-        evector[i][j]=1.0;
-        evalue[i]=1./matrix[i][j];
-      }
-    }
-    
-  }
-  else
-  {
-    
-    //unpack arrays from gsl inversion
-    for(i=0; i<N; i++)
-    {
-      evalue[i] = gsl_vector_get(GSLevalue,i);
-      for(j=0; j<N; j++)
-      {
-        evector[i][j] = gsl_matrix_get(GSLevectr,i,j);
-        if(evector[i][j] != evector[i][j]) evector[i][j] = 0.;
-      }
-    }
-    
-    //for(i=0;i<N-1;i++)for(j=i+1;j<N;j++) gsl_matrix_set(GSLcovari,j,i, gsl_matrix_get(GSLcovari,i,j) );
-    
-    //copy covariance matrix back into Fisher
-    for(i=0; i<N; i++)
-    {
-      for(j=0; j<N; j++)
-      {
-        matrix[i][j] = gsl_matrix_get(GSLcovari,i,j);
-      }
-    }
-    
-    //cap minimum size eigenvalues
-    for(i=0; i<N; i++)
-    {
-      if(evalue[i] != evalue[i] || evalue[i] <= 10.0) evalue[i] = 10.;
-    }
-  }
-  
-  gsl_vector_free (GSLevalue);
-  gsl_matrix_free (GSLfisher);
-  gsl_matrix_free (GSLcovari);
-  gsl_matrix_free (GSLevectr);
-  gsl_eigen_symmv_free (workspace);
-  gsl_permutation_free (permutation);
-}
+
 

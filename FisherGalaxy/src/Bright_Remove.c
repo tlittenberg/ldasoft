@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <LISA.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryWaveform.h>
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
@@ -22,7 +25,6 @@ int main(int argc,char **argv)
 {
   
   double f, fdot, theta, phi, A, iota, psi, phase;
-  char Gfile[50];
   double *params;
   double *XfLS, *AALS, *EELS;
   double *XLS, *AA, *EE;
@@ -71,12 +73,12 @@ int main(int argc,char **argv)
   Abright = fopen("BrightAE.dat","w");
   
   //Data structure for interpolating orbits from file
-  struct lisa_orbit *LISAorbit;
-  LISAorbit = &orbit;
+  struct Orbit *LISAorbit = malloc(sizeof(struct Orbit));
+  
   
   //Set up orbit structure (allocate memory, read file, cubic spline)
-  sprintf(Gfile,"%s",argv[4]);
-  initialize_orbit(Gfile, LISAorbit);
+  sprintf(LISAorbit->OrbitFileName,"%s",argv[4]);
+  initialize_numeric_orbit(LISAorbit);
   double L     = LISAorbit->L;
   double fstar = LISAorbit->fstar;
   
@@ -183,7 +185,7 @@ int main(int argc,char **argv)
     AA  = dvector(1,2*M);
     EE  = dvector(1,2*M);
     
-    FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
+    galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
     
     /*inst2*/
     SNX = (SXYZ+Xconf[q]);//*sin(f/fstar)*sin(f/fstar);
