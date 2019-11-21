@@ -4,7 +4,7 @@ CC = gcc
 #CCFLAGS = -fopenmp
 
 LIBS  = gsl gslcblas m gbmcmc
-LDFLAGS = -L../../galactic_binaries/src
+LDFLAGS = -L../../gbmcmc/src
 #CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -Werror
 CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 
 
@@ -13,7 +13,7 @@ GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 
 # include gb_mcmc routines
-CCFLAGS += -I../../galactic_binaries/src/
+CCFLAGS += -I../../gbmcmc/src/
 
 OBJS = arrays.o Subroutines.o
 

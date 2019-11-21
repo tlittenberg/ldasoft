@@ -853,6 +853,39 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
   }//loop over sources
 }
 
+void generate_power_law_noise_model(struct Data *data, struct Model *model)
+{
+  struct Noise *noise = NULL;
+  double df_on_fmin   = 1./(double)data->qmin;
+  
+  
+  for(int m=0; m<model->NT; m++)
+  {
+    noise = model->noise[m];
+    switch(data->Nchannel)
+    {
+      case 1:
+        for(int n=0; n<data->N; n++)
+        {
+          //Taylor expansion Sn(f/fmin)^alpha
+          noise->SnX[n] = noise->SnX_0*(1.0 + noise->alpha_X * df_on_fmin);
+        }
+        break;
+      case 2:
+        for(int n=0; n<data->N; n++)
+        {
+          //Taylor expansion Sn(f/fmin)^alpha
+          noise->SnA[n] = noise->SnA_0*(1.0 + noise->alpha_A * df_on_fmin);
+          noise->SnE[n] = noise->SnE_0*(1.0 + noise->alpha_E * df_on_fmin);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+}
+
 void generate_noise_model(struct Data *data, struct Model *model)
 {
   for(int m=0; m<model->NT; m++)

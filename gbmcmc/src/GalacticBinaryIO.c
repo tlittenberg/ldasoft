@@ -512,6 +512,14 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
 
     //map fmin to nearest bin
     data[i]->fmin = floor(data[i]->fmin*data[i]->T)/data[i]->T;
+    
+    //calculate helper quantities for likelihood normalizations
+    data[i]->logfmin   = log(data[i]->fmin);
+    data[i]->sum_log_f = 0.0;
+    for(int n=0; n<data[i]->N; n++)
+    {
+      data[i]->sum_log_f += log(data[i]->fmin + (double)n/data[i]->T);
+    }
   }
 
   

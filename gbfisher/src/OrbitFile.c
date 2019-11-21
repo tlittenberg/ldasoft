@@ -7,7 +7,7 @@
 #include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
-#include "../../galactic_binaries/src/LISA.h"
+#include <LISA.h>
 
 /*************************************************************************/
 /*        Rigid approximation position of each LISA spacecraft           */
