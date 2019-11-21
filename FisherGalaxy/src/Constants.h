@@ -55,6 +55,3 @@
 /* LISA modulation frequency */
 #define fm 3.168753575e-8
 
-/* fraction of interacting sytems to include */
-#define downsample 0.1
-

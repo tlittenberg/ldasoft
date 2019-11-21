@@ -17,7 +17,7 @@ double galactic_binary_fdot(double Mc, double f0, double T);
 
 double galactic_binary_Mc(double f0, double dfdt, double T);
 
-double galactic_binary_dL(double f0, double dfdt, double A, double T);
+double galactic_binary_dL(double f0, double dfdt, double A);
 
 void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise);
 

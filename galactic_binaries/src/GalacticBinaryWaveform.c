@@ -43,10 +43,10 @@ double galactic_binary_Mc(double f0, double dfdt, double T)
   return pow(fd/(96./5.)/pi83/pow(f,11./3.), 3./5.)/TSUN;
 }
 
-double galactic_binary_dL(double f0, double dfdt, double A, double T)
+double galactic_binary_dL(double f0, double dfdt, double A)
 {
-  double f    = f0;//T;
-  double fd = dfdt;//(T*T);
+  double f    = f0;
+  double fd = dfdt;
   double amp   = A;
   return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
 }
@@ -522,13 +522,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     exit(1);
   }
   
-  /*   Deallocate Arrays   */
-//  free_dvector(x,1,3); free_dvector(y,1,3); free_dvector(z,1,3);
-//  free_dvector(data12,1,BW2); free_dvector(data21,1,BW2); free_dvector(data31,1,BW2);
-//  free_dvector(data13,1,BW2); free_dvector(data23,1,BW2); free_dvector(data32,1,BW2); 
-//  free_d3tensor(d,1,3,1,3,1,BW2);
-  
-  /*   Allocating Arrays   */
+  /*   Free Arrays   */
   free(x);
   free(y);
   free(z);
@@ -540,7 +534,6 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
   free(data23);
   free(data32);
   
-  //d = d3tensor(1,3,1,3,1,BW2);
   for(i=0; i<4; i++)
   {
     for(j=0; j<4; j++)

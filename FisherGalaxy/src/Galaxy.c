@@ -15,6 +15,10 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include <LISA.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryWaveform.h>
+
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
@@ -24,7 +28,6 @@ int main(int argc,char **argv)
 {
   
   double f, fdot, theta, phi, A, iota, psi, phase;
-  char Gfile[50];
   double *params;
   double *XfLS, *AALS, *EELS;
   double *XLS, *AA, *EE;
@@ -69,13 +72,12 @@ int main(int argc,char **argv)
   Outfile = fopen("Bright.dat","w");
   
   //Data structure for interpolating orbits from file
-  struct lisa_orbit *LISAorbit;
-  LISAorbit = &orbit;
-  
+  struct Orbit *LISAorbit = malloc(sizeof(struct Orbit));
+
   //Set up orbit structure (allocate memory, read file, cubic spline)
-  sprintf(Gfile,"%s",argv[2]);
-  initialize_orbit(Gfile, LISAorbit);
-		
+  sprintf(LISAorbit->OrbitFileName,"%s",argv[2]);
+  initialize_numeric_orbit(LISAorbit);
+
   XfLS = malloc(sizeof(double)*NFFT);
   AALS = malloc(sizeof(double)*NFFT);
   EELS = malloc(sizeof(double)*NFFT);
@@ -164,7 +166,7 @@ int main(int argc,char **argv)
     AA  = dvector(1,2*M);
     EE  = dvector(1,2*M);
     
-    FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
+    galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
     
     for(i=1; i<=M; i++)
     {

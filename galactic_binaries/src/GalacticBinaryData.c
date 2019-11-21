@@ -852,7 +852,7 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
         //Get injected SNR
         double SNR = snr(inj, data->noise[0]);
         double Mc  = galactic_binary_Mc(f0, dfdt, data->T);
-        double dL  = galactic_binary_dL(f0, dfdt, amp, data->T);
+        double dL  = galactic_binary_dL(f0, dfdt, amp);
         
         fprintf(outfile,"%g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
     }
