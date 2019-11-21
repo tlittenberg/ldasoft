@@ -1,4 +1,4 @@
-<mxfile modified="2019-11-21T04:44:41.893Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="ZPdMWvL3Tas65Hivo4LX" version="12.2.7" type="github" pages="3">
+<mxfile modified="2019-11-21T04:45:27.164Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="li1wUNuf0qHFqeVM54bN" version="12.2.7" type="github" pages="3">
   <diagram id="nEb7vlC1iJB3Md7GIFur" name="Overview">
     <mxGraphModel dx="5515" dy="3075" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
@@ -1059,7 +1059,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="eudohnYF3d1JdbeArwqK" name="Global Fit">
-    <mxGraphModel dx="8453" dy="4950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+    <mxGraphModel dx="4251" dy="2607" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="JTwieSXLjlI79sAsuV_H-0"/>
         <mxCell id="JTwieSXLjlI79sAsuV_H-1" parent="JTwieSXLjlI79sAsuV_H-0"/>
@@ -2054,13 +2054,6 @@
               <mxPoint x="2929" y="5350"/>
               <mxPoint x="3129" y="5350"/>
               <mxPoint x="3129" y="6191"/>
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="QCUe52wZTerY90ueSjrE-158" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=1;fontSize=30;" edge="1" parent="JTwieSXLjlI79sAsuV_H-1" source="QCUe52wZTerY90ueSjrE-134" target="QCUe52wZTerY90ueSjrE-151">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="2923" y="4500"/>
             </Array>
           </mxGeometry>
         </mxCell>
