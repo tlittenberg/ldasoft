@@ -22,6 +22,10 @@ struct Data
   double fmin;
   double fmax;
   
+  //some manipulations of f,fmin for likelihood calculation
+  double sum_log_f;
+  double logfmin;
+  
   double *t0;   //start times of segments
   double *tgap; //time between segments
   
@@ -173,13 +177,24 @@ struct Noise
 {
   int N;
   
+  //multiplyers of analytic inst. noise model
   double etaA;
   double etaE;
   double etaX;
   
+  //composite noise model
   double *SnA;
   double *SnE;
   double *SnX;
+  
+  //NEW! noise parameters for power-law fit
+  double SnA_0;
+  double SnE_0;
+  double SnX_0;
+  double alpha_A;
+  double alpha_E;
+  double alpha_X;
+  
 };
 
 struct Calibration
