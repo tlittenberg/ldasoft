@@ -1,4 +1,4 @@
-<mxfile modified="2019-11-21T04:45:27.164Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="li1wUNuf0qHFqeVM54bN" version="12.2.7" type="github" pages="3">
+<mxfile modified="2019-11-21T04:48:32.363Z" host="www.draw.io" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36" etag="5gHvUUO3ykYPb0qLqBlX" version="12.2.7" type="github" pages="3">
   <diagram id="nEb7vlC1iJB3Md7GIFur" name="Overview">
     <mxGraphModel dx="5515" dy="3075" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
@@ -1059,7 +1059,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="eudohnYF3d1JdbeArwqK" name="Global Fit">
-    <mxGraphModel dx="4251" dy="2607" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+    <mxGraphModel dx="2938" dy="1875" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="JTwieSXLjlI79sAsuV_H-0"/>
         <mxCell id="JTwieSXLjlI79sAsuV_H-1" parent="JTwieSXLjlI79sAsuV_H-0"/>
@@ -1072,7 +1072,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="QCUe52wZTerY90ueSjrE-143" value="&quot;L0.5&quot; Inputs" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#CBD5E8;fontSize=20;opacity=50;fontStyle=1;verticalAlign=top;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
+        <mxCell id="QCUe52wZTerY90ueSjrE-143" value="Select L0 Inputs" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#CBD5E8;fontSize=20;opacity=50;fontStyle=1;verticalAlign=top;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
           <mxGeometry x="-1022" y="2363.5" width="440" height="261" as="geometry"/>
         </mxCell>
         <mxCell id="QCUe52wZTerY90ueSjrE-103" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=1;fontSize=30;" edge="1" parent="JTwieSXLjlI79sAsuV_H-1" source="QCUe52wZTerY90ueSjrE-102" target="QCUe52wZTerY90ueSjrE-89">
@@ -1080,6 +1080,14 @@
             <Array as="points">
               <mxPoint x="-795" y="4790.5"/>
               <mxPoint x="1640" y="4790.5"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="QCUe52wZTerY90ueSjrE-163" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;strokeWidth=1;fontSize=30;" edge="1" parent="JTwieSXLjlI79sAsuV_H-1" source="QCUe52wZTerY90ueSjrE-102" target="QCUe52wZTerY90ueSjrE-64">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-490" y="5042"/>
+              <mxPoint x="-490" y="5470"/>
             </Array>
           </mxGeometry>
         </mxCell>
@@ -1347,7 +1355,7 @@
         <mxCell id="fz_osLnUqpV3CWwy4zfS-83" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=30;fillColor=#00FF00;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
           <mxGeometry x="-1066" y="781.5" width="80" height="80" as="geometry"/>
         </mxCell>
-        <mxCell id="fz_osLnUqpV3CWwy4zfS-238" value="&lt;h4&gt;&lt;font style=&quot;font-size: 40px&quot;&gt;Advanced L2 data production&lt;/font&gt;&lt;/h4&gt;&lt;h1 style=&quot;font-size: 31px&quot;&gt;&lt;span style=&quot;font-weight: normal&quot;&gt;&lt;font style=&quot;font-size: 31px&quot;&gt;The most ambitious and robust approach to the Global Fit, including extensive modeling of the detector behavior in order to fully account for uncertainty in TDI/calibration production and how it propagates&amp;nbsp;to astrophysical/cosmological observables.&lt;/font&gt;&lt;/span&gt;&lt;/h1&gt;&lt;h5 style=&quot;font-size: 31px&quot;&gt;Pros:&lt;/h5&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;Provides the most statistically robust results, properly folding instrumental systematic errors into well-characterized statistical errors&lt;/li&gt;&lt;li&gt;Better-insulated to changing (real or understood) instrument performance.&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;h5&gt;&lt;font style=&quot;font-size: 31px&quot;&gt;Cons&lt;/font&gt;&lt;span style=&quot;font-size: 25px&quot;&gt;:&lt;/span&gt;&lt;/h5&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;Substantially more low-level data needed&lt;/li&gt;&lt;li&gt;Singularly dependent on L1 data production&lt;/li&gt;&lt;li&gt;Uncharacterized systematic errors propagate into posteriors&lt;/li&gt;&lt;li&gt;Increased demand on Instrument Team supporting lower-level data products for science analysis&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;overflow=hidden;rounded=0;fontSize=30;whiteSpace=wrap;align=left;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
+        <mxCell id="fz_osLnUqpV3CWwy4zfS-238" value="&lt;h4&gt;&lt;font style=&quot;font-size: 40px&quot;&gt;Advanced L2 data production&lt;/font&gt;&lt;/h4&gt;&lt;h1 style=&quot;font-size: 31px&quot;&gt;&lt;span style=&quot;font-weight: normal&quot;&gt;&lt;font style=&quot;font-size: 31px&quot;&gt;The most ambitious and robust approach to the Global Fit, including extensive modeling of the detector behavior in order to fully account for uncertainty in TDI/calibration production and how it propagates&amp;nbsp;to astrophysical/cosmological observables.&lt;/font&gt;&lt;/span&gt;&lt;/h1&gt;&lt;h5 style=&quot;font-size: 31px&quot;&gt;Pros:&lt;/h5&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;Provides the most statistically robust results, properly folding instrumental systematic errors into well-characterized statistical errors&lt;/li&gt;&lt;li&gt;Better-insulated to changing (real or understood) instrument performance.&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;h5&gt;&lt;font style=&quot;font-size: 31px&quot;&gt;Cons&lt;/font&gt;&lt;span style=&quot;font-size: 25px&quot;&gt;:&lt;/span&gt;&lt;/h5&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;Substantially more low-level data needed&lt;/li&gt;&lt;li&gt;Increased demand on Instrument Team supporting lower-level data products for science analysis&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;overflow=hidden;rounded=0;fontSize=30;whiteSpace=wrap;align=left;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
           <mxGeometry x="-932" y="5774.5" width="882" height="966" as="geometry"/>
         </mxCell>
         <mxCell id="fz_osLnUqpV3CWwy4zfS-245" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#000000;fontSize=30;" vertex="1" parent="JTwieSXLjlI79sAsuV_H-1">
@@ -1862,10 +1870,10 @@
         <mxCell id="QCUe52wZTerY90ueSjrE-64" value="Master Sampler" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;verticalAlign=top;fontSize=20;" vertex="1" parent="QCUe52wZTerY90ueSjrE-63">
           <mxGeometry width="350" height="350" as="geometry"/>
         </mxCell>
-        <mxCell id="QCUe52wZTerY90ueSjrE-65" value="&lt;font style=&quot;font-size: 19px&quot;&gt;Generate&amp;nbsp;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 19px&quot;&gt;&lt;i&gt;r&lt;/i&gt;(&lt;i&gt;t,f&lt;/i&gt;) &lt;/font&gt;&lt;font style=&quot;font-size: 19px&quot;&gt;from TDI, DQV, Archived L3&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=20;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="QCUe52wZTerY90ueSjrE-63">
+        <mxCell id="QCUe52wZTerY90ueSjrE-65" value="&lt;font style=&quot;font-size: 19px&quot;&gt;Generate&amp;nbsp;&lt;font face=&quot;Times New Roman&quot; style=&quot;font-size: 19px&quot;&gt;&lt;i&gt;r&lt;/i&gt;(&lt;i&gt;t,f&lt;/i&gt;) &lt;/font&gt;&lt;font style=&quot;font-size: 19px&quot;&gt;from L0, DQV, Archived L3&lt;/font&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=20;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="QCUe52wZTerY90ueSjrE-63">
           <mxGeometry x="59" y="60.5" width="232" height="69" as="geometry"/>
         </mxCell>
-        <mxCell id="QCUe52wZTerY90ueSjrE-66" value="&lt;font style=&quot;font-size: 19px&quot;&gt;Format &lt;font style=&quot;font-size: 19px&quot;&gt;&lt;font face=&quot;Times New Roman&quot;&gt;&lt;i&gt;L&lt;sub&gt;ij&lt;/sub&gt;&lt;/i&gt;(&lt;i&gt;t&lt;/i&gt;)&amp;nbsp;&lt;/font&gt;&lt;/font&gt;&lt;/font&gt;&lt;span style=&quot;font-size: 19px&quot;&gt;from Orbits&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=20;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="QCUe52wZTerY90ueSjrE-63">
+        <mxCell id="QCUe52wZTerY90ueSjrE-66" value="&lt;font style=&quot;font-size: 19px&quot;&gt;Format &lt;font style=&quot;font-size: 19px&quot;&gt;&lt;font face=&quot;Times New Roman&quot;&gt;&lt;i&gt;L&lt;sub&gt;ij&lt;/sub&gt;&lt;/i&gt;(&lt;i&gt;t&lt;/i&gt;)&amp;nbsp;&lt;/font&gt;&lt;/font&gt;&lt;/font&gt;&lt;span style=&quot;font-size: 19px&quot;&gt;from L0, Orbits&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=20;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="QCUe52wZTerY90ueSjrE-63">
           <mxGeometry x="59" y="146" width="232" height="69" as="geometry"/>
         </mxCell>
         <mxCell id="QCUe52wZTerY90ueSjrE-67" value="&lt;span style=&quot;font-size: 19px&quot;&gt;Setup priors, proposals, sampling schedule, etc.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=20;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="QCUe52wZTerY90ueSjrE-63">
