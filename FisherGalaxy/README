@@ -1,0 +1,54 @@
+
+
+####################################################################
+# Create detector.h for different mission configurations
+####################################################################
+./Setup kappa, lambda, Larm (m), Sacc (m^2 s^-4 Hz^-1), Spos (m^2 Hz^-1), Cadence (s), Nsamples
+
+
+####################################################################
+# Create orbit file for mission configuration
+####################################################################
+./OrbitFile
+
+####################################################################
+# Take list of sources parameterized by 
+# (f, fdot, theta, phi, A, iota, psi, phase)
+# and create a crude list of detectable sources Bright.dat
+# and a simulation of the full galaxy Galaxy_XAE.dat with noise
+####################################################################
+./Galaxy Galaxy.dat Orbits.dat
+
+
+####################################################################
+# Take galaxy simulation and produce fit to confusion noise
+####################################################################
+./Confusion_Fit Galaxy.dat Orbit.dat
+
+####################################################################
+# Read in simulated galaxy, confusion noise?  and crude list of 
+# bright binaries, and subtract off detectable binaries to create
+# residual?
+####################################################################
+./Bright_Remove XAE.dat Noise.dat Bright.dat Orbit.dat
+
+####################################################################
+# Take list of detections and fit to confusion noise and do some parameter
+# estimation estimation, summarizing numbers of detectable and well constrained
+# sources
+####################################################################
+./Fisher_Galaxy detections.dat confusion.dat sigmasX.dat sigmasAE.dat Orbit.dat
+
+
+EXAMPLE:
+gcc -O3 -o Setup Setup.c -lm
+./Setup 0 0 2.5e9 9.e-30 8.321e-23 1 31457280
+gcc -O3 -o OrbitFile OrbitFile.c arrays.c -lm
+gcc -O3 -o Galaxy Galaxy.c arrays.c -lm 
+gcc -O3 -o Confusion_Fit Confusion_Fit.c arrays.c -lm
+gcc -O3 -o Bright_Remove Bright_Remove.c arrays.c -lm
+
+./OrbitFile
+./Galaxy Catalog_NoID.txt EccentricInclined.txt
+./Confusion_Fit Galaxy_XAE.dat EccentricInclined.txt
+./Bright_Remove Galaxy_XAE.dat Confusion_XAE_0.dat Bright.dat EccentricInclined.txt
