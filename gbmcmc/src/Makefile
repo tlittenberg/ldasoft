@@ -66,7 +66,7 @@ libgbmcmc.a : $(OBJS)
 #	$(CC) -shared -o libgb.so $(OBJS) $(LIBS:%=-l%)
 	ar rcs libgbmcmc.a $(OBJS)
 
-install : gitversion.h gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
+install : gitversion.h gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual libgbmcmc.a
 	install gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
 
 clean:

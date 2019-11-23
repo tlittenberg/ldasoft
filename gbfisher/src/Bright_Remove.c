@@ -1,11 +1,22 @@
-/*********************************************************/
-/*                                                       */
-/*        Bright_Remove.c, Version 2.3, 4/28/2011        */
-/*      Written by Neil Cornish & Tyson Littenberg       */
-/*                                                       */
-/* gcc -O2 -o Bright_Remove Bright_Remove.c arrays.c -lm */
-/*                                                       */
-/*********************************************************/
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +24,7 @@
 
 #include <LISA.h>
 #include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
 #include <GalacticBinaryWaveform.h>
 
 #include "arrays.h"
@@ -35,7 +47,7 @@ int main(int argc,char **argv)
   long i, k, cnt, cc1, mult, imax, imin;
   double SAE, SXYZ, sqT;
   double *Xnoise, *Xconf;
-  double *AEnoise, *AEconf;
+  double *Anoise, *Aconf;
   double *XP, *AEP;
   double SNX, SNAE, SNRAE, SNRX;
   double SNRthres;
@@ -112,7 +124,7 @@ int main(int argc,char **argv)
   
   XP = double_vector(NFFT/2);  AEP = double_vector(NFFT/2);
   Xnoise = double_vector(NFFT/2);  Xconf = double_vector(NFFT/2);
-  AEnoise = double_vector(NFFT/2);  AEconf = double_vector(NFFT/2);
+  Anoise = double_vector(NFFT/2);  Aconf = double_vector(NFFT/2);
   
   for(i=0; i< NFFT/2; i++)
   {
@@ -124,7 +136,7 @@ int main(int argc,char **argv)
   Outfile = fopen(argv[2],"r");
   for(i=imin; i<= imax; i++)
   {
-    fscanf(Outfile,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xconf[i], &AEnoise[i], &AEconf[i]);
+    fscanf(Outfile,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xconf[i], &Anoise[i], &Aconf[i]);
   }
   fclose(Outfile);
   
@@ -172,7 +184,8 @@ int main(int argc,char **argv)
     
     q = (long)(f*TOBS);
     
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     
     /*  calculate michelson noise  */
     
@@ -191,7 +204,7 @@ int main(int argc,char **argv)
     
     /*inst2*/
     SNX = (SXYZ+Xconf[q]);//*sin(f/fstar)*sin(f/fstar);
-    SNAE = (SAE+AEconf[q]);//*sin(f/fstar)*sin(f/fstar);
+    SNAE = (SAE+Aconf[q]);//*sin(f/fstar)*sin(f/fstar);
     
     SNRAE = 0.0;
     SNRX = 0.0;
@@ -263,7 +276,9 @@ int main(int argc,char **argv)
   {
     XP[i]  = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    instrument_noise((double)i/TOBS, LISAorbit->fstar, LISAorbit->L, &AEnoise[i], &Xnoise[i]);
+    Anoise[i]  = AEnoise(LISAorbit->L,LISAorbit->fstar,(double)i/TOBS);
+    Xnoise[i]  = XYZnoise(LISAorbit->L,LISAorbit->fstar,(double)i/TOBS);
+
   }
   
   printf("Estimating Confusion Noise\n");
@@ -274,20 +289,20 @@ int main(int argc,char **argv)
   if(imax > NFFT/2-divs/2-1) imax =  NFFT/2-divs/2-1;
 
   //spline_fit(0, divs, imin, imax, XP, Xnoise, Xconf, TOBS, fstar, L);
-  //spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, fstar, L);
-  //confusion_mcmc(AEP, AEnoise, AEconf, imin, imax, TOBS);
-  confusion_mcmc(AEP, AEnoise, AEconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
+  //spline_fit(1, divs, imin, imax, AEP, Anoise, Aconf, TOBS, fstar, L);
+  //confusion_mcmc(AEP, Anoise, Aconf, imin, imax, TOBS);
+  confusion_mcmc(AEP, Anoise, Aconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
 
   
   medianX(imin, imax, fstar, L, XP, Xnoise, Xconf, TOBS);
-  //medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf, TOBS);
+  //medianAE(imin, imax, fstar, L, AEP, Anoise, Aconf, TOBS);
   
   
   Outfile = fopen("Confusion_XAE_1.dat","w");
   for(i=imin; i<= imax; i++)
   {
     f = (double)(i)/TOBS;
-    fprintf(Outfile,"%.12g %e %e %e %e\n", f, Xnoise[i], Xconf[i], AEnoise[i], AEconf[i]);
+    fprintf(Outfile,"%.12g %e %e %e %e\n", f, Xnoise[i], Xconf[i], Anoise[i], Aconf[i]);
   }
   fclose(Outfile);
   
@@ -297,7 +312,7 @@ int main(int argc,char **argv)
     if(i%100==0)
     {
       f = (double)(i)/TOBS;
-      fprintf(Outfile,"%.12g %e %e %e %e\n", f, Xnoise[i], Xconf[i], AEnoise[i], AEconf[i]);
+      fprintf(Outfile,"%.12g %e %e %e %e\n", f, Xnoise[i], Xconf[i], Anoise[i], Aconf[i]);
     }
   }
   fclose(Outfile);

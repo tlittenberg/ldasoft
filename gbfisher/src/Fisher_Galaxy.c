@@ -1,11 +1,21 @@
-/***************************************************************************/
-/*                                                                         */
-/*              Fisher_Galaxy.c, Version 2.3, 4/28/2011                    */
-/*             Written by Neil Cornish & Tyson Littenberg                  */
-/*                                                                         */
-/* gcc -O2 -o Fisher_Galaxy Fisher_Galaxy.c arrays.c -lcblas -lclapack -lm */
-/*                                                                         */
-/***************************************************************************/
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
 
 
 #include <stdio.h>
@@ -19,6 +29,7 @@
 
 #include <LISA.h>
 #include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
 #include <GalacticBinaryMath.h>
 #include <GalacticBinaryWaveform.h>
 
@@ -51,7 +62,7 @@ int main(int argc,char **argv)
   double f, fdot, A=0.0, theta, phi, iota, psi, phase, fddot;
   int cntx, cnt1, cnt2, cnt3, cnt4, cnt5, cnt6, cnt7, cnt8, cnt9, cnt10;
   int imin, imax;
-  double *Xc, *AEc, *Xnoise, *AEnoise;
+  double *Xc, *AEc, *Xnoise, *Anoise;
   FILE* vfile;
   FILE* afile;
   FILE* pfile;
@@ -104,13 +115,15 @@ int main(int argc,char **argv)
   imin = (int)floor(1.0e-4*TOBS);
   
   Xc = double_vector(imax);  AEc = double_vector(imax);
-  Xnoise = double_vector(imax);  AEnoise = double_vector(imax);
+  Xnoise = double_vector(imax);  Anoise = double_vector(imax);
   
   amps = fopen(argv[2],"r");
   for(i=imin; i<= imax; i++)
   {
-    fscanf(amps,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xc[i], &AEnoise[i], &AEc[i]);
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    fscanf(amps,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xc[i], &Anoise[i], &AEc[i]);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
+
     // printf("%e %e %e\n", f, SXYZ+Xc[i], SAE+AEc[i]);
   }
   fclose(amps);
@@ -218,8 +231,9 @@ int main(int argc,char **argv)
     
     q = (long)(f*TOBS);
     
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
-    
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
+
     if(q <= imax)
     {
       SAE  += AEc[q];
@@ -575,15 +589,9 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       ParamsP[8] /= TOBS*TOBS*TOBS;
       ParamsM[8] /= TOBS*TOBS*TOBS;
     }
-    
-    //       printf("Constructing plus template");
-    
-    //FAST_LISA(orbit, TOBS, ParamsP, N, M, XP, templateP1, templateP2);
+
     galactic_binary(orbit, "phase", TOBS, 0, ParamsP, 9, XP, templateP1, templateP2, M, 2);
 
-    //       printf("Constructing minus template");
-    
-    //FAST_LISA(orbit, TOBS, ParamsM, N, M, XM, templateM1, templateM2);
     galactic_binary(orbit, "phase", TOBS, 0, ParamsM, 9, XP, templateM1, templateM2, M, 2);
 
     for (j = 1 ; j <= 2*M ; j++)
@@ -591,7 +599,6 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       XD[i][j] = XP[j] - XM[j];
       temD1[i][j] = templateP1[j] - templateM1[j];
       temD2[i][j] = templateP2[j] - templateM2[j];
-      //if(i==7)printf("%i %g %g %g\n",j,temD1[i][j] , templateP1[j] , templateM1[j]);
     }
     
   }
@@ -655,60 +662,14 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       Fisher2[i][j] /= (4.0*epsilon*epsilon);
     }
   }
-  
-  /*
-   nA = d;
-   lwork = 4*d;
-   IPIV = ivector(0,(d-1));
-   work = double_vector(lwork-1);
-   A = double_vector((d*d-1));
-   W = double_vector((d-1));
-   
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   A[i*d+j] = Fisher2[i][j];
-   }
-   }
-   
-   
-   nA = d; lwork = 4*d;
-   
-   dpotrf_("U", &nA, A, &nA, &info);
-   dpotri_("U", &nA, A, &nA, &info);
-   
-   
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   Cov2[i][j] = A[i*d+j];
-   }
-   }
-   */
+
   double **evector = double_matrix(d-1,d-1);
   double *evalue = double_vector(d-1);
   matrix_eigenstuff(Fisher2,evector,evalue,d);
   for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov2[i][j] = Fisher2[i][j];
   
   //get perturbed params (ignoring fddot)
-  
-  //are evectors normalized?
-//  double df = 0.0;
-//  for (i = 0; i < 8; i++)
-//  {
-//    double norm = 0.0;
-//    for (j = 0; j < 8; j++)
-//    {
-//      norm += evector[i][j]*evector[i][j];
-//    }
-////    printf("f-component[%i]: %g * %g / %g\n",i, u[i], evector[0][i], sqrt(evalue[i]) );
-//    df+=evector[0][i]/sqrt(evalue[i]);
-//    //printf("|evector[%i]| = %g\n",i,sqrt(norm));
-//  }
-//  printf("df = %g\n",df);
-  
+
   for (i = 0; i < 8; i++)
   {
     DrawAE[i] = 0.0;
@@ -733,94 +694,8 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
   
   SigmaAE[9] = 2.0*pi*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
   
-  
-//  for (j = 0; j < 2; j++)
-//  {
-//    if(SigmaAE[d-1] > 0.5)
-//    {
-//      SigmaAE[d-1] = 1.0e10;
-//      d -= 1;
-//      /*
-//       for (i = 0; i < d; i++)
-//       {
-//       for (j = 0; j < d; j++)
-//       {
-//       Cov2[i][j] = Fisher2[i][j];
-//       }
-//       }
-//       
-//       nA = d; lwork = 4*d;
-//       
-//       dpotrf_("U", &nA, A, &nA, &info);
-//       dpotri_("U", &nA, A, &nA, &info);
-//       
-//       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
-//       */
-//      evector = double_matrix(d-1,d-1);
-//      evalue = double_vector(d-1);
-//      matrix_eigenstuff(Fisher2,evector,evalue,d);
-//      for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov2[i][j] = Fisher2[i][j];
-//      free_double_vector(evalue);
-//      free_double_matrix(evector,d-1);
-//      
-//      for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
-//      
-//    }
-//  }
-  
-  // printf("%d %f %f\n", d, SigmaAE[7], SigmaAE[8]);
-  
   d = 9;
-  
-  /*
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   A[i*d+j] = Fisher1[i][j];
-   }
-   }
-   
-   nA = d;
-   lwork = 4*d;
-   
-   dpotrf_("U", &nA, A, &nA, &info);
-   dpotri_("U", &nA, A, &nA, &info);
-   
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   Cov1[i][j] = A[i*d+j];
-   }
-   }
-   
-   for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
-   SigmaX[9] = 2.0*pi*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
-   
-   for (j = 0; j < 2; j++)
-   {
-   if(SigmaX[d-1] > 0.5)
-   {
-   SigmaX[d-1] = 1.0e10;
-   d -= 1;
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   A[i*d+j] = Fisher1[i][j];
-   }
-   }
-   
-   nA = d; lwork = 4*d;
-   
-   dpotrf_("U", &nA, A, &nA, &info);
-   dpotri_("U", &nA, A, &nA, &info);
-   
-   for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
-   
-   }
-   }*/
+
   
   evector = double_matrix(d-1,d-1);
   evalue = double_vector(d-1);
@@ -840,22 +715,7 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
     {
       SigmaX[d-1] = 1.0e10;
       d -= 1;
-      /*
-       for (i = 0; i < d; i++)
-       {
-       for (j = 0; j < d; j++)
-       {
-       Cov2[i][j] = Fisher2[i][j];
-       }
-       }
-       
-       nA = d; lwork = 4*d;
-       
-       dpotrf_("U", &nA, A, &nA, &info);
-       dpotri_("U", &nA, A, &nA, &info);
-       
-       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
-       */
+
       evector = double_matrix(d-1,d-1);
       evalue = double_vector(d-1);
       matrix_eigenstuff(Fisher1,evector,evalue,d);
@@ -867,12 +727,6 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       
     }
   }
-  
-  
-  //  free_double_vector(work);
-  //  free_double_vector(A);
-  //  free_double_vector(W);
-  //  free_ivector(IPIV, 0,(d-1));
   
   d = 9;
   
