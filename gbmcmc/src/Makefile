@@ -1,9 +1,9 @@
 # OpenMP
 #CC = gcc-mp-5
-CC = gcc
-#CCFLAGS = -fopenmp
+CC = clang-mp-9.0
+CCFLAGS = -fopenmp 
 
-LIBS  = gsl gslcblas m
+LIBS  = gsl gslcblas m fftw3
 CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
 
 # Compile src with git hash

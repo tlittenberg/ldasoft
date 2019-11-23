@@ -3,7 +3,7 @@
 CC = gcc
 #CCFLAGS = -fopenmp
 
-LIBS  = gsl gslcblas m gbmcmc
+LIBS  = gsl gslcblas m fftw3 gbmcmc
 LDFLAGS = -L../../gbmcmc/src
 #CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -Werror
 CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 

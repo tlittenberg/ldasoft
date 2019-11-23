@@ -1,31 +1,12 @@
 
-struct lisa_orbit{
-  int N;
-  
-  double L;
-  double fstar;
-  
-  double *t;
-  double **x;
-  double **y;
-  double **z;
-  double **dx;
-  double **dy;
-  double **dz;
-};
-struct lisa_orbit orbit;
 
 void printProgress (double percentage);
 
-void FAST_LISA(struct lisa_orbit *orbit, double TOBS, double *params, long N, long M, double *XLS, double *ALS, double *ELS);
 void XYZ(double L, double fstar, double TOBS, double ***d, double f0, long q, long M, double *XLS, double *ALS, double *ELS);
 
 double M_fdot(double f, double fdot);
 
 void instrument_noise(double f, double fstar, double L, double *SAE, double *SXYZ);
-
-void spacecraft(struct lisa_orbit *orbit, double tint, double *xint, double *yint, double *zint);
-void initialize_orbit(char OrbitFile[], struct lisa_orbit *orbit);
 
 
 double Sum(double *AA, double *EE, long M, double SN, double TOBS);
