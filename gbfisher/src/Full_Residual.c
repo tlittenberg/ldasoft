@@ -71,7 +71,7 @@ int main(int argc,char **argv)
   fclose(Infile);
   /*****************************/
   
-  printf("*   Observing Time:         %.1f year (%f s)\n",TOBS/year,TOBS);
+  printf("*   Observing Time:         %.1f year (%f s)\n",TOBS/YEAR,TOBS);
   printf("*\n");
   printf("***********************************************************************\n");
   
@@ -86,10 +86,10 @@ int main(int argc,char **argv)
 
   params = double_vector(9);
   
-  if((TOBS/year) <= 8.0) mult = 8;
-  if((TOBS/year) <= 4.0) mult = 4;
-  if((TOBS/year) <= 2.0) mult = 2;
-  if((TOBS/year) <= 1.0) mult = 1;
+  if((TOBS/YEAR) <= 8.0) mult = 8;
+  if((TOBS/YEAR) <= 4.0) mult = 4;
+  if((TOBS/YEAR) <= 2.0) mult = 2;
+  if((TOBS/YEAR) <= 1.0) mult = 1;
   
   XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1);  EELS = double_vector(NFFT-1);
   
@@ -147,7 +147,7 @@ int main(int argc,char **argv)
     fscanf(Abright, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
     
     params[0] = f;
-    params[1] = 0.5*pi-theta;
+    params[1] = 0.5*M_PI-theta;
     params[2] = phi;
     params[3] = A;
     params[4] = iota;

@@ -23,11 +23,11 @@
 #include <math.h>
 #include <time.h>
 #include "arrays.h"
-#include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
 
 #include <LISA.h>
+#include <Constants.h>
 #include <GalacticBinary.h>
 #include <GalacticBinaryIO.h>
 #include <GalacticBinaryMath.h>
@@ -95,7 +95,7 @@ int main(int argc,char **argv)
   fclose(Infile);
   /*****************************/
 
-  printf("*   Observing Time:      %.1f year (%f s)\n",TOBS/year,TOBS);
+  printf("*   Observing Time:      %.1f year (%f s)\n",TOBS/YEAR,TOBS);
   printf("*\n");
   printf("***********************************************************************\n");
   
@@ -134,13 +134,13 @@ int main(int argc,char **argv)
   DrawAE = double_vector(8+1);
   
   
-  fix = pi/180.0;  /* one degree in radians */
+  fix = M_PI/180.0;  /* one degree in radians */
   
   
-  if((TOBS/year) <= 8.0) mult = 8;
-  if((TOBS/year) <= 4.0) mult = 4;
-  if((TOBS/year) <= 2.0) mult = 2;
-  if((TOBS/year) <= 1.0) mult = 1;
+  if((TOBS/YEAR) <= 8.0) mult = 8;
+  if((TOBS/YEAR) <= 4.0) mult = 4;
+  if((TOBS/YEAR) <= 2.0) mult = 2;
+  if((TOBS/YEAR) <= 1.0) mult = 1;
   
   
   //xfile = fopen(argv[3], "w");
@@ -193,7 +193,7 @@ int main(int argc,char **argv)
     fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
     
     params[0] = f;
-    params[1] = 0.5*pi-theta;
+    params[1] = 0.5*M_PI-theta;
     params[2] = phi;
     params[3] = Amp;
     params[4] = iota;
@@ -210,7 +210,7 @@ int main(int argc,char **argv)
      iota = cos(iota);
      theta = acos(theta);
      params[0] = f;
-     params[1] = theta;//0.5*pi - theta;
+     params[1] = theta;//0.5*M_PI - theta;
      params[2] = phi;
      params[3] = Amp;
      params[4] = iota;
@@ -286,7 +286,7 @@ int main(int argc,char **argv)
       loudSNR[0][loudSNRcount] = log10(SNR);        //1:2
       loudSNR[1][loudSNRcount] = params[0];        //3:4
       loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);      //5:6
-      loudSNR[3][loudSNRcount] = 0.5*pi-theta;  //7:8
+      loudSNR[3][loudSNRcount] = 0.5*M_PI-theta;  //7:8
       loudSNR[4][loudSNRcount] = phi;        //9:10
       loudSNR[5][loudSNRcount] = Amp;        //11:12
       loudSNR[6][loudSNRcount] = iota;      //13:14
@@ -373,7 +373,7 @@ int main(int argc,char **argv)
 //        loudSNR[0][loudSNRcount] = log10(SNR);        //1:2
 //        loudSNR[1][loudSNRcount] = params[0];        //3:4
 //        loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);      //5:6
-//        loudSNR[3][loudSNRcount] = 0.5*pi-theta;  //7:8
+//        loudSNR[3][loudSNRcount] = 0.5*M_PI-theta;  //7:8
 //        loudSNR[4][loudSNRcount] = phi;        //9:10
 //        loudSNR[5][loudSNRcount] = Amp;        //11:12
 //        loudSNR[6][loudSNRcount] = iota;      //13:14
@@ -692,7 +692,7 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
   //get Fisher estimated errors
   for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
   
-  SigmaAE[9] = 2.0*pi*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
+  SigmaAE[9] = 2.0*M_PI*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
   
   d = 9;
 
@@ -706,7 +706,7 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
   
   for (i = 0; i < d; i++) SigmaX[i] = sqrt(Cov1[i][i]);
   
-  SigmaX[9] = 2.0*pi*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
+  SigmaX[9] = 2.0*M_PI*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
   
   
   for (j = 0; j < 2; j++)

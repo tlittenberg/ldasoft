@@ -26,11 +26,11 @@
 #include <gsl/gsl_randist.h>
 
 #include "arrays.h"
-#include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
 
 #include <LISA.h>
+#include <Constants.h>
 #include <GalacticBinary.h>
 #include <GalacticBinaryIO.h>
 

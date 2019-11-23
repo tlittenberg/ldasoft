@@ -83,7 +83,7 @@ int main(int argc,char **argv)
       //convert mass+distance to amplitude
       m1 *= MSUN;
       m2 *= MSUN;
-      Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
+      Amp    = 2.0 * GNEWTON*GNEWTON*m1*m2 * pow(M_PI*M_PI*f*f/(GNEWTON*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
       
       fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
     }

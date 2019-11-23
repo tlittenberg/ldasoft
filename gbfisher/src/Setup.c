@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
-#include "Constants.h"
+#include <Constants.h>
 #include "Subroutines.h"
 
 int main(int argc,char **argv)
@@ -45,8 +45,8 @@ int main(int argc,char **argv)
   NFFT = atoi(argv[7]);
   
   T = dt*(double)(NFFT);
-  fstar = clight/(2.0*pi*L);
-  ec = (L/(2.0*sqrt(3.0)*Rgc));
+  fstar = CLIGHT/(2.0*M_PI*L);
+  ec = (L/(2.0*sqrt(3.0)*RGC));
   
   
   fprintf(Output, "         /* ----------------  DETECTOR CONSTANTS  ---------------- */               \n\n");
