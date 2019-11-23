@@ -1,15 +1,28 @@
-//
-//  LISA.h
-//  
-//
-//  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
-//
-//
+/*
+*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
 
 #ifndef LISA_h
 #define LISA_h
 
 #include <stdio.h>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_spline.h>
 
 /* Photon shot noise power */
 #define Sps 8.321000e-23
@@ -36,9 +49,11 @@ struct Orbit
   double **x;
   double **y;
   double **z;
-  double **dx;
-  double **dy;
-  double **dz;
+  
+  gsl_spline **dx;
+  gsl_spline **dy;
+  gsl_spline **dz;
+  gsl_interp_accel *acc;
   
   void (*orbit_function)(struct Orbit*,double,double*,double*,double*);
 };
@@ -72,8 +87,6 @@ void initialize_analytic_orbit(struct Orbit *orbit);
 void initialize_numeric_orbit(struct Orbit *orbit);
 void free_orbit(struct Orbit *orbit);
 
-void LISA_spline(double *x, double *y, int n, double yp1, double ypn, double *y2);
-void LISA_splint(double *xa, double *ya, double *y2a, int n, double x, double *y);
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
 double AEnoise(double L, double fstar, double f);
 double GBnoise(double T, double f);

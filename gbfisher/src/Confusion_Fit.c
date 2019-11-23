@@ -11,16 +11,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include <LISA.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryMath.h>
+#include <GalacticBinaryWaveform.h>
+
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
 
+
 int main(int argc,char **argv)
 {
   
   double f;
-  char Gfile[50];
   double *XfLS, *AALS, *EELS;
   double *XP, *AEP;
   long i, imax, imin;
@@ -64,13 +70,12 @@ int main(int argc,char **argv)
   
   
   //Data structure for interpolating orbits from file
-  struct lisa_orbit *LISAorbit;
-  LISAorbit = &orbit;
-  
+  struct Orbit *LISAorbit = malloc(sizeof(struct Orbit));
+
   //Set up orbit structure (allocate memory, read file, cubic spline)
-  sprintf(Gfile,"%s",argv[2]);
-  initialize_orbit(Gfile, LISAorbit);
-  
+  sprintf(LISAorbit->OrbitFileName,"%s",argv[6]);
+  initialize_numeric_orbit(LISAorbit);
+
   double L     = LISAorbit->L;
   double fstar = LISAorbit->fstar;
   

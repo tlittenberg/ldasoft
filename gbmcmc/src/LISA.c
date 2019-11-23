@@ -1,10 +1,23 @@
-//
-//  LISA.c
-//
-//
-//  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
-//
-//
+/*
+*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
+
 #include <stdlib.h>
 #include <math.h>
 
@@ -37,9 +50,9 @@ void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, dou
   
   for(i=0; i<3; i++)
   {
-    LISA_splint(orbit->t, orbit->x[i], orbit->dx[i], orbit->Norb, t, &x[i+1]);
-    LISA_splint(orbit->t, orbit->y[i], orbit->dy[i], orbit->Norb, t, &y[i+1]);
-    LISA_splint(orbit->t, orbit->z[i], orbit->dz[i], orbit->Norb, t, &z[i+1]);
+    x[i+1] = gsl_spline_eval(orbit->dx[i], t, orbit->acc);
+    y[i+1] = gsl_spline_eval(orbit->dy[i], t, orbit->acc);
+    z[i+1] = gsl_spline_eval(orbit->dz[i], t, orbit->acc);
   }
 }
 
@@ -92,12 +105,13 @@ void initialize_analytic_orbit(struct Orbit *orbit)
 {
   //store armlenght & transfer frequency in orbit structure.
   orbit->L     = Larm;
-  orbit->fstar = C/(2.0*M_PI*Larm);
+  orbit->fstar = CLIGHT/(2.0*M_PI*Larm);
   orbit->ecc   = Larm/(2.0*SQ3*AU);
   orbit->R     = AU*orbit->ecc;
   orbit->orbit_function = &analytic_orbits;
 
 }
+
 void initialize_numeric_orbit(struct Orbit *orbit)
 {
   fprintf(stdout,"==== Initialize LISA Orbit Structure ====\n\n");
@@ -126,17 +140,11 @@ void initialize_numeric_orbit(struct Orbit *orbit)
   double **x  = malloc(sizeof(double *)*3);
   double **y  = malloc(sizeof(double *)*3);
   double **z  = malloc(sizeof(double *)*3);
-  double **dx = malloc(sizeof(double *)*3);
-  double **dy = malloc(sizeof(double *)*3);
-  double **dz = malloc(sizeof(double *)*3);
   for(i=0; i<3; i++)
   {
     x[i]  = malloc(sizeof(double)*orbit->Norb);
     y[i]  = malloc(sizeof(double)*orbit->Norb);
     z[i]  = malloc(sizeof(double)*orbit->Norb);
-    dx[i] = malloc(sizeof(double)*orbit->Norb);
-    dy[i] = malloc(sizeof(double)*orbit->Norb);
-    dz[i] = malloc(sizeof(double)*orbit->Norb);
   }
   
   //allocate memory for orbit structure
@@ -144,17 +152,19 @@ void initialize_numeric_orbit(struct Orbit *orbit)
   orbit->x  = malloc(sizeof(double *)*3);
   orbit->y  = malloc(sizeof(double *)*3);
   orbit->z  = malloc(sizeof(double *)*3);
-  orbit->dx = malloc(sizeof(double *)*3);
-  orbit->dy = malloc(sizeof(double *)*3);
-  orbit->dz = malloc(sizeof(double *)*3);
+  orbit->dx = malloc(sizeof(gsl_spline *)*3);
+  orbit->dy = malloc(sizeof(gsl_spline *)*3);
+  orbit->dz = malloc(sizeof(gsl_spline *)*3);
+  orbit->acc= gsl_interp_accel_alloc();
+  
   for(i=0; i<3; i++)
   {
     orbit->x[i]  = malloc(sizeof(double)*orbit->Norb);
     orbit->y[i]  = malloc(sizeof(double)*orbit->Norb);
     orbit->z[i]  = malloc(sizeof(double)*orbit->Norb);
-    orbit->dx[i] = malloc(sizeof(double)*orbit->Norb);
-    orbit->dy[i] = malloc(sizeof(double)*orbit->Norb);
-    orbit->dz[i] = malloc(sizeof(double)*orbit->Norb);
+    orbit->dx[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
+    orbit->dy[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
+    orbit->dz[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
   }
   
   //read in orbits
@@ -179,9 +189,9 @@ void initialize_numeric_orbit(struct Orbit *orbit)
   //calculate derivatives for cubic spline
   for(i=0; i<3; i++)
   {
-    LISA_spline(t, orbit->x[i], orbit->Norb, 1.e30, 1.e30, orbit->dx[i]);
-    LISA_spline(t, orbit->y[i], orbit->Norb, 1.e30, 1.e30, orbit->dy[i]);
-    LISA_spline(t, orbit->z[i], orbit->Norb, 1.e30, 1.e30, orbit->dz[i]);
+    gsl_spline_init(orbit->dx[i],t,orbit->x[i],orbit->Norb);
+    gsl_spline_init(orbit->dy[i],t,orbit->y[i],orbit->Norb);
+    gsl_spline_init(orbit->dz[i],t,orbit->z[i],orbit->Norb);
   }
   
   //calculate average arm length
@@ -234,7 +244,7 @@ void initialize_numeric_orbit(struct Orbit *orbit)
   
   //store armlenght & transfer frequency in orbit structure.
   orbit->L     = L;
-  orbit->fstar = C/(2.0*M_PI*L);
+  orbit->fstar = CLIGHT/(2.0*M_PI*L);
   orbit->ecc   = L/(2.0*SQ3*AU);
   orbit->R     = AU*orbit->ecc;
   orbit->orbit_function = &interpolate_orbits;
@@ -245,17 +255,11 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     free(x[i]);
     free(y[i]);
     free(z[i]);
-    free(dx[i]);
-    free(dy[i]);
-    free(dz[i]);
   }
   free(t);
   free(x);
   free(y);
   free(z);
-  free(dx);
-  free(dy);
-  free(dz);
   fprintf(stdout,"=========================================\n\n");
   
 }
@@ -283,64 +287,6 @@ void free_orbit(struct Orbit *orbit)
   free(orbit);
 }
 
-
-void LISA_spline(double *x, double *y, int n, double yp1, double ypn, double *y2)
-// Unlike NR version, assumes zero-offset arrays.  CHECK THAT THIS IS CORRECT.
-{
-  int i, k;
-  double p, qn, sig, un, *u;
-  u = malloc(sizeof(double)*(n-1));
-  // Boundary conditions: Check which is best.
-  if (yp1 > 0.99e30)
-    y2[0] = u[0] = 0.0;
-  else {
-    y2[0] = -0.5;
-    u[0] = (3.0/(x[1]-x[0]))*((y[1]-y[0])/(x[1]-x[0])-yp1);
-  }
-  
-  
-  for(i = 1; i < n-1; i++) {
-    sig = (x[i]-x[i-1])/(x[i+1]-x[i-1]);
-    p = sig*y2[i-1] + 2.0;
-    y2[i] = (sig-1.0)/p;
-    u[i] = (y[i+1]-y[i])/(x[i+1]-x[i]) - (y[i]-y[i-1])/(x[i]-x[i-1]);
-    u[i] = (6.0*u[i]/(x[i+1]-x[i-1])-sig*u[i-1])/p;
-  }
-  // More boundary conditions.
-  if (ypn > 0.99e30)
-    qn = un = 0.0;
-  else {
-    qn = 0.5;
-    un = (3.0/(x[n-1]-x[n-2]))*(ypn-(y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
-  }
-  y2[n-1] = (un-qn*u[n-2])/(qn*y2[n-2]+1.0);
-  for (k = n-2; k >= 0; k--)
-    y2[k] = y2[k]*y2[k+1]+u[k];
-  free(u);
-}
-
-void LISA_splint(double *xa, double *ya, double *y2a, int n, double x, double *y)
-{
-  // Unlike NR version, assumes zero-offset arrays.  CHECK THAT THIS IS CORRECT.
-  int klo,khi,k;
-  double h,b,a;
-  
-  klo=0;
-  khi=n-1;
-  while (khi-klo > 1) {
-    k=(khi+klo) >> 1;
-    if (xa[k] > x) khi=k;
-    else klo=k;
-  }
-  h=xa[khi]-xa[klo];
-  
-  a=(xa[khi]-x)/h;
-  b=(x-xa[klo])/h;
-  *y=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.0;
-}
-
-
-
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
 {
   int i,j,k;
@@ -357,7 +303,7 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
   
   //phiLS = PI2*f0*(0.5-LonC);//1 s sampling rate
   //TODO: sampling rate is hard-coded into tdi function
-  phiLS = PI2*f0*(7.5-L/C);//15 s sampling rate
+  phiLS = PI2*f0*(7.5-L/CLIGHT);//15 s sampling rate
   //phiLS = PI2*f0*(dt/2.0-LonC);//arbitrary sampling rate
   cLS = cos(phiLS);
   sLS = sin(phiLS);
@@ -440,7 +386,7 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
   double invfstar = 1./fstar;
   double invSQ3 = 1./SQ3;
   
-  phiSL = PIon2 - PI2*f0*(L/C);//15 s sampling rate
+  phiSL = PIon2 - PI2*f0*(L/CLIGHT);//15 s sampling rate
   cSL = cos(phiSL);
   sSL = sin(phiSL);
   

@@ -1,15 +1,26 @@
-//
-//  GalacticBinaryWaveform.c
-//  
-//
-//  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
-//
-//
+/*
+*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
-//#include "omp.h"
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
@@ -22,7 +33,7 @@ double galactic_binary_Amp(double Mc, double f0, double D, double T)
 {
   double f = f0;//T;
   double M = Mc*TSUN;
-  double dL= D*PC/C;
+  double dL= D*PC/CLIGHT;
   
   return 2.*pow(pow(M,5)*pow(M_PI*f,2),1./3.)/dL;
 }
@@ -48,7 +59,7 @@ double galactic_binary_dL(double f0, double dfdt, double A)
   double f    = f0;
   double fd = dfdt;
   double amp   = A;
-  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
+  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*CLIGHT/PC); //seconds  !check notes on 02/28!
 }
 
 void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise)
@@ -205,7 +216,7 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
   
   //Doppler spreading
   double sintheta = sin(acos(costheta));
-  double bw = 8*T*((4.+PI2*f*(AU/C)*sintheta)/YEAR + fdot*T);
+  double bw = 8*T*((4.+PI2*f*(AU/CLIGHT)*sintheta)/YEAR + fdot*T);
   int DS = (int)pow(2,(int)log2(bw-1)+1);
   if(DS > Nmax) DS = Nmax;
   if(DS < Nmin) DS = Nmin;
@@ -278,16 +289,16 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
   double ***d;
   
   /*   Allocating Arrays   */
-  x = malloc(sizeof(double)*4);//dvector(1,3);
-  y = malloc(sizeof(double)*4);//dvector(1,3);
-  z = malloc(sizeof(double)*4);//dvector(1,3);
+  x = malloc(sizeof(double)*4);
+  y = malloc(sizeof(double)*4);
+  z = malloc(sizeof(double)*4);
   
-  data12 = malloc(sizeof(double)*(BW2+1));//dvector(1,BW2);
-  data21 = malloc(sizeof(double)*(BW2+1));//dvector(1,BW2);
-  data31 = malloc(sizeof(double)*(BW2+1));//dvector(1,BW2);
-  data13 = malloc(sizeof(double)*(BW2+1));//dvector(1,BW2);
-  data23 = malloc(sizeof(double)*(BW2+1));//dvector(1,BW2);
-  data32 = malloc(sizeof(double)*(BW2+1));//dvector(1,BW2);
+  data12 = malloc(sizeof(double)*(BW2+1));
+  data21 = malloc(sizeof(double)*(BW2+1));
+  data31 = malloc(sizeof(double)*(BW2+1));
+  data13 = malloc(sizeof(double)*(BW2+1));
+  data23 = malloc(sizeof(double)*(BW2+1));
+  data32 = malloc(sizeof(double)*(BW2+1));
   
   //d = d3tensor(1,3,1,3,1,BW2);
   d = malloc(sizeof(double**)*4);
@@ -368,7 +379,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     
     for(i=1; i<=3; i++)
     {
-      kdotx[i] = (x[i]*k[1]+y[i]*k[2]+z[i]*k[3])/C;
+      kdotx[i] = (x[i]*k[1]+y[i]*k[2]+z[i]*k[3])/CLIGHT;
       
       //Wave arrival time at spacecraft i
       xi[i] = t - kdotx[i];
@@ -487,14 +498,14 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
   }
   
   /*   Numerical Fourier transform of slowly evolving signal   */
-  dfour1(data12, BW, -1);
-  dfour1(data21, BW, -1);
-  dfour1(data31, BW, -1);
-  dfour1(data13, BW, -1);
-  dfour1(data23, BW, -1);
-  dfour1(data32, BW, -1);
+  fftw_wrapper(data12, BW, -1);
+  fftw_wrapper(data21, BW, -1);
+  fftw_wrapper(data31, BW, -1);
+  fftw_wrapper(data13, BW, -1);
+  fftw_wrapper(data23, BW, -1);
+  fftw_wrapper(data32, BW, -1);
   
-  //Unpack arrays from dfour1.c and normalize
+  //Unpack arrays from fftw and normalize
   for(i=1; i<=BW; i++)
   {
     j = i + BW;
