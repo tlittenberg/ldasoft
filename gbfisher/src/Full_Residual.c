@@ -72,14 +72,14 @@ int main(int argc,char **argv)
   sprintf(LISAorbit->OrbitFileName,"%s",argv[3]);
   initialize_numeric_orbit(LISAorbit);
 
-  params = dvector(0,9);
+  params = double_vector(9);
   
   if((TOBS/year) <= 8.0) mult = 8;
   if((TOBS/year) <= 4.0) mult = 4;
   if((TOBS/year) <= 2.0) mult = 2;
   if((TOBS/year) <= 1.0) mult = 1;
   
-  XfLS = dvector(0,NFFT-1);  AALS = dvector(0,NFFT-1);  EELS = dvector(0,NFFT-1);
+  XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1);  EELS = double_vector(NFFT-1);
   
   for(i=0; i<NFFT; i++)
   {
@@ -154,9 +154,9 @@ int main(int argc,char **argv)
     
     M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
-    XLS = dvector(1,2*M);
-    AA  = dvector(1,2*M);
-    EE  = dvector(1,2*M);
+    XLS = double_vector(2*M);
+    AA  = double_vector(2*M);
+    EE  = double_vector(2*M);
     
     //FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
     galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
@@ -177,9 +177,9 @@ int main(int argc,char **argv)
       }
     }
     
-    free_dvector(XLS,1,2*M);
-    free_dvector(AA,1,2*M);
-    free_dvector(EE,1,2*M);
+    free_double_vector(XLS);
+    free_double_vector(AA);
+    free_double_vector(EE);
   }
   printProgress(1.0);
 
@@ -195,9 +195,9 @@ int main(int argc,char **argv)
   }
   fclose(Outfile);
   
-  XP = dvector(0,NFFT/2);  AEP = dvector(0,NFFT/2);
-  Xnoise = dvector(0,NFFT/2);  Xconf = dvector(0,NFFT/2);
-  AEnoise = dvector(0,NFFT/2);  AEconf = dvector(0,NFFT/2);
+  XP = double_vector(NFFT/2);  AEP = double_vector(NFFT/2);
+  Xnoise = double_vector(NFFT/2);  Xconf = double_vector(NFFT/2);
+  AEnoise = double_vector(NFFT/2);  AEconf = double_vector(NFFT/2);
   
   for(i=0; i<NFFT/2; i++)
   {
