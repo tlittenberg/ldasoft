@@ -2,8 +2,6 @@
 
 void printProgress (double percentage);
 
-void XYZ(double L, double fstar, double TOBS, double ***d, double f0, long q, long M, double *XLS, double *ALS, double *ELS);
-
 double M_fdot(double f, double fdot);
 
 void instrument_noise(double f, double fstar, double L, double *SAE, double *SXYZ);
@@ -17,12 +15,9 @@ double Sum(double *AA, double *EE, long M, double SN, double TOBS);
 /*        Median-based Confusion Noise Fitting       */
 /*                                                   */
 /*****************************************************/
-
 double quickselect(double *arr, int n, int k);
 void medianX(long imin, long imax, double fstar, double L, double *XP, double *Xnoise, double *Xconf,double TOBS);
 void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEnoise, double *AEconf, double TOBS);
-double ran2(long *idum);
-double gasdev2(long *idum);
 void KILL(char*);
 
 /*****************************************************/

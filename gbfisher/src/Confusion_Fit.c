@@ -60,13 +60,13 @@ int main(int argc,char **argv)
   printf("*\n");
   printf("***********************************************************************\n");
 
-  XfLS = dvector(0,NFFT-1);  AALS = dvector(0,NFFT-1);  EELS = dvector(0,NFFT-1);
+  XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1);  EELS = double_vector(NFFT-1);
   
   
   imax = (long)ceil(4.0e-2*TOBS);
   imin = (long)floor(1.0e-4*TOBS);
   
-  XfLS = dvector(0,NFFT-1);  AALS = dvector(0,NFFT-1); EELS = dvector(0,NFFT-1);
+  XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1); EELS = double_vector(NFFT-1);
   
   
   //Data structure for interpolating orbits from file
@@ -93,9 +93,9 @@ int main(int argc,char **argv)
   
   printf("Estimating Confusion Noise\n");
 
-  XP = dvector(0,NFFT/2);  AEP = dvector(0,NFFT/2);
-  Xnoise = dvector(0,NFFT/2);  Xconf = dvector(0,NFFT/2);
-  AEnoise = dvector(0,NFFT/2);  AEconf = dvector(0,NFFT/2);
+  XP = double_vector(NFFT/2);  AEP = double_vector(NFFT/2);
+  Xnoise = double_vector(NFFT/2);  Xconf = double_vector(NFFT/2);
+  AEnoise = double_vector(NFFT/2);  AEconf = double_vector(NFFT/2);
   
   rseed = -7584529636;
   

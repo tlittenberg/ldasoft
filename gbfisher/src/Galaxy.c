@@ -162,9 +162,9 @@ int main(int argc,char **argv)
     
     M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
-    XLS = dvector(1,2*M);
-    AA  = dvector(1,2*M);
-    EE  = dvector(1,2*M);
+    XLS = double_vector(2*M);
+    AA  = double_vector(2*M);
+    EE  = double_vector(2*M);
     
     galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
     
@@ -186,9 +186,9 @@ int main(int argc,char **argv)
     }
     
     
-    free_dvector(XLS,1,2*M);
-    free_dvector(AA,1,2*M);
-    free_dvector(EE,1,2*M);
+    free_double_vector(XLS);
+    free_double_vector(AA);
+    free_double_vector(EE);
   }
   fclose(Infile);
   printProgress(1.0);
