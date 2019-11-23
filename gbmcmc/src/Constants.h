@@ -64,8 +64,10 @@
 #define AU 1.49597870660e11
 
 /* Gravitational Constant (m^3 kg^-1 s^-2) */
-#define G 6.67408e-11
+#define GNEWTON 6.67408e-11
 
+/* Orbital radius of the guiding center */
+#define RGC (1.0*AU)
 
 
 #endif /* Constants_h */

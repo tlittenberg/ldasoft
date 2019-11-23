@@ -68,7 +68,7 @@ int main(int argc,char **argv)
   fclose(Infile);
   /*****************************/
 
-  printf("*   Observing Time: %.1f year (%f s)\n",TOBS/year,TOBS);
+  printf("*   Observing Time: %.1f year (%f s)\n",TOBS/YEAR,TOBS);
   printf("*\n");
   printf("***********************************************************************\n");
 

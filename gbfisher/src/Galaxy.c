@@ -59,7 +59,7 @@ int main(int argc,char **argv)
   printf("* FisherGalaxy: Galaxy Simulation Tool\n");
   printf("*   Galaxy Simulation: %s\n",argv[1]);
   printf("*   Orbit File:        %s\n",argv[2]);
-  printf("*   Observing Time:    %.1f year\n",atof(argv[3])/year);
+  printf("*   Observing Time:    %.1f year\n",atof(argv[3])/YEAR);
   printf("*\n");
   printf("***********************************************************************\n");
   
@@ -75,10 +75,10 @@ int main(int argc,char **argv)
   
   params = malloc(sizeof(double)*9);
   
-  if((TOBS/year) <= 8.0) mult = 8;
-  if((TOBS/year) <= 4.0) mult = 4;
-  if((TOBS/year) <= 2.0) mult = 2;
-  if((TOBS/year) <= 1.0) mult = 1;
+  if((TOBS/YEAR) <= 8.0) mult = 8;
+  if((TOBS/YEAR) <= 4.0) mult = 4;
+  if((TOBS/YEAR) <= 2.0) mult = 2;
+  if((TOBS/YEAR) <= 1.0) mult = 1;
   
   Infile  = fopen(argv[1],"r");
   Outfile = fopen("Bright.dat","w");
@@ -138,7 +138,7 @@ int main(int argc,char **argv)
     //theta-=0.5*M_PI;
     
     params[0] = f;
-    params[1] = 0.5*pi-theta;
+    params[1] = 0.5*M_PI-theta;
     params[2] = phi;
     params[3] = A;
     params[4] = iota;
