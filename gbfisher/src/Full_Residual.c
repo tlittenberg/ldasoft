@@ -1,11 +1,22 @@
-/*********************************************************/
-/*                                                       */
-/*        Bright_Remove.c, Version 2.3, 4/28/2011        */
-/*      Written by Neil Cornish & Tyson Littenberg       */
-/*                                                       */
-/* gcc -O2 -o Full_Residual Full_Residual.c Subroutines.c arrays.c -lm -lgsl */
-/*                                                       */
-/*********************************************************/
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +24,7 @@
 
 #include <LISA.h>
 #include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
 #include <GalacticBinaryWaveform.h>
 
 #include "arrays.h"
@@ -32,7 +44,7 @@ int main(int argc,char **argv)
   long i, k, cnt, cc1, mult, imax, imin;
   double sqT;
   double *Xnoise, *Xconf;
-  double *AEnoise, *AEconf;
+  double *Anoise, *AEconf;
   double *XP, *AEP;
   
   FILE* Infile;
@@ -197,25 +209,27 @@ int main(int argc,char **argv)
   
   XP = double_vector(NFFT/2);  AEP = double_vector(NFFT/2);
   Xnoise = double_vector(NFFT/2);  Xconf = double_vector(NFFT/2);
-  AEnoise = double_vector(NFFT/2);  AEconf = double_vector(NFFT/2);
+  Anoise = double_vector(NFFT/2);  AEconf = double_vector(NFFT/2);
   
   for(i=0; i<NFFT/2; i++)
   {
     XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    instrument_noise((double)i/TOBS, LISAorbit->fstar, LISAorbit->L, &AEnoise[i], &Xnoise[i]);
+    Anoise[i] = AEnoise(LISAorbit->L,LISAorbit->fstar,f);
+    Xnoise[i] = XYZnoise(LISAorbit->L,LISAorbit->fstar,f);
+
   }
   printf("Estimate Confusion Noise\n");
 
-  //medianAE(imin, imax, LISAorbit->fstar, LISAorbit->L, AEP, AEnoise, AEconf, TOBS);
+  //medianAE(imin, imax, LISAorbit->fstar, LISAorbit->L, AEP, Anoise, AEconf, TOBS);
   int divs = 100;  // must be even - used to compute median
   
   if(divs/2+1 > imin) imin = divs/2+1;
   if(imax > NFFT/2-divs/2-1) imax =  NFFT/2-divs/2-1;
   
-  //spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, LISAorbit->fstar,LISAorbit->L);
+  //spline_fit(1, divs, imin, imax, AEP, Anoise, AEconf, TOBS, LISAorbit->fstar,LISAorbit->L);
   
-  confusion_mcmc(AEP, AEnoise, AEconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
+  confusion_mcmc(AEP, Anoise, AEconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
 
   printf("Writing Residual File\n");
 
@@ -223,7 +237,7 @@ int main(int argc,char **argv)
   for(i=imin; i<= imax; i++)
   {
     f = (double)(i)/TOBS;
-    fprintf(Outfile,"%.12g %e %e\n", f, AEnoise[i], AEconf[i]);
+    fprintf(Outfile,"%.12g %e %e\n", f, Anoise[i], AEconf[i]);
   }
   fclose(Outfile);
   
@@ -233,7 +247,7 @@ int main(int argc,char **argv)
     if(i%100==0)
     {
       f = (double)(i)/TOBS;
-      fprintf(Outfile,"%.12g %e %e\n", f, AEnoise[i], AEconf[i]);
+      fprintf(Outfile,"%.12g %e %e\n", f, Anoise[i], AEconf[i]);
     }
   }
   fclose(Outfile);

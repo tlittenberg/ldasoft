@@ -508,27 +508,31 @@ double GBnoise_FF(double T, double fstar, double f)
   return 4.*(f/fstar)*(f/fstar)*GBnoise(T,f);
 }
 
+static double rednoise(double f)
+{
+  return 1. + 16.0*(pow((2.0e-5/f), 10.0)+ ipow(1.0e-4/f,2));
+}
+
 double AEnoise(double L, double fstar, double f)
 {
   //Power spectral density of the detector noise and transfer frequency
-  double red;
-  double Sloc;
-  
-  
-  red = 16.0*(pow((2.0e-5/f), 10.0)+ ipow(1.0e-4/f,2));
-  
-  Sloc = 2.89e-24;
 
   double fonfstar = f/fstar;
   double trans = ipow(sin(fonfstar),2.0);
-  // Calculate the power spectral density of the detector noise at the given frequency
-  
-  //return  16.0/3.0*ipow(sin(f/fstar),2)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/ipow(PI2*f,4)*(1.0+red)) ) / ipow(2.0*L,2);
-  
 
-  return (16.0/3.0)*trans*( (2.0+cos(fonfstar))*(Sps + Sloc) + 2.0*( 3.0 + 2.0*cos(fonfstar) + cos(2.0*fonfstar) ) * ( Sloc/2.0 + Sacc/ipow(PI2*f,4)*(1.0+red) ) ) / ipow(2.0*L,2);
+  return (16.0/3.0)*trans*( (2.0+cos(fonfstar))*(SPS + SLOC) + 2.0*( 3.0 + 2.0*cos(fonfstar) + cos(2.0*fonfstar) ) * ( SLOC/2.0 + SACC/ipow(PI2*f,4)*rednoise(f) ) ) / ipow(2.0*L,2);
 
 
+}
+
+double XYZnoise(double L, double fstar, double f)
+{
+  //Power spectral density of the detector noise and transfer frequency
+
+  double fonfstar = f/fstar;
+  double trans = ipow(sin(fonfstar),2.0);
+
+  return (4.0)*trans*( (4.0)*(SPS + SLOC) + 8.0*( 1.0 +                ipow(cos(fonfstar),2) ) * ( SLOC/2.0 + SACC*(1./(ipow(PI2*f,4)))*rednoise(f) ) ) / ipow(2.0*L,2);
 }
 
 double GBnoise(double T, double f)

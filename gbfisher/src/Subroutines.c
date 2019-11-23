@@ -1,3 +1,22 @@
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,41 +31,13 @@
 #include "Subroutines.h"
 
 #include <LISA.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
 
-void printProgress (double percentage)
-{
-  int val = (int) (percentage * 100);
-  int lpad = (int) (percentage * PBWIDTH);
-  int rpad = PBWIDTH - lpad;
-  printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-  fflush (stdout);
-}
 
-double M_fdot(double f, double fdot)
-{
-  return pow( fdot*pow(f,-11./3.)*(5./96.)*pow(M_PI,-8./3.)  ,  3./5.)/TSUN;
-}
-
-void instrument_noise(double f, double fstar, double L, double *SAE, double *SXYZ)
-{
-  
-  double SLOC = 2.89e-24; //what is this?
-
-  double fonfstar = f/fstar;
-  double trans = pow(sin(fonfstar),2.0);
-  double red = 1.0 + 16.0*(pow((2.0e-5/f), 10.0) + pow(1.0e-4/f,2));
-  
-  double cosfstar = cos(fonfstar);
-  
-  double L4 = 4.0*L*L;
-  double f4 = 1./(pow(PI2*f,4));
-  
-  *SAE  = (16.0/3.0)*trans*( (2.0+cosfstar)*(SPS + SLOC) + 2.0*( 3.0 + 2.0*cosfstar + cos(2.0*fonfstar) ) * ( SLOC/2.0 + SACC*f4*red ) ) / L4;
-  *SXYZ =      (4.0)*trans*(          (4.0)*(SPS + SLOC) + 8.0*( 1.0 +                pow(cosfstar,2.0) ) * ( SLOC/2.0 + SACC*f4*red ) ) / L4;
-}
 
 double Sum(double *AA, double *EE, long M, double SN, double TOBS)
 {
@@ -122,7 +113,8 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
   {
     for(j=0; j<=100; j++) XX[j] = XP[imin+101*i+j];
     f = (double)(imin+101*i-50)/TOBS;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     inst[i] = log(SXYZ*1.0e40);
     chi=quickselect(XX, 101, 51);
     //printf("%e %e\n", f, chi/0.72);
@@ -218,7 +210,8 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
     lf = log(f);
     j = (long)floor((lf-lfmin)/dlf);
     fit = pcx[j]+((pcx[j+1]-pcx[j])/dlf)*(lf-(lfmin+(double)(j)*dlf));
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     alpha = exp(fit)*1.0e-40;
     conf = alpha -SXYZ;
     if(conf < SXYZ/30.0) conf = 1.0e-46;
@@ -240,7 +233,7 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
   return;
 }
 
-void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEnoise, double *AEconf, double TOBS)
+void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEinst, double *AEconf, double TOBS)
 {
   printf(" Median fit to AE-channel confusion noise\n");
   
@@ -283,7 +276,8 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
   {
     for(j=0; j<=100; j++) XX[j] = AEP[imin+101*i+j];
     f = (double)(imin+101*i-50)/TOBS;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     inst[i] = log(SAE*1.0e40);
     chi=quickselect(XX, 101, 51);
     //printf("%e %e\n", f, chi/0.72);
@@ -369,16 +363,13 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
     lf = log(f);
     j = (long)floor((lf-lfmin)/dlf);
     fit = pcx[j]+((pcx[j+1]-pcx[j])/dlf)*(lf-(lfmin+(double)(j)*dlf));
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     alpha = exp(fit)*1.0e-40;
     conf = alpha -SAE;
     if(conf < SAE/30.0) conf = 1.0e-46;
-    AEnoise[i] = alpha;
+    AEinst[i] = alpha;
     AEconf[i] = conf;
-    
-    
-    //AEnoise[i]*=pow(sin(f/fstar),2.0);
-    //AEconf[i]*=pow(sin(f/fstar),2.0);
     
   }
   
@@ -481,7 +472,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
     adata[i] = mean;
     sdata[i] = var;
     f = (double)(imin+divsp*i)/T;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     if(flag == 0) inst[i] = log(SXYZ*1.0e40);
     if(flag == 1) inst[i] = log(SAE*1.0e40);
     
@@ -495,7 +487,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
   for(i=imin; i <= imax; i++)
   {
     f = (double)(i)/T;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     if(flag == 0)
     {
       conf = Xnoise[i] -SXYZ;

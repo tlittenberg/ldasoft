@@ -25,10 +25,13 @@
 #include <gsl/gsl_spline.h>
 
 /* Photon shot noise power */
-#define Sps 8.321000e-23
+#define SPS 8.321000e-23
 
 /* Acceleration noise power */
-#define Sacc 9.000000e-30
+#define SACC 9.000000e-30
+
+/* Position noise? */
+#define SLOC 2.89e-24
 
 /* Mean arm length of constellation (m) */
 #define Larm 2.5e9
@@ -89,6 +92,7 @@ void free_orbit(struct Orbit *orbit);
 
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
 double AEnoise(double L, double fstar, double f);
+double XYZnoise(double L, double fstar, double f);
 double GBnoise(double T, double f);
 
 /* Fractional frequency versions of TDI & Sn(f) codes */

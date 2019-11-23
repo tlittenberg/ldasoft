@@ -51,6 +51,9 @@
 /* Radius of the Sun (s) */
 #define RSUN 2.32060541029
 
+/* Mass of the SUn (kg) */
+#define MSUN 1.9889e30
+
 /* Number of meters in a parsec */
 #define PC 3.0856775807e16
 
@@ -62,6 +65,7 @@
 
 /* Gravitational Constant (m^3 kg^-1 s^-2) */
 #define G 6.67408e-11
+
 
 
 #endif /* Constants_h */

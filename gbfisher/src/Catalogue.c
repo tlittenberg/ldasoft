@@ -5,15 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define pi 3.141592653589793
-#define pc 3.0856775807e16
-#define clight 299792458.
-#define Msun 1.9889e30
-#define G 6.67259e-11
-#define YEAR 31457280.0
-
-
-double ran2(long *idum);
+#include <../../gbmcmc/src/Constants.h>
 
 int main(int argc,char **argv)
 {
@@ -30,9 +22,9 @@ int main(int argc,char **argv)
   //LISA parameters
   double f,fdot,theta,phi,Amp,iota,psi,phi0;
   
-  double deg2rad = pi/180.0;
+  double deg2rad = M_PI/180.0;
   double gc = 8500.0;
-  double kpc2pc =  1000.0;
+  double kPC2PC =  1000.0;
   double x,y,z;
   double xgc,ygc,zgc;
   double xec,yec,zec,rec;
@@ -83,15 +75,15 @@ int main(int argc,char **argv)
       
       DL = sqrt(xec*xec + yec*yec + zec*zec);
       
-      theta = pi/2.0 - acos(zec/DL);
+      theta = M_PI/2.0 - acos(zec/DL);
       phi   = atan2(yec,xec);
-      while(phi<0.0) phi += 2.0*pi;
+      while(phi<0.0) phi += 2.0*M_PI;
       
       
       //convert mass+distance to amplitude
-      m1 *= Msun;
-      m2 *= Msun;
-      Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+      m1 *= MSUN;
+      m2 *= MSUN;
+      Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
       
       fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
     }
@@ -123,8 +115,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -141,23 +133,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -179,8 +171,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -197,23 +189,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -235,8 +227,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -253,23 +245,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -291,8 +283,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -309,23 +301,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -351,8 +343,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -369,23 +361,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -407,8 +399,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -425,23 +417,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -463,8 +455,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -481,23 +473,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -519,8 +511,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -537,23 +529,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -583,8 +575,8 @@ int main(int argc,char **argv)
 //		l = l*deg2rad;
 //		b = (90.0 - b)*deg2rad;
 //
-//		//convert distance to pc
-//		DL *= kpc2pc;
+//		//convert distance to PC
+//		DL *= kPC2PC;
 //
 //		//change to ecliptic coordinates
 //		x = DL*sin(b)*cos(l);
@@ -601,23 +593,23 @@ int main(int argc,char **argv)
 //
 //		rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//		theta = pi/2.0 - acos(zec/rec);
+//		theta = M_PI/2.0 - acos(zec/rec);
 //		phi   = atan2(yec,xec);
-//		while(phi<0.0) phi += 2.0*pi;
+//		while(phi<0.0) phi += 2.0*M_PI;
 //
 //		//convert orbital parameters to GW parameters
 //		f    =  2.0/Porb;
 //		fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //		//convert mass+distance to amplitude
-//		m1 *= Msun;
-//		m2 *= Msun;
-//		Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//		m1 *= MSUN;
+//		m2 *= MSUN;
+//		Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //		//randomly assign orientation parameters
 //		iota = acos(-1.0 + 2.0*ran2(&seed));
-//		psi  = ran2(&seed)*2.0*pi;
-//		phi0 = ran2(&seed)*2.0*pi;
+//		psi  = ran2(&seed)*2.0*M_PI;
+//		phi0 = ran2(&seed)*2.0*M_PI;
 //
 //		fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //	}
@@ -642,8 +634,8 @@ int main(int argc,char **argv)
 //    l = l*deg2rad;
 //    b = (90.0 - b)*deg2rad;
 //
-//    //convert distance to pc
-//    DL *= kpc2pc;
+//    //convert distance to PC
+//    DL *= kPC2PC;
 //
 //    //change to ecliptic coordinates
 //    x = DL*sin(b)*cos(l);
@@ -660,23 +652,23 @@ int main(int argc,char **argv)
 //
 //    rec = sqrt(xec*xec + yec*yec + zec*zec);
 //
-//    theta = pi/2.0 - acos(zec/rec);
+//    theta = M_PI/2.0 - acos(zec/rec);
 //    phi   = atan2(yec,xec);
-//    while(phi<0.0) phi += 2.0*pi;
+//    while(phi<0.0) phi += 2.0*M_PI;
 //
 //    //convert orbital parameters to GW parameters
 //    f    =  2.0/Porb;
 //    fdot = -2.0*Porb_dot/Porb/Porb;
 //
 //    //convert mass+distance to amplitude
-//    m1 *= Msun;
-//    m2 *= Msun;
-//    Amp    = 2.0 * G*G*m1*m2 * pow(pi*pi*f*f/(G*(m1+m2)),1./3.) / (DL*pc) /(clight*clight*clight*clight);
+//    m1 *= MSUN;
+//    m2 *= MSUN;
+//    Amp    = 2.0 * G*G*m1*m2 * pow(M_PI*M_PI*f*f/(G*(m1+m2)),1./3.) / (DL*PC) /(CLIGHT*CLIGHT*CLIGHT*CLIGHT);
 //
 //    //randomly assign orientation parameters
 //    iota = acos(-1.0 + 2.0*ran2(&seed));
-//    psi  = ran2(&seed)*2.0*pi;
-//    phi0 = ran2(&seed)*2.0*pi;
+//    psi  = ran2(&seed)*2.0*M_PI;
+//    phi0 = ran2(&seed)*2.0*M_PI;
 //
 //    fprintf(Outfile, "%.16g %.10g %.6g %.6g %.6g %.6g %.6g %.6g\n",f,fdot,theta,phi,Amp,iota,psi,phi0);
 //  }
