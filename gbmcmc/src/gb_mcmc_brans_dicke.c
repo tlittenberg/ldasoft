@@ -17,7 +17,7 @@
 #define RAD2ARCMIN 3437.75
 #define RAD2DEGREE 57.295833313961
 
-/* ============================  MAIN PROGRAM  ============================ */
+/* ============================  MAIN PRdouble radius_1;OGRAM  ============================ */
 
 double M_fdot(double f, double fdot)
 {
@@ -123,8 +123,10 @@ int main(int argc, char* argv[])
    12) fddot
    */
   
-  int i,n;
-  double logL,t0,f,fdot,A,phi,theta,cosi,psi,phase,fddot;
+//  int i,n;
+   int i;
+//  double logL,t0,f,fdot,A,phi,theta,cosi,psi,phase,fddot;
+  double f,fdot,A,phi,theta,cosi,psi,phase,fddot;
   double Mc,B;
   
   int count_pos  = 0;
@@ -139,7 +141,7 @@ int main(int argc, char* argv[])
   
   double mass_1;
   double mass_2;
-  double radius_1;
+//  double radius_1;
   double radius_2;
   double eta;
   double S2;
@@ -183,7 +185,7 @@ int main(int argc, char* argv[])
           mass_1 = m1 + gsl_ran_gaussian(r,sm1);
           
           //draw R1
-          radius_1 = r1 + gsl_ran_gaussian(r,sr1);
+//          radius_1 = r1 + gsl_ran_gaussian(r,sr1);
           
           //draw M2
           mass_2 = m2 + gsl_ran_gaussian(r,sm2);
