@@ -113,6 +113,7 @@ struct Flags
   int gap; //are we fitting for a time-gap in the data?
   int calibration; //are we marginalizing over calibration  uncertainty?
   int confNoise; //include model of confusion noise in Sn(f)
+  int resume; //start chain state from previous run
   
   char **injFile;
   char cdfFile[128];

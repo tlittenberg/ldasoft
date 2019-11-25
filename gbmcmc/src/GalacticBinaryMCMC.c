@@ -163,6 +163,18 @@ int main(int argc, char *argv[])
       
       alloc_model(model_ptr,DMAX,data_ptr->N,data_ptr->Nchannel, data_ptr->NP, flags->NT);
       
+      if(flags->resume)
+      {
+        //set Nlive
+        
+        //get checkpoint file for chain ic
+
+        //map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
+        //galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[0]);
+
+        //set noise model
+      }
+      
       if(ic==0)set_uniform_prior(flags, model_ptr, data_ptr, 1);
       else     set_uniform_prior(flags, model_ptr, data_ptr, 0);
       
@@ -172,8 +184,12 @@ int main(int argc, char *argv[])
       //set signal model
       for(int n=0; n<DMAX; n++)
       {
-
-        if(flags->cheat)
+        if(flags->resume)
+        {
+          //get checkpoint file for chain ic
+          
+        }
+        else if(flags->cheat)
         {
           struct Source *inj = data_ptr->inj;
           //map parameters to vector
@@ -310,6 +326,10 @@ int main(int argc, char *argv[])
         fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
         print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
       }
+      
+      //save chain state to resume sampler
+      save_chain_state(data, model, chain, flags, mcmc);
+
     }
     
     //dump waveforms to file, update avgLogL for thermodynamic integration
