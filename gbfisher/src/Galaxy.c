@@ -1,11 +1,22 @@
-/***********************************************************************/
-/*                                                                     */
-/*                  Galaxy.c, Version 3.0, 8/03/2018                   */
-/*             Written by Neil Cornish & Tyson Littenberg              */
-/*                                                                     */
-/*        gcc -O2 -o Galaxy Galaxy.c Subroutines.c arrays.c -lm        */
-/*                                                                     */
-/***********************************************************************/
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +28,7 @@
 
 #include <LISA.h>
 #include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
 #include <GalacticBinaryWaveform.h>
 
 #include "arrays.h"
@@ -47,7 +59,7 @@ int main(int argc,char **argv)
   printf("* FisherGalaxy: Galaxy Simulation Tool\n");
   printf("*   Galaxy Simulation: %s\n",argv[1]);
   printf("*   Orbit File:        %s\n",argv[2]);
-  printf("*   Observing Time:    %.1f year\n",atof(argv[3])/year);
+  printf("*   Observing Time:    %.1f year\n",atof(argv[3])/YEAR);
   printf("*\n");
   printf("***********************************************************************\n");
   
@@ -63,10 +75,10 @@ int main(int argc,char **argv)
   
   params = malloc(sizeof(double)*9);
   
-  if((TOBS/year) <= 8.0) mult = 8;
-  if((TOBS/year) <= 4.0) mult = 4;
-  if((TOBS/year) <= 2.0) mult = 2;
-  if((TOBS/year) <= 1.0) mult = 1;
+  if((TOBS/YEAR) <= 8.0) mult = 8;
+  if((TOBS/YEAR) <= 4.0) mult = 4;
+  if((TOBS/YEAR) <= 2.0) mult = 2;
+  if((TOBS/YEAR) <= 1.0) mult = 1;
   
   Infile  = fopen(argv[1],"r");
   Outfile = fopen("Bright.dat","w");
@@ -126,7 +138,7 @@ int main(int argc,char **argv)
     //theta-=0.5*M_PI;
     
     params[0] = f;
-    params[1] = 0.5*pi-theta;
+    params[1] = 0.5*M_PI-theta;
     params[2] = phi;
     params[3] = A;
     params[4] = iota;
@@ -147,8 +159,9 @@ int main(int argc,char **argv)
     
     q = (long)(f*TOBS);
     
-    instrument_noise(f, LISAorbit->fstar, LISAorbit->L, &SAE, &SXYZ);
-    
+    SAE  = AEnoise(LISAorbit->L,LISAorbit->fstar,f);
+    SXYZ = XYZnoise(LISAorbit->L,LISAorbit->fstar,f);
+
     /*  calculate michelson noise  */
     Sm = SXYZ/(4.0*sin(fonfs)*sin(fonfs));
 
@@ -162,9 +175,9 @@ int main(int argc,char **argv)
     
     M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
-    XLS = dvector(1,2*M);
-    AA  = dvector(1,2*M);
-    EE  = dvector(1,2*M);
+    XLS = double_vector(2*M);
+    AA  = double_vector(2*M);
+    EE  = double_vector(2*M);
     
     galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
     
@@ -186,9 +199,9 @@ int main(int argc,char **argv)
     }
     
     
-    free_dvector(XLS,1,2*M);
-    free_dvector(AA,1,2*M);
-    free_dvector(EE,1,2*M);
+    free_double_vector(XLS);
+    free_double_vector(AA);
+    free_double_vector(EE);
   }
   fclose(Infile);
   printProgress(1.0);
@@ -203,7 +216,8 @@ int main(int argc,char **argv)
   {
     f = (double)(i)/TOBS;
     fonfs = f/LISAorbit->fstar;
-    instrument_noise(f, LISAorbit->fstar, LISAorbit->L, &SAE, &SXYZ);
+    SAE  = AEnoise(LISAorbit->L,LISAorbit->fstar,f);
+    SXYZ = XYZnoise(LISAorbit->L,LISAorbit->fstar,f);
     XR = 0.5 * sqrt(SXYZ) * gsl_ran_ugaussian(r);
     XI = 0.5 * sqrt(SXYZ) * gsl_ran_ugaussian(r);
     AR = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
