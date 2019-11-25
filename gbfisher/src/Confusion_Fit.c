@@ -85,7 +85,7 @@ int main(int argc,char **argv)
   struct Orbit *LISAorbit = malloc(sizeof(struct Orbit));
 
   //Set up orbit structure (allocate memory, read file, cubic spline)
-  sprintf(LISAorbit->OrbitFileName,"%s",argv[6]);
+  sprintf(LISAorbit->OrbitFileName,"%s",argv[2]);
   initialize_numeric_orbit(LISAorbit);
 
   double L     = LISAorbit->L;
