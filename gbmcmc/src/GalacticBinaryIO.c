@@ -190,7 +190,7 @@ void print_usage()
 
   //Chain
   fprintf(stdout,"       ========== Chains ========== \n");
-  fprintf(stdout,"       --steps       : number of mcmc steps (10000)        \n");
+  fprintf(stdout,"       --steps       : number of mcmc steps (100000)        \n");
   fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
   fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
   fprintf(stdout,"\n");
@@ -273,8 +273,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->updateCov   = 0;
   flags->match       = 0;
   flags->DMAX        = DMAX_default;
-  flags->NMCMC       = 10000;
-  flags->NBURN       = 10000;
+  flags->NMCMC       = 100000;
+  flags->NBURN       = 100000;
   chain->NP          = 9; //number of proposals
   chain->NC          = 12;//number of chains
   
@@ -550,8 +550,9 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
 
   // run looks good to go, make directories and save command line
   mode_t process_mask = umask(0);
-  mkdir("chains",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  mkdir("data",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  mkdir("checkpoint",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  mkdir("chains",    S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  mkdir("data",      S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
   umask(process_mask);
   
   //Print command line
@@ -571,6 +572,65 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   
   fclose(runlog);
 
+}
+
+void save_chain_state(struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step)
+{
+  char filename[128];
+  FILE *stateFile;
+  for(int ic=0; ic<chain->NC; ic++)
+  {
+    sprintf(filename,"checkpoint/chain_state_%i.dat",ic);
+    stateFile = fopen(filename,"w");
+
+    int n = chain->index[ic];
+    
+    for(int j=0; j<flags->NDATA; j++)
+    {
+      print_chain_state(data[j], chain, model[n][j], flags, stateFile, step);
+      print_noise_state(data[j], model[n][j], stateFile, step);
+      if(flags->calibration)
+        print_calibration_state(data[j], model[n][j], stateFile, step);
+      
+      int D = model[n][j]->Nlive;
+      for(int i=0; i<D; i++)
+      {
+        print_source_params(data[j],model[n][j]->source[i],stateFile);
+        fprintf(stateFile,"\n");
+      }
+    }
+    
+    fclose(stateFile);
+  }
+}
+
+void restore_chain_state(struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step)
+{
+  char filename[128];
+  FILE *stateFile;
+  for(int ic=0; ic<chain->NC; ic++)
+  {
+    sprintf(filename,"checkpoint/chain_state_%i.dat",ic);
+    stateFile = fopen(filename,"r");
+
+    int n = chain->index[ic];
+    
+    for(int j=0; j<flags->NDATA; j++)
+    {
+      scan_chain_state(data[j], chain, model[n][j], flags, stateFile, step);
+      scan_noise_state(data[j], model[n][j], stateFile, step);
+      if(flags->calibration)
+        scan_calibration_state(data[j], model[n][j], stateFile, step);
+      
+      int D = model[n][j]->Nlive;
+      for(int i=0; i<D; i++)
+      {
+        scan_source_params(data[j],model[n][j]->source[i],stateFile);
+      }
+    }
+    
+    fclose(stateFile);
+  }
 }
 
 void print_chain_files(struct Data *data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step)
@@ -646,13 +706,28 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
   }//verbose flag
 }
 
+void scan_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int *step)
+{
+  fscanf(fptr, "%i",step);
+  fscanf(fptr, "%i",&model->Nlive);
+  fscanf(fptr, "%lg",&model->logL);
+  fscanf(fptr, "%lg",&model->logLnorm);
+  for(int j=0; j<flags->NT; j++)fscanf(fptr, "%lg",&model->t0[j]);
+  if(flags->verbose)
+  {
+    for(int i=0; i<model->Nlive; i++)
+    {
+      scan_source_params(data,model->source[i],fptr);
+    }
+  }
+}
+
 void print_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int step)
 {
-  double logL=0.0;
-  logL = model->logL+model->logLnorm;
   fprintf(fptr, "%i ",step);
   fprintf(fptr, "%i ",model->Nlive);
-  fprintf(fptr, "%lg ",logL);
+  fprintf(fptr, "%lg ",model->logL);
+  fprintf(fptr, "%lg ",model->logLnorm);
   for(int j=0; j<flags->NT; j++)fprintf(fptr, "%.12g ",model->t0[j]);
   if(flags->verbose)
   {
@@ -664,10 +739,31 @@ void print_chain_state(struct Data *data, struct Chain *chain, struct Model *mod
   fprintf(fptr, "\n");
 }
 
+void scan_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int *step)
+{
+  fscanf(fptr, "%i %lg %lg",step, &model->logL,&model->logLnorm);
+  
+  for(int i=0; i<model->NT; i++)
+  {
+    switch(data->Nchannel)
+    {
+      case 1:
+        fscanf(fptr, "%lg", &model->calibration[i]->dampX);
+        fscanf(fptr, "%lg", &model->calibration[i]->dphiX);
+        break;
+      case 2:
+        fscanf(fptr, "%lg", &model->calibration[i]->dampA);
+        fscanf(fptr, "%lg", &model->calibration[i]->dphiA);
+        fscanf(fptr, "%lg", &model->calibration[i]->dampE);
+        fscanf(fptr, "%lg", &model->calibration[i]->dphiE);
+        break;
+    }
+  }
+}
 void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int step)
 {
   fprintf(fptr, "%i ",step);
-  fprintf(fptr, "%lg ",model->logL+model->logLnorm);
+  fprintf(fptr, "%lg %lg ",model->logL, model->logLnorm);
   
   for(int i=0; i<model->NT; i++)
   {
@@ -688,10 +784,31 @@ void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr,
   fprintf(fptr, "\n");
 }
 
+void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *step)
+{
+  double logL;
+  fscanf(fptr, "%i ",step);
+  fscanf(fptr, "%lg ",&logL);
+
+  for(int i=0; i<model->NT; i++)
+  {
+    switch(data->Nchannel)
+    {
+      case 1:
+        fscanf(fptr, "%lg", &model->noise[i]->etaX);
+        break;
+      case 2:
+        fscanf(fptr, "%lg", &model->noise[i]->etaA);
+        fscanf(fptr, "%lg", &model->noise[i]->etaE);
+        break;
+    }
+  }
+}
+
 void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int step)
 {
   fprintf(fptr, "%i ",step);
-  fprintf(fptr, "%lg ",model->logL+model->logLnorm);
+  fprintf(fptr, "%lg %lg ",model->logL, model->logLnorm);
 
   for(int i=0; i<model->NT; i++)
   {
