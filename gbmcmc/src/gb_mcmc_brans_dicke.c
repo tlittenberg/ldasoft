@@ -52,7 +52,7 @@ double galactic_binary_dL(double f0, double dfdt, double A)
   double f    = f0;//T;
   double fd = dfdt;//(T*T);
   double amp   = A;
-  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*C/PC); //seconds  !check notes on 02/28!
+  return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*CLIGHT/PC); //seconds  !check notes on 02/28!
 }
 
 double reduced_mass_ratio(double m1, double m2)

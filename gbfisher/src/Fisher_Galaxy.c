@@ -1,11 +1,21 @@
-/***************************************************************************/
-/*                                                                         */
-/*              Fisher_Galaxy.c, Version 2.3, 4/28/2011                    */
-/*             Written by Neil Cornish & Tyson Littenberg                  */
-/*                                                                         */
-/* gcc -O2 -o Fisher_Galaxy Fisher_Galaxy.c arrays.c -lcblas -lclapack -lm */
-/*                                                                         */
-/***************************************************************************/
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
 
 
 #include <stdio.h>
@@ -13,16 +23,18 @@
 #include <math.h>
 #include <time.h>
 #include "arrays.h"
-#include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
 
 #include <LISA.h>
+#include <Constants.h>
 #include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
 #include <GalacticBinaryMath.h>
 #include <GalacticBinaryWaveform.h>
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_sort.h>
 #include <gsl/gsl_randist.h>
 
 #include <gsl/gsl_matrix.h>
@@ -33,8 +45,6 @@
 
 
 void FISHER(struct Orbit *orbit, double TOBS, double *params, long N, long M, double SXYZ, double SAE, double *SigmaX, double *SigmaAE, double *DrawAE);
-void indexx(unsigned long n, double *arr, unsigned long *indx);
-
 
 int main(int argc,char **argv)
 {
@@ -52,7 +62,7 @@ int main(int argc,char **argv)
   double f, fdot, A=0.0, theta, phi, iota, psi, phase, fddot;
   int cntx, cnt1, cnt2, cnt3, cnt4, cnt5, cnt6, cnt7, cnt8, cnt9, cnt10;
   int imin, imax;
-  double *Xc, *AEc, *Xnoise, *AEnoise;
+  double *Xc, *AEc, *Xnoise, *Anoise;
   FILE* vfile;
   FILE* afile;
   FILE* pfile;
@@ -85,7 +95,7 @@ int main(int argc,char **argv)
   fclose(Infile);
   /*****************************/
 
-  printf("*   Observing Time:      %.1f year (%f s)\n",TOBS/year,TOBS);
+  printf("*   Observing Time:      %.1f year (%f s)\n",TOBS/YEAR,TOBS);
   printf("*\n");
   printf("***********************************************************************\n");
   
@@ -104,31 +114,33 @@ int main(int argc,char **argv)
   imax = (int)ceil(4.0e-2*TOBS);
   imin = (int)floor(1.0e-4*TOBS);
   
-  Xc = dvector(imin,imax);  AEc = dvector(imin,imax);
-  Xnoise = dvector(imin,imax);  AEnoise = dvector(imin,imax);
+  Xc = double_vector(imax);  AEc = double_vector(imax);
+  Xnoise = double_vector(imax);  Anoise = double_vector(imax);
   
   amps = fopen(argv[2],"r");
   for(i=imin; i<= imax; i++)
   {
-    fscanf(amps,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xc[i], &AEnoise[i], &AEc[i]);
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    fscanf(amps,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xc[i], &Anoise[i], &AEc[i]);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
+
     // printf("%e %e %e\n", f, SXYZ+Xc[i], SAE+AEc[i]);
   }
   fclose(amps);
   
-  params = dvector(0,8);
-  SigmaX = dvector(0,8+1);
-  SigmaAE = dvector(0,8+1);
-  DrawAE = dvector(0,8+1);
+  params = double_vector(8);
+  SigmaX = double_vector(8+1);
+  SigmaAE = double_vector(8+1);
+  DrawAE = double_vector(8+1);
   
   
-  fix = pi/180.0;  /* one degree in radians */
+  fix = M_PI/180.0;  /* one degree in radians */
   
   
-  if((TOBS/year) <= 8.0) mult = 8;
-  if((TOBS/year) <= 4.0) mult = 4;
-  if((TOBS/year) <= 2.0) mult = 2;
-  if((TOBS/year) <= 1.0) mult = 1;
+  if((TOBS/YEAR) <= 8.0) mult = 8;
+  if((TOBS/YEAR) <= 4.0) mult = 4;
+  if((TOBS/YEAR) <= 2.0) mult = 2;
+  if((TOBS/YEAR) <= 1.0) mult = 1;
   
   
   //xfile = fopen(argv[3], "w");
@@ -148,7 +160,7 @@ int main(int argc,char **argv)
   
   int COUNT = cntx--;
   int loudSNRcount=0;
-  double **loudSNR = dmatrix(0,16,0,COUNT-1);
+  double **loudSNR = double_matrix(16,COUNT-1);
   for(i=0; i<COUNT; i++)for(j=0; j<17; j++) loudSNR[j][i] = 0.0;
   
   rewind(vfile);
@@ -181,7 +193,7 @@ int main(int argc,char **argv)
     fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
     
     params[0] = f;
-    params[1] = 0.5*pi-theta;
+    params[1] = 0.5*M_PI-theta;
     params[2] = phi;
     params[3] = Amp;
     params[4] = iota;
@@ -198,7 +210,7 @@ int main(int argc,char **argv)
      iota = cos(iota);
      theta = acos(theta);
      params[0] = f;
-     params[1] = theta;//0.5*pi - theta;
+     params[1] = theta;//0.5*M_PI - theta;
      params[2] = phi;
      params[3] = Amp;
      params[4] = iota;
@@ -219,8 +231,9 @@ int main(int argc,char **argv)
     
     q = (long)(f*TOBS);
     
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
-    
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
+
     if(q <= imax)
     {
       SAE  += AEc[q];
@@ -240,9 +253,9 @@ int main(int argc,char **argv)
       exit(0);
     }
     
-    XLS = dvector(1,2*M);
-    AA  = dvector(1,2*M);
-    EE  = dvector(1,2*M);
+    XLS = double_vector(2*M);
+    AA  = double_vector(2*M);
+    EE  = double_vector(2*M);
     
     //FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
     galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
@@ -250,9 +263,9 @@ int main(int argc,char **argv)
     SNRX = sqrt(Sum(XLS,XLS,M,SXYZ,TOBS));
     SNR  = sqrt(Sum(AA,AA,M,SAE,TOBS)+Sum(EE,EE,M,SAE,TOBS));
     
-    free_dvector(XLS,1,2*M);
-    free_dvector(AA,1,2*M);
-    free_dvector(EE,1,2*M);
+    free_double_vector(XLS);
+    free_double_vector(AA);
+    free_double_vector(EE);
     
     if(SNR > 7.0)
     {
@@ -273,7 +286,7 @@ int main(int argc,char **argv)
       loudSNR[0][loudSNRcount] = log10(SNR);        //1:2
       loudSNR[1][loudSNRcount] = params[0];        //3:4
       loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);      //5:6
-      loudSNR[3][loudSNRcount] = 0.5*pi-theta;  //7:8
+      loudSNR[3][loudSNRcount] = 0.5*M_PI-theta;  //7:8
       loudSNR[4][loudSNRcount] = phi;        //9:10
       loudSNR[5][loudSNRcount] = Amp;        //11:12
       loudSNR[6][loudSNRcount] = iota;      //13:14
@@ -360,7 +373,7 @@ int main(int argc,char **argv)
 //        loudSNR[0][loudSNRcount] = log10(SNR);        //1:2
 //        loudSNR[1][loudSNRcount] = params[0];        //3:4
 //        loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);      //5:6
-//        loudSNR[3][loudSNRcount] = 0.5*pi-theta;  //7:8
+//        loudSNR[3][loudSNRcount] = 0.5*M_PI-theta;  //7:8
 //        loudSNR[4][loudSNRcount] = phi;        //9:10
 //        loudSNR[5][loudSNRcount] = Amp;        //11:12
 //        loudSNR[6][loudSNRcount] = iota;      //13:14
@@ -441,20 +454,21 @@ int main(int argc,char **argv)
   
   
   //sort cell->occupancy so I search from most occupied to least occupied cell
-  unsigned long *dumb_sort = lvector(1,COUNT);
-  unsigned long *sort = lvector(0,COUNT-1);
+  size_t *sort_ascending  = malloc(COUNT*(sizeof(size_t)));
+  size_t *sort_descending = malloc(COUNT*(sizeof(size_t)));
   
-  indexx(COUNT, loudSNR[0]-1, dumb_sort);
+  gsl_sort_index(sort_ascending, loudSNR[0], 1, COUNT);
+  
   for(i=0; i<COUNT; i++)
   {
     j = COUNT - i;
-    sort[i] = dumb_sort[j]-1;
+    sort_descending[i] = sort_ascending[j];
   }
   
   FILE *outfile = fopen("Brightest.dat","w");
   for(i=0; i<COUNT; i++)
   {
-    j = sort[i];
+    j = sort_descending[i];
     for(k=0; k<17; k++) fprintf(outfile,"%g ",loudSNR[k][j]);
     fprintf(outfile,"\n");
   }
@@ -486,31 +500,31 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
   
   // Plus and minus parameters:
   
-  ParamsP = dvector(0, d-1);
-  ParamsM = dvector(0, d-1);
+  ParamsP = double_vector(d-1);
+  ParamsM = double_vector(d-1);
   
   // Plus and minus templates for each channel:
   
-  XP = dvector(1, 2*M);
-  templateP1 = dvector(1, 2*M);
-  templateP2 = dvector(1, 2*M);
+  XP = double_vector(2*M);
+  templateP1 = double_vector(2*M);
+  templateP2 = double_vector(2*M);
   
-  XM = dvector(1, 2*M);
-  templateM1 = dvector(1, 2*M);
-  templateM2 = dvector(1, 2*M);
+  XM = double_vector(2*M);
+  templateM1 = double_vector(2*M);
+  templateM2 = double_vector(2*M);
   
   // Differences for each channel
   
-  XD = dmatrix(0, d-1, 1, 2*M);
-  temD1 = dmatrix(0, d-1, 1, 2*M);
-  temD2 = dmatrix(0, d-1, 1, 2*M);
+  XD = double_matrix(d-1, 2*M);
+  temD1 = double_matrix(d-1, 2*M);
+  temD2 = double_matrix(d-1, 2*M);
   
   // The individual Fisher matrices:
   
-  Fisher1 = dmatrix(0, d-1, 0, d-1);
-  Fisher2 = dmatrix(0, d-1, 0, d-1);
-  Cov1 = dmatrix(0, d-1, 0, d-1);
-  Cov2 = dmatrix(0, d-1, 0, d-1);
+  Fisher1 = double_matrix(d-1,d-1);
+  Fisher2 = double_matrix(d-1,d-1);
+  Cov1 = double_matrix(d-1,d-1);
+  Cov2 = double_matrix(d-1,d-1);
   
   // Random draw to perturb params by Fisher
   const gsl_rng_type *T = gsl_rng_default;
@@ -575,15 +589,9 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       ParamsP[8] /= TOBS*TOBS*TOBS;
       ParamsM[8] /= TOBS*TOBS*TOBS;
     }
-    
-    //       printf("Constructing plus template");
-    
-    //FAST_LISA(orbit, TOBS, ParamsP, N, M, XP, templateP1, templateP2);
+
     galactic_binary(orbit, "phase", TOBS, 0, ParamsP, 9, XP, templateP1, templateP2, M, 2);
 
-    //       printf("Constructing minus template");
-    
-    //FAST_LISA(orbit, TOBS, ParamsM, N, M, XM, templateM1, templateM2);
     galactic_binary(orbit, "phase", TOBS, 0, ParamsM, 9, XP, templateM1, templateM2, M, 2);
 
     for (j = 1 ; j <= 2*M ; j++)
@@ -591,17 +599,16 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       XD[i][j] = XP[j] - XM[j];
       temD1[i][j] = templateP1[j] - templateM1[j];
       temD2[i][j] = templateP2[j] - templateM2[j];
-      //if(i==7)printf("%i %g %g %g\n",j,temD1[i][j] , templateP1[j] , templateM1[j]);
     }
     
   }
   
-  free_dvector(XP, 1, 2*M);
-  free_dvector(XM, 1, 2*M);
-  free_dvector(templateP1, 1, 2*M);
-  free_dvector(templateP2, 1, 2*M);
-  free_dvector(templateM1, 1, 2*M);
-  free_dvector(templateM2, 1, 2*M);
+  free_double_vector(XP);
+  free_double_vector(XM);
+  free_double_vector(templateP1);
+  free_double_vector(templateP2);
+  free_double_vector(templateM1);
+  free_double_vector(templateM2);
   
   // Calculate Fisher1 (using just one channel)
   
@@ -614,7 +621,7 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
     }
   }
   
-  free_dmatrix(XD, 0, d-1, 1, 2*M);
+  free_double_matrix(XD,d-1);
   
   
   for (i = 0; i < d; i++)
@@ -639,8 +646,8 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
     }
   }
   
-  free_dmatrix(temD1, 0, d-1, 1, 2*M);
-  free_dmatrix(temD2, 0, d-1, 1, 2*M);
+  free_double_matrix(temD1,d-1);
+  free_double_matrix(temD2,d-1);
   
   for (i = 0; i < d; i++)
   {
@@ -655,60 +662,14 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       Fisher2[i][j] /= (4.0*epsilon*epsilon);
     }
   }
-  
-  /*
-   nA = d;
-   lwork = 4*d;
-   IPIV = ivector(0,(d-1));
-   work = dvector(0,lwork-1);
-   A = dvector(0,(d*d-1));
-   W = dvector(0,(d-1));
-   
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   A[i*d+j] = Fisher2[i][j];
-   }
-   }
-   
-   
-   nA = d; lwork = 4*d;
-   
-   dpotrf_("U", &nA, A, &nA, &info);
-   dpotri_("U", &nA, A, &nA, &info);
-   
-   
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   Cov2[i][j] = A[i*d+j];
-   }
-   }
-   */
-  double **evector = dmatrix(0,d-1,0,d-1);
-  double *evalue = dvector(0,d-1);
+
+  double **evector = double_matrix(d-1,d-1);
+  double *evalue = double_vector(d-1);
   matrix_eigenstuff(Fisher2,evector,evalue,d);
   for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov2[i][j] = Fisher2[i][j];
   
   //get perturbed params (ignoring fddot)
-  
-  //are evectors normalized?
-//  double df = 0.0;
-//  for (i = 0; i < 8; i++)
-//  {
-//    double norm = 0.0;
-//    for (j = 0; j < 8; j++)
-//    {
-//      norm += evector[i][j]*evector[i][j];
-//    }
-////    printf("f-component[%i]: %g * %g / %g\n",i, u[i], evector[0][i], sqrt(evalue[i]) );
-//    df+=evector[0][i]/sqrt(evalue[i]);
-//    //printf("|evector[%i]| = %g\n",i,sqrt(norm));
-//  }
-//  printf("df = %g\n",df);
-  
+
   for (i = 0; i < 8; i++)
   {
     DrawAE[i] = 0.0;
@@ -723,115 +684,29 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
     
   }
   
-  free_dvector(evalue,0,d-1);
-  free_dmatrix(evector,0,d-1,0,d-1);
+  free_double_vector(evalue);
+  free_double_matrix(evector,d-1);
   
   
   
   //get Fisher estimated errors
   for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
   
-  SigmaAE[9] = 2.0*pi*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
-  
-  
-//  for (j = 0; j < 2; j++)
-//  {
-//    if(SigmaAE[d-1] > 0.5)
-//    {
-//      SigmaAE[d-1] = 1.0e10;
-//      d -= 1;
-//      /*
-//       for (i = 0; i < d; i++)
-//       {
-//       for (j = 0; j < d; j++)
-//       {
-//       Cov2[i][j] = Fisher2[i][j];
-//       }
-//       }
-//       
-//       nA = d; lwork = 4*d;
-//       
-//       dpotrf_("U", &nA, A, &nA, &info);
-//       dpotri_("U", &nA, A, &nA, &info);
-//       
-//       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
-//       */
-//      evector = dmatrix(0,d-1,0,d-1);
-//      evalue = dvector(0,d-1);
-//      matrix_eigenstuff(Fisher2,evector,evalue,d);
-//      for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov2[i][j] = Fisher2[i][j];
-//      free_dvector(evalue,0,d-1);
-//      free_dmatrix(evector,0,d-1,0,d-1);
-//      
-//      for (i = 0; i < d; i++) SigmaAE[i] = sqrt(Cov2[i][i]);
-//      
-//    }
-//  }
-  
-  // printf("%d %f %f\n", d, SigmaAE[7], SigmaAE[8]);
+  SigmaAE[9] = 2.0*M_PI*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
   
   d = 9;
+
   
-  /*
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   A[i*d+j] = Fisher1[i][j];
-   }
-   }
-   
-   nA = d;
-   lwork = 4*d;
-   
-   dpotrf_("U", &nA, A, &nA, &info);
-   dpotri_("U", &nA, A, &nA, &info);
-   
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   Cov1[i][j] = A[i*d+j];
-   }
-   }
-   
-   for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
-   SigmaX[9] = 2.0*pi*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
-   
-   for (j = 0; j < 2; j++)
-   {
-   if(SigmaX[d-1] > 0.5)
-   {
-   SigmaX[d-1] = 1.0e10;
-   d -= 1;
-   for (i = 0; i < d; i++)
-   {
-   for (j = 0; j < d; j++)
-   {
-   A[i*d+j] = Fisher1[i][j];
-   }
-   }
-   
-   nA = d; lwork = 4*d;
-   
-   dpotrf_("U", &nA, A, &nA, &info);
-   dpotri_("U", &nA, A, &nA, &info);
-   
-   for (i = 0; i < d; i++) SigmaX[i] = sqrt(A[i*d+i]);
-   
-   }
-   }*/
-  
-  evector = dmatrix(0,d-1,0,d-1);
-  evalue = dvector(0,d-1);
+  evector = double_matrix(d-1,d-1);
+  evalue = double_vector(d-1);
   matrix_eigenstuff(Fisher1,evector,evalue,d);
   for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov1[i][j] = Fisher1[i][j];
-  free_dvector(evalue,0,d-1);
-  free_dmatrix(evector,0,d-1,0,d-1);
+  free_double_vector(evalue);
+  free_double_matrix(evector,d-1);
   
   for (i = 0; i < d; i++) SigmaX[i] = sqrt(Cov1[i][i]);
   
-  SigmaX[9] = 2.0*pi*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
+  SigmaX[9] = 2.0*M_PI*sin(Params[1])*sqrt(Cov1[1][1]*Cov1[2][2] - Cov1[2][1]*Cov1[2][1]);
   
   
   for (j = 0; j < 2; j++)
@@ -840,174 +715,30 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
     {
       SigmaX[d-1] = 1.0e10;
       d -= 1;
-      /*
-       for (i = 0; i < d; i++)
-       {
-       for (j = 0; j < d; j++)
-       {
-       Cov2[i][j] = Fisher2[i][j];
-       }
-       }
-       
-       nA = d; lwork = 4*d;
-       
-       dpotrf_("U", &nA, A, &nA, &info);
-       dpotri_("U", &nA, A, &nA, &info);
-       
-       for (i = 0; i < d; i++) SigmaAE[i] = sqrt(A[i*d+i]);
-       */
-      evector = dmatrix(0,d-1,0,d-1);
-      evalue = dvector(0,d-1);
+
+      evector = double_matrix(d-1,d-1);
+      evalue = double_vector(d-1);
       matrix_eigenstuff(Fisher1,evector,evalue,d);
       for (i = 0; i < d; i++)for (j = 0; j < d; j++) Cov1[i][j] = Fisher1[i][j];
-      free_dvector(evalue,0,d-1);
-      free_dmatrix(evector,0,d-1,0,d-1);
+      free_double_vector(evalue);
+      free_double_matrix(evector,d-1);
       
       for (i = 0; i < d; i++) SigmaX[i] = sqrt(Cov2[i][i]);
       
     }
   }
   
-  
-  //  free_dvector(work, 0, lwork-1);
-  //  free_dvector(A, 0,(d*d-1));
-  //  free_dvector(W, 0,(d-1));
-  //  free_ivector(IPIV, 0,(d-1));
-  
   d = 9;
   
-  free_dvector(ParamsP, 0, d-1);
-  free_dvector(ParamsM, 0, d-1);
+  free_double_vector(ParamsP);
+  free_double_vector(ParamsM);
   
-  free_dmatrix(Fisher1, 0, d-1, 0, d-1);
-  free_dmatrix(Fisher2, 0, d-1, 0, d-1);
+  free_double_matrix(Fisher1,d-1);
+  free_double_matrix(Fisher2,d-1);
   
-  free_dmatrix(Cov1, 0, d-1, 0, d-1);
-  free_dmatrix(Cov2, 0, d-1, 0, d-1);
+  free_double_matrix(Cov1, d-1);
+  free_double_matrix(Cov2, d-1);
   
 }
-
-
-
-/*************************************************************************************/
-/*                                                                                   */
-/*                                    Subroutines                                    */
-/*                                                                                   */
-/*************************************************************************************/
-
-
-
-/*************************************************************************/
-/*        Rigid approximation position of each LISA spacecraft           */
-/*************************************************************************/
-//void spacecraft(double t, double *x, double *y, double *z)
-//{
-//
-//	double alpha;
-//	double beta1, beta2, beta3;
-//	double sa, sb, ca, cb;
-//
-//	alpha = 2.*pi*fm*t + kappa;
-//
-//	beta1 = 0. + lambda;
-//	beta2 = 2.*pi/3. + lambda;
-//	beta3 = 4.*pi/3. + lambda;
-//
-//	sa = sin(alpha);
-//	ca = cos(alpha);
-//
-//
-//	sb = sin(beta1);
-//	cb = cos(beta1);
-//	x[1] = AU*ca + AU*ec*(sa*ca*sb - (1. + sa*sa)*cb);
-//	y[1] = AU*sa + AU*ec*(sa*ca*cb - (1. + ca*ca)*sb);
-//	z[1] = -sq3*AU*ec*(ca*cb + sa*sb);
-//
-//
-//	sb = sin(beta2);
-//	cb = cos(beta2);
-//	x[2] = AU*ca + AU*ec*(sa*ca*sb - (1. + sa*sa)*cb);
-//	y[2] = AU*sa + AU*ec*(sa*ca*cb - (1. + ca*ca)*sb);
-//	z[2] = -sq3*AU*ec*(ca*cb + sa*sb);
-//
-//	sb = sin(beta3);
-//	cb = cos(beta3);
-//	x[3] = AU*ca + AU*ec*(sa*ca*sb - (1. + sa*sa)*cb);
-//	y[3] = AU*sa + AU*ec*(sa*ca*cb - (1. + ca*ca)*sb);
-//	z[3] = -sq3*AU*ec*(ca*cb + sa*sb);
-//
-//}
-
-
-
-void indexx(unsigned long n, double *arr, unsigned long *indx)
-{
-  unsigned long i,indxt,ir=n,j,k,l=1;
-  int jstack=0,*istack,M=7;
-  double a;
-  double tempr;
-  
-  istack=ivector(1,NSTACK);
-  for (j=1;j<=n;j++) indx[j]=j;
-  for (;;) {
-    if (ir-l < M) {
-      for (j=l+1;j<=ir;j++) {
-        indxt=indx[j];
-        a=arr[indxt];
-        for (i=j-1;i>=l;i--) {
-          if (arr[indx[i]] <= a) break;
-          indx[i+1]=indx[i];
-        }
-        indx[i+1]=indxt;
-      }
-      if (jstack == 0) break;
-      ir=istack[jstack--];
-      l=istack[jstack--];
-    } else {
-      k=(l+ir) >> 1;
-      //SWAP(indx[k],indx[l+1]);
-      tempr=indx[k];indx[k]=indx[l+1];indx[l+1]=tempr;
-      if (arr[indx[l]] > arr[indx[ir]]) {
-        //SWAP(indx[l],indx[ir]);
-        tempr=indx[l],indx[l]=indx[ir];indx[ir]=tempr;
-      }
-      if (arr[indx[l+1]] > arr[indx[ir]]) {
-        //SWAP(indx[l+1],indx[ir]);
-        tempr=indx[l+1],indx[l+1]=indx[ir];indx[ir]=tempr;
-        
-      }
-      if (arr[indx[l]] > arr[indx[l+1]]) {
-        //SWAP(indx[l],indx[l+1]);
-        tempr=indx[l],indx[l]=indx[l+1];indx[l+1]=tempr;
-      }
-      i=l+1;
-      j=ir;
-      indxt=indx[l+1];
-      a=arr[indxt];
-      for (;;) {
-        do i++; while (arr[indx[i]] < a);
-        do j--; while (arr[indx[j]] > a);
-        if (j < i) break;
-        //SWAP(indx[i],indx[j]);
-        tempr=indx[i];indx[i]=indx[j];indx[j]=tempr;
-      }
-      indx[l+1]=indx[j];
-      indx[j]=indxt;
-      jstack += 2;
-      //if (jstack > NSTACK) nrerror("NSTACK too small in indexx.");
-      if (ir-i+1 >= j-l) {
-        istack[jstack]=ir;
-        istack[jstack-1]=i;
-        ir=j-1;
-      } else {
-        istack[jstack]=j-1;
-        istack[jstack-1]=l;
-        l=i;
-      }
-    }
-  }
-  free_ivector(istack,1,NSTACK);
-}
-
 
 

@@ -1,9 +1,9 @@
 # OpenMP
 #CC = gcc-mp-5
-CC = gcc
-#CCFLAGS = -fopenmp
+CC = clang-mp-9.0
+CCFLAGS = -fopenmp 
 
-LIBS  = gsl gslcblas m
+LIBS  = gsl gslcblas m fftw3
 CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
 
 # Compile src with git hash
@@ -66,7 +66,7 @@ libgbmcmc.a : $(OBJS)
 #	$(CC) -shared -o libgb.so $(OBJS) $(LIBS:%=-l%)
 	ar rcs libgbmcmc.a $(OBJS)
 
-install : gitversion.h gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual
+install : gitversion.h gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual libgbmcmc.a
 	install gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
 
 clean:

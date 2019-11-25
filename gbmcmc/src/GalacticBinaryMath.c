@@ -1,12 +1,26 @@
-//
-//  GalacticBinaryMath.c
-//
-//
-//  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
-//
-//
+/*
+*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
+
 #include <math.h>
 #include <stdlib.h>
+#include <fftw3.h>
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
@@ -364,94 +378,76 @@ void cholesky_decomp(double **A, double **L, int N)
 /*                                                                                                                              */
 /* ********************************************************************************** */
 
-void dfour1(double data[], unsigned long nn, int isign)
+void fftw_wrapper(double *data, int N, int flag)
 {
-    unsigned long n,mmax,m,j,istep,i;
-    double wtemp,wr,wpr,wpi,wi,theta;
-    double tempr,tempi;
-    
-    n=nn << 1;
-    j=1;
-    for (i=1;i<n;i+=2) {
-        if (j > i) {
-            SWAP(data[j],data[i]);
-            SWAP(data[j+1],data[i+1]);
-        }
-        m=n >> 1;
-        while (m >= 2 && j > m) {
-            j -= m;
-            m >>= 1;
-        }
-        j += m;
-    }
-    mmax=2;
-    while (n > mmax) {
-        istep=mmax << 1;
-        theta=isign*(6.28318530717959/mmax);
-        wtemp=gsl_sf_sin(0.5*theta);
-        wpr = -2.0*wtemp*wtemp;
-        wpi=gsl_sf_sin(theta);
-        wr=1.0;
-        wi=0.0;
-        for (m=1;m<mmax;m+=2) {
-            for (i=m;i<=n;i+=istep) {
-                j=i+mmax;
-                tempr=wr*data[j]-wi*data[j+1];
-                tempi=wr*data[j+1]+wi*data[j];
-                data[j]=data[i]-tempr;
-                data[j+1]=data[i+1]-tempi;
-                data[i] += tempr;
-                data[i+1] += tempi;
-            }
-            wr=(wtemp=wr)*wpr-wi*wpi+wr;
-            wi=wi*wpr+wtemp*wpi+wi;
-        }
-        mmax=istep;
-    }
-}
-
-void drealft(double data[], unsigned long n, int isign)
-{
-    void dfour1(double data[], unsigned long nn, int isign);
-    unsigned long i,i1,i2,i3,i4,np3;
-    double c1=0.5,c2,h1r,h1i,h2r,h2i;
-    double wr,wi,wpr,wpi,wtemp,theta;
-    
-    theta=3.141592653589793/(double) (n>>1);
-    if (isign == 1) {
-        c2 = -0.5;
-        dfour1(data,n>>1,1);
-    } else {
-        c2=0.5;
-        theta = -theta;
-    }
-    wtemp=sin(0.5*theta);
-    wpr = -2.0*wtemp*wtemp;
-    wpi=sin(theta);
-    wr=1.0+wpr;
-    wi=wpi;
-    np3=n+3;
-    for (i=2;i<=(n>>2);i++) {
-        i4=1+(i3=np3-(i2=1+(i1=i+i-1)));
-        h1r=c1*(data[i1]+data[i3]);
-        h1i=c1*(data[i2]-data[i4]);
-        h2r = -c2*(data[i2]+data[i4]);
-        h2i=c2*(data[i1]-data[i3]);
-        data[i1]=h1r+wr*h2r-wi*h2i;
-        data[i2]=h1i+wr*h2i+wi*h2r;
-        data[i3]=h1r-wr*h2r+wi*h2i;
-        data[i4] = -h1i+wr*h2i+wi*h2r;
-        wr=(wtemp=wr)*wpr-wi*wpi+wr;
-        wi=wi*wpr+wtemp*wpi+wi;
-    }
-    if (isign == 1) {
-        data[1] = (h1r=data[1])+data[2];
-        data[2] = h1r-data[2];
-    } else {
-        data[1]=c1*((h1r=data[1])+data[2]);
-        data[2]=c1*(h1r-data[2]);
-        dfour1(data,n>>1,-1);
-    }
+  int n;
+  double *timeData = (double *)malloc(N*sizeof(double));
+  fftw_complex *freqData = (fftw_complex *) fftw_malloc(sizeof(fftw_complex)*N);
+  
+  //setup FFTW plans
+  fftw_plan reverse = fftw_plan_dft_c2r_1d(N, freqData, timeData, FFTW_MEASURE);
+  fftw_plan forward = fftw_plan_dft_r2c_1d(N, timeData, freqData, FFTW_MEASURE);
+  
+  switch (flag)
+  {
+      //Reverse transform
+    case -1:
+      
+      //fill freqData with contents of data
+      for(n=0; n<N/2; n++)
+      {
+        freqData[n][0] = data[2*n];
+        freqData[n][1] = data[2*n+1];
+      }
+      
+      //get DC and Nyquist where FFTW wants them
+      freqData[N/2][0] = freqData[0][1];
+      freqData[N/2][1] = freqData[0][1] = 0.0;
+      
+      
+      //The FFT
+      fftw_execute(reverse);
+      
+      //Copy output back into data
+      for(n=0; n<N; n++) data[n] = timeData[n];
+      
+      break;
+      
+      //Forward transform
+    case 1:
+      
+      //fill timeData with contents of data
+      for(n=0; n<N; n++) timeData[n] = data[n];
+      
+      //fill timeData with contents of data
+      for(n=0; n<N; n++) timeData[n] = data[n];
+      
+      //The FFT
+      fftw_execute(forward);
+      
+      //Copy output back into data
+      for(n=0; n<N/2; n++)
+      {
+        data[2*n]   = freqData[n][0];
+        data[2*n+1] = freqData[n][1];
+      }
+      
+      //get DC and Nyquist where FFTW wants them
+      data[1] = freqData[N/2][1];
+      
+      break;
+      
+    default:
+      fprintf(stdout,"Error: unsupported type in fftw_wrapper()\n");
+      exit(1);
+      break;
+  }
+  
+  fftw_destroy_plan(reverse);
+  fftw_destroy_plan(forward);
+  
+  free(timeData);
+  fftw_free(freqData);
 }
 
 double power_spectrum(double *data, int n)

@@ -1,9 +1,28 @@
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
-#include "Constants.h"
+#include <Constants.h>
 #include "Subroutines.h"
 
 int main(int argc,char **argv)
@@ -26,8 +45,8 @@ int main(int argc,char **argv)
   NFFT = atoi(argv[7]);
   
   T = dt*(double)(NFFT);
-  fstar = clight/(2.0*pi*L);
-  ec = (L/(2.0*sqrt(3.0)*Rgc));
+  fstar = CLIGHT/(2.0*M_PI*L);
+  ec = (L/(2.0*sqrt(3.0)*RGC));
   
   
   fprintf(Output, "         /* ----------------  DETECTOR CONSTANTS  ---------------- */               \n\n");

@@ -1,19 +1,29 @@
-//
-//  GalacticBinaryMath.h
-//
-//
-//  Created by Littenberg, Tyson B. (MSFC-ZP12) on 1/15/17.
-//
-//
+/*
+*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
+
 
 #ifndef GalacticBinaryMath_h
 #define GalacticBinaryMath_h
 
 #include <stdio.h>
 #include <stdlib.h>
-
-double swap, tempr;
-#define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
 
 double chirpmass(double m1, double m2);
 
@@ -36,8 +46,7 @@ void cholesky_decomp(double **A, double **L, int N);
 /*                                                                                    */
 /* ********************************************************************************** */
 
-void dfour1(double data[], unsigned long nn, int isign);
-void drealft(double data[], unsigned long n, int isign);
+void fftw_wrapper(double *data, int N, int flag);
 
 double power_spectrum(double *data, int n);
 

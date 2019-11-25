@@ -1,336 +1,42 @@
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_statistics_double.h>
+#include <gsl/gsl_randist.h>
+
 #include "arrays.h"
-#include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
 
 #include <LISA.h>
+#include <Constants.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
 
-void printProgress (double percentage)
-{
-  int val = (int) (percentage * 100);
-  int lpad = (int) (percentage * PBWIDTH);
-  int rpad = PBWIDTH - lpad;
-  printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-  fflush (stdout);
-}
-
-void XYZ(double L, double fstar, double TOBS, double ***d, double f0, long q, long M, double *XLS, double *ALS, double *ELS)
-{
-  int i;
-  double fonfs, sqT;
-  double c3, s3, c2, s2, c1, s1;
-  double f;
-  double *X, *Y, *Z;
-  double *YLS, *ZLS;
-  double phiLS, cLS, sLS;
-  
-  X = dvector(1,2*M);  Y = dvector(1,2*M);  Z = dvector(1,2*M);
-  YLS = dvector(1,2*M);  ZLS = dvector(1,2*M);
-  
-  phiLS = 2.0*pi*f0*(DT/2.0-L/clight);
-  /* phiSL = pi/2.0-2.0*pi*f0*(L/clight); */
-  cLS = cos(phiLS);
-  sLS = sin(phiLS);
-  /*cSL = cos(phiSL);
-   sSL = sin(phiSL); */
-  
-  sqT = sqrt(TOBS);
-  for(i=1; i<=M; i++)
-  {
-    
-    f = ((double)(q + i-1 - M/2))/TOBS;
-    fonfs = f/fstar;
-    c3 = cos(3.*fonfs);  c2 = cos(2.*fonfs);  c1 = cos(1.*fonfs);
-    s3 = sin(3.*fonfs);  s2 = sin(2.*fonfs);  s1 = sin(1.*fonfs);
-    
-    
-    X[2*i-1] = (d[1][2][2*i-1]-d[1][3][2*i-1])*c3 + (d[1][2][2*i]-d[1][3][2*i])*s3 +
-    (d[2][1][2*i-1]-d[3][1][2*i-1])*c2 + (d[2][1][2*i]-d[3][1][2*i])*s2 +
-    (d[1][3][2*i-1]-d[1][2][2*i-1])*c1 + (d[1][3][2*i]-d[1][2][2*i])*s1 +
-    (d[3][1][2*i-1]-d[2][1][2*i-1]);
-    X[2*i]   = (d[1][2][2*i]-d[1][3][2*i])*c3 - (d[1][2][2*i-1]-d[1][3][2*i-1])*s3 +
-    (d[2][1][2*i]-d[3][1][2*i])*c2 - (d[2][1][2*i-1]-d[3][1][2*i-1])*s2 +
-    (d[1][3][2*i]-d[1][2][2*i])*c1 - (d[1][3][2*i-1]-d[1][2][2*i-1])*s1 +
-    (d[3][1][2*i]-d[2][1][2*i]);
-    
-    Y[2*i-1] = (d[2][3][2*i-1]-d[2][1][2*i-1])*c3 + (d[2][3][2*i]-d[2][1][2*i])*s3 +
-    (d[3][2][2*i-1]-d[1][2][2*i-1])*c2 + (d[3][2][2*i]-d[1][2][2*i])*s2+
-    (d[2][1][2*i-1]-d[2][3][2*i-1])*c1 + (d[2][1][2*i]-d[2][3][2*i])*s1+
-    (d[1][2][2*i-1]-d[3][2][2*i-1]);
-    Y[2*i]   = (d[2][3][2*i]-d[2][1][2*i])*c3 - (d[2][3][2*i-1]-d[2][1][2*i-1])*s3+
-    (d[3][2][2*i]-d[1][2][2*i])*c2 - (d[3][2][2*i-1]-d[1][2][2*i-1])*s2+
-    (d[2][1][2*i]-d[2][3][2*i])*c1 - (d[2][1][2*i-1]-d[2][3][2*i-1])*s1+
-    (d[1][2][2*i]-d[3][2][2*i]);
-    
-    Z[2*i-1] = (d[3][1][2*i-1]-d[3][2][2*i-1])*c3 + (d[3][1][2*i]-d[3][2][2*i])*s3+
-    (d[1][3][2*i-1]-d[2][3][2*i-1])*c2 + (d[1][3][2*i]-d[2][3][2*i])*s2+
-    (d[3][2][2*i-1]-d[3][1][2*i-1])*c1 + (d[3][2][2*i]-d[3][1][2*i])*s1+
-    (d[2][3][2*i-1]-d[1][3][2*i-1]);
-    
-    Z[2*i]   = (d[3][1][2*i]-d[3][2][2*i])*c3 - (d[3][1][2*i-1]-d[3][2][2*i-1])*s3+
-    (d[1][3][2*i]-d[2][3][2*i])*c2 - (d[1][3][2*i-1]-d[2][3][2*i-1])*s2+
-    (d[3][2][2*i]-d[3][1][2*i])*c1 - (d[3][2][2*i-1]-d[3][1][2*i-1])*s1+
-    (d[2][3][2*i]-d[1][3][2*i]);
-    
-    
-    /* XSL[2*i-1] = 2.0*fonfs*(X[2*i-1]*cSL-X[2*i]*sSL);
-     XSL[2*i] = -2.0*fonfs*(X[2*i-1]*sSL+X[2*i]*cSL);
-     YSL[2*i-1] = 2.0*fonfs*(Y[2*i-1]*cSL-Y[2*i]*sSL);
-     YSL[2*i] = -2.0*fonfs*(Y[2*i-1]*sSL+Y[2*i]*cSL);
-     ZSL[2*i-1] = 2.0*fonfs*(Z[2*i-1]*cSL-Z[2*i]*sSL);
-     ZSL[2*i] = -2.0*fonfs*(Z[2*i-1]*sSL+Z[2*i]*cSL); */
-    
-    XLS[2*i-1] = (X[2*i-1]*cLS-X[2*i]*sLS);
-    XLS[2*i] = -(X[2*i-1]*sLS+X[2*i]*cLS);
-    YLS[2*i-1] = (Y[2*i-1]*cLS-Y[2*i]*sLS);
-    YLS[2*i] = -(Y[2*i-1]*sLS+Y[2*i]*cLS);
-    ZLS[2*i-1] = (Z[2*i-1]*cLS-Z[2*i]*sLS);
-    ZLS[2*i] = -(Z[2*i-1]*sLS+Z[2*i]*cLS);
-    
-    
-  }
-  
-  
-  for(i=1; i<=2*M; i++)
-  {
-    // A channel
-    ALS[i] = (2.0*XLS[i] - YLS[i] - ZLS[i])/3.0;
-    // E channel
-    ELS[i] = (ZLS[i]-YLS[i])/sq3;
-  }
-  
-  free_dvector(X,1,2*M);  free_dvector(Y,1,2*M);  free_dvector(Z,1,2*M);
-  free_dvector(YLS,1,2*M);  free_dvector(ZLS,1,2*M);
-  
-}
-
-double M_fdot(double f, double fdot)
-{
-  return pow( fdot*pow(f,-11./3.)*(5./96.)*pow(M_PI,-8./3.)  ,  3./5.)/TSUN;
-}
-
-void instrument_noise(double f, double fstar, double L, double *SAE, double *SXYZ)
-{
-  
-  double SLOC = 2.89e-24; //what is this?
-
-  double fonfstar = f/fstar;
-  double trans = pow(sin(fonfstar),2.0);
-  double red = 1.0 + 16.0*(pow((2.0e-5/f), 10.0) + pow(1.0e-4/f,2));
-  
-  double cosfstar = cos(fonfstar);
-  
-  double L4 = 4.0*L*L;
-  double f4 = 1./(pow(PI2*f,4));
-  
-  *SAE  = (16.0/3.0)*trans*( (2.0+cosfstar)*(SPS + SLOC) + 2.0*( 3.0 + 2.0*cosfstar + cos(2.0*fonfstar) ) * ( SLOC/2.0 + SACC*f4*red ) ) / L4;
-  *SXYZ =      (4.0)*trans*(          (4.0)*(SPS + SLOC) + 8.0*( 1.0 +                pow(cosfstar,2.0) ) * ( SLOC/2.0 + SACC*f4*red ) ) / L4;
-}
-
-void spacecraft(struct lisa_orbit *orbit, double tint, double *xint, double *yint, double *zint)
-{
-  int i;
-  for(i=0; i<3; i++)
-  {
-    LISA_splint(orbit->t, orbit->x[i], orbit->dx[i], orbit->N, tint, &xint[i+1]);
-    LISA_splint(orbit->t, orbit->y[i], orbit->dy[i], orbit->N, tint, &yint[i+1]);
-    LISA_splint(orbit->t, orbit->z[i], orbit->dz[i], orbit->N, tint, &zint[i+1]);
-  }
-}
-
-//void LISA_spline(double *x, double *y, int n, double yp1, double ypn, double *y2)
-//// Unlike NR version, assumes zero-offset arrays.  CHECK THAT THIS IS CORRECT.
-//{
-//  int i, k;
-//  double p, qn, sig, un, *u;
-//  u = dvector(0, n-2);
-//  // Boundary conditions: Check which is best.
-//  if (yp1 > 0.99e30)
-//    y2[0] = u[0] = 0.0;
-//  else {
-//    y2[0] = -0.5;
-//    u[0] = (3.0/(x[1]-x[0]))*((y[1]-y[0])/(x[1]-x[0])-yp1);
-//  }
-//  
-//  
-//  for(i = 1; i < n-1; i++) {
-//    sig = (x[i]-x[i-1])/(x[i+1]-x[i-1]);
-//    p = sig*y2[i-1] + 2.0;
-//    y2[i] = (sig-1.0)/p;
-//    u[i] = (y[i+1]-y[i])/(x[i+1]-x[i]) - (y[i]-y[i-1])/(x[i]-x[i-1]);
-//    u[i] = (6.0*u[i]/(x[i+1]-x[i-1])-sig*u[i-1])/p;
-//  }
-//  // More boundary conditions.
-//  if (ypn > 0.99e30)
-//    qn = un = 0.0;
-//  else {
-//    qn = 0.5;
-//    un = (3.0/(x[n-1]-x[n-2]))*(ypn-(y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
-//  }
-//  y2[n-1] = (un-qn*u[n-2])/(qn*y2[n-2]+1.0);
-//  for (k = n-2; k >= 0; k--)
-//    y2[k] = y2[k]*y2[k+1]+u[k];
-//  free_dvector(u, 0, n-2);
-//}
-//
-//void LISA_splint(double *xa, double *ya, double *y2a, int n, double x, double *y)
-//{
-//  // Unlike NR version, assumes zero-offset arrays.  CHECK THAT THIS IS CORRECT.
-//  int klo,khi,k;
-//  double h,b,a;
-//  
-//  klo=0;
-//  khi=n-1;
-//  while (khi-klo > 1) {
-//    k=(khi+klo) >> 1;
-//    if (xa[k] > x) khi=k;
-//    else klo=k;
-//  }
-//  h=xa[khi]-xa[klo];
-//  
-//  a=(xa[khi]-x)/h;
-//  b=(x-xa[klo])/h;
-//  *y=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.0;
-//}
-
-void initialize_orbit(char OrbitFile[], struct lisa_orbit *orbit)
-{
-  int n,i;
-  double junk;
-  
-  FILE *infile = fopen(OrbitFile,"r");
-  
-  //how big is the file
-  n=0;
-  while(!feof(infile))
-  {
-    /*columns of orbit file:
-     t sc1x sc1y sc1z sc2x sc2y sc2z sc3x sc3y sc3z
-     */
-    n++;
-    fscanf(infile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg %lg",&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk);
-  }
-  n--;
-  rewind(infile);
-  
-  //allocate memory for local workspace
-  int N = n;
-  double *t  = dvector(0,N-1);
-  double **x  = dmatrix(0,2,0,N-1);
-  double **y  = dmatrix(0,2,0,N-1);
-  double **z  = dmatrix(0,2,0,N-1);
-  double **dx = dmatrix(0,2,0,N-1);
-  double **dy = dmatrix(0,2,0,N-1);
-  double **dz = dmatrix(0,2,0,N-1);
-  
-  //allocate memory for orbit structure
-  orbit->N = n;
-  
-  orbit->t  = dvector(0,orbit->N-1);
-  orbit->x  = dmatrix(0,2,0,orbit->N-1);
-  orbit->y  = dmatrix(0,2,0,orbit->N-1);
-  orbit->z  = dmatrix(0,2,0,orbit->N-1);
-  orbit->dx = dmatrix(0,2,0,orbit->N-1);
-  orbit->dy = dmatrix(0,2,0,orbit->N-1);
-  orbit->dz = dmatrix(0,2,0,orbit->N-1);
-  
-  //read in orbits
-  for(n=0; n<orbit->N; n++)
-  {
-    //First time sample must be at t=0 for phasing
-    fscanf(infile,"%lg",&t[n]);
-    for(i=0; i<3; i++) fscanf(infile,"%lg %lg %lg",&x[i][n],&y[i][n],&z[i][n]);
-    
-    orbit->t[n] = t[n];
-    
-    //Repackage orbit positions into arrays for interpolation
-    for(i=0; i<3; i++)
-    {
-      orbit->x[i][n] = x[i][n];
-      orbit->y[i][n] = y[i][n];
-      orbit->z[i][n] = z[i][n];
-    }
-  }
-  fclose(infile);
-  
-  //calculate derivatives for cubic spline
-  for(i=0; i<3; i++)
-  {
-    LISA_spline(t, orbit->x[i], N, 1.e30, 1.e30, orbit->dx[i]);
-    LISA_spline(t, orbit->y[i], N, 1.e30, 1.e30, orbit->dy[i]);
-    LISA_spline(t, orbit->z[i], N, 1.e30, 1.e30, orbit->dz[i]);
-  }
-  
-  //calculate average arm length
-  //printf("estimating average armlengths -- assumes evenly sampled orbits\n");
-  double L12=0.0;
-  double L23=0.0;
-  double L31=0.0;
-  double x1,x2,x3,y1,y2,y3,z1,z2,z3;
-  for(n=0; n<orbit->N; n++)
-  {
-    x1 = orbit->x[0][n];
-    x2 = orbit->x[1][n];
-    x3 = orbit->x[2][n];
-    
-    y1 = orbit->y[0][n];
-    y2 = orbit->y[1][n];
-    y3 = orbit->y[2][n];
-    
-    z1 = orbit->z[0][n];
-    z2 = orbit->z[1][n];
-    z3 = orbit->z[2][n];
-    
-    
-    //L12
-    L12 += sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-    
-    //L23
-    L23 += sqrt( (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2) );
-    
-    //L31
-    L31 += sqrt( (x1-x3)*(x1-x3) + (y1-y3)*(y1-y3) + (z1-z3)*(z1-z3) );
-  }
-  L12 /= (double)orbit->N;
-  L31 /= (double)orbit->N;
-  L23 /= (double)orbit->N;
-  
-  /*
-  printf("Average arm lengths for the constellation:\n");
-  printf("  L12 = %g\n",L12);
-  printf("  L31 = %g\n",L31);
-  printf("  L23 = %g\n",L23);
-  */
-  //are the armlenghts consistent?
-  double L = (L12+L31)/2.;//+L23)/3.;
-  /*
-  printf("Fractional deviation from average armlength for each side:\n");
-  printf("  L12 = %g\n",fabs(L12-L)/L);
-  printf("  L31 = %g\n",fabs(L31-L)/L);
-  printf("  L23 = %g\n",fabs(L23-L)/L);
-   */
-
-  //store armlenght & transfer frequency in orbit structure.
-  orbit->L     = L;
-  orbit->fstar = clight/(2.0*pi*L);
-  
-  //free local memory
-  free_dvector(t,0,N-1);
-  free_dmatrix(x ,0,2,0,N-1);
-  free_dmatrix(y ,0,2,0,N-1);
-  free_dmatrix(z ,0,2,0,N-1);
-  free_dmatrix(dx,0,2,0,N-1);
-  free_dmatrix(dy,0,2,0,N-1);
-  free_dmatrix(dz,0,2,0,N-1);
-}
-/*************************************************************************/
 
 
 double Sum(double *AA, double *EE, long M, double SN, double TOBS)
@@ -364,6 +70,11 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
 {
   printf(" Median fit to X-channel confusion noise\n");
 
+  const gsl_rng_type *T = gsl_rng_default;
+  gsl_rng *seed = gsl_rng_alloc(T);
+  gsl_rng_env_setup();
+
+  
   double f;
   double SAE, SXYZ;
   double chi;
@@ -377,7 +88,7 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
   double lfmin, lfmax, dlf, lf, ln4;
   FILE *Xfile;
   
-  XX = dvector(0,100);
+  XX = double_vector(100);
   
   rseed = -546214;
   
@@ -392,17 +103,18 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
   dlf = (lfmax-lfmin)/(double)(Npoly);
   ln4 = log(1.0e-4);
   
-  fdata = dvector(0,segs-1);
-  mdata = dvector(0,segs-1);
-  inst = dvector(0,segs-1);
-  pcx = dvector(0,Npoly);
-  pcy = dvector(0,Npoly);
+  fdata = double_vector(segs-1);
+  mdata = double_vector(segs-1);
+  inst = double_vector(segs-1);
+  pcx = double_vector(Npoly);
+  pcy = double_vector(Npoly);
   
   for(i=0; i < segs; i++)
   {
     for(j=0; j<=100; j++) XX[j] = XP[imin+101*i+j];
     f = (double)(imin+101*i-50)/TOBS;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     inst[i] = log(SXYZ*1.0e40);
     chi=quickselect(XX, 101, 51);
     //printf("%e %e\n", f, chi/0.72);
@@ -442,12 +154,12 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
     beta = pow(10.0,-0.0001*(10000.0-(double)(k))/10000.0);
     
     for(j=0; j <= Npoly; j++) pcy[j] = pcx[j];
-    j = (long)((double)(Npoly+1)*ran2(&rseed));
+    j = (long)((double)(Npoly+1)*gsl_rng_uniform(seed));
     mul = 1.0;
-    alpha = ran2(&rseed);
+    alpha = gsl_rng_uniform(seed);
     if(alpha > 0.3) mul = 10.0;
     if(alpha > 0.7) mul = 0.01;
-    pcy[j] = pcx[j]+mul*0.01*gasdev2(&rseed)/sqrt(beta);
+    pcy[j] = pcx[j]+mul*0.01*gsl_ran_gaussian(seed,1)/sqrt(beta);
     
     chiy = 0.0;
     for(i=0; i < segs; i++)
@@ -459,7 +171,7 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
       chiy += 500.0*(mdata[i] - fit)*(mdata[i] - fit)*f;
     }
     
-    alpha = log(ran2(&rseed));
+    alpha = log(gsl_rng_uniform(seed));
     
     if(beta*(chix-chiy) > alpha)
     {
@@ -498,7 +210,8 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
     lf = log(f);
     j = (long)floor((lf-lfmin)/dlf);
     fit = pcx[j]+((pcx[j+1]-pcx[j])/dlf)*(lf-(lfmin+(double)(j)*dlf));
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     alpha = exp(fit)*1.0e-40;
     conf = alpha -SXYZ;
     if(conf < SXYZ/30.0) conf = 1.0e-46;
@@ -511,24 +224,28 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
     //Xconf[i]*=pow(sin(f/fstar),2.0);
   }
   
-  free_dvector(XX, 0,100);
-  free_dvector(fdata, 0,segs-1);
-  free_dvector(mdata, 0,segs-1);
-  free_dvector(pcx, 0,Npoly);
-  free_dvector(pcy, 0,Npoly);
+  free_double_vector(XX);
+  free_double_vector(fdata);
+  free_double_vector(mdata);
+  free_double_vector(pcx);
+  free_double_vector(pcy);
   
   return;
 }
 
-void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEnoise, double *AEconf, double TOBS)
+void medianAE(long imin, long imax, double fstar, double L, double *AEP, double *AEinst, double *AEconf, double TOBS)
 {
   printf(" Median fit to AE-channel confusion noise\n");
+  
+  const gsl_rng_type *T = gsl_rng_default;
+  gsl_rng *seed = gsl_rng_alloc(T);
+  gsl_rng_env_setup();
+
   double f;
   double SAE, SXYZ;
   double chi;
   long i, j, k;
   long segs;
-  long rseed;
   int Npoly;
   double *XX;
   double *fdata, *mdata, *pcx, *pcy, *inst;
@@ -536,10 +253,8 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
   double lfmin, lfmax, dlf, lf, ln4;
   FILE *Xfile;
   
-  XX = dvector(0,100);
-  
-  rseed = -546214;
-  
+  XX = double_vector(100);
+    
   segs = (int)((double)(imax-imin)/101.0);
   
   lfmin = log((double)(imin-101)/TOBS);
@@ -551,17 +266,18 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
   dlf = (lfmax-lfmin)/(double)(Npoly);
   ln4 = log(1.0e-4);
   
-  fdata = dvector(0,segs-1);
-  mdata = dvector(0,segs-1);
-  inst = dvector(0,segs-1);
-  pcx = dvector(0,Npoly);
-  pcy = dvector(0,Npoly);
+  fdata = double_vector(segs-1);
+  mdata = double_vector(segs-1);
+  inst = double_vector(segs-1);
+  pcx = double_vector(Npoly);
+  pcy = double_vector(Npoly);
   
   for(i=0; i < segs; i++)
   {
     for(j=0; j<=100; j++) XX[j] = AEP[imin+101*i+j];
     f = (double)(imin+101*i-50)/TOBS;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     inst[i] = log(SAE*1.0e40);
     chi=quickselect(XX, 101, 51);
     //printf("%e %e\n", f, chi/0.72);
@@ -601,12 +317,12 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
     beta = pow(10.0,-0.0001*(10000.0-(double)(k))/10000.0);
     
     for(j=0; j <= Npoly; j++) pcy[j] = pcx[j];
-    j = (long)((double)(Npoly+1)*ran2(&rseed));
+    j = (long)((double)(Npoly+1)*gsl_rng_uniform(seed));
     mul = 1.0;
-    alpha = ran2(&rseed);
+    alpha = gsl_rng_uniform(seed);
     if(alpha > 0.3) mul = 10.0;
     if(alpha > 0.7) mul = 0.01;
-    pcy[j] = pcx[j]+mul*0.01*gasdev2(&rseed)/sqrt(beta);
+    pcy[j] = pcx[j]+mul*0.01*gsl_ran_gaussian(seed,1)/sqrt(beta);
     
     chiy = 0.0;
     for(i=0; i < segs; i++)
@@ -618,7 +334,7 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
       chiy += 500.0*(mdata[i] - fit)*(mdata[i] - fit)*f;
     }
     
-    alpha = log(ran2(&rseed));
+    alpha = log(gsl_rng_uniform(seed));
     
     if(beta*(chix-chiy) > alpha)
     {
@@ -647,24 +363,21 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
     lf = log(f);
     j = (long)floor((lf-lfmin)/dlf);
     fit = pcx[j]+((pcx[j+1]-pcx[j])/dlf)*(lf-(lfmin+(double)(j)*dlf));
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     alpha = exp(fit)*1.0e-40;
     conf = alpha -SAE;
     if(conf < SAE/30.0) conf = 1.0e-46;
-    AEnoise[i] = alpha;
+    AEinst[i] = alpha;
     AEconf[i] = conf;
-    
-    
-    //AEnoise[i]*=pow(sin(f/fstar),2.0);
-    //AEconf[i]*=pow(sin(f/fstar),2.0);
     
   }
   
-  free_dvector(XX, 0,100);
-  free_dvector(fdata, 0,segs-1);
-  free_dvector(mdata, 0,segs-1);
-  free_dvector(pcx, 0,Npoly);
-  free_dvector(pcy, 0,Npoly);
+  free_double_vector(XX);
+  free_double_vector(fdata);
+  free_double_vector(mdata);
+  free_double_vector(pcx);
+  free_double_vector(pcy);
   
   return;
 }
@@ -677,110 +390,15 @@ void KILL(char* Message)
   exit(1);
 }
 
-double gasdev2(long *idum)
-{
-  double ran2(long *idum);
-  static int iset=0;
-  static double gset;
-  double fac, rsq, v1, v2;
-  
-  if(*idum < 0) iset = 0;
-  if(iset == 0){
-    do{
-      v1 = 2.0 * ran2(idum)-1.0;
-      v2 = 2.0 * ran2(idum)-1.0;
-      rsq = v1*v1+v2*v2;
-    } while (rsq >= 1.0 || rsq == 0.0);
-    fac=sqrt(-2.0*log(rsq)/rsq);
-    gset = v1 * fac;
-    iset = 1;
-    return(v2*fac);
-  } else {
-    iset = 0;
-    return (gset);
-  }
-}
-
-double ran2(long *idum)
-{
-  int j;
-  long k;
-  static long idum2=123456789;
-  static long iy=0;
-  static long iv[NTAB];
-  double temp;
-  
-  if (*idum <= 0) {
-    if (-(*idum) < 1) *idum=1;
-    else *idum = -(*idum);
-    idum2=(*idum);
-    for (j=NTAB+7;j>=0;j--) {
-      k=(*idum)/IQ1;
-      *idum=IA1*(*idum-k*IQ1)-k*IR1;
-      if (*idum < 0) *idum += IM1;
-      if (j < NTAB) iv[j] = *idum;
-    }
-    iy=iv[0];
-  }
-  k=(*idum)/IQ1;
-  *idum=IA1*(*idum-k*IQ1)-k*IR1;
-  if (*idum < 0) *idum += IM1;
-  k=idum2/IQ2;
-  idum2=IA2*(idum2-k*IQ2)-k*IR2;
-  if (idum2 < 0) idum2 += IM2;
-  j=iy/NDIV;
-  iy=iv[j]-idum2;
-  iv[j] = *idum;
-  if (iy < 1) iy += IMM1;
-  if ((temp=AM*iy) > RNMX) return RNMX;
-  else return temp;
-}
-
-#define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
-
-// for n odd, median given by k = (n+1)/2. for n even, median is average of k=n/2, k=n/2+1 elements
-
 double quickselect(double *arr, int n, int k)
 {
-  unsigned long i,ir,j,l,mid;
-  double a,temp;
+  double *arr_sorted = malloc(n*sizeof(double));
+  for(int i=0; i<n; i++) arr_sorted[i] = arr[i];
   
-  l=0;
-  ir=n-1;
-  for(;;) {
-    if (ir <= l+1) {
-      if (ir == l+1 && arr[ir] < arr[l]) {
-        SWAP(arr[l],arr[ir]);
-      }
-      return arr[k];
-    }
-    else {
-      mid=(l+ir) >> 1;
-      SWAP(arr[mid],arr[l+1]);
-      if (arr[l] > arr[ir]) {
-        SWAP(arr[l],arr[ir]);
-      }
-      if (arr[l+1] > arr[ir]) {
-        SWAP(arr[l+1],arr[ir]);
-      }
-      if (arr[l] > arr[l+1]) {
-        SWAP(arr[l],arr[l+1]);
-      }
-      i=l+1;
-      j=ir;
-      a=arr[l+1];
-      for (;;) {
-        do i++; while (arr[i] < a);
-        do j--; while (arr[j] > a);
-        if (j < i) break;
-        SWAP(arr[i],arr[j]);
-      }
-      arr[l+1]=arr[j];
-      arr[j]=a;
-      if (j >= k) ir=j-1;
-      if (j <= k) l=i;
-    }
-  }
+  double val = gsl_stats_select(arr_sorted, 1, n, k);
+  
+  free(arr_sorted);
+  return val;
 }
 
 /*****************************************************/
@@ -796,7 +414,6 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
   double chi;
   long i, j;
   long segs;
-  long rseed;
   int Npoly;
   double *XX;
   double *fdata, *mdata, *pcx, *pcy, *inst;
@@ -809,10 +426,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
   divsp = divs+1;
   divh = divs/2;
   
-  XX = dvector(0,divs);
-  
-  rseed = -546214;
-  
+  XX = double_vector(divs);
+
   segs = (int)((double)(imax-imin)/(double)(divsp));
   
   lfmin = log((double)(imin)/T);
@@ -823,13 +438,13 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
   dlf = (lfmax-lfmin)/(double)(Npoly);
   ln4 = log(1.0e-4);
   
-  fdata = dvector(0,segs-1);
-  mdata = dvector(0,segs-1);
-  adata = dvector(0,segs-1);
-  sdata = dvector(0,segs-1);
-  inst = dvector(0,segs-1);
-  pcx = dvector(0,Npoly);
-  pcy = dvector(0,Npoly);
+  fdata = double_vector(segs-1);
+  mdata = double_vector(segs-1);
+  adata = double_vector(segs-1);
+  sdata = double_vector(segs-1);
+  inst = double_vector(segs-1);
+  pcx = double_vector(Npoly);
+  pcy = double_vector(Npoly);
   
   if(flag==0)   printf(" Spline fit to X-channel confusion noise\n");
   if(flag==1)   printf(" Spline fit to AE-channel confusion noise\n");
@@ -857,7 +472,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
     adata[i] = mean;
     sdata[i] = var;
     f = (double)(imin+divsp*i)/T;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     if(flag == 0) inst[i] = log(SXYZ*1.0e40);
     if(flag == 1) inst[i] = log(SAE*1.0e40);
     
@@ -871,7 +487,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
   for(i=imin; i <= imax; i++)
   {
     f = (double)(i)/T;
-    instrument_noise(f, fstar, L, &SAE, &SXYZ);
+    SAE  = AEnoise(L,fstar,f);
+    SXYZ = XYZnoise(L,fstar,f);
     if(flag == 0)
     {
       conf = Xnoise[i] -SXYZ;
@@ -892,11 +509,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
 
 void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double *sigma, double *Xnoise, double T)
 {
-  
-  
   int N, Nf, Nx, Ny;
   int mc, i, j, ii, test;
-  long seed;
   int ltest;
   int fixedD;
   double logLx, logLy;
@@ -918,12 +532,18 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   double lambdax, lambday;
   int acc=0;
   
+  const gsl_rng_type *RNGT = gsl_rng_default;
+  gsl_rng *seed = gsl_rng_alloc(RNGT);
+  gsl_rng_env_setup();
+  
+  gsl_spline *cspline;
+  gsl_interp_accel *splineacc = gsl_interp_accel_alloc();
+
+
   N = 100000;   // number of MCMC steps
   
   Nf = 20; // maximum number of spline control points
-  
-  seed = -946673524;
-  
+    
   // log likelihood fixed test. set this flag = 1 to fix likelihood
   ltest = 0;
   
@@ -945,17 +565,17 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   double *sdatay, *sderiv;
   double *spoints, *sdatax, *tdata, *tpoints;
   
-  mdl = dvector(0,ND);
-  ref = dvector(1,Nf);
-  spoints = dvector(1,Nf);
-  tdata = dvector(1,Nf);
-  tpoints = dvector(1,Nf);
-  sdatax = dvector(1,Nf);
-  sdatay = dvector(1,Nf);
-  sderiv = dvector(1,Nf);
+  mdl = double_vector(ND);
+  ref = double_vector(Nf);
+  spoints = double_vector(Nf);
+  tdata = double_vector(Nf);
+  tpoints = double_vector(Nf);
+  sdatax = double_vector(Nf);
+  sdatay = double_vector(Nf);
+  sderiv = double_vector(Nf);
   
-  activex = ivector(1,Nf);
-  activey = ivector(1,Nf);
+  activex = int_vector(Nf);
+  activey = int_vector(Nf);
   
   // only start with 3 active points
   Nx = Ny = Nf;
@@ -1027,17 +647,21 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
     }
   }
   
-  spline(tpoints, tdata, Nx, 1.0e31, 1.0e31, sderiv);
+  cspline = gsl_spline_alloc(gsl_interp_cspline, Nx);
+  gsl_spline_init(cspline,tpoints,tdata,Nx);
   
   av = 0.0;
   for(j=0; j< ND; j++)
   {
-    splint(tpoints, tdata, sderiv, Nx, datax[j], &model);
+    model = gsl_spline_eval(cspline,datax[j],splineacc);
     mdl[j] = model;
     y = (datay[j]-model)/sigma[j];
     av -= y*y;
   }
   logLx = av/2.0;
+  
+  gsl_spline_free (cspline);
+
   
   beta = exp(lambdax);
   y = 0.0;
@@ -1078,7 +702,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
       activey[i] = activex[i];
     }
     
-    alpha = ran2(&seed);
+    alpha = gsl_rng_uniform(seed);
     
     q = 0.5;
     if(fixedD == 1) q = 10.0;
@@ -1088,7 +712,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
       // Note that the spline points at the ends are never added or subtracted
       
       
-      alpha = ran2(&seed);
+      alpha = gsl_rng_uniform(seed);
       
       if(alpha < 0.5)
       {
@@ -1106,7 +730,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
           
           do
           {
-            i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to kill
+            i = 2 + (int)(gsl_rng_uniform(seed)*(double)(Nf-2)); // pick one to kill
           } while(activex[i] == 0);  // can't kill it if already dead
           activey[i] = 0;
         }
@@ -1122,11 +746,11 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
           
           do
           {
-            i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to add
+            i = 2 + (int)(gsl_rng_uniform(seed)*(double)(Nf-2)); // pick one to add
           } while(activex[i] == 1);  // can't add if already in use
           activey[i] = 1;
           
-          sdatay[i] = rmin + (rmax-rmin)*ran2(&seed);  // draw from prior
+          sdatay[i] = rmin + (rmax-rmin)*gsl_rng_uniform(seed);  // draw from prior
           
         }
         else
@@ -1144,7 +768,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
       
       Ny = Nx;
       
-      alpha = ran2(&seed);
+      alpha = gsl_rng_uniform(seed);
       
       if(alpha > 0.6)  // update all points
       {
@@ -1154,19 +778,19 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
           // variety of jump sizes
           if(alpha > 0.8)
           {
-            sdatay[ii] += sh*1.0e-1*gasdev2(&seed);
+            sdatay[ii] += sh*1.0e-1*gsl_ran_gaussian(seed,1);
           }
           else if (alpha > 0.5)
           {
-            sdatay[ii] += sh*1.0e-2*gasdev2(&seed);
+            sdatay[ii] += sh*1.0e-2*gsl_ran_gaussian(seed,1);
           }
           else if (alpha > 0.3)
           {
-            sdatay[ii] += sh*1.0e-3*gasdev2(&seed);
+            sdatay[ii] += sh*1.0e-3*gsl_ran_gaussian(seed,1);
           }
           else
           {
-            sdatay[ii] += sh*1.0e-4*gasdev2(&seed);
+            sdatay[ii] += sh*1.0e-4*gsl_ran_gaussian(seed,1);
           }
           
         }
@@ -1177,27 +801,27 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
         
         do
         {
-          ii = (int)(ran2(&seed)*(double)(Nf));
+          ii = (int)(gsl_rng_uniform(seed)*(double)(Nf));
         }while(activey[ii] == 0);
         
-        sdatay[ii] += sh*1.0e-1*gasdev2(&seed);
+        sdatay[ii] += sh*1.0e-1*gsl_ran_gaussian(seed,1);
         
       }
       else  // birth/death
       {
         do
         {
-          i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to kill
+          i = 2 + (int)(gsl_rng_uniform(seed)*(double)(Nf-2)); // pick one to kill
         } while(activex[i] == 0);  // can't kill it if already dead
         activey[i] = 0;
         
         do
         {
-          i = 2 + (int)(ran2(&seed)*(double)(Nf-2)); // pick one to add
+          i = 2 + (int)(gsl_rng_uniform(seed)*(double)(Nf-2)); // pick one to add
         } while(activey[i] == 1);  // can't add if already in use
         activey[i] = 1;
         
-        sdatay[i] = rmin + (rmax-rmin)*ran2(&seed);  // draw from prior
+        sdatay[i] = rmin + (rmax-rmin)*gsl_rng_uniform(seed);  // draw from prior
         
         
       }
@@ -1206,22 +830,22 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
     }
     
     
-    alpha = ran2(&seed);
+    alpha = gsl_rng_uniform(seed);
     if(alpha > 0.9)
     {
-      lambday = lmin+(lmax-lmin)*ran2(&seed);  // uniform draw from the prior
+      lambday = lmin+(lmax-lmin)*gsl_rng_uniform(seed);  // uniform draw from the prior
     }
     else if (alpha > 0.7)
     {
-      lambday = lambdax + 0.1*gasdev2(&seed);
+      lambday = lambdax + 0.1*gsl_ran_gaussian(seed,1);
     }
     else if (alpha > 0.3)
     {
-      lambday = lambdax + 0.01*gasdev2(&seed);
+      lambday = lambdax + 0.01*gsl_ran_gaussian(seed,1);
     }
     else
     {
-      lambday = lambdax + 0.001*gasdev2(&seed);
+      lambday = lambdax + 0.001*gsl_ran_gaussian(seed,1);
     }
     
     
@@ -1249,18 +873,21 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
           }
         }
         
+        cspline = gsl_spline_alloc(gsl_interp_cspline, Ny);
+        gsl_spline_init(cspline,tpoints,tdata,Ny);
         
-        spline(tpoints, tdata, Ny, 1.0e31, 1.0e31, sderiv);
         av = 0.0;
         for(j=0; j< ND; j++)
         {
-          splint(tpoints, tdata, sderiv, Ny, datax[j], &model);
+          model = gsl_spline_eval(cspline,datax[j],splineacc);
+
           mdl[j] = model;
           y = (datay[j]-model)/sigma[j];
           av -= y*y;
         }
         logLy = av/2.0;
-        
+        gsl_spline_free (cspline);
+
         beta = exp(lambday);
         y = 0.0;
         for(i=2; i< ND; i++)
@@ -1285,7 +912,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
     
     H = (logLy-logLx) +logpy  - logpx;
     
-    alpha = log(ran2(&seed));
+    alpha = log(gsl_rng_uniform(seed));
     
     if((H > alpha) && (test==0))
     {
@@ -1336,86 +963,34 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   }
   }
   
-  spline(tpoints, tdata, Nx, 1.0e31, 1.0e31, sderiv);
+  
+  cspline = gsl_spline_alloc(gsl_interp_cspline, Nx);
+  gsl_spline_init(cspline,tpoints,tdata,Nx);
   
   for(i=imin; i <= imax; i++)
   {
     f = (double)(i)/T;
-    splint(tpoints, tdata, sderiv, Nx, log(f), &model);
+    model = gsl_spline_eval(cspline,log(f),splineacc);
+
     Xnoise[i] = exp(model)*1.0e-40;
   }
+  gsl_spline_free (cspline);
+
   
+  free_double_vector(mdl);
+  free_double_vector(ref);
+  free_double_vector(spoints);
+  free_double_vector(tdata);
+  free_double_vector(tpoints);
+  free_double_vector(sdatax);
+  free_double_vector(sdatay);
+  free_double_vector(sderiv);
+  free_int_vector(activex);
+  free_int_vector(activey);
   
-  free_dvector(mdl,0,ND);
-  free_dvector(ref,1,Nf);
-  free_dvector(spoints,1,Nf);
-  free_dvector(tdata,1,Nf);
-  free_dvector(tpoints,1,Nf);
-  free_dvector(sdatax,1,Nf);
-  free_dvector(sdatay,1,Nf);
-  free_dvector(sderiv,1,Nf);
-  free_ivector(activex,1,Nf);
-  free_ivector(activey, 1,Nf);
-  
-  
+  gsl_interp_accel_free (splineacc);
+
 }
-
-void splint(double *xa, double *ya, double *y2a, int n, double x, double *y)
-{
-  int klo,khi,k;
-  double h,b,a;
-  
-  klo=1;
-  khi=n;
-  while (khi-klo > 1) {
-    k=(khi+klo) >> 1;
-    if (xa[k] > x) khi=k;
-    else klo=k;
-  }
-  h=xa[khi]-xa[klo];
-  a=(xa[khi]-x)/h;
-  b=(x-xa[klo])/h;
-  *y=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.0;
-}
-
-#define NRANSI
-void spline(double *x, double *y, int n, double yp1, double ypn, double *y2)
-{
-  int i,k;
-  double p,qn,sig,un;
-  double *u;
-  
-  u=dvector(1,n-1);
-  if (yp1 > 0.99e30)
-    y2[1]=u[1]=0.0;
-  else {
-    y2[1] = -0.5;
-    u[1]=(3.0/(x[2]-x[1]))*((y[2]-y[1])/(x[2]-x[1])-yp1);
-  }
-  for (i=2;i<=n-1;i++) {
-    sig=(x[i]-x[i-1])/(x[i+1]-x[i-1]);
-    p=sig*y2[i-1]+2.0;
-    y2[i]=(sig-1.0)/p;
-    u[i]=(y[i+1]-y[i])/(x[i+1]-x[i]) - (y[i]-y[i-1])/(x[i]-x[i-1]);
-    u[i]=(6.0*u[i]/(x[i+1]-x[i-1])-sig*u[i-1])/p;
-  }
-  if (ypn > 0.99e30)   qn=un=0.0;
-  
-  else {
-    qn=0.5;
-    un=(3.0/(x[n]-x[n-1]))*(ypn-(y[n]-y[n-1])/(x[n]-x[n-1]));
-  }
-  y2[n]=(un-qn*u[n-1])/(qn*y2[n-1]+1.0);
-  
-  for (k=n-1;k>=1;k--) y2[k]=y2[k]*y2[k+1]+u[k];
-  
-  free_dvector(u,1,n-1);
-}
-#undef NRANSI
-
-
-
-
 
 
 /*****************************************************/
@@ -1452,12 +1027,10 @@ void confusion_mcmc(double *data, double *noise, double *conf, int imin, int ima
   double *Sc   = malloc(imax*sizeof(double));
   double *Sc_y = malloc(imax*sizeof(double));
 
-  
-  long seed = -123456;
-  
-  //gasdev2(&seed)
-  //ran2(&seed)
-  
+      const gsl_rng_type *RNGT = gsl_rng_default;
+      gsl_rng *seed = gsl_rng_alloc(RNGT);
+      gsl_rng_env_setup();
+
   
   logL = 0.0;
   for(int i=imin; i<imax; i++) Sc[i] = confusion_fit((double)i/T, logA, alpha, beta, kappa, gamma, fk);
@@ -1499,17 +1072,17 @@ void confusion_mcmc(double *data, double *noise, double *conf, int imin, int ima
 
 
     double scale = 1.0;
-    double draw = ran2(&seed);
+    double draw = gsl_rng_uniform(seed);
     if(draw<0.3) scale = 10.0;
     else if (draw<0.6) scale = 1.0;
     else scale = 0.1;
     
-    logA_y  = logA  + gasdev2(&seed)*1.0*scale;
-    alpha_y = alpha + gasdev2(&seed)*0.01*scale;
-    beta_y  = beta  + gasdev2(&seed)*100*scale;
-    kappa_y = kappa + gasdev2(&seed)*10*scale;
-    gamma_y = gamma + gasdev2(&seed)*200*scale;
-    fk_y    = fk    + gasdev2(&seed)*.0001*scale;
+    logA_y  = logA  + gsl_ran_gaussian(seed,1)*1.0*scale;
+    alpha_y = alpha + gsl_ran_gaussian(seed,1)*0.01*scale;
+    beta_y  = beta  + gsl_ran_gaussian(seed,1)*100*scale;
+    kappa_y = kappa + gsl_ran_gaussian(seed,1)*10*scale;
+    gamma_y = gamma + gsl_ran_gaussian(seed,1)*200*scale;
+    fk_y    = fk    + gsl_ran_gaussian(seed,1)*.0001*scale;
     
     //check priors
     if(fk_y < fk_min || fk_y > fk_max) continue;
@@ -1526,7 +1099,7 @@ void confusion_mcmc(double *data, double *noise, double *conf, int imin, int ima
     }
     
     
-    if(logL_y - logL > log(ran2(&seed)))
+    if(logL_y - logL > log(gsl_rng_uniform(seed)))
     {
       logL  = logL_y;
       logA  = logA_y;

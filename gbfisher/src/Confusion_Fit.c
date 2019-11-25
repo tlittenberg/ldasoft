@@ -1,26 +1,44 @@
-/*********************************************************/
-/*                                                       */
-/*       Confusion_Fit.c, Version 2.3, 4/28/2011         */
-/*      Written by Neil Cornish & Tyson Littenberg       */
-/*                                                       */
-/* gcc -O2 -o Confusion_Fit Confusion_Fit.c arrays.c -lm */
-/*                                                       */
-/*********************************************************/
+/*
+*  Copyright (C) 2019 Neil J. Cornish, Tyson B. Littenberg (MSFC-ST12)
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with with program; see the file COPYING. If not, write to the
+*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+*  MA  02111-1307  USA
+*/
+
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include <LISA.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
+#include <GalacticBinaryMath.h>
+#include <GalacticBinaryWaveform.h>
+
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
 
+
 int main(int argc,char **argv)
 {
   
   double f;
-  char Gfile[50];
   double *XfLS, *AALS, *EELS;
   double *XP, *AEP;
   long i, imax, imin;
@@ -50,27 +68,26 @@ int main(int argc,char **argv)
   fclose(Infile);
   /*****************************/
 
-  printf("*   Observing Time: %.1f year (%f s)\n",TOBS/year,TOBS);
+  printf("*   Observing Time: %.1f year (%f s)\n",TOBS/YEAR,TOBS);
   printf("*\n");
   printf("***********************************************************************\n");
 
-  XfLS = dvector(0,NFFT-1);  AALS = dvector(0,NFFT-1);  EELS = dvector(0,NFFT-1);
+  XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1);  EELS = double_vector(NFFT-1);
   
   
   imax = (long)ceil(4.0e-2*TOBS);
   imin = (long)floor(1.0e-4*TOBS);
   
-  XfLS = dvector(0,NFFT-1);  AALS = dvector(0,NFFT-1); EELS = dvector(0,NFFT-1);
+  XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1); EELS = double_vector(NFFT-1);
   
   
   //Data structure for interpolating orbits from file
-  struct lisa_orbit *LISAorbit;
-  LISAorbit = &orbit;
-  
+  struct Orbit *LISAorbit = malloc(sizeof(struct Orbit));
+
   //Set up orbit structure (allocate memory, read file, cubic spline)
-  sprintf(Gfile,"%s",argv[2]);
-  initialize_orbit(Gfile, LISAorbit);
-  
+  sprintf(LISAorbit->OrbitFileName,"%s",argv[2]);
+  initialize_numeric_orbit(LISAorbit);
+
   double L     = LISAorbit->L;
   double fstar = LISAorbit->fstar;
   
@@ -88,9 +105,9 @@ int main(int argc,char **argv)
   
   printf("Estimating Confusion Noise\n");
 
-  XP = dvector(0,NFFT/2);  AEP = dvector(0,NFFT/2);
-  Xnoise = dvector(0,NFFT/2);  Xconf = dvector(0,NFFT/2);
-  AEnoise = dvector(0,NFFT/2);  AEconf = dvector(0,NFFT/2);
+  XP = double_vector(NFFT/2);  AEP = double_vector(NFFT/2);
+  Xnoise = double_vector(NFFT/2);  Xconf = double_vector(NFFT/2);
+  AEnoise = double_vector(NFFT/2);  AEconf = double_vector(NFFT/2);
   
   rseed = -7584529636;
   
