@@ -28,6 +28,7 @@
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sf.h>
 
+
 #include "LISA.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
@@ -38,6 +39,18 @@ double chirpmass(double m1, double m2)
     return pow(m1*m2,3./5.)/pow(m1+m2,1./5.);
 }
 
+double power_spectrum(double *data, int n)
+{
+    int i,j;
+    double Re, Im;
+    
+    i = 2*n;
+    j = i+1;
+    Re = data[i];
+    Im = data[j];
+    
+    return (Re*Re + Im*Im);
+}
 
 double fourier_nwip(double *a, double *b, double *Sn, int n)
 {
@@ -370,97 +383,4 @@ void cholesky_decomp(double **A, double **L, int N)
   gsl_matrix_free (GSLmatrix);
   
 }
-
-
-/* ********************************************************************************** */
-/*                                                                                                                              */
-/*                                   Fourier Tools                                    */
-/*                                                                                                                              */
-/* ********************************************************************************** */
-
-void fftw_wrapper(double *data, int N, int flag)
-{
-  int n;
-  double *timeData = (double *)malloc(N*sizeof(double));
-  fftw_complex *freqData = (fftw_complex *) fftw_malloc(sizeof(fftw_complex)*N);
-  
-  //setup FFTW plans
-  fftw_plan reverse = fftw_plan_dft_c2r_1d(N, freqData, timeData, FFTW_MEASURE);
-  fftw_plan forward = fftw_plan_dft_r2c_1d(N, timeData, freqData, FFTW_MEASURE);
-  
-  switch (flag)
-  {
-      //Reverse transform
-    case -1:
-      
-      //fill freqData with contents of data
-      for(n=0; n<N/2; n++)
-      {
-        freqData[n][0] = data[2*n];
-        freqData[n][1] = data[2*n+1];
-      }
-      
-      //get DC and Nyquist where FFTW wants them
-      freqData[N/2][0] = freqData[0][1];
-      freqData[N/2][1] = freqData[0][1] = 0.0;
-      
-      
-      //The FFT
-      fftw_execute(reverse);
-      
-      //Copy output back into data
-      for(n=0; n<N; n++) data[n] = timeData[n];
-      
-      break;
-      
-      //Forward transform
-    case 1:
-      
-      //fill timeData with contents of data
-      for(n=0; n<N; n++) timeData[n] = data[n];
-      
-      //fill timeData with contents of data
-      for(n=0; n<N; n++) timeData[n] = data[n];
-      
-      //The FFT
-      fftw_execute(forward);
-      
-      //Copy output back into data
-      for(n=0; n<N/2; n++)
-      {
-        data[2*n]   = freqData[n][0];
-        data[2*n+1] = freqData[n][1];
-      }
-      
-      //get DC and Nyquist where FFTW wants them
-      data[1] = freqData[N/2][1];
-      
-      break;
-      
-    default:
-      fprintf(stdout,"Error: unsupported type in fftw_wrapper()\n");
-      exit(1);
-      break;
-  }
-  
-  fftw_destroy_plan(reverse);
-  fftw_destroy_plan(forward);
-  
-  free(timeData);
-  fftw_free(freqData);
-}
-
-double power_spectrum(double *data, int n)
-{
-    int i,j;
-    double Re, Im;
-    
-    i = 2*n;
-    j = i+1;
-    Re = data[i];
-    Im = data[j];
-    
-    return (Re*Re + Im*Im);
-}
-
 
