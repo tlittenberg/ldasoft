@@ -1,7 +1,8 @@
 # OpenMP
 #CC = gcc-mp-5
-CC = clang-mp-9.0
-CCFLAGS = -fopenmp 
+#CC = clang-mp-9.0
+CC = gcc
+#CCFLAGS = -fopenmp 
 
 LIBS  = gsl gslcblas m fftw3
 CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
