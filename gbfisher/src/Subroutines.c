@@ -481,7 +481,7 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
     fdata[i] = log(f);
     mdata[i] = log(chi/0.72);
   }
-
+  
   splineMCMC(imin, imax, segs, fdata, mdata, sdata, Xnoise, T);
 
   for(i=imin; i <= imax; i++)
@@ -557,7 +557,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   lambdax = lambday = 1.0;
   
   
-  max = datax[ND-1];
+  max = datax[ND];
   min = datax[0];
   
   // printf("min %e max %e\n", min, max);
@@ -611,7 +611,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   rmax += x;
   
   
-  
+   
   
   // inititate fit
   for(i=1; i<= Nf; i++)
@@ -641,15 +641,20 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
   {
     if(activey[ii] == 1)  // only use active points
     {
-      i++;
       tpoints[i] = spoints[ii];
       tdata[i] = sdatax[ii];
+      i++;
     }
   }
+
+
+
   
   cspline = gsl_spline_alloc(gsl_interp_cspline, Nx);
   gsl_spline_init(cspline,tpoints,tdata,Nx);
+
   
+
   av = 0.0;
   for(j=0; j< ND; j++)
   {
@@ -867,12 +872,11 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
         {
           if(activey[ii] == 1)  // only use active points
           {
-            i++;
             tpoints[i] = spoints[ii];
             tdata[i] = sdatay[ii];
+            i++;
           }
         }
-        
         cspline = gsl_spline_alloc(gsl_interp_cspline, Ny);
         gsl_spline_init(cspline,tpoints,tdata,Ny);
         
@@ -907,7 +911,7 @@ void splineMCMC(int imin, int imax, int ND, double *datax, double *datay, double
       }
       
     }
-    
+
     
     
     H = (logLy-logLx) +logpy  - logpx;
