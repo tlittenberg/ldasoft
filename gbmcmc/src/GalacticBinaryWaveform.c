@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gsl/gsl_fft_complex.h>
+
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
@@ -498,14 +500,14 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
   }
   
   /*   Numerical Fourier transform of slowly evolving signal   */
-  fftw_wrapper(data12, BW, -1);
-  fftw_wrapper(data21, BW, -1);
-  fftw_wrapper(data31, BW, -1);
-  fftw_wrapper(data13, BW, -1);
-  fftw_wrapper(data23, BW, -1);
-  fftw_wrapper(data32, BW, -1);
+  gsl_fft_complex_radix2_forward (data12+1, 1, BW);
+  gsl_fft_complex_radix2_forward (data21+1, 1, BW);
+  gsl_fft_complex_radix2_forward (data31+1, 1, BW);
+  gsl_fft_complex_radix2_forward (data13+1, 1, BW);
+  gsl_fft_complex_radix2_forward (data23+1, 1, BW);
+  gsl_fft_complex_radix2_forward (data32+1, 1, BW);
   
-  //Unpack arrays from fftw and normalize
+  //Unpack arrays from fft and normalize
   for(i=1; i<=BW; i++)
   {
     j = i + BW;

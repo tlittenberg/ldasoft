@@ -29,6 +29,7 @@ double chirpmass(double m1, double m2);
 
 double ipow(double x, int n);
 
+double power_spectrum(double *data, int n);
 double fourier_nwip(double *a, double *b, double *Sn, int n);
 double snr(struct Source *source, struct Noise *noise);
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise);
@@ -40,15 +41,6 @@ void invert_matrix(double **matrix, int N);
 void matrix_multiply(double **A, double **B, double **AB, int N);
 void cholesky_decomp(double **A, double **L, int N);
 
-/* ********************************************************************************** */
-/*                                                                                    */
-/*                                    Fourier Tools                                   */
-/*                                                                                    */
-/* ********************************************************************************** */
-
-void fftw_wrapper(double *data, int N, int flag);
-
-double power_spectrum(double *data, int n);
 
 
 #endif /* GalacticBinaryMath_h */
