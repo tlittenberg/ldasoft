@@ -25,7 +25,6 @@
 #include "Constants.h"
 #include "Detector.h"
 #include "Subroutines.h"
-#include <LISA.h>
 
 /*************************************************************************/
 /*        Rigid approximation position of each LISA spacecraft           */

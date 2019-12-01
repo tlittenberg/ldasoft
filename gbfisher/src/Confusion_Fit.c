@@ -23,12 +23,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <LISA.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryMath.h>
-#include <GalacticBinaryWaveform.h>
-
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"

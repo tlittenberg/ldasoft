@@ -29,13 +29,10 @@
 #include "Detector.h"
 #include "Subroutines.h"
 
-#include <LISA.h>
-#include <Constants.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
+
 
 
 
@@ -51,10 +48,29 @@ double Sum(double *AA, double *EE, long M, double SN, double TOBS)
     sm += (AA[2*i-1]*EE[2*i-1]+AA[2*i]*EE[2*i]);
   }
   
-  sm *= 4.0*TOBS/SN;
+  sm *= 4.0/SN;
   
   return sm;
   
+}
+
+void FAST_LISA(struct Orbit *LISAorbit, double TOBS, double *params, int M, double *XLS, double *AA, double *EE)
+{
+  double params_temp[9];
+  
+  params_temp[0] = params[0]*TOBS;//f;
+  params_temp[1] = cos(params[1]);//0.5*M_PI-theta;
+  params_temp[2] = params[2];//phi;
+  params_temp[3] = log(params[3]);//A;
+  params_temp[4] = cos(params[4]);//iota;
+  params_temp[5] = params[5];//psi;
+  params_temp[6] = params[6];//phase;
+  params_temp[7] = params[7]*TOBS*TOBS;//fdot;
+  params_temp[8] = params[8]*TOBS*TOBS*TOBS;//11.0/3.0*fdot*fdot/f;
+
+  
+  galactic_binary(LISAorbit, "phase", TOBS, 0, params_temp, 9, XLS, AA, EE, M, 2);
+
 }
 
 

@@ -26,11 +26,6 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include <LISA.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryWaveform.h>
-
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
@@ -179,21 +174,21 @@ int main(int argc,char **argv)
     AA  = double_vector(2*M);
     EE  = double_vector(2*M);
     
-    galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
+    FAST_LISA(LISAorbit, TOBS, params, M, XLS, AA, EE);
     
-    for(i=1; i<=M; i++)
+    for(i=0; i<M; i++)
     {
       
-      k = (q + i - 1 - M/2);
+      k = (q + i - M/2);
       
       if(k>0 && k<NFFT/2)
       {
-        XfLS[2*k]   += XLS[2*i-1];
-        XfLS[2*k+1] += XLS[2*i];
-        AALS[2*k]   += AA[2*i-1];
-        AALS[2*k+1] += AA[2*i];
-        EELS[2*k]   += EE[2*i-1];
-        EELS[2*k+1] += EE[2*i];
+        XfLS[2*k]   += XLS[2*i];
+        XfLS[2*k+1] += XLS[2*i+1];
+        AALS[2*k]   += AA[2*i];
+        AALS[2*k+1] += AA[2*i+1];
+        EELS[2*k]   += EE[2*i];
+        EELS[2*k+1] += EE[2*i+1];
       }
       
     }
@@ -212,7 +207,7 @@ int main(int argc,char **argv)
   sqT = sqrt(TOBS);
   
   Outfile = fopen("Galaxy_XAE.dat","w");
-  for(i=1; i< imax; i++)
+  for(i=1; i<imax; i++)
   {
     f = (double)(i)/TOBS;
     fonfs = f/LISAorbit->fstar;
@@ -224,7 +219,7 @@ int main(int argc,char **argv)
     AI = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
     ER = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
     EI = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
-    fprintf(Outfile,"%.12g %.12g %.12g %.12g %.12g %.12g %.12g\n", f, sqT*XfLS[2*i]+XR, sqT*XfLS[2*i+1]+XI, sqT*AALS[2*i]+AR, sqT*AALS[2*i+1]+AI, sqT*EELS[2*i]+ER, sqT*EELS[2*i+1]+EI);
+    fprintf(Outfile,"%.12g %.12g %.12g %.12g %.12g %.12g %.12g\n", f, XfLS[2*i]+XR, XfLS[2*i+1]+XI, AALS[2*i]+AR, AALS[2*i+1]+AI, EELS[2*i]+ER, EELS[2*i+1]+EI);
   }
   fclose(Outfile);
   
