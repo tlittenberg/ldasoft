@@ -26,13 +26,6 @@
 #include "Detector.h"
 #include "Subroutines.h"
 
-#include <LISA.h>
-#include <Constants.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryMath.h>
-#include <GalacticBinaryWaveform.h>
-
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_randist.h>
@@ -257,8 +250,7 @@ int main(int argc,char **argv)
     AA  = double_vector(2*M);
     EE  = double_vector(2*M);
     
-    //FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
-    galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
+    FAST_LISA(LISAorbit, TOBS, params, M, XLS, AA, EE);
 
     SNRX = sqrt(Sum(XLS,XLS,M,SXYZ,TOBS));
     SNR  = sqrt(Sum(AA,AA,M,SAE,TOBS)+Sum(EE,EE,M,SAE,TOBS));
@@ -590,11 +582,10 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
       ParamsM[8] /= TOBS*TOBS*TOBS;
     }
 
-    galactic_binary(orbit, "phase", TOBS, 0, ParamsP, 9, XP, templateP1, templateP2, M, 2);
+    FAST_LISA(orbit, TOBS, ParamsP, M, XP, templateP1, templateP2);
+    FAST_LISA(orbit, TOBS, ParamsM, M, XM, templateM1, templateM2);
 
-    galactic_binary(orbit, "phase", TOBS, 0, ParamsM, 9, XP, templateM1, templateM2, M, 2);
-
-    for (j = 1 ; j <= 2*M ; j++)
+    for (j = 0 ; j < 2*M ; j++)
     {
       XD[i][j] = XP[j] - XM[j];
       temD1[i][j] = templateP1[j] - templateM1[j];

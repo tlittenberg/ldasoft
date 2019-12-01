@@ -22,11 +22,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <LISA.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryWaveform.h>
-
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
@@ -200,7 +195,7 @@ int main(int argc,char **argv)
     AA  = double_vector(2*M);
     EE  = double_vector(2*M);
     
-    galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
+    FAST_LISA(LISAorbit,TOBS,params,M,XLS,AA,EE);
     
     /*inst2*/
     SNX = (SXYZ+Xconf[q]);//*sin(f/fstar)*sin(f/fstar);
@@ -208,26 +203,26 @@ int main(int argc,char **argv)
     
     SNRAE = 0.0;
     SNRX = 0.0;
-    for(i=1; i<=M; i++)
+    for(i=0; i<M; i++)
     {
-      SNRX += 4.0*(XLS[2*i-1]*XLS[2*i-1]+XLS[2*i]*XLS[2*i]);
-      SNRAE += 4.0*(AA[2*i-1]*AA[2*i-1]+AA[2*i]*AA[2*i]+EE[2*i-1]*EE[2*i-1]+EE[2*i]*EE[2*i]);
+      SNRX += 4.0*(XLS[2*i]*XLS[2*i]+XLS[2*i+1]*XLS[2*i+1]);
+      SNRAE += 4.0*(AA[2*i]*AA[2*i]+AA[2*i+1]*AA[2*i+1]+EE[2*i]*EE[2*i]+EE[2*i+1]*EE[2*i+1]);
     }
-    SNRAE *= TOBS/SNAE;
-    SNRX  *= TOBS/SNX;
+    SNRAE /= SNAE;
+    SNRX  /= SNX;
     SNRAE  = sqrt(SNRAE);
     SNRX   = sqrt(SNRX);
     
     if(SNRX > SNRthres)
     {
       fprintf(Xbright, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
-      for(i=1; i<=M; i++)
+      for(i=0; i<M; i++)
       {
-        k = (q + i -1 - M/2);
+        k = (q + i - M/2);
         if(k>0)
         {
-          XfLS[2*k]   -= sqT*XLS[2*i-1];
-          XfLS[2*k+1] -= sqT*XLS[2*i];
+          XfLS[2*k]   -= XLS[2*i];
+          XfLS[2*k+1] -= XLS[2*i+1];
         }
       }
     }
@@ -235,15 +230,15 @@ int main(int argc,char **argv)
     if(SNRAE > SNRthres)
     {
       fprintf(Abright, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
-      for(i=1; i<=M; i++)
+      for(i=0; i<M; i++)
       {
-        k = (q + i -1 - M/2);
+        k = (q + i - M/2);
         if(k>0)
         {
-          AALS[2*k]   -= sqT*AA[2*i-1];
-          AALS[2*k+1] -= sqT*AA[2*i];
-          EELS[2*k]   -= sqT*EE[2*i-1];
-          EELS[2*k+1] -= sqT*EE[2*i];
+          AALS[2*k]   -= AA[2*i];
+          AALS[2*k+1] -= AA[2*i+1];
+          EELS[2*k]   -= EE[2*i];
+          EELS[2*k+1] -= EE[2*i+1];
         }
       }
     }

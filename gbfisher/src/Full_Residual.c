@@ -22,11 +22,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <LISA.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryWaveform.h>
-
 #include "arrays.h"
 #include "Constants.h"
 #include "Detector.h"
@@ -169,23 +164,18 @@ int main(int argc,char **argv)
     XLS = double_vector(2*M);
     AA  = double_vector(2*M);
     EE  = double_vector(2*M);
-    
-    //FAST_LISA(LISAorbit, TOBS, params, N, M, XLS, AA, EE);
-    galactic_binary(LISAorbit, "phase", TOBS, 0, params, 9, XLS, AA, EE, M, 2);
 
-    for(i=1; i<=M; i++)
+    FAST_LISA(LISAorbit, TOBS, params, M, XLS, AA, EE);
+
+    for(i=0; i<M; i++)
     {
-      k = (q + i -1 - M/2);
+      k = (q + i - M/2);
       if(k>0)
       {
-        AALS[2*k]   -= sqT*AA[2*i-1];
-        AALS[2*k+1] -= sqT*AA[2*i];
-        EELS[2*k]   -= sqT*EE[2*i-1];
-        EELS[2*k+1] -= sqT*EE[2*i];
-//        AALS[2*k]   += sqT*AA[2*i-1];
-//        AALS[2*k+1] += sqT*AA[2*i];
-//        EELS[2*k]   += sqT*EE[2*i-1];
-//        EELS[2*k+1] += sqT*EE[2*i];
+        AALS[2*k]   -= AA[2*i];
+        AALS[2*k+1] -= AA[2*i+1];
+        EELS[2*k]   -= EE[2*i];
+        EELS[2*k+1] -= EE[2*i+1];
       }
     }
     

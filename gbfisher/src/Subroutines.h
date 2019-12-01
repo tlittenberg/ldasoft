@@ -17,8 +17,15 @@
 *  MA  02111-1307  USA
 */
 
+#include <LISA.h>
+#include <Constants.h>
+#include <GalacticBinary.h>
+#include <GalacticBinaryIO.h>
+#include <GalacticBinaryMath.h>
+#include <GalacticBinaryWaveform.h>
 
 double Sum(double *AA, double *EE, long M, double SN, double TOBS);
+void FAST_LISA(struct Orbit *LISAorbit, double TOBS, double *params, int M, double *XLS, double *AA, double *EE);
 
 
 /*****************************************************/
