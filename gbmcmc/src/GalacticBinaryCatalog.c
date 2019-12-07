@@ -342,10 +342,104 @@ int main(int argc, char *argv[])
       fprintf(out,"%lg\n",entry->match[k]);
     }
     
-    // close detection file
+    //close detection file
     fclose(out);
-  }
+    
+    //create and print individual source waveform reconstructions
+    double ***hrec = malloc(data->N * sizeof(double **));
+    for(int j=0; j<data->N; j++)
+    {
+      hrec[j] = malloc(data->Nchannel * sizeof(double *));
+      
+      //allocate and zero
+      for(int k=0; k<data->Nchannel; k++)
+      {
+        hrec[j][k] = malloc(entry->I * sizeof(double));
+        for(int i=0; i<entry->I; i++)
+        {
+          hrec[j][k][i] = 0.0;
+        }
+      }
+    }
+    
+    //insert waveform power
+    for(int i=0; i<entry->I; i++)
+    {
+      for(int j=0; j<entry->source[i]->BW; j++)
+      {
+        
+        int k = j+entry->source[i]->imin;
+        
+        if(k>-1 && k < data->N)
+        {
+          int j_re = 2*j;
+          int j_im = j_re+1;
+          
+          hrec[k][0][i] = entry->source[i]->tdi->A[j_re]*entry->source[i]->tdi->A[j_re]+entry->source[i]->tdi->A[j_im]*entry->source[i]->tdi->A[j_im];
+          hrec[k][1][i] = entry->source[i]->tdi->E[j_re]*entry->source[i]->tdi->E[j_re]+entry->source[i]->tdi->E[j_im]*entry->source[i]->tdi->E[j_im];
+        }
+      }
+    }
+    
+    //sort reconstructed power in each frequency bin and get median, CIs
+    for(int j=0; j<data->N; j++)
+    {
+      for(int k=0; k<data->Nchannel; k++)
+      {
+        gsl_sort(hrec[j][k],1,entry->I);
+      }
+    }
+    double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
+    double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
 
+    sprintf(filename, "%s/%s_power_reconstruction.dat", outdir,entry->name);
+    out = fopen( filename, "w");
+
+    for(int j=0; j<data->N; j++)
+    {
+      double f = (double)(j+data->qmin)/data->T;
+      
+      A_med   = gsl_stats_median_from_sorted_data   (hrec[j][0], 1, entry->I);
+      A_lo_50 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.25);
+      A_hi_50 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.75);
+      A_lo_90 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.05);
+      A_hi_90 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.95);
+      
+      E_med   = gsl_stats_median_from_sorted_data   (hrec[j][1], 1, entry->I);
+      E_lo_50 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.25);
+      E_hi_50 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.75);
+      E_lo_90 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.05);
+      E_hi_90 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.95);
+      
+      fprintf(out,"%.12g ",f);
+      fprintf(out,"%lg ",A_med);
+      fprintf(out,"%lg ",A_lo_50);
+      fprintf(out,"%lg ",A_hi_50);
+      fprintf(out,"%lg ",A_lo_90);
+      fprintf(out,"%lg ",A_hi_90);
+      fprintf(out,"%lg ",E_med);
+      fprintf(out,"%lg ",E_lo_50);
+      fprintf(out,"%lg ",E_hi_50);
+      fprintf(out,"%lg ",E_lo_90);
+      fprintf(out,"%lg ",E_hi_90);
+      fprintf(out,"\n");
+    }
+    
+    fclose(out);
+    
+    
+    for(int i=0; i<data->N; i++)
+    {
+      for(int j=0; j<data->Nchannel; j++)
+      {
+        free(hrec[i][j]);
+      }
+      free(hrec[i]);
+    }
+    free(hrec);
+  }//end loop over catalog entries
+  
+  
   if(flags->orbit)free_orbit(orbit);
   
   return 0;
