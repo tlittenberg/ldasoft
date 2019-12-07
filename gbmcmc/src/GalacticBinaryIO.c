@@ -92,6 +92,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
   }
   fprintf(fptr,"  Data sample size .... %i   \n",data_ptr->N);
   fprintf(fptr,"  Data start time ..... %.0f \n",data_ptr->t0[0]);
+  fprintf(fptr,"  Data start frequency. %.16g\n",data_ptr->fmin);
   fprintf(fptr,"  Data duration ....... %.0f \n",data_ptr->T);
   fprintf(fptr,"  Data segments ....... %i   \n",flags->NT);
   fprintf(fptr,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
@@ -377,7 +378,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
         if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
         if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
-        if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin    = (double)atof(optarg);
+        if(strcmp("fmin",        long_options[long_index].name) == 0) sscanf(optarg, "%lg", &data_ptr->fmin);
         if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap[0] = (double)atof(optarg);
         if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
         if(strcmp("chainseed",   long_options[long_index].name) == 0) data_ptr->cseed   = (long)atoi(optarg);
