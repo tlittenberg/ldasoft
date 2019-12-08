@@ -4,7 +4,8 @@
 CC = gcc
 #CCFLAGS = -fopenmp 
 
-LIBS  = gsl gslcblas m fftw3
+#LIBS  = gsl gslcblas m fftw3
+LIBS  = gsl gslcblas m 
 CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
 
 # Compile src with git hash
