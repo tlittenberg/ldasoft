@@ -62,7 +62,7 @@ gb_match : GalacticBinaryMatch.c $(OBJS) GalacticBinary.h
 	$(CC) $(CCFLAGS) -o gb_match GalacticBinaryMatch.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
 
 gb_mcmc_brans_dicke : gb_mcmc_brans_dicke.c
-	$(CC) -o gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -o gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c $(LIBS:%=-l%)
 
 libgbmcmc.a : $(OBJS)
 #	$(CC) -shared -o libgb.so $(OBJS) $(LIBS:%=-l%)
