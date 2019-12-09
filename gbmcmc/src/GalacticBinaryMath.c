@@ -20,7 +20,7 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <fftw3.h>
+/*#include <fftw3.h>*/
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
