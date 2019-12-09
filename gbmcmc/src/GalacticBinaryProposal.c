@@ -584,7 +584,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
   double **Lij  = proposal->tensor[mode];
   
   //scale NP-dimensional jump to 1-sigma of the joint distribution
-  double scale = 1./sqrt((double)NP);
+  double scale = 1.;///sqrt((double)NP);
 
   //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
   for(int n=0; n<NP; n++)
@@ -616,7 +616,24 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
   return cov_density(data, model, source, proposal, params);
 }
 
-//double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal)
+/* when wrapping azimuthal parameters the sign matters! */
+static double phase_wrapper(double x, double cycle)
+{
+  double a = fabs(x);
+  double b = fabs(x + cycle);
+  double c = fabs(x - cycle);
+  double temp,min;
+
+  temp = (a < b)    ? a : b;
+  min =  (c < temp) ? c : temp;
+
+  if(min==a)
+    return x;
+  else if(min==b)
+    return x + cycle;
+  else
+    return x - cycle;
+}
 double cov_density(UNUSED struct Data *data, struct Model *model, struct Source * source, struct Proposal *proposal, double *params)
 {
   
@@ -676,11 +693,11 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
       delta_x[n] = params[n]-mean[n];
       
       //map parameters periodic on U[0,2pi]
-      if(n==2) delta_x[n] = acos(cos(delta_x[n])); //longitude
-      if(n==6) delta_x[n] = acos(cos(delta_x[n])); //phase
+      if(n==2) delta_x[n] = phase_wrapper(delta_x[n],PI2); //longitude
+      if(n==6) delta_x[n] = phase_wrapper(delta_x[n],PI2); //phase
       
       //map parameters periodic on U[0,pi]
-      if(n==5) delta_x[n] = asin(sin(delta_x[n])); //psi
+      if(n==5) delta_x[n] = phase_wrapper(delta_x[n],M_PI); //psi
       
     }
     
@@ -873,7 +890,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         if(flags->updateCov)
         {
           setup_covariance_proposal(data, flags, proposal[i]);
-          proposal[i]->weight   = 0.1;
+          proposal[i]->weight   = 0.2;
           proposal[i]->rjweight = 0.2;
         }
         check   += proposal[i]->weight;
@@ -1193,7 +1210,7 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg", &alpha, &detCij, &junk, &junk, &junk, &junk, &junk, &junk);
 
     //relative weighting of mode
-    proposal->vector[n*Ncov]=alpha;
+    proposal->vector[n*2]=alpha;
     
     //absorb normalization constants into stored determinant detCij
 //    proposal->vector[n*Ncov+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));

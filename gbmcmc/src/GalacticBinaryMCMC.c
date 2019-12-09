@@ -246,6 +246,18 @@ int main(int argc, char *argv[])
   }//end loop over chains
   
   
+  //test covariance proposal
+  /*
+  FILE *test=fopen("proposal_test.dat","w");
+  for(int i=0; i<100000; i++)
+  {
+    double logP = draw_from_cov(data[0], model[0][0], model[0][0]->source[0], proposal[0][8], model[0][0]->source[0]->params, chain->r[0]);
+    print_source_params(data[0], model[0][0]->source[0], test);
+    fprintf(test,"%lg\n",logP);
+  }
+  fclose(test);
+   */
+  
   /* The MCMC loop */
   for(int mcmc = -flags->NBURN; mcmc < flags->NMCMC; mcmc++)
   {
@@ -598,9 +610,9 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
    because we are always drawing from prior...for now
    */
   
-  //copy params for segment 0 into higher segments
-  copy_source(model_y->source[n],model_y->source[n]);
-  map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
+  //TODO:copy params for segment 0 into higher segments
+  //copy_source(model_y->source[n],model_y->source[n]);
+  //map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
   
   //get priors for x and y
   logPx = evaluate_prior(flags, data, model_x, prior, source_x->params);

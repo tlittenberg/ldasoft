@@ -322,7 +322,7 @@ void invert_matrix(double **matrix, int N)
     }
     else
     {
-        //copy covariance matrix back into Fisher
+        //copy inverse back into matrix
         for(i=0; i<N; i++)
         {
             for(j=0; j<N; j++)
