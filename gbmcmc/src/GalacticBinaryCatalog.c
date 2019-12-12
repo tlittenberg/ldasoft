@@ -280,6 +280,9 @@ int main(int argc, char *argv[])
 
   double f_med;
   double *f_vec;
+  size_t *index;
+  int i_med;
+  
   fprintf(stdout,"\nPost processing events\n");
   for(int d=0; d<detections; d++)
   {
@@ -288,26 +291,23 @@ int main(int argc, char *argv[])
     int n = detection_index[d];
     entry = catalog->entry[n];
     
-    //get median frequency as identifier of source
+    //get sample containing median frequency as identifier of source
     f_vec = malloc(entry->I*sizeof(double));
     for(int i=0; i<entry->I; i++) f_vec[i] = entry->source[i]->f0;
-    gsl_sort(f_vec, 1, entry->I);
-    f_med = gsl_stats_median_from_sorted_data(f_vec, 1, entry->I);
+    
+    index = malloc(entry->I*(sizeof(size_t)));
+    gsl_sort_index(index,f_vec,1,entry->I);
+    i_med = index[entry->I/2];
     free(f_vec);
+    free(index);
 
-    //find sample containing median frequency
-    for(int i=0; i<entry->I; i++)
-    {
-      if(f_med == entry->source[i]->f0)
-      {
-        //store index of median sample
-        entry->i = i;
-        //replace stored SNR with median sample
-        entry->SNR = snr(entry->source[i],noise);
-        break;
-      }
-    }
+    f_med = entry->source[i_med]->f0;//gsl_stats_median_from_sorted_data(f_vec, 1, entry->I);
 
+    entry->i = i_med;
+    
+    //replace stored SNR with median sample
+    entry->SNR = snr(entry->source[i_med],noise);
+      
     //name source based on median frequency
     sprintf(entry->name,"GW%010li",(long)(f_med*1e10));
     
@@ -325,10 +325,9 @@ int main(int argc, char *argv[])
   
   for(int d=0; d<detections; d++)
   {
-    //open file for detection
-    
     FILE *out;
     
+    //print detection posterior samples
     int n = detection_index[d];
     entry = catalog->entry[n];
     
@@ -341,9 +340,14 @@ int main(int argc, char *argv[])
       print_source_params(data,entry->source[k],out);
       fprintf(out,"%lg\n",entry->match[k]);
     }
-    
-    //close detection file
     fclose(out);
+    
+    //print point estimate parameters at median frequency
+    sprintf(filename, "%s/%s_params.dat", outdir, entry->name);
+    out = fopen(filename, "w");
+    print_source_params(data,entry->source[i_med],out);
+    fclose(out);
+    
     
     //create and print individual source waveform reconstructions
     double ***hrec = malloc(data->N * sizeof(double **));
