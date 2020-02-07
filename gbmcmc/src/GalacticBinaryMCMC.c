@@ -120,7 +120,84 @@ int main(int argc, char *argv[])
     else
       GalacticBinaryInjectSimulatedSource(data,orbit,flags);
   }
-  
+    
+  /* Remove sources outside of window */
+    if(flags->catalog)
+    {
+        struct Data *data_ptr = data[0];
+        
+        //parse file
+        FILE *catalog_file = fopen(flags->catalogFile,"r");
+        
+        //count number of sources
+        
+        struct Source *catalog_entry = NULL;
+        catalog_entry = malloc(sizeof(struct Source));
+        alloc_source(catalog_entry, data_ptr->N, data_ptr->Nchannel, data_ptr->NP);
+
+        
+        int Nsource = 0;
+        while(!feof(catalog_file))
+        {
+            scan_source_params(data_ptr, catalog_entry, catalog_file);
+            Nsource++;
+        }
+        Nsource--;
+        rewind(catalog_file);
+
+        
+        //allocate model & source structures
+        struct Model *catalog = malloc(sizeof(struct Model));
+        alloc_model(catalog, Nsource, data_ptr->N, data_ptr->Nchannel, data_ptr->NP, data_ptr->NT);
+
+        catalog->Nlive = 0;
+        for(int n=0; n<Nsource; n++)
+        {
+            scan_source_params(data_ptr, catalog_entry, catalog_file);
+            if(catalog_entry->params[0] < data_ptr->qmin+data_ptr->qpad || catalog_entry->params[0] > data_ptr->qmax-data_ptr->qpad)
+            {
+                copy_source(catalog_entry, catalog->source[catalog->Nlive]);
+                catalog->Nlive++;
+            }
+        }
+
+        
+        //for binaries in padded region, compute model
+        generate_signal_model(orbit, data_ptr, catalog, -1);
+        
+        //remove from data
+        for(int n=0; n<catalog->NT; n++)
+        {
+            
+            for(int i=0; i<data_ptr->N*2; i++)
+            {
+                data_ptr->tdi[n]->X[i] -= catalog->tdi[n]->X[i];
+                data_ptr->tdi[n]->A[i] -= catalog->tdi[n]->A[i];
+                data_ptr->tdi[n]->E[i] -= catalog->tdi[n]->E[i];
+            }
+        }
+        
+        char filename[128];
+        sprintf(filename,"data/power_residual_%i_%i.dat",0,0);
+        FILE *fptr=fopen(filename,"w");
+        
+        for(int i=0; i<data_ptr->N; i++)
+        {
+            double f = (double)(i+data_ptr->qmin)/data_ptr->T;
+            fprintf(fptr,"%.12g %lg %lg ",
+                    f,
+                    data_ptr->tdi[0]->A[2*i]*data_ptr->tdi[0]->A[2*i]+data_ptr->tdi[0]->A[2*i+1]*data_ptr->tdi[0]->A[2*i+1],
+                    data_ptr->tdi[0]->E[2*i]*data_ptr->tdi[0]->E[2*i]+data_ptr->tdi[0]->E[2*i+1]*data_ptr->tdi[0]->E[2*i+1]);
+            fprintf(fptr,"\n");
+        }
+        fclose(fptr);
+
+        //clean up after yourself
+        fclose(catalog_file);
+        free_model(catalog);
+        free_source(catalog_entry);
+    }
+    
   /* Initialize data-dependent proposal */
   setup_frequency_proposal(data[0]);
   

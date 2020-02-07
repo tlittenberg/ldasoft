@@ -189,6 +189,7 @@ void print_usage()
   fprintf(stdout,"       --noiseseed   : seed for noise RNG                  \n");
   fprintf(stdout,"       --inj         : inject signal                       \n");
   fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
+  fprintf(stdout,"       --catalog     : list of known sources               \n");
   fprintf(stdout,"\n");
 
   //Chain
@@ -269,6 +270,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->detached    = 0;
   flags->strainData  = 0;
   flags->knownSource = 0;
+  flags->catalog     = 0;
   flags->NT          = 1;
   flags->orbit       = 0;
   flags->prior       = 0;
@@ -339,10 +341,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
     {"update-cov",required_argument, 0, 0},
-    {"match-in1",  required_argument, 0, 0},
+    {"match-in1", required_argument, 0, 0},
     {"match-in2", required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
     {"em-prior",  required_argument, 0, 0},
+    {"catalog",   required_argument, 0, 0},
     
     /* These options don’t set a flag.
      We distinguish them by their indices. */
@@ -421,6 +424,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         {
           flags->knownSource = 1;
           flags->fixSky      = 1;
+        }
+        if(strcmp("catalog",long_options[long_index].name) == 0)
+        {
+            flags->catalog = 1;
+            sprintf(flags->catalogFile,"%s",optarg);
         }
         if(strcmp("data", long_options[long_index].name) == 0)
         {
