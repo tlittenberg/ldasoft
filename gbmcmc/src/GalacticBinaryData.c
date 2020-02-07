@@ -874,3 +874,4 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
     
     fprintf(stdout,"================================================\n\n");
 }
+
