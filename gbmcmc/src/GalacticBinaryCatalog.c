@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
     alloc_data(data_tmp, flags);
     struct Data *data  = data_tmp[0];
     data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin + data->N;
   
     //File containing chain samples
     FILE *chain_file = fopen(data->fileName,"r");
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
   //selection criteria for catalog entries
     int matchFlag;          //track if sample matches any entries
     double Match;     //match between pairs of waveforms
-    double tolerance = 0.8; //tolerance on match to be considered associated
+    double tolerance = 0.5; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
   
 
@@ -176,20 +177,30 @@ int main(int argc, char *argv[])
     
     //calculate waveform model of sample
     galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
-        
-    //add new source to catalog
-    create_new_source(catalog, sample, noise, IMAX, data->N, sample->tdi->Nchannel, data->NP);
+      
+      //check frequencies
+      double q_sample = sample->f0 * data->T;
+      if(q_sample > data->qmin && q_sample < data->qmax)
+      {
+          //add new source to catalog
+          create_new_source(catalog, sample, noise, IMAX, data->N, sample->tdi->Nchannel, data->NP);
+      }
   }
 
 
   /* ****************************************************************/
   /*            Now loop over the rest of the chain file            */
   /* ****************************************************************/
-  
+
+    //prevent multiple templates being added to the same source (only relevent for low SNR, low match threshold)
+    int *entryFlag = malloc(NMAX*sizeof(int));
+
   fprintf(stdout,"\nLooping over chain file\n");
   for(int i=1; i<IMAX; i++)
   {
     if(i%(IMAX/100)==0)printProgress((double)i/(double)IMAX);
+
+      for(int n=0; n<N; n++) entryFlag[n] = 0;
 
     //check each source in chain sample
     for(int d=0; d<DMAX; d++)
@@ -203,6 +214,10 @@ int main(int argc, char *argv[])
         //calculate waveform model of sample
         galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
         
+        double q_sample = sample->f0 * data->T;
+
+        if(q_sample < data->qmin || q_sample > data->qmax) continue;
+        
       //calculate match of sample and all entries
       matchFlag = 0;
       for(int n=0; n<catalog->N; n++)
@@ -211,17 +226,16 @@ int main(int argc, char *argv[])
         
         //check frequency separation
         double q_entry  = entry->source[0]->f0 * data->T;
-        double q_sample = sample->f0 * data->T;
         
         if( fabs(q_entry-q_sample) > dqmax ) Match = -1.0;
         
         //calculate match
         else Match = waveform_match(sample, entry->source[0], noise);
 
-        if(Match > tolerance)
+        if(Match > tolerance && !entryFlag[n])
         {
           matchFlag = 1;
-        
+            entryFlag[n] = 1;
           //append sample to entry
           entry->match[entry->I] = Match;
           append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel, data->NP);
@@ -231,22 +245,28 @@ int main(int argc, char *argv[])
         }
 
       }//end loop over catalog entries
+        
 
       //if the match tolerence is never met, add as new source
-      if(!matchFlag) create_new_source(catalog, sample, noise, IMAX, data->N, data->Nchannel, data->NP);
+      if(!matchFlag)
+      {
+          entryFlag[catalog->N]=1;
+          create_new_source(catalog, sample, noise, IMAX, data->N, data->Nchannel, data->NP);
+      }
 
     }//end loop over sources in chain sample
 
   }//end loop over chain
   fprintf(stdout,"\n");
   fclose(chain_file);
-  
+  free(entryFlag);
+
 
   /* ****************************************************************/
   /*             Select entries that have enough weight             */
   /* ****************************************************************/
   double weight;
-  double weight_threshold = 0.2; //what fraction of samples must an entry have to count?
+  double weight_threshold = 0.5; //what fraction of samples must an entry have to count?
 
   int detections = 0;            //number of entries that meet the weight threshold
   int detection_index[NMAX];     //list of entry indicies for detected sources
@@ -311,6 +331,14 @@ int main(int argc, char *argv[])
     //name source based on median frequency
     sprintf(entry->name,"GW%010li",(long)(f_med*1e10));
     
+       //print point estimate parameters at median frequency
+       sprintf(filename, "%s/%s_params.dat", outdir, entry->name);
+       FILE *out = fopen(filename, "w");
+       print_source_params(data,entry->source[i_med],out);
+      fprintf(out,"\n");
+       fclose(out);
+      
+      
     //evidence for source related to number of visits in the chain
     entry->evidence = (double)entry->I/(double)IMAX;
     
@@ -341,13 +369,6 @@ int main(int argc, char *argv[])
       fprintf(out,"%lg\n",entry->match[k]);
     }
     fclose(out);
-    
-    //print point estimate parameters at median frequency
-    sprintf(filename, "%s/%s_params.dat", outdir, entry->name);
-    out = fopen(filename, "w");
-    print_source_params(data,entry->source[i_med],out);
-    fclose(out);
-    
     
     //create and print individual source waveform reconstructions
     double ***hrec = malloc(data->N * sizeof(double **));
