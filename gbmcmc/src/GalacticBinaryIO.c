@@ -91,6 +91,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
       break;
   }
   fprintf(fptr,"  Data sample size .... %i   \n",data_ptr->N);
+  fprintf(fptr,"  Data padding size ... %i   \n",data_ptr->qpad);
   fprintf(fptr,"  Data start time ..... %.0f \n",data_ptr->t0[0]);
   fprintf(fptr,"  Data start frequency. %.16g\n",data_ptr->fmin);
   fprintf(fptr,"  Data duration ....... %.0f \n",data_ptr->T);
@@ -177,6 +178,7 @@ void print_usage()
   fprintf(stdout,"       =========== Data =========== \n");
   fprintf(stdout,"       --data        : strain data file                    \n");
   fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
+  fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
   fprintf(stdout,"       --segments    : number of data segments (1)         \n");
   fprintf(stdout,"       --start-time  : initial time of segment  (0)        \n");
   fprintf(stdout,"       --gap-time    : duration of data gaps (0)           \n");
@@ -187,6 +189,7 @@ void print_usage()
   fprintf(stdout,"       --noiseseed   : seed for noise RNG                  \n");
   fprintf(stdout,"       --inj         : inject signal                       \n");
   fprintf(stdout,"       --injseed     : seed for injection parameters       \n");
+  fprintf(stdout,"       --catalog     : list of known sources               \n");
   fprintf(stdout,"\n");
 
   //Chain
@@ -267,6 +270,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->detached    = 0;
   flags->strainData  = 0;
   flags->knownSource = 0;
+  flags->catalog     = 0;
   flags->NT          = 1;
   flags->orbit       = 0;
   flags->prior       = 0;
@@ -303,6 +307,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     data[i]->NP       = 8; //default includes fdot
     data[i]->Nchannel = 2; //1=X, 2=AE
     data[i]->DMAX     = DMAX_default;//maximum number of sources
+    data[i]->qpad     = 0;
     
     data[i]->cseed = 150914+i*Nmax;
     data[i]->nseed = 151226+i*Nmax;
@@ -319,6 +324,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   {
     /* These options set a flag. */
     {"samples",   required_argument, 0, 0},
+    {"padding",   required_argument, 0, 0},
     {"duration",  required_argument, 0, 0},
     {"segments",  required_argument, 0, 0},
     {"sources",   required_argument, 0, 0},
@@ -335,10 +341,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"links",     required_argument, 0, 0},
     {"update",    required_argument, 0, 0},
     {"update-cov",required_argument, 0, 0},
-    {"match-in1",  required_argument, 0, 0},
+    {"match-in1", required_argument, 0, 0},
     {"match-in2", required_argument, 0, 0},
     {"steps",     required_argument, 0, 0},
     {"em-prior",  required_argument, 0, 0},
+    {"catalog",   required_argument, 0, 0},
     
     /* These options don’t set a flag.
      We distinguish them by their indices. */
@@ -375,6 +382,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         
       case 0:
         if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
+        if(strcmp("padding",     long_options[long_index].name) == 0) data_ptr->qpad    = atoi(optarg);
         if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
         if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
         if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
@@ -416,6 +424,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         {
           flags->knownSource = 1;
           flags->fixSky      = 1;
+        }
+        if(strcmp("catalog",long_options[long_index].name) == 0)
+        {
+            flags->catalog = 1;
+            sprintf(flags->catalogFile,"%s",optarg);
         }
         if(strcmp("data", long_options[long_index].name) == 0)
         {
@@ -503,6 +516,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   }
   if(flags->cheat) flags->NBURN = 0;
 
+  //pad data
+  data[0]->N += 2*data[0]->qpad;
+  data[0]->fmin -= data[0]->qpad/data[0]->T;
+
+    
   // copy command line args to other data structures
   for(int i=0; i<flags->NDATA; i++)
   {
@@ -513,6 +531,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
       data[i]->tgap[j] = data[0]->tgap[0];
     }
     data[i]->T        = data[0]->T;
+    data[i]->qpad     = data[0]->qpad;
     data[i]->N        = data[0]->N;
     data[i]->NT       = data[0]->N;
     data[i]->NP       = data[0]->NP;

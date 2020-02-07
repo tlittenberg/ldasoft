@@ -38,6 +38,7 @@ struct Data
   
   int qmin;
   int qmax;
+  int qpad;
   
   double fmin;
   double fmax;
@@ -114,6 +115,7 @@ struct Flags
   int calibration; //are we marginalizing over calibration  uncertainty?
   int confNoise; //include model of confusion noise in Sn(f)
   int resume; //start chain state from previous run
+  int catalog; //use list of previously detected sources to clean bandwidth padding
   
   char **injFile;
   char cdfFile[128];
@@ -121,6 +123,7 @@ struct Flags
   char matchInfile1[128];
   char matchInfile2[128];
   char pdfFile[128];
+  char catalogFile[128];
 };
 
 struct Chain
