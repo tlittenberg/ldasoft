@@ -38,6 +38,7 @@ struct Data
   
   int qmin;
   int qmax;
+  int qpad;
   
   double fmin;
   double fmax;

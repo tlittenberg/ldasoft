@@ -297,8 +297,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   
   //frequency bin
   //double qpad = 10;
-  model->prior[0][0] = data->qmin;//+qpad;
-  model->prior[0][1] = data->qmax;//-qpad;
+  model->prior[0][0] = data->qmin;// + data->qpad;
+  model->prior[0][1] = data->qmax;// - data->qpad;
   
   //colatitude
   model->prior[1][0] = -1.0;
