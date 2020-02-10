@@ -209,7 +209,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
 int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, double costheta, double A, double T, int N)
 {
   int Nmin = 16;
-  int Nmax = N/2;
+  int Nmax = (int)pow(2,(int)log2((double)(N/2)));
   
   double sqT=sqrt(T);
 
