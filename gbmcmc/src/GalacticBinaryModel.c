@@ -151,7 +151,7 @@ void alloc_data(struct Data **data_vec, struct Flags *flags)
   }
 }
 
-void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
+void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode)
 {
   int ic;
   int NC = chain->NC;
@@ -187,30 +187,30 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
     *seed = (long)gsl_rng_get(chain->r[ic]);
   }
   
-  chain->likelihoodFile = fopen("chains/log_likelihood_chain.dat","w");
+  chain->likelihoodFile = fopen("chains/log_likelihood_chain.dat",mode);
   
-  chain->temperatureFile = fopen("chains/temperature_chain.dat","w");
+  chain->temperatureFile = fopen("chains/temperature_chain.dat",mode);
   
   chain->chainFile = malloc(NC*sizeof(FILE *));
-  chain->chainFile[0] = fopen("chains/model_chain.dat.0","w");
+  chain->chainFile[0] = fopen("chains/model_chain.dat.0",mode);
 
   chain->parameterFile = malloc(NC*sizeof(FILE *));
-  chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0","w");
+  chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0",mode);
 
   chain->dimensionFile = malloc(flags->DMAX*sizeof(FILE *));
   for(int i=0; i<flags->DMAX; i++)
   {
     sprintf(filename,"chains/dimension_chain.dat.%i",i);
-    chain->dimensionFile[i] = fopen(filename,"w");
+    chain->dimensionFile[i] = fopen(filename,mode);
   }
   
   chain->noiseFile = malloc(NC*sizeof(FILE *));
-  chain->noiseFile[0] = fopen("chains/noise_chain.dat.0","w");
+  chain->noiseFile[0] = fopen("chains/noise_chain.dat.0",mode);
 
   if(flags->calibration)
   {
     chain->calibrationFile = malloc(NC*sizeof(FILE *));
-    chain->calibrationFile[0] = fopen("chains/calibration_chain.dat.0","w");
+    chain->calibrationFile[0] = fopen("chains/calibration_chain.dat.0",mode);
   }
 
   if(flags->verbose)
@@ -218,13 +218,13 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed)
     for(ic=1; ic<NC; ic++)
     {
       sprintf(filename,"chains/parameter_chain.dat.%i",ic);
-      chain->parameterFile[ic] = fopen(filename,"w");
+      chain->parameterFile[ic] = fopen(filename,mode);
 
       sprintf(filename,"chains/model_chain.dat.%i",ic);
-      chain->chainFile[ic] = fopen(filename,"w");
+      chain->chainFile[ic] = fopen(filename,mode);
 
       sprintf(filename,"chains/noise_chain.dat.%i",ic);
-      chain->noiseFile[ic] = fopen(filename,"w");
+      chain->noiseFile[ic] = fopen(filename,mode);
     }
   }
 }
