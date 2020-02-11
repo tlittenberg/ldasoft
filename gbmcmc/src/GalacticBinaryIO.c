@@ -33,6 +33,7 @@
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryModel.h"
+#include "GalacticBinaryWaveform.h"
 #include "gitversion.h"
 
 #define FIXME 0
@@ -277,14 +278,13 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->update      = 0;
   flags->updateCov   = 0;
   flags->match       = 0;
+  flags->resume      = 0;
   flags->DMAX        = DMAX_default;
   flags->NMCMC       = 100000;
   flags->NBURN       = 100000;
   chain->NP          = 9; //number of proposals
   chain->NC          = 12;//number of chains
   
-  
-
   for(int i=0; i<Nmax; i++)
   {
     /*
@@ -352,6 +352,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"help",        no_argument, 0,'h'},
     {"verbose",     no_argument, 0,'v'},
     {"debug",       no_argument, 0,'d'},
+    {"resume",      no_argument, 0, 0 },
     {"zero-noise",  no_argument, 0, 0 },
     {"conf-noise",  no_argument, 0, 0 },
     {"frac-freq",   no_argument, 0, 0 },
@@ -405,6 +406,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
         if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
+        if(strcmp("resume",      long_options[long_index].name) == 0)
+          flags->resume=1;
         if(strcmp("sources",     long_options[long_index].name) == 0)
         {
           data_ptr->DMAX    = atoi(optarg);
@@ -605,6 +608,8 @@ void save_chain_state(struct Data **data, struct Model ***model, struct Chain *c
 
     int n = chain->index[ic];
     
+    fprintf(stateFile,"%.12g\n",chain->logLmax);
+    
     for(int j=0; j<flags->NDATA; j++)
     {
       print_chain_state(data[j], chain, model[n][j], flags, stateFile, step);
@@ -624,16 +629,19 @@ void save_chain_state(struct Data **data, struct Model ***model, struct Chain *c
   }
 }
 
-void restore_chain_state(struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step)
+void restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step)
 {
   char filename[128];
   FILE *stateFile;
+  chain->logLmax=0.0;
   for(int ic=0; ic<chain->NC; ic++)
   {
     sprintf(filename,"checkpoint/chain_state_%i.dat",ic);
     stateFile = fopen(filename,"r");
 
     int n = chain->index[ic];
+    
+    fscanf(stateFile,"%lg",&chain->logLmax);
     
     for(int j=0; j<flags->NDATA; j++)
     {
@@ -645,8 +653,20 @@ void restore_chain_state(struct Data **data, struct Model ***model, struct Chain
       int D = model[n][j]->Nlive;
       for(int i=0; i<D; i++)
       {
-        scan_source_params(data[j],model[n][j]->source[i],stateFile);
+        scan_source_params(data[j],model[n][j]->source[i], stateFile);
+        galactic_binary_fisher(orbit, data[j], model[n][j]->source[i], data[j]->noise[0]);
       }
+      
+      generate_noise_model(data[j], model[n][j]);
+      generate_signal_model(orbit, data[j], model[n][j], -1);
+      
+      if(!flags->prior)
+      {
+        model[n][j]->logL = gaussian_log_likelihood(orbit, data[j], model[n][j]);
+        model[n][j]->logLnorm = gaussian_log_likelihood_constant_norm(data[j], model[n][j]);
+      }
+      else model[n][j]->logL = model[n][j]->logLnorm = 0.0;
+
     }
     
     fclose(stateFile);
@@ -806,9 +826,8 @@ void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr,
 
 void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *step)
 {
-  double logL;
   fscanf(fptr, "%i ",step);
-  fscanf(fptr, "%lg ",&logL);
+  fscanf(fptr, "%lg %lg ", &model->logL, &model->logLnorm);
 
   for(int i=0; i<model->NT; i++)
   {

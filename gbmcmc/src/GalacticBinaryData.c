@@ -875,3 +875,78 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
     fprintf(stdout,"================================================\n\n");
 }
 
+void GalacticBinaryCleanEdges(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
+{
+  struct Data *data = data_vec[0];
+  
+  //parse file
+  FILE *catalog_file = fopen(flags->catalogFile,"r");
+  
+  //count number of sources
+  
+  struct Source *catalog_entry = NULL;
+  catalog_entry = malloc(sizeof(struct Source));
+  alloc_source(catalog_entry, data->N, data->Nchannel, data->NP);
+
+  
+  int Nsource = 0;
+  while(!feof(catalog_file))
+  {
+      scan_source_params(data, catalog_entry, catalog_file);
+      Nsource++;
+  }
+  Nsource--;
+  rewind(catalog_file);
+
+  
+  //allocate model & source structures
+  struct Model *catalog = malloc(sizeof(struct Model));
+  alloc_model(catalog, Nsource, data->N, data->Nchannel, data->NP, data->NT);
+
+  catalog->Nlive = 0;
+  for(int n=0; n<Nsource; n++)
+  {
+      scan_source_params(data, catalog_entry, catalog_file);
+      if(catalog_entry->params[0] < data->qmin+data->qpad || catalog_entry->params[0] > data->qmax-data->qpad)
+      {
+          copy_source(catalog_entry, catalog->source[catalog->Nlive]);
+          catalog->Nlive++;
+      }
+  }
+
+  
+  //for binaries in padded region, compute model
+  generate_signal_model(orbit, data, catalog, -1);
+  
+  //remove from data
+  for(int n=0; n<catalog->NT; n++)
+  {
+      
+      for(int i=0; i<data->N*2; i++)
+      {
+          data->tdi[n]->X[i] -= catalog->tdi[n]->X[i];
+          data->tdi[n]->A[i] -= catalog->tdi[n]->A[i];
+          data->tdi[n]->E[i] -= catalog->tdi[n]->E[i];
+      }
+  }
+  
+  char filename[128];
+  sprintf(filename,"data/power_residual_%i_%i.dat",0,0);
+  FILE *fptr=fopen(filename,"w");
+  
+  for(int i=0; i<data->N; i++)
+  {
+      double f = (double)(i+data->qmin)/data->T;
+      fprintf(fptr,"%.12g %lg %lg ",
+              f,
+              data->tdi[0]->A[2*i]*data->tdi[0]->A[2*i]+data->tdi[0]->A[2*i+1]*data->tdi[0]->A[2*i+1],
+              data->tdi[0]->E[2*i]*data->tdi[0]->E[2*i]+data->tdi[0]->E[2*i+1]*data->tdi[0]->E[2*i+1]);
+      fprintf(fptr,"\n");
+  }
+  fclose(fptr);
+
+  //clean up after yourself
+  fclose(catalog_file);
+  free_model(catalog);
+  free_source(catalog_entry);
+}

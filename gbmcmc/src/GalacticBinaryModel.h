@@ -40,7 +40,7 @@ void map_array_to_params(struct Source *source, double *params, double T);
 
 void alloc_data(struct Data **data_vec, struct Flags *flags);
 
-void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed);
+void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode);
 void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, int NT);
 void alloc_noise(struct Noise *noise, int NFFT);
 void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel);

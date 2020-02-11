@@ -32,6 +32,7 @@ int checkfile(char filename[]);
 
 void save_chain_state(struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step);
 void print_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int step);
+void restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step);
 void scan_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int *step);\
 void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int step);
 void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *step);
