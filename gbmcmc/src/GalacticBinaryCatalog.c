@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
   //selection criteria for catalog entries
     int matchFlag;          //track if sample matches any entries
     double Match;     //match between pairs of waveforms
-    double tolerance = 0.5; //tolerance on match to be considered associated
+    double tolerance = data->pmax; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
   
 
@@ -532,6 +532,7 @@ static void print_usage_catalog()
   fprintf(stdout,"       --orbit       : orbit ephemerides file (2.5 GM MLDC)\n");
   fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
   fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
+  fprintf(stdout,"       --match       : match threshold for waveforms (0.8) \n");
   fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
@@ -558,7 +559,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
   flags->NT          = 1;
   flags->NDATA       = 1;
   flags->DMAX        = DMAX_default;
-
+  data[0]->pmax      = 0.8;
 
   for(int i=0; i<Nmax; i++)
   {
@@ -602,6 +603,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     {"fmin",      required_argument, 0, 0},
     {"links",     required_argument, 0, 0},
     {"chain-file",required_argument, 0, 0},
+    {"match",     required_argument, 0, 0},
 
     /* These options don’t set a flag.
      We distinguish them by their indices. */
@@ -647,7 +649,10 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
             checkfile(optarg);
             sprintf(data_ptr->fileName,"%s",optarg);
         }
-
+        if(strcmp("match", long_options[long_index].name) == 0)
+        {
+          data_ptr->pmax = atof(optarg);
+        }
         if(strcmp("links",long_options[long_index].name) == 0)
         {
           int Nlinks = (int)atoi(optarg);
