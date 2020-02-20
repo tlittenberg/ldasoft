@@ -338,7 +338,19 @@ int main(int argc, char *argv[])
       fprintf(out,"\n");
        fclose(out);
       
-      
+      sprintf(filename, "%s/%s_waveform.dat", outdir,entry->name);
+      out = fopen( filename, "w");
+        
+      for(int j=0; j<data->N; j++)
+      {
+        double f = (double)(j+data->qmin)/data->T;
+        fprintf(out,"%.12g %lg %lg %lg %lg",f,entry->source[i_med]->tdi->A[2*j],entry->source[i_med]->tdi->A[2*j+1],
+        entry->source[i_med]->tdi->E[2*j],entry->source[i_med]->tdi->E[2*j+1]);
+        fprintf(out,"\n");
+       }
+
+      fclose(out);
+
     //evidence for source related to number of visits in the chain
     entry->evidence = (double)entry->I/(double)IMAX;
     
