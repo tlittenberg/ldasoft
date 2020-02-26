@@ -593,7 +593,7 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
   if(n<0 || n>=data->N) return -INFINITY;
   
   double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = data->noise[0]->SnA[n];
+  double sn = model->noise[0]->SnA[n];
   double sqT = sqrt(data->T);
   
   //Sinc spreading

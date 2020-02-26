@@ -120,7 +120,8 @@ int main(int argc, char *argv[])
     double Match;     //match between pairs of waveforms
     double tolerance = data->pmax; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
-  
+  int downsample = 100;
+
 
   //Book-keeping
   int DMAX = data->DMAX; //maximum number of sources per chain sample (needs to be read in from above)
@@ -180,7 +181,7 @@ int main(int argc, char *argv[])
       
       //check frequencies
       double q_sample = sample->f0 * data->T;
-      if(q_sample > data->qmin && q_sample < data->qmax)
+      if(q_sample > data->qmin+data->qpad && q_sample < data->qmax-data->qpad)
       {
           //add new source to catalog
           create_new_source(catalog, sample, noise, IMAX, data->N, sample->tdi->Nchannel, data->NP);
@@ -216,7 +217,9 @@ int main(int argc, char *argv[])
         
         double q_sample = sample->f0 * data->T;
 
-        if(q_sample < data->qmin || q_sample > data->qmax) continue;
+        if(q_sample < data->qmin+data->qpad || q_sample > data->qmax-data->qpad) continue;
+        
+        if(i%downsample!=0) continue;
         
       //calculate match of sample and all entries
       matchFlag = 0;
@@ -269,12 +272,13 @@ int main(int argc, char *argv[])
   double weight_threshold = 0.5; //what fraction of samples must an entry have to count?
 
   int detections = 0;            //number of entries that meet the weight threshold
-  int detection_index[NMAX];     //list of entry indicies for detected sources
+    int *detection_index = malloc(NMAX*sizeof(int));//detection_index[NMAX];     //list of entry indicies for detected sources
 
+    
   for(int n=0; n<catalog->N; n++)
   {
 
-    weight = (double)catalog->entry[n]->I/(double)IMAX;
+    weight = (double)catalog->entry[n]->I/(double)(IMAX/downsample);
     if(weight > weight_threshold)
     {
       //record index of catalog entry for detected source
@@ -420,7 +424,8 @@ int main(int argc, char *argv[])
     sprintf(filename, "%s/%s_power_reconstruction.dat", outdir,entry->name);
     out = fopen( filename, "w");
 
-    for(int j=0; j<data->N; j++)
+
+      for(int j=0; j<data->N; j++)
     {
       double f = (double)(j+data->qmin)/data->T;
       
@@ -531,6 +536,7 @@ static void print_usage_catalog()
   fprintf(stdout,"  -h | --help        : print help message and exit         \n");
   fprintf(stdout,"       --orbit       : orbit ephemerides file (2.5 GM MLDC)\n");
   fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
+  fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
   fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
   fprintf(stdout,"       --match       : match threshold for waveforms (0.8) \n");
   fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
@@ -596,6 +602,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
   {
     /* These options set a flag. */
     {"samples",   required_argument, 0, 0},
+    {"padding",   required_argument, 0, 0},
     {"duration",  required_argument, 0, 0},
     {"segments",  required_argument, 0, 0},
     {"sources",   required_argument, 0, 0},
@@ -626,6 +633,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
 
       case 0:
         if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
+        if(strcmp("padding",     long_options[long_index].name) == 0) data_ptr->qpad    = atoi(optarg);
         if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
         if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin    = (double)atof(optarg);
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
@@ -682,6 +690,11 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
         exit(EXIT_FAILURE);
     }
   }
+    
+    //pad data
+    data[0]->N += 2*data[0]->qpad;
+    data[0]->fmin -= data[0]->qpad/data[0]->T;
+
 
   // copy command line args to other data structures
   for(int i=0; i<flags->NDATA; i++)
@@ -693,6 +706,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
       data[i]->tgap[j] = data[0]->tgap[0];
     }
     data[i]->T        = data[0]->T;
+      data[i]->qpad     = data[0]->qpad;
     data[i]->N        = data[0]->N;
     data[i]->NT       = data[0]->N;
     data[i]->NP       = data[0]->NP;
