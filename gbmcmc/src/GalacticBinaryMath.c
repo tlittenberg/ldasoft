@@ -372,7 +372,7 @@ void cholesky_decomp(double **A, double **L, int N)
   for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLmatrix,i,j,A[i][j]);
   
   //make the magic happen
-  gsl_linalg_cholesky_decomp1(GSLmatrix);
+  gsl_linalg_cholesky_decomp(GSLmatrix);
   
   //copy cholesky decomposition into output matrix
   for(i=0; i<N; i++) for(j=0; j<N; j++)  L[i][j] = gsl_matrix_get(GSLmatrix,i,j);
