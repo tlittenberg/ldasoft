@@ -344,14 +344,54 @@ int main(int argc, char *argv[])
       
       sprintf(filename, "%s/%s_waveform.dat", outdir,entry->name);
       out = fopen( filename, "w");
-        
-      for(int j=0; j<data->N; j++)
+      
+      
+      
+      
+      
+      struct Source *b=entry->source[0];
+      int N = b->tdi->N;
+      int NFFT = 2*N;
+      double *b_A = malloc(NFFT*sizeof(double));
+      double *b_E = malloc(NFFT*sizeof(double));
+      for(int i=0; i<NFFT; i++)
       {
-        double f = (double)(j+data->qmin)/data->T;
-        fprintf(out,"%.12g %lg %lg %lg %lg",f,entry->source[i_med]->tdi->A[2*j],entry->source[i_med]->tdi->A[2*j+1],
-        entry->source[i_med]->tdi->E[2*j],entry->source[i_med]->tdi->E[2*j+1]);
-        fprintf(out,"\n");
-       }
+        b_A[i] = 0.0;
+        b_E[i] = 0.0;
+      }
+      int qmin = b->qmin - b->imin;
+
+      for(int i=0; i<b->BW; i++)
+      {
+        int j = i+b->qmin-qmin;
+        if(j>-1 && j<N)
+        {
+          int i_re = 2*i;
+          int i_im = i_re+1;
+          int j_re = 2*j;
+          int j_im = j_re+1;
+
+          b_A[j_re] = b->tdi->A[i_re];
+          b_A[j_im] = b->tdi->A[i_im];
+          b_E[j_re] = b->tdi->E[i_re];
+          b_E[j_im] = b->tdi->E[i_im];
+          double f = (double)(j+data->qmin)/data->T;
+          fprintf(out,"%.12g %lg %lg %lg %lg",f,b_A[j_re],b_A[j_im],b_E[j_re],b_E[j_im]);
+          fprintf(out,"\n");
+         }//check that index is in range
+       }//loop over waveform bins
+
+        
+      
+      
+      
+      
+//      for(int j=0; j<data->N; j++)
+//      {
+//        double f = (double)(j+data->qmin)/data->T;
+//        fprintf(out,"%.12g %lg %lg %lg %lg",f,b_A[2*j],b_A[2*j+1],b_E[2*j],b_E[2*j+1]);
+//        fprintf(out,"\n");
+//       }
 
       fclose(out);
 
