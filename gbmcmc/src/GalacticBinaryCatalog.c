@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     double Match;     //match between pairs of waveforms
     double tolerance = data->pmax; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
-  int downsample = 100;
+  int downsample = 10;
 
 
   //Book-keeping
@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
       fclose(out);
 
     //evidence for source related to number of visits in the chain
-    entry->evidence = (double)entry->I/(double)IMAX;
+    entry->evidence = (double)entry->I/(double)(IMAX/downsample);
     
     fprintf(catalogFile,"%s %lg %lg\n",entry->name, entry->SNR, entry->evidence);
   }

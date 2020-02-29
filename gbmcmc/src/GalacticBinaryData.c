@@ -907,7 +907,19 @@ void GalacticBinaryCleanEdges(struct Data **data_vec, struct Orbit *orbit, struc
   for(int n=0; n<Nsource; n++)
   {
       scan_source_params(data, catalog_entry, catalog_file);
-      if(catalog_entry->params[0] < data->qmin+data->qpad || catalog_entry->params[0] > data->qmax-data->qpad)
+    
+      //find where the source fits in the measurement band
+      galactic_binary_alignment(orbit, data, catalog_entry);
+      double q0   = catalog_entry->params[0];
+      double qmax = catalog_entry->params[0] + catalog_entry->BW/2;
+      double qmin = catalog_entry->params[0] - catalog_entry->BW/2;
+    
+    
+      /*
+       only substract tails of sources outside of window that leak in.
+       this means we are redundantly fitting sources in the overlap region, but that's better than fitting bad residuals
+      */
+      if( (q0 < data->qmin && qmax > data->qmin) || (q0 > data->qmax && qmin < data->qmax) )
       {
           copy_source(catalog_entry, catalog->source[catalog->Nlive]);
           catalog->Nlive++;
