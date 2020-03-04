@@ -577,7 +577,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   {
     source_y->costheta = data->inj->costheta;
     source_y->phi      = data->inj->phi;
-    map_params_to_array(source_y, source_y->params, data->T);
   }
 
   //hold frequencies fixed to injected value
@@ -585,7 +584,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
   {
     source_y->f0   = data->inj->f0;
     source_y->dfdt = data->inj->dfdt;
-    map_params_to_array(source_y, source_y->params, data->T);
   }
 
   //call associated proposal density functions
