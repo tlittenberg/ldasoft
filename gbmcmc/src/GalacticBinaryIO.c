@@ -353,7 +353,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"verbose",     no_argument, 0,'v'},
     {"debug",       no_argument, 0,'d'},
     {"resume",      no_argument, 0, 0 },
-    {"zero-noise",  no_argument, 0, 0 },
+    {"sim-noise",   no_argument, 0, 0 },
     {"conf-noise",  no_argument, 0, 0 },
     {"frac-freq",   no_argument, 0, 0 },
     {"fix-sky",     no_argument, 0, 0 },
