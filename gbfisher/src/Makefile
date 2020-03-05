@@ -3,10 +3,10 @@
 CC = gcc
 #CCFLAGS = -fopenmp
 
-LIBS  = gsl gslcblas m fftw3 gbmcmc
+LIBS  = gsl gslcblas m gbmcmc # fftw3
 LDFLAGS = -L../../gbmcmc/src
 #CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -Werror
-CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 
+CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
@@ -22,7 +22,7 @@ all: $(OBJS) Confusion_Fit Bright_Remove Galaxy OrbitFile Setup Fisher_Galaxy Fu
 arrays.o : arrays.c
 	$(CC) $(CCFLAGS) -c arrays.c
 
-Subroutines.o : Subroutines.c Detector.h 
+Subroutines.o : Subroutines.c Detector.h
 	$(CC) $(CCFLAGS) -c Subroutines.c
 
 Confusion_Fit : Confusion_Fit.c Subroutines.o arrays.o
@@ -40,7 +40,7 @@ Galaxy : Galaxy.c Subroutines.o arrays.o
 OrbitFile : OrbitFile.c Subroutines.o arrays.o
 	$(CC) $(CCFLAGS) -o OrbitFile OrbitFile.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LDFLAGS) $(LIBS:%=-l%)
 
-Setup : Setup.c Detector.h 
+Setup : Setup.c Detector.h
 	$(CC) $(CCFLAGS) -o Setup Setup.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LDFLAGS) $(LIBS:%=-l%)
 
 Fisher_Galaxy : Fisher_Galaxy.c Subroutines.o arrays.o
