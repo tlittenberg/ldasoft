@@ -286,11 +286,11 @@ int main(int argc,char **argv)
   //spline_fit(0, divs, imin, imax, XP, Xnoise, Xconf, TOBS, fstar, L);
   //spline_fit(1, divs, imin, imax, AEP, Anoise, Aconf, TOBS, fstar, L);
   //confusion_mcmc(AEP, Anoise, Aconf, imin, imax, TOBS);
-  confusion_mcmc(AEP, Anoise, Aconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
+  //confusion_mcmc(AEP, Anoise, Aconf, (int)floor(0.0001*TOBS), (int)floor(0.006*TOBS), TOBS);
 
   
   medianX(imin, imax, fstar, L, XP, Xnoise, Xconf, TOBS);
-  //medianAE(imin, imax, fstar, L, AEP, Anoise, Aconf, TOBS);
+  medianAE(imin, imax, fstar, L, AEP, Anoise, Aconf, TOBS);
   
   
   Outfile = fopen("Confusion_XAE_1.dat","w");

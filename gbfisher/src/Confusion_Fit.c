@@ -117,11 +117,11 @@ int main(int argc,char **argv)
   if(imax > NFFT/2-divs/2-1) imax =  NFFT/2-divs/2-1;
   
   //spline_fit(0, divs, imin, imax, XP, Xnoise, Xconf, TOBS, fstar, L);
-  spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, fstar, L);
+  //spline_fit(1, divs, imin, imax, AEP, AEnoise, AEconf, TOBS, fstar, L);
 
   
   medianX(imin, imax, fstar, L, XP, Xnoise, Xconf, TOBS);
-  //medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf, TOBS);
+  medianAE(imin, imax, fstar, L, AEP, AEnoise, AEconf, TOBS);
   
   Outfile = fopen("Confusion_XAE_0.dat","w");
   for(i=imin; i<= imax; i++)
