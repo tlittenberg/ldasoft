@@ -195,9 +195,10 @@ void print_usage()
 
   //Chain
   fprintf(stdout,"       ========== Chains ========== \n");
-  fprintf(stdout,"       --steps       : number of mcmc steps (100000)        \n");
+  fprintf(stdout,"       --steps       : number of mcmc steps (100000)       \n");
   fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
   fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
+  fprintf(stdout,"       --no-burnin   : skip burn in steps                  \n");
   fprintf(stdout,"\n");
 
   //Model
@@ -267,6 +268,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->snrPrior    = 0;
   flags->emPrior     = 0;
   flags->cheat       = 0;
+  flags->burnin      = 1;
   flags->debug       = 0;
   flags->detached    = 0;
   flags->strainData  = 0;
@@ -365,6 +367,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     {"detached",    no_argument, 0, 0 },
     {"prior",       no_argument, 0, 0 },
     {"cheat",       no_argument, 0, 0 },
+    {"no-burnin",   no_argument, 0, 0 },
     {"no-rj",       no_argument, 0, 0 },
     {"fit-gap",     no_argument, 0, 0 },
     {"calibration", no_argument, 0, 0 },
@@ -403,6 +406,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
         if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
         if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
+        if(strcmp("no-burnin",   long_options[long_index].name) == 0) flags->burnin     = 0;
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
         if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
@@ -517,7 +521,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         exit(EXIT_FAILURE);
     }
   }
-  if(flags->cheat) flags->NBURN = 0;
+  if(flags->cheat || !flags->burnin) flags->NBURN = 0;
 
   //pad data
   data[0]->N += 2*data[0]->qpad;
