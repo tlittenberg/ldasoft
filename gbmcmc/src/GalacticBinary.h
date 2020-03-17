@@ -87,6 +87,7 @@ struct Data
 struct Flags
 {
   int verbose;
+  int quiet;
   int NMCMC; //number of MCMC steps
   int NBURN; //number of Burn-in steps
   int NINJ; //number of frequency segments;
