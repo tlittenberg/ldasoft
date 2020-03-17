@@ -319,16 +319,20 @@ int main(int argc, char *argv[])
     }
     
     //store reconstructed waveform
-    print_waveform_draw(data, model[chain->index[0]], flags);
+    if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
     
     //update run status
     if(mcmc%data[FIXME]->downsample==0)
     {
-      for(int i=0; i<flags->NDATA; i++)
+      
+      if(!flags->quiet)
       {
-        print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
-        fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
-        print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
+        for(int i=0; i<flags->NDATA; i++)
+        {
+          print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
+          fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
+          print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
+        }
       }
       
       //save chain state to resume sampler

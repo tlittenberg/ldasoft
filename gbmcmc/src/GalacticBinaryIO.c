@@ -107,6 +107,8 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
   fprintf(fptr,"================= RUN FLAGS ================\n");
   if(flags->verbose)  fprintf(fptr,"  Verbose flag ........ ENABLED \n");
   else                fprintf(fptr,"  Verbose flag ........ DISABLED\n");
+  if(flags->quiet)    fprintf(fptr,"  Quiet flag .......... ENABLED \n");
+  else                fprintf(fptr,"  Quiet flag .......... DISABLED\n");
   if(flags->NINJ>0)
   {
     fprintf(fptr,"  Injected sources..... %i\n",flags->NINJ);
@@ -165,6 +167,7 @@ void print_usage()
   fprintf(stdout,"OPTIONAL:\n");
   fprintf(stdout,"  -h | --help        : print help message and exit         \n");
   fprintf(stdout,"  -v | --verbose     : enable verbose output               \n");
+  fprintf(stdout,"  -q | --quiet       : restrict output                     \n");
   fprintf(stdout,"  -d | --debug       : leaner settings for quick running   \n");
   fprintf(stdout,"\n");
 
@@ -258,6 +261,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
   flags->calibration = 0;
   flags->rj          = 1;
   flags->verbose     = 0;
+  flags->quiet       = 0;
   flags->NDATA       = 1;
   flags->NINJ        = 0;
   flags->simNoise    = 0;
@@ -353,6 +357,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
      We distinguish them by their indices. */
     {"help",        no_argument, 0,'h'},
     {"verbose",     no_argument, 0,'v'},
+    {"quiet",       no_argument, 0,'q'},
     {"debug",       no_argument, 0,'d'},
     {"resume",      no_argument, 0, 0 },
     {"sim-noise",   no_argument, 0, 0 },
@@ -517,12 +522,20 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         break;
       case 'v' : flags->verbose = 1;
         break;
+      case 'q' : flags->quiet = 1;
+        break;
       default: print_usage();
         exit(EXIT_FAILURE);
     }
   }
   if(flags->cheat || !flags->burnin) flags->NBURN = 0;
 
+  if(flags->verbose && flags->quiet)
+  {
+    fprintf(stderr,"--verbose and --quiet flags are in conflict\n");
+    exit(1);
+  }
+  
   //pad data
   data[0]->N += 2*data[0]->qpad;
   data[0]->fmin -= data[0]->qpad/data[0]->T;
@@ -681,27 +694,31 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
 {
   int i,j,n,ic;
   
-  //Always print logL & temperature chains
-  fprintf(chain->likelihoodFile,  "%i ",step);
-  fprintf(chain->temperatureFile, "%i ",step);
-  double logL;
-  for(ic=0; ic<chain->NC; ic++)
+  //Print logL & temperature chains
+  if(!flags->quiet)
   {
-    n = chain->index[ic];
-    logL=0.0;
-    for(i=0; i<flags->NDATA; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
-    fprintf(chain->likelihoodFile,  "%lg ",logL);
-    fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
+    fprintf(chain->likelihoodFile,  "%i ",step);
+    fprintf(chain->temperatureFile, "%i ",step);
+    double logL;
+    for(ic=0; ic<chain->NC; ic++)
+    {
+      n = chain->index[ic];
+      logL=0.0;
+      for(i=0; i<flags->NDATA; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
+      fprintf(chain->likelihoodFile,  "%lg ",logL);
+      fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
+    }
+    fprintf(chain->likelihoodFile, "\n");
+    fprintf(chain->temperatureFile,"\n");
   }
-  fprintf(chain->likelihoodFile, "\n");
-  fprintf(chain->temperatureFile,"\n");
   
-  //Always print cold chain
+  //Print cold chains
   n = chain->index[0];
   for(i=0; i<flags->NDATA; i++)
   {
     print_chain_state(data, chain, model[n][i], flags, chain->chainFile[0], step);
-    print_noise_state(data, model[n][i], chain->noiseFile[0], step);
+    if(!flags->quiet || step>0)
+      print_noise_state(data, model[n][i], chain->noiseFile[0], step);
     if(flags->calibration)
       print_calibration_state(data, model[n][i], chain->calibrationFile[0], step);
   }
@@ -718,9 +735,12 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
     int D = model[n][j]->Nlive;
     for(i=0; i<D; i++)
     {
-      print_source_params(data,model[n][j]->source[i],chain->parameterFile[0]);
-      fprintf(chain->parameterFile[0],"\n");
+      if(!flags->quiet || step>0)
+      {
+        print_source_params(data,model[n][j]->source[i],chain->parameterFile[0]);
+        fprintf(chain->parameterFile[0],"\n");
         if(flags->verbose)fflush(chain->parameterFile[0]);
+      }
       if(step>0)
       {
         print_source_params(data,model[n][j]->source[i],chain->dimensionFile[D]);
