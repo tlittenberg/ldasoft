@@ -46,7 +46,7 @@
 
 /* ============================  MAIN PROGRAM  ============================ */
 static void print_usage_catalog();
-static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax);
+static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog);
 
 int main(int argc, char *argv[])
 {
@@ -56,13 +56,14 @@ int main(int argc, char *argv[])
   /* ************************************************************** */
 
     int NTEMP = 1;   //needed size of data structure
-
     
     /* Allocate data structures */
     struct Flags *flags = malloc(sizeof(struct Flags));
     struct Orbit *orbit = malloc(sizeof(struct Orbit));
     struct Data  **data_tmp = malloc(sizeof(struct Data*)*NTEMP); //data[NF]
-    
+    struct Data *data_old = malloc(sizeof(struct Data));
+
+    double Tcatalog; //duration of previous analysis (for source heritage)
     
     /* Parse command line and set defaults/flags */
     for(int i=0; i<NTEMP; i++)
@@ -70,11 +71,15 @@ int main(int argc, char *argv[])
         data_tmp[i] = malloc(sizeof(struct Data));
         data_tmp[i]->t0   = malloc( NTEMP * sizeof(double) );
     }
-    parse_catalog(argc,argv,data_tmp,orbit,flags,NTEMP);
+    parse_catalog(argc,argv,data_tmp,orbit,flags,NTEMP,&Tcatalog);
     alloc_data(data_tmp, flags);
     struct Data *data  = data_tmp[0];
     data->qmin = (int)(data->fmin*data->T);
     data->qmax = data->qmin + data->N;
+    
+    data_old->T    = Tcatalog;
+    data_old->qmin = (int)(data->fmin*data_old->T);
+    data_old->qmax = data_old->qmin + data->N;
   
     //File containing chain samples
     FILE *chain_file = fopen(data->fileName,"r");
@@ -209,7 +214,7 @@ int main(int argc, char *argv[])
         //parse source parameters
         scan_source_params(data, sample, chain_file);
 
-        //calculate waveform model of sample
+        //find where the source fits in the measurement band
         galactic_binary_alignment(orbit, data, sample);
 
         //calculate waveform model of sample
@@ -402,6 +407,85 @@ int main(int argc, char *argv[])
   }
   fprintf(stdout,"\n");
   
+
+    /* *************************************************************** */
+    /*           Check sources against previous catalog                */
+    /* *************************************************************** */
+    
+    //parse file
+    FILE *old_catalog_file = fopen(flags->catalogFile,"r");
+    
+    //count number of sources
+    
+    struct Source *old_catalog_entry = NULL;
+    old_catalog_entry = malloc(sizeof(struct Source));
+    alloc_source(old_catalog_entry, data->N, data->Nchannel, data->NP);
+
+    struct Source *new_catalog_entry = NULL;
+    new_catalog_entry = malloc(sizeof(struct Source));
+    alloc_source(new_catalog_entry, data->N, data->Nchannel, data->NP);
+
+    
+    int Nsource = 0;
+    while(!feof(old_catalog_file))
+    {
+        scan_source_params(data, old_catalog_entry, old_catalog_file);
+        Nsource++;
+    }
+    Nsource--;
+    rewind(old_catalog_file);
+
+    sprintf(filename,"%s/history.dat",outdir);
+    FILE *historyFile = fopen(filename,"w");
+   for(int i=0; i<Nsource; i++)
+    {
+        scan_source_params(data_old, old_catalog_entry, old_catalog_file);
+        
+        //find where the source fits in the measurement band
+        galactic_binary_alignment(orbit, data_old, old_catalog_entry);
+
+        //find central bin of catalog event for current data
+        double q_old_catalog_entry = old_catalog_entry->f0 * data_old->T;
+        
+        //check that source lives in current data segment (allow sources in padded region)
+        if(q_old_catalog_entry < data_old->qmin || q_old_catalog_entry > data_old->qmax) continue;
+        
+        //calculate waveform model of sample at Tcatalog
+        galactic_binary(orbit, data->format, data_old->T, data->t0[0], old_catalog_entry->params, data->NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
+
+        //check against new catalog
+        for(int d=0; d<detections; d++)
+        {
+            int n = detection_index[d];
+            entry = catalog->entry[n];
+
+            double q_new_catalog_entry = entry->source[entry->i]->f0 * data_old->T;
+            
+            //check that the sources are close enough to bother looking
+            if(fabs(q_new_catalog_entry - q_old_catalog_entry) > dqmax) continue;
+            
+            copy_source(entry->source[entry->i], new_catalog_entry);
+
+            //re-align where the source fits in the (old) measurement band
+            map_params_to_array(new_catalog_entry, new_catalog_entry->params, data_old->T);
+            galactic_binary_alignment(orbit, data_old, new_catalog_entry);
+
+            //calculate waveform of entry at Tcatalog
+            galactic_binary(orbit, data->format, data_old->T, data->t0[0], new_catalog_entry->params, data->NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
+
+            
+            Match = waveform_match(old_catalog_entry,new_catalog_entry,noise);
+            
+            if(Match>0.5)
+            {
+                sprintf(entry->parent,"GW%010li",(long)(old_catalog_entry->f0*1e10));
+                fprintf(historyFile,"%s %s\n",entry->parent,entry->name);
+            }
+
+        }
+    }
+
+
     
   /* *************************************************************** */
   /*           Save source detection parameters to file              */
@@ -594,6 +678,8 @@ static void print_usage_catalog()
   fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
+    fprintf(stdout,"       --catalog     : list of known sources               \n");
+    fprintf(stdout,"       --Tcatalog    : observing time of previous catalog  \n");
   fprintf(stdout,"--\n");
   fprintf(stdout,"EXAMPLE:\n");
   fprintf(stdout,"./gb_catalog --fmin 0.004 --samples 256 --duration 31457280 --sources 5 --chain-file chains/dimension_chain.dat.5");
@@ -602,7 +688,7 @@ static void print_usage_catalog()
   exit(EXIT_FAILURE);
 }
 
-static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax)
+static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog)
 {
   print_LISA_ASCII_art(stdout);
   print_version(stdout);
@@ -617,7 +703,9 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
   flags->NT          = 1;
   flags->NDATA       = 1;
   flags->DMAX        = DMAX_default;
+    flags->catalog     = 0;
   data[0]->pmax      = 0.8;
+    *Tcatalog          = -1.0;
 
   for(int i=0; i<Nmax; i++)
   {
@@ -663,6 +751,8 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     {"links",     required_argument, 0, 0},
     {"chain-file",required_argument, 0, 0},
     {"match",     required_argument, 0, 0},
+      {"catalog",   required_argument, 0, 0},
+      {"Tcatalog",   required_argument, 0, 0},
 
     /* These options don’t set a flag.
      We distinguish them by their indices. */
@@ -684,11 +774,12 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     {
 
       case 0:
-        if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
-        if(strcmp("padding",     long_options[long_index].name) == 0) data_ptr->qpad    = atoi(optarg);
-        if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
-        if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin    = (double)atof(optarg);
-        if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
+        if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N    = atoi(optarg);
+        if(strcmp("padding",     long_options[long_index].name) == 0) data_ptr->qpad = atoi(optarg);
+        if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T    = (double)atof(optarg);
+        if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin = (double)atof(optarg);
+        if(strcmp("Tcatalog",    long_options[long_index].name) == 0) *Tcatalog      = (double)atof(optarg);
+        if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP   = 9;
         if(strcmp("sources",     long_options[long_index].name) == 0)
         {
           data_ptr->DMAX    = atoi(optarg);
@@ -709,6 +800,12 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
             checkfile(optarg);
             sprintf(data_ptr->fileName,"%s",optarg);
         }
+            if(strcmp("catalog",long_options[long_index].name) == 0)
+            {
+                flags->catalog = 1;
+                sprintf(flags->catalogFile,"%s",optarg);
+            }
+                
         if(strcmp("match", long_options[long_index].name) == 0)
         {
           data_ptr->pmax = atof(optarg);
@@ -742,6 +839,14 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
         exit(EXIT_FAILURE);
     }
   }
+    
+    //check if catalog is supplied so is corresponding duration
+    if(flags->catalog && *Tcatalog<0)
+    {
+        fprintf(stderr,"Use of --catalog flag requires --Tcatalog argument\n");
+        fprintf(stderr,"Supply observing time for input catalog or remove the option\n");
+        exit(1);
+    }
     
     //pad data
     data[0]->N += 2*data[0]->qpad;
