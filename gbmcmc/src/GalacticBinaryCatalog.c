@@ -411,79 +411,81 @@ int main(int argc, char *argv[])
     /* *************************************************************** */
     /*           Check sources against previous catalog                */
     /* *************************************************************** */
-    
-    //parse file
-    FILE *old_catalog_file = fopen(flags->catalogFile,"r");
-    
-    //count number of sources
-    
-    struct Source *old_catalog_entry = NULL;
-    old_catalog_entry = malloc(sizeof(struct Source));
-    alloc_source(old_catalog_entry, data->N, data->Nchannel, data->NP);
-
-    struct Source *new_catalog_entry = NULL;
-    new_catalog_entry = malloc(sizeof(struct Source));
-    alloc_source(new_catalog_entry, data->N, data->Nchannel, data->NP);
-
-    
-    int Nsource = 0;
-    while(!feof(old_catalog_file))
-    {
-        scan_source_params(data, old_catalog_entry, old_catalog_file);
-        Nsource++;
-    }
-    Nsource--;
-    rewind(old_catalog_file);
-
-    sprintf(filename,"%s/history.dat",outdir);
-    FILE *historyFile = fopen(filename,"w");
-   for(int i=0; i<Nsource; i++)
-    {
-        scan_source_params(data_old, old_catalog_entry, old_catalog_file);
-        
-        //find where the source fits in the measurement band
-        galactic_binary_alignment(orbit, data_old, old_catalog_entry);
-
-        //find central bin of catalog event for current data
-        double q_old_catalog_entry = old_catalog_entry->f0 * data_old->T;
-        
-        //check that source lives in current data segment (allow sources in padded region)
-        if(q_old_catalog_entry < data_old->qmin || q_old_catalog_entry > data_old->qmax) continue;
-        
-        //calculate waveform model of sample at Tcatalog
-        galactic_binary(orbit, data->format, data_old->T, data->t0[0], old_catalog_entry->params, data->NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
-
-        //check against new catalog
-        for(int d=0; d<detections; d++)
+    if(flags->catalog)
         {
-            int n = detection_index[d];
-            entry = catalog->entry[n];
-
-            double q_new_catalog_entry = entry->source[entry->i]->f0 * data_old->T;
+            //parse file
+            FILE *old_catalog_file = fopen(flags->catalogFile,"r");
             
-            //check that the sources are close enough to bother looking
-            if(fabs(q_new_catalog_entry - q_old_catalog_entry) > dqmax) continue;
+            //count number of sources
             
-            copy_source(entry->source[entry->i], new_catalog_entry);
+            struct Source *old_catalog_entry = NULL;
+            old_catalog_entry = malloc(sizeof(struct Source));
+            alloc_source(old_catalog_entry, data->N, data->Nchannel, data->NP);
 
-            //re-align where the source fits in the (old) measurement band
-            map_params_to_array(new_catalog_entry, new_catalog_entry->params, data_old->T);
-            galactic_binary_alignment(orbit, data_old, new_catalog_entry);
-
-            //calculate waveform of entry at Tcatalog
-            galactic_binary(orbit, data->format, data_old->T, data->t0[0], new_catalog_entry->params, data->NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
+            struct Source *new_catalog_entry = NULL;
+            new_catalog_entry = malloc(sizeof(struct Source));
+            alloc_source(new_catalog_entry, data->N, data->Nchannel, data->NP);
 
             
-            Match = waveform_match(old_catalog_entry,new_catalog_entry,noise);
-            
-            if(Match>0.5)
+            int Nsource = 0;
+            while(!feof(old_catalog_file))
             {
-                sprintf(entry->parent,"GW%010li",(long)(old_catalog_entry->f0*1e10));
-                fprintf(historyFile,"%s %s\n",entry->parent,entry->name);
+                scan_source_params(data, old_catalog_entry, old_catalog_file);
+                Nsource++;
             }
+            Nsource--;
+            rewind(old_catalog_file);
 
+            sprintf(filename,"%s/history.dat",outdir);
+            FILE *historyFile = fopen(filename,"w");
+           for(int i=0; i<Nsource; i++)
+            {
+                scan_source_params(data_old, old_catalog_entry, old_catalog_file);
+                
+                //find where the source fits in the measurement band
+                galactic_binary_alignment(orbit, data_old, old_catalog_entry);
+
+                //find central bin of catalog event for current data
+                double q_old_catalog_entry = old_catalog_entry->f0 * data_old->T;
+                
+                //check that source lives in current data segment (allow sources in padded region)
+                if(q_old_catalog_entry < data_old->qmin || q_old_catalog_entry > data_old->qmax) continue;
+                
+                //calculate waveform model of sample at Tcatalog
+                galactic_binary(orbit, data->format, data_old->T, data->t0[0], old_catalog_entry->params, data->NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
+
+                //check against new catalog
+                for(int d=0; d<detections; d++)
+                {
+                    int n = detection_index[d];
+                    entry = catalog->entry[n];
+
+                    double q_new_catalog_entry = entry->source[entry->i]->f0 * data_old->T;
+                    
+                    //check that the sources are close enough to bother looking
+                    if(fabs(q_new_catalog_entry - q_old_catalog_entry) > dqmax) continue;
+                    
+                    copy_source(entry->source[entry->i], new_catalog_entry);
+
+                    //re-align where the source fits in the (old) measurement band
+                    map_params_to_array(new_catalog_entry, new_catalog_entry->params, data_old->T);
+                    galactic_binary_alignment(orbit, data_old, new_catalog_entry);
+
+                    //calculate waveform of entry at Tcatalog
+                    galactic_binary(orbit, data->format, data_old->T, data->t0[0], new_catalog_entry->params, data->NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
+
+                    
+                    Match = waveform_match(old_catalog_entry,new_catalog_entry,noise);
+                    
+                    if(Match>0.5)
+                    {
+                        sprintf(entry->parent,"GW%010li",(long)(old_catalog_entry->f0*1e10));
+                        fprintf(historyFile,"%s %s\n",entry->parent,entry->name);
+                    }
+
+                }
+            }
         }
-    }
 
 
     
