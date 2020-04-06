@@ -393,7 +393,6 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
         if(strcmp("padding",     long_options[long_index].name) == 0) data_ptr->qpad    = atoi(optarg);
         if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
-        if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T       = (double)atof(optarg);
         if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
         if(strcmp("fmin",        long_options[long_index].name) == 0) sscanf(optarg, "%lg", &data_ptr->fmin);
         if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap[0] = (double)atof(optarg);
@@ -415,8 +414,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
         if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
         if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
-        if(strcmp("resume",      long_options[long_index].name) == 0)
-          flags->resume=1;
+        if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume=1;
+        if(strcmp("duration",    long_options[long_index].name) == 0)
+        {   data_ptr->T   = (double)atof(optarg);
+            data_ptr->sqT = sqrt(data_ptr->T);
+        }
         if(strcmp("sources",     long_options[long_index].name) == 0)
         {
           data_ptr->DMAX    = atoi(optarg);
@@ -551,6 +553,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
       data[i]->tgap[j] = data[0]->tgap[0];
     }
     data[i]->T        = data[0]->T;
+    data[i]->sqT      = data[0]->sqT;
     data[i]->qpad     = data[0]->qpad;
     data[i]->N        = data[0]->N;
     data[i]->NT       = data[0]->N;

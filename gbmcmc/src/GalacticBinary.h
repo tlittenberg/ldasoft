@@ -35,6 +35,7 @@ struct Data
   long iseed; //seed for injection parameters
   
   double T;
+    double sqT;
   
   int qmin;
   int qmax;

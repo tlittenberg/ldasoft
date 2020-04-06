@@ -30,9 +30,16 @@
 
 
 #include "LISA.h"
+#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 
+double ipow(double x, int n)
+{
+    double xn = 1.0;
+    for(int i=0; i<n; i++) xn*=x;
+    return xn;
+}
 
 double chirpmass(double m1, double m2)
 {
@@ -87,6 +94,17 @@ double snr(struct Source *source, struct Noise *noise)
     }
     
     return(sqrt(snr2));
+}
+
+double snr_prior(double A, double Sn, double Sf, double sqT)
+{
+    double SNm  = Sn/(4.*Sf*Sf);   //Michelson noise
+    double SNR = A*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
+    
+    //SNRPEAK defined in Constants.h
+    double dfac  = 1.+SNR/(4.*SNRPEAK);
+    double dfac5 = ipow(dfac,5);
+    return (3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5);
 }
 
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
