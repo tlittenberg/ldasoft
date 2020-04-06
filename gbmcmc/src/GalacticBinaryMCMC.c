@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
   //print total run time
   stop = time(NULL);
   
-  if(flags->verbose) printf(" ELAPSED TIME = %g second\n",(double)(stop-start));
+  printf(" ELAPSED TIME = %g second\n",(double)(stop-start));
   
   
   //free memory and exit cleanly
