@@ -25,6 +25,7 @@
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
+#include "GalacticBinaryMath.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryPrior.h"
@@ -309,8 +310,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
   model->prior[2][1] = PI2;
   
   //log amplitude
-  model->prior[3][0] = -55.0;//-54
-  model->prior[3][1] = -45.0;
+  model->prior[3][0] = -60.0;//-54
+  model->prior[3][1] = -48.0;
   
   //cos inclination
   model->prior[4][0] = -1.0;
@@ -487,6 +488,9 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
 
 double evaluate_uniform_priors(double *params, double **uniform_prior, double *logPriorVolume, int NP)
 {
+    //nan check
+    for(int n=0; n<NP; n++) if(params[n]!=params[n]) return -INFINITY;
+    
   double logP = 0.0;
   //frequency bin (uniform)
   if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return -INFINITY;
@@ -581,65 +585,24 @@ double evalaute_sky_location_prior(double *params, double **uniform_prior, doubl
 }
 
 
-/* Rejection sample on SNR < SNRPEAK */
-double evaluate_snr_prior(struct Data *data, struct Model *model, double *params)
-{
 
-  //check that amplitude is in range
-  if(params[3]<model->prior[3][0] || params[3]>model->prior[3][1]) return -INFINITY;
-
-  //check that frequency is in range
-  int n = (int)floor(params[0] - model->prior[0][0]);
-  if(n<0 || n>=data->N) return -INFINITY;
-  
-  double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n];
-  double sqT = sqrt(data->T);
-  
-  //Sinc spreading
-  double amp = exp(params[3]);
-  double SNm  = sn/(4.*sf*sf);   //Michelson noise
-  double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
-  
-  //SNRPEAK defined in Constants.h
-  if(SNR < SNRPEAK) return -INFINITY;
-
-  //return amplitude prior
-  return -model->logPriorVolume[3];
-}
-/*
- double evaluate_snr_prior(struct Prior *prior, struct Data *data, struct Model *model, double *params)
+ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params)
  {
- double logP;
- double dfac, dfac5;
- 
- 
- //double f   = params[0]/Tobs;
- double amp = params[3];
- 
- // x/a^2 exp(-x/a) prior on SNR. Peaks at x = a. Good choice is a=5
- 
- int n = (int)floor(params[0] - model->prior[0][0]);
- if(n<0 || n>=data->N) return -INFINITY;
- double sf = 1.0;//sin(f/fstar); //sin(f/f*)
- double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
- double sqT = sqrt(data->T);
- 
- //Sinc spreading
- double SNm  = sn/(4.*sf*sf);   //Michelson noise
- double SNR = amp*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
- 
- //SNRPEAK defined in Constants.h
- 
- dfac = 1.+SNR/(4.*SNRPEAK);
- dfac5 = dfac*dfac*dfac*dfac*dfac;
- 
- //logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/params[3]);
- logP = log((3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5)) + log(SNR/amp);
- 
- return logP;
+     //check that frequency is in range
+     int n = (int)floor(params[0] - model->prior[0][0]);
+     if(n<0 || n>=data->N) return -INFINITY;
+     
+     //calculate noise model estimate
+     double sf = 1.0;//sin(f/fstar);
+     double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+     
+     //get GW amplitude
+     double amp = exp(params[3]);
+
+     return log(snr_prior(amp,sn,sf,data->sqT));
  }
- */
+ 
+
 
 double evaluate_calibration_prior(struct Data *data, struct Model *model)
 {

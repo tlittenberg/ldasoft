@@ -241,16 +241,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
   
   //amplitude
   n = 3;
-  //  logQ += draw_signal_amplitude(data, model, source, proposal, params, seed);
-  double q=-INFINITY;
-  while(q==-INFINITY)
-  {
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-    q = evaluate_snr_prior(data, model, params);
-  }
-  logQ -= model->logPriorVolume[n];
-  logQ += q;
-  
+  logQ += draw_signal_amplitude(data, model, source, proposal, params, seed);
   
   //inclination
   n = 4;
@@ -384,79 +375,46 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
 
 double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-  int k;
-  double SNR, den=-1.0, alpha=1.0;
-  double max;
-  
-  double dfac, dfac5;
-  
-  //SNRPEAK defined in Constants.h
-  
-  double SNR4 = 4.0*SNRPEAK;
-  double SNRsq = 4.0*SNRPEAK*SNRPEAK;
-  
-  dfac = 1.+SNRPEAK/(SNR4);
-  dfac5 = dfac*dfac*dfac*dfac*dfac;
-  max = (3.*SNRPEAK)/(SNRsq*dfac5);
-  
-  int n = (int)floor(params[0] - model->prior[0][0]);
-  double sf = 1.0;//sin(f/fstar); //sin(f/f*)
-  double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
-  double sqT = sqrt(data->T);
-  
-  //Estimate SNR
-  double SNm  = sn/(4.*sf*sf);   //Michelson noise
-  double SNR1 = sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
-  
-  double SNRmin = model->prior[3][0]*SNR1;
-  double SNRmax = model->prior[3][1]*SNR1;
-  
-  
-  //Draw new SNR
-  k = 0;
-  SNR = SNRmin + (SNRmax-SNRmin)*gsl_rng_uniform(seed);
-  
-  dfac = 1.+SNR/(SNR4);
-  dfac5 = dfac*dfac*dfac*dfac*dfac;
-  
-  den = (3.*SNR)/(SNRsq*dfac5);
-  
-  alpha = max*gsl_rng_uniform(seed);
-  
-  while(alpha > den)
-  {
-    
-    SNR = SNRmin + (SNRmax-SNRmin)*gsl_rng_uniform(seed);
-    
-    dfac = 1.+SNR/(SNR4);
-    dfac5 = dfac*dfac*dfac*dfac*dfac;
-    
-    den = (3.*SNR)/(SNRsq*dfac5);
-    
-    alpha = max*gsl_rng_uniform(seed);
-    
-    k++;
-    
-    //you had your chance
-    if(k>10000)
+    int n = (int)floor(params[0] - model->prior[0][0]);
+    double sf = 1.0;//sin(f/fstar); //sin(f/f*)
+    double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+    double SNm   = sqrt(sn/(4.*sf*sf));   //Michelson noise
+    double SNR1  = data->sqT/SNm;
+    double iSNR1 = 1./SNR1;
+
+    //Get bounds on SNR
+    double SNR;
+    double SNRmin = exp(model->prior[3][0])*SNR1;
+    double SNRmax = exp(model->prior[3][1])*SNR1;
+
+    //Get max of prior density for rejection sampling
+    //double amp = SNRPEAK/SNR1;
+    double amp = SNRPEAK*iSNR1;
+    double maxP = snr_prior(amp,sn,sf,data->sqT);
+
+    //Rejection sample on uniform draws in SNR
+    double alpha = 1;
+    double P = 0;
+    int counter=0;
+    while(alpha > P)
     {
-      SNR=0.0;
-      den=0.0;
-      return -INFINITY;
+        SNR   = SNRmin + (SNRmax-SNRmin)*gsl_rng_uniform(seed);
+        //amp   = SNR/SNR1;
+        amp   = SNR*iSNR1;
+        P     = snr_prior(amp,sn,sf,data->sqT);
+        alpha = maxP*gsl_rng_uniform(seed);
+        
+        counter++;
+        
+        //you had your chance
+        if(counter>10000)
+        {
+            params[3] = log(amp);
+            return -INFINITY;
+        }
     }
-    
-    
-  }
-  
-  //SNR defined with Sn(f) but Snf array holdes <n_i^2>
-  params[3] = SNR/SNR1;//log(SNR/SNR1);
-  
-  return log(den);
-  
-  //  FILE *temp=fopen("prior.dat","a");
-  //  fprintf(temp,"%lg\n",params[3]);
-  //  fclose(temp);
-  
+    params[3] = log(amp);
+    return log(P);
 }
 
 double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -1262,8 +1220,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
   double i,j,k;
   
   //first draw from prior
-  for(int n=0; n<source->NP; n++)
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    draw_from_prior(data, model, source, proposal, params, seed);
 
   //now rejection sample on f,theta,phi
   int check=1;
@@ -1370,9 +1327,19 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
 double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *model, UNUSED struct Source * source, struct Proposal *proposal, double *params)
 {
   double logP = 0.0;
-  
-  for(int n=0; n<source->NP; n++) logP -= model->logPriorVolume[n];
-  
+    
+    //TODO: sky location proposal does not support galaxy prior!
+    double *skyhist = NULL; //dummy pointer for sky location prior
+    
+    //sky location prior
+    logP += evalaute_sky_location_prior(params, model->prior, model->logPriorVolume, 0, skyhist, 1, 1, 1);
+
+  //amplitude prior
+  logP += evaluate_snr_prior(data, model, params);
+
+  //everything else uses simple uniform priors
+  logP += evaluate_uniform_priors(params, model->prior, model->logPriorVolume, model->NP);
+
   double d_f     = proposal->matrix[0][1];
   double d_theta = proposal->matrix[1][1];
   double d_phi   = proposal->matrix[2][1];
