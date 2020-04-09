@@ -399,7 +399,6 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
     double alpha = 1;
     double P = 0;
     int counter=0;
-    FILE *snrprior=fopen("snrprior.dat","a");
     while(alpha > P)
     {
         SNR   = SNRmax*gsl_rng_uniform(seed);
