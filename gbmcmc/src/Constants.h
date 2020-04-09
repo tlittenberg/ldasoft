@@ -26,8 +26,10 @@
 #define SNRPEAK 10
 
 /* --------------  MATHEMATICAL CONSTANTS  -------------- */
-/* Square root of 3 */
-#define SQ3   1.73205080757
+/* Some square roots */
+#define SQ2 1.4142135623731
+#define SQ3 1.73205080757
+#define SQ8 2.82842712474619
 
 /* Pi's and frinds */
 //use math.h (M_PI) for PI

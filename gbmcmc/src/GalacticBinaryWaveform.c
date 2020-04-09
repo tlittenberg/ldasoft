@@ -225,10 +225,9 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
 
   
   //Sinc spreading
-  double SNm  = sn/(4.*sf*sf);   //Michelson noise
-  double SNRm = A*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
+    double SNRm = analytic_snr(A, sn, sf, sqT);
 
-  int SS = (int)pow(2,(int)log2(SNRm-1)+1);
+    int SS = (int)pow(2,(int)log2(SNRm-1)+1);
   
   if(SS > Nmax) SS = Nmax;
   if(SS < Nmin) SS = Nmin;
