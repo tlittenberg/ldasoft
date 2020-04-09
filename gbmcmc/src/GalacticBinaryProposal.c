@@ -280,16 +280,23 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
 
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-  for(int n=1; n<3; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
-  for(int n=4; n<7; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    double logP = 0.0;
+
+  for(int n=1; n<3; n++)
+  {
+      params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+      logP -= model->logPriorVolume[n];
+  }
+  for(int n=4; n<7; n++)
+  {
+      params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+      logP -= model->logPriorVolume[n];
+  }
   
   for(int j=0; j<source->NP; j++)
   {
     if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
   }
-  
-  double logP = 0.0;
-  for(int j=0; j<source->NP; j++) logP -= model->logPriorVolume[j];
   
   return logP;
 }
@@ -376,32 +383,27 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
 double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
     int n = (int)floor(params[0] - model->prior[0][0]);
-    double sf = 1.0;//sin(f/fstar); //sin(f/f*)
+    double sf = data->sine_f_on_fstar;
     double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
-    double SNm   = sqrt(sn/(4.*sf*sf));   //Michelson noise
-    double SNR1  = data->sqT/SNm;
+    double SNR1  = analytic_snr(1, sn, sf, data->sqT);
     double iSNR1 = 1./SNR1;
 
     //Get bounds on SNR
     double SNR;
-    double SNRmin = exp(model->prior[3][0])*SNR1;
     double SNRmax = exp(model->prior[3][1])*SNR1;
 
     //Get max of prior density for rejection sampling
-    //double amp = SNRPEAK/SNR1;
-    double amp = SNRPEAK*iSNR1;
-    double maxP = snr_prior(amp,sn,sf,data->sqT);
+    double maxP = snr_prior(SNRPEAK);
 
     //Rejection sample on uniform draws in SNR
     double alpha = 1;
     double P = 0;
     int counter=0;
+    FILE *snrprior=fopen("snrprior.dat","a");
     while(alpha > P)
     {
-        SNR   = SNRmin + (SNRmax-SNRmin)*gsl_rng_uniform(seed);
-        //amp   = SNR/SNR1;
-        amp   = SNR*iSNR1;
-        P     = snr_prior(amp,sn,sf,data->sqT);
+        SNR   = SNRmax*gsl_rng_uniform(seed);
+        P     = snr_prior(SNR);
         alpha = maxP*gsl_rng_uniform(seed);
         
         counter++;
@@ -409,12 +411,12 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
         //you had your chance
         if(counter>10000)
         {
-            params[3] = log(amp);
+            params[3] = log(SNR*iSNR1);
             return -INFINITY;
         }
     }
-    params[3] = log(amp);
-    return log(P);
+    params[3] = log(SNR*iSNR1);
+    return evaluate_snr_prior(data, model, params);
 }
 
 double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -675,8 +677,10 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
   double fm = data->T/YEAR;
   
   //update all parameters with a draw from the fisher
-  if(gsl_rng_uniform(seed)<0.5) draw_from_fisher(data, model, source, proposal, params, seed);
-  else for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    draw_from_fisher(data, model, source, proposal, params, seed);
+    
+    //try total reset of extrinsic parameters
+    if(gsl_rng_uniform(seed)<0.5) draw_from_extrinsic_prior(data, model, source, proposal, params, seed);
   
   //perturb frequency by 1 fm
   double scale = floor(6*gsl_ran_gaussian(seed,1));

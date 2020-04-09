@@ -121,6 +121,10 @@ int main(int argc, char *argv[])
       GalacticBinaryInjectSimulatedSource(data,orbit,flags);
   }
     
+    /* set approximate f/fstar for segment */
+    for(int i=0; i<NMAX; i++)
+        data[i]->sine_f_on_fstar = sin((data[i]->fmin + (data[i]->fmax-data[i]->fmin)/2.)/orbit->fstar);
+    
   /* Remove sources outside of window */
   if(flags->catalog)
       GalacticBinaryCleanEdges(data, orbit, flags);
@@ -139,7 +143,6 @@ int main(int argc, char *argv[])
   if(flags->galaxyPrior) set_galaxy_prior(flags, prior);
 
   /* Initialize MCMC proposals */
-  printf("chain->NP=%i\n",chain->NP);
   struct Proposal ***proposal = malloc(NMAX*sizeof(struct Proposal**));
   for(int j=0; j<NMAX; j++)
   {

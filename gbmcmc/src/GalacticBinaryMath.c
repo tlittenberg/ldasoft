@@ -79,6 +79,11 @@ double fourier_nwip(double *a, double *b, double *Sn, int n)
     return(4.0*arg);
 }
 
+double analytic_snr(double A, double Sn, double Sf, double sqT)
+{
+    return 0.5*A*sqT*Sf/sqrt(Sn); //not exactly what's in paper--calibrated against (h|h)
+}
+
 double snr(struct Source *source, struct Noise *noise)
 {
     double snr2=0.0;
@@ -96,11 +101,8 @@ double snr(struct Source *source, struct Noise *noise)
     return(sqrt(snr2));
 }
 
-double snr_prior(double A, double Sn, double Sf, double sqT)
+double snr_prior(double SNR)
 {
-    double SNm  = Sn/(4.*Sf*Sf);   //Michelson noise
-    double SNR = A*sqT/sqrt(SNm); //Michelson SNR (w/ no spread)
-    
     //SNRPEAK defined in Constants.h
     double dfac  = 1.+SNR/(4.*SNRPEAK);
     double dfac5 = ipow(dfac,5);

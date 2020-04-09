@@ -43,6 +43,7 @@ struct Data
   
   double fmin;
   double fmax;
+    double sine_f_on_fstar;
   
   //some manipulations of f,fmin for likelihood calculation
   double sum_log_f;

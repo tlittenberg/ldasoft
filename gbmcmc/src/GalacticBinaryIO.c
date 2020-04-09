@@ -32,6 +32,7 @@
 #include "LISA.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
+#include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
 #include "gitversion.h"
@@ -741,6 +742,15 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
       if(!flags->quiet || step>0)
       {
         print_source_params(data,model[n][j]->source[i],chain->parameterFile[0]);
+          if(flags->verbose)
+          {
+          //numerical SNR
+            double snr_n = snr(model[n][j]->source[i], data->noise[0]);
+            //analytic SNR
+            double snr_a = analytic_snr(exp(model[n][j]->source[i]->params[3]), data->noise[0]->SnA[0], data->sine_f_on_fstar, data->sqT);
+            
+            fprintf(chain->parameterFile[0],"%lg %lg ",snr_a,snr_n);
+          }
         fprintf(chain->parameterFile[0],"\n");
         if(flags->verbose)fflush(chain->parameterFile[0]);
       }

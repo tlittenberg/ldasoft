@@ -593,13 +593,15 @@ double evalaute_sky_location_prior(double *params, double **uniform_prior, doubl
      if(n<0 || n>=data->N) return -INFINITY;
      
      //calculate noise model estimate
-     double sf = 1.0;//sin(f/fstar);
+     double sf = data->sine_f_on_fstar;
      double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
      
      //get GW amplitude
      double amp = exp(params[3]);
+     
+     double snr = analytic_snr(amp,sn,sf,data->sqT);
 
-     return log(snr_prior(amp,sn,sf,data->sqT));
+     return log(snr_prior(snr));// * snr/amp);
  }
  
 

@@ -32,7 +32,8 @@ double ipow(double x, int n);
 double power_spectrum(double *data, int n);
 double fourier_nwip(double *a, double *b, double *Sn, int n);
 double snr(struct Source *source, struct Noise *noise);
-double snr_prior(double A, double Sn, double Sf, double sqT);
+double analytic_snr(double A, double Sn, double Sf, double sqT);
+double snr_prior(double SNR);
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise);
 
 int binary_search(double *array, int nmin, int nmax, double x);
