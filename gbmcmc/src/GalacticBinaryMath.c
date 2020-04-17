@@ -1,21 +1,21 @@
 /*
-*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with with program; see the file COPYING. If not, write to the
-*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-*  MA  02111-1307  USA
-*/
+ *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with with program; see the file COPYING. If not, write to the
+ *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ *  MA  02111-1307  USA
+ */
 
 
 #include <math.h>
@@ -111,77 +111,77 @@ double snr_prior(double SNR)
 
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
 {
-  int N = a->tdi->N;
-  int NFFT = 2*N;
-  double match=0;
-
-  double *a_A = malloc(NFFT*sizeof(double));
-  double *a_E = malloc(NFFT*sizeof(double));
-  double *b_A = malloc(NFFT*sizeof(double));
-  double *b_E = malloc(NFFT*sizeof(double));
-  for(int i=0; i<NFFT; i++)
-  {
-    a_A[i] = 0.0;
-    a_E[i] = 0.0;
-    b_A[i] = 0.0;
-    b_E[i] = 0.0;
-  }
-
-  int qmin = a->qmin - a->imin;
-
-
-  //Align waveforms into arrays for summing
-  for(int i=0; i<a->BW; i++)
-  {
-    int j = i+a->qmin-qmin;
-   // printf("data->qmin=%i,i=%i, imin=%i, qmin=%i, j=%i\n",qmin,i,a->imin,a->qmin,j);
+    int N = a->tdi->N;
+    int NFFT = 2*N;
+    double match=0;
     
-    if(j>-1 && j<N)
+    double *a_A = malloc(NFFT*sizeof(double));
+    double *a_E = malloc(NFFT*sizeof(double));
+    double *b_A = malloc(NFFT*sizeof(double));
+    double *b_E = malloc(NFFT*sizeof(double));
+    for(int i=0; i<NFFT; i++)
     {
-      int i_re = 2*i;
-      int i_im = i_re+1;
-      int j_re = 2*j;
-      int j_im = j_re+1;
-      
-      a_A[j_re] = a->tdi->A[i_re];
-      a_A[j_im] = a->tdi->A[i_im];
-      a_E[j_re] = a->tdi->E[i_re];
-      a_E[j_im] = a->tdi->E[i_im];
-    }//check that index is in range
-  }//loop over waveform bins
-
-  //Align waveforms into arrays for summing
-  for(int i=0; i<b->BW; i++)
-  {
-    int j = i+b->qmin-qmin;
+        a_A[i] = 0.0;
+        a_E[i] = 0.0;
+        b_A[i] = 0.0;
+        b_E[i] = 0.0;
+    }
     
-    if(j>-1 && j<N)
+    int qmin = a->qmin - a->imin;
+    
+    
+    //Align waveforms into arrays for summing
+    for(int i=0; i<a->BW; i++)
     {
-      int i_re = 2*i;
-      int i_im = i_re+1;
-      int j_re = 2*j;
-      int j_im = j_re+1;
-      
-      b_A[j_re] = b->tdi->A[i_re];
-      b_A[j_im] = b->tdi->A[i_im];
-      b_E[j_re] = b->tdi->E[i_re];
-      b_E[j_im] = b->tdi->E[i_im];
-    }//check that index is in range
-  }//loop over waveform bins
-
-  
-  double aa = fourier_nwip(a_A,a_A,noise->SnA,N) + fourier_nwip(a_E,a_E,noise->SnE,N);
-  double bb = fourier_nwip(b_A,b_A,noise->SnA,N) + fourier_nwip(b_E,b_E,noise->SnE,N);
-  double ab = fourier_nwip(a_A,b_A,noise->SnA,N) + fourier_nwip(a_E,b_E,noise->SnE,N);
-  
-  match = ab/sqrt(aa*bb);
-
-  free(a_A);
-  free(a_E);
-  free(b_A);
-  free(b_E);
-  
-  return match;
+        int j = i+a->qmin-qmin;
+        // printf("data->qmin=%i,i=%i, imin=%i, qmin=%i, j=%i\n",qmin,i,a->imin,a->qmin,j);
+        
+        if(j>-1 && j<N)
+        {
+            int i_re = 2*i;
+            int i_im = i_re+1;
+            int j_re = 2*j;
+            int j_im = j_re+1;
+            
+            a_A[j_re] = a->tdi->A[i_re];
+            a_A[j_im] = a->tdi->A[i_im];
+            a_E[j_re] = a->tdi->E[i_re];
+            a_E[j_im] = a->tdi->E[i_im];
+        }//check that index is in range
+    }//loop over waveform bins
+    
+    //Align waveforms into arrays for summing
+    for(int i=0; i<b->BW; i++)
+    {
+        int j = i+b->qmin-qmin;
+        
+        if(j>-1 && j<N)
+        {
+            int i_re = 2*i;
+            int i_im = i_re+1;
+            int j_re = 2*j;
+            int j_im = j_re+1;
+            
+            b_A[j_re] = b->tdi->A[i_re];
+            b_A[j_im] = b->tdi->A[i_im];
+            b_E[j_re] = b->tdi->E[i_re];
+            b_E[j_im] = b->tdi->E[i_im];
+        }//check that index is in range
+    }//loop over waveform bins
+    
+    
+    double aa = fourier_nwip(a_A,a_A,noise->SnA,N) + fourier_nwip(a_E,a_E,noise->SnE,N);
+    double bb = fourier_nwip(b_A,b_A,noise->SnA,N) + fourier_nwip(b_E,b_E,noise->SnE,N);
+    double ab = fourier_nwip(a_A,b_A,noise->SnA,N) + fourier_nwip(a_E,b_E,noise->SnE,N);
+    
+    match = ab/sqrt(aa*bb);
+    
+    free(a_A);
+    free(a_E);
+    free(b_A);
+    free(b_E);
+    
+    return match;
 }
 
 // Recursive binary search function.
@@ -189,33 +189,33 @@ double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
 // otherwise -1
 int binary_search(double *array, int nmin, int nmax, double x)
 {
-  int next;
-  if(nmax>nmin)
-  {
-    int mid = nmin + (nmax - nmin) / 2;
-
-    //find next unique element of array
-    next = mid;
-    while(array[mid]==array[next]) next++;
-    
-    // If the element is present at the middle
-    // itself
-    if (x > array[mid])
+    int next;
+    if(nmax>nmin)
     {
-      if(x < array[next]) return mid;
+        int mid = nmin + (nmax - nmin) / 2;
+        
+        //find next unique element of array
+        next = mid;
+        while(array[mid]==array[next]) next++;
+        
+        // If the element is present at the middle
+        // itself
+        if (x > array[mid])
+        {
+            if(x < array[next]) return mid;
+        }
+        
+        // the element is in the lower half
+        if (array[mid] > x)
+            return binary_search(array, nmin, mid, x);
+        
+        // the element is in upper half
+        return binary_search(array, next, nmax, x);
     }
     
-    // the element is in the lower half
-    if (array[mid] > x)
-      return binary_search(array, nmin, mid, x);
-    
-    // the element is in upper half
-    return binary_search(array, next, nmax, x);
-  }
-  
-  // We reach here when element is not
-  // present in array
-  return -1;
+    // We reach here when element is not
+    // present in array
+    return -1;
 }
 
 void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
@@ -359,48 +359,48 @@ void invert_matrix(double **matrix, int N)
 
 void matrix_multiply(double **A, double **B, double **AB, int N)
 {
-  //AB = A*B
-  
-  int i,j,k;
-  
-  for(i=0; i<N; i++)
-  {
-    for(j=0; j<N; j++)
+    //AB = A*B
+    
+    int i,j,k;
+    
+    for(i=0; i<N; i++)
     {
-      AB[i][j] = 0.0;
-      for(k=0; k<N; k++)
-      {
-        AB[i][j] += A[i][k]*B[k][j];
-      }
+        for(j=0; j<N; j++)
+        {
+            AB[i][j] = 0.0;
+            for(k=0; k<N; k++)
+            {
+                AB[i][j] += A[i][k]*B[k][j];
+            }
+        }
     }
-  }
-  
+    
 }
 
 
 void cholesky_decomp(double **A, double **L, int N)
 {
-  /*
-   factorize matrix A into cholesky decomposition L.
-   GSL overwrites the original matrix which we want
-   to preserve
-   */
-  int i,j;
-  gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
-
-  //copy covariance matrix into workspace
-  for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLmatrix,i,j,A[i][j]);
-  
-  //make the magic happen
-  gsl_linalg_cholesky_decomp(GSLmatrix);
-  
-  //copy cholesky decomposition into output matrix
-  for(i=0; i<N; i++) for(j=0; j<N; j++)  L[i][j] = gsl_matrix_get(GSLmatrix,i,j);
-  
-  //zero upper half of matrix (copy of A)
-  for(i=0; i<N; i++) for(j=i+1; j<N; j++) L[i][j] = 0.0;
-  
-  gsl_matrix_free (GSLmatrix);
-  
+    /*
+     factorize matrix A into cholesky decomposition L.
+     GSL overwrites the original matrix which we want
+     to preserve
+     */
+    int i,j;
+    gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
+    
+    //copy covariance matrix into workspace
+    for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLmatrix,i,j,A[i][j]);
+    
+    //make the magic happen
+    gsl_linalg_cholesky_decomp(GSLmatrix);
+    
+    //copy cholesky decomposition into output matrix
+    for(i=0; i<N; i++) for(j=0; j<N; j++)  L[i][j] = gsl_matrix_get(GSLmatrix,i,j);
+    
+    //zero upper half of matrix (copy of A)
+    for(i=0; i<N; i++) for(j=i+1; j<N; j++) L[i][j] = 0.0;
+    
+    gsl_matrix_free (GSLmatrix);
+    
 }
 
