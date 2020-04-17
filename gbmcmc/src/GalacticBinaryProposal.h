@@ -1,21 +1,21 @@
 /*
-*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish, Kristen Lackeos
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with with program; see the file COPYING. If not, write to the
-*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-*  MA  02111-1307  USA
-*/
+ *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish, Kristen Lackeos
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with with program; see the file COPYING. If not, write to the
+ *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ *  MA  02111-1307  USA
+ */
 
 #ifndef GalacticBinaryProposal_h
 #define GalacticBinaryProposal_h
@@ -34,20 +34,20 @@
  */
 struct Proposal
 {
-  double (*function)(struct Data*,struct Model*,struct Source*,struct Proposal*,double*,gsl_rng*);
-  double (*density)(struct Data*, struct Model*, struct Source*,struct Proposal*,double*);
-  int *trial;
-  int *accept;
-  char name[128];
-  double norm;
-  double maxp;     /* maximum p for rejection sampling */
-  double weight;   /* between 0 and 1 */
-  double rjweight; /* weight for RJ moves */
-
-  int size;
-  double *vector;
-  double **matrix;
-  double ***tensor;
+    double (*function)(struct Data*,struct Model*,struct Source*,struct Proposal*,double*,gsl_rng*);
+    double (*density)(struct Data*, struct Model*, struct Source*,struct Proposal*,double*);
+    int *trial;
+    int *accept;
+    char name[128];
+    double norm;
+    double maxp;     /* maximum p for rejection sampling */
+    double weight;   /* between 0 and 1 */
+    double rjweight; /* weight for RJ moves */
+    
+    int size;
+    double *vector;
+    double **matrix;
+    double ***tensor;
 };
 
 void setup_frequency_proposal(struct Data *data);
