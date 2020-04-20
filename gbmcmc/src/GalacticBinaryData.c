@@ -1,21 +1,21 @@
 /*
-*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with with program; see the file COPYING. If not, write to the
-*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-*  MA  02111-1307  USA
-*/
+ *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with with program; see the file COPYING. If not, write to the
+ *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ *  MA  02111-1307  USA
+ */
 
 
 #include <stdio.h>
@@ -261,18 +261,18 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         phi0 = gsl_rng_uniform(r)*M_PI*2.;
         psi  = gsl_rng_uniform(r)*M_PI/4.;
         
-      if(flags->emPrior)
-      {
-        FILE *priorFile = fopen(flags->pdfFile,"r");
-        char name[16];
-        double min,max;
-        
-        while(fscanf(priorFile,"%s %lg %lg",name,&min,&max) != EOF)
+        if(flags->emPrior)
         {
-          if(strcmp("cosi",name) == 0)
-            cosi = min + gsl_rng_uniform(r)*(max-min);
+            FILE *priorFile = fopen(flags->pdfFile,"r");
+            char name[16];
+            double min,max;
+            
+            while(fscanf(priorFile,"%s %lg %lg",name,&min,&max) != EOF)
+            {
+                if(strcmp("cosi",name) == 0)
+                    cosi = min + gsl_rng_uniform(r)*(max-min);
+            }
         }
-      }
         
         
         //compute derived parameters
@@ -530,7 +530,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
             N++;
         }
         rewind(injectionFile);
-//        N--;
+        //        N--;
         
         //set RNG for injection
         const gsl_rng_type *T = gsl_rng_default;
@@ -891,88 +891,88 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
 
 void GalacticBinaryCleanEdges(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
 {
-  struct Data *data = data_vec[0];
-  
-  //parse file
-  FILE *catalog_file = fopen(flags->catalogFile,"r");
-  
-  //count number of sources
-  
-  struct Source *catalog_entry = NULL;
-  catalog_entry = malloc(sizeof(struct Source));
-  alloc_source(catalog_entry, data->N, data->Nchannel, data->NP);
-
-  
-  int Nsource = 0;
-  while(!feof(catalog_file))
-  {
-      scan_source_params(data, catalog_entry, catalog_file);
-      Nsource++;
-  }
-  Nsource--;
-  rewind(catalog_file);
-
-  
-  //allocate model & source structures
-  struct Model *catalog = malloc(sizeof(struct Model));
-  alloc_model(catalog, Nsource, data->N, data->Nchannel, data->NP, data->NT);
-
-  catalog->Nlive = 0;
-  for(int n=0; n<Nsource; n++)
-  {
-      scan_source_params(data, catalog_entry, catalog_file);
+    struct Data *data = data_vec[0];
     
-      //find where the source fits in the measurement band
-      galactic_binary_alignment(orbit, data, catalog_entry);
-      double q0   = catalog_entry->params[0];
-      double qmax = catalog_entry->params[0] + catalog_entry->BW/2;
-      double qmin = catalog_entry->params[0] - catalog_entry->BW/2;
+    //parse file
+    FILE *catalog_file = fopen(flags->catalogFile,"r");
+    
+    //count number of sources
+    
+    struct Source *catalog_entry = NULL;
+    catalog_entry = malloc(sizeof(struct Source));
+    alloc_source(catalog_entry, data->N, data->Nchannel, data->NP);
     
     
-      /*
-       only substract tails of sources outside of window that leak in.
-       this means we are redundantly fitting sources in the overlap region, but that's better than fitting bad residuals
-      */
-      if( (q0 < data->qmin && qmax > data->qmin) || (q0 > data->qmax && qmin < data->qmax) )
-      {
-          copy_source(catalog_entry, catalog->source[catalog->Nlive]);
-          catalog->Nlive++;
-      }
-  }
-
-  
-  //for binaries in padded region, compute model
-  generate_signal_model(orbit, data, catalog, -1);
-  
-  //remove from data
-  for(int n=0; n<catalog->NT; n++)
-  {
-      
-      for(int i=0; i<data->N*2; i++)
-      {
-          data->tdi[n]->X[i] -= catalog->tdi[n]->X[i];
-          data->tdi[n]->A[i] -= catalog->tdi[n]->A[i];
-          data->tdi[n]->E[i] -= catalog->tdi[n]->E[i];
-      }
-  }
-  
-  char filename[128];
-  sprintf(filename,"data/power_residual_%i_%i.dat",0,0);
-  FILE *fptr=fopen(filename,"w");
-  
-  for(int i=0; i<data->N; i++)
-  {
-      double f = (double)(i+data->qmin)/data->T;
-      fprintf(fptr,"%.12g %lg %lg ",
-              f,
-              data->tdi[0]->A[2*i]*data->tdi[0]->A[2*i]+data->tdi[0]->A[2*i+1]*data->tdi[0]->A[2*i+1],
-              data->tdi[0]->E[2*i]*data->tdi[0]->E[2*i]+data->tdi[0]->E[2*i+1]*data->tdi[0]->E[2*i+1]);
-      fprintf(fptr,"\n");
-  }
-  fclose(fptr);
-
-  //clean up after yourself
-  fclose(catalog_file);
-  free_model(catalog);
-  free_source(catalog_entry);
+    int Nsource = 0;
+    while(!feof(catalog_file))
+    {
+        scan_source_params(data, catalog_entry, catalog_file);
+        Nsource++;
+    }
+    Nsource--;
+    rewind(catalog_file);
+    
+    
+    //allocate model & source structures
+    struct Model *catalog = malloc(sizeof(struct Model));
+    alloc_model(catalog, Nsource, data->N, data->Nchannel, data->NP, data->NT);
+    
+    catalog->Nlive = 0;
+    for(int n=0; n<Nsource; n++)
+    {
+        scan_source_params(data, catalog_entry, catalog_file);
+        
+        //find where the source fits in the measurement band
+        galactic_binary_alignment(orbit, data, catalog_entry);
+        double q0   = catalog_entry->params[0];
+        double qmax = catalog_entry->params[0] + catalog_entry->BW/2;
+        double qmin = catalog_entry->params[0] - catalog_entry->BW/2;
+        
+        
+        /*
+         only substract tails of sources outside of window that leak in.
+         this means we are redundantly fitting sources in the overlap region, but that's better than fitting bad residuals
+         */
+        if( (q0 < data->qmin && qmax > data->qmin) || (q0 > data->qmax && qmin < data->qmax) )
+        {
+            copy_source(catalog_entry, catalog->source[catalog->Nlive]);
+            catalog->Nlive++;
+        }
+    }
+    
+    
+    //for binaries in padded region, compute model
+    generate_signal_model(orbit, data, catalog, -1);
+    
+    //remove from data
+    for(int n=0; n<catalog->NT; n++)
+    {
+        
+        for(int i=0; i<data->N*2; i++)
+        {
+            data->tdi[n]->X[i] -= catalog->tdi[n]->X[i];
+            data->tdi[n]->A[i] -= catalog->tdi[n]->A[i];
+            data->tdi[n]->E[i] -= catalog->tdi[n]->E[i];
+        }
+    }
+    
+    char filename[128];
+    sprintf(filename,"data/power_residual_%i_%i.dat",0,0);
+    FILE *fptr=fopen(filename,"w");
+    
+    for(int i=0; i<data->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%.12g %lg %lg ",
+                f,
+                data->tdi[0]->A[2*i]*data->tdi[0]->A[2*i]+data->tdi[0]->A[2*i+1]*data->tdi[0]->A[2*i+1],
+                data->tdi[0]->E[2*i]*data->tdi[0]->E[2*i]+data->tdi[0]->E[2*i+1]*data->tdi[0]->E[2*i+1]);
+        fprintf(fptr,"\n");
+    }
+    fclose(fptr);
+    
+    //clean up after yourself
+    fclose(catalog_file);
+    free_model(catalog);
+    free_source(catalog_entry);
 }

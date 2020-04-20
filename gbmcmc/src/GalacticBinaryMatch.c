@@ -49,146 +49,146 @@ void print_match(struct Flags *flags, double match);
 
 int main(int argc, char *argv[])
 {
-  
-  FILE *chain_file1;
-  FILE *chain_file2;
-  int NMAX = 10;   //max number of frequency & time segments
-  
-  
-  /* Allocate data structures */
-  struct Flags *flags = malloc(sizeof(struct Flags));
-  struct Orbit *orbit = malloc(sizeof(struct Orbit));
-  struct Chain *chain = malloc(sizeof(struct Chain));
-  struct Data  **data = malloc(sizeof(struct Data*)*NMAX); //data[NF]
-  
-  
-  //   Parse command line and set defaults/flags
-  for(int i=0; i<NMAX; i++)
-  {
-    data[i] = malloc(sizeof(struct Data));
-    data[i]->t0   = malloc( NMAX * sizeof(double) );
-  }
-  parse(argc,argv,data,orbit,flags,chain,NMAX);
-  alloc_data(data, flags);
-  struct Data **data_vec = data;
-  struct Data *data2  = data_vec[0];
-  data2->qmin = (int)(data2->fmin*data2->T);
-
-  /* Load spacecraft ephemerides */
-  switch(flags->orbit)
-  {
-    case 0:
-      initialize_analytic_orbit(orbit);
-      break;
-    case 1:
-      initialize_numeric_orbit(orbit);
-      break;
-    default:
-      fprintf(stderr,"unsupported orbit type\n");
-      return(1);
-      break;
-  }
-  
-  chain_file1 = fopen(flags->matchInfile1,"r");
-  chain_file2 = fopen(flags->matchInfile2,"r");
-  
-  if ( chain_file1 == NULL )
-  {
-    printf("match-in1 is null\n");
-  }
-  
-  if ( chain_file2 == NULL )
-  {
-    printf("match-in2 is null\n");
-  }
-  
-  
-  //allocate memory for two sources and noise
-  struct Source *src1 = NULL;
-  src1 = malloc(sizeof(struct Source));
-  alloc_source(src1, data2->N,2,data2->NP);
-
-  struct Source *src2 = NULL;
-  src2 = malloc(sizeof(struct Source));
-  alloc_source(src2, data2->N,2,data2->NP);
-
-  struct Noise *noise = NULL;
-  noise = malloc(flags->NT*sizeof(struct Noise));
-  alloc_noise(noise, data2->N);
-  
-  
-  for(int n=0; n<2*data2->N; n++)
-  {
-    src1->tdi->A[n] = 0.0;
-    src1->tdi->E[n] = 0.0;
-    src1->tdi->X[n] = 0.0;
-    src2->tdi->A[n] = 0.0;
-    src2->tdi->E[n] = 0.0;
-    src2->tdi->X[n] = 0.0;
-  }
- 
-  scan_source_params(data2, src1, chain_file1);
-  scan_source_params(data2, src2, chain_file2);
-  
-  //Book-keeping of injection time-frequency volume
-  galactic_binary_alignment(orbit, data2, src1);
-  
-  galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src1->params, data2->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
-  
-  galactic_binary_alignment(orbit, data2, src2);
-  
-  galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src2->params, data2->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
-  
-  
-  
-  
-  //Get noise spectrum for data segment
-  for(int n=0; n<data2->N; n++)
-  {
-    double f = data2->fmin + (double)(n)/data2->T;
-    if(strcmp(data2->format,"phase")==0)
+    
+    FILE *chain_file1;
+    FILE *chain_file2;
+    int NMAX = 10;   //max number of frequency & time segments
+    
+    
+    /* Allocate data structures */
+    struct Flags *flags = malloc(sizeof(struct Flags));
+    struct Orbit *orbit = malloc(sizeof(struct Orbit));
+    struct Chain *chain = malloc(sizeof(struct Chain));
+    struct Data  **data = malloc(sizeof(struct Data*)*NMAX); //data[NF]
+    
+    
+    //   Parse command line and set defaults/flags
+    for(int i=0; i<NMAX; i++)
     {
-      noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-      noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+        data[i] = malloc(sizeof(struct Data));
+        data[i]->t0   = malloc( NMAX * sizeof(double) );
     }
-    else if(strcmp(data2->format,"frequency")==0)
+    parse(argc,argv,data,orbit,flags,chain,NMAX);
+    alloc_data(data, flags);
+    struct Data **data_vec = data;
+    struct Data *data2  = data_vec[0];
+    data2->qmin = (int)(data2->fmin*data2->T);
+    
+    /* Load spacecraft ephemerides */
+    switch(flags->orbit)
     {
-      noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-      noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        case 0:
+            initialize_analytic_orbit(orbit);
+            break;
+        case 1:
+            initialize_numeric_orbit(orbit);
+            break;
+        default:
+            fprintf(stderr,"unsupported orbit type\n");
+            return(1);
+            break;
     }
-    else
+    
+    chain_file1 = fopen(flags->matchInfile1,"r");
+    chain_file2 = fopen(flags->matchInfile2,"r");
+    
+    if ( chain_file1 == NULL )
     {
-      fprintf(stderr,"Unsupported data format %s",data2->format);
-      exit(1);
+        printf("match-in1 is null\n");
     }
-  }
-  
-  printf("snr of source 1 %g\n",snr(src1,noise));
-  printf("snr of source 2 %g\n",snr(src2,noise));
-
-  
-  double match = waveform_match(src1, src2, noise);
-  
-  //Print results of overlap calc.
-  print_match(flags,match);
-  if(flags->orbit)free_orbit(orbit);
-  printf("\n");
-  fclose(chain_file1);
-  fclose(chain_file2);
-  
-  return 0;
+    
+    if ( chain_file2 == NULL )
+    {
+        printf("match-in2 is null\n");
+    }
+    
+    
+    //allocate memory for two sources and noise
+    struct Source *src1 = NULL;
+    src1 = malloc(sizeof(struct Source));
+    alloc_source(src1, data2->N,2,data2->NP);
+    
+    struct Source *src2 = NULL;
+    src2 = malloc(sizeof(struct Source));
+    alloc_source(src2, data2->N,2,data2->NP);
+    
+    struct Noise *noise = NULL;
+    noise = malloc(flags->NT*sizeof(struct Noise));
+    alloc_noise(noise, data2->N);
+    
+    
+    for(int n=0; n<2*data2->N; n++)
+    {
+        src1->tdi->A[n] = 0.0;
+        src1->tdi->E[n] = 0.0;
+        src1->tdi->X[n] = 0.0;
+        src2->tdi->A[n] = 0.0;
+        src2->tdi->E[n] = 0.0;
+        src2->tdi->X[n] = 0.0;
+    }
+    
+    scan_source_params(data2, src1, chain_file1);
+    scan_source_params(data2, src2, chain_file2);
+    
+    //Book-keeping of injection time-frequency volume
+    galactic_binary_alignment(orbit, data2, src1);
+    
+    galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src1->params, data2->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
+    
+    galactic_binary_alignment(orbit, data2, src2);
+    
+    galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src2->params, data2->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
+    
+    
+    
+    
+    //Get noise spectrum for data segment
+    for(int n=0; n<data2->N; n++)
+    {
+        double f = data2->fmin + (double)(n)/data2->T;
+        if(strcmp(data2->format,"phase")==0)
+        {
+            noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+            noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+        }
+        else if(strcmp(data2->format,"frequency")==0)
+        {
+            noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+            noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        }
+        else
+        {
+            fprintf(stderr,"Unsupported data format %s",data2->format);
+            exit(1);
+        }
+    }
+    
+    printf("snr of source 1 %g\n",snr(src1,noise));
+    printf("snr of source 2 %g\n",snr(src2,noise));
+    
+    
+    double match = waveform_match(src1, src2, noise);
+    
+    //Print results of overlap calc.
+    print_match(flags,match);
+    if(flags->orbit)free_orbit(orbit);
+    printf("\n");
+    fclose(chain_file1);
+    fclose(chain_file2);
+    
+    return 0;
 }
 
 void print_match(struct Flags *flags, double match)
 {
-  if(match > 0.999)
-  {
-    fprintf(stdout,"These are the same source.\n");
-    fprintf(stdout,"overlap = %lg > 0.999\n",match);
-  }
-  else
-  {
-    fprintf(stdout,"Different sources.\n");
-    fprintf(stdout,"overlap = %lg < 0.999\n",match);
-  }
+    if(match > 0.999)
+    {
+        fprintf(stdout,"These are the same source.\n");
+        fprintf(stdout,"overlap = %lg > 0.999\n",match);
+    }
+    else
+    {
+        fprintf(stdout,"Different sources.\n");
+        fprintf(stdout,"overlap = %lg < 0.999\n",match);
+    }
 }
