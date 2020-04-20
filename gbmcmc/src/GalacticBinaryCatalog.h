@@ -37,6 +37,7 @@ struct Entry
     char parent[128];       //source parent name
   struct Source **source; //source structure contains parameters, defined in GalacticBinary.h
   double *match;          //match between sample and ref. source
+    double *distance;       //distance between sample and ref. source
   double evidence;        //source evidence
   double SNR;             //reference SNR of source
   int i;                  //sample containing med. freq.

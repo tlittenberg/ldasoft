@@ -127,6 +127,7 @@ struct Flags
   char matchInfile2[128];
   char pdfFile[128];
   char catalogFile[128];
+    char noiseFile[128];
 };
 
 struct Chain
