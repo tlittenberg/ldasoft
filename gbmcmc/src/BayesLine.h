@@ -26,89 +26,89 @@
 
 typedef struct
 {
-  int n;
-  int size;
-
-  int *larray;
-
-  double *Q;
-  double *A;
-  double *f;
-
+    int n;
+    int size;
+    
+    int *larray;
+    
+    double *Q;
+    double *A;
+    double *f;
+    
 }lorentzianParams;
 
 typedef struct
 {
-  int tmax;
-  int ncut;
-  int nmin;
-  int tfull;
-  int sgmts;
-
-  double df;
-  double fny;
-  double Tobs;
-  double fmin;
-  double fmax;
-  double flow;
-  double fgrid;
-  double fstep;
-  double fhigh;
-  double cadence;
-
+    int tmax;
+    int ncut;
+    int nmin;
+    int tfull;
+    int sgmts;
+    
+    double df;
+    double fny;
+    double Tobs;
+    double fmin;
+    double fmax;
+    double flow;
+    double fgrid;
+    double fstep;
+    double fhigh;
+    double cadence;
+    
 }dataParams;
 
 typedef struct
 {
-  int n;
-  double *points;
-  double *data;
-
+    int n;
+    double *points;
+    double *data;
+    
 }splineParams;
 
 typedef struct
 {
-  double SAmin;
-  double SAmax;
-  double LQmin;
-  double LQmax;
-  double LAmin;
-  double LAmax;
-
-  //double *invsigma; //variances for each frequency bin
-  double *sigma; //variances for each frequency bin
-  double *upper; //variances for each frequency bin
-  double *lower; //variances for each frequency bin
-  double *mean;     //means for each frequency bin
-
+    double SAmin;
+    double SAmax;
+    double LQmin;
+    double LQmax;
+    double LAmin;
+    double LAmax;
+    
+    //double *invsigma; //variances for each frequency bin
+    double *sigma; //variances for each frequency bin
+    double *upper; //variances for each frequency bin
+    double *lower; //variances for each frequency bin
+    double *mean;     //means for each frequency bin
+    
 }BayesLinePriors;
 
 struct BayesLineParams
 {
-  dataParams *data;
-  splineParams *spline;
-  splineParams *spline_x;
-  lorentzianParams *lines_x;
-  lorentzianParams *lines_full;
-  BayesLinePriors *priors;
-
-  double *Snf;
-  double *Sna;
-  double *fa;
-  double *freq;
-  double *power;
-  double *spow;
-  double *sfreq;
-  double *Sbase;
-  double *Sline;
-
-  int constantLogLFlag;
-
-  double TwoDeltaT;
-  gsl_rng *r;
-  
-  FILE *splineChainFile;
-  FILE *lineChainFile;
+    dataParams *data;
+    splineParams *spline;
+    splineParams *spline_x;
+    lorentzianParams *lines_x;
+    lorentzianParams *lines_full;
+    BayesLinePriors *priors;
+    
+    double *Snf;
+    double *Sna;
+    double *fa;
+    double *freq;
+    double *power;
+    double *spow;
+    double *sfreq;
+    double *Sbase;
+    double *Sline;
+    
+    int constantLogLFlag;
+    
+    double TwoDeltaT;
+    gsl_rng *r;
+    
+    FILE *splineChainFile;
+    FILE *lineChainFile;
 };
 
 void BayesLineFree(struct BayesLineParams *bptr);

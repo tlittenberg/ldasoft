@@ -1,21 +1,21 @@
 /*
-*  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with with program; see the file COPYING. If not, write to the
-*  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-*  MA  02111-1307  USA
-*/
+ *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with with program; see the file COPYING. If not, write to the
+ *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+ *  MA  02111-1307  USA
+ */
 
 #ifndef LISA_h
 #define LISA_h
@@ -39,45 +39,45 @@
 
 struct Orbit
 {
-  char OrbitFileName[1024];
-  
-  int Norb;
-  
-  double L;
-  double fstar;
-  double ecc;
-  double R;
-  
-  double *t;
-  double **x;
-  double **y;
-  double **z;
-  
-  gsl_spline **dx;
-  gsl_spline **dy;
-  gsl_spline **dz;
-  gsl_interp_accel *acc;
-  
-  void (*orbit_function)(struct Orbit*,double,double*,double*,double*);
+    char OrbitFileName[1024];
+    
+    int Norb;
+    
+    double L;
+    double fstar;
+    double ecc;
+    double R;
+    
+    double *t;
+    double **x;
+    double **y;
+    double **z;
+    
+    gsl_spline **dx;
+    gsl_spline **dy;
+    gsl_spline **dz;
+    gsl_interp_accel *acc;
+    
+    void (*orbit_function)(struct Orbit*,double,double*,double*,double*);
 };
 
 struct TDI
 {
-  //Michelson
-  double *X;
-  double *Y;
-  double *Z;
-  
-  //Noise-orthogonal
-  double *A;
-  double *E;
-  double *T;
-  
-  //Number of data channels
-  int Nchannel;
-  
-  //Number of frequency bins
-  int N;
+    //Michelson
+    double *X;
+    double *Y;
+    double *Z;
+    
+    //Noise-orthogonal
+    double *A;
+    double *E;
+    double *T;
+    
+    //Number of data channels
+    int Nchannel;
+    
+    //Number of frequency bins
+    int N;
 };
 
 
