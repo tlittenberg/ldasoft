@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
   //selection criteria for catalog entries
     int matchFlag;          //track if sample matches any entries
     double Match;     //match between pairs of waveforms
+    double Distance;  //distance between pairs of waveforms
     double tolerance = data->pmax; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
   int downsample = 10;
@@ -148,27 +149,49 @@ int main(int argc, char *argv[])
         
     //Noise model
     //Get noise spectrum for data segment
-    for(int n=0; n<data->N; n++)
+    if(flags->simNoise)
     {
-        double f = data->fmin + (double)(n)/data->T;
-        if(strcmp(data->format,"phase")==0)
+        for(int n=0; n<data->N; n++)
         {
-            noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-            noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
-        }
-        else if(strcmp(data->format,"frequency")==0)
-        {
-            noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-            noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-        }
-        else
-        {
-            fprintf(stderr,"Unsupported data format %s",data->format);
-            exit(1);
+            double f = data->fmin + (double)(n)/data->T;
+            if(strcmp(data->format,"phase")==0)
+            {
+                noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+                noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+            }
+            else if(strcmp(data->format,"frequency")==0)
+            {
+                noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+            }
+            else
+            {
+                fprintf(stderr,"Unsupported data format %s",data->format);
+                exit(1);
+            }
         }
     }
+    else
+    {
+        double junk;
+        FILE *noiseFile = fopen(flags->noiseFile,"r");
+        for(int n=0; n<data->N; n++)
+        {
+            fscanf(noiseFile,"%lg",&junk); //);f
+            fscanf(noiseFile,"%lg",&noise->SnA[n]);//A_med);
+            fscanf(noiseFile,"%lg",&junk); //A_lo_50
+            fscanf(noiseFile,"%lg",&junk);//A_hi_50);
+            fscanf(noiseFile,"%lg",&junk);//A_lo_90);
+            fscanf(noiseFile,"%lg",&junk);//A_hi_90);
+            fscanf(noiseFile,"%lg",&noise->SnE[n]);//E_med);
+            fscanf(noiseFile,"%lg",&junk);//E_lo_50);
+            fscanf(noiseFile,"%lg",&junk);//E_hi_50);
+            fscanf(noiseFile,"%lg",&junk);//E_lo_90);
+            fscanf(noiseFile,"%lg",&junk);//E_hi_90);
+        }
+        fclose(noiseFile);
+    }
 
-    
   /* **************************************************************** */
   /*        First sample of the chain initializes entry list          */
   /* **************************************************************** */
@@ -238,7 +261,11 @@ int main(int argc, char *argv[])
         if( fabs(q_entry-q_sample) > dqmax ) Match = -1.0;
         
         //calculate match
-        else Match = waveform_match(sample, entry->source[0], noise);
+        else
+        {
+            Match = waveform_match(sample, entry->source[0], noise);
+            Distance = waveform_distance(sample, entry->source[0], noise);
+        }
 
         if(Match > tolerance && !entryFlag[n])
         {
@@ -246,6 +273,7 @@ int main(int argc, char *argv[])
             entryFlag[n] = 1;
           //append sample to entry
           entry->match[entry->I] = Match;
+            entry->distance[entry->I] = Distance;
           append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel, data->NP);
 
           //stop looping over entries in catalog
@@ -338,7 +366,7 @@ int main(int argc, char *argv[])
     entry->SNR = snr(entry->source[i_med],noise);
       
     //name source based on median frequency
-    sprintf(entry->name,"GW%010li",(long)(f_med*1e10));
+    sprintf(entry->name,"LDC%010li",(long)(f_med*1e10));
     
        //print point estimate parameters at median frequency
        sprintf(filename, "%s/%s_params.dat", outdir, entry->name);
@@ -401,7 +429,7 @@ int main(int argc, char *argv[])
       fclose(out);
 
     //evidence for source related to number of visits in the chain
-    entry->evidence = (double)entry->I/(double)(IMAX/downsample);
+    entry->evidence = (double)(entry->I-1)/(double)(IMAX/downsample);
     
     fprintf(catalogFile,"%s %lg %lg\n",entry->name, entry->SNR, entry->evidence);
   }
@@ -479,7 +507,7 @@ int main(int argc, char *argv[])
                     
                     if(Match>0.5)
                     {
-                        sprintf(entry->parent,"GW%010li",(long)(old_catalog_entry->f0*1e10));
+                        sprintf(entry->parent,"LDC%010li",(long)(old_catalog_entry->f0*1e10));
                         fprintf(historyFile,"%s %s\n",entry->parent,entry->name);
                     }
 
@@ -508,7 +536,7 @@ int main(int argc, char *argv[])
     for(int k=0; k<entry->I; k++)
     {
       print_source_params(data,entry->source[k],out);
-      fprintf(out,"%lg\n",entry->match[k]);
+      fprintf(out,"%lg %lg %lg\n",snr(entry->source[k],noise),entry->match[k],entry->distance[k]);
     }
     fclose(out);
     
@@ -621,6 +649,7 @@ void alloc_entry(struct Entry *entry, int IMAX)
   entry->I = 0;
   entry->source = malloc(IMAX*sizeof(struct Source*));
   entry->match  = malloc(IMAX*sizeof(double));
+    entry->distance  = malloc(IMAX*sizeof(double));
 
 }
 
@@ -643,6 +672,7 @@ void create_new_source(struct Catalog *catalog, struct Source *sample, struct No
   entry->SNR = snr(sample,noise);
   
   entry->match[entry->I] = 1.0;
+    entry->distance[entry->I] = 0.0;
 
   entry->I++; //increment number of samples for entry
   catalog->N++;//increment number of entries for catalog
@@ -680,6 +710,8 @@ static void print_usage_catalog()
   fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
   fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
   fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
+    fprintf(stdout,"       --noise-file  : reconstructed noise model         \n");
+    fprintf(stdout,"                       e.g., data/power_noise_t0_f0.dat  \n");
     fprintf(stdout,"       --catalog     : list of known sources               \n");
     fprintf(stdout,"       --Tcatalog    : observing time of previous catalog  \n");
   fprintf(stdout,"--\n");
@@ -706,7 +738,8 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
   flags->NDATA       = 1;
   flags->DMAX        = DMAX_default;
     flags->catalog     = 0;
-  data[0]->pmax      = 0.8;
+    flags->simNoise = 1; //hijack simNoise flag for noise model
+  data[0]->pmax      = 0.5; //default match tolerance for inclusion (hijacked pmax in data structure)
     *Tcatalog          = -1.0;
 
   for(int i=0; i<Nmax; i++)
@@ -752,6 +785,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     {"fmin",      required_argument, 0, 0},
     {"links",     required_argument, 0, 0},
     {"chain-file",required_argument, 0, 0},
+    {"noise-file",required_argument, 0, 0},
     {"match",     required_argument, 0, 0},
       {"catalog",   required_argument, 0, 0},
       {"Tcatalog",   required_argument, 0, 0},
@@ -797,6 +831,12 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
           flags->orbit = 1;
           sprintf(orbit->OrbitFileName,"%s",optarg);
         }
+            if(strcmp("noise-file", long_options[long_index].name) == 0)
+            {
+                checkfile(optarg);
+                sprintf(flags->noiseFile,"%s",optarg);
+                flags->simNoise = 0;
+            }
         if(strcmp("chain-file", long_options[long_index].name) == 0)
         {
             checkfile(optarg);

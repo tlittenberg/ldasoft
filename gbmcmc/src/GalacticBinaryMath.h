@@ -35,6 +35,7 @@ double snr(struct Source *source, struct Noise *noise);
 double analytic_snr(double A, double Sn, double Sf, double sqT);
 double snr_prior(double SNR);
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise);
+double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise);
 
 int binary_search(double *array, int nmin, int nmax, double x);
 
