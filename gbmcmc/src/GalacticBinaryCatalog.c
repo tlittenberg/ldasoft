@@ -264,13 +264,13 @@ int main(int argc, char *argv[])
                 else
                 {
                     Match = waveform_match(sample, entry->source[0], noise);
-                    Distance = waveform_distance(sample, entry->source[0], noise);
                 }
                 
                 if(Match > tolerance && !entryFlag[n])
                 {
                     matchFlag = 1;
                     entryFlag[n] = 1;
+                    Distance = waveform_distance(sample, entry->source[0], noise);
                     //append sample to entry
                     entry->match[entry->I] = Match;
                     entry->distance[entry->I] = Distance;
