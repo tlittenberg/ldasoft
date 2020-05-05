@@ -372,7 +372,9 @@ int main(int argc, char *argv[])
     stop = time(NULL);
     
     printf(" ELAPSED TIME = %g second\n",(double)(stop-start));
-    
+    FILE *runlog = fopen("gb_mcmc.log","a");
+    fprintf(runlog," ELAPSED TIME = %g second\n",(double)(stop-start));
+    fclose(runlog);
     
     //free memory and exit cleanly
     for(int ic=0; ic<NC; ic++)
