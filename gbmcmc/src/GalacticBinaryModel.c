@@ -501,14 +501,14 @@ void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
     tdi->N = NFFT;
     
     //Michelson
-    tdi->X = calloc(2,tdi->N*sizeof(double));
-    tdi->Y = calloc(2,tdi->N*sizeof(double));
-    tdi->Z = calloc(2,tdi->N*sizeof(double));
+    tdi->X = calloc(2*tdi->N,sizeof(double));
+    tdi->Y = calloc(2*tdi->N,sizeof(double));
+    tdi->Z = calloc(2*tdi->N,sizeof(double));
     
     //Noise-orthogonal
-    tdi->A = calloc(2,tdi->N*sizeof(double));
-    tdi->E = calloc(2,tdi->N*sizeof(double));
-    tdi->T = calloc(2,tdi->N*sizeof(double));
+    tdi->A = calloc(2*tdi->N,sizeof(double));
+    tdi->E = calloc(2*tdi->N,sizeof(double));
+    tdi->T = calloc(2*tdi->N,sizeof(double));
     
     int n;
     for(n=0; n<2*tdi->N; n++)
