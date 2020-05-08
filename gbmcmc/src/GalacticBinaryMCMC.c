@@ -252,6 +252,10 @@ int main(int argc, char *argv[])
      }
      fclose(test);
      */
+    //test covariance proposal
+    if(flags->updateCov) test_covariance_proposal(data[0], flags, model[0][0], prior, proposal[0][8], chain->r[0]);
+
+    
     
     /* The MCMC loop */
     for(int mcmc = mcmc_start; mcmc < flags->NMCMC; mcmc++)
@@ -466,7 +470,6 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc)
         A[ic][1] = chain->acceptance[ic];
     }
     
-    ic=0;
     for(ic=1; ic<NC-1; ic++)
     {
         S[ic] += (A[ic][0] - A[ic][1])*(t0/((double)mcmc+t0))/nu;

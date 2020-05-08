@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     /* Allocate data structures */
     struct Flags *flags       = malloc(sizeof(struct Flags));
     struct Orbit *orbit       = malloc(sizeof(struct Orbit));
-    struct Data  **data_ptr  = malloc(sizeof(struct Data**)*NMAX);
+    struct Data  **data_ptr   = malloc(sizeof(struct Data*)*NMAX);
     struct Chain *chain       = malloc(sizeof(struct Chain));
     
     /* Parse command line and set defaults/flags */
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     
     for(int nn=0; nn<N; nn++)
     {
-        if(nn%(N/100)==0)printProgress( (double)nn / (double)N );
+        if(N>100 && nn%(N/100)==0)printProgress( (double)nn / (double)N );
         fscanf(catalogFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&theta,&iota,&psi,&phi0);
         
         //set bandwidth of data segment centered on injection

@@ -1197,6 +1197,16 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
         fclose(fptr_rec);
         fclose(fptr_Snf);
     }
+    
+    for(int n=0; n<data->N; n++)
+    {
+        for(int m=0; m<data->Nchannel; m++)
+        {
+            free(res_var[n][m]);
+        }
+        free(res_var[n]);
+    }
+    free(res_var);
 }
 
 

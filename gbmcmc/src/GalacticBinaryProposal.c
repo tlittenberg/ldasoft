@@ -240,7 +240,7 @@ double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED str
     logQ -= model->logPriorVolume[n];
     
     //amplitude
-    n = 3;
+    //n = 3;
     logQ += draw_signal_amplitude(data, model, source, proposal, params, seed);
     
     //inclination
@@ -389,7 +389,7 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
     double iSNR1 = 1./SNR1;
     
     //Get bounds on SNR
-    double SNR;
+    double SNR = 1.0;
     double SNRmax = exp(model->prior[3][1])*SNR1;
     
     //Get max of prior density for rejection sampling
@@ -1119,6 +1119,84 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     fclose(fptr);
     
     fprintf(stdout,"\n================================================\n");
+}
+
+void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed)
+{
+    fprintf(stdout,"\n======== Test Covariance matrix proposal =======\n");
+
+    double logP;
+    int N = 100000;
+
+    //correction factor to rescale & renormalize covariance matrix
+    double gamma = 0;// = (double)i/(double)N;
+    double gamma2;// = gamma*gamma;
+    
+    printf("\n  Correction to normalization: %g\n",gamma);
+    
+    int Nmodes = proposal->size*2;
+    
+    double **invCij = NULL;
+    double **Lij  = NULL;
+    double *mean = NULL;
+    double ran_no[data->NP] = {0};
+
+    for(int i=0; i<Nmodes; i++)
+    {
+        gamma = 0.0;
+        
+        //define some helper pointers for ease of reading
+        mean = proposal->matrix[i];
+        Lij  = proposal->tensor[i];
+        
+        //scale NP-dimensional jump to 1-sigma of the joint distribution
+        double scale = 1.;///sqrt((double)NP);
+        
+        for(int n=0; n<N; n++)
+        {
+            
+            //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
+            for(int m=0; m<data->NP; m++)
+            {
+                ran_no[m] = gsl_ran_gaussian(seed,scale);
+            }
+            
+            //the matrix multiplication...
+            for(int n=0; n<data->NP; n++)
+            {
+                //start at mean
+                model->source[0]->params[n] = mean[n];
+                
+                //add contribution from each row of invC
+                for(int k=0; k<data->NP; k++) model->source[0]->params[n] += ran_no[k]*Lij[n][k];
+            }
+
+            
+            logP = evaluate_prior(flags, data, model, prior, model->source[0]->params);
+            if(logP>-INFINITY) gamma+=1.;
+        }
+        
+
+        gamma  = gamma/(double)N;
+        gamma2 = gamma*gamma;
+
+        printf("\n  Mode %i: Correction = %g\n",i,gamma);
+
+        proposal->vector[i*2+1]/=gamma;
+        invCij = proposal->tensor[Nmodes+i];
+        Lij = proposal->tensor[i];
+
+        for(int n=0; n<data->NP; n++)
+        {
+            for(int m=0; m<data->NP; m++)
+            {
+                invCij[n][m] /= gamma2;
+                Lij[n][m]    *= gamma;
+            }
+        }
+    }
+    
+    fprintf(stdout,"\n================================================\n\n");
 }
 
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal)

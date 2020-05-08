@@ -82,6 +82,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
 
 void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal);
 
+void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed);
+
 void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, int NMAX);
 
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal);
