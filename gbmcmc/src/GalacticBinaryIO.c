@@ -301,8 +301,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
          */
         sprintf(data[i]->format,"phase");
         
-        data[i]->t0   = calloc(sizeof(double),Nmax);
-        data[i]->tgap = calloc(sizeof(double),Nmax);
+        data[i]->t0   = calloc(Nmax,sizeof(double));
+        data[i]->tgap = calloc(Nmax,sizeof(double));
         
         data[i]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
         data[i]->N        = 1024;

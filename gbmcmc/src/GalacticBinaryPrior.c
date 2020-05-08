@@ -97,12 +97,12 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
     T = gsl_rng_default;
     r = gsl_rng_alloc (T);
     
-    x =  (double*)calloc(sizeof(double), D);
-    xe = (double*)calloc(sizeof(double), D);
-    xg = (double*)calloc(sizeof(double), D);
-    y =  (double*)calloc(sizeof(double), D);
+    x =  (double*)calloc(D,sizeof(double));
+    xe = (double*)calloc(D,sizeof(double));
+    xg = (double*)calloc(D,sizeof(double));
+    y =  (double*)calloc(D,sizeof(double));
     
-    prior->skyhist = (double*)calloc(sizeof(double), (Nth*Nph));
+    prior->skyhist = (double*)calloc((Nth*Nph),sizeof(double));
     
     prior->dcostheta = 2./(double)Nth;
     prior->dphi      = 2.*M_PI/(double)Nph;

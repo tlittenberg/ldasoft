@@ -136,19 +136,19 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     
     //allocate memory for local workspace
     orbit->Norb = n;
-    double *t   = calloc(sizeof(double),orbit->Norb);
+    double *t   = calloc(orbit->Norb,sizeof(double));
     double **x  = malloc(sizeof(double *)*3);
     double **y  = malloc(sizeof(double *)*3);
     double **z  = malloc(sizeof(double *)*3);
     for(i=0; i<3; i++)
     {
-        x[i]  = calloc(sizeof(double),orbit->Norb);
-        y[i]  = calloc(sizeof(double),orbit->Norb);
-        z[i]  = calloc(sizeof(double),orbit->Norb);
+        x[i]  = calloc(orbit->Norb,sizeof(double));
+        y[i]  = calloc(orbit->Norb,sizeof(double));
+        z[i]  = calloc(orbit->Norb,sizeof(double));
     }
     
     //allocate memory for orbit structure
-    orbit->t  = calloc(sizeof(double),orbit->Norb);
+    orbit->t  = calloc(orbit->Norb,sizeof(double));
     orbit->x  = malloc(sizeof(double *)*3);
     orbit->y  = malloc(sizeof(double *)*3);
     orbit->z  = malloc(sizeof(double *)*3);
@@ -159,9 +159,9 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     
     for(i=0; i<3; i++)
     {
-        orbit->x[i]  = calloc(sizeof(double),orbit->Norb);
-        orbit->y[i]  = calloc(sizeof(double),orbit->Norb);
-        orbit->z[i]  = calloc(sizeof(double),orbit->Norb);
+        orbit->x[i]  = calloc(orbit->Norb,sizeof(double));
+        orbit->y[i]  = calloc(orbit->Norb,sizeof(double));
+        orbit->z[i]  = calloc(orbit->Norb,sizeof(double));
         orbit->dx[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
         orbit->dy[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
         orbit->dz[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);

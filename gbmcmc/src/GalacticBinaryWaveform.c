@@ -290,16 +290,16 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     double ***d;
     
     /*   Allocating Arrays   */
-    x = calloc(sizeof(double),4);
-    y = calloc(sizeof(double),4);
-    z = calloc(sizeof(double),4);
+    x = calloc(4,sizeof(double));
+    y = calloc(4,sizeof(double));
+    z = calloc(4,sizeof(double));
     
-    data12 = calloc(sizeof(double),(BW2+1));
-    data21 = calloc(sizeof(double),(BW2+1));
-    data31 = calloc(sizeof(double),(BW2+1));
-    data13 = calloc(sizeof(double),(BW2+1));
-    data23 = calloc(sizeof(double),(BW2+1));
-    data32 = calloc(sizeof(double),(BW2+1));
+    data12 = calloc((BW2+1),sizeof(double));
+    data21 = calloc((BW2+1),sizeof(double));
+    data31 = calloc((BW2+1),sizeof(double));
+    data13 = calloc((BW2+1),sizeof(double));
+    data23 = calloc((BW2+1),sizeof(double));
+    data32 = calloc((BW2+1),sizeof(double));
     
     d = malloc(sizeof(double**)*4);
     for(i=0; i<4; i++)
@@ -307,7 +307,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         d[i] = malloc(sizeof(double*)*4);
         for(j=0; j<4; j++)
         {
-            	d[i][j] = calloc(sizeof(double),(BW2+1));
+            	d[i][j] = calloc((BW2+1),sizeof(double));
 		dplus[i][j] = 0.0;
 		dcross[i][j] = 0.0;
 		eplus[i][j] = 0.0;
@@ -411,6 +411,10 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         r12[3] = (z[2] - z[1])/orbit->L;   r13[3] = (z[3] - z[1])/orbit->L;   r23[3] = (z[3] - z[2])/orbit->L;
         
         
+        //Zero arrays to be summed
+        dplus[1][2]  = dplus[1][3]  = dplus[2][1]  = dplus[2][3]  = dplus[3][1]  = dplus[3][2]  = 0.;
+        dcross[1][2] = dcross[1][3] = dcross[2][1] = dcross[2][3] = dcross[3][1] = dcross[3][2] = 0.;
+        
         //Convenient quantities d+ & dx
         for(i=1; i<=3; i++)
         {
@@ -475,7 +479,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                     //Transfer function
                     double sinc = 0.25*sinf(arg1)/arg1;
                     
-                    ///Real and imaginary pieces of time series (no complex exponential)
+                    //Real and imaginary pieces of time series (no complex exponential)
                     double tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);
                     double tran1i = aevol*(dplus[i][j]*DPi + dcross[i][j]*DCi);
                     
@@ -524,7 +528,8 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         d[1][2][i] = a12[i];  d[2][1][i] = a21[i];  d[3][1][i] = a31[i];
         d[1][3][i] = a13[i];  d[2][3][i] = a23[i];  d[3][2][i] = a32[i];
     }
-	/*   Call subroutines for synthesizing different TDI data channels  */
+    
+    /*   Call subroutines for synthesizing different TDI data channels  */
     if(strcmp("phase",format) == 0)
         LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
     else if(strcmp("frequency",format) == 0)
