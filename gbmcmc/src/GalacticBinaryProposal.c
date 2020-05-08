@@ -1133,71 +1133,74 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
     double gamma = 0;// = (double)i/(double)N;
     double gamma2;// = gamma*gamma;
     
-    printf("\n  Correction to normalization: %g\n",gamma);
-    
     int Nmodes = proposal->size*2;
     
     double **invCij = NULL;
     double **Lij  = NULL;
     double *mean = NULL;
     double ran_no[NP];
-
-    for(int i=0; i<Nmodes; i++)
+    
+    //renormalization asymptotically converges.  Do a few laps
+    for(int j = 0; j<3; j++)
     {
-        gamma = 0.0;
-        
-        //define some helper pointers for ease of reading
-        mean = proposal->matrix[i];
-        Lij  = proposal->tensor[i];
-        
-        //scale NP-dimensional jump to 1-sigma of the joint distribution
-        double scale = 1.;///sqrt((double)NP);
-        
-        for(int n=0; n<N; n++)
+        printf(" Iteration %i:{ ",j+1);
+        for(int i=0; i<Nmodes; i++)
         {
+            gamma = 0.0;
             
-            //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
-            for(int m=0; m<NP; m++)
+            //define some helper pointers for ease of reading
+            mean = proposal->matrix[i];
+            Lij  = proposal->tensor[i];
+            
+            //scale NP-dimensional jump to 1-sigma of the joint distribution
+            double scale = 1.;///sqrt((double)NP);
+            
+            for(int n=0; n<N; n++)
             {
-                ran_no[m] = gsl_ran_gaussian(seed,scale);
+                
+                //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
+                for(int m=0; m<NP; m++)
+                {
+                    ran_no[m] = gsl_ran_gaussian(seed,scale);
+                }
+                
+                //the matrix multiplication...
+                for(int n=0; n<NP; n++)
+                {
+                    //start at mean
+                    model->source[0]->params[n] = mean[n];
+                    
+                    //add contribution from each row of invC
+                    for(int k=0; k<NP; k++) model->source[0]->params[n] += ran_no[k]*Lij[n][k];
+                }
+                
+                
+                logP = evaluate_prior(flags, data, model, prior, model->source[0]->params);
+                if(logP>-INFINITY) gamma+=1.;
             }
             
-            //the matrix multiplication...
+            
+            gamma  = gamma/(double)N;
+            gamma2 = gamma*gamma;
+            
+            printf("%.2f ",gamma);
+            
+            proposal->vector[i*2+1]/=gamma;
+            invCij = proposal->tensor[Nmodes+i];
+            Lij = proposal->tensor[i];
+            
             for(int n=0; n<NP; n++)
             {
-                //start at mean
-                model->source[0]->params[n] = mean[n];
-                
-                //add contribution from each row of invC
-                for(int k=0; k<NP; k++) model->source[0]->params[n] += ran_no[k]*Lij[n][k];
-            }
-
-            
-            logP = evaluate_prior(flags, data, model, prior, model->source[0]->params);
-            if(logP>-INFINITY) gamma+=1.;
-        }
-        
-
-        gamma  = gamma/(double)N;
-        gamma2 = gamma*gamma;
-
-        printf("\n  Mode %i: Correction = %g\n",i,gamma);
-
-        proposal->vector[i*2+1]/=gamma;
-        invCij = proposal->tensor[Nmodes+i];
-        Lij = proposal->tensor[i];
-
-        for(int n=0; n<NP; n++)
-        {
-            for(int m=0; m<data->NP; m++)
-            {
-                invCij[n][m] /= gamma2;
-                Lij[n][m]    *= gamma;
+                for(int m=0; m<data->NP; m++)
+                {
+                    invCij[n][m] /= gamma2;
+                    Lij[n][m]    *= gamma;
+                }
             }
         }
+        printf("}\n");
     }
-    
-    fprintf(stdout,"\n================================================\n\n");
+    fprintf(stdout,"================================================\n\n");
 }
 
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal)
