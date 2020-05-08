@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
             break;
         default:
             fprintf(stderr,"unsupported orbit type\n");
+            free_orbit(orbit);
             return(1);
             break;
     }
@@ -414,18 +415,8 @@ int main(int argc, char *argv[])
             }//check that index is in range
         }//loop over waveform bins
         
-        
-        
-        
-        
-        
-        //      for(int j=0; j<data->N; j++)
-        //      {
-        //        double f = (double)(j+data->qmin)/data->T;
-        //        fprintf(out,"%.12g %lg %lg %lg %lg",f,b_A[2*j],b_A[2*j+1],b_E[2*j],b_E[2*j+1]);
-        //        fprintf(out,"\n");
-        //       }
-        
+        free(b_A);
+        free(b_E);
         fclose(out);
         
         //evidence for source related to number of visits in the chain
@@ -513,6 +504,8 @@ int main(int argc, char *argv[])
                 
             }
         }
+        free_source(old_catalog_entry);
+        free_source(new_catalog_entry);
     }
     
     
@@ -636,8 +629,10 @@ int main(int argc, char *argv[])
     }//end loop over catalog entries
     
     
-    if(flags->orbit)free_orbit(orbit);
-    
+    free_noise(noise);
+    free_orbit(orbit);
+    free(detection_index);
+
     return 0;
 }
 

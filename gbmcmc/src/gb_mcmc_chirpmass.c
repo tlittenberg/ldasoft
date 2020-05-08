@@ -116,7 +116,10 @@ int main(int argc, char* argv[])
    */
   
   int i,n;
-  double logL,t0,f,fdot,A,phi,theta,cosi,psi,phase,fddot;
+  double logL,t0,A,phi,theta,cosi,psi,phase;
+    double f = 0.0;
+    double fdot = 0.0;
+    double fddot = 0.0;
   double Mc,B;
   
   while(!feof(ifile))
