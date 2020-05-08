@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
     for(int i=0; i<NMAX; i++)
     {
         data[i] = malloc(sizeof(struct Data));
-        data[i]->t0   = malloc( NMAX * sizeof(double) );
-        data[i]->tgap = malloc( NMAX * sizeof(double) );
+        data[i]->t0   = calloc( NMAX , sizeof(double) );
+        data[i]->tgap = calloc( NMAX , sizeof(double) );
     }
     parse(argc,argv,data,orbit,flags,chain,NMAX);
     int NC = chain->NC;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     }
     
     /* set approximate f/fstar for segment */
-    for(int i=0; i<NMAX; i++)
+    for(int i=0; i<flags->NDATA; i++)
         data[i]->sine_f_on_fstar = sin((data[i]->fmin + (data[i]->fmax-data[i]->fmin)/2.)/orbit->fstar);
     
     /* Remove sources outside of window */

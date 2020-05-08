@@ -280,6 +280,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     flags->knownSource = 0;
     flags->catalog     = 0;
     flags->NT          = 1;
+    flags->gap         = 0;
     flags->orbit       = 0;
     flags->prior       = 0;
     flags->update      = 0;
@@ -300,14 +301,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
          */
         sprintf(data[i]->format,"phase");
         
-        data[i]->t0   = malloc(sizeof(double)*Nmax);
-        data[i]->tgap = malloc(sizeof(double)*Nmax);
-        
-        for(int j=0; j<Nmax; j++)
-        {
-            data[i]->t0[j]   = 0.0;
-            data[i]->tgap[j] = 0.0;
-        }
+        data[i]->t0   = calloc(sizeof(double),Nmax);
+        data[i]->tgap = calloc(sizeof(double),Nmax);
         
         data[i]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
         data[i]->N        = 1024;
@@ -561,7 +556,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         data[i]->NP       = data[0]->NP;
         data[i]->Nchannel = data[0]->Nchannel;
         data[i]->DMAX     = data[0]->DMAX;
-        
+        data[i]->fmin     = data[0]->fmin;
         
         data[i]->cseed = data[0]->cseed+i*flags->NDATA;
         data[i]->nseed = data[0]->nseed+i*flags->NDATA;
@@ -1067,8 +1062,7 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
         res_var[n] = malloc(data->Nchannel*sizeof(double *));
         for(int m=0; m<data->Nchannel; m++)
         {
-            res_var[n][m] =  malloc(data->NT*sizeof(double));
-            for(int k=0; k<data->NT; k++) res_var[n][m][k] = 0.0;
+            res_var[n][m] =  calloc(data->NT,sizeof(double));
         }
     }
     

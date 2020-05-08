@@ -52,20 +52,20 @@ void init_A_filters(struct Orbit *orbit, struct Data *data, struct Filter *F_fil
 {
     long M = F_filter->M_filter;
     
-    F_filter->A1_fX = malloc((2*M)*sizeof(double));
-    F_filter->A2_fX = malloc((2*M)*sizeof(double));
-    F_filter->A3_fX = malloc((2*M)*sizeof(double));
-    F_filter->A4_fX = malloc((2*M)*sizeof(double));
+    F_filter->A1_fX = calloc((2*M),sizeof(double));
+    F_filter->A2_fX = calloc((2*M),sizeof(double));
+    F_filter->A3_fX = calloc((2*M),sizeof(double));
+    F_filter->A4_fX = calloc((2*M),sizeof(double));
     
-    F_filter->A1_fA = malloc((2*M)*sizeof(double));
-    F_filter->A2_fA = malloc((2*M)*sizeof(double));
-    F_filter->A3_fA = malloc((2*M)*sizeof(double));
-    F_filter->A4_fA = malloc((2*M)*sizeof(double));
+    F_filter->A1_fA = calloc((2*M),sizeof(double));
+    F_filter->A2_fA = calloc((2*M),sizeof(double));
+    F_filter->A3_fA = calloc((2*M),sizeof(double));
+    F_filter->A4_fA = calloc((2*M),sizeof(double));
     
-    F_filter->A1_fE = malloc((2*M)*sizeof(double));
-    F_filter->A2_fE = malloc((2*M)*sizeof(double));
-    F_filter->A3_fE = malloc((2*M)*sizeof(double));
-    F_filter->A4_fE = malloc((2*M)*sizeof(double));
+    F_filter->A1_fE = calloc((2*M),sizeof(double));
+    F_filter->A2_fE = calloc((2*M),sizeof(double));
+    F_filter->A3_fE = calloc((2*M),sizeof(double));
+    F_filter->A4_fE = calloc((2*M),sizeof(double));
     
     initialize_XLS(M, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE);
     initialize_XLS(M, F_filter->A2_fX, F_filter->A2_fA, F_filter->A2_fE);
@@ -116,8 +116,8 @@ void init_M_matrix(struct Filter *F_filter, struct Data *data)
     F_filter->M_inv_AE = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
     for(i=0; i<4; i++)
     {
-        F_filter->M_inv_X[i]  = malloc(4*sizeof(double));//dmatrix(0,3,0,3);
-        F_filter->M_inv_AE[i] = malloc(4*sizeof(double));//dmatrix(0,3,0,3);
+        F_filter->M_inv_X[i]  = calloc(4,sizeof(double));//dmatrix(0,3,0,3);
+        F_filter->M_inv_AE[i] = calloc(4,sizeof(double));//dmatrix(0,3,0,3);
         
         for (j=0;j<4;j++)
         {
@@ -166,7 +166,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     
     M_filter = F_filter->M_filter;
     
-    params = malloc(d*sizeof(double));  // allocate memory for filter parameters
+    params = calloc(d,sizeof(double));  // allocate memory for filter parameters
     for (i=0;i<d;i++)  		 // initialize the array to zeros
     {
         params[i] = 0.0;

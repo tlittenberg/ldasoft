@@ -115,17 +115,10 @@ double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
     int NFFT = 2*N;
     double match=0;
     
-    double *a_A = malloc(NFFT*sizeof(double));
-    double *a_E = malloc(NFFT*sizeof(double));
-    double *b_A = malloc(NFFT*sizeof(double));
-    double *b_E = malloc(NFFT*sizeof(double));
-    for(int i=0; i<NFFT; i++)
-    {
-        a_A[i] = 0.0;
-        a_E[i] = 0.0;
-        b_A[i] = 0.0;
-        b_E[i] = 0.0;
-    }
+    double *a_A = calloc(NFFT,sizeof(double));
+    double *a_E = calloc(NFFT,sizeof(double));
+    double *b_A = calloc(NFFT,sizeof(double));
+    double *b_E = calloc(NFFT,sizeof(double));
     
     int qmin = a->qmin - a->imin;
     
@@ -190,17 +183,10 @@ double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise
   int N = a->tdi->N;
   int NFFT = 2*N;
 
-  double *a_A = malloc(NFFT*sizeof(double));
-  double *a_E = malloc(NFFT*sizeof(double));
-  double *b_A = malloc(NFFT*sizeof(double));
-  double *b_E = malloc(NFFT*sizeof(double));
-  for(int i=0; i<NFFT; i++)
-  {
-    a_A[i] = 0.0;
-    a_E[i] = 0.0;
-    b_A[i] = 0.0;
-    b_E[i] = 0.0;
-  }
+  double *a_A = calloc(NFFT,sizeof(double));
+  double *a_E = calloc(NFFT,sizeof(double));
+  double *b_A = calloc(NFFT,sizeof(double));
+  double *b_E = calloc(NFFT,sizeof(double));
 
   int qmin = a->qmin - a->imin;
 
