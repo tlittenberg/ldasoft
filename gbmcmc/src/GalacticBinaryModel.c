@@ -123,31 +123,19 @@ void alloc_data(struct Data **data_vec, struct Flags *flags)
                 
                 for(int n=0; n<flags->NT; n++)
                 {
-                    data->S_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
-                    data->h_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
-                    data->r_pow[i][l][n]    = malloc(data->Nwave*sizeof(double));
-                    data->h_rec[i_re][l][n] = malloc(data->Nwave*sizeof(double));
-                    data->h_rec[i_im][l][n] = malloc(data->Nwave*sizeof(double));
-                    data->h_res[i_re][l][n] = malloc(data->Nwave*sizeof(double));
-                    data->h_res[i_im][l][n] = malloc(data->Nwave*sizeof(double));
-                    for(int m=0; m<data->Nwave; m++)
-                    {
-                        
-                        data->h_rec[i_re][l][n][m] = 0.0;
-                        data->h_rec[i_im][l][n][m] = 0.0;
-                        data->h_res[i_re][l][n][m] = 0.0;
-                        data->h_res[i_im][l][n][m] = 0.0;
-                        data->r_pow[i][l][n][m]    = 0.0;
-                        data->h_pow[i][l][n][m]    = 0.0;
-                        data->S_pow[i][l][n][m]    = 0.0;
-                        
-                    }
+                    data->S_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                    data->h_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                    data->r_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                    data->h_rec[i_re][l][n] = calloc(data->Nwave,sizeof(double));
+                    data->h_rec[i_im][l][n] = calloc(data->Nwave,sizeof(double));
+                    data->h_res[i_re][l][n] = calloc(data->Nwave,sizeof(double));
+                    data->h_res[i_im][l][n] = calloc(data->Nwave,sizeof(double));
                 }
             }
         }
         
         //Spectrum proposal
-        data->p = malloc(data->N*sizeof(double));
+        data->p = calloc(data->N,sizeof(double));
     }
 }
 
@@ -157,18 +145,18 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     int NC = chain->NC;
     char filename[1024];
     
-    chain->index = malloc(NC*sizeof(int));
-    chain->acceptance = malloc(NC*sizeof(double));
-    chain->temperature = malloc(NC*sizeof(double));
-    chain->avgLogL     = malloc(NC*sizeof(double));
-    chain->dimension   = malloc(NC*sizeof(int *));
+    chain->index = calloc(NC,sizeof(int));
+    chain->acceptance = calloc(NC,sizeof(double));
+    chain->temperature = calloc(NC,sizeof(double));
+    chain->avgLogL     = calloc(NC,sizeof(double));
+    chain->dimension   = calloc(NC,sizeof(int *));
     for(ic=0; ic<NC; ic++)
     {
         chain->index[ic]=ic;
         chain->acceptance[ic] = 1.0;
         chain->temperature[ic] = pow(1.2,(double)ic);
         chain->avgLogL[ic] = 0.0;
-        chain->dimension[ic] = malloc(flags->DMAX*sizeof(int));
+        chain->dimension[ic] = calloc(flags->DMAX,sizeof(int));
         for(int id=0; id<flags->DMAX; id++) chain->dimension[ic][id] = 0;
     }
     //set hottest chain to ~infinite temperature
@@ -272,9 +260,9 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, 
     model->noise       = malloc( NT * sizeof(struct Noise *)       );
     model->tdi         = malloc( NT * sizeof(struct TDI *)         );
     model->residual    = malloc( NT * sizeof(struct TDI *)         );
-    model->t0          = malloc( NT * sizeof(double)               );
-    model->t0_min      = malloc( NT * sizeof(double)               );
-    model->t0_max      = malloc( NT * sizeof(double)               );
+    model->t0          = calloc( NT , sizeof(double)               );
+    model->t0_min      = calloc( NT , sizeof(double)               );
+    model->t0_max      = calloc( NT , sizeof(double)               );
     
     for(n = 0; n<NT; n++)
     {
@@ -294,9 +282,9 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, 
         alloc_source(model->source[n],NFFT,Nchannel,NP);
     }
     
-    model->logPriorVolume = malloc(NP*sizeof(double));
+    model->logPriorVolume = calloc(NP,sizeof(double));
     model->prior = malloc(NP*sizeof(double *));
-    for(n=0; n<NP; n++) model->prior[n] = malloc(2*sizeof(double));
+    for(n=0; n<NP; n++) model->prior[n] = calloc(2,sizeof(double));
 }
 
 void copy_model(struct Model *origin, struct Model *copy)
@@ -513,14 +501,14 @@ void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
     tdi->N = NFFT;
     
     //Michelson
-    tdi->X = malloc(2*tdi->N*sizeof(double));
-    tdi->Y = malloc(2*tdi->N*sizeof(double));
-    tdi->Z = malloc(2*tdi->N*sizeof(double));
+    tdi->X = calloc(2,tdi->N*sizeof(double));
+    tdi->Y = calloc(2,tdi->N*sizeof(double));
+    tdi->Z = calloc(2,tdi->N*sizeof(double));
     
     //Noise-orthogonal
-    tdi->A = malloc(2*tdi->N*sizeof(double));
-    tdi->E = malloc(2*tdi->N*sizeof(double));
-    tdi->T = malloc(2*tdi->N*sizeof(double));
+    tdi->A = calloc(2,tdi->N*sizeof(double));
+    tdi->E = calloc(2,tdi->N*sizeof(double));
+    tdi->T = calloc(2,tdi->N*sizeof(double));
     
     int n;
     for(n=0; n<2*tdi->N; n++)
@@ -573,9 +561,9 @@ void alloc_noise(struct Noise *noise, int NFFT)
     noise->etaE = 1.0;
     noise->etaX = 1.0;
     
-    noise->SnA = malloc(NFFT*sizeof(double));
-    noise->SnE = malloc(NFFT*sizeof(double));
-    noise->SnX = malloc(NFFT*sizeof(double));
+    noise->SnA = calloc(NFFT,sizeof(double));
+    noise->SnE = calloc(NFFT,sizeof(double));
+    noise->SnX = calloc(NFFT,sizeof(double));
     
     int n;
     for(n=0; n<NFFT; n++)
@@ -678,7 +666,7 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP)
     
     
     //Package parameters for waveform generator
-    source->params=malloc(NP*sizeof(double));
+    source->params=calloc(NP,sizeof(double));
     
     //Response
     source->tdi = malloc(sizeof(struct TDI));
@@ -687,11 +675,11 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP)
     //FIsher
     source->fisher_matrix = malloc(NP*sizeof(double *));
     source->fisher_evectr = malloc(NP*sizeof(double *));
-    source->fisher_evalue = malloc(NP*sizeof(double));
+    source->fisher_evalue = calloc(NP,sizeof(double));
     for(int i=0; i<NP; i++)
     {
-        source->fisher_matrix[i] = malloc(NP*sizeof(double));
-        source->fisher_evectr[i] = malloc(NP*sizeof(double));
+        source->fisher_matrix[i] = calloc(NP,sizeof(double));
+        source->fisher_evectr[i] = calloc(NP,sizeof(double));
     }
 };
 

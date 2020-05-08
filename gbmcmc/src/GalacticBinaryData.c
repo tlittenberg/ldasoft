@@ -54,7 +54,6 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     data->fmax = data->fmin + data->N/data->T;
     data->qmin = (int)(data->fmin*data->T);
     data->qmax = data->qmin+data->N;
-    
     double f, junk;
     char filename[128];
     
@@ -509,6 +508,13 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
     FILE *paramFile;
     char filename[1024];
     
+    if(flags->NINJ==0)
+    {
+      data_vec[0]->fmax = data_vec[0]->fmin + data_vec[0]->N/data_vec[0]->T;
+      data_vec[0]->qmin = (int)(data_vec[0]->fmin*data_vec[0]->T);
+      data_vec[0]->qmax = data_vec[0]->qmin+data_vec[0]->N;
+   }
+
     for(int ii = 0; ii<flags->NINJ; ii++)
     {
         

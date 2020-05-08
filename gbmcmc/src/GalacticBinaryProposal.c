@@ -902,7 +902,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
      */
     
     //matrix to hold maximized extrinsic parameters
-    double *Fparams = malloc(4*sizeof(double));
+    double *Fparams = calloc(4,sizeof(double));
     
     //grid sizes
     int n_f     = 4*data->N;
@@ -938,7 +938,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
      */
     proposal->matrix = malloc(3*sizeof(double *));
     for(int i=0; i<3; i++)
-        proposal->matrix[i] = malloc(2*sizeof(double));
+        proposal->matrix[i] = calloc(2,sizeof(double));
     
     proposal->matrix[0][0] = (double)n_f;
     proposal->matrix[0][1] = d_f;
@@ -1051,7 +1051,7 @@ void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Propo
      */
     proposal->size         = flags->galaxyPrior;
     proposal->matrix       = malloc(2*sizeof(double *));
-    proposal->matrix[0]    = malloc(3*sizeof(double));
+    proposal->matrix[0]    = calloc(3,sizeof(double));
     proposal->matrix[0][0] = prior->dcostheta;
     proposal->matrix[0][1] = prior->dphi;
     proposal->matrix[0][2] = (double)prior->nphi;
@@ -1085,9 +1085,9 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     
     fprintf(stdout, "  samples in chain: %i\n",proposal->size);
     
-    proposal->vector = malloc(proposal->size * sizeof(double));
+    proposal->vector = calloc(proposal->size , sizeof(double));
     proposal->matrix = malloc(data->NP * sizeof(double*));
-    for(int j=0; j<data->NP; j++) proposal->matrix[j] = malloc(proposal->size * sizeof(double));
+    for(int j=0; j<data->NP; j++) proposal->matrix[j] = calloc(proposal->size , sizeof(double));
     
     struct Model *temp = malloc(sizeof(struct Model));
     alloc_model(temp,NMAX,data->N,data->Nchannel, data->NP, data->NT);
@@ -1218,20 +1218,20 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     
     
     //book keeping (weights and determinants
-    proposal->vector = malloc(Ncov*2*sizeof(double));
+    proposal->vector = calloc(Ncov*2,sizeof(double));
     
     //centroids
     proposal->matrix = malloc(Ncov*sizeof(double*));
-    for(int j=0; j<Ncov; j++) proposal->matrix[j] = malloc(NP * sizeof(double));
+    for(int j=0; j<Ncov; j++) proposal->matrix[j] = calloc(NP , sizeof(double));
     
     //covariance matrix and friends
     proposal->tensor = malloc((Ncov*2)*sizeof(double**));
     for(int j=0; j<Ncov*2; j++)
     {
-        proposal->tensor[j] = malloc(NP * sizeof(double**));
+        proposal->tensor[j] = malloc(NP * sizeof(double*));
         for(int k=0; k<NP; k++)
         {
-            proposal->tensor[j][k] = malloc(NP * sizeof(double*));
+            proposal->tensor[j][k] = calloc(NP , sizeof(double));
         }
     }
     
