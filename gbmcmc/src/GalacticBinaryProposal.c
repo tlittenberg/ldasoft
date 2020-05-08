@@ -1127,6 +1127,7 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
 
     double logP;
     int N = 100000;
+    int NP = data->NP;
 
     //correction factor to rescale & renormalize covariance matrix
     double gamma = 0;// = (double)i/(double)N;
@@ -1139,7 +1140,7 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
     double **invCij = NULL;
     double **Lij  = NULL;
     double *mean = NULL;
-    double ran_no[data->NP] = {0};
+    double ran_no[NP];
 
     for(int i=0; i<Nmodes; i++)
     {
@@ -1156,19 +1157,19 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
         {
             
             //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
-            for(int m=0; m<data->NP; m++)
+            for(int m=0; m<NP; m++)
             {
                 ran_no[m] = gsl_ran_gaussian(seed,scale);
             }
             
             //the matrix multiplication...
-            for(int n=0; n<data->NP; n++)
+            for(int n=0; n<NP; n++)
             {
                 //start at mean
                 model->source[0]->params[n] = mean[n];
                 
                 //add contribution from each row of invC
-                for(int k=0; k<data->NP; k++) model->source[0]->params[n] += ran_no[k]*Lij[n][k];
+                for(int k=0; k<NP; k++) model->source[0]->params[n] += ran_no[k]*Lij[n][k];
             }
 
             
@@ -1186,7 +1187,7 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
         invCij = proposal->tensor[Nmodes+i];
         Lij = proposal->tensor[i];
 
-        for(int n=0; n<data->NP; n++)
+        for(int n=0; n<NP; n++)
         {
             for(int m=0; m<data->NP; m++)
             {

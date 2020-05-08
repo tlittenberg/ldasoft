@@ -350,10 +350,10 @@ int main(int argc, char *argv[])
         entry = catalog->entry[n];
         
         //get sample containing median frequency as identifier of source
-        f_vec = malloc(entry->I*sizeof(double));
+        f_vec = calloc(entry->I,sizeof(double));
         for(int i=0; i<entry->I; i++) f_vec[i] = entry->source[i]->f0;
         
-        index = malloc(entry->I*(sizeof(size_t)));
+        index = calloc(entry->I,(sizeof(size_t)));
         gsl_sort_index(index,f_vec,1,entry->I);
         i_med = index[entry->I/2];
         free(f_vec);
@@ -541,13 +541,7 @@ int main(int argc, char *argv[])
             
             //allocate and zero
             for(int k=0; k<data->Nchannel; k++)
-            {
-                hrec[j][k] = malloc(entry->I * sizeof(double));
-                for(int i=0; i<entry->I; i++)
-                {
-                    hrec[j][k][i] = 0.0;
-                }
-            }
+                hrec[j][k] = calloc(entry->I , sizeof(double));
         }
         
         //insert waveform power
