@@ -76,8 +76,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     double invstep;
     
     // Plus and minus parameters:
-    double *params_p = malloc(NP*sizeof(double));
-    double *params_m = malloc(NP*sizeof(double));
+    double *params_p = calloc(NP,sizeof(double));
+    double *params_m = calloc(NP,sizeof(double));
     
     // Plus and minus templates for each detector:
     struct Source *wave_p = malloc(sizeof(struct Source));
@@ -262,18 +262,18 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     double eplus[4][4], ecross[4][4];
     /*   Spacecraft position and separation vector   */
     double *x, *y, *z;
-    double r12[4],r13[4],r23[4];
+    double r12[4]={0},r13[4]={0},r23[4]={0};
     /*   Dot products   */
-    double kdotx[4],kdotr[4][4];
+    double kdotx[4]={0},kdotr[4][4];
     /*   Convenient quantities   */
     double dplus[4][4],dcross[4][4];
     /*   GW source parameters   */
     double phi, psi, amp, Aplus, Across, f0, dfdt, d2fdt2, phi0;
     double costh, sinth, cosph, sinph, cosi, cosps, sinps;
     /*   Time and distance variables   */
-    double t, xi[4];
+    double t, xi[4] = {0};
     /*   Gravitational wave frequency & ratio of f and transfer frequency f*  */
-    double f[4], fonfs[4];
+    double f[4] = {0},fonfs[4] = {0};
     /*   LISA response to slow terms (Real & Imaginary pieces)   */
     //Static quantities (Re and Im)
     double DPr, DPi, DCr, DCi;
@@ -290,25 +290,31 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     double ***d;
     
     /*   Allocating Arrays   */
-    x = malloc(sizeof(double)*4);
-    y = malloc(sizeof(double)*4);
-    z = malloc(sizeof(double)*4);
+    x = calloc(sizeof(double),4);
+    y = calloc(sizeof(double),4);
+    z = calloc(sizeof(double),4);
     
-    data12 = malloc(sizeof(double)*(BW2+1));
-    data21 = malloc(sizeof(double)*(BW2+1));
-    data31 = malloc(sizeof(double)*(BW2+1));
-    data13 = malloc(sizeof(double)*(BW2+1));
-    data23 = malloc(sizeof(double)*(BW2+1));
-    data32 = malloc(sizeof(double)*(BW2+1));
+    data12 = calloc(sizeof(double),(BW2+1));
+    data21 = calloc(sizeof(double),(BW2+1));
+    data31 = calloc(sizeof(double),(BW2+1));
+    data13 = calloc(sizeof(double),(BW2+1));
+    data23 = calloc(sizeof(double),(BW2+1));
+    data32 = calloc(sizeof(double),(BW2+1));
     
-    //d = d3tensor(1,3,1,3,1,BW2);
     d = malloc(sizeof(double**)*4);
     for(i=0; i<4; i++)
     {
         d[i] = malloc(sizeof(double*)*4);
         for(j=0; j<4; j++)
         {
-            d[i][j] = malloc(sizeof(double*)*(BW2+1));
+            	d[i][j] = calloc(sizeof(double),(BW2+1));
+		dplus[i][j] = 0.0;
+		dcross[i][j] = 0.0;
+		eplus[i][j] = 0.0;
+		ecross[i][j] = 0.0;
+		kdotr[i][j] = 0.0;
+		TR[i][j] = 0.0;
+		TI[i][j] = 0.0;
         }
     }
     
@@ -404,10 +410,6 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         r12[2] = (y[2] - y[1])/orbit->L;   r13[2] = (y[3] - y[1])/orbit->L;   r23[2] = (y[3] - y[2])/orbit->L;
         r12[3] = (z[2] - z[1])/orbit->L;   r13[3] = (z[3] - z[1])/orbit->L;   r23[3] = (z[3] - z[2])/orbit->L;
         
-        
-        //Zero arrays to be summed
-        dplus[1][2]  = dplus[1][3]  = dplus[2][1]  = dplus[2][3]  = dplus[3][1]  = dplus[3][2]  = 0.;
-        dcross[1][2] = dcross[1][3] = dcross[2][1] = dcross[2][3] = dcross[3][1] = dcross[3][2] = 0.;
         
         //Convenient quantities d+ & dx
         for(i=1; i<=3; i++)
@@ -522,8 +524,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         d[1][2][i] = a12[i];  d[2][1][i] = a21[i];  d[3][1][i] = a31[i];
         d[1][3][i] = a13[i];  d[2][3][i] = a23[i];  d[3][2][i] = a32[i];
     }
-    
-    /*   Call subroutines for synthesizing different TDI data channels  */
+	/*   Call subroutines for synthesizing different TDI data channels  */
     if(strcmp("phase",format) == 0)
         LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
     else if(strcmp("frequency",format) == 0)
