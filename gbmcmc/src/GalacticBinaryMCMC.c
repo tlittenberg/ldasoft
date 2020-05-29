@@ -238,8 +238,37 @@ int main(int argc, char *argv[])
         }//end loop over frequency segments
     }//end loop over chains
     
-    if(flags->resume) restore_chain_state(orbit, data, model, chain, flags, &mcmc_start);
-    
+    /* Start analysis from saved chain state */
+    if(flags->resume)
+    {
+        fprintf(stdout,"\n=============== Checkpointing ===============\n");
+
+        //check for files needed to resume
+        FILE *fptr = NULL;
+        char filename[MAXSTRINGSIZE];
+        int file_error = 0;
+        
+        for(int ic=0; ic<chain->NC; ic++)
+        {
+            sprintf(filename,"checkpoint/chain_state_%i.dat",ic);
+            
+            if( (fptr = fopen(filename,"r")) == NULL )
+            {
+                fprintf(stderr,"Warning: Could not checkpoint run state\n");
+                fprintf(stderr,"         Parameter file %s does not exist\n",filename);
+                file_error++;
+                break;
+            }
+        }
+        
+        //if all of the files exist resume run from checkpointed state
+        if(!file_error)
+        {
+            fprintf(stdout,"   Checkpoint files found. Resuming chain\n");
+            restore_chain_state(orbit, data, model, chain, flags, &mcmc_start);
+        }
+        fprintf(stdout,"============================================\n\n");
+    }
     
     //test covariance proposal
     /*
