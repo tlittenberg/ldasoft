@@ -72,5 +72,6 @@ int sgn(double v);
 
 void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fdot, double theta, double phi, double *logL_X, double *logL_AE, double *Fparams);
 
+void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *xmax);
 
 #endif /* GalacticBinaryFStatistic_h */
