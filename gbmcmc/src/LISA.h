@@ -98,7 +98,8 @@ double GBnoise(double T, double f);
 /* Fractional frequency versions of TDI & Sn(f) codes */
 void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
 double AEnoise_FF(double L, double fstar, double f);
+//double GBnoise_FF(double T, double fstar, double f);
 double GBnoise_FF(double T, double fstar, double f);
-
+double XYZnoise_FF(double L, double fstar, double f);
 
 #endif /* LISA_h */
