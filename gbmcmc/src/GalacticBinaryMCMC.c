@@ -616,15 +616,15 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     //hold sky position fixed to injected value
     if(flags->fixSky)
     {
-        source_y->costheta = data->inj->costheta;
-        source_y->phi      = data->inj->phi;
+        source_y->params[1] = data->inj->costheta;
+        source_y->params[2] = data->inj->phi;
     }
     
     //hold frequencies fixed to injected value
     if(flags->fixFreq)
     {
-        source_y->f0   = data->inj->f0;
-        source_y->dfdt = data->inj->dfdt;
+        source_y->params[0] = data->inj->f0*data->T;
+        source_y->params[7] = data->inj->dfdt*data->T*data->T;
     }
     
     //call associated proposal density functions
