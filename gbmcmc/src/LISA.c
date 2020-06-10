@@ -19,6 +19,7 @@
 
 
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "LISA.h"
@@ -498,14 +499,100 @@ static double ipow(double x, int n)
     return xn;
 }
 
-double AEnoise_FF(double L, double fstar, double f)
+/*
+ adapted from LDC git
+ https://gitlab.in2p3.fr/LISA/LDC/-/blob/master/ldc/lisa/noise/noise.py
+ commit #491bf4b3
+ (c) LISA 2019
+*/
+static void get_noise_levels(char model[], double f, double *Spm, double *Sop)
 {
-    return 4.*(f/fstar)*(f/fstar)*AEnoise(L,fstar,f);
+    if (strcmp(model, "radler") == 0)
+    {
+      *Spm = 2.5e-48*(1.0 + pow(f/1e-4,-2))/f/f;
+      *Sop = 1.8e-37*(0.5)*(0.5)*f*f;
+    }
+    else if (strcmp(model, "scirdv1") == 0)
+    {
+        
+        double fonc = PI2*f/CLIGHT;
+        
+        double DSoms_d = 2.25e-22;//15.e-12*15.e-12;
+        double DSa_a = 9.00e-30;//3.e-15*3.e-15;
+      
+      double Sa_a = DSa_a * (1.0 +(0.4e-3/f)*(0.4e-3/f)) * (1.0 + pow((f/8.e-3),4)); // in acceleration
+
+      double Sa_d = Sa_a*pow(PI2*f,-4.); // in displacement
+      
+      *Spm = Sa_d*(fonc)*(fonc);
+      
+      double Soms_d  = DSoms_d*(1. + pow(2.e-3/f, 4.) );
+      double Soms_nu = Soms_d*(fonc)*(fonc);
+      *Sop = Soms_nu;
+    }
+    /* more else if clauses */
+    else /* default: */
+    {
+        fprintf(stderr,"Unrecognized noise model %s\n",model);
+        exit(1);
+    }
 }
 
+double XYZnoise_FF(double L, double fstar, double f)
+{
+    double Spm, Sop;
+    
+    get_noise_levels("scirdv1",f,&Spm,&Sop);
+    
+    double x = f/fstar;
+    double sinx  = sin(x);
+    double cosx  = cos(x);
+
+    return 16. * sinx*sinx * ( 2.*(1.0 + cosx*cosx)*Spm + Sop );
+}
+
+double AEnoise_FF(double L, double fstar, double f)
+{
+
+    double Spm, Sop;
+    
+    get_noise_levels("radler",f,&Spm,&Sop);
+
+    double x = f/fstar;
+    
+    double sinx  = sin(x);
+    double cosx  = cos(x);
+    double cos2x = cos(2.*x);
+    
+    return  8. * sinx*sinx * ( 2.*Spm*(3. + 2.*cosx + cos2x) + Sop*(2. + cosx) );
+    
+}
+
+/*
+ adapted from LDC git
+ https://gitlab.in2p3.fr/LISA/LDC/-/blob/master/ldc/lisa/noise/noise.py
+ commit #491bf4b3
+ (c) LISA 2019
+*/
 double GBnoise_FF(double T, double fstar, double f)
 {
-    return 4.*(f/fstar)*(f/fstar)*GBnoise(T,f);
+    double x = f/fstar;
+    double t = 4.*x*x*sin(x)*sin(x);
+    
+    double Ampl = 1.2826e-44;
+    double alpha = 1.629667;
+    double fr2 = 4.810781e-4;
+    double af1 = -2.235e-1;
+    double bf1 = -2.7040844;
+    double afk = -3.60976122e-1;
+    double bfk = -2.37822436;
+    
+    double fr1 = pow(10., af1*log10(T/31457280.) + bf1);
+    double knee = pow(10., afk*log10(T/31457280.) + bfk);
+    double SG_sense = Ampl * exp(-pow(f/fr1,alpha)) * pow(f,-7./3.) * 0.5 * (1.0 + tanh(-(f-knee)/fr2) );
+    double SGXYZ = t*SG_sense;
+    double SGAE  = 1.5*SGXYZ;
+    return SGAE;
 }
 
 static double rednoise(double f)
