@@ -234,7 +234,8 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
     
     FILE *injectionFile;
     FILE *paramFile;
-    char filename[1024];
+    char filename[MAXSTRINGSIZE];
+    char header[MAXSTRINGSIZE];
     
     for(int ii = 0; ii<flags->NINJ; ii++)
     {
@@ -245,7 +246,15 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         else
             fprintf(stdout,"Injecting verification binary %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NINJ);
         
-        fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&D);
+        //strip off header
+        fgets(header, MAXSTRINGSIZE, injectionFile);
+        
+        //parse injection parameters
+        fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&cosi,&D);
+        
+        //incoming distance in kpc, function expects pc
+        D *= 1000.0;
+        
         
         //draw extrinsic parameters
         
@@ -256,7 +265,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         gsl_rng_set (r, data_vec[ii]->iseed);
         
         //TODO: support for verification binary priors
-        cosi = -1.0 + gsl_rng_uniform(r)*2.0;
+        //cosi = -1.0 + gsl_rng_uniform(r)*2.0;
         phi0 = gsl_rng_uniform(r)*M_PI*2.;
         psi  = gsl_rng_uniform(r)*M_PI/4.;
         
