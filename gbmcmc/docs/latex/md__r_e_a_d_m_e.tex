@@ -1,0 +1,48 @@
+Get help with {\ttfamily gb\+\_\+mcmc -\/-\/help}\hypertarget{md__r_e_a_d_m_e_autotoc_md1}{}\doxysection{Analyze on-\/the-\/fly data \& source simulation}\label{md__r_e_a_d_m_e_autotoc_md1}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{gb\_mcmc \(\backslash\)}
+\DoxyCodeLine{  -\/-\/inj <path to>/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource\_0.txt}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md2}{}\doxysection{Analyze L\+D\+C simulations}\label{md__r_e_a_d_m_e_autotoc_md2}
+See {\ttfamily src/\+R\+E\+A\+D\+M\+E.\+md}\hypertarget{md__r_e_a_d_m_e_autotoc_md3}{}\doxysection{Analyze verification binary with E\+M \char`\"{}priors\char`\"{}}\label{md__r_e_a_d_m_e_autotoc_md3}
+Run with sky-\/location fixed 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{gb\_mcmc \(\backslash\)}
+\DoxyCodeLine{  -\/-\/inj <path to>/ldasoft/gbmcmc/etc/sources/verification/ZTF1539.dat \(\backslash\)}
+\DoxyCodeLine{  -\/-\/known-\/source \(\backslash\)}
+\DoxyCodeLine{  -\/-\/no-\/rj \(\backslash\)}
+\DoxyCodeLine{  -\/-\/cheat \(\backslash\)}
+\DoxyCodeLine{  -\/-\/samples 128}
+\end{DoxyCode}
+
+
+Run with sky-\/location and orbital period fixed 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{gb\_mcmc \(\backslash\)}
+\DoxyCodeLine{  -\/-\/inj /Users/tlittenb/ldasoft/galactic\_binaries/etc/sources/verification/ZTF1539\_tides.dat \(\backslash\)}
+\DoxyCodeLine{  -\/-\/known-\/source \(\backslash\)}
+\DoxyCodeLine{  -\/-\/no-\/rj \(\backslash\)}
+\DoxyCodeLine{  -\/-\/cheat \(\backslash\)}
+\DoxyCodeLine{  -\/-\/samples 128 \(\backslash\)}
+\DoxyCodeLine{  -\/-\/fix-\/freq}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md4}{}\doxysection{Use U\+C\+Bs as calibration sources}\label{md__r_e_a_d_m_e_autotoc_md4}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{gb\_mcmc \(\backslash\)}
+\DoxyCodeLine{  -\/-\/inj <path to>/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource\_0.txt \(\backslash\)}
+\DoxyCodeLine{  -\/-\/duration 604948 \(\backslash\)}
+\DoxyCodeLine{  -\/-\/segments 2 \(\backslash\)}
+\DoxyCodeLine{  -\/-\/fit-\/gap \(\backslash\)}
+\DoxyCodeLine{  -\/-\/samples 128 \(\backslash\)}
+\DoxyCodeLine{  -\/-\/no-\/rj}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md5}{}\doxysection{Output format}\label{md__r_e_a_d_m_e_autotoc_md5}
+The {\ttfamily dimension\+\_\+chain.\+dat.\+N} files contain the post-\/burnin posterior samples of the binary parameters for the subset of models that have exactly {\ttfamily N} binaries. The columns are \begin{DoxyVerb}f fdot A cos_colat long cos_inc psi phi
+\end{DoxyVerb}
+
+
+If there are more than one source, the sources cycle in the output (so line 1 is the first source, first posterior sample; line 2 is the second source, first posterior sample, etc).
+
+The {\ttfamily parameter\+\_\+chain.\+dat.\+M} files should be used in concert with the {\ttfamily model\+\_\+chain.\+dat.\+M} files. {\ttfamily model\+\_\+chain.\+dat.\+M} records how many binaries were in the model at each M\+C\+MC step; there are a corresponding number of lines in {\ttfamily parameter\+\_\+chain.\+dat.\+M} for that step\textquotesingle{}s binary parameters (i.\+e. {\ttfamily parameter\+\_\+chain.\+dat.\+M} contains a mashed-\/together compilation of the {\ttfamily dimension\+\_\+chain.\+dat.\+N} files). The index {\ttfamily M} for these files refers to the {\itshape temperature} of the parallel-\/tempered chain that is producing these outputs ({\ttfamily M = 0} is the target distribution; {\ttfamily M $>$ 0} is softened versions of this distribution; if you don\textquotesingle{}t know what this means, you want {\ttfamily M=0}). Unline {\ttfamily dimension\+\_\+chain.\+dat.\+N} files, these files contain {\itshape all} samples including burnin. Unless you care deeply about checkpointing or run diagnostics, you do not need these files. Use {\ttfamily dimension\+\_\+chain.\+dat.\+N} files, as described above. 
