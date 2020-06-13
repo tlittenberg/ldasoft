@@ -23,42 +23,52 @@
 
 #define MAXSTRINGSIZE 1024
 
+/*! \brief
+ * The Data structure stores information about the data being analyzed,
+ * including size of data, where it is located in the full LISA band,
+ * information about gaps, etc.
+ *
+ * The structure stores the Fourier-domain TDI data channels, and a
+ * fiducial model for the instrument noise. It also has memory allocated
+ * for storing the reconstructed waveforms, residuals, and noise models.
+ */
 struct Data
 {
-    int N;        //number of frequency bins
-    int NT;       //number of time segments
-    int Nchannel; //number of data channels
-    int DMAX;     //max dimension of signal model
+    int N;        //!<number of frequency bins
+    int NT;       //!<number of time segments
+    int Nchannel; //!<number of data channels
+    int DMAX;     //!<max dimension of signal model
     
-    long cseed; //seed for MCMC
-    long nseed; //seed for noise realization
-    long iseed; //seed for injection parameters
+    long cseed; //!<seed for MCMC
+    long nseed; //!<seed for noise realization
+    long iseed; //!<seed for injection parameters
     
-    double T;
-    double sqT;
+    double T; //!<observation time
+    double sqT; //!<\f$\sqrt{T}\f$
     
-    int qmin;
-    int qmax;
-    int qpad;
+    int qmin; //!<minimum frequency bin of segment
+    int qmax; //!<maximum frequency bin of segment
+    int qpad; //!<number of frequency bins padding ends of segment
     
-    double fmin;
-    double fmax;
-    double sine_f_on_fstar;
+    double fmin; //!<minimum frequency of segment
+    double fmax; //!<maximum frequency of segment
+    double sine_f_on_fstar; //!<\f$sin(f * 2\pi L/c)\f$
     
     //some manipulations of f,fmin for likelihood calculation
-    double sum_log_f;
-    double logfmin;
+    double sum_log_f; //!<\f$\sum \log(f)\f$ appears in some normalizations
+    double logfmin; //!<\f$\log(f_{\rm min})\f$ appears in some normalizations
     
-    double *t0;   //start times of segments
-    double *tgap; //time between segments
+    double *t0;   //!<start times of segments
+    double *tgap; //!<time between segments
     
     //Response
-    struct TDI **tdi;
-    struct Noise **noise;
+    struct TDI **tdi; //!<TDI data channels
+    struct Noise **noise; //!<Reference noise model
     
     //Reconstructed signal
-    int Nwave;
-    int downsample;
+    int Nwave; //!<Number of samples for computing posterior reconstructions
+    int downsample; //!<Downsample factor for getting the desired number of samples
+
     double ****h_rec; // N x Nchannel x NT x NMCMC
     double ****h_res; // N x Nchannel x NT x NMCMC
     double ****r_pow; // N x Nchannel x NT x NMCMC
@@ -66,23 +76,23 @@ struct Data
     double ****S_pow; // N x Nchannel x NT x NMCMC
     
     //Injection
-    int NP; //number of parameters of injection
-    struct Source *inj;
+    int NP; //!<number of parameters of injection
+    struct Source *inj; //!<injected source structure
     
     //Spectrum proposal
-    double *p;
-    double pmax;
-    double SNR2;
+    double *p; //!<power spectral density of data
+    double pmax; //!<maximum power spectrial density
+    double SNR2; //!<estimated \f${\rm SNR}^2\f$ of data
     
     //
-    char fileName[128];
+    char fileName[128]; //!<place holder for filnames
     
     /*
      Data format string 
      'phase'     ==> LISA Simulator esque
      'frequency' ==> Synthetic LISA esque
      */
-    char format[16];
+    char format[16]; //!<string identifying data format (phase/frequency)
     
 };
 
