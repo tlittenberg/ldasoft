@@ -1,0 +1,126 @@
+\hypertarget{_galactic_binary_m_c_m_c_8c}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+M\+C\+MC.c File Reference}
+\label{_galactic_binary_m_c_m_c_8c}\index{gbmcmc/src/GalacticBinaryMCMC.c@{gbmcmc/src/GalacticBinaryMCMC.c}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$time.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+rng.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+randist.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}L\+I\+S\+A.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Bayes\+Line.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+I\+O.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Prior.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Model.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Proposal.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Waveform.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_galactic_binary_m_c_m_c_8c_ac3d943895e5a6ba430f9ae78d38c8d51}{ptmcmc}} (struct \mbox{\hyperlink{struct_model}{Model}} $\ast$$\ast$$\ast$model, struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\begin{DoxyCompactList}\small\item\em Parallel tempering exchange. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_galactic_binary_m_c_m_c_8c_ac97ca10801918e6cd12966cc22138e07}{adapt\+\_\+temperature\+\_\+ladder}} (struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, int mcmc)
+\begin{DoxyCompactList}\small\item\em Adaptive temperature spacing. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_galactic_binary_m_c_m_c_8c_ab9f19d06dd8696cb53404f3ad7d51847}{galactic\+\_\+binary\+\_\+mcmc}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$trial, struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$proposal, int ic)
+\begin{DoxyCompactList}\small\item\em Fixed dimension galactic binary M\+C\+MC. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_galactic_binary_m_c_m_c_8c_ab5eab905e7e198274d8a2e787d73357d}{galactic\+\_\+binary\+\_\+rjmcmc}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$trial, struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$proposal, int ic)
+\begin{DoxyCompactList}\small\item\em Trans-\/dimension galactic binary R\+J\+M\+C\+MC. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_galactic_binary_m_c_m_c_8c_aff72dd63677483236b7841ac1280dddf}{data\+\_\+mcmc}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$$\ast$model, struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$proposal, int ic)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{struct_data}{Data}} model M\+C\+MC. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_galactic_binary_m_c_m_c_8c_a0994005e8d92885d46c3fafd99e37029}{noise\+\_\+model\+\_\+mcmc}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$trial, struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, int ic)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{struct_noise}{Noise}} model M\+C\+MC. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{_galactic_binary_m_c_m_c_8c_a0ddf1224851353fc92bfbff6f499fa97}{main}} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_m_c_m_c_8c_ac97ca10801918e6cd12966cc22138e07}\label{_galactic_binary_m_c_m_c_8c_ac97ca10801918e6cd12966cc22138e07}} 
+\index{GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}!adapt\_temperature\_ladder@{adapt\_temperature\_ladder}}
+\index{adapt\_temperature\_ladder@{adapt\_temperature\_ladder}!GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}}
+\doxysubsubsection{\texorpdfstring{adapt\_temperature\_ladder()}{adapt\_temperature\_ladder()}}
+{\footnotesize\ttfamily void adapt\+\_\+temperature\+\_\+ladder (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{int}]{mcmc }\end{DoxyParamCaption})}
+
+
+
+Adaptive temperature spacing. 
+
+Adjusts temperature spacing between tempered chains according with the goal of having an even acceptance rate between all pairs. The sensitivity of the adjustment asymptotically goes to zero as the sampler approaches the end of the burn-\/in phase. \mbox{\Hypertarget{_galactic_binary_m_c_m_c_8c_aff72dd63677483236b7841ac1280dddf}\label{_galactic_binary_m_c_m_c_8c_aff72dd63677483236b7841ac1280dddf}} 
+\index{GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}!data\_mcmc@{data\_mcmc}}
+\index{data\_mcmc@{data\_mcmc}!GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}}
+\doxysubsubsection{\texorpdfstring{data\_mcmc()}{data\_mcmc()}}
+{\footnotesize\ttfamily void data\+\_\+mcmc (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$$\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$}]{proposal,  }\item[{int}]{ic }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{struct_data}{Data}} model M\+C\+MC. 
+
+One fixed-\/dimension M\+C\+MC step to update the data model. Currently this includes calibration parameters but could be extended to \mbox{\hyperlink{struct_t_d_i}{T\+DI}}, etc. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em ic} & index for which chain is being updated \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{_galactic_binary_m_c_m_c_8c_ab9f19d06dd8696cb53404f3ad7d51847}\label{_galactic_binary_m_c_m_c_8c_ab9f19d06dd8696cb53404f3ad7d51847}} 
+\index{GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}!galactic\_binary\_mcmc@{galactic\_binary\_mcmc}}
+\index{galactic\_binary\_mcmc@{galactic\_binary\_mcmc}!GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_mcmc()}{galactic\_binary\_mcmc()}}
+{\footnotesize\ttfamily void galactic\+\_\+binary\+\_\+mcmc (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{trial,  }\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$}]{prior,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$}]{proposal,  }\item[{int}]{ic }\end{DoxyParamCaption})}
+
+
+
+Fixed dimension galactic binary M\+C\+MC. 
+
+One fixed-\/dimension M\+C\+MC step for galactic binary model. The sampler chooses a source at random from the full model to update. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em ic} & index for which chain is being updated \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{_galactic_binary_m_c_m_c_8c_ab5eab905e7e198274d8a2e787d73357d}\label{_galactic_binary_m_c_m_c_8c_ab5eab905e7e198274d8a2e787d73357d}} 
+\index{GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}!galactic\_binary\_rjmcmc@{galactic\_binary\_rjmcmc}}
+\index{galactic\_binary\_rjmcmc@{galactic\_binary\_rjmcmc}!GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_rjmcmc()}{galactic\_binary\_rjmcmc()}}
+{\footnotesize\ttfamily void galactic\+\_\+binary\+\_\+rjmcmc (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{trial,  }\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$}]{prior,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$}]{proposal,  }\item[{int}]{ic }\end{DoxyParamCaption})}
+
+
+
+Trans-\/dimension galactic binary R\+J\+M\+C\+MC. 
+
+One trans-\/dimension R\+J\+M\+C\+MC step for galactic binary model. The sampler chooses to either add or remove a galactic binary signal to the model. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em ic} & index for which chain is being updated \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{_galactic_binary_m_c_m_c_8c_a0ddf1224851353fc92bfbff6f499fa97}\label{_galactic_binary_m_c_m_c_8c_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}!main@{main}}
+\index{main@{main}!GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+This is the main function \mbox{\Hypertarget{_galactic_binary_m_c_m_c_8c_a0994005e8d92885d46c3fafd99e37029}\label{_galactic_binary_m_c_m_c_8c_a0994005e8d92885d46c3fafd99e37029}} 
+\index{GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}!noise\_model\_mcmc@{noise\_model\_mcmc}}
+\index{noise\_model\_mcmc@{noise\_model\_mcmc}!GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}}
+\doxysubsubsection{\texorpdfstring{noise\_model\_mcmc()}{noise\_model\_mcmc()}}
+{\footnotesize\ttfamily void noise\+\_\+model\+\_\+mcmc (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{trial,  }\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{int}]{ic }\end{DoxyParamCaption})}
+
+
+
+\mbox{\hyperlink{struct_noise}{Noise}} model M\+C\+MC. 
+
+One fixed-\/dimension M\+C\+MC step to update the noise model. Currently this only the variance of the orthogonal A and E \mbox{\hyperlink{struct_t_d_i}{T\+DI}} channels. This will be generalized to include more complete covariance matrices, including non-\/stationary and non-\/orthogonal noise. 
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\texttt{ in}}  & {\em ic} & index for which chain is being updated \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{_galactic_binary_m_c_m_c_8c_ac3d943895e5a6ba430f9ae78d38c8d51}\label{_galactic_binary_m_c_m_c_8c_ac3d943895e5a6ba430f9ae78d38c8d51}} 
+\index{GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}!ptmcmc@{ptmcmc}}
+\index{ptmcmc@{ptmcmc}!GalacticBinaryMCMC.c@{GalacticBinaryMCMC.c}}
+\doxysubsubsection{\texorpdfstring{ptmcmc()}{ptmcmc()}}
+{\footnotesize\ttfamily void ptmcmc (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$$\ast$$\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+
+
+Parallel tempering exchange. 
+
+Cycles through all chains and proposes swaps between adjacent pairs. 

@@ -1,0 +1,129 @@
+\hypertarget{struct_data}{}\doxysection{Data Struct Reference}
+\label{struct_data}\index{Data@{Data}}
+
+
+The \mbox{\hyperlink{struct_data}{Data}} structure stores information about the data being analyzed, including size of data, where it is located in the full L\+I\+SA band, information about gaps, etc.  
+
+
+
+
+{\ttfamily \#include $<$Galactic\+Binary.\+h$>$}
+
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{struct_data_a3be03de44986fc55905076acc5cdae2e}\label{struct_data_a3be03de44986fc55905076acc5cdae2e}} 
+int \mbox{\hyperlink{struct_data_a3be03de44986fc55905076acc5cdae2e}{N}}
+\begin{DoxyCompactList}\small\item\em number of frequency bins \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a913af45a251a07eb589171c23afa4f34}\label{struct_data_a913af45a251a07eb589171c23afa4f34}} 
+int \mbox{\hyperlink{struct_data_a913af45a251a07eb589171c23afa4f34}{NT}}
+\begin{DoxyCompactList}\small\item\em number of time segments \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a40984ec8faee6f66f294f19efdffc748}\label{struct_data_a40984ec8faee6f66f294f19efdffc748}} 
+int \mbox{\hyperlink{struct_data_a40984ec8faee6f66f294f19efdffc748}{Nchannel}}
+\begin{DoxyCompactList}\small\item\em number of data channels \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ae2e953ef9275991dbefdb9a3b15034c7}\label{struct_data_ae2e953ef9275991dbefdb9a3b15034c7}} 
+int \mbox{\hyperlink{struct_data_ae2e953ef9275991dbefdb9a3b15034c7}{D\+M\+AX}}
+\begin{DoxyCompactList}\small\item\em max dimension of signal model \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a758dee275c2a979a3141ee70d7c9ba90}\label{struct_data_a758dee275c2a979a3141ee70d7c9ba90}} 
+long \mbox{\hyperlink{struct_data_a758dee275c2a979a3141ee70d7c9ba90}{cseed}}
+\begin{DoxyCompactList}\small\item\em seed for M\+C\+MC \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_aded73ae8e42873e7d905ff7f14a0a354}\label{struct_data_aded73ae8e42873e7d905ff7f14a0a354}} 
+long \mbox{\hyperlink{struct_data_aded73ae8e42873e7d905ff7f14a0a354}{nseed}}
+\begin{DoxyCompactList}\small\item\em seed for noise realization \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a377bda85cbfd007855748f4c53d8305c}\label{struct_data_a377bda85cbfd007855748f4c53d8305c}} 
+long \mbox{\hyperlink{struct_data_a377bda85cbfd007855748f4c53d8305c}{iseed}}
+\begin{DoxyCompactList}\small\item\em seed for injection parameters \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ae837768c48b47d8df3cd22dd53d383f3}\label{struct_data_ae837768c48b47d8df3cd22dd53d383f3}} 
+double \mbox{\hyperlink{struct_data_ae837768c48b47d8df3cd22dd53d383f3}{T}}
+\begin{DoxyCompactList}\small\item\em observation time \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ad44b894b08062090b76441d16570bca3}\label{struct_data_ad44b894b08062090b76441d16570bca3}} 
+double \mbox{\hyperlink{struct_data_ad44b894b08062090b76441d16570bca3}{sqT}}
+\begin{DoxyCompactList}\small\item\em $\sqrt{T}$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_afc6d1d4930961006b7d3593230ce07b7}\label{struct_data_afc6d1d4930961006b7d3593230ce07b7}} 
+int \mbox{\hyperlink{struct_data_afc6d1d4930961006b7d3593230ce07b7}{qmin}}
+\begin{DoxyCompactList}\small\item\em minimum frequency bin of segment \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_aff9d4adb0d0786ca384500f377c7faac}\label{struct_data_aff9d4adb0d0786ca384500f377c7faac}} 
+int \mbox{\hyperlink{struct_data_aff9d4adb0d0786ca384500f377c7faac}{qmax}}
+\begin{DoxyCompactList}\small\item\em maximum frequency bin of segment \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a5d1d8220060d2f6b29cc9bbd935113f8}\label{struct_data_a5d1d8220060d2f6b29cc9bbd935113f8}} 
+int \mbox{\hyperlink{struct_data_a5d1d8220060d2f6b29cc9bbd935113f8}{qpad}}
+\begin{DoxyCompactList}\small\item\em number of frequency bins padding ends of segment \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ac91c45dac949a9be16be5751f1eb3695}\label{struct_data_ac91c45dac949a9be16be5751f1eb3695}} 
+double \mbox{\hyperlink{struct_data_ac91c45dac949a9be16be5751f1eb3695}{fmin}}
+\begin{DoxyCompactList}\small\item\em minimum frequency of segment \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ae0b4921e57b971170ecb83c234e3f0a8}\label{struct_data_ae0b4921e57b971170ecb83c234e3f0a8}} 
+double \mbox{\hyperlink{struct_data_ae0b4921e57b971170ecb83c234e3f0a8}{fmax}}
+\begin{DoxyCompactList}\small\item\em maximum frequency of segment \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ac4db839b05312ebbaf3a611c0fab1482}\label{struct_data_ac4db839b05312ebbaf3a611c0fab1482}} 
+double \mbox{\hyperlink{struct_data_ac4db839b05312ebbaf3a611c0fab1482}{sine\+\_\+f\+\_\+on\+\_\+fstar}}
+\begin{DoxyCompactList}\small\item\em $sin(f * 2\pi L/c)$ \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a2a1500b1864aadb6e713746c7a36c5b7}\label{struct_data_a2a1500b1864aadb6e713746c7a36c5b7}} 
+double \mbox{\hyperlink{struct_data_a2a1500b1864aadb6e713746c7a36c5b7}{sum\+\_\+log\+\_\+f}}
+\begin{DoxyCompactList}\small\item\em $\sum \log(f)$ appears in some normalizations \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a3d638edc3bb44936e2ffd2ba195aabae}\label{struct_data_a3d638edc3bb44936e2ffd2ba195aabae}} 
+double \mbox{\hyperlink{struct_data_a3d638edc3bb44936e2ffd2ba195aabae}{logfmin}}
+\begin{DoxyCompactList}\small\item\em $\log(f_{\rm min})$ appears in some normalizations \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_aea49bff932eaf931689edccaa155b333}\label{struct_data_aea49bff932eaf931689edccaa155b333}} 
+double $\ast$ \mbox{\hyperlink{struct_data_aea49bff932eaf931689edccaa155b333}{t0}}
+\begin{DoxyCompactList}\small\item\em start times of segments \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a73c788cfea88195d14c53f9e52a8ada1}\label{struct_data_a73c788cfea88195d14c53f9e52a8ada1}} 
+double $\ast$ \mbox{\hyperlink{struct_data_a73c788cfea88195d14c53f9e52a8ada1}{tgap}}
+\begin{DoxyCompactList}\small\item\em time between segments \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a98432cd2a586429f74d696da622446d1}\label{struct_data_a98432cd2a586429f74d696da622446d1}} 
+struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$$\ast$ \mbox{\hyperlink{struct_data_a98432cd2a586429f74d696da622446d1}{tdi}}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{struct_t_d_i}{T\+DI}} data channels. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a5646530b83cfb236488c75567a94317d}\label{struct_data_a5646530b83cfb236488c75567a94317d}} 
+struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$$\ast$ \mbox{\hyperlink{struct_data_a5646530b83cfb236488c75567a94317d}{noise}}
+\begin{DoxyCompactList}\small\item\em Reference noise model. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a2928c4204fcb0f5213ae9afb88d7ece1}\label{struct_data_a2928c4204fcb0f5213ae9afb88d7ece1}} 
+int \mbox{\hyperlink{struct_data_a2928c4204fcb0f5213ae9afb88d7ece1}{Nwave}}
+\begin{DoxyCompactList}\small\item\em Number of samples for computing posterior reconstructions. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_abd3208e22c3348f0356e4c2f13f4ffc1}\label{struct_data_abd3208e22c3348f0356e4c2f13f4ffc1}} 
+int \mbox{\hyperlink{struct_data_abd3208e22c3348f0356e4c2f13f4ffc1}{downsample}}
+\begin{DoxyCompactList}\small\item\em Downsample factor for getting the desired number of samples. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a8200a4f7f4a97f94dc7500299da945db}\label{struct_data_a8200a4f7f4a97f94dc7500299da945db}} 
+double $\ast$$\ast$$\ast$$\ast$ {\bfseries h\+\_\+rec}
+\item 
+\mbox{\Hypertarget{struct_data_ad801eb68f47932db30ec701694b72cee}\label{struct_data_ad801eb68f47932db30ec701694b72cee}} 
+double $\ast$$\ast$$\ast$$\ast$ {\bfseries h\+\_\+res}
+\item 
+\mbox{\Hypertarget{struct_data_a7261769b2611a460f8a6ccc5ce70992f}\label{struct_data_a7261769b2611a460f8a6ccc5ce70992f}} 
+double $\ast$$\ast$$\ast$$\ast$ {\bfseries r\+\_\+pow}
+\item 
+\mbox{\Hypertarget{struct_data_a00d4717e62c1120636b7f5b07b71d121}\label{struct_data_a00d4717e62c1120636b7f5b07b71d121}} 
+double $\ast$$\ast$$\ast$$\ast$ {\bfseries h\+\_\+pow}
+\item 
+\mbox{\Hypertarget{struct_data_a4a466b0d0d1d0e685ca3ba3230f331d6}\label{struct_data_a4a466b0d0d1d0e685ca3ba3230f331d6}} 
+double $\ast$$\ast$$\ast$$\ast$ {\bfseries S\+\_\+pow}
+\item 
+\mbox{\Hypertarget{struct_data_ab456e86e4cf30a20af41383cff94e535}\label{struct_data_ab456e86e4cf30a20af41383cff94e535}} 
+int \mbox{\hyperlink{struct_data_ab456e86e4cf30a20af41383cff94e535}{NP}}
+\begin{DoxyCompactList}\small\item\em number of parameters of injection \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ac136349d39219fa435ca7cbd43c46444}\label{struct_data_ac136349d39219fa435ca7cbd43c46444}} 
+struct \mbox{\hyperlink{struct_source}{Source}} $\ast$ \mbox{\hyperlink{struct_data_ac136349d39219fa435ca7cbd43c46444}{inj}}
+\begin{DoxyCompactList}\small\item\em injected source structure \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a30f6e2b62b5480035d01a19b13b23269}\label{struct_data_a30f6e2b62b5480035d01a19b13b23269}} 
+double $\ast$ \mbox{\hyperlink{struct_data_a30f6e2b62b5480035d01a19b13b23269}{p}}
+\begin{DoxyCompactList}\small\item\em power spectral density of data \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a0e272a91e2c6739072eea633bfdc8feb}\label{struct_data_a0e272a91e2c6739072eea633bfdc8feb}} 
+double \mbox{\hyperlink{struct_data_a0e272a91e2c6739072eea633bfdc8feb}{pmax}}
+\begin{DoxyCompactList}\small\item\em maximum power spectrial density \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_a018485652e36524ee3c2b07f35befc76}\label{struct_data_a018485652e36524ee3c2b07f35befc76}} 
+double \mbox{\hyperlink{struct_data_a018485652e36524ee3c2b07f35befc76}{S\+N\+R2}}
+\begin{DoxyCompactList}\small\item\em estimated ${\rm SNR}^2$ of data \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_aac66b9dc61783962135088350f5ec2ec}\label{struct_data_aac66b9dc61783962135088350f5ec2ec}} 
+char \mbox{\hyperlink{struct_data_aac66b9dc61783962135088350f5ec2ec}{file\+Name}} \mbox{[}128\mbox{]}
+\begin{DoxyCompactList}\small\item\em place holder for filnames \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{struct_data_ad89c9b316266fa46dfd5b5b3897fcf6e}\label{struct_data_ad89c9b316266fa46dfd5b5b3897fcf6e}} 
+char \mbox{\hyperlink{struct_data_ad89c9b316266fa46dfd5b5b3897fcf6e}{format}} \mbox{[}16\mbox{]}
+\begin{DoxyCompactList}\small\item\em string identifying data format (phase/frequency) \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+The \mbox{\hyperlink{struct_data}{Data}} structure stores information about the data being analyzed, including size of data, where it is located in the full L\+I\+SA band, information about gaps, etc. 
+
+The structure stores the Fourier-\/domain \mbox{\hyperlink{struct_t_d_i}{T\+DI}} data channels, and a fiducial model for the instrument noise. It also has memory allocated for storing the reconstructed waveforms, residuals, and noise models. 
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+gbmcmc/src/Galactic\+Binary.\+h\end{DoxyCompactItemize}
