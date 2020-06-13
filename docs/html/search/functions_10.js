@@ -1,5 +1,0 @@
-var searchData=
-[
-  ['t0_5fshift_807',['t0_shift',['../_galactic_binary_proposal_8c.html#a99ccaa6a68983e3f6c1dbd27e8f1c78a',1,'t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed):&#160;GalacticBinaryProposal.c'],['../_galactic_binary_proposal_8h.html#a99ccaa6a68983e3f6c1dbd27e8f1c78a',1,'t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed):&#160;GalacticBinaryProposal.c']]],
-  ['test_5fcovariance_5fproposal_808',['test_covariance_proposal',['../_galactic_binary_proposal_8c.html#a2eb3f28b6ca7783cd317fc3798793dfd',1,'test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed):&#160;GalacticBinaryProposal.c'],['../_galactic_binary_proposal_8h.html#a2eb3f28b6ca7783cd317fc3798793dfd',1,'test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed):&#160;GalacticBinaryProposal.c']]]
-];
