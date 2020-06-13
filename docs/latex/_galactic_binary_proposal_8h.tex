@@ -1,0 +1,158 @@
+\hypertarget{_galactic_binary_proposal_8h}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+Proposal.h File Reference}
+\label{_galactic_binary_proposal_8h}\index{gbmcmc/src/GalacticBinaryProposal.h@{gbmcmc/src/GalacticBinaryProposal.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_proposal}{Proposal}}
+\begin{DoxyCompactList}\small\item\em Prototype structure for proposal distributions. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_galactic_binary_proposal_8h_a2662e53920bbe4d94dc1b22e25f3a52b}{setup\+\_\+frequency\+\_\+proposal}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data)
+\item 
+void \mbox{\hyperlink{_galactic_binary_proposal_8h_ae8c2b734b1d1527285455a36236470c8}{print\+\_\+acceptance\+\_\+rates}} (struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$proposal, int NP, int ic, F\+I\+LE $\ast$fptr)
+\item 
+double \mbox{\hyperlink{_galactic_binary_proposal_8h_a99ccaa6a68983e3f6c1dbd27e8f1c78a}{t0\+\_\+shift}} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, U\+N\+U\+S\+ED double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+double \mbox{\hyperlink{_galactic_binary_proposal_8h_a88ba19ad0f3f49dfef9b7e8393b264f8}{draw\+\_\+from\+\_\+prior}} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+double \mbox{\hyperlink{_galactic_binary_proposal_8h_a90a7a19dab33c408e9e339f5b32fd389}{draw\+\_\+from\+\_\+extrinsic\+\_\+prior}} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+double \mbox{\hyperlink{_galactic_binary_proposal_8h_a07f1e5aa0e2c9dd3fbdebf6959de1038}{draw\+\_\+from\+\_\+fisher}} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\begin{DoxyCompactList}\small\item\em Jump from current location along eigenvectors of Fisher information matrix. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{_galactic_binary_proposal_8h_a8ac7b844a4a59395d7623f857a96f065}{draw\+\_\+from\+\_\+cdf}} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\begin{DoxyCompactList}\small\item\em Draw each parameter from 1D marginalized C\+DF. \end{DoxyCompactList}\item 
+double \mbox{\hyperlink{_galactic_binary_proposal_8h_a0fdd7a5e44fd29128ee7beaa335a572f}{draw\+\_\+from\+\_\+cov}} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\begin{DoxyCompactList}\small\item\em Draw from multivariate Gaussian characterized by chain covariance. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_aafb096baebfddf86f0e38100ddc176a3}\label{_galactic_binary_proposal_8h_aafb096baebfddf86f0e38100ddc176a3}} 
+double {\bfseries draw\+\_\+from\+\_\+fstatistic} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_ab00e578ab3662a8afa2baf2cba5ed4fb}\label{_galactic_binary_proposal_8h_ab00e578ab3662a8afa2baf2cba5ed4fb}} 
+double {\bfseries draw\+\_\+signal\+\_\+amplitude} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a882af8d84df4b4a0f7d93b5585fe82ab}\label{_galactic_binary_proposal_8h_a882af8d84df4b4a0f7d93b5585fe82ab}} 
+double {\bfseries draw\+\_\+from\+\_\+spectrum} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_aff3c7d1f3059dfdb7723e1d08f40deff}\label{_galactic_binary_proposal_8h_aff3c7d1f3059dfdb7723e1d08f40deff}} 
+double {\bfseries fm\+\_\+shift} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a6a462b2ade2ace48eb864880bc7e33f3}\label{_galactic_binary_proposal_8h_a6a462b2ade2ace48eb864880bc7e33f3}} 
+double {\bfseries psi\+\_\+phi\+\_\+jump} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_afd202d0b69e6c8d622ec85a1b18fdd6e}\label{_galactic_binary_proposal_8h_afd202d0b69e6c8d622ec85a1b18fdd6e}} 
+double {\bfseries jump\+\_\+from\+\_\+fstatistic} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a42e3e5ae65a52afab2bcec1dd1b365fd}\label{_galactic_binary_proposal_8h_a42e3e5ae65a52afab2bcec1dd1b365fd}} 
+double {\bfseries draw\+\_\+from\+\_\+galaxy\+\_\+prior} (struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior, double $\ast$params, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a970124673a0953fd0ead32795be431ef}\label{_galactic_binary_proposal_8h_a970124673a0953fd0ead32795be431ef}} 
+double {\bfseries draw\+\_\+calibration\+\_\+parameters} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a5299553c610fa57fe95527a5df181f22}\label{_galactic_binary_proposal_8h_a5299553c610fa57fe95527a5df181f22}} 
+double {\bfseries cdf\+\_\+density} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, U\+N\+U\+S\+ED double $\ast$params)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a48c97df4de6815daf57b7f054092a035}\label{_galactic_binary_proposal_8h_a48c97df4de6815daf57b7f054092a035}} 
+double {\bfseries cov\+\_\+density} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a56be2a79ceec1bd3e5ca7813ddd10007}\label{_galactic_binary_proposal_8h_a56be2a79ceec1bd3e5ca7813ddd10007}} 
+void {\bfseries initialize\+\_\+proposal} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior, struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$proposal, int N\+M\+AX)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a970c096c5428c06d08846a24c1e1c3d6}\label{_galactic_binary_proposal_8h_a970c096c5428c06d08846a24c1e1c3d6}} 
+void {\bfseries setup\+\_\+fstatistic\+\_\+proposal} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_af4d23d535092cc291b8c817e72177ecc}\label{_galactic_binary_proposal_8h_af4d23d535092cc291b8c817e72177ecc}} 
+void {\bfseries setup\+\_\+prior\+\_\+proposal} (struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a2eb3f28b6ca7783cd317fc3798793dfd}\label{_galactic_binary_proposal_8h_a2eb3f28b6ca7783cd317fc3798793dfd}} 
+void {\bfseries test\+\_\+covariance\+\_\+proposal} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, gsl\+\_\+rng $\ast$seed)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a840df697159100dca6ef37caf4bf1db2}\label{_galactic_binary_proposal_8h_a840df697159100dca6ef37caf4bf1db2}} 
+void {\bfseries setup\+\_\+cdf\+\_\+proposal} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, int N\+M\+AX)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb}\label{_galactic_binary_proposal_8h_a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb}} 
+void {\bfseries setup\+\_\+covariance\+\_\+proposal} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_aaaea7bf91a5ca99c7c29d1d6b7a8de12}\label{_galactic_binary_proposal_8h_aaaea7bf91a5ca99c7c29d1d6b7a8de12}} 
+double {\bfseries evaluate\+\_\+fstatistic\+\_\+proposal} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_ad42abc9fc4e637728c2206bc88601c3b}\label{_galactic_binary_proposal_8h_ad42abc9fc4e637728c2206bc88601c3b}} 
+double {\bfseries prior\+\_\+density} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, double $\ast$params)
+\item 
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a6411d0cd1ce0b0862365fa63ee9cd28f}\label{_galactic_binary_proposal_8h_a6411d0cd1ce0b0862365fa63ee9cd28f}} 
+double {\bfseries symmetric\+\_\+density} (U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$proposal, U\+N\+U\+S\+ED double $\ast$params)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_proposal_8h_a8ac7b844a4a59395d7623f857a96f065}\label{_galactic_binary_proposal_8h_a8ac7b844a4a59395d7623f857a96f065}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!draw\_from\_cdf@{draw\_from\_cdf}}
+\index{draw\_from\_cdf@{draw\_from\_cdf}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{draw\_from\_cdf()}{draw\_from\_cdf()}}
+{\footnotesize\ttfamily double draw\+\_\+from\+\_\+cdf (\begin{DoxyParamCaption}\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$}]{proposal,  }\item[{double $\ast$}]{params,  }\item[{gsl\+\_\+rng $\ast$}]{seed }\end{DoxyParamCaption})}
+
+
+
+Draw each parameter from 1D marginalized C\+DF. 
+
+Use C\+D\+Fs constructed from chain file input at command line with --update flag to draw new parameters. The proposal draws a p-\/value from $U[0,1]$ and interpolates the samples from the input chain file to find the associated parameter value. \mbox{\Hypertarget{_galactic_binary_proposal_8h_a0fdd7a5e44fd29128ee7beaa335a572f}\label{_galactic_binary_proposal_8h_a0fdd7a5e44fd29128ee7beaa335a572f}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!draw\_from\_cov@{draw\_from\_cov}}
+\index{draw\_from\_cov@{draw\_from\_cov}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{draw\_from\_cov()}{draw\_from\_cov()}}
+{\footnotesize\ttfamily double draw\+\_\+from\+\_\+cov (\begin{DoxyParamCaption}\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$}]{proposal,  }\item[{double $\ast$}]{params,  }\item[{gsl\+\_\+rng $\ast$}]{seed }\end{DoxyParamCaption})}
+
+
+
+Draw from multivariate Gaussian characterized by chain covariance. 
+
+Use covariance matrices $ \bf{C}$ input at command line with --update\+\_\+cov flag to draw new parameters. The covariance matrices are typically computed from already acquired chain files (e.\+g., from a previous run on less data).
+
+The posteriors are bimodal so each source is represented by two multivariate Gaussians, one at each mode, characterized by the covariance matrix of the samples associated with each mode.
+
+The proposal first randomly selects a source, then randomly selects a mode from the source. The proposed values are then computed using $ \vec\theta_y = \vec\theta_0 + {\bf L}\vec{n}$ where $ \vec{n} $ are fair draws from $ N[0,1]$, $ \vec\theta_0 $ are the mode centroids from the input chain, and $ {\bf}L $ is the LU decomposition of $ \bf{C} $. \mbox{\Hypertarget{_galactic_binary_proposal_8h_a90a7a19dab33c408e9e339f5b32fd389}\label{_galactic_binary_proposal_8h_a90a7a19dab33c408e9e339f5b32fd389}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!draw\_from\_extrinsic\_prior@{draw\_from\_extrinsic\_prior}}
+\index{draw\_from\_extrinsic\_prior@{draw\_from\_extrinsic\_prior}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{draw\_from\_extrinsic\_prior()}{draw\_from\_extrinsic\_prior()}}
+{\footnotesize\ttfamily double draw\+\_\+from\+\_\+extrinsic\+\_\+prior (\begin{DoxyParamCaption}\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$}]{proposal,  }\item[{double $\ast$}]{params,  }\item[{gsl\+\_\+rng $\ast$}]{seed }\end{DoxyParamCaption})}
+
+Fair draw from prior for location and orientation parameters \mbox{\Hypertarget{_galactic_binary_proposal_8h_a07f1e5aa0e2c9dd3fbdebf6959de1038}\label{_galactic_binary_proposal_8h_a07f1e5aa0e2c9dd3fbdebf6959de1038}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!draw\_from\_fisher@{draw\_from\_fisher}}
+\index{draw\_from\_fisher@{draw\_from\_fisher}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{draw\_from\_fisher()}{draw\_from\_fisher()}}
+{\footnotesize\ttfamily double draw\+\_\+from\+\_\+fisher (\begin{DoxyParamCaption}\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$}]{proposal,  }\item[{double $\ast$}]{params,  }\item[{gsl\+\_\+rng $\ast$}]{seed }\end{DoxyParamCaption})}
+
+
+
+Jump from current location along eigenvectors of Fisher information matrix. 
+
+Use precomputed Fisher matrix $ \Gamma_{ij} \equiv \langle \frac{\partial^2 h}{\partial \theta_i^2} \vert \frac{\partial^2 h}{\partial\theta_j^2} \rangle $ and center it at current parameters. Choose one eigenvector at random and propose a Gaussian jump along that direction scaled by the associated eigenvalue.
+
+Jumps are conditioned against singular values, in which case the jump along that parameter direction is 0.\+01 the current value.
+
+The proposal is assumed symmetric because the Fisher matrix is not being updated at each location.
+
+The Fisher matrix is updated periodically during the M\+C\+MC. \mbox{\Hypertarget{_galactic_binary_proposal_8h_a88ba19ad0f3f49dfef9b7e8393b264f8}\label{_galactic_binary_proposal_8h_a88ba19ad0f3f49dfef9b7e8393b264f8}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!draw\_from\_prior@{draw\_from\_prior}}
+\index{draw\_from\_prior@{draw\_from\_prior}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{draw\_from\_prior()}{draw\_from\_prior()}}
+{\footnotesize\ttfamily double draw\+\_\+from\+\_\+prior (\begin{DoxyParamCaption}\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$}]{proposal,  }\item[{double $\ast$}]{params,  }\item[{gsl\+\_\+rng $\ast$}]{seed }\end{DoxyParamCaption})}
+
+Fair draw from prior for each parameter \mbox{\Hypertarget{_galactic_binary_proposal_8h_ae8c2b734b1d1527285455a36236470c8}\label{_galactic_binary_proposal_8h_ae8c2b734b1d1527285455a36236470c8}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!print\_acceptance\_rates@{print\_acceptance\_rates}}
+\index{print\_acceptance\_rates@{print\_acceptance\_rates}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{print\_acceptance\_rates()}{print\_acceptance\_rates()}}
+{\footnotesize\ttfamily void print\+\_\+acceptance\+\_\+rates (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$$\ast$}]{proposal,  }\item[{int}]{NP,  }\item[{int}]{ic,  }\item[{F\+I\+LE $\ast$}]{fptr }\end{DoxyParamCaption})}
+
+Compute and print acceptance ratios for each proposal \mbox{\Hypertarget{_galactic_binary_proposal_8h_a2662e53920bbe4d94dc1b22e25f3a52b}\label{_galactic_binary_proposal_8h_a2662e53920bbe4d94dc1b22e25f3a52b}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!setup\_frequency\_proposal@{setup\_frequency\_proposal}}
+\index{setup\_frequency\_proposal@{setup\_frequency\_proposal}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{setup\_frequency\_proposal()}{setup\_frequency\_proposal()}}
+{\footnotesize\ttfamily void setup\+\_\+frequency\+\_\+proposal (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data }\end{DoxyParamCaption})}
+
+Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power \mbox{\Hypertarget{_galactic_binary_proposal_8h_a99ccaa6a68983e3f6c1dbd27e8f1c78a}\label{_galactic_binary_proposal_8h_a99ccaa6a68983e3f6c1dbd27e8f1c78a}} 
+\index{GalacticBinaryProposal.h@{GalacticBinaryProposal.h}!t0\_shift@{t0\_shift}}
+\index{t0\_shift@{t0\_shift}!GalacticBinaryProposal.h@{GalacticBinaryProposal.h}}
+\doxysubsubsection{\texorpdfstring{t0\_shift()}{t0\_shift()}}
+{\footnotesize\ttfamily double t0\+\_\+shift (\begin{DoxyParamCaption}\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{U\+N\+U\+S\+ED struct \mbox{\hyperlink{struct_proposal}{Proposal}} $\ast$}]{proposal,  }\item[{U\+N\+U\+S\+ED double $\ast$}]{params,  }\item[{gsl\+\_\+rng $\ast$}]{seed }\end{DoxyParamCaption})}
+
+Shift start time of data segment 
