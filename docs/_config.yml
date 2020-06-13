@@ -1,2 +1,4 @@
 theme: jekyll-theme-cayman
-include: 'html/_galactic_binary_m_c_m_c_8c.html'
+include: 
+ - '/html/_galactic_binary_m_c_m_c_8c.html'
+ - '/html/_galactic_binary_proposal_8h.html'
