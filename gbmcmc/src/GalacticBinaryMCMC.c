@@ -17,7 +17,7 @@
  *  MA  02111-1307  USA
  */
 
-
+/// @file GalacticBinaryMCMC.c
 
 /***************************  REQUIRED LIBRARIES  ***************************/
 
@@ -45,18 +45,61 @@
 #include "GalacticBinaryProposal.h"
 #include "GalacticBinaryWaveform.h"
 
-
+/** \brief Parallel tempering exchange
+ 
+ Cycles through all chains and proposes swaps between adjacent pairs.
+*/
 void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags);
+
+/**
+ \brief Adaptive temperature spacing
+ 
+ Adjusts temperature spacing between tempered chains according with the goal of having an even acceptance rate between all pairs. The sensitivity of the adjustment asymptotically goes to zero as the sampler approaches the end of the burn-in phase.
+*/
 void adapt_temperature_ladder(struct Chain *chain, int mcmc);
 
+/**
+\brief Fixed dimension galactic binary MCMC
+ 
+ One fixed-dimension MCMC step for galactic binary model.
+ The sampler chooses a source at random from the full model to update.
+ @param[in] ic index for which chain is being updated
+*/
 void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
+
+/**
+\brief Trans-dimension galactic binary RJMCMC
+ 
+ One trans-dimension RJMCMC step for galactic binary model.
+ The sampler chooses to either add or remove a galactic binary signal to the model.
+ @param[in] ic index for which chain is being updated
+*/
 void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
 
+/**
+\brief Data model MCMC
+ 
+ One fixed-dimension MCMC step to update the data model.
+ Currently this includes calibration parameters but could be extended to TDI, etc.
+ @param[in] ic index for which chain is being updated
+*/
 void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+
+/**
+\brief Noise model MCMC
+ 
+ One fixed-dimension MCMC step to update the noise model.
+ Currently this only the variance of the orthogonal A and E TDI channels. This will be generalized to include more complete covariance matrices, including non-stationary and non-orthogonal noise.
+ @param[in] ic index for which chain is being updated
+*/
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic);
 
 /* ============================  MAIN PROGRAM  ============================ */
 
+/**
+ * This is the main function
+ *
+*/
 int main(int argc, char *argv[])
 {
     

@@ -1,4 +1,6 @@
-# Fourier domain analysis of the LISA Data Challenge (LDC) data (Radler Galaxy and 10 Galactic Binary (GB) sources) with GalacticBinaryMCMC.c (gb_mcmc).
+## Workflow for processing LDC Data
+
+Fourier domain analysis of the LISA Data Challenge (LDC) data (Radler Galaxy and 10 Galactic Binary (GB) sources) with `gb_mcmc`.
 
 The following refers to python scripts found [here](https://github.com/tlittenberg/ldasoft/tree/master/gbmcmc/scripts) .
 
