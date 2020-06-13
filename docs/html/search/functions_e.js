@@ -1,0 +1,5 @@
+var searchData=
+[
+  ['reduced_5fmass_5fratio_783',['reduced_mass_ratio',['../gb__mcmc__brans__dicke_8c.html#ad8d07f05c3dab0abef9348342c3c6b16',1,'reduced_mass_ratio(double m1, double m2):&#160;gb_mcmc_brans_dicke.c'],['../gb__mcmc__scalar_8c.html#ad8d07f05c3dab0abef9348342c3c6b16',1,'reduced_mass_ratio(double m1, double m2):&#160;gb_mcmc_scalar.c'],['../gb__mcmc__scalar__fddot_8c.html#ad8d07f05c3dab0abef9348342c3c6b16',1,'reduced_mass_ratio(double m1, double m2):&#160;gb_mcmc_scalar_fddot.c']]],
+  ['restore_5fchain_5fstate_784',['restore_chain_state',['../_galactic_binary_i_o_8c.html#a5716a89d3bfc6ea1ae6cdbfe11313836',1,'restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step):&#160;GalacticBinaryIO.c'],['../_galactic_binary_i_o_8h.html#a5716a89d3bfc6ea1ae6cdbfe11313836',1,'restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step):&#160;GalacticBinaryIO.c']]]
+];
