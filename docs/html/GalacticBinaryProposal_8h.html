@@ -132,35 +132,38 @@ Functions</h2></td></tr>
 <tr class="memitem:a0fdd7a5e44fd29128ee7beaa335a572f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a0fdd7a5e44fd29128ee7beaa335a572f">draw_from_cov</a> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
 <tr class="memdesc:a0fdd7a5e44fd29128ee7beaa335a572f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draw from multivariate Gaussian characterized by chain covariance.  <a href="GalacticBinaryProposal_8h.html#a0fdd7a5e44fd29128ee7beaa335a572f">More...</a><br /></td></tr>
 <tr class="separator:a0fdd7a5e44fd29128ee7beaa335a572f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafb096baebfddf86f0e38100ddc176a3"><td class="memItemLeft" align="right" valign="top"><a id="aafb096baebfddf86f0e38100ddc176a3"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>draw_from_fstatistic</b> (struct <a class="el" href="structData.html">Data</a> *data, UNUSED struct <a class="el" href="structModel.html">Model</a> *model, UNUSED struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memitem:aafb096baebfddf86f0e38100ddc176a3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#aafb096baebfddf86f0e38100ddc176a3">draw_from_fstatistic</a> (struct <a class="el" href="structData.html">Data</a> *data, UNUSED struct <a class="el" href="structModel.html">Model</a> *model, UNUSED struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memdesc:aafb096baebfddf86f0e38100ddc176a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draw from 3D F-statistic distribution.  <a href="GalacticBinaryProposal_8h.html#aafb096baebfddf86f0e38100ddc176a3">More...</a><br /></td></tr>
 <tr class="separator:aafb096baebfddf86f0e38100ddc176a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab00e578ab3662a8afa2baf2cba5ed4fb"><td class="memItemLeft" align="right" valign="top"><a id="ab00e578ab3662a8afa2baf2cba5ed4fb"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>draw_signal_amplitude</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, UNUSED struct <a class="el" href="structSource.html">Source</a> *source, UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#ab00e578ab3662a8afa2baf2cba5ed4fb">draw_signal_amplitude</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, UNUSED struct <a class="el" href="structSource.html">Source</a> *source, UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memdesc:ab00e578ab3662a8afa2baf2cba5ed4fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draw \(\mathcal{A}\) from SNR-based amplitude prior. <br /></td></tr>
 <tr class="separator:ab00e578ab3662a8afa2baf2cba5ed4fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a882af8d84df4b4a0f7d93b5585fe82ab"><td class="memItemLeft" align="right" valign="top"><a id="a882af8d84df4b4a0f7d93b5585fe82ab"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>draw_from_spectrum</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a882af8d84df4b4a0f7d93b5585fe82ab">draw_from_spectrum</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memdesc:a882af8d84df4b4a0f7d93b5585fe82ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draw \(f_0\) weighted by power spectrum of data. <br /></td></tr>
 <tr class="separator:a882af8d84df4b4a0f7d93b5585fe82ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff3c7d1f3059dfdb7723e1d08f40deff"><td class="memItemLeft" align="right" valign="top"><a id="aff3c7d1f3059dfdb7723e1d08f40deff"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>fm_shift</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memitem:aff3c7d1f3059dfdb7723e1d08f40deff"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff">fm_shift</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memdesc:aff3c7d1f3059dfdb7723e1d08f40deff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shift \(f_0\) by orbital modulation frequency.  <a href="GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff">More...</a><br /></td></tr>
 <tr class="separator:aff3c7d1f3059dfdb7723e1d08f40deff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a462b2ade2ace48eb864880bc7e33f3"><td class="memItemLeft" align="right" valign="top"><a id="a6a462b2ade2ace48eb864880bc7e33f3"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>psi_phi_jump</b> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, UNUSED struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memitem:a6a462b2ade2ace48eb864880bc7e33f3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a6a462b2ade2ace48eb864880bc7e33f3">psi_phi_jump</a> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, UNUSED struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memdesc:a6a462b2ade2ace48eb864880bc7e33f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Jumps between modes in \(\psi\)&ndash; \(\varphi_0\) plane.  <a href="GalacticBinaryProposal_8h.html#a6a462b2ade2ace48eb864880bc7e33f3">More...</a><br /></td></tr>
 <tr class="separator:a6a462b2ade2ace48eb864880bc7e33f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd202d0b69e6c8d622ec85a1b18fdd6e"><td class="memItemLeft" align="right" valign="top"><a id="afd202d0b69e6c8d622ec85a1b18fdd6e"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>jump_from_fstatistic</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memitem:afd202d0b69e6c8d622ec85a1b18fdd6e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#afd202d0b69e6c8d622ec85a1b18fdd6e">jump_from_fstatistic</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params, gsl_rng *seed)</td></tr>
+<tr class="memdesc:afd202d0b69e6c8d622ec85a1b18fdd6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as <a class="el" href="GalacticBinaryProposal_8h.html#aafb096baebfddf86f0e38100ddc176a3" title="Draw from 3D F-statistic distribution.">draw_from_fstatistic()</a> with <a class="el" href="GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff" title="Shift  by orbital modulation frequency.">fm_shift()</a>  <a href="GalacticBinaryProposal_8h.html#afd202d0b69e6c8d622ec85a1b18fdd6e">More...</a><br /></td></tr>
 <tr class="separator:afd202d0b69e6c8d622ec85a1b18fdd6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="memItemLeft" align="right" valign="top"><a id="a42e3e5ae65a52afab2bcec1dd1b365fd"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>draw_from_galaxy_prior</b> (struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structPrior.html">Prior</a> *prior, double *params, gsl_rng *seed)</td></tr>
+<tr class="memitem:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a42e3e5ae65a52afab2bcec1dd1b365fd">draw_from_galaxy_prior</a> (struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structPrior.html">Prior</a> *prior, double *params, gsl_rng *seed)</td></tr>
+<tr class="memdesc:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draw sky location from galaxy prior defined in set_galaxy_prior()  <a href="GalacticBinaryProposal_8h.html#a42e3e5ae65a52afab2bcec1dd1b365fd">More...</a><br /></td></tr>
 <tr class="separator:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a970124673a0953fd0ead32795be431ef"><td class="memItemLeft" align="right" valign="top"><a id="a970124673a0953fd0ead32795be431ef"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>draw_calibration_parameters</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, gsl_rng *seed)</td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a970124673a0953fd0ead32795be431ef">draw_calibration_parameters</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, gsl_rng *seed)</td></tr>
+<tr class="memdesc:a970124673a0953fd0ead32795be431ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fair draw on phase and amplitude calibration parameters. <br /></td></tr>
 <tr class="separator:a970124673a0953fd0ead32795be431ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5299553c610fa57fe95527a5df181f22"><td class="memItemLeft" align="right" valign="top"><a id="a5299553c610fa57fe95527a5df181f22"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>cdf_density</b> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, UNUSED double *params)</td></tr>
+<tr class="memitem:a5299553c610fa57fe95527a5df181f22"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a5299553c610fa57fe95527a5df181f22">cdf_density</a> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, UNUSED double *params)</td></tr>
+<tr class="memdesc:a5299553c610fa57fe95527a5df181f22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate probability density from CDF.  <a href="GalacticBinaryProposal_8h.html#a5299553c610fa57fe95527a5df181f22">More...</a><br /></td></tr>
 <tr class="separator:a5299553c610fa57fe95527a5df181f22"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48c97df4de6815daf57b7f054092a035"><td class="memItemLeft" align="right" valign="top"><a id="a48c97df4de6815daf57b7f054092a035"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>cov_density</b> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params)</td></tr>
+<tr class="memitem:a48c97df4de6815daf57b7f054092a035"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a48c97df4de6815daf57b7f054092a035">cov_density</a> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structSource.html">Source</a> *source, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, double *params)</td></tr>
+<tr class="memdesc:a48c97df4de6815daf57b7f054092a035"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate probability density of multimode, multivariate Gaussians given covariance matrices of each Gaussian and relative weights between them.  <a href="GalacticBinaryProposal_8h.html#a48c97df4de6815daf57b7f054092a035">More...</a><br /></td></tr>
 <tr class="separator:a48c97df4de6815daf57b7f054092a035"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56be2a79ceec1bd3e5ca7813ddd10007"><td class="memItemLeft" align="right" valign="top"><a id="a56be2a79ceec1bd3e5ca7813ddd10007"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initialize_proposal</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structPrior.html">Prior</a> *prior, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> **proposal, int NMAX)</td></tr>
@@ -191,6 +194,104 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>symmetric_density</
 <tr class="separator:a6411d0cd1ce0b0862365fa63ee9cd28f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="a5299553c610fa57fe95527a5df181f22"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5299553c610fa57fe95527a5df181f22">&#9670;&nbsp;</a></span>cdf_density()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double cdf_density </td>
+          <td>(</td>
+          <td class="paramtype">UNUSED struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structSource.html">Source</a> *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structProposal.html">Proposal</a> *&#160;</td>
+          <td class="paramname"><em>proposal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UNUSED double *&#160;</td>
+          <td class="paramname"><em>params</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Evaluate probability density from CDF. </p>
+<p>Uses binary_search() to locate input params in CDF. Returns approximate value of PDF by taking numerical derivative of CDF on either side of input parameters. </p>
+
+</div>
+</div>
+<a id="a48c97df4de6815daf57b7f054092a035"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48c97df4de6815daf57b7f054092a035">&#9670;&nbsp;</a></span>cov_density()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double cov_density </td>
+          <td>(</td>
+          <td class="paramtype">UNUSED struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structSource.html">Source</a> *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structProposal.html">Proposal</a> *&#160;</td>
+          <td class="paramname"><em>proposal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>params</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Evaluate probability density of multimode, multivariate Gaussians given covariance matrices of each Gaussian and relative weights between them. </p>
+<p>\( p = \sum_{m}^{\rm modes} {\rm weight}_m \frac{1}{(2\pi\det{\bf C}_m)^{D/2}} e^{-\frac{1}{2} \sum_i\sum_j \left(x_i - \bar{x}_{m,i}\right) C_{m,ij}^{-1} \left(x_j - \bar{x}_{m,j} \right) } \) </p>
+
+</div>
+</div>
 <a id="a8ac7b844a4a59395d7623f857a96f065"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8ac7b844a4a59395d7623f857a96f065">&#9670;&nbsp;</a></span>draw_from_cdf()</h2>
 
@@ -414,6 +515,104 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>symmetric_density</
 
 </div>
 </div>
+<a id="aafb096baebfddf86f0e38100ddc176a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aafb096baebfddf86f0e38100ddc176a3">&#9670;&nbsp;</a></span>draw_from_fstatistic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double draw_from_fstatistic </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UNUSED struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UNUSED struct <a class="el" href="structSource.html">Source</a> *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structProposal.html">Proposal</a> *&#160;</td>
+          <td class="paramname"><em>proposal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">gsl_rng *&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Draw from 3D F-statistic distribution. </p>
+<p>Uses pre-computed 3D quantized distribution to draw \([f_0,\cos\theta,\phi]\) weighted by F-statistic likelihood in each cell. Remaining parameters are drawn from the prior. </p>
+
+</div>
+</div>
+<a id="a42e3e5ae65a52afab2bcec1dd1b365fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42e3e5ae65a52afab2bcec1dd1b365fd">&#9670;&nbsp;</a></span>draw_from_galaxy_prior()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double draw_from_galaxy_prior </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structPrior.html">Prior</a> *&#160;</td>
+          <td class="paramname"><em>prior</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">gsl_rng *&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Draw sky location from galaxy prior defined in set_galaxy_prior() </p>
+<p>Rejection samples sky location parameters \({\cos\theta,\phi}\) using galaxy-weighted sky prior. </p>
+
+</div>
+</div>
 <a id="a88ba19ad0f3f49dfef9b7e8393b264f8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a88ba19ad0f3f49dfef9b7e8393b264f8">&#9670;&nbsp;</a></span>draw_from_prior()</h2>
 
@@ -467,6 +666,116 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>symmetric_density</
 
 </div>
 </div>
+<a id="aff3c7d1f3059dfdb7723e1d08f40deff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff3c7d1f3059dfdb7723e1d08f40deff">&#9670;&nbsp;</a></span>fm_shift()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double fm_shift </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structSource.html">Source</a> *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structProposal.html">Proposal</a> *&#160;</td>
+          <td class="paramname"><em>proposal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">gsl_rng *&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Shift \(f_0\) by orbital modulation frequency. </p>
+<p>LISA's orbital motion induces secondary maxima spaced by the modulation frequency \(f_m = $1/{\rm year}\). This proposal shifts \(f_0\) by an integer multiple of \(f_m\) drawn from \(\text{floor}(N[0,1])\). Other parameters are either drawn from the Fisher matrix or from the prior. </p>
+
+</div>
+</div>
+<a id="afd202d0b69e6c8d622ec85a1b18fdd6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd202d0b69e6c8d622ec85a1b18fdd6e">&#9670;&nbsp;</a></span>jump_from_fstatistic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double jump_from_fstatistic </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structSource.html">Source</a> *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structProposal.html">Proposal</a> *&#160;</td>
+          <td class="paramname"><em>proposal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">gsl_rng *&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Same as <a class="el" href="GalacticBinaryProposal_8h.html#aafb096baebfddf86f0e38100ddc176a3" title="Draw from 3D F-statistic distribution.">draw_from_fstatistic()</a> with <a class="el" href="GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff" title="Shift  by orbital modulation frequency.">fm_shift()</a> </p>
+<p>Uses the same F-statistics proposal as <a class="el" href="GalacticBinaryProposal_8h.html#aafb096baebfddf86f0e38100ddc176a3" title="Draw from 3D F-statistic distribution.">draw_from_fstatistic()</a> but randomly shifts \(f_0\) with <a class="el" href="GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff" title="Shift  by orbital modulation frequency.">fm_shift()</a> instead of drawing \(f_0\) from prior. </p>
+
+</div>
+</div>
 <a id="ae8c2b734b1d1527285455a36236470c8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae8c2b734b1d1527285455a36236470c8">&#9670;&nbsp;</a></span>print_acceptance_rates()</h2>
 
@@ -505,6 +814,61 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>symmetric_density</
       </table>
 </div><div class="memdoc">
 <p>Compute and print acceptance ratios for each proposal </p>
+
+</div>
+</div>
+<a id="a6a462b2ade2ace48eb864880bc7e33f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a462b2ade2ace48eb864880bc7e33f3">&#9670;&nbsp;</a></span>psi_phi_jump()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double psi_phi_jump </td>
+          <td>(</td>
+          <td class="paramtype">UNUSED struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UNUSED struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structSource.html">Source</a> *&#160;</td>
+          <td class="paramname"><em>source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *&#160;</td>
+          <td class="paramname"><em>proposal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>params</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">gsl_rng *&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Jumps between modes in \(\psi\)&ndash; \(\varphi_0\) plane. </p>
+<p>For UCBs there is a perfect degeneracy between the polarization angle \(\psi\) and the initial phase \(\varphi_0\) at \( {\psi,\varphi_0} \rightarrow {\psi\pm\pi/2,\varphi_0\pm\pi} \). The sign of the shift depends on the inclination angle. This proposal chooses a scale for the jump \(\alpha = N[0,2\pi]\) and randomly chooses the sign of the proposal, then shifts \(\varphi_0\) and \(\psi\) by \(\alpha\) and \(\alpha/2\), respectively. </p>
 
 </div>
 </div>

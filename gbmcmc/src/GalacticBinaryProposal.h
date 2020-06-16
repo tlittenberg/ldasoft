@@ -132,21 +132,75 @@ double draw_from_cdf            (UNUSED struct Data *data, struct Model *model, 
  */
 double draw_from_cov            (UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
-
+/**
+ \brief Draw from 3D F-statistic distribution
+ 
+ Uses pre-computed 3D quantized distribution to draw \f$[f_0,\cos\theta,\phi]\f$ weighted by F-statistic likelihood in each cell. Remaining parameters are drawn from the prior.
+ */
 double draw_from_fstatistic     (struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+ \brief Draw \f$\mathcal{A}\f$ from SNR-based amplitude prior
+ */
 double draw_signal_amplitude    (struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+ \brief Draw \f$f_0\f$ weighted by power spectrum of data
+ */
 double draw_from_spectrum       (struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+ \brief Shift \f$f_0\f$ by orbital modulation frequency
+ 
+ LISA's orbital motion induces secondary maxima spaced by the modulation
+ frequency \f$f_m = $1/{\rm year}\f$. This proposal shifts \f$f_0\f$ by an integer multiple of \f$f_m\f$ drawn from \f$\text{floor}(N[0,1])\f$.
+ Other parameters are either drawn from the Fisher matrix or from the prior.
+ */
 double fm_shift                 (struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+ \brief Jumps between modes in \f$\psi\f$--\f$\varphi_0\f$ plane.
+ 
+ For UCBs there is a perfect degeneracy between the polarization angle \f$\psi\f$ and the initial phase \f$\varphi_0\f$ at
+ \f$ {\psi,\varphi_0} \rightarrow {\psi\pm\pi/2,\varphi_0\pm\pi} \f$.
+ The sign of the shift depends on the inclination angle.
+ This proposal chooses a scale for the jump \f$\alpha = N[0,2\pi]\f$ and randomly chooses the sign of the proposal, then shifts \f$\varphi_0\f$ and \f$\psi\f$ by \f$\alpha\f$ and \f$\alpha/2\f$, respectively.
+ */
 double psi_phi_jump             (UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+ \brief Same as draw_from_fstatistic() with fm_shift()
+ 
+ Uses the same F-statistics proposal as draw_from_fstatistic() but randomly shifts \f$f_0\f$ with fm_shift() instead of drawing \f$f_0\f$ from prior.
+ */
 double jump_from_fstatistic     (struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+ \brief Draw sky location from galaxy prior defined in set_galaxy_prior()
+ 
+ Rejection samples sky location parameters \f${\cos\theta,\phi}\f$ using galaxy-weighted sky prior.
+ */
 double draw_from_galaxy_prior   (struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
 
+
+/**
+ \brief Fair draw on phase and amplitude calibration parameters
+ */
 double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed);
 
-//double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal);
+/**
+ \brief Evaluate probability density from CDF
+ 
+ Uses binary_search() to locate input params in CDF.
+ Returns approximate value of PDF by taking numerical derivative of CDF on either side of input parameters.
+ */
 double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source * source, struct Proposal *proposal, UNUSED double *params);
 
-//double cov_density(struct Model *model, struct Source *source, struct Proposal *proposal);
+/**
+ \brief Evaluate probability density of multimode, multivariate Gaussians given covariance matrices of each Gaussian and relative weights between them.
+ 
+ \f$ p = \sum_{m}^{\rm modes} {\rm weight}_m \frac{1}{(2\pi\det{\bf C}_m)^{D/2}} e^{-\frac{1}{2} \sum_i\sum_j \left(x_i - \bar{x}_{m,i}\right) C_{m,ij}^{-1} \left(x_j - \bar{x}_{m,j} \right) } \f$
+ */
 double cov_density(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params);
 
 
