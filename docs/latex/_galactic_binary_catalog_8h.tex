@@ -1,0 +1,40 @@
+\hypertarget{_galactic_binary_catalog_8h}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+Catalog.h File Reference}
+\label{_galactic_binary_catalog_8h}\index{gbmcmc/src/GalacticBinaryCatalog.h@{gbmcmc/src/GalacticBinaryCatalog.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_catalog}{Catalog}}
+\item 
+struct \mbox{\hyperlink{struct_entry}{Entry}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_galactic_binary_catalog_8h_a2a143534fd0acd7c73cdf5195900e809}{alloc\+\_\+entry}} (struct \mbox{\hyperlink{struct_entry}{Entry}} $\ast$entry, int I\+M\+AX)
+\item 
+void \mbox{\hyperlink{_galactic_binary_catalog_8h_abe3d4c505521bd03f2fe34abc16f1f3d}{create\+\_\+new\+\_\+source}} (struct \mbox{\hyperlink{struct_catalog}{Catalog}} $\ast$catalog, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$\mbox{\hyperlink{_bayes_line_8h_a4bc97c6ad25b32d82dcbb0dc25ec3566}{sample}}, struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$noise, int I\+M\+AX, int N\+F\+FT, int Nchannel, int NP)
+\item 
+void \mbox{\hyperlink{_galactic_binary_catalog_8h_ac7422e19c60eede1c7a95a3025fc7251}{append\+\_\+sample\+\_\+to\+\_\+entry}} (struct \mbox{\hyperlink{struct_entry}{Entry}} $\ast$entry, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$\mbox{\hyperlink{_bayes_line_8h_a4bc97c6ad25b32d82dcbb0dc25ec3566}{sample}}, int I\+M\+AX, int N\+F\+FT, int Nchannel, int NP)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_catalog_8h_a2a143534fd0acd7c73cdf5195900e809}\label{_galactic_binary_catalog_8h_a2a143534fd0acd7c73cdf5195900e809}} 
+\index{GalacticBinaryCatalog.h@{GalacticBinaryCatalog.h}!alloc\_entry@{alloc\_entry}}
+\index{alloc\_entry@{alloc\_entry}!GalacticBinaryCatalog.h@{GalacticBinaryCatalog.h}}
+\doxysubsubsection{\texorpdfstring{alloc\_entry()}{alloc\_entry()}}
+{\footnotesize\ttfamily void alloc\+\_\+entry (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_entry}{Entry}} $\ast$}]{entry,  }\item[{int}]{I\+M\+AX }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_catalog_8h_ac7422e19c60eede1c7a95a3025fc7251}\label{_galactic_binary_catalog_8h_ac7422e19c60eede1c7a95a3025fc7251}} 
+\index{GalacticBinaryCatalog.h@{GalacticBinaryCatalog.h}!append\_sample\_to\_entry@{append\_sample\_to\_entry}}
+\index{append\_sample\_to\_entry@{append\_sample\_to\_entry}!GalacticBinaryCatalog.h@{GalacticBinaryCatalog.h}}
+\doxysubsubsection{\texorpdfstring{append\_sample\_to\_entry()}{append\_sample\_to\_entry()}}
+{\footnotesize\ttfamily void append\+\_\+sample\+\_\+to\+\_\+entry (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_entry}{Entry}} $\ast$}]{entry,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{sample,  }\item[{int}]{I\+M\+AX,  }\item[{int}]{N\+F\+FT,  }\item[{int}]{Nchannel,  }\item[{int}]{NP }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_catalog_8h_abe3d4c505521bd03f2fe34abc16f1f3d}\label{_galactic_binary_catalog_8h_abe3d4c505521bd03f2fe34abc16f1f3d}} 
+\index{GalacticBinaryCatalog.h@{GalacticBinaryCatalog.h}!create\_new\_source@{create\_new\_source}}
+\index{create\_new\_source@{create\_new\_source}!GalacticBinaryCatalog.h@{GalacticBinaryCatalog.h}}
+\doxysubsubsection{\texorpdfstring{create\_new\_source()}{create\_new\_source()}}
+{\footnotesize\ttfamily void create\+\_\+new\+\_\+source (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_catalog}{Catalog}} $\ast$}]{catalog,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{sample,  }\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{noise,  }\item[{int}]{I\+M\+AX,  }\item[{int}]{N\+F\+FT,  }\item[{int}]{Nchannel,  }\item[{int}]{NP }\end{DoxyParamCaption})}
+

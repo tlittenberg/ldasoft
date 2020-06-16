@@ -1,0 +1,71 @@
+\hypertarget{_galactic_binary_data_8c}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+Data.c File Reference}
+\label{_galactic_binary_data_8c}\index{gbmcmc/src/GalacticBinaryData.c@{gbmcmc/src/GalacticBinaryData.c}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$time.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+rng.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+randist.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}L\+I\+S\+A.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+I\+O.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Data.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Math.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Model.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Waveform.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_galactic_binary_data_8c_a1f465485795a890561f640a72473d9a4}{Galactic\+Binary\+Read\+Data}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$data\+\_\+vec, struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\item 
+void \mbox{\hyperlink{_galactic_binary_data_8c_a94a5a09a9f745bf545919fe8d4326a06}{Galactic\+Binary\+Simulate\+Data}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data)
+\item 
+void \mbox{\hyperlink{_galactic_binary_data_8c_a9a87f9f04a250667e89e6cc3c6f02a84}{Galactic\+Binary\+Inject\+Verification\+Source}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$data\+\_\+vec, struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\item 
+void \mbox{\hyperlink{_galactic_binary_data_8c_a9a3e53f07650365052129e2db33b0d71}{Galactic\+Binary\+Inject\+Simulated\+Source}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$data\+\_\+vec, struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\item 
+void \mbox{\hyperlink{_galactic_binary_data_8c_a6aabba35a5b6c6a8b9474af6a5a32863}{Galactic\+Binary\+Catalog\+S\+NR}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\item 
+void \mbox{\hyperlink{_galactic_binary_data_8c_ac9f9b6862a9b974e9a079ed9587b18bd}{Galactic\+Binary\+Clean\+Edges}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$data\+\_\+vec, struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_data_8c_a6aabba35a5b6c6a8b9474af6a5a32863}\label{_galactic_binary_data_8c_a6aabba35a5b6c6a8b9474af6a5a32863}} 
+\index{GalacticBinaryData.c@{GalacticBinaryData.c}!GalacticBinaryCatalogSNR@{GalacticBinaryCatalogSNR}}
+\index{GalacticBinaryCatalogSNR@{GalacticBinaryCatalogSNR}!GalacticBinaryData.c@{GalacticBinaryData.c}}
+\doxysubsubsection{\texorpdfstring{GalacticBinaryCatalogSNR()}{GalacticBinaryCatalogSNR()}}
+{\footnotesize\ttfamily void Galactic\+Binary\+Catalog\+S\+NR (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_data_8c_ac9f9b6862a9b974e9a079ed9587b18bd}\label{_galactic_binary_data_8c_ac9f9b6862a9b974e9a079ed9587b18bd}} 
+\index{GalacticBinaryData.c@{GalacticBinaryData.c}!GalacticBinaryCleanEdges@{GalacticBinaryCleanEdges}}
+\index{GalacticBinaryCleanEdges@{GalacticBinaryCleanEdges}!GalacticBinaryData.c@{GalacticBinaryData.c}}
+\doxysubsubsection{\texorpdfstring{GalacticBinaryCleanEdges()}{GalacticBinaryCleanEdges()}}
+{\footnotesize\ttfamily void Galactic\+Binary\+Clean\+Edges (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$}]{data\+\_\+vec,  }\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_data_8c_a9a3e53f07650365052129e2db33b0d71}\label{_galactic_binary_data_8c_a9a3e53f07650365052129e2db33b0d71}} 
+\index{GalacticBinaryData.c@{GalacticBinaryData.c}!GalacticBinaryInjectSimulatedSource@{GalacticBinaryInjectSimulatedSource}}
+\index{GalacticBinaryInjectSimulatedSource@{GalacticBinaryInjectSimulatedSource}!GalacticBinaryData.c@{GalacticBinaryData.c}}
+\doxysubsubsection{\texorpdfstring{GalacticBinaryInjectSimulatedSource()}{GalacticBinaryInjectSimulatedSource()}}
+{\footnotesize\ttfamily void Galactic\+Binary\+Inject\+Simulated\+Source (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$}]{data\+\_\+vec,  }\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_data_8c_a9a87f9f04a250667e89e6cc3c6f02a84}\label{_galactic_binary_data_8c_a9a87f9f04a250667e89e6cc3c6f02a84}} 
+\index{GalacticBinaryData.c@{GalacticBinaryData.c}!GalacticBinaryInjectVerificationSource@{GalacticBinaryInjectVerificationSource}}
+\index{GalacticBinaryInjectVerificationSource@{GalacticBinaryInjectVerificationSource}!GalacticBinaryData.c@{GalacticBinaryData.c}}
+\doxysubsubsection{\texorpdfstring{GalacticBinaryInjectVerificationSource()}{GalacticBinaryInjectVerificationSource()}}
+{\footnotesize\ttfamily void Galactic\+Binary\+Inject\+Verification\+Source (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$}]{data\+\_\+vec,  }\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_data_8c_a1f465485795a890561f640a72473d9a4}\label{_galactic_binary_data_8c_a1f465485795a890561f640a72473d9a4}} 
+\index{GalacticBinaryData.c@{GalacticBinaryData.c}!GalacticBinaryReadData@{GalacticBinaryReadData}}
+\index{GalacticBinaryReadData@{GalacticBinaryReadData}!GalacticBinaryData.c@{GalacticBinaryData.c}}
+\doxysubsubsection{\texorpdfstring{GalacticBinaryReadData()}{GalacticBinaryReadData()}}
+{\footnotesize\ttfamily void Galactic\+Binary\+Read\+Data (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$}]{data\+\_\+vec,  }\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_data_8c_a94a5a09a9f745bf545919fe8d4326a06}\label{_galactic_binary_data_8c_a94a5a09a9f745bf545919fe8d4326a06}} 
+\index{GalacticBinaryData.c@{GalacticBinaryData.c}!GalacticBinarySimulateData@{GalacticBinarySimulateData}}
+\index{GalacticBinarySimulateData@{GalacticBinarySimulateData}!GalacticBinaryData.c@{GalacticBinaryData.c}}
+\doxysubsubsection{\texorpdfstring{GalacticBinarySimulateData()}{GalacticBinarySimulateData()}}
+{\footnotesize\ttfamily void Galactic\+Binary\+Simulate\+Data (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data }\end{DoxyParamCaption})}
+

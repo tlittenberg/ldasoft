@@ -624,4 +624,60 @@ void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fd
     free_Filter(F_filter);
 }
 
+void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *xmax)
+{
+    long M_filter, N_filter;
+    
+    //TODO: Filter size hard coded?
+    M_filter = 64;
+    N_filter = 64;
+        
+    struct Filter *F_filter = malloc(sizeof(struct Filter));
+    
+    F_filter->M_filter = M_filter;
+    F_filter->N_filter = N_filter;
+    
+    double f0 = x[0]/data->T;
+    double theta = acos(x[1]);
+    double phi = x[2];
+    double fdot = x[7]/(data->T*data->T);
+
+    F_filter->f0     = f0;
+    F_filter->fdot   = fdot;
+    F_filter->fddot  = 0.;    //11.0/3.0*fdot*fdot/f0
+    F_filter->q      = (long)x[0];
+    F_filter->theta  = theta;
+    F_filter->phi    = phi;
+    
+    init_A_filters(orbit, data, F_filter);
+    
+    /////////
+    //
+    // Calculate N^{i} (Cornish & Crowder '05)
+    // N^{i} = (s|A^{i})
+    //
+    /////////
+    get_N(data, F_filter);
+    
+    /////////
+    //
+    // Calculate M^{ij} inverse (Cornish & Crowder '05)
+    // M^{ij} = (A^{i}|A^{j})
+    // It is symmetric
+    //
+    /////////
+    init_M_matrix(F_filter, data);
+    
+    calc_a_i(F_filter);           // calculate the a_{i}'s associated with filters to get F-stat ML params
+    get_F_params(F_filter);  // get the F-stat ML parameters
+    
+    xmax[3] = log(F_filter->A_AE_Fstat);
+    xmax[4] = cos(F_filter->iota_AE_Fstat);
+    xmax[5] = F_filter->psi_AE_Fstat;
+    xmax[6] = F_filter->phase_AE_Fstat;
+    
+    free_Filter(F_filter);
+}
+
+
 

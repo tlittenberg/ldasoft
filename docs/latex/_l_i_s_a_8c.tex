@@ -1,0 +1,125 @@
+\hypertarget{_l_i_s_a_8c}{}\doxysection{gbmcmc/src/\+L\+I\+SA.c File Reference}
+\label{_l_i_s_a_8c}\index{gbmcmc/src/LISA.c@{gbmcmc/src/LISA.c}}
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}L\+I\+S\+A.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_a9edba02a0cd8d9888dad6447ae2903cf}{print\+\_\+\+L\+I\+S\+A\+\_\+\+A\+S\+C\+I\+I\+\_\+art}} (F\+I\+LE $\ast$fptr)
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_a3e7bbddde117293cbb918d494cfd5756}{interpolate\+\_\+orbits}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, double t, double $\ast$x, double $\ast$y, double $\ast$z)
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_ac1edd2c2913eb00c98fe9f12e7369ecb}{analytic\+\_\+orbits}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, double t, double $\ast$x, double $\ast$y, double $\ast$z)
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_af7949a3c678a1ae73a1f1a8a6cc718d9}{initialize\+\_\+analytic\+\_\+orbit}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit)
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_a2e29147c03677e0d91eb7da0c4fc4385}{initialize\+\_\+numeric\+\_\+orbit}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit)
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_aa924cff641b421b8b8f2dc60c4ed4f31}{free\+\_\+orbit}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit)
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_a05d5de34a81cdf05b5f840239f994f3a}{L\+I\+S\+A\+\_\+tdi}} (double L, double fstar, double T, double $\ast$$\ast$$\ast$d, double f0, long q, double $\ast$M, double $\ast$A, double $\ast$E, int BW, int NI)
+\item 
+void \mbox{\hyperlink{_l_i_s_a_8c_ac11580d9874132cd3573548b31ca365b}{L\+I\+S\+A\+\_\+tdi\+\_\+\+FF}} (double L, double fstar, double T, double $\ast$$\ast$$\ast$d, double f0, long q, double $\ast$M, double $\ast$A, double $\ast$E, int BW, int NI)
+\item 
+double \mbox{\hyperlink{_l_i_s_a_8c_a085a1b1b2d7b1d471e1d09920e4b8b25}{X\+Y\+Znoise\+\_\+\+FF}} (double L, double fstar, double f)
+\item 
+double \mbox{\hyperlink{_l_i_s_a_8c_a31866640ebc3ef128ef054ee35fbbaf7}{A\+Enoise\+\_\+\+FF}} (double L, double fstar, double f)
+\item 
+double \mbox{\hyperlink{_l_i_s_a_8c_aab05008d5db5fd93e0f0d2d71ac2ee6f}{G\+Bnoise\+\_\+\+FF}} (double T, double fstar, double f)
+\item 
+double \mbox{\hyperlink{_l_i_s_a_8c_a19c242aefb6a191a2260cfe7303eaa2e}{A\+Enoise}} (double L, double fstar, double f)
+\item 
+double \mbox{\hyperlink{_l_i_s_a_8c_ab3dcc11b20ced7d09d75651726c5f01f}{X\+Y\+Znoise}} (double L, double fstar, double f)
+\item 
+double \mbox{\hyperlink{_l_i_s_a_8c_a3cdb9a29789f85ebeec151d7f5a91791}{G\+Bnoise}} (double T, double f)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_l_i_s_a_8c_a19c242aefb6a191a2260cfe7303eaa2e}\label{_l_i_s_a_8c_a19c242aefb6a191a2260cfe7303eaa2e}} 
+\index{LISA.c@{LISA.c}!AEnoise@{AEnoise}}
+\index{AEnoise@{AEnoise}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{AEnoise()}{AEnoise()}}
+{\footnotesize\ttfamily double A\+Enoise (\begin{DoxyParamCaption}\item[{double}]{L,  }\item[{double}]{fstar,  }\item[{double}]{f }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_a31866640ebc3ef128ef054ee35fbbaf7}\label{_l_i_s_a_8c_a31866640ebc3ef128ef054ee35fbbaf7}} 
+\index{LISA.c@{LISA.c}!AEnoise\_FF@{AEnoise\_FF}}
+\index{AEnoise\_FF@{AEnoise\_FF}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{AEnoise\_FF()}{AEnoise\_FF()}}
+{\footnotesize\ttfamily double A\+Enoise\+\_\+\+FF (\begin{DoxyParamCaption}\item[{double}]{L,  }\item[{double}]{fstar,  }\item[{double}]{f }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_ac1edd2c2913eb00c98fe9f12e7369ecb}\label{_l_i_s_a_8c_ac1edd2c2913eb00c98fe9f12e7369ecb}} 
+\index{LISA.c@{LISA.c}!analytic\_orbits@{analytic\_orbits}}
+\index{analytic\_orbits@{analytic\_orbits}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{analytic\_orbits()}{analytic\_orbits()}}
+{\footnotesize\ttfamily void analytic\+\_\+orbits (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{double}]{t,  }\item[{double $\ast$}]{x,  }\item[{double $\ast$}]{y,  }\item[{double $\ast$}]{z }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_aa924cff641b421b8b8f2dc60c4ed4f31}\label{_l_i_s_a_8c_aa924cff641b421b8b8f2dc60c4ed4f31}} 
+\index{LISA.c@{LISA.c}!free\_orbit@{free\_orbit}}
+\index{free\_orbit@{free\_orbit}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{free\_orbit()}{free\_orbit()}}
+{\footnotesize\ttfamily void free\+\_\+orbit (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_a3cdb9a29789f85ebeec151d7f5a91791}\label{_l_i_s_a_8c_a3cdb9a29789f85ebeec151d7f5a91791}} 
+\index{LISA.c@{LISA.c}!GBnoise@{GBnoise}}
+\index{GBnoise@{GBnoise}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{GBnoise()}{GBnoise()}}
+{\footnotesize\ttfamily double G\+Bnoise (\begin{DoxyParamCaption}\item[{double}]{T,  }\item[{double}]{f }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_aab05008d5db5fd93e0f0d2d71ac2ee6f}\label{_l_i_s_a_8c_aab05008d5db5fd93e0f0d2d71ac2ee6f}} 
+\index{LISA.c@{LISA.c}!GBnoise\_FF@{GBnoise\_FF}}
+\index{GBnoise\_FF@{GBnoise\_FF}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{GBnoise\_FF()}{GBnoise\_FF()}}
+{\footnotesize\ttfamily double G\+Bnoise\+\_\+\+FF (\begin{DoxyParamCaption}\item[{double}]{T,  }\item[{double}]{fstar,  }\item[{double}]{f }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_af7949a3c678a1ae73a1f1a8a6cc718d9}\label{_l_i_s_a_8c_af7949a3c678a1ae73a1f1a8a6cc718d9}} 
+\index{LISA.c@{LISA.c}!initialize\_analytic\_orbit@{initialize\_analytic\_orbit}}
+\index{initialize\_analytic\_orbit@{initialize\_analytic\_orbit}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{initialize\_analytic\_orbit()}{initialize\_analytic\_orbit()}}
+{\footnotesize\ttfamily void initialize\+\_\+analytic\+\_\+orbit (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_a2e29147c03677e0d91eb7da0c4fc4385}\label{_l_i_s_a_8c_a2e29147c03677e0d91eb7da0c4fc4385}} 
+\index{LISA.c@{LISA.c}!initialize\_numeric\_orbit@{initialize\_numeric\_orbit}}
+\index{initialize\_numeric\_orbit@{initialize\_numeric\_orbit}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{initialize\_numeric\_orbit()}{initialize\_numeric\_orbit()}}
+{\footnotesize\ttfamily void initialize\+\_\+numeric\+\_\+orbit (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_a3e7bbddde117293cbb918d494cfd5756}\label{_l_i_s_a_8c_a3e7bbddde117293cbb918d494cfd5756}} 
+\index{LISA.c@{LISA.c}!interpolate\_orbits@{interpolate\_orbits}}
+\index{interpolate\_orbits@{interpolate\_orbits}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{interpolate\_orbits()}{interpolate\_orbits()}}
+{\footnotesize\ttfamily void interpolate\+\_\+orbits (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{double}]{t,  }\item[{double $\ast$}]{x,  }\item[{double $\ast$}]{y,  }\item[{double $\ast$}]{z }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_a05d5de34a81cdf05b5f840239f994f3a}\label{_l_i_s_a_8c_a05d5de34a81cdf05b5f840239f994f3a}} 
+\index{LISA.c@{LISA.c}!LISA\_tdi@{LISA\_tdi}}
+\index{LISA\_tdi@{LISA\_tdi}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{LISA\_tdi()}{LISA\_tdi()}}
+{\footnotesize\ttfamily void L\+I\+S\+A\+\_\+tdi (\begin{DoxyParamCaption}\item[{double}]{L,  }\item[{double}]{fstar,  }\item[{double}]{T,  }\item[{double $\ast$$\ast$$\ast$}]{d,  }\item[{double}]{f0,  }\item[{long}]{q,  }\item[{double $\ast$}]{M,  }\item[{double $\ast$}]{A,  }\item[{double $\ast$}]{E,  }\item[{int}]{BW,  }\item[{int}]{NI }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_ac11580d9874132cd3573548b31ca365b}\label{_l_i_s_a_8c_ac11580d9874132cd3573548b31ca365b}} 
+\index{LISA.c@{LISA.c}!LISA\_tdi\_FF@{LISA\_tdi\_FF}}
+\index{LISA\_tdi\_FF@{LISA\_tdi\_FF}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{LISA\_tdi\_FF()}{LISA\_tdi\_FF()}}
+{\footnotesize\ttfamily void L\+I\+S\+A\+\_\+tdi\+\_\+\+FF (\begin{DoxyParamCaption}\item[{double}]{L,  }\item[{double}]{fstar,  }\item[{double}]{T,  }\item[{double $\ast$$\ast$$\ast$}]{d,  }\item[{double}]{f0,  }\item[{long}]{q,  }\item[{double $\ast$}]{M,  }\item[{double $\ast$}]{A,  }\item[{double $\ast$}]{E,  }\item[{int}]{BW,  }\item[{int}]{NI }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_a9edba02a0cd8d9888dad6447ae2903cf}\label{_l_i_s_a_8c_a9edba02a0cd8d9888dad6447ae2903cf}} 
+\index{LISA.c@{LISA.c}!print\_LISA\_ASCII\_art@{print\_LISA\_ASCII\_art}}
+\index{print\_LISA\_ASCII\_art@{print\_LISA\_ASCII\_art}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{print\_LISA\_ASCII\_art()}{print\_LISA\_ASCII\_art()}}
+{\footnotesize\ttfamily void print\+\_\+\+L\+I\+S\+A\+\_\+\+A\+S\+C\+I\+I\+\_\+art (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{fptr }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_ab3dcc11b20ced7d09d75651726c5f01f}\label{_l_i_s_a_8c_ab3dcc11b20ced7d09d75651726c5f01f}} 
+\index{LISA.c@{LISA.c}!XYZnoise@{XYZnoise}}
+\index{XYZnoise@{XYZnoise}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{XYZnoise()}{XYZnoise()}}
+{\footnotesize\ttfamily double X\+Y\+Znoise (\begin{DoxyParamCaption}\item[{double}]{L,  }\item[{double}]{fstar,  }\item[{double}]{f }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_l_i_s_a_8c_a085a1b1b2d7b1d471e1d09920e4b8b25}\label{_l_i_s_a_8c_a085a1b1b2d7b1d471e1d09920e4b8b25}} 
+\index{LISA.c@{LISA.c}!XYZnoise\_FF@{XYZnoise\_FF}}
+\index{XYZnoise\_FF@{XYZnoise\_FF}!LISA.c@{LISA.c}}
+\doxysubsubsection{\texorpdfstring{XYZnoise\_FF()}{XYZnoise\_FF()}}
+{\footnotesize\ttfamily double X\+Y\+Znoise\+\_\+\+FF (\begin{DoxyParamCaption}\item[{double}]{L,  }\item[{double}]{fstar,  }\item[{double}]{f }\end{DoxyParamCaption})}
+

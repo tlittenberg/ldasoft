@@ -1,0 +1,86 @@
+\hypertarget{gb__mcmc__chirpmass_8c}{}\doxysection{gbmcmc/src/gb\+\_\+mcmc\+\_\+chirpmass.c File Reference}
+\label{gb__mcmc__chirpmass_8c}\index{gbmcmc/src/gb\_mcmc\_chirpmass.c@{gbmcmc/src/gb\_mcmc\_chirpmass.c}}
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$time.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+sort.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+randist.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{gb__mcmc__chirpmass_8c_a27a46d3c01b150b85e31d9bb0be1f549}{R\+A\+D2\+A\+R\+C\+M\+IN}}~3437.\+75
+\item 
+\#define \mbox{\hyperlink{gb__mcmc__chirpmass_8c_aac947ba5e8055977333644077c0b3fb6}{R\+A\+D2\+D\+E\+G\+R\+EE}}~57.\+295833313961
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{gb__mcmc__chirpmass_8c_a0ffcec7d44e2d1cb7cc53dd440d481a7}{M\+\_\+fdot}} (double f, double fdot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__chirpmass_8c_a508e5f82efabf4c7ce7b8b816621a22b}{M\+\_\+fddot}} (double f, double fddot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__chirpmass_8c_aadf4377933dafb1613c4d6041ef38914}{M\+\_\+fdot\+\_\+fddot}} (double f, double fdot, double fddot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__chirpmass_8c_ab20b12710e9bcc07d3eccbc765b74a51}{beta}} (double f, double fdot, double fddot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__chirpmass_8c_a606c6145ac36a717a77b3bcaae536531}{galactic\+\_\+binary\+\_\+dL}} (double f0, double dfdt, double A)
+\item 
+int \mbox{\hyperlink{gb__mcmc__chirpmass_8c_a0ddf1224851353fc92bfbff6f499fa97}{main}} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_a27a46d3c01b150b85e31d9bb0be1f549}\label{gb__mcmc__chirpmass_8c_a27a46d3c01b150b85e31d9bb0be1f549}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!RAD2ARCMIN@{RAD2ARCMIN}}
+\index{RAD2ARCMIN@{RAD2ARCMIN}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{RAD2ARCMIN}{RAD2ARCMIN}}
+{\footnotesize\ttfamily \#define R\+A\+D2\+A\+R\+C\+M\+IN~3437.\+75}
+
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_aac947ba5e8055977333644077c0b3fb6}\label{gb__mcmc__chirpmass_8c_aac947ba5e8055977333644077c0b3fb6}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!RAD2DEGREE@{RAD2DEGREE}}
+\index{RAD2DEGREE@{RAD2DEGREE}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{RAD2DEGREE}{RAD2DEGREE}}
+{\footnotesize\ttfamily \#define R\+A\+D2\+D\+E\+G\+R\+EE~57.\+295833313961}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_ab20b12710e9bcc07d3eccbc765b74a51}\label{gb__mcmc__chirpmass_8c_ab20b12710e9bcc07d3eccbc765b74a51}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!beta@{beta}}
+\index{beta@{beta}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{beta()}{beta()}}
+{\footnotesize\ttfamily double beta (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fdot,  }\item[{double}]{fddot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_a606c6145ac36a717a77b3bcaae536531}\label{gb__mcmc__chirpmass_8c_a606c6145ac36a717a77b3bcaae536531}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!galactic\_binary\_dL@{galactic\_binary\_dL}}
+\index{galactic\_binary\_dL@{galactic\_binary\_dL}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_dL()}{galactic\_binary\_dL()}}
+{\footnotesize\ttfamily double galactic\+\_\+binary\+\_\+dL (\begin{DoxyParamCaption}\item[{double}]{f0,  }\item[{double}]{dfdt,  }\item[{double}]{A }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_a508e5f82efabf4c7ce7b8b816621a22b}\label{gb__mcmc__chirpmass_8c_a508e5f82efabf4c7ce7b8b816621a22b}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!M\_fddot@{M\_fddot}}
+\index{M\_fddot@{M\_fddot}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{M\_fddot()}{M\_fddot()}}
+{\footnotesize\ttfamily double M\+\_\+fddot (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fddot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_a0ffcec7d44e2d1cb7cc53dd440d481a7}\label{gb__mcmc__chirpmass_8c_a0ffcec7d44e2d1cb7cc53dd440d481a7}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!M\_fdot@{M\_fdot}}
+\index{M\_fdot@{M\_fdot}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{M\_fdot()}{M\_fdot()}}
+{\footnotesize\ttfamily double M\+\_\+fdot (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fdot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_aadf4377933dafb1613c4d6041ef38914}\label{gb__mcmc__chirpmass_8c_aadf4377933dafb1613c4d6041ef38914}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!M\_fdot\_fddot@{M\_fdot\_fddot}}
+\index{M\_fdot\_fddot@{M\_fdot\_fddot}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{M\_fdot\_fddot()}{M\_fdot\_fddot()}}
+{\footnotesize\ttfamily double M\+\_\+fdot\+\_\+fddot (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fdot,  }\item[{double}]{fddot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__chirpmass_8c_a0ddf1224851353fc92bfbff6f499fa97}\label{gb__mcmc__chirpmass_8c_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}!main@{main}}
+\index{main@{main}!gb\_mcmc\_chirpmass.c@{gb\_mcmc\_chirpmass.c}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+

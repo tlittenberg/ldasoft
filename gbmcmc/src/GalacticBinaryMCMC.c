@@ -17,7 +17,7 @@
  *  MA  02111-1307  USA
  */
 
-
+/// @file GalacticBinaryMCMC.c
 
 /***************************  REQUIRED LIBRARIES  ***************************/
 
@@ -45,18 +45,61 @@
 #include "GalacticBinaryProposal.h"
 #include "GalacticBinaryWaveform.h"
 
-
+/** \brief Parallel tempering exchange
+ 
+ Cycles through all chains and proposes swaps between adjacent pairs.
+*/
 void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags);
+
+/**
+ \brief Adaptive temperature spacing
+ 
+ Adjusts temperature spacing between tempered chains according with the goal of having an even acceptance rate between all pairs. The sensitivity of the adjustment asymptotically goes to zero as the sampler approaches the end of the burn-in phase.
+*/
 void adapt_temperature_ladder(struct Chain *chain, int mcmc);
 
+/**
+\brief Fixed dimension galactic binary MCMC
+ 
+ One fixed-dimension MCMC step for galactic binary model.
+ The sampler chooses a source at random from the full model to update.
+ @param[in] ic index for which chain is being updated
+*/
 void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
+
+/**
+\brief Trans-dimension galactic binary RJMCMC
+ 
+ One trans-dimension RJMCMC step for galactic binary model.
+ The sampler chooses to either add or remove a galactic binary signal to the model.
+ @param[in] ic index for which chain is being updated
+*/
 void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
 
+/**
+\brief Data model MCMC
+ 
+ One fixed-dimension MCMC step to update the data model.
+ Currently this includes calibration parameters but could be extended to TDI, etc.
+ @param[in] ic index for which chain is being updated
+*/
 void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic);
+
+/**
+\brief Noise model MCMC
+ 
+ One fixed-dimension MCMC step to update the noise model.
+ Currently this only the variance of the orthogonal A and E TDI channels. This will be generalized to include more complete covariance matrices, including non-stationary and non-orthogonal noise.
+ @param[in] ic index for which chain is being updated
+*/
 void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, int ic);
 
 /* ============================  MAIN PROGRAM  ============================ */
 
+/**
+ * This is the main function
+ *
+*/
 int main(int argc, char *argv[])
 {
     
@@ -238,8 +281,37 @@ int main(int argc, char *argv[])
         }//end loop over frequency segments
     }//end loop over chains
     
-    if(flags->resume) restore_chain_state(orbit, data, model, chain, flags, &mcmc_start);
-    
+    /* Start analysis from saved chain state */
+    if(flags->resume)
+    {
+        fprintf(stdout,"\n=============== Checkpointing ===============\n");
+
+        //check for files needed to resume
+        FILE *fptr = NULL;
+        char filename[MAXSTRINGSIZE];
+        int file_error = 0;
+        
+        for(int ic=0; ic<chain->NC; ic++)
+        {
+            sprintf(filename,"checkpoint/chain_state_%i.dat",ic);
+            
+            if( (fptr = fopen(filename,"r")) == NULL )
+            {
+                fprintf(stderr,"Warning: Could not checkpoint run state\n");
+                fprintf(stderr,"         Parameter file %s does not exist\n",filename);
+                file_error++;
+                break;
+            }
+        }
+        
+        //if all of the files exist resume run from checkpointed state
+        if(!file_error)
+        {
+            fprintf(stdout,"   Checkpoint files found. Resuming chain\n");
+            restore_chain_state(orbit, data, model, chain, flags, &mcmc_start);
+        }
+        fprintf(stdout,"============================================\n\n");
+    }
     
     //test covariance proposal
     /*
@@ -587,15 +659,15 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     //hold sky position fixed to injected value
     if(flags->fixSky)
     {
-        source_y->costheta = data->inj->costheta;
-        source_y->phi      = data->inj->phi;
+        source_y->params[1] = data->inj->costheta;
+        source_y->params[2] = data->inj->phi;
     }
     
     //hold frequencies fixed to injected value
     if(flags->fixFreq)
     {
-        source_y->f0   = data->inj->f0;
-        source_y->dfdt = data->inj->dfdt;
+        source_y->params[0] = data->inj->f0*data->T;
+        source_y->params[7] = data->inj->dfdt*data->T*data->T;
     }
     
     //call associated proposal density functions

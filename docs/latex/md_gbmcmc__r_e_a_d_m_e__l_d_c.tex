@@ -1,0 +1,82 @@
+Fourier domain analysis of the L\+I\+SA \mbox{\hyperlink{struct_data}{Data}} Challenge (L\+DC) data (Radler Galaxy and 10 Galactic Binary (GB) sources) with {\ttfamily gb\+\_\+mcmc}.
+
+The following refers to python scripts found \href{https://github.com/tlittenberg/ldasoft/tree/master/gbmcmc/scripts}{\texttt{ here}} .\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md12}{}\doxysection{Download L\+D\+C G\+B data}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md12}
+Username, password are required to \href{https://lisa-ldc.lal.in2p3.fr/}{\texttt{ access challenge data}} \begin{DoxyVerb}*Contact for LISA Data Challenges (LDC):  lisa-ldc-helpdesk-l@in2p3.fr
+\end{DoxyVerb}
+
+
+Filename\+: L\+D\+C1-\/3\+\_\+\+V\+G\+B\+\_\+v1.\+hdf5 \begin{DoxyVerb}Description: two year `verification' GB timeseries with noise (10 GB's)
+GB parameters included in hdf5 file (LDC VGB key)
+\end{DoxyVerb}
+
+
+Filename\+: L\+D\+C1-\/4\+\_\+\+G\+B\+\_\+v1.\+hdf5 \begin{DoxyVerb}Description: two year Radler Galaxy timeseries, ~30 million GB's with noise (file size is 2GB)
+GB parameters included in hdf5 file (LDC Galaxy key)
+\end{DoxyVerb}
+\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md13}{}\doxysection{F\+F\+T L\+D\+C data with fft\+\_\+ldc\+\_\+data.\+py}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md13}
+The output of fft\+\_\+ldc\+\_\+data.\+py is L\+DC data in the `frequency domain', which is used as input to gb\+\_\+mcmc
+
+Enter the following for usage. \begin{DoxyVerb}fft_ldc_data.py -h
+\end{DoxyVerb}
+
+
+For example, to F\+FT 1.\+5 months of L\+D\+C1-\/3\+\_\+\+V\+G\+B\+\_\+v1.\+hdf5 data and save the output as output.\+dat, run from terminal the following. \begin{DoxyVerb}python3 fft_ldc_data.py -i LDC1-3_VGB_v1.hdf5 -o output.dat -m 1.5
+\end{DoxyVerb}
+
+
+Specifying an output file (with the -\/o flag) is optional. If the output file is not specified, the code\textquotesingle{}s default (output file) nameing system is the following\+: The input file name is affixed with the number of months that were Fourier transformed, e.\+g. L\+D\+C1-\/3\+\_\+\+V\+G\+B\+\_\+v1\+\_\+1.\+5mo.\+dat. (If -\/m flag is left unspecified, the code\textquotesingle{}s default is to FT 24 months of data.)
+
+One can also F\+FT the L\+DC Galaxy data timeseries\+: \begin{DoxyVerb}python3 fft_ldc_data.py -i LDC1-4_GB_v1.hdf5 -o output.dat -m 1.5
+\end{DoxyVerb}
+
+
+In that case, the output filename is L\+D\+C1-\/4\+\_\+\+G\+B\+\_\+v1\+\_\+1.\+5mo.\+dat\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md14}{}\doxysection{Access L\+D\+C V\+G\+B key parameters with python}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md14}
+The user inputs $\sim$/\+L\+D\+C1-\/3\+\_\+\+V\+G\+B\+\_\+v1.hdf5 to the code, and the output is L\+DC key information, in order of increasing source frequency. (Output is saved to the user\textquotesingle{}s working directory. ) \begin{DoxyVerb}ldc_vgb_key.py
+\end{DoxyVerb}
+\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md15}{}\doxysection{Access L\+D\+C Galaxy key parameters, with python}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md15}
+The user inputs $\sim$/\+L\+D\+C1-\/4\+\_\+\+G\+B\+\_\+v1.hdf5 to the code, and the code outputs key parameters corresponding to a specific frequency range. For example, one could input the frequency range analyzed by gb\+\_\+mcmc, described next. (Output is saved to the user\textquotesingle{}s working directory.) \begin{DoxyVerb}ldc_radler_key.py
+\end{DoxyVerb}
+\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md16}{}\doxysection{Run gb\+\_\+mcmc on Fourier transformed L\+D\+C data.}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md16}
+The user\textquotesingle{}s working directory should be where they want the output of gb\+\_\+mcmc to be saved.
+
+The following assumes the user is analyzing a frequency segment of L\+D\+C1-\/3\+\_\+\+V\+G\+B\+\_\+v1\+\_\+\{n\}mo.\+dat, or L\+D\+C1-\/4\+\_\+\+G\+B\+\_\+v1\+\_\+\{n\}mo.\+dat, where n = \{1.\+5, 3, 6, 12, 24\}. The input data are obtained from fft\+\_\+ldc\+\_\+data.\+py, described above.
+
+Select a specific frequency range for analysis by setting flags --fmin (Hz) and --samples (integer).
+
+One set of choices for --samples are 2$^\wedge$5, 2$^\wedge$6, 2$^\wedge$7, 2$^\wedge$8, 2$^\wedge$9 for analyzing 1.\+5, 3, 6, 12, 24 months of L\+DC data, respectively.
+
+One may prefer the range a freq. factor of two larger. In that case, --samples becomes 2$^\wedge$6, 2$^\wedge$7, 2$^\wedge$8, 2$^\wedge$9, 2$^\wedge$10, for the time periods listed in the line above.
+
+Specify flag --duration for an integer number of seconds
+
+(e.\+g. use 3932160, 7864320, 15728640, 31457280, and 62914560 for 1.\+5, 3, 6, 12, 24 months, respectively) ~\newline
+
+
+For example, to analyze 1.\+5 months of data for the lowest frequency V\+GB source, the user could run the following. \begin{DoxyVerb}~/gb_mcmc --data ~/LDC1-3_VGB_v1_1.5_months.dat --frac-freq --fmin 0.001249 --samples 32 --duration 3932160 --chainseed 1234 --verbose
+\end{DoxyVerb}
+
+
+Here is another example showing how to analyze 1.\+5 months of data for three L\+DC Galaxy GB sources found in frequency range \mbox{[}0.\+0099706, 0.\+0099785\mbox{]}. \begin{DoxyVerb}~/gb_mcmc --data ~/LDC1-4_GB_v1_1.5mo.dat --frac-freq --fmin 0.0099706 --samples 32 --duration 3932160 --chainseed 5678 --verbose
+\end{DoxyVerb}
+\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md17}{}\doxysection{Use Galactic\+Binary\+Catalog.\+c (gb\+\_\+catalog) to produce catalog data with the gb\+\_\+mcmc output}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md17}
+Enter the following for usage. \begin{DoxyVerb}gb_catalog -h
+\end{DoxyVerb}
+
+
+Here we produce catalog output for the V\+GB example (the lowest frequency V\+GB source). The ouput will be saved in directory ./catalog\+\_\+1 (The following assumes the user\textquotesingle{}s working directory contains the chains directory, output from gb\+\_\+mcmc.) \begin{DoxyVerb}~/gb_catalog --fmin 0.001249 --samples 32 --duration 3932160 --sources 1 --chain-file ./chains/dimension_chain.dat.1
+\end{DoxyVerb}
+
+
+Here we produce catalog output for the Galaxy example given above (three GB sources). The output will be saved in directory ./catalog\+\_\+3 (We assume the user\textquotesingle{}s working directory contains the chains directory, output from gb\+\_\+mcmc.) \begin{DoxyVerb}~/gb_catalog --fmin 0.0099706 --samples 32 --duration 3932160 --sources 3 --chain-file ./chains/dimension_chain.dat.3
+\end{DoxyVerb}
+
+
+Next we show how to use the catalog output to build covariance matrix proposals for gb\+\_\+mcmc.\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md18}{}\doxysection{Build covariance matrix proposal from catalog output}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md18}
+Here we use the catalog output produced for the V\+GB example or the Galaxy example above.
+
+We assume the user\textquotesingle{}s {\itshape working directory is catalog\+\_\+1 or catalog\+\_\+3}, which were created with the gb\+\_\+catalog code steps above. The code asks for user input on where to save the covariance proposal output and what to name it. The code also asks the user to \char`\"{}enter observation time for covariance matrix\char`\"{}. Options are listed. For example, if we want to use the 1.\+5 month chain as a proposal for a 3 month run, we would enter 7864320.
+
+NB\+: The following code is still under development. \begin{DoxyVerb}covariance_proposal_maker.py
+\end{DoxyVerb}
+\hypertarget{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md19}{}\doxysection{Run gb\+\_\+mcmc with draws from a proposal distribution, for example, from cummulative distribution function (\+C\+D\+F proposal updates) and/or from covariance matrices}\label{md_gbmcmc__r_e_a_d_m_e__l_d_c_autotoc_md19}
+currently being updated 

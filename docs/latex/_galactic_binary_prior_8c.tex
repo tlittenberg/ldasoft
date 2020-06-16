@@ -1,0 +1,74 @@
+\hypertarget{_galactic_binary_prior_8c}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+Prior.c File Reference}
+\label{_galactic_binary_prior_8c}\index{gbmcmc/src/GalacticBinaryPrior.c@{gbmcmc/src/GalacticBinaryPrior.c}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}L\+I\+S\+A.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Math.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+I\+O.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Waveform.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Prior.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_galactic_binary_prior_8c_a0ed9791e0240bd9a6c9f8ed6d4bca2dc}{set\+\_\+galaxy\+\_\+prior}} (struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior)
+\item 
+void \mbox{\hyperlink{_galactic_binary_prior_8c_a92c29a92bb33e3774c12531dab5e2e3c}{set\+\_\+uniform\+\_\+prior}} (struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, int verbose)
+\item 
+double \mbox{\hyperlink{_galactic_binary_prior_8c_a4a0d6349cb85dc2815e5d68499caca63}{evaluate\+\_\+prior}} (struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$prior, double $\ast$params)
+\item 
+double \mbox{\hyperlink{_galactic_binary_prior_8c_adb5c0e2fde9b555330f108c5c4dab69e}{evaluate\+\_\+uniform\+\_\+priors}} (double $\ast$params, double $\ast$$\ast$uniform\+\_\+prior, double $\ast$log\+Prior\+Volume, int NP)
+\item 
+double \mbox{\hyperlink{_galactic_binary_prior_8c_a8fc1f8587b804b753a5240930e6dfd54}{evalaute\+\_\+sky\+\_\+location\+\_\+prior}} (double $\ast$params, double $\ast$$\ast$uniform\+\_\+prior, double $\ast$log\+Prior\+Volume, int galaxy\+Flag, double $\ast$skyhist, double dcostheta, double dphi, int nphi)
+\item 
+double \mbox{\hyperlink{_galactic_binary_prior_8c_a6ee03939465c46feba5faba1bd1f3a36}{evaluate\+\_\+snr\+\_\+prior}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, double $\ast$params)
+\item 
+double \mbox{\hyperlink{_galactic_binary_prior_8c_a22aafbb53d124f4464eb2fc192f19357}{evaluate\+\_\+calibration\+\_\+prior}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_prior_8c_a8fc1f8587b804b753a5240930e6dfd54}\label{_galactic_binary_prior_8c_a8fc1f8587b804b753a5240930e6dfd54}} 
+\index{GalacticBinaryPrior.c@{GalacticBinaryPrior.c}!evalaute\_sky\_location\_prior@{evalaute\_sky\_location\_prior}}
+\index{evalaute\_sky\_location\_prior@{evalaute\_sky\_location\_prior}!GalacticBinaryPrior.c@{GalacticBinaryPrior.c}}
+\doxysubsubsection{\texorpdfstring{evalaute\_sky\_location\_prior()}{evalaute\_sky\_location\_prior()}}
+{\footnotesize\ttfamily double evalaute\+\_\+sky\+\_\+location\+\_\+prior (\begin{DoxyParamCaption}\item[{double $\ast$}]{params,  }\item[{double $\ast$$\ast$}]{uniform\+\_\+prior,  }\item[{double $\ast$}]{log\+Prior\+Volume,  }\item[{int}]{galaxy\+Flag,  }\item[{double $\ast$}]{skyhist,  }\item[{double}]{dcostheta,  }\item[{double}]{dphi,  }\item[{int}]{nphi }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_prior_8c_a22aafbb53d124f4464eb2fc192f19357}\label{_galactic_binary_prior_8c_a22aafbb53d124f4464eb2fc192f19357}} 
+\index{GalacticBinaryPrior.c@{GalacticBinaryPrior.c}!evaluate\_calibration\_prior@{evaluate\_calibration\_prior}}
+\index{evaluate\_calibration\_prior@{evaluate\_calibration\_prior}!GalacticBinaryPrior.c@{GalacticBinaryPrior.c}}
+\doxysubsubsection{\texorpdfstring{evaluate\_calibration\_prior()}{evaluate\_calibration\_prior()}}
+{\footnotesize\ttfamily double evaluate\+\_\+calibration\+\_\+prior (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_prior_8c_a4a0d6349cb85dc2815e5d68499caca63}\label{_galactic_binary_prior_8c_a4a0d6349cb85dc2815e5d68499caca63}} 
+\index{GalacticBinaryPrior.c@{GalacticBinaryPrior.c}!evaluate\_prior@{evaluate\_prior}}
+\index{evaluate\_prior@{evaluate\_prior}!GalacticBinaryPrior.c@{GalacticBinaryPrior.c}}
+\doxysubsubsection{\texorpdfstring{evaluate\_prior()}{evaluate\_prior()}}
+{\footnotesize\ttfamily double evaluate\+\_\+prior (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$}]{prior,  }\item[{double $\ast$}]{params }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_prior_8c_a6ee03939465c46feba5faba1bd1f3a36}\label{_galactic_binary_prior_8c_a6ee03939465c46feba5faba1bd1f3a36}} 
+\index{GalacticBinaryPrior.c@{GalacticBinaryPrior.c}!evaluate\_snr\_prior@{evaluate\_snr\_prior}}
+\index{evaluate\_snr\_prior@{evaluate\_snr\_prior}!GalacticBinaryPrior.c@{GalacticBinaryPrior.c}}
+\doxysubsubsection{\texorpdfstring{evaluate\_snr\_prior()}{evaluate\_snr\_prior()}}
+{\footnotesize\ttfamily double evaluate\+\_\+snr\+\_\+prior (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{double $\ast$}]{params }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_prior_8c_adb5c0e2fde9b555330f108c5c4dab69e}\label{_galactic_binary_prior_8c_adb5c0e2fde9b555330f108c5c4dab69e}} 
+\index{GalacticBinaryPrior.c@{GalacticBinaryPrior.c}!evaluate\_uniform\_priors@{evaluate\_uniform\_priors}}
+\index{evaluate\_uniform\_priors@{evaluate\_uniform\_priors}!GalacticBinaryPrior.c@{GalacticBinaryPrior.c}}
+\doxysubsubsection{\texorpdfstring{evaluate\_uniform\_priors()}{evaluate\_uniform\_priors()}}
+{\footnotesize\ttfamily double evaluate\+\_\+uniform\+\_\+priors (\begin{DoxyParamCaption}\item[{double $\ast$}]{params,  }\item[{double $\ast$$\ast$}]{uniform\+\_\+prior,  }\item[{double $\ast$}]{log\+Prior\+Volume,  }\item[{int}]{NP }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_prior_8c_a0ed9791e0240bd9a6c9f8ed6d4bca2dc}\label{_galactic_binary_prior_8c_a0ed9791e0240bd9a6c9f8ed6d4bca2dc}} 
+\index{GalacticBinaryPrior.c@{GalacticBinaryPrior.c}!set\_galaxy\_prior@{set\_galaxy\_prior}}
+\index{set\_galaxy\_prior@{set\_galaxy\_prior}!GalacticBinaryPrior.c@{GalacticBinaryPrior.c}}
+\doxysubsubsection{\texorpdfstring{set\_galaxy\_prior()}{set\_galaxy\_prior()}}
+{\footnotesize\ttfamily void set\+\_\+galaxy\+\_\+prior (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{struct \mbox{\hyperlink{struct_prior}{Prior}} $\ast$}]{prior }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_prior_8c_a92c29a92bb33e3774c12531dab5e2e3c}\label{_galactic_binary_prior_8c_a92c29a92bb33e3774c12531dab5e2e3c}} 
+\index{GalacticBinaryPrior.c@{GalacticBinaryPrior.c}!set\_uniform\_prior@{set\_uniform\_prior}}
+\index{set\_uniform\_prior@{set\_uniform\_prior}!GalacticBinaryPrior.c@{GalacticBinaryPrior.c}}
+\doxysubsubsection{\texorpdfstring{set\_uniform\_prior()}{set\_uniform\_prior()}}
+{\footnotesize\ttfamily void set\+\_\+uniform\+\_\+prior (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{int}]{verbose }\end{DoxyParamCaption})}
+

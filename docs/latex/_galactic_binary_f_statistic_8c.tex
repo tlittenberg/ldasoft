@@ -1,0 +1,119 @@
+\hypertarget{_galactic_binary_f_statistic_8c}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+F\+Statistic.c File Reference}
+\label{_galactic_binary_f_statistic_8c}\index{gbmcmc/src/GalacticBinaryFStatistic.c@{gbmcmc/src/GalacticBinaryFStatistic.c}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}L\+I\+S\+A.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Math.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Waveform.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+F\+Statistic.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_ad36cc3b41c1450f4aa538bc8538545d4}{initialize\+\_\+\+X\+LS}} (long M, double $\ast$X\+LS, double $\ast$AA, double $\ast$EE)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_a0c05b310d349122d321f5ec8f7ec1e60}{init\+\_\+\+A\+\_\+filters}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_a1efe41469f85111df88f2a64cdd30195}{init\+\_\+\+M\+\_\+matrix}} (struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_a2a8a654372bba12128de74ef063b2fe0}{free\+\_\+\+Filter}} (struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_ad11148186e62a2d53ea4cd9e8e6bfc56}{get\+\_\+filters}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, int filter\+\_\+id, struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_abfd1e6db3a0f5d5888950e88efdf3c56}{get\+\_\+N}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_ac84b575f5635000c63c2bef82f92c90d}{get\+\_\+M}} (struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter, double $\ast$$\ast$M\+\_\+inv\+\_\+X, double $\ast$$\ast$M\+\_\+inv\+\_\+\+AE, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data)
+\item 
+int \mbox{\hyperlink{_galactic_binary_f_statistic_8c_a34f0394aeb862479ab1b0aed798d2308}{sgn}} (double v)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_a1d41491209077f3d1b450fc4b594100b}{get\+\_\+\+F\+\_\+params}} (struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_af0c888ec6ce4aaa63584e8c777d431bb}{calc\+\_\+\+Fstat\+\_\+logL}} (struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_ab94ee345c720891607c65a7fabbc166d}{calc\+\_\+a\+\_\+i}} (struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$F\+\_\+filter)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_a3243fca0491023fb02848b02c917ee23}{get\+\_\+\+Fstat\+\_\+logL}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, double f0, double fdot, double theta, double phi, double $\ast$log\+L\+\_\+X, double $\ast$log\+L\+\_\+\+AE, double $\ast$Fparams)
+\item 
+void \mbox{\hyperlink{_galactic_binary_f_statistic_8c_a894d89c14815bcf53cfb61231339ff4e}{get\+\_\+\+Fstat\+\_\+xmax}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, double $\ast$x, double $\ast$xmax)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_ab94ee345c720891607c65a7fabbc166d}\label{_galactic_binary_f_statistic_8c_ab94ee345c720891607c65a7fabbc166d}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!calc\_a\_i@{calc\_a\_i}}
+\index{calc\_a\_i@{calc\_a\_i}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{calc\_a\_i()}{calc\_a\_i()}}
+{\footnotesize\ttfamily void calc\+\_\+a\+\_\+i (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_af0c888ec6ce4aaa63584e8c777d431bb}\label{_galactic_binary_f_statistic_8c_af0c888ec6ce4aaa63584e8c777d431bb}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!calc\_Fstat\_logL@{calc\_Fstat\_logL}}
+\index{calc\_Fstat\_logL@{calc\_Fstat\_logL}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{calc\_Fstat\_logL()}{calc\_Fstat\_logL()}}
+{\footnotesize\ttfamily void calc\+\_\+\+Fstat\+\_\+logL (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_a2a8a654372bba12128de74ef063b2fe0}\label{_galactic_binary_f_statistic_8c_a2a8a654372bba12128de74ef063b2fe0}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!free\_Filter@{free\_Filter}}
+\index{free\_Filter@{free\_Filter}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{free\_Filter()}{free\_Filter()}}
+{\footnotesize\ttfamily void free\+\_\+\+Filter (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_a1d41491209077f3d1b450fc4b594100b}\label{_galactic_binary_f_statistic_8c_a1d41491209077f3d1b450fc4b594100b}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!get\_F\_params@{get\_F\_params}}
+\index{get\_F\_params@{get\_F\_params}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{get\_F\_params()}{get\_F\_params()}}
+{\footnotesize\ttfamily void get\+\_\+\+F\+\_\+params (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_ad11148186e62a2d53ea4cd9e8e6bfc56}\label{_galactic_binary_f_statistic_8c_ad11148186e62a2d53ea4cd9e8e6bfc56}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!get\_filters@{get\_filters}}
+\index{get\_filters@{get\_filters}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{get\_filters()}{get\_filters()}}
+{\footnotesize\ttfamily void get\+\_\+filters (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{int}]{filter\+\_\+id,  }\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_a3243fca0491023fb02848b02c917ee23}\label{_galactic_binary_f_statistic_8c_a3243fca0491023fb02848b02c917ee23}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!get\_Fstat\_logL@{get\_Fstat\_logL}}
+\index{get\_Fstat\_logL@{get\_Fstat\_logL}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{get\_Fstat\_logL()}{get\_Fstat\_logL()}}
+{\footnotesize\ttfamily void get\+\_\+\+Fstat\+\_\+logL (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{double}]{f0,  }\item[{double}]{fdot,  }\item[{double}]{theta,  }\item[{double}]{phi,  }\item[{double $\ast$}]{log\+L\+\_\+X,  }\item[{double $\ast$}]{log\+L\+\_\+\+AE,  }\item[{double $\ast$}]{Fparams }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_a894d89c14815bcf53cfb61231339ff4e}\label{_galactic_binary_f_statistic_8c_a894d89c14815bcf53cfb61231339ff4e}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!get\_Fstat\_xmax@{get\_Fstat\_xmax}}
+\index{get\_Fstat\_xmax@{get\_Fstat\_xmax}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{get\_Fstat\_xmax()}{get\_Fstat\_xmax()}}
+{\footnotesize\ttfamily void get\+\_\+\+Fstat\+\_\+xmax (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{double $\ast$}]{x,  }\item[{double $\ast$}]{xmax }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_ac84b575f5635000c63c2bef82f92c90d}\label{_galactic_binary_f_statistic_8c_ac84b575f5635000c63c2bef82f92c90d}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!get\_M@{get\_M}}
+\index{get\_M@{get\_M}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{get\_M()}{get\_M()}}
+{\footnotesize\ttfamily void get\+\_\+M (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter,  }\item[{double $\ast$$\ast$}]{M\+\_\+inv\+\_\+X,  }\item[{double $\ast$$\ast$}]{M\+\_\+inv\+\_\+\+AE,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_abfd1e6db3a0f5d5888950e88efdf3c56}\label{_galactic_binary_f_statistic_8c_abfd1e6db3a0f5d5888950e88efdf3c56}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!get\_N@{get\_N}}
+\index{get\_N@{get\_N}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{get\_N()}{get\_N()}}
+{\footnotesize\ttfamily void get\+\_\+N (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_a0c05b310d349122d321f5ec8f7ec1e60}\label{_galactic_binary_f_statistic_8c_a0c05b310d349122d321f5ec8f7ec1e60}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!init\_A\_filters@{init\_A\_filters}}
+\index{init\_A\_filters@{init\_A\_filters}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{init\_A\_filters()}{init\_A\_filters()}}
+{\footnotesize\ttfamily void init\+\_\+\+A\+\_\+filters (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_a1efe41469f85111df88f2a64cdd30195}\label{_galactic_binary_f_statistic_8c_a1efe41469f85111df88f2a64cdd30195}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!init\_M\_matrix@{init\_M\_matrix}}
+\index{init\_M\_matrix@{init\_M\_matrix}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{init\_M\_matrix()}{init\_M\_matrix()}}
+{\footnotesize\ttfamily void init\+\_\+\+M\+\_\+matrix (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_filter}{Filter}} $\ast$}]{F\+\_\+filter,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_ad36cc3b41c1450f4aa538bc8538545d4}\label{_galactic_binary_f_statistic_8c_ad36cc3b41c1450f4aa538bc8538545d4}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!initialize\_XLS@{initialize\_XLS}}
+\index{initialize\_XLS@{initialize\_XLS}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{initialize\_XLS()}{initialize\_XLS()}}
+{\footnotesize\ttfamily void initialize\+\_\+\+X\+LS (\begin{DoxyParamCaption}\item[{long}]{M,  }\item[{double $\ast$}]{X\+LS,  }\item[{double $\ast$}]{AA,  }\item[{double $\ast$}]{EE }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_f_statistic_8c_a34f0394aeb862479ab1b0aed798d2308}\label{_galactic_binary_f_statistic_8c_a34f0394aeb862479ab1b0aed798d2308}} 
+\index{GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}!sgn@{sgn}}
+\index{sgn@{sgn}!GalacticBinaryFStatistic.c@{GalacticBinaryFStatistic.c}}
+\doxysubsubsection{\texorpdfstring{sgn()}{sgn()}}
+{\footnotesize\ttfamily int sgn (\begin{DoxyParamCaption}\item[{double}]{v }\end{DoxyParamCaption})}
+

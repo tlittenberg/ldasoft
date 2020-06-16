@@ -1,0 +1,279 @@
+\hypertarget{_galactic_binary_model_8c}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+Model.c File Reference}
+\label{_galactic_binary_model_8c}\index{gbmcmc/src/GalacticBinaryModel.c@{gbmcmc/src/GalacticBinaryModel.c}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}L\+I\+S\+A.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Math.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Model.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Waveform.\+h\char`\"{}}\newline
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{_galactic_binary_model_8c_a783c49c38c9489b1a10bc04049b3682f}{F\+I\+X\+ME}}~0
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a8e2448b6a3c5eda5d8f7554aa5c8a22c}{map\+\_\+array\+\_\+to\+\_\+params}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, double $\ast$params, double T)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_ac5233ef8561550f70d0c30b73ba456fd}{map\+\_\+params\+\_\+to\+\_\+array}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, double $\ast$params, double T)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_aadc89e78ca912fd283654d3d104bee38}{alloc\+\_\+data}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$data\+\_\+vec, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_aa0ddc99281149e50dad8c49827efa97e}{initialize\+\_\+chain}} (struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, long $\ast$seed, const char $\ast$mode)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a0139893a312804a38d6970d41292c233}{free\+\_\+chain}} (struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a1e2ce40c066c60db2b591b10f5e12295}{alloc\+\_\+model}} (struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, int Nmax, int N\+F\+FT, int Nchannel, int NP, int NT)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a0e3b9c63403d57e6c1a8446543760089}{copy\+\_\+model}} (struct \mbox{\hyperlink{struct_model}{Model}} $\ast$origin, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$copy)
+\item 
+int \mbox{\hyperlink{_galactic_binary_model_8c_aa9152d7274cafed11f3aef58c5aec474}{compare\+\_\+model}} (struct \mbox{\hyperlink{struct_model}{Model}} $\ast$a, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$\mbox{\hyperlink{gb__mcmc__scalar__fddot_8c_a00303988edb9fdd11848a23fb4eda358}{b}})
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_adc82b05c54de08445433147948ee5f65}{free\+\_\+model}} (struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a2fb9ce2127a9a5ad85b44bd6711bc81a}{alloc\+\_\+tdi}} (struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$tdi, int N\+F\+FT, int Nchannel)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a10c575b155ad3c0340db8029ead3c037}{copy\+\_\+tdi}} (struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$origin, struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$copy)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_aa4e5f3c8ba29dc1ab3589f9839c3fa5d}{free\+\_\+tdi}} (struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$tdi)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a7ebc45814152141c744e513ac6c89fa3}{alloc\+\_\+noise}} (struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$noise, int N\+F\+FT)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_aac0726c8e74b4cfe06a47c9f41c1bd86}{copy\+\_\+noise}} (struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$origin, struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$copy)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a82c54b48e4607c9d91e860550ac48076}{free\+\_\+noise}} (struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$noise)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a38f2cf23bb8f44a24f5040506b0923cd}{alloc\+\_\+calibration}} (struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$calibration)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a53b8c9e7e22f51ffd98ada535d064afb}{copy\+\_\+calibration}} (struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$origin, struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$copy)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a5834ab2647341d5655b91a407cc9870c}{free\+\_\+calibration}} (struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$calibration)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_af4d427c1f55fb38c73f25ba924108aec}{alloc\+\_\+source}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, int N\+F\+FT, int Nchannel, int NP)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a9356d699ff50aa1361fcef848cd2095b}{copy\+\_\+source}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$origin, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$copy)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a9c14765afc01ee00538660b53adec6b0}{free\+\_\+source}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a79437c6f00ae1f13aec9c623817c55dc}{simualte\+\_\+data}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$$\ast$injections, int Ninj)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a43db494cb65c780d0eb771c97301ec18}{generate\+\_\+signal\+\_\+model}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model, int index)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a35fd14c25ecbbd988057da7ae740a051}{generate\+\_\+power\+\_\+law\+\_\+noise\+\_\+model}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a9d05914da5fd4f3afe8b7fa7b12aedae}{generate\+\_\+noise\+\_\+model}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_aae9f1345cdb131ac555e8b7a47ecdadf}{generate\+\_\+calibration\+\_\+model}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+void \mbox{\hyperlink{_galactic_binary_model_8c_a0ea5f768d5e2549c7d915fb39d4983ac}{apply\+\_\+calibration\+\_\+model}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+double \mbox{\hyperlink{_galactic_binary_model_8c_aa84388c42bbd2231e7e9bc257a54e84e}{gaussian\+\_\+log\+\_\+likelihood}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+double \mbox{\hyperlink{_galactic_binary_model_8c_a033e2dbb7c3a92e43634ba5b477b70c3}{gaussian\+\_\+log\+\_\+likelihood\+\_\+constant\+\_\+norm}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+double \mbox{\hyperlink{_galactic_binary_model_8c_aed294af3354f45ddf6e25f21e4b27672}{gaussian\+\_\+log\+\_\+likelihood\+\_\+model\+\_\+norm}} (struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_model}{Model}} $\ast$model)
+\item 
+int \mbox{\hyperlink{_galactic_binary_model_8c_a77314c81b8fb43c9bde2c95f764674ba}{update\+\_\+max\+\_\+log\+\_\+likelihood}} (struct \mbox{\hyperlink{struct_model}{Model}} $\ast$$\ast$$\ast$model, struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$chain, struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$flags)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{_galactic_binary_model_8c_a783c49c38c9489b1a10bc04049b3682f}\label{_galactic_binary_model_8c_a783c49c38c9489b1a10bc04049b3682f}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!FIXME@{FIXME}}
+\index{FIXME@{FIXME}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{FIXME}{FIXME}}
+{\footnotesize\ttfamily \#define F\+I\+X\+ME~0}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_model_8c_a38f2cf23bb8f44a24f5040506b0923cd}\label{_galactic_binary_model_8c_a38f2cf23bb8f44a24f5040506b0923cd}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!alloc\_calibration@{alloc\_calibration}}
+\index{alloc\_calibration@{alloc\_calibration}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_calibration()}{alloc\_calibration()}}
+{\footnotesize\ttfamily void alloc\+\_\+calibration (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$}]{calibration }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aadc89e78ca912fd283654d3d104bee38}\label{_galactic_binary_model_8c_aadc89e78ca912fd283654d3d104bee38}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!alloc\_data@{alloc\_data}}
+\index{alloc\_data@{alloc\_data}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_data()}{alloc\_data()}}
+{\footnotesize\ttfamily void alloc\+\_\+data (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$$\ast$}]{data\+\_\+vec,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a1e2ce40c066c60db2b591b10f5e12295}\label{_galactic_binary_model_8c_a1e2ce40c066c60db2b591b10f5e12295}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!alloc\_model@{alloc\_model}}
+\index{alloc\_model@{alloc\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_model()}{alloc\_model()}}
+{\footnotesize\ttfamily void alloc\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{int}]{Nmax,  }\item[{int}]{N\+F\+FT,  }\item[{int}]{Nchannel,  }\item[{int}]{NP,  }\item[{int}]{NT }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a7ebc45814152141c744e513ac6c89fa3}\label{_galactic_binary_model_8c_a7ebc45814152141c744e513ac6c89fa3}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!alloc\_noise@{alloc\_noise}}
+\index{alloc\_noise@{alloc\_noise}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_noise()}{alloc\_noise()}}
+{\footnotesize\ttfamily void alloc\+\_\+noise (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{noise,  }\item[{int}]{N\+F\+FT }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_af4d427c1f55fb38c73f25ba924108aec}\label{_galactic_binary_model_8c_af4d427c1f55fb38c73f25ba924108aec}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!alloc\_source@{alloc\_source}}
+\index{alloc\_source@{alloc\_source}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_source()}{alloc\_source()}}
+{\footnotesize\ttfamily void alloc\+\_\+source (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{int}]{N\+F\+FT,  }\item[{int}]{Nchannel,  }\item[{int}]{NP }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a2fb9ce2127a9a5ad85b44bd6711bc81a}\label{_galactic_binary_model_8c_a2fb9ce2127a9a5ad85b44bd6711bc81a}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!alloc\_tdi@{alloc\_tdi}}
+\index{alloc\_tdi@{alloc\_tdi}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{alloc\_tdi()}{alloc\_tdi()}}
+{\footnotesize\ttfamily void alloc\+\_\+tdi (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$}]{tdi,  }\item[{int}]{N\+F\+FT,  }\item[{int}]{Nchannel }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a0ea5f768d5e2549c7d915fb39d4983ac}\label{_galactic_binary_model_8c_a0ea5f768d5e2549c7d915fb39d4983ac}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!apply\_calibration\_model@{apply\_calibration\_model}}
+\index{apply\_calibration\_model@{apply\_calibration\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{apply\_calibration\_model()}{apply\_calibration\_model()}}
+{\footnotesize\ttfamily void apply\+\_\+calibration\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aa9152d7274cafed11f3aef58c5aec474}\label{_galactic_binary_model_8c_aa9152d7274cafed11f3aef58c5aec474}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!compare\_model@{compare\_model}}
+\index{compare\_model@{compare\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{compare\_model()}{compare\_model()}}
+{\footnotesize\ttfamily int compare\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{a,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{b }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a53b8c9e7e22f51ffd98ada535d064afb}\label{_galactic_binary_model_8c_a53b8c9e7e22f51ffd98ada535d064afb}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!copy\_calibration@{copy\_calibration}}
+\index{copy\_calibration@{copy\_calibration}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{copy\_calibration()}{copy\_calibration()}}
+{\footnotesize\ttfamily void copy\+\_\+calibration (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$}]{origin,  }\item[{struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a0e3b9c63403d57e6c1a8446543760089}\label{_galactic_binary_model_8c_a0e3b9c63403d57e6c1a8446543760089}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!copy\_model@{copy\_model}}
+\index{copy\_model@{copy\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{copy\_model()}{copy\_model()}}
+{\footnotesize\ttfamily void copy\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{origin,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aac0726c8e74b4cfe06a47c9f41c1bd86}\label{_galactic_binary_model_8c_aac0726c8e74b4cfe06a47c9f41c1bd86}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!copy\_noise@{copy\_noise}}
+\index{copy\_noise@{copy\_noise}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{copy\_noise()}{copy\_noise()}}
+{\footnotesize\ttfamily void copy\+\_\+noise (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{origin,  }\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a9356d699ff50aa1361fcef848cd2095b}\label{_galactic_binary_model_8c_a9356d699ff50aa1361fcef848cd2095b}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!copy\_source@{copy\_source}}
+\index{copy\_source@{copy\_source}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{copy\_source()}{copy\_source()}}
+{\footnotesize\ttfamily void copy\+\_\+source (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{origin,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a10c575b155ad3c0340db8029ead3c037}\label{_galactic_binary_model_8c_a10c575b155ad3c0340db8029ead3c037}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!copy\_tdi@{copy\_tdi}}
+\index{copy\_tdi@{copy\_tdi}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{copy\_tdi()}{copy\_tdi()}}
+{\footnotesize\ttfamily void copy\+\_\+tdi (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$}]{origin,  }\item[{struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a5834ab2647341d5655b91a407cc9870c}\label{_galactic_binary_model_8c_a5834ab2647341d5655b91a407cc9870c}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!free\_calibration@{free\_calibration}}
+\index{free\_calibration@{free\_calibration}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{free\_calibration()}{free\_calibration()}}
+{\footnotesize\ttfamily void free\+\_\+calibration (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_calibration}{Calibration}} $\ast$}]{calibration }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a0139893a312804a38d6970d41292c233}\label{_galactic_binary_model_8c_a0139893a312804a38d6970d41292c233}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!free\_chain@{free\_chain}}
+\index{free\_chain@{free\_chain}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{free\_chain()}{free\_chain()}}
+{\footnotesize\ttfamily void free\+\_\+chain (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_adc82b05c54de08445433147948ee5f65}\label{_galactic_binary_model_8c_adc82b05c54de08445433147948ee5f65}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!free\_model@{free\_model}}
+\index{free\_model@{free\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{free\_model()}{free\_model()}}
+{\footnotesize\ttfamily void free\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a82c54b48e4607c9d91e860550ac48076}\label{_galactic_binary_model_8c_a82c54b48e4607c9d91e860550ac48076}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!free\_noise@{free\_noise}}
+\index{free\_noise@{free\_noise}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{free\_noise()}{free\_noise()}}
+{\footnotesize\ttfamily void free\+\_\+noise (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{noise }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a9c14765afc01ee00538660b53adec6b0}\label{_galactic_binary_model_8c_a9c14765afc01ee00538660b53adec6b0}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!free\_source@{free\_source}}
+\index{free\_source@{free\_source}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{free\_source()}{free\_source()}}
+{\footnotesize\ttfamily void free\+\_\+source (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aa4e5f3c8ba29dc1ab3589f9839c3fa5d}\label{_galactic_binary_model_8c_aa4e5f3c8ba29dc1ab3589f9839c3fa5d}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!free\_tdi@{free\_tdi}}
+\index{free\_tdi@{free\_tdi}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{free\_tdi()}{free\_tdi()}}
+{\footnotesize\ttfamily void free\+\_\+tdi (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_t_d_i}{T\+DI}} $\ast$}]{tdi }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aa84388c42bbd2231e7e9bc257a54e84e}\label{_galactic_binary_model_8c_aa84388c42bbd2231e7e9bc257a54e84e}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!gaussian\_log\_likelihood@{gaussian\_log\_likelihood}}
+\index{gaussian\_log\_likelihood@{gaussian\_log\_likelihood}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{gaussian\_log\_likelihood()}{gaussian\_log\_likelihood()}}
+{\footnotesize\ttfamily double gaussian\+\_\+log\+\_\+likelihood (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a033e2dbb7c3a92e43634ba5b477b70c3}\label{_galactic_binary_model_8c_a033e2dbb7c3a92e43634ba5b477b70c3}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!gaussian\_log\_likelihood\_constant\_norm@{gaussian\_log\_likelihood\_constant\_norm}}
+\index{gaussian\_log\_likelihood\_constant\_norm@{gaussian\_log\_likelihood\_constant\_norm}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{gaussian\_log\_likelihood\_constant\_norm()}{gaussian\_log\_likelihood\_constant\_norm()}}
+{\footnotesize\ttfamily double gaussian\+\_\+log\+\_\+likelihood\+\_\+constant\+\_\+norm (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aed294af3354f45ddf6e25f21e4b27672}\label{_galactic_binary_model_8c_aed294af3354f45ddf6e25f21e4b27672}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!gaussian\_log\_likelihood\_model\_norm@{gaussian\_log\_likelihood\_model\_norm}}
+\index{gaussian\_log\_likelihood\_model\_norm@{gaussian\_log\_likelihood\_model\_norm}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{gaussian\_log\_likelihood\_model\_norm()}{gaussian\_log\_likelihood\_model\_norm()}}
+{\footnotesize\ttfamily double gaussian\+\_\+log\+\_\+likelihood\+\_\+model\+\_\+norm (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aae9f1345cdb131ac555e8b7a47ecdadf}\label{_galactic_binary_model_8c_aae9f1345cdb131ac555e8b7a47ecdadf}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!generate\_calibration\_model@{generate\_calibration\_model}}
+\index{generate\_calibration\_model@{generate\_calibration\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{generate\_calibration\_model()}{generate\_calibration\_model()}}
+{\footnotesize\ttfamily void generate\+\_\+calibration\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a9d05914da5fd4f3afe8b7fa7b12aedae}\label{_galactic_binary_model_8c_a9d05914da5fd4f3afe8b7fa7b12aedae}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!generate\_noise\_model@{generate\_noise\_model}}
+\index{generate\_noise\_model@{generate\_noise\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{generate\_noise\_model()}{generate\_noise\_model()}}
+{\footnotesize\ttfamily void generate\+\_\+noise\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a35fd14c25ecbbd988057da7ae740a051}\label{_galactic_binary_model_8c_a35fd14c25ecbbd988057da7ae740a051}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!generate\_power\_law\_noise\_model@{generate\_power\_law\_noise\_model}}
+\index{generate\_power\_law\_noise\_model@{generate\_power\_law\_noise\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{generate\_power\_law\_noise\_model()}{generate\_power\_law\_noise\_model()}}
+{\footnotesize\ttfamily void generate\+\_\+power\+\_\+law\+\_\+noise\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a43db494cb65c780d0eb771c97301ec18}\label{_galactic_binary_model_8c_a43db494cb65c780d0eb771c97301ec18}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!generate\_signal\_model@{generate\_signal\_model}}
+\index{generate\_signal\_model@{generate\_signal\_model}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{generate\_signal\_model()}{generate\_signal\_model()}}
+{\footnotesize\ttfamily void generate\+\_\+signal\+\_\+model (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$}]{model,  }\item[{int}]{index }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_aa0ddc99281149e50dad8c49827efa97e}\label{_galactic_binary_model_8c_aa0ddc99281149e50dad8c49827efa97e}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!initialize\_chain@{initialize\_chain}}
+\index{initialize\_chain@{initialize\_chain}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{initialize\_chain()}{initialize\_chain()}}
+{\footnotesize\ttfamily void initialize\+\_\+chain (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{long $\ast$}]{seed,  }\item[{const char $\ast$}]{mode }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a8e2448b6a3c5eda5d8f7554aa5c8a22c}\label{_galactic_binary_model_8c_a8e2448b6a3c5eda5d8f7554aa5c8a22c}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!map\_array\_to\_params@{map\_array\_to\_params}}
+\index{map\_array\_to\_params@{map\_array\_to\_params}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{map\_array\_to\_params()}{map\_array\_to\_params()}}
+{\footnotesize\ttfamily void map\+\_\+array\+\_\+to\+\_\+params (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{double $\ast$}]{params,  }\item[{double}]{T }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_ac5233ef8561550f70d0c30b73ba456fd}\label{_galactic_binary_model_8c_ac5233ef8561550f70d0c30b73ba456fd}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!map\_params\_to\_array@{map\_params\_to\_array}}
+\index{map\_params\_to\_array@{map\_params\_to\_array}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{map\_params\_to\_array()}{map\_params\_to\_array()}}
+{\footnotesize\ttfamily void map\+\_\+params\+\_\+to\+\_\+array (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{double $\ast$}]{params,  }\item[{double}]{T }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a79437c6f00ae1f13aec9c623817c55dc}\label{_galactic_binary_model_8c_a79437c6f00ae1f13aec9c623817c55dc}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!simualte\_data@{simualte\_data}}
+\index{simualte\_data@{simualte\_data}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{simualte\_data()}{simualte\_data()}}
+{\footnotesize\ttfamily void simualte\+\_\+data (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$$\ast$}]{injections,  }\item[{int}]{Ninj }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_model_8c_a77314c81b8fb43c9bde2c95f764674ba}\label{_galactic_binary_model_8c_a77314c81b8fb43c9bde2c95f764674ba}} 
+\index{GalacticBinaryModel.c@{GalacticBinaryModel.c}!update\_max\_log\_likelihood@{update\_max\_log\_likelihood}}
+\index{update\_max\_log\_likelihood@{update\_max\_log\_likelihood}!GalacticBinaryModel.c@{GalacticBinaryModel.c}}
+\doxysubsubsection{\texorpdfstring{update\_max\_log\_likelihood()}{update\_max\_log\_likelihood()}}
+{\footnotesize\ttfamily int update\+\_\+max\+\_\+log\+\_\+likelihood (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_model}{Model}} $\ast$$\ast$$\ast$}]{model,  }\item[{struct \mbox{\hyperlink{struct_chain}{Chain}} $\ast$}]{chain,  }\item[{struct \mbox{\hyperlink{struct_flags}{Flags}} $\ast$}]{flags }\end{DoxyParamCaption})}
+
