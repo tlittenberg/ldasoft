@@ -81,6 +81,48 @@ gb_mcmc \
 
 # GBMCMC output format
 
+## Parameterization
+
+* `f` GW frequency at mission start (Hz)
+* `fdot` first time derivative of frequency (Hz/s)
+* `A` GW amplitude
+* `[long,cos_colat]` sky location parameters in solar system barycenter ecliptic coordinates.  The latitude parameter is cosine(co-latitude), where colatitude is PI/2 - latitude. We use co-latitude so that the cosine is not double-valued, and U[-1,1] maps to a uniform distribution on the sky.
+* `cos_inc` cosine of inclination angle [-1,1]
+* `psi` polarization angle [0,PI]
+* `phi` phase of GW at mission start [0,2PI]
+* *OPTIONAL* `f-double-dot` Second frequency derivative (Hz/s^2)
+
+Converting from the internal sky location parameters to galactic coordinates or RA and dec is easy using `astropy`:
+
+```python
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+
+#AM CVn as example
+gbmcmc_phi = 2.9737          
+gbmcmc_costheta = 0.6080   
+
+# source = SkyCoord(lon, lat, frame)
+source = SkyCoord(gbmcmc_phi*u.rad,(np.pi/2 - np.arccos(gbmcmc_costheta))*u.rad,frame='barycentrictrueecliptic')
+
+#convert to galactic coordiantes
+print("\n Galactic coordinates:")
+print(source.galactic)
+
+#convert to RA & DEC coordiantes
+print("\n RA & Dec (deg)")
+print(source.icrs)
+
+#convert to RA & DEC in h:m:s format
+print("\n RA & Dec (hhmmss)")
+print(source.to_string(style='hmsdms'))
+
+#check the built in location of AM CVn
+print("\n Built in location for AM CVn")
+print(SkyCoord.from_name("AM CVn"))
+```
+
 ## `chains` directory
 
 ### `dimension_chain.dat.N`
