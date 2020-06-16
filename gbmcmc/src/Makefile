@@ -7,7 +7,7 @@ CC = gcc
 #LIBS  = gsl gslcblas m fftw3
 LIBS  = gsl gslcblas m tools
 LDFLAGS = -L../../tools/src
-CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
+CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -fopenmp -Werror
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
