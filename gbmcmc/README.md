@@ -21,8 +21,9 @@ pydot
 ## Installation
 Build and install binaries in `${HOME}/ldasoft/master/bin/` 
 ```bash
-cd <path to>/ldasoft
-./install.sh 
+cd <path to>/ldasoft/gbmcmc/src
+make
+make install
 ```
 Edit `ldasoft/gbmcmc/src/Makefile` and `ldasoft/gbfisher/src/Makefile` change install destination.
 
