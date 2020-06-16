@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['main_111',['main',['../GalacticBinaryMCMC_8c.html#a0ddf1224851353fc92bfbff6f499fa97',1,'GalacticBinaryMCMC.c']]]
+  ['fm_5fshift_126',['fm_shift',['../GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff',1,'GalacticBinaryProposal.c']]]
 ];
