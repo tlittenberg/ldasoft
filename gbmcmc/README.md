@@ -1,4 +1,4 @@
-# Installing GBMCMC
+# GBMCMC Manual
 ## Dependencies
 ```bash
 gcc
@@ -25,7 +25,7 @@ cd <path to>/ldasoft/gbmcmc/src
 make
 make install
 ```
-Edit `ldasoft/gbmcmc/src/Makefile` and `ldasoft/gbfisher/src/Makefile` change install destination.
+Edit `ldasoft/gbmcmc/src/Makefile` to change install destination.
 
 # Example use cases for GBMCMC
 See run options with `gb_mcmc --help`
