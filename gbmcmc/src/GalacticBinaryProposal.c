@@ -543,7 +543,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
     double **Lij  = proposal->tensor[mode];
     
     //scale NP-dimensional jump to 1-sigma of the joint distribution
-    double scale = 1.;///sqrt((double)NP);
+    double scale = 1.;
     
     //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
     for(int n=0; n<NP; n++)
@@ -1153,7 +1153,7 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
             Lij  = proposal->tensor[i];
             
             //scale NP-dimensional jump to 1-sigma of the joint distribution
-            double scale = 1.;///sqrt((double)NP);
+            double scale = 1.;
             
             for(int n=0; n<N; n++)
             {

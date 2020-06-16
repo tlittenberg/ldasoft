@@ -1,0 +1,326 @@
+\hypertarget{_bayes_line_8h}{}\doxysection{gbmcmc/src/\+Bayes\+Line.h File Reference}
+\label{_bayes_line_8h}\index{gbmcmc/src/BayesLine.h@{gbmcmc/src/BayesLine.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$getopt.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+sort.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+rng.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+randist.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+spline.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+statistics.\+h$>$}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}}
+\item 
+struct \mbox{\hyperlink{structdata_params}{data\+Params}}
+\item 
+struct \mbox{\hyperlink{structspline_params}{spline\+Params}}
+\item 
+struct \mbox{\hyperlink{struct_bayes_line_priors}{Bayes\+Line\+Priors}}
+\item 
+struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{_bayes_line_8h_a4b2ef7b69ed670c1688da7686b1ec0c1}{l\+Awidth}}~2.\+3
+\item 
+\#define \mbox{\hyperlink{_bayes_line_8h_a72db03025c1c883cdbf32b816241ccea}{zeta}}~1.\+0
+\item 
+\#define \mbox{\hyperlink{_bayes_line_8h_ad84c918bb124eb8120c46513290abead}{kappa\+\_\+\+BL}}~0.\+8
+\item 
+\#define \mbox{\hyperlink{_bayes_line_8h_aef5e22694322d48a9607f13bb9a4c6f4}{F\+S\+T\+EP}}~10.\+0
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_abd72ce18f1b33e4ed207330bc3770e98}{Bayes\+Line\+Free}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bptr)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_ac17f03e8eb4c8625d372ce2c5cf39b0c}{Bayes\+Line\+Setup}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bptr, double $\ast$freq\+Data, double fmin, double fmax, double deltaT, double Tobs)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_ab3c3a971ffccaa355c25d16db81a588e}{Bayes\+Line\+R\+J\+M\+C\+MC}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline, double $\ast$freq\+Data, double $\ast$psd, double $\ast$invpsd, double $\ast$spline\+P\+SD, int N, int cycle, double \mbox{\hyperlink{gb__mcmc__scalar__fddot_8c_ab20b12710e9bcc07d3eccbc765b74a51}{beta}}, int prior\+Flag)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a3b2f5e45d9cf0e3d5a1ee023e1fca8de}{Bayes\+Line\+Search}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bptr, double $\ast$freq\+Data, double fmin, double fmax, double deltaT, double Tobs)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a95676c2ac33298669b6b07db36980fe5}{Bayes\+Line\+Non\+Markovian\+Fit}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline, int $\ast$nj)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a87618d90ab0a1e02ea5f8469af26f105}{Bayes\+Line\+Lorentz\+Spline\+M\+C\+MC}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline, double heat, int steps, int focus, int prior\+Flag, double $\ast$dan)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a34efdf9b0e5528a3461d57cafb498dd0}{Bayes\+Line\+Markovian\+Spline\+Only}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline, int nspline, int jj)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a8094e4a3897190b69ca085ebeffe6e50}{Bayes\+Line\+Markovian\+Focused\+Analysis}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline)
+\item 
+double \mbox{\hyperlink{_bayes_line_8h_ac669497e1d459efd5864792e8fe6ec33}{loglike\+\_\+fit\+\_\+spline}} (double $\ast$respow, double $\ast$Snf, int ncut)
+\item 
+double \mbox{\hyperlink{_bayes_line_8h_ac2fba7cd02fd7d7036d924afb46b1bcd}{loglike\+\_\+pm}} (double $\ast$respow, double $\ast$Sn, double $\ast$Snx, int ilow, int ihigh)
+\item 
+double \mbox{\hyperlink{_bayes_line_8h_a0185e76e93d46ae9ba3cdbb5e914b141}{loglike\+\_\+single}} (double $\ast$respow, double $\ast$Sn, double $\ast$Snx, int ilowx, int ihighx, int ilowy, int ihighy)
+\item 
+double \mbox{\hyperlink{_bayes_line_8h_a4bc97c6ad25b32d82dcbb0dc25ec3566}{sample}} (double $\ast$fprop, double pmax, \mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data, gsl\+\_\+rng $\ast$r)
+\item 
+double \mbox{\hyperlink{_bayes_line_8h_a2deae03dfa3e54575c7874f95252a4e5}{lprop}} (double f, double $\ast$fprop, \mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_ae73819a603bb7eae522b44932da14d22}{full\+\_\+spectrum\+\_\+single}} (double $\ast$Sn, double $\ast$Snx, double $\ast$Sbasex, double $\ast$sfreq, \mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data, \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$line\+\_\+x, \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$line\+\_\+y, int ii, int $\ast$ilowx, int $\ast$ihighx, int $\ast$ilowy, int $\ast$ihighy)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a135455b59c13a483b990c0a97d4c9a55}{full\+\_\+spectrum\+\_\+add\+\_\+or\+\_\+subtract}} (double $\ast$Snew, double $\ast$Sold, double $\ast$Sbase, double $\ast$sfreq, \mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data, \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$lines, int ii, int $\ast$ilow, int $\ast$ihigh, int flag)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_adbb9a88191fe38c8d493032f6b6358d0}{full\+\_\+spectrum\+\_\+spline}} (double $\ast$Sline, double $\ast$Sbase, double $\ast$sfreq, \mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data, \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$lines)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a9c6085c5fe5b6a4eea880026aa07b7c1}{spectrum\+\_\+spline}} (double $\ast$Sn, double $\ast$Sbase, double $\ast$sfreq, \mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data, \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$lines, \mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$spline)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a2b6ba2a11aac3540f6ef651ef45064d1}{Spec\+Fit\+Spline}} (\mbox{\hyperlink{struct_bayes_line_priors}{Bayes\+Line\+Priors}} $\ast$priors, int zero\+LogL, int steps, double $\ast$freq, double $\ast$power, \mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$spline, double $\ast$Snf, int ncut, gsl\+\_\+rng $\ast$r)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a340d70f46a67f6402a74b690dae9eb2f}{Lorentz\+Spline\+Fit}} (\mbox{\hyperlink{struct_bayes_line_priors}{Bayes\+Line\+Priors}} $\ast$priors, int zero\+LogL, int steps, \mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data, \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$lines, \mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$spline, double $\ast$sfreq, double $\ast$spow, gsl\+\_\+rng $\ast$r)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a805d240e93c0309da5a4c6985defab31}{Cubic\+Spline\+G\+SL}} (int N, double $\ast$x, double $\ast$y, int Nint, double $\ast$xint, double $\ast$yint)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a8585be8c619a89801eb633d04b5ca965}{create\+\_\+data\+Params}} (\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$data, double $\ast$f, int n)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_af4f846fb30a1b38b9fee5c3a7aee9c0e}{create\+\_\+lorentzian\+Params}} (\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$lines, int size)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_aba1518114e14c68363c050f929069bc4}{copy\+\_\+lorentzian\+Params}} (\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$origin, \mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$copy)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_aa8bb24b8a5475976aec189e8d990c21f}{destroy\+\_\+lorentzian\+Params}} (\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$lines)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_af5a769714756a0043c606cc8342cd22a}{create\+\_\+spline\+Params}} (\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$spline, int size)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a4b9df8b4a618634a12a140829382c339}{copy\+\_\+spline\+Params}} (\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$origin, \mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$copy)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a2bfa015c97a08ee22c180eb0322b7a65}{destroy\+\_\+spline\+Params}} (\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$spline)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a84160fce8aa87f3b6b2b99d6117466ad}{copy\+\_\+bayesline\+\_\+params}} (struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$origin, struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$copy)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_ac04b36e55c9b6e9e874109f1a23eb7a6}{print\+\_\+line\+\_\+model}} (F\+I\+LE $\ast$fptr, struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a9e16782d14b0ef4aa0bf785e30d23c4b}{print\+\_\+spline\+\_\+model}} (F\+I\+LE $\ast$fptr, struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_a9296d272a7212f92bb069ebaef25c1db}{parse\+\_\+line\+\_\+model}} (F\+I\+LE $\ast$fptr, struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline)
+\item 
+void \mbox{\hyperlink{_bayes_line_8h_afd70044e6f7ebb3a67a6a4065065a508}{parse\+\_\+spline\+\_\+model}} (F\+I\+LE $\ast$fptr, struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$bayesline)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{_bayes_line_8h_aef5e22694322d48a9607f13bb9a4c6f4}\label{_bayes_line_8h_aef5e22694322d48a9607f13bb9a4c6f4}} 
+\index{BayesLine.h@{BayesLine.h}!FSTEP@{FSTEP}}
+\index{FSTEP@{FSTEP}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{FSTEP}{FSTEP}}
+{\footnotesize\ttfamily \#define F\+S\+T\+EP~10.\+0}
+
+\mbox{\Hypertarget{_bayes_line_8h_ad84c918bb124eb8120c46513290abead}\label{_bayes_line_8h_ad84c918bb124eb8120c46513290abead}} 
+\index{BayesLine.h@{BayesLine.h}!kappa\_BL@{kappa\_BL}}
+\index{kappa\_BL@{kappa\_BL}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{kappa\_BL}{kappa\_BL}}
+{\footnotesize\ttfamily \#define kappa\+\_\+\+BL~0.\+8}
+
+\mbox{\Hypertarget{_bayes_line_8h_a4b2ef7b69ed670c1688da7686b1ec0c1}\label{_bayes_line_8h_a4b2ef7b69ed670c1688da7686b1ec0c1}} 
+\index{BayesLine.h@{BayesLine.h}!lAwidth@{lAwidth}}
+\index{lAwidth@{lAwidth}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{lAwidth}{lAwidth}}
+{\footnotesize\ttfamily \#define l\+Awidth~2.\+3}
+
+\mbox{\Hypertarget{_bayes_line_8h_a72db03025c1c883cdbf32b816241ccea}\label{_bayes_line_8h_a72db03025c1c883cdbf32b816241ccea}} 
+\index{BayesLine.h@{BayesLine.h}!zeta@{zeta}}
+\index{zeta@{zeta}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{zeta}{zeta}}
+{\footnotesize\ttfamily \#define zeta~1.\+0}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_bayes_line_8h_abd72ce18f1b33e4ed207330bc3770e98}\label{_bayes_line_8h_abd72ce18f1b33e4ed207330bc3770e98}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineFree@{BayesLineFree}}
+\index{BayesLineFree@{BayesLineFree}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineFree()}{BayesLineFree()}}
+{\footnotesize\ttfamily void Bayes\+Line\+Free (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bptr }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a87618d90ab0a1e02ea5f8469af26f105}\label{_bayes_line_8h_a87618d90ab0a1e02ea5f8469af26f105}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineLorentzSplineMCMC@{BayesLineLorentzSplineMCMC}}
+\index{BayesLineLorentzSplineMCMC@{BayesLineLorentzSplineMCMC}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineLorentzSplineMCMC()}{BayesLineLorentzSplineMCMC()}}
+{\footnotesize\ttfamily void Bayes\+Line\+Lorentz\+Spline\+M\+C\+MC (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline,  }\item[{double}]{heat,  }\item[{int}]{steps,  }\item[{int}]{focus,  }\item[{int}]{prior\+Flag,  }\item[{double $\ast$}]{dan }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a8094e4a3897190b69ca085ebeffe6e50}\label{_bayes_line_8h_a8094e4a3897190b69ca085ebeffe6e50}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineMarkovianFocusedAnalysis@{BayesLineMarkovianFocusedAnalysis}}
+\index{BayesLineMarkovianFocusedAnalysis@{BayesLineMarkovianFocusedAnalysis}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineMarkovianFocusedAnalysis()}{BayesLineMarkovianFocusedAnalysis()}}
+{\footnotesize\ttfamily void Bayes\+Line\+Markovian\+Focused\+Analysis (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a34efdf9b0e5528a3461d57cafb498dd0}\label{_bayes_line_8h_a34efdf9b0e5528a3461d57cafb498dd0}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineMarkovianSplineOnly@{BayesLineMarkovianSplineOnly}}
+\index{BayesLineMarkovianSplineOnly@{BayesLineMarkovianSplineOnly}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineMarkovianSplineOnly()}{BayesLineMarkovianSplineOnly()}}
+{\footnotesize\ttfamily void Bayes\+Line\+Markovian\+Spline\+Only (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline,  }\item[{int}]{nspline,  }\item[{int}]{jj }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a95676c2ac33298669b6b07db36980fe5}\label{_bayes_line_8h_a95676c2ac33298669b6b07db36980fe5}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineNonMarkovianFit@{BayesLineNonMarkovianFit}}
+\index{BayesLineNonMarkovianFit@{BayesLineNonMarkovianFit}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineNonMarkovianFit()}{BayesLineNonMarkovianFit()}}
+{\footnotesize\ttfamily void Bayes\+Line\+Non\+Markovian\+Fit (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline,  }\item[{int $\ast$}]{nj }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_ab3c3a971ffccaa355c25d16db81a588e}\label{_bayes_line_8h_ab3c3a971ffccaa355c25d16db81a588e}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineRJMCMC@{BayesLineRJMCMC}}
+\index{BayesLineRJMCMC@{BayesLineRJMCMC}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineRJMCMC()}{BayesLineRJMCMC()}}
+{\footnotesize\ttfamily void Bayes\+Line\+R\+J\+M\+C\+MC (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline,  }\item[{double $\ast$}]{freq\+Data,  }\item[{double $\ast$}]{psd,  }\item[{double $\ast$}]{invpsd,  }\item[{double $\ast$}]{spline\+P\+SD,  }\item[{int}]{N,  }\item[{int}]{cycle,  }\item[{double}]{beta,  }\item[{int}]{prior\+Flag }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a3b2f5e45d9cf0e3d5a1ee023e1fca8de}\label{_bayes_line_8h_a3b2f5e45d9cf0e3d5a1ee023e1fca8de}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineSearch@{BayesLineSearch}}
+\index{BayesLineSearch@{BayesLineSearch}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineSearch()}{BayesLineSearch()}}
+{\footnotesize\ttfamily void Bayes\+Line\+Search (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bptr,  }\item[{double $\ast$}]{freq\+Data,  }\item[{double}]{fmin,  }\item[{double}]{fmax,  }\item[{double}]{deltaT,  }\item[{double}]{Tobs }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_ac17f03e8eb4c8625d372ce2c5cf39b0c}\label{_bayes_line_8h_ac17f03e8eb4c8625d372ce2c5cf39b0c}} 
+\index{BayesLine.h@{BayesLine.h}!BayesLineSetup@{BayesLineSetup}}
+\index{BayesLineSetup@{BayesLineSetup}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{BayesLineSetup()}{BayesLineSetup()}}
+{\footnotesize\ttfamily void Bayes\+Line\+Setup (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bptr,  }\item[{double $\ast$}]{freq\+Data,  }\item[{double}]{fmin,  }\item[{double}]{fmax,  }\item[{double}]{deltaT,  }\item[{double}]{Tobs }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a84160fce8aa87f3b6b2b99d6117466ad}\label{_bayes_line_8h_a84160fce8aa87f3b6b2b99d6117466ad}} 
+\index{BayesLine.h@{BayesLine.h}!copy\_bayesline\_params@{copy\_bayesline\_params}}
+\index{copy\_bayesline\_params@{copy\_bayesline\_params}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{copy\_bayesline\_params()}{copy\_bayesline\_params()}}
+{\footnotesize\ttfamily void copy\+\_\+bayesline\+\_\+params (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{origin,  }\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_aba1518114e14c68363c050f929069bc4}\label{_bayes_line_8h_aba1518114e14c68363c050f929069bc4}} 
+\index{BayesLine.h@{BayesLine.h}!copy\_lorentzianParams@{copy\_lorentzianParams}}
+\index{copy\_lorentzianParams@{copy\_lorentzianParams}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{copy\_lorentzianParams()}{copy\_lorentzianParams()}}
+{\footnotesize\ttfamily void copy\+\_\+lorentzian\+Params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{origin,  }\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a4b9df8b4a618634a12a140829382c339}\label{_bayes_line_8h_a4b9df8b4a618634a12a140829382c339}} 
+\index{BayesLine.h@{BayesLine.h}!copy\_splineParams@{copy\_splineParams}}
+\index{copy\_splineParams@{copy\_splineParams}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{copy\_splineParams()}{copy\_splineParams()}}
+{\footnotesize\ttfamily void copy\+\_\+spline\+Params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$}]{origin,  }\item[{\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$}]{copy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a8585be8c619a89801eb633d04b5ca965}\label{_bayes_line_8h_a8585be8c619a89801eb633d04b5ca965}} 
+\index{BayesLine.h@{BayesLine.h}!create\_dataParams@{create\_dataParams}}
+\index{create\_dataParams@{create\_dataParams}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{create\_dataParams()}{create\_dataParams()}}
+{\footnotesize\ttfamily void create\+\_\+data\+Params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data,  }\item[{double $\ast$}]{f,  }\item[{int}]{n }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_af4f846fb30a1b38b9fee5c3a7aee9c0e}\label{_bayes_line_8h_af4f846fb30a1b38b9fee5c3a7aee9c0e}} 
+\index{BayesLine.h@{BayesLine.h}!create\_lorentzianParams@{create\_lorentzianParams}}
+\index{create\_lorentzianParams@{create\_lorentzianParams}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{create\_lorentzianParams()}{create\_lorentzianParams()}}
+{\footnotesize\ttfamily void create\+\_\+lorentzian\+Params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{lines,  }\item[{int}]{size }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_af5a769714756a0043c606cc8342cd22a}\label{_bayes_line_8h_af5a769714756a0043c606cc8342cd22a}} 
+\index{BayesLine.h@{BayesLine.h}!create\_splineParams@{create\_splineParams}}
+\index{create\_splineParams@{create\_splineParams}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{create\_splineParams()}{create\_splineParams()}}
+{\footnotesize\ttfamily void create\+\_\+spline\+Params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$}]{spline,  }\item[{int}]{size }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a805d240e93c0309da5a4c6985defab31}\label{_bayes_line_8h_a805d240e93c0309da5a4c6985defab31}} 
+\index{BayesLine.h@{BayesLine.h}!CubicSplineGSL@{CubicSplineGSL}}
+\index{CubicSplineGSL@{CubicSplineGSL}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{CubicSplineGSL()}{CubicSplineGSL()}}
+{\footnotesize\ttfamily void Cubic\+Spline\+G\+SL (\begin{DoxyParamCaption}\item[{int}]{N,  }\item[{double $\ast$}]{x,  }\item[{double $\ast$}]{y,  }\item[{int}]{Nint,  }\item[{double $\ast$}]{xint,  }\item[{double $\ast$}]{yint }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_aa8bb24b8a5475976aec189e8d990c21f}\label{_bayes_line_8h_aa8bb24b8a5475976aec189e8d990c21f}} 
+\index{BayesLine.h@{BayesLine.h}!destroy\_lorentzianParams@{destroy\_lorentzianParams}}
+\index{destroy\_lorentzianParams@{destroy\_lorentzianParams}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{destroy\_lorentzianParams()}{destroy\_lorentzianParams()}}
+{\footnotesize\ttfamily void destroy\+\_\+lorentzian\+Params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{lines }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a2bfa015c97a08ee22c180eb0322b7a65}\label{_bayes_line_8h_a2bfa015c97a08ee22c180eb0322b7a65}} 
+\index{BayesLine.h@{BayesLine.h}!destroy\_splineParams@{destroy\_splineParams}}
+\index{destroy\_splineParams@{destroy\_splineParams}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{destroy\_splineParams()}{destroy\_splineParams()}}
+{\footnotesize\ttfamily void destroy\+\_\+spline\+Params (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$}]{spline }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a135455b59c13a483b990c0a97d4c9a55}\label{_bayes_line_8h_a135455b59c13a483b990c0a97d4c9a55}} 
+\index{BayesLine.h@{BayesLine.h}!full\_spectrum\_add\_or\_subtract@{full\_spectrum\_add\_or\_subtract}}
+\index{full\_spectrum\_add\_or\_subtract@{full\_spectrum\_add\_or\_subtract}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{full\_spectrum\_add\_or\_subtract()}{full\_spectrum\_add\_or\_subtract()}}
+{\footnotesize\ttfamily void full\+\_\+spectrum\+\_\+add\+\_\+or\+\_\+subtract (\begin{DoxyParamCaption}\item[{double $\ast$}]{Snew,  }\item[{double $\ast$}]{Sold,  }\item[{double $\ast$}]{Sbase,  }\item[{double $\ast$}]{sfreq,  }\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{lines,  }\item[{int}]{ii,  }\item[{int $\ast$}]{ilow,  }\item[{int $\ast$}]{ihigh,  }\item[{int}]{flag }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_ae73819a603bb7eae522b44932da14d22}\label{_bayes_line_8h_ae73819a603bb7eae522b44932da14d22}} 
+\index{BayesLine.h@{BayesLine.h}!full\_spectrum\_single@{full\_spectrum\_single}}
+\index{full\_spectrum\_single@{full\_spectrum\_single}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{full\_spectrum\_single()}{full\_spectrum\_single()}}
+{\footnotesize\ttfamily void full\+\_\+spectrum\+\_\+single (\begin{DoxyParamCaption}\item[{double $\ast$}]{Sn,  }\item[{double $\ast$}]{Snx,  }\item[{double $\ast$}]{Sbasex,  }\item[{double $\ast$}]{sfreq,  }\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{line\+\_\+x,  }\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{line\+\_\+y,  }\item[{int}]{ii,  }\item[{int $\ast$}]{ilowx,  }\item[{int $\ast$}]{ihighx,  }\item[{int $\ast$}]{ilowy,  }\item[{int $\ast$}]{ihighy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_adbb9a88191fe38c8d493032f6b6358d0}\label{_bayes_line_8h_adbb9a88191fe38c8d493032f6b6358d0}} 
+\index{BayesLine.h@{BayesLine.h}!full\_spectrum\_spline@{full\_spectrum\_spline}}
+\index{full\_spectrum\_spline@{full\_spectrum\_spline}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{full\_spectrum\_spline()}{full\_spectrum\_spline()}}
+{\footnotesize\ttfamily void full\+\_\+spectrum\+\_\+spline (\begin{DoxyParamCaption}\item[{double $\ast$}]{Sline,  }\item[{double $\ast$}]{Sbase,  }\item[{double $\ast$}]{sfreq,  }\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{lines }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_ac669497e1d459efd5864792e8fe6ec33}\label{_bayes_line_8h_ac669497e1d459efd5864792e8fe6ec33}} 
+\index{BayesLine.h@{BayesLine.h}!loglike\_fit\_spline@{loglike\_fit\_spline}}
+\index{loglike\_fit\_spline@{loglike\_fit\_spline}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{loglike\_fit\_spline()}{loglike\_fit\_spline()}}
+{\footnotesize\ttfamily double loglike\+\_\+fit\+\_\+spline (\begin{DoxyParamCaption}\item[{double $\ast$}]{respow,  }\item[{double $\ast$}]{Snf,  }\item[{int}]{ncut }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_ac2fba7cd02fd7d7036d924afb46b1bcd}\label{_bayes_line_8h_ac2fba7cd02fd7d7036d924afb46b1bcd}} 
+\index{BayesLine.h@{BayesLine.h}!loglike\_pm@{loglike\_pm}}
+\index{loglike\_pm@{loglike\_pm}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{loglike\_pm()}{loglike\_pm()}}
+{\footnotesize\ttfamily double loglike\+\_\+pm (\begin{DoxyParamCaption}\item[{double $\ast$}]{respow,  }\item[{double $\ast$}]{Sn,  }\item[{double $\ast$}]{Snx,  }\item[{int}]{ilow,  }\item[{int}]{ihigh }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a0185e76e93d46ae9ba3cdbb5e914b141}\label{_bayes_line_8h_a0185e76e93d46ae9ba3cdbb5e914b141}} 
+\index{BayesLine.h@{BayesLine.h}!loglike\_single@{loglike\_single}}
+\index{loglike\_single@{loglike\_single}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{loglike\_single()}{loglike\_single()}}
+{\footnotesize\ttfamily double loglike\+\_\+single (\begin{DoxyParamCaption}\item[{double $\ast$}]{respow,  }\item[{double $\ast$}]{Sn,  }\item[{double $\ast$}]{Snx,  }\item[{int}]{ilowx,  }\item[{int}]{ihighx,  }\item[{int}]{ilowy,  }\item[{int}]{ihighy }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a340d70f46a67f6402a74b690dae9eb2f}\label{_bayes_line_8h_a340d70f46a67f6402a74b690dae9eb2f}} 
+\index{BayesLine.h@{BayesLine.h}!LorentzSplineFit@{LorentzSplineFit}}
+\index{LorentzSplineFit@{LorentzSplineFit}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{LorentzSplineFit()}{LorentzSplineFit()}}
+{\footnotesize\ttfamily void Lorentz\+Spline\+Fit (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bayes_line_priors}{Bayes\+Line\+Priors}} $\ast$}]{priors,  }\item[{int}]{zero\+LogL,  }\item[{int}]{steps,  }\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{lines,  }\item[{\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$}]{spline,  }\item[{double $\ast$}]{sfreq,  }\item[{double $\ast$}]{spow,  }\item[{gsl\+\_\+rng $\ast$}]{r }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a2deae03dfa3e54575c7874f95252a4e5}\label{_bayes_line_8h_a2deae03dfa3e54575c7874f95252a4e5}} 
+\index{BayesLine.h@{BayesLine.h}!lprop@{lprop}}
+\index{lprop@{lprop}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{lprop()}{lprop()}}
+{\footnotesize\ttfamily double lprop (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double $\ast$}]{fprop,  }\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a9296d272a7212f92bb069ebaef25c1db}\label{_bayes_line_8h_a9296d272a7212f92bb069ebaef25c1db}} 
+\index{BayesLine.h@{BayesLine.h}!parse\_line\_model@{parse\_line\_model}}
+\index{parse\_line\_model@{parse\_line\_model}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{parse\_line\_model()}{parse\_line\_model()}}
+{\footnotesize\ttfamily void parse\+\_\+line\+\_\+model (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{fptr,  }\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_afd70044e6f7ebb3a67a6a4065065a508}\label{_bayes_line_8h_afd70044e6f7ebb3a67a6a4065065a508}} 
+\index{BayesLine.h@{BayesLine.h}!parse\_spline\_model@{parse\_spline\_model}}
+\index{parse\_spline\_model@{parse\_spline\_model}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{parse\_spline\_model()}{parse\_spline\_model()}}
+{\footnotesize\ttfamily void parse\+\_\+spline\+\_\+model (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{fptr,  }\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_ac04b36e55c9b6e9e874109f1a23eb7a6}\label{_bayes_line_8h_ac04b36e55c9b6e9e874109f1a23eb7a6}} 
+\index{BayesLine.h@{BayesLine.h}!print\_line\_model@{print\_line\_model}}
+\index{print\_line\_model@{print\_line\_model}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{print\_line\_model()}{print\_line\_model()}}
+{\footnotesize\ttfamily void print\+\_\+line\+\_\+model (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{fptr,  }\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a9e16782d14b0ef4aa0bf785e30d23c4b}\label{_bayes_line_8h_a9e16782d14b0ef4aa0bf785e30d23c4b}} 
+\index{BayesLine.h@{BayesLine.h}!print\_spline\_model@{print\_spline\_model}}
+\index{print\_spline\_model@{print\_spline\_model}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{print\_spline\_model()}{print\_spline\_model()}}
+{\footnotesize\ttfamily void print\+\_\+spline\+\_\+model (\begin{DoxyParamCaption}\item[{F\+I\+LE $\ast$}]{fptr,  }\item[{struct \mbox{\hyperlink{struct_bayes_line_params}{Bayes\+Line\+Params}} $\ast$}]{bayesline }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a4bc97c6ad25b32d82dcbb0dc25ec3566}\label{_bayes_line_8h_a4bc97c6ad25b32d82dcbb0dc25ec3566}} 
+\index{BayesLine.h@{BayesLine.h}!sample@{sample}}
+\index{sample@{sample}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{sample()}{sample()}}
+{\footnotesize\ttfamily double sample (\begin{DoxyParamCaption}\item[{double $\ast$}]{fprop,  }\item[{double}]{pmax,  }\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data,  }\item[{gsl\+\_\+rng $\ast$}]{r }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a2b6ba2a11aac3540f6ef651ef45064d1}\label{_bayes_line_8h_a2b6ba2a11aac3540f6ef651ef45064d1}} 
+\index{BayesLine.h@{BayesLine.h}!SpecFitSpline@{SpecFitSpline}}
+\index{SpecFitSpline@{SpecFitSpline}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{SpecFitSpline()}{SpecFitSpline()}}
+{\footnotesize\ttfamily void Spec\+Fit\+Spline (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_bayes_line_priors}{Bayes\+Line\+Priors}} $\ast$}]{priors,  }\item[{int}]{zero\+LogL,  }\item[{int}]{steps,  }\item[{double $\ast$}]{freq,  }\item[{double $\ast$}]{power,  }\item[{\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$}]{spline,  }\item[{double $\ast$}]{Snf,  }\item[{int}]{ncut,  }\item[{gsl\+\_\+rng $\ast$}]{r }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_bayes_line_8h_a9c6085c5fe5b6a4eea880026aa07b7c1}\label{_bayes_line_8h_a9c6085c5fe5b6a4eea880026aa07b7c1}} 
+\index{BayesLine.h@{BayesLine.h}!spectrum\_spline@{spectrum\_spline}}
+\index{spectrum\_spline@{spectrum\_spline}!BayesLine.h@{BayesLine.h}}
+\doxysubsubsection{\texorpdfstring{spectrum\_spline()}{spectrum\_spline()}}
+{\footnotesize\ttfamily void spectrum\+\_\+spline (\begin{DoxyParamCaption}\item[{double $\ast$}]{Sn,  }\item[{double $\ast$}]{Sbase,  }\item[{double $\ast$}]{sfreq,  }\item[{\mbox{\hyperlink{structdata_params}{data\+Params}} $\ast$}]{data,  }\item[{\mbox{\hyperlink{structlorentzian_params}{lorentzian\+Params}} $\ast$}]{lines,  }\item[{\mbox{\hyperlink{structspline_params}{spline\+Params}} $\ast$}]{spline }\end{DoxyParamCaption})}
+

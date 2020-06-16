@@ -1,0 +1,126 @@
+\hypertarget{gb__mcmc__brans__dicke_8c}{}\doxysection{gbmcmc/src/gb\+\_\+mcmc\+\_\+brans\+\_\+dicke.c File Reference}
+\label{gb__mcmc__brans__dicke_8c}\index{gbmcmc/src/gb\_mcmc\_brans\_dicke.c@{gbmcmc/src/gb\_mcmc\_brans\_dicke.c}}
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$time.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+rng.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+randist.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_a27a46d3c01b150b85e31d9bb0be1f549}{R\+A\+D2\+A\+R\+C\+M\+IN}}~3437.\+75
+\item 
+\#define \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_aac947ba5e8055977333644077c0b3fb6}{R\+A\+D2\+D\+E\+G\+R\+EE}}~57.\+295833313961
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_a0ffcec7d44e2d1cb7cc53dd440d481a7}{M\+\_\+fdot}} (double f, double fdot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_a508e5f82efabf4c7ce7b8b816621a22b}{M\+\_\+fddot}} (double f, double fddot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_aadf4377933dafb1613c4d6041ef38914}{M\+\_\+fdot\+\_\+fddot}} (double f, double fdot, double fddot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_ab20b12710e9bcc07d3eccbc765b74a51}{beta}} (double f, double fdot, double fddot)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_aed36cfdee9934b2f18872f89701d2df2}{beta\+\_\+fdot}} (double f, double fdot, double Mc)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_a606c6145ac36a717a77b3bcaae536531}{galactic\+\_\+binary\+\_\+dL}} (double f0, double dfdt, double A)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_ad8d07f05c3dab0abef9348342c3c6b16}{reduced\+\_\+mass\+\_\+ratio}} (double m1, double m2)
+\item 
+void \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_a8b1f801ff83fbb023e2c0d93fd9e062e}{component\+\_\+masses}} (double Mc, double eta, double $\ast$m1, double $\ast$m2)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_ab95941d4ca5b1df9ba865b29e371f310}{sensitivity}} (double m1, double m2, double r1, double r2)
+\item 
+double \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_a6b69214565a84f4f3a03a722d2021d44}{white\+\_\+dwarf\+\_\+radius}} (double M)
+\item 
+int \mbox{\hyperlink{gb__mcmc__brans__dicke_8c_a0ddf1224851353fc92bfbff6f499fa97}{main}} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_a27a46d3c01b150b85e31d9bb0be1f549}\label{gb__mcmc__brans__dicke_8c_a27a46d3c01b150b85e31d9bb0be1f549}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!RAD2ARCMIN@{RAD2ARCMIN}}
+\index{RAD2ARCMIN@{RAD2ARCMIN}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{RAD2ARCMIN}{RAD2ARCMIN}}
+{\footnotesize\ttfamily \#define R\+A\+D2\+A\+R\+C\+M\+IN~3437.\+75}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_aac947ba5e8055977333644077c0b3fb6}\label{gb__mcmc__brans__dicke_8c_aac947ba5e8055977333644077c0b3fb6}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!RAD2DEGREE@{RAD2DEGREE}}
+\index{RAD2DEGREE@{RAD2DEGREE}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{RAD2DEGREE}{RAD2DEGREE}}
+{\footnotesize\ttfamily \#define R\+A\+D2\+D\+E\+G\+R\+EE~57.\+295833313961}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_ab20b12710e9bcc07d3eccbc765b74a51}\label{gb__mcmc__brans__dicke_8c_ab20b12710e9bcc07d3eccbc765b74a51}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!beta@{beta}}
+\index{beta@{beta}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{beta()}{beta()}}
+{\footnotesize\ttfamily double beta (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fdot,  }\item[{double}]{fddot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_aed36cfdee9934b2f18872f89701d2df2}\label{gb__mcmc__brans__dicke_8c_aed36cfdee9934b2f18872f89701d2df2}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!beta\_fdot@{beta\_fdot}}
+\index{beta\_fdot@{beta\_fdot}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{beta\_fdot()}{beta\_fdot()}}
+{\footnotesize\ttfamily double beta\+\_\+fdot (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fdot,  }\item[{double}]{Mc }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_a8b1f801ff83fbb023e2c0d93fd9e062e}\label{gb__mcmc__brans__dicke_8c_a8b1f801ff83fbb023e2c0d93fd9e062e}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!component\_masses@{component\_masses}}
+\index{component\_masses@{component\_masses}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{component\_masses()}{component\_masses()}}
+{\footnotesize\ttfamily void component\+\_\+masses (\begin{DoxyParamCaption}\item[{double}]{Mc,  }\item[{double}]{eta,  }\item[{double $\ast$}]{m1,  }\item[{double $\ast$}]{m2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_a606c6145ac36a717a77b3bcaae536531}\label{gb__mcmc__brans__dicke_8c_a606c6145ac36a717a77b3bcaae536531}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!galactic\_binary\_dL@{galactic\_binary\_dL}}
+\index{galactic\_binary\_dL@{galactic\_binary\_dL}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_dL()}{galactic\_binary\_dL()}}
+{\footnotesize\ttfamily double galactic\+\_\+binary\+\_\+dL (\begin{DoxyParamCaption}\item[{double}]{f0,  }\item[{double}]{dfdt,  }\item[{double}]{A }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_a508e5f82efabf4c7ce7b8b816621a22b}\label{gb__mcmc__brans__dicke_8c_a508e5f82efabf4c7ce7b8b816621a22b}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!M\_fddot@{M\_fddot}}
+\index{M\_fddot@{M\_fddot}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{M\_fddot()}{M\_fddot()}}
+{\footnotesize\ttfamily double M\+\_\+fddot (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fddot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_a0ffcec7d44e2d1cb7cc53dd440d481a7}\label{gb__mcmc__brans__dicke_8c_a0ffcec7d44e2d1cb7cc53dd440d481a7}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!M\_fdot@{M\_fdot}}
+\index{M\_fdot@{M\_fdot}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{M\_fdot()}{M\_fdot()}}
+{\footnotesize\ttfamily double M\+\_\+fdot (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fdot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_aadf4377933dafb1613c4d6041ef38914}\label{gb__mcmc__brans__dicke_8c_aadf4377933dafb1613c4d6041ef38914}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!M\_fdot\_fddot@{M\_fdot\_fddot}}
+\index{M\_fdot\_fddot@{M\_fdot\_fddot}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{M\_fdot\_fddot()}{M\_fdot\_fddot()}}
+{\footnotesize\ttfamily double M\+\_\+fdot\+\_\+fddot (\begin{DoxyParamCaption}\item[{double}]{f,  }\item[{double}]{fdot,  }\item[{double}]{fddot }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_a0ddf1224851353fc92bfbff6f499fa97}\label{gb__mcmc__brans__dicke_8c_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!main@{main}}
+\index{main@{main}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_ad8d07f05c3dab0abef9348342c3c6b16}\label{gb__mcmc__brans__dicke_8c_ad8d07f05c3dab0abef9348342c3c6b16}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!reduced\_mass\_ratio@{reduced\_mass\_ratio}}
+\index{reduced\_mass\_ratio@{reduced\_mass\_ratio}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{reduced\_mass\_ratio()}{reduced\_mass\_ratio()}}
+{\footnotesize\ttfamily double reduced\+\_\+mass\+\_\+ratio (\begin{DoxyParamCaption}\item[{double}]{m1,  }\item[{double}]{m2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_ab95941d4ca5b1df9ba865b29e371f310}\label{gb__mcmc__brans__dicke_8c_ab95941d4ca5b1df9ba865b29e371f310}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!sensitivity@{sensitivity}}
+\index{sensitivity@{sensitivity}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{sensitivity()}{sensitivity()}}
+{\footnotesize\ttfamily double sensitivity (\begin{DoxyParamCaption}\item[{double}]{m1,  }\item[{double}]{m2,  }\item[{double}]{r1,  }\item[{double}]{r2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{gb__mcmc__brans__dicke_8c_a6b69214565a84f4f3a03a722d2021d44}\label{gb__mcmc__brans__dicke_8c_a6b69214565a84f4f3a03a722d2021d44}} 
+\index{gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}!white\_dwarf\_radius@{white\_dwarf\_radius}}
+\index{white\_dwarf\_radius@{white\_dwarf\_radius}!gb\_mcmc\_brans\_dicke.c@{gb\_mcmc\_brans\_dicke.c}}
+\doxysubsubsection{\texorpdfstring{white\_dwarf\_radius()}{white\_dwarf\_radius()}}
+{\footnotesize\ttfamily double white\+\_\+dwarf\+\_\+radius (\begin{DoxyParamCaption}\item[{double}]{M }\end{DoxyParamCaption})}
+

@@ -1,0 +1,131 @@
+\hypertarget{_galactic_binary_math_8c}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+Math.c File Reference}
+\label{_galactic_binary_math_8c}\index{gbmcmc/src/GalacticBinaryMath.c@{gbmcmc/src/GalacticBinaryMath.c}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+matrix.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+linalg.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+vector.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+eigen.\+h$>$}\newline
+{\ttfamily \#include $<$gsl/gsl\+\_\+sf.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}L\+I\+S\+A.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}Galactic\+Binary\+Math.\+h\char`\"{}}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_a6bda7243d9d6427acdcf175555f631f6}{ipow}} (double x, int n)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_af44d01bd4c020c57a52e5e31f0d303bb}{chirpmass}} (double m1, double m2)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_a04b3858ec1f4cad3447ac81c71bd56fa}{power\+\_\+spectrum}} (double $\ast$data, int n)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_af6be40ef7d76705dfd7be5c1fdcbf780}{fourier\+\_\+nwip}} (double $\ast$a, double $\ast$\mbox{\hyperlink{gb__mcmc__scalar__fddot_8c_a00303988edb9fdd11848a23fb4eda358}{b}}, double $\ast$Sn, int n)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_a062f3109773fd2491fe4898a2df34562}{analytic\+\_\+snr}} (double A, double Sn, double Sf, double sqT)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_a1db00b5097458e1b94e9b2a5ba28a967}{snr}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$noise)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_a74665f1529a8a18fb59b419760efd718}{snr\+\_\+prior}} (double S\+NR)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_a1d25c44949bcafd9c1a2140b06efc3b3}{waveform\+\_\+match}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$a, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$\mbox{\hyperlink{gb__mcmc__scalar__fddot_8c_a00303988edb9fdd11848a23fb4eda358}{b}}, struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$noise)
+\item 
+double \mbox{\hyperlink{_galactic_binary_math_8c_aa88289847661abddedbcaff5e232095a}{waveform\+\_\+distance}} (struct \mbox{\hyperlink{struct_source}{Source}} $\ast$a, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$\mbox{\hyperlink{gb__mcmc__scalar__fddot_8c_a00303988edb9fdd11848a23fb4eda358}{b}}, struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$noise)
+\item 
+int \mbox{\hyperlink{_galactic_binary_math_8c_ab4a868b858e559d8a660ef849bdce1cb}{binary\+\_\+search}} (double $\ast$array, int nmin, int nmax, double x)
+\item 
+void \mbox{\hyperlink{_galactic_binary_math_8c_ac836ddf6f14586138a159517163d3e4c}{matrix\+\_\+eigenstuff}} (double $\ast$$\ast$matrix, double $\ast$$\ast$evector, double $\ast$evalue, int N)
+\item 
+void \mbox{\hyperlink{_galactic_binary_math_8c_a1081e9f1e9ee4e1eb158abe18efc4656}{invert\+\_\+matrix}} (double $\ast$$\ast$matrix, int N)
+\item 
+void \mbox{\hyperlink{_galactic_binary_math_8c_acc14e2c155fe0111000033f22a7a3c3b}{matrix\+\_\+multiply}} (double $\ast$$\ast$A, double $\ast$$\ast$B, double $\ast$$\ast$AB, int N)
+\item 
+void \mbox{\hyperlink{_galactic_binary_math_8c_a2431c31bce9711b866999db85774919a}{cholesky\+\_\+decomp}} (double $\ast$$\ast$A, double $\ast$$\ast$L, int N)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_math_8c_a062f3109773fd2491fe4898a2df34562}\label{_galactic_binary_math_8c_a062f3109773fd2491fe4898a2df34562}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!analytic\_snr@{analytic\_snr}}
+\index{analytic\_snr@{analytic\_snr}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{analytic\_snr()}{analytic\_snr()}}
+{\footnotesize\ttfamily double analytic\+\_\+snr (\begin{DoxyParamCaption}\item[{double}]{A,  }\item[{double}]{Sn,  }\item[{double}]{Sf,  }\item[{double}]{sqT }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_ab4a868b858e559d8a660ef849bdce1cb}\label{_galactic_binary_math_8c_ab4a868b858e559d8a660ef849bdce1cb}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!binary\_search@{binary\_search}}
+\index{binary\_search@{binary\_search}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{binary\_search()}{binary\_search()}}
+{\footnotesize\ttfamily int binary\+\_\+search (\begin{DoxyParamCaption}\item[{double $\ast$}]{array,  }\item[{int}]{nmin,  }\item[{int}]{nmax,  }\item[{double}]{x }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_af44d01bd4c020c57a52e5e31f0d303bb}\label{_galactic_binary_math_8c_af44d01bd4c020c57a52e5e31f0d303bb}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!chirpmass@{chirpmass}}
+\index{chirpmass@{chirpmass}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{chirpmass()}{chirpmass()}}
+{\footnotesize\ttfamily double chirpmass (\begin{DoxyParamCaption}\item[{double}]{m1,  }\item[{double}]{m2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_a2431c31bce9711b866999db85774919a}\label{_galactic_binary_math_8c_a2431c31bce9711b866999db85774919a}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!cholesky\_decomp@{cholesky\_decomp}}
+\index{cholesky\_decomp@{cholesky\_decomp}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{cholesky\_decomp()}{cholesky\_decomp()}}
+{\footnotesize\ttfamily void cholesky\+\_\+decomp (\begin{DoxyParamCaption}\item[{double $\ast$$\ast$}]{A,  }\item[{double $\ast$$\ast$}]{L,  }\item[{int}]{N }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_af6be40ef7d76705dfd7be5c1fdcbf780}\label{_galactic_binary_math_8c_af6be40ef7d76705dfd7be5c1fdcbf780}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!fourier\_nwip@{fourier\_nwip}}
+\index{fourier\_nwip@{fourier\_nwip}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{fourier\_nwip()}{fourier\_nwip()}}
+{\footnotesize\ttfamily double fourier\+\_\+nwip (\begin{DoxyParamCaption}\item[{double $\ast$}]{a,  }\item[{double $\ast$}]{b,  }\item[{double $\ast$}]{Sn,  }\item[{int}]{n }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_a1081e9f1e9ee4e1eb158abe18efc4656}\label{_galactic_binary_math_8c_a1081e9f1e9ee4e1eb158abe18efc4656}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!invert\_matrix@{invert\_matrix}}
+\index{invert\_matrix@{invert\_matrix}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{invert\_matrix()}{invert\_matrix()}}
+{\footnotesize\ttfamily void invert\+\_\+matrix (\begin{DoxyParamCaption}\item[{double $\ast$$\ast$}]{matrix,  }\item[{int}]{N }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_a6bda7243d9d6427acdcf175555f631f6}\label{_galactic_binary_math_8c_a6bda7243d9d6427acdcf175555f631f6}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!ipow@{ipow}}
+\index{ipow@{ipow}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{ipow()}{ipow()}}
+{\footnotesize\ttfamily double ipow (\begin{DoxyParamCaption}\item[{double}]{x,  }\item[{int}]{n }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_ac836ddf6f14586138a159517163d3e4c}\label{_galactic_binary_math_8c_ac836ddf6f14586138a159517163d3e4c}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!matrix\_eigenstuff@{matrix\_eigenstuff}}
+\index{matrix\_eigenstuff@{matrix\_eigenstuff}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{matrix\_eigenstuff()}{matrix\_eigenstuff()}}
+{\footnotesize\ttfamily void matrix\+\_\+eigenstuff (\begin{DoxyParamCaption}\item[{double $\ast$$\ast$}]{matrix,  }\item[{double $\ast$$\ast$}]{evector,  }\item[{double $\ast$}]{evalue,  }\item[{int}]{N }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_acc14e2c155fe0111000033f22a7a3c3b}\label{_galactic_binary_math_8c_acc14e2c155fe0111000033f22a7a3c3b}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!matrix\_multiply@{matrix\_multiply}}
+\index{matrix\_multiply@{matrix\_multiply}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{matrix\_multiply()}{matrix\_multiply()}}
+{\footnotesize\ttfamily void matrix\+\_\+multiply (\begin{DoxyParamCaption}\item[{double $\ast$$\ast$}]{A,  }\item[{double $\ast$$\ast$}]{B,  }\item[{double $\ast$$\ast$}]{AB,  }\item[{int}]{N }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_a04b3858ec1f4cad3447ac81c71bd56fa}\label{_galactic_binary_math_8c_a04b3858ec1f4cad3447ac81c71bd56fa}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!power\_spectrum@{power\_spectrum}}
+\index{power\_spectrum@{power\_spectrum}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{power\_spectrum()}{power\_spectrum()}}
+{\footnotesize\ttfamily double power\+\_\+spectrum (\begin{DoxyParamCaption}\item[{double $\ast$}]{data,  }\item[{int}]{n }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_a1db00b5097458e1b94e9b2a5ba28a967}\label{_galactic_binary_math_8c_a1db00b5097458e1b94e9b2a5ba28a967}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!snr@{snr}}
+\index{snr@{snr}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{snr()}{snr()}}
+{\footnotesize\ttfamily double snr (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{noise }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_a74665f1529a8a18fb59b419760efd718}\label{_galactic_binary_math_8c_a74665f1529a8a18fb59b419760efd718}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!snr\_prior@{snr\_prior}}
+\index{snr\_prior@{snr\_prior}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{snr\_prior()}{snr\_prior()}}
+{\footnotesize\ttfamily double snr\+\_\+prior (\begin{DoxyParamCaption}\item[{double}]{S\+NR }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_aa88289847661abddedbcaff5e232095a}\label{_galactic_binary_math_8c_aa88289847661abddedbcaff5e232095a}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!waveform\_distance@{waveform\_distance}}
+\index{waveform\_distance@{waveform\_distance}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{waveform\_distance()}{waveform\_distance()}}
+{\footnotesize\ttfamily double waveform\+\_\+distance (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{a,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{b,  }\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{noise }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_math_8c_a1d25c44949bcafd9c1a2140b06efc3b3}\label{_galactic_binary_math_8c_a1d25c44949bcafd9c1a2140b06efc3b3}} 
+\index{GalacticBinaryMath.c@{GalacticBinaryMath.c}!waveform\_match@{waveform\_match}}
+\index{waveform\_match@{waveform\_match}!GalacticBinaryMath.c@{GalacticBinaryMath.c}}
+\doxysubsubsection{\texorpdfstring{waveform\_match()}{waveform\_match()}}
+{\footnotesize\ttfamily double waveform\+\_\+match (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{a,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{b,  }\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{noise }\end{DoxyParamCaption})}
+

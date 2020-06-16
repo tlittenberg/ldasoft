@@ -1,0 +1,74 @@
+\hypertarget{_galactic_binary_waveform_8h}{}\doxysection{gbmcmc/src/\+Galactic\+Binary\+Waveform.h File Reference}
+\label{_galactic_binary_waveform_8h}\index{gbmcmc/src/GalacticBinaryWaveform.h@{gbmcmc/src/GalacticBinaryWaveform.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+double \mbox{\hyperlink{_galactic_binary_waveform_8h_ab6c5308ad70c1554f7324b3cb0f600a8}{galactic\+\_\+binary\+\_\+\+Amp}} (double Mc, double f0, double D, double T)
+\item 
+double \mbox{\hyperlink{_galactic_binary_waveform_8h_a40cf42a3c72347f55197df243387db23}{galactic\+\_\+binary\+\_\+fdot}} (double Mc, double f0, double T)
+\item 
+double \mbox{\hyperlink{_galactic_binary_waveform_8h_ab011ed3521d48db50853cd0d3871285e}{galactic\+\_\+binary\+\_\+\+Mc}} (double f0, double dfdt, double T)
+\item 
+double \mbox{\hyperlink{_galactic_binary_waveform_8h_a606c6145ac36a717a77b3bcaae536531}{galactic\+\_\+binary\+\_\+dL}} (double f0, double dfdt, double A)
+\item 
+void \mbox{\hyperlink{_galactic_binary_waveform_8h_ad303ca6118903bd563cb3bee4e8ac174}{galactic\+\_\+binary\+\_\+fisher}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source, struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$noise)
+\item 
+void \mbox{\hyperlink{_galactic_binary_waveform_8h_a83dd310bc696e85059ce0a838d61e045}{galactic\+\_\+binary\+\_\+alignment}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, struct \mbox{\hyperlink{struct_data}{Data}} $\ast$data, struct \mbox{\hyperlink{struct_source}{Source}} $\ast$source)
+\item 
+int \mbox{\hyperlink{_galactic_binary_waveform_8h_a71eeb38f8dbebe3286e55de7ade6f4b6}{galactic\+\_\+binary\+\_\+bandwidth}} (double L, double fstar, double f, double fdot, double costheta, double A, double T, int N)
+\item 
+void \mbox{\hyperlink{_galactic_binary_waveform_8h_a760ef0a604a22ece220ed7f5b5d6205b}{galactic\+\_\+binary}} (struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$orbit, char $\ast$format, double T, double t0, double params\mbox{[}$\,$\mbox{]}, int NP, double $\ast$X, double $\ast$A, double $\ast$E, int BW, int NI)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_galactic_binary_waveform_8h_a760ef0a604a22ece220ed7f5b5d6205b}\label{_galactic_binary_waveform_8h_a760ef0a604a22ece220ed7f5b5d6205b}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary@{galactic\_binary}}
+\index{galactic\_binary@{galactic\_binary}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary()}{galactic\_binary()}}
+{\footnotesize\ttfamily void galactic\+\_\+binary (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{char $\ast$}]{format,  }\item[{double}]{T,  }\item[{double}]{t0,  }\item[{double}]{params\mbox{[}$\,$\mbox{]},  }\item[{int}]{NP,  }\item[{double $\ast$}]{X,  }\item[{double $\ast$}]{A,  }\item[{double $\ast$}]{E,  }\item[{int}]{BW,  }\item[{int}]{NI }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_waveform_8h_a83dd310bc696e85059ce0a838d61e045}\label{_galactic_binary_waveform_8h_a83dd310bc696e85059ce0a838d61e045}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary\_alignment@{galactic\_binary\_alignment}}
+\index{galactic\_binary\_alignment@{galactic\_binary\_alignment}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_alignment()}{galactic\_binary\_alignment()}}
+{\footnotesize\ttfamily void galactic\+\_\+binary\+\_\+alignment (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_waveform_8h_ab6c5308ad70c1554f7324b3cb0f600a8}\label{_galactic_binary_waveform_8h_ab6c5308ad70c1554f7324b3cb0f600a8}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary\_Amp@{galactic\_binary\_Amp}}
+\index{galactic\_binary\_Amp@{galactic\_binary\_Amp}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_Amp()}{galactic\_binary\_Amp()}}
+{\footnotesize\ttfamily double galactic\+\_\+binary\+\_\+\+Amp (\begin{DoxyParamCaption}\item[{double}]{Mc,  }\item[{double}]{f0,  }\item[{double}]{D,  }\item[{double}]{T }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_waveform_8h_a71eeb38f8dbebe3286e55de7ade6f4b6}\label{_galactic_binary_waveform_8h_a71eeb38f8dbebe3286e55de7ade6f4b6}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary\_bandwidth@{galactic\_binary\_bandwidth}}
+\index{galactic\_binary\_bandwidth@{galactic\_binary\_bandwidth}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_bandwidth()}{galactic\_binary\_bandwidth()}}
+{\footnotesize\ttfamily int galactic\+\_\+binary\+\_\+bandwidth (\begin{DoxyParamCaption}\item[{double}]{L,  }\item[{double}]{fstar,  }\item[{double}]{f,  }\item[{double}]{fdot,  }\item[{double}]{costheta,  }\item[{double}]{A,  }\item[{double}]{T,  }\item[{int}]{N }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_waveform_8h_a606c6145ac36a717a77b3bcaae536531}\label{_galactic_binary_waveform_8h_a606c6145ac36a717a77b3bcaae536531}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary\_dL@{galactic\_binary\_dL}}
+\index{galactic\_binary\_dL@{galactic\_binary\_dL}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_dL()}{galactic\_binary\_dL()}}
+{\footnotesize\ttfamily double galactic\+\_\+binary\+\_\+dL (\begin{DoxyParamCaption}\item[{double}]{f0,  }\item[{double}]{dfdt,  }\item[{double}]{A }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_waveform_8h_a40cf42a3c72347f55197df243387db23}\label{_galactic_binary_waveform_8h_a40cf42a3c72347f55197df243387db23}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary\_fdot@{galactic\_binary\_fdot}}
+\index{galactic\_binary\_fdot@{galactic\_binary\_fdot}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_fdot()}{galactic\_binary\_fdot()}}
+{\footnotesize\ttfamily double galactic\+\_\+binary\+\_\+fdot (\begin{DoxyParamCaption}\item[{double}]{Mc,  }\item[{double}]{f0,  }\item[{double}]{T }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{_galactic_binary_waveform_8h_ad303ca6118903bd563cb3bee4e8ac174}\label{_galactic_binary_waveform_8h_ad303ca6118903bd563cb3bee4e8ac174}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary\_fisher@{galactic\_binary\_fisher}}
+\index{galactic\_binary\_fisher@{galactic\_binary\_fisher}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_fisher()}{galactic\_binary\_fisher()}}
+{\footnotesize\ttfamily void galactic\+\_\+binary\+\_\+fisher (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_orbit}{Orbit}} $\ast$}]{orbit,  }\item[{struct \mbox{\hyperlink{struct_data}{Data}} $\ast$}]{data,  }\item[{struct \mbox{\hyperlink{struct_source}{Source}} $\ast$}]{source,  }\item[{struct \mbox{\hyperlink{struct_noise}{Noise}} $\ast$}]{noise }\end{DoxyParamCaption})}
+
+source-\/$>$params\mbox{[}i\mbox{]};\mbox{\Hypertarget{_galactic_binary_waveform_8h_ab011ed3521d48db50853cd0d3871285e}\label{_galactic_binary_waveform_8h_ab011ed3521d48db50853cd0d3871285e}} 
+\index{GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}!galactic\_binary\_Mc@{galactic\_binary\_Mc}}
+\index{galactic\_binary\_Mc@{galactic\_binary\_Mc}!GalacticBinaryWaveform.h@{GalacticBinaryWaveform.h}}
+\doxysubsubsection{\texorpdfstring{galactic\_binary\_Mc()}{galactic\_binary\_Mc()}}
+{\footnotesize\ttfamily double galactic\+\_\+binary\+\_\+\+Mc (\begin{DoxyParamCaption}\item[{double}]{f0,  }\item[{double}]{dfdt,  }\item[{double}]{T }\end{DoxyParamCaption})}
+
+T;
