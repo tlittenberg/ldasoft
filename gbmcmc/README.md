@@ -127,7 +127,7 @@ print(SkyCoord.from_name("AM CVn"))
 
 ## `chains` directory
 
-`model_chain.dat.0`: Model state information for the chain sampling the target distribution (*temperature* T=0). Each row of the file is a chain sample. The columns are
+**`model_chain.dat.0`**: Model state information for the chain sampling the target distribution (*temperature* T=0). Each row of the file is a chain sample. The columns are
 
     step | N_live | logL | logL_norm | t_0
     
@@ -146,7 +146,7 @@ If the run includes the `--verbose` flag, the file also contains `NP x N_live` a
 
 Thus, when parsing the file, the `N_live` column should tell the parser how many additional parameter columns are appended to the end of the row. 
 
-`parameter_chain.dat.0`: Full set of chain samples including burn-in. 
+**`parameter_chain.dat.0`**: Full set of chain samples including burn-in. 
 To properly parse the file into individual chain samples, use in concert with the
 `model_chain.dat.M` files to extract the number of templates used at each step `N_live` .  For each chain iteration in the `parameter_chain.dat.0` file there are `N_live` lines with each containing the parameters for a single source.  
 
@@ -157,7 +157,7 @@ NOTE: These files contain *all* samples including
 burnin.  Unless you care deeply about checkpointing or run diagnostics, you do
 not need these files. Use `dimension_chain.dat.N` files, as described below.
 
-`dimension_chain.dat.N`:  The post-burnin posterior samples of
+**`dimension_chain.dat.N`**:  The post-burnin posterior samples of
 the binary parameters for the subset of models that have exactly `N` binaries.
 The columns are
 
@@ -167,7 +167,7 @@ If there are more than one source, the sources cycle in the output (so line 1 is
 the first source, first posterior sample; line 2 is the second source, first
 posterior sample, etc).
 
-`noise_chain.dat.0`: Full set of chain samples for noise model parameters. The columns are
+**`noise_chain.dat.0`**: Full set of chain samples for noise model parameters. The columns are
 
     step | logL | logL_norm | etaA | eta E
     
@@ -177,7 +177,7 @@ For 4-channel data there are only 4 columns and `X` replaces `A`.
 
 When the `--quiet` flag is in use only the post-burnin samples are recorded.
 
-`log_likelihood_chain.dat`: The full log likelihood (`logL + logLnorm`) for each of the `NC` parallel tempered chains, at each chain step. Columns are
+**`log_likelihood_chain.dat`**: The full log likelihood (`logL + logLnorm`) for each of the `NC` parallel tempered chains, at each chain step. Columns are
 
     step | logL_0 | logL_1 | ... | logL_NC-1
 
@@ -186,7 +186,7 @@ Useful for monitoring the effectiveness of the parallel tempering by checking th
 The `logL_0` column is the likelihood for the target distribution. 
 **File is not filled when `--quiet` flag is in use.**
 
-`temperature_chain.dat`: Inverse temperature for each of the `NC` parallel tempered chains, at each chain step. Columns are
+**`temperature_chain.dat`**: Inverse temperature for each of the `NC` parallel tempered chains, at each chain step. Columns are
 
     step | 1/T_0 | 1/T_1 | ... | 1/T_NC-1
 
@@ -194,8 +194,7 @@ Useful for monitoring the adaptive temperature spacing.
 **File is not filled when `--quiet` flag is in use.**
 
 ## `data` directory
-* `data_0_0.dat`
-Fourier series of input data. For 6-link data columns are 
+**`data_0_0.dat`**: Fourier series of input data. For 6-link data columns are 
 
     f [Hz] | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)} 
     
@@ -203,8 +202,7 @@ For 4-link data there are two columns with the X channel replacing A.
 
 The `0_0` in the filename indicate that the data is for the first (0th) time and frequency segment. If the analysis involves multiple time or frequency segments, different `data_i_j.dat` files will be filled.
 
-* `waveform_injection_0_0.dat`
-Fourier series of the injected signals. For 6-link data columns are 
+**`waveform_injection_0_0.dat`**: Fourier series of the injected signals. For 6-link data columns are 
 
     f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
     
@@ -213,8 +211,7 @@ For 4-link data there are two columns with the X channel replacing A.
 The same `i_j.dat` naming convention as the `data_i_j.dat` files is used here.
 In the absence of an injection for the analysis, the file contains a copy of the data.
 
-* `power_data_0_0.dat`
-Power spectrum of input data. For 6-link data columns are 
+**`power_data_0_0.dat`**: Power spectrum of input data. For 6-link data columns are 
 
     f [Hz] | A^2(f) | E^2(f) 
     
@@ -222,8 +219,7 @@ For 4-link data there are two columns with the X channel replacing A.
 
 The same `i_j.dat` naming convention as the `data_i_j.dat` files is used here.
 
-* `power_injection_0_0.dat`
-Power spectrum of injected signals. For 6-link data columns are 
+**`power_injection_0_0.dat`**: Power spectrum of injected signals. For 6-link data columns are 
 
     f [Hz] | h_A^2(f) | h_E^2(f) 
     
@@ -233,14 +229,13 @@ The same `i_j.dat` naming convention as the `data_i_j.dat` files is used here.
 If no injection is being done, the file contains the power spectrum of the data and is identical to `power_data_0_0.dat`.
 
 
-* `frequency_proposal.dat`
-Smoothed and normalized power spectrum of data used for frequency proposal. Columns are 
+**`frequency_proposal.dat`**: Smoothed and normalized power spectrum of data used for frequency proposal. Columns are 
 
     frequency bin number | probability density
     
 **THIS FILE COULD BE REMOVED FROM OUTPUT OR PUT IN `--verbose` OUTPUT**
 
-`power_noise_t0_f0.dat`:Quantiles of the posterior distribution for the reconstructed noise model. For 6-link data the columns are
+**`power_noise_t0_f0.dat`**:Quantiles of the posterior distribution for the reconstructed noise model. For 6-link data the columns are
 
     f | SnA_50 | SnA_25 | SnA_75 | SnA_05 | SnA_95 | SnE_50 | SnE_25 | SnE_75 | SnE_05 | SnE_95
 
@@ -248,7 +243,7 @@ Where `SnY` is the noise power spectral density for channel `Y`, `X_NN` is the N
 
 If multiple time/frequency segments are being analyzed there will be `power_noise_t[i]_f[j].dat` files for each time-frequency segment.
 
-`power_reconstruction_t0_f0.dat`: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are
+**`power_reconstruction_t0_f0.dat`**: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are
 
     f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
 
@@ -256,7 +251,7 @@ Where `hY^2` is the signal power spectral density for channel `Y`, `X_NN` is the
 
 If multiple time/frequency segments are being analyzed there will be `power_reconstruction_t[i]_f[j].dat` files for each time-frequency segment.
 
-`power_residual_t0_f0.dat`: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are
+**`power_residual_t0_f0.dat`**: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are
 
     f | rA^2_50 | rA^2_25 | rA^2_75 | rA^2_05 | rA^2_95 | rE^2_50 | rE^2_25 | rE^2_75 | rE^2_05 | rE^2_95
 
@@ -264,7 +259,7 @@ Where `rY^2` is the residual power spectral density for channel `Y`, `X_NN` is t
 
 If multiple time/frequency segments are being analyzed there will be `power_residual_t[i]_f[j].dat` files for each time-frequency segment.
 
-`variance_residual_t0_f0.dat`: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are
+**`variance_residual_t0_f0.dat`**: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are
 
     f | Var(hA) | Var(hE)
     
@@ -272,7 +267,7 @@ For 4-link data there are only two columns and X replaces A.
 
 The intent here is that this variance can be added to the noise PSD for a follow-on analysis of the residuals to take into account the uncertainty in the signal model used in the subtraction. **This needs to be tested**
 
-`waveform_draw_0.dat`: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are 
+**`waveform_draw_0.dat`**: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are 
 
     f | dA^2 | dE^2 | hA^2 | hE^2 | rA^2 | rE^2
     
@@ -280,17 +275,17 @@ where `dY`,`hY`, and `rY` is the data, waveform, and residual of channel `Y`.
 For 4-link data there are four columns and X replaces A.
 
 ## main run directory
-`evidence.dat`: Posterior for number of templates used to fit the data. Columns are
+**`evidence.dat`**: Posterior for number of templates used to fit the data. Columns are
 
     M | NN
     
 Where `M` is the model "dimension", i.e. the number of templates in the model, and `NN` signifies that the sampler spent NN% of iterations in that model.
 
-`gb_mcmc.log`: Run information including git version number, command line, summary of data settings and run flags, and  total run time.
+**`gb_mcmc.log`**: Run information including git version number, command line, summary of data settings and run flags, and  total run time.
 
-`run.sh`: Bash script which echos command line used for analysis.
+**`run.sh`**: Bash script which echos command line used for analysis.
 
-`avg_log_likelihood.dat`:  Average log likelihoood for each parallel tempered chain. These data would serve as the integrand for a thermodynamic integration step to compute the overall evidence for the model (marginalized over the number of galactic binary signals in the data). Columns are
+**`avg_log_likelihood.dat`**:  Average log likelihoood for each parallel tempered chain. These data would serve as the integrand for a thermodynamic integration step to compute the overall evidence for the model (marginalized over the number of galactic binary signals in the data). Columns are
 
     1/T | <logL+logL_norm>
 
