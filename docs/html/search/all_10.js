@@ -1,10 +1,11 @@
 var searchData=
 [
-  ['t_70',['T',['../structData.html#ae837768c48b47d8df3cd22dd53d383f3',1,'Data']]],
-  ['t0_71',['t0',['../structData.html#aea49bff932eaf931689edccaa155b333',1,'Data']]],
-  ['t0_5fshift_72',['t0_shift',['../GalacticBinaryProposal_8h.html#a99ccaa6a68983e3f6c1dbd27e8f1c78a',1,'GalacticBinaryProposal.c']]],
-  ['tdi_73',['TDI',['../structTDI.html',1,'TDI'],['../structData.html#a98432cd2a586429f74d696da622446d1',1,'Data::tdi()']]],
-  ['tensor_74',['tensor',['../structProposal.html#a638598576e81e94d7268e704e74c983f',1,'Proposal']]],
-  ['tgap_75',['tgap',['../structData.html#a73c788cfea88195d14c53f9e52a8ada1',1,'Data']]],
-  ['trial_76',['trial',['../structProposal.html#ac16adfd3c70daf09f553a819fb6e806c',1,'Proposal']]]
+  ['setup_5ffrequency_5fproposal_72',['setup_frequency_proposal',['../GalacticBinaryProposal_8h.html#a2662e53920bbe4d94dc1b22e25f3a52b',1,'GalacticBinaryProposal.c']]],
+  ['sine_5ff_5fon_5ffstar_73',['sine_f_on_fstar',['../structData.html#ac4db839b05312ebbaf3a611c0fab1482',1,'Data']]],
+  ['size_74',['size',['../structProposal.html#afb3afbfca750d99d1736f848c5c89187',1,'Proposal']]],
+  ['snr2_75',['SNR2',['../structData.html#a018485652e36524ee3c2b07f35befc76',1,'Data']]],
+  ['source_76',['Source',['../structSource.html',1,'']]],
+  ['splineparams_77',['splineParams',['../structsplineParams.html',1,'']]],
+  ['sqt_78',['sqT',['../structData.html#ad44b894b08062090b76441d16570bca3',1,'Data']]],
+  ['sum_5flog_5ff_79',['sum_log_f',['../structData.html#a2a1500b1864aadb6e713746c7a36c5b7',1,'Data']]]
 ];

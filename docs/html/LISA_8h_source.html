@@ -197,11 +197,13 @@ $(document).ready(function(){initNavTree('LISA_8h_source.html','');});
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="comment">/* Fractional frequency versions of TDI &amp; Sn(f) codes */</span></div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="keywordtype">void</span> LISA_tdi_FF(<span class="keywordtype">double</span> L, <span class="keywordtype">double</span> fstar, <span class="keywordtype">double</span> T, <span class="keywordtype">double</span> ***d, <span class="keywordtype">double</span> f0, <span class="keywordtype">long</span> q, <span class="keywordtype">double</span> *M, <span class="keywordtype">double</span> *A, <span class="keywordtype">double</span> *E, <span class="keywordtype">int</span> BW, <span class="keywordtype">int</span> NI);</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="keywordtype">double</span> AEnoise_FF(<span class="keywordtype">double</span> L, <span class="keywordtype">double</span> fstar, <span class="keywordtype">double</span> f);</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="comment">//double GBnoise_FF(double T, double fstar, double f);</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="keywordtype">double</span> Tnoise_FF(<span class="keywordtype">double</span> L, <span class="keywordtype">double</span> fstar, <span class="keywordtype">double</span> f);</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keywordtype">double</span> GBnoise_FF(<span class="keywordtype">double</span> T, <span class="keywordtype">double</span> fstar, <span class="keywordtype">double</span> f);</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="keywordtype">double</span> XYZnoise_FF(<span class="keywordtype">double</span> L, <span class="keywordtype">double</span> fstar, <span class="keywordtype">double</span> f);</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; </div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* LISA_h */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="keywordtype">void</span> test_noise_model(<span class="keyword">struct</span> <a class="code" href="structOrbit.html">Orbit</a> *orbit);</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* LISA_h */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="astructTDI_html"><div class="ttname"><a href="structTDI.html">TDI</a></div><div class="ttdef"><b>Definition:</b> LISA.h:64</div></div>

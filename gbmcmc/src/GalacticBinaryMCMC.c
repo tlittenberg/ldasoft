@@ -194,6 +194,9 @@ int main(int argc, char *argv[])
     }
     for(int j=0; j<flags->NDATA; j++) initialize_proposal(orbit, data[j], prior, chain, flags, proposal[j], DMAX);
     
+    /* Test noise model */
+    //test_noise_model(orbit);
+    
     /* Initialize data models */
     for(int ic=0; ic<NC; ic++)
     {

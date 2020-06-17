@@ -466,6 +466,10 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
             E[j] =  sqT*fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
             E[k] =  sqT*fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
             
+
+            //T[j] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*cSL-((1./3.)*(X[k]+Y[k]+Z[k]))*sSL)*0.33333333;
+            //T[k] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*sSL+((1./3.)*(X[k]+Y[k]+Z[k]))*cSL)*0.33333333;
+
             
             /* TODO: HORRIBLE HACK!  PUT X,Y,Z into A,E,M arrays for checking against LDC
              A[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
@@ -566,6 +570,21 @@ double AEnoise_FF(double L, double fstar, double f)
     
     return  8. * sinx*sinx * ( 2.*Spm*(3. + 2.*cosx + cos2x) + Sop*(2. + cosx) );
     
+}
+
+double Tnoise_FF(double L, double fstar, double f)
+{
+    double Spm, Sop;
+    
+    get_noise_levels("radler",f,&Spm,&Sop);
+
+    double x = f/fstar;
+    
+    double sinx  = sin(x);
+    double cosx  = cos(x);
+
+    return 16.0 * Sop * (1.0 - cosx) * sinx*sinx + 128.0 * Spm * sinx*sinx * sin(0.5*x)*sin(0.5*x)*sin(0.5*x)*sin(0.5*x);
+
 }
 
 /*
@@ -703,3 +722,18 @@ double GBnoise(double T, double f)
 //  *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( 4.0*(Sps+Sloc) + 8.0*(1.0+pow(cos(f/fstar),2.0))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
 //  
 //}
+
+void test_noise_model(struct Orbit *orbit)
+{
+    double fstart = log10(1e-5);
+    double fstop = log10(0.1);
+    int Nf = 1000;
+    double df=(fstop-fstart)/(double)Nf;
+    FILE *psdfile = fopen("psd.dat","w");
+    for(int nf=0; nf<Nf; nf++)
+    {
+        double ftemp = pow(10,fstart + nf*df);
+        fprintf(psdfile,"%lg %lg %lg\n",ftemp,AEnoise_FF(orbit->L,orbit->fstar,ftemp),Tnoise_FF(orbit->L,orbit->fstar,ftemp));
+    }
+    fclose(psdfile);
+}

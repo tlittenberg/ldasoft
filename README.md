@@ -2,7 +2,7 @@
 
 Prototype data analysis software for LISA analysis
 
-# Documentation
+# Doxygen code documentation
 https://tlittenberg.github.io/ldasoft/html/index.html
 
 # Acknowledgment

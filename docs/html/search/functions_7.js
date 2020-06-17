@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['t0_5fshift_116',['t0_shift',['../GalacticBinaryProposal_8h.html#a99ccaa6a68983e3f6c1dbd27e8f1c78a',1,'GalacticBinaryProposal.c']]]
+  ['noise_5fmodel_5fmcmc_131',['noise_model_mcmc',['../GalacticBinaryMCMC_8c.html#a0994005e8d92885d46c3fafd99e37029',1,'GalacticBinaryMCMC.c']]]
 ];
