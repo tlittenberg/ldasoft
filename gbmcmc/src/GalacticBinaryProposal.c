@@ -489,7 +489,6 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
     return cdf_density(data, model, source, proposal, params);
 }
 
-//double cdf_density(struct Model *model, struct Source *source, struct Proposal *proposal)
 double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source * source, struct Proposal *proposal, double *params)
 {
     int N = proposal->size;

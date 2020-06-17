@@ -230,8 +230,8 @@ void print_usage()
     
     //Misc.
     fprintf(stdout,"       =========== Misc =========== \n");
-    fprintf(stdout,"       --match-in1      : input paramaters for overlap [filename] \n");
-    fprintf(stdout,"       --match-in2      : output match values [filename] \n");
+    fprintf(stdout,"       --match-in1   : input paramaters for overlap [filename] \n");
+    fprintf(stdout,"       --match-in2   : output match values [filename] \n");
     
     fprintf(stdout,"--\n");
     fprintf(stdout,"EXAMPLE:\n");

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.16"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LDASoft: Example use cases for GBMCMC</title>
+<title>LDASoft: Installing GBMCMC</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -94,34 +94,57 @@ $(document).ready(function(){initNavTree('md_gbmcmc_README.html','');});
 
 <div class="PageDoc"><div class="header">
   <div class="headertitle">
-<div class="title">Example use cases for GBMCMC </div>  </div>
+<div class="title">Installing GBMCMC </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Get help with <code>gb_mcmc --help</code></p>
-<h1><a class="anchor" id="autotoc_md6"></a>
-Analyze on-the-fly data &amp; source simulation</h1>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md6"></a>
+Dependencies</h1>
+<div class="fragment"><div class="line">gcc</div>
+<div class="line">gsl</div>
+<div class="line">gslcblas</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md7"></a>
+Good things to have for post-production</h1>
+<div class="fragment"><div class="line">numpy</div>
+<div class="line">glob</div>
+<div class="line">pandas</div>
+<div class="line">astropy</div>
+<div class="line">matplotlib</div>
+<div class="line">chainConsumer</div>
+<div class="line">h5py</div>
+<div class="line">tables</div>
+<div class="line">pydot</div>
+</div><!-- fragment --> <h1><a class="anchor" id="autotoc_md8"></a>
+Installation</h1>
+<p>Build and install binaries in <code>${HOME}/ldasoft/master/bin/</code> </p><div class="fragment"><div class="line">cd &lt;path to&gt;/ldasoft</div>
+<div class="line">./install.sh </div>
+</div><!-- fragment --><p> Edit <code>ldasoft/gbmcmc/src/Makefile</code> and <code>ldasoft/gbfisher/src/Makefile</code> change install destination.</p>
+<h1><a class="anchor" id="autotoc_md9"></a>
+Example use cases for GBMCMC</h1>
+<p>See run options with <code>gb_mcmc --help</code></p>
+<h2><a class="anchor" id="autotoc_md10"></a>
+Analyze on-the-fly data &amp; source simulation</h2>
 <div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md7"></a>
-Analyze LDC simulations</h1>
-<p>See <code>src/README.md</code></p>
-<h1><a class="anchor" id="autotoc_md8"></a>
-Analyze verification binary with EM "priors"</h1>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
+Analyze LDC data</h2>
+<p>See <code>README_LDC.md</code></p>
+<h2><a class="anchor" id="autotoc_md12"></a>
+Analyze verification binary with EM priors</h2>
+<p>Files containing verification binary parameters and priors are located in <code>ldasoft/gbmcmc/etc/sources/verification</code>. Current best estimates of known binaries and their parameters, with references to source material, are found <a href="https://docs.google.com/spreadsheets/d/1PfwgaPjOpcEz_8RIcf87doyhErnT0cYTYJ9b6fC0yfA/edit">here</a></p>
+<h3><a class="anchor" id="autotoc_md13"></a>
+Examples for AM CVn</h3>
 <p>Run with sky-location fixed </p><div class="fragment"><div class="line">gb_mcmc \</div>
-<div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/ZTF1539.dat \</div>
+<div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \</div>
 <div class="line">  --known-source \</div>
 <div class="line">  --no-rj \</div>
 <div class="line">  --cheat \</div>
 <div class="line">  --samples 128</div>
-</div><!-- fragment --><p>Run with sky-location and orbital period fixed </p><div class="fragment"><div class="line">gb_mcmc \</div>
-<div class="line">  --inj /Users/tlittenb/ldasoft/galactic_binaries/etc/sources/verification/ZTF1539_tides.dat \</div>
-<div class="line">  --known-source \</div>
-<div class="line">  --no-rj \</div>
-<div class="line">  --cheat \</div>
-<div class="line">  --samples 128 \</div>
-<div class="line">  --fix-freq</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md9"></a>
-Use UCBs as calibration sources</h1>
+</div><!-- fragment --><p>To run with sky-location and EM-constrained priors (currently just U[cosi]) add </p><div class="fragment"><div class="line">--em-prior &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat </div>
+</div><!-- fragment --><p>To run with orbital period P and dP/dt fixed add </p><div class="fragment"><div class="line">--fix-freq</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md14"></a>
+Other use cases</h2>
+<h3><a class="anchor" id="autotoc_md15"></a>
+Use UCBs as calibration sources</h3>
 <div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \</div>
 <div class="line">  --duration 604948 \</div>
@@ -129,11 +152,60 @@ Use UCBs as calibration sources</h1>
 <div class="line">  --fit-gap \</div>
 <div class="line">  --samples 128 \</div>
 <div class="line">  --no-rj</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md10"></a>
-Output format</h1>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md16"></a>
+GBMCMC output format</h1>
+<h2><a class="anchor" id="autotoc_md17"></a>
+&lt;tt&gt;chains&lt;/tt&gt; directory</h2>
+<h3><a class="anchor" id="autotoc_md18"></a>
+&lt;tt&gt;dimension_chain.dat.N&lt;/tt&gt;</h3>
 <p>The <code>dimension_chain.dat.N</code> files contain the post-burnin posterior samples of the binary parameters for the subset of models that have exactly <code>N</code> binaries. The columns are </p><pre class="fragment">f fdot A cos_colat long cos_inc psi phi
 </pre><p>If there are more than one source, the sources cycle in the output (so line 1 is the first source, first posterior sample; line 2 is the second source, first posterior sample, etc).</p>
-<p>The <code>parameter_chain.dat.M</code> files should be used in concert with the <code>model_chain.dat.M</code> files. <code>model_chain.dat.M</code> records how many binaries were in the model at each MCMC step; there are a corresponding number of lines in <code>parameter_chain.dat.M</code> for that step's binary parameters (i.e. <code>parameter_chain.dat.M</code> contains a mashed-together compilation of the <code>dimension_chain.dat.N</code> files). The index <code>M</code> for these files refers to the <em>temperature</em> of the parallel-tempered chain that is producing these outputs (<code>M = 0</code> is the target distribution; <code>M &gt; 0</code> is softened versions of this distribution; if you don't know what this means, you want <code>M=0</code>). Unline <code>dimension_chain.dat.N</code> files, these files contain <em>all</em> samples including burnin. Unless you care deeply about checkpointing or run diagnostics, you do not need these files. Use <code>dimension_chain.dat.N</code> files, as described above. </p>
+<h3><a class="anchor" id="autotoc_md19"></a>
+&lt;tt&gt;model_chain.dat.0&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md20"></a>
+&lt;tt&gt;parameter_chain.dat.0&lt;/tt&gt;</h3>
+<p>The <code>parameter_chain.dat.M</code> files should be used in concert with the <code>model_chain.dat.M</code> files. <code>model_chain.dat.M</code> records how many binaries were in the model at each MCMC step; there are a corresponding number of lines in <code>parameter_chain.dat.M</code> for that step's binary parameters (i.e. <code>parameter_chain.dat.M</code> contains a mashed-together compilation of the <code>dimension_chain.dat.N</code> files). The index <code>M</code> for these files refers to the <em>temperature</em> of the parallel-tempered chain that is producing these outputs (<code>M = 0</code> is the target distribution; <code>M &gt; 0</code> is softened versions of this distribution; if you don't know what this means, you want <code>M=0</code>). Unlike <code>dimension_chain.dat.N</code> files, these files contain <em>all</em> samples including burnin. Unless you care deeply about checkpointing or run diagnostics, you do not need these files. Use <code>dimension_chain.dat.N</code> files, as described above.</p>
+<h3><a class="anchor" id="autotoc_md21"></a>
+&lt;tt&gt;log_likelihood_chain.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md22"></a>
+&lt;tt&gt;noise_chain.dat.0&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md23"></a>
+&lt;tt&gt;temperature_chain.dat&lt;/tt&gt;</h3>
+<h2><a class="anchor" id="autotoc_md24"></a>
+&lt;tt&gt;data&lt;/tt&gt; directory</h2>
+<h3><a class="anchor" id="autotoc_md25"></a>
+&lt;tt&gt;data_0_0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md26"></a>
+&lt;tt&gt;frequency_proposal.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md27"></a>
+&lt;tt&gt;power_data_0_0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md28"></a>
+&lt;tt&gt;power_injection_0_0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md29"></a>
+&lt;tt&gt;power_noise_t0_f0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md30"></a>
+&lt;tt&gt;power_reconstruction_t0_f0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md31"></a>
+&lt;tt&gt;power_residual_t0_f0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md32"></a>
+&lt;tt&gt;variance_residual_t0_f0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md33"></a>
+&lt;tt&gt;waveform_draw_0.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md34"></a>
+&lt;tt&gt;waveform_injection_0_0.dat&lt;/tt&gt;</h3>
+<h2><a class="anchor" id="autotoc_md35"></a>
+main run directory</h2>
+<h3><a class="anchor" id="autotoc_md36"></a>
+&lt;tt&gt;evidence.dat&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md37"></a>
+&lt;tt&gt;gb_mcmc.log&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md38"></a>
+&lt;tt&gt;run.sh&lt;/tt&gt;</h3>
+<h3><a class="anchor" id="autotoc_md39"></a>
+&lt;tt&gt;avg_log_likelihood.dat&lt;/tt&gt;</h3>
+<h1><a class="anchor" id="autotoc_md40"></a>
+Post processing GBMCMC</h1>
+<p>To be continued... </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
