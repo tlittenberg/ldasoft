@@ -1,4 +1,26 @@
 # GBMCMC Manual
+
+# Table of contents
+1. [Introduction](#intro)
+    1. [Dependencies](#dependencies)
+    2. [Useful modules](#post_proc_dependencies)
+    3. [Installation instructions](#installation)
+2. [Example Use Cases](#examples)
+    1. [High SNR injection](#highsnr)
+    2. [LDC data](#ldc)
+    3. [Verification binaries](#verification_binaries)
+    4. [Other examples](#other)
+3. [Description of Output](#output)
+    1. [Description of source parameters](#parameters)
+    2. [Contents of `chains` directory](#chains)
+    3. [Contents of `data` directory](#data)
+    4. [Contents of `run` directory](#run)
+4. [Post Processing](#post)
+
+<a name="intro"></a>
+# Introduction
+
+<a name="dependencies"></a>
 ## Dependencies
 ```bash
 gcc
@@ -6,6 +28,7 @@ gsl
 gslcblas
 ```
 
+<a name="post_proc_dependencies"></a>
 ## Good things to have for post-production
 ```bash
 numpy
@@ -18,6 +41,7 @@ h5py
 tables
 pydot
 ```
+<a name="installation"></a>
 ## Installation
 Build and install binaries in `${HOME}/ldasoft/master/bin/` 
 ```bash
@@ -27,18 +51,21 @@ make install
 ```
 Edit `ldasoft/gbmcmc/src/Makefile` to change install destination.
 
+<a name="examples"></a>
 # Example use cases for GBMCMC
 See run options with `gb_mcmc --help`
 
-## Analyze on-the-fly data & source simulation
+<a name="highsnr"></a>
+## Analyze single high SNR injection
 ```bash
 gb_mcmc \
   --inj <path to>/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt
 ```
-
+<a name="ldc"></a>
 ## Analyze LDC data
-See `README_LDC.md`
+See [Running on LDC Documentation](`README_LDC.md`)
 
+<a name="verification_binaries"></a>
 ## Analyze verification binary with EM priors
 Files containing verification binary parameters and priors are located in `ldasoft/gbmcmc/etc/sources/verification`.
 Current best estimates of known binaries and their parameters, with references to source material, are found [here](https://docs.google.com/spreadsheets/d/1PfwgaPjOpcEz_8RIcf87doyhErnT0cYTYJ9b6fC0yfA/edit)
@@ -64,7 +91,7 @@ To run with orbital period P and dP/dt fixed add
   --fix-freq
 ```
 
-
+<a name="other"></a>
 ## Other use cases
 
 ### Use UCBs as calibration sources
@@ -78,9 +105,10 @@ gb_mcmc \
   --no-rj
 ```
 
-
+<a name="output"></a>
 # GBMCMC output format
 
+<a name="parameters"></a>
 ## Parameterization
 
 Each galactic binary is fit with `NP` parameters, where `NP` is typically 8, but can be increased to 9 using the `--f-double-dot`.  The parameters are:
@@ -125,6 +153,7 @@ print("\n Built in location for AM CVn")
 print(SkyCoord.from_name("AM CVn"))
 ```
 
+<a name="chains"></a>
 ## `chains` directory
 
 **`model_chain.dat.0`**: Model state information for the chain sampling the target distribution (*temperature* T=0). Each row of the file is a chain sample. The columns are
@@ -193,6 +222,7 @@ The `logL_0` column is the likelihood for the target distribution.
 Useful for monitoring the adaptive temperature spacing.
 **File is not filled when `--quiet` flag is in use.**
 
+<a name="data"></a>
 ## `data` directory
 **`data_0_0.dat`**: Fourier series of input data. For 6-link data columns are 
 
@@ -274,6 +304,7 @@ The intent here is that this variance can be added to the noise PSD for a follow
 where `dY`,`hY`, and `rY` is the data, waveform, and residual of channel `Y`. 
 For 4-link data there are four columns and X replaces A.
 
+<a name="run"></a>
 ## main run directory
 **`evidence.dat`**: Posterior for number of templates used to fit the data. Columns are
 
@@ -291,6 +322,7 @@ Where `M` is the model "dimension", i.e. the number of templates in the model, a
 
 The first row is the target distribution with `T=1`
 
+<a name="post"></a>
 # Post processing GBMCMC
 
 To be continued...
