@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['jump_5ffrom_5ffstatistic_129',['jump_from_fstatistic',['../GalacticBinaryProposal_8h.html#afd202d0b69e6c8d622ec85a1b18fdd6e',1,'GalacticBinaryProposal.c']]]
+  ['galactic_5fbinary_5fmcmc_158',['galactic_binary_mcmc',['../GalacticBinaryMCMC_8c.html#ab9f19d06dd8696cb53404f3ad7d51847',1,'GalacticBinaryMCMC.c']]],
+  ['galactic_5fbinary_5frjmcmc_159',['galactic_binary_rjmcmc',['../GalacticBinaryMCMC_8c.html#ab5eab905e7e198274d8a2e787d73357d',1,'GalacticBinaryMCMC.c']]]
 ];

@@ -17,7 +17,12 @@
  *  MA  02111-1307  USA
  */
 
-/// @file GalacticBinaryProposal.h
+/**
+ @file GalacticBinaryProposal.h
+ \brief Functions supporting proposal distributions.
+ 
+ Includes functions for generating new samples, evaluting proposal densities, and setup of specialized proposals using input data.
+ */
 
 
 #ifndef GalacticBinaryProposal_h
@@ -46,9 +51,8 @@ struct Proposal
     /**
      \brief Function that generates updated source parameters.
      
-     @param[in]  params parameter vector
-     @param[out] params updated parameter values
-     @param[out] logQ proposal density
+     @param  params parameter vector
+     @return logQ proposal density
      */
     double (*function)(struct Data*,struct Model*,struct Source*,struct Proposal*,double*,gsl_rng*);
 
@@ -79,13 +83,30 @@ void setup_frequency_proposal(struct Data *data);
 /** Compute and print acceptance ratios for each proposal */
 void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr);
 
-/** Shift start time of data segment */
+/**
+\brief Shift start time of data segment
+ 
+ @param model->t0 (updates data start times)
+ @return logQ = 0 (symmetric proposal)
+ */
 double t0_shift                 (UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed);
 
-/** Fair draw from prior for each parameter */
+/**
+\brief Fair draw from prior for each parameter
+ 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = \f$\ln p(\f$ \c params \f$)\f$
+
+ */
 double draw_from_prior          (UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
-/** Fair draw from prior for location and orientation parameters */
+/**
+\brief Fair draw from prior for location and orientation parameters
+ 
+ @param params (updates \f${\cos\theta,\phi,\psi,\cos\iota,\varphi_0}\f$)
+ @return logQ = \f$\ln p(\f$ \c params \f$)\f$
+
+ */
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
@@ -104,6 +125,11 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
  
  The Fisher matrix is updated periodically during the MCMC.
 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = 0 (symmetric proposal)
+ 
+ 
+
  */
 double draw_from_fisher         (UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
@@ -111,6 +137,9 @@ double draw_from_fisher         (UNUSED struct Data *data, struct Model *model, 
  \brief Draw each parameter from 1D marginalized CDF
  
  Use CDFs constructed from chain file input at command line with --update flag to draw new parameters.  The proposal draws a p-value from \f$U[0,1]\f$ and interpolates the samples from the input chain file to find the associated parameter value.
+ 
+@param params (updates \f$\vec\theta\f$)
+@return logQ = cdf_density()
  
  */
 double draw_from_cdf            (UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
@@ -129,6 +158,9 @@ double draw_from_cdf            (UNUSED struct Data *data, struct Model *model, 
  \f$ \vec\theta_0 \f$ are the mode centroids from the input chain,
  and \f$ {\bf}L \f$ is the LU decomposition of \f$ \bf{C} \f$.
 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = cov_density()
+
  */
 double draw_from_cov            (UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
@@ -136,16 +168,28 @@ double draw_from_cov            (UNUSED struct Data *data, struct Model *model, 
  \brief Draw from 3D F-statistic distribution
  
  Uses pre-computed 3D quantized distribution to draw \f$[f_0,\cos\theta,\phi]\f$ weighted by F-statistic likelihood in each cell. Remaining parameters are drawn from the prior.
+ 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = evaluate_fstatistic_proposal()
+
  */
 double draw_from_fstatistic     (struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw \f$\mathcal{A}\f$ from SNR-based amplitude prior
+ 
+ @param params (updates \f$\mathcal{A}\f$)
+ @return logQ = evaluate_snr_prior()
+
  */
 double draw_signal_amplitude    (struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw \f$f_0\f$ weighted by power spectrum of data
+ 
+ @param params (updates \f$\mathcal{A}\f$)
+ @return logQ = 0
+
  */
 double draw_from_spectrum       (struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
 
@@ -155,6 +199,10 @@ double draw_from_spectrum       (struct Data *data, struct Model *model, struct 
  LISA's orbital motion induces secondary maxima spaced by the modulation
  frequency \f$f_m = $1/{\rm year}\f$. This proposal shifts \f$f_0\f$ by an integer multiple of \f$f_m\f$ drawn from \f$\text{floor}(N[0,1])\f$.
  Other parameters are either drawn from the Fisher matrix or from the prior.
+ 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = 0 (symmetric proposal)
+
  */
 double fm_shift                 (struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
@@ -165,6 +213,10 @@ double fm_shift                 (struct Data *data, struct Model *model, struct 
  \f$ {\psi,\varphi_0} \rightarrow {\psi\pm\pi/2,\varphi_0\pm\pi} \f$.
  The sign of the shift depends on the inclination angle.
  This proposal chooses a scale for the jump \f$\alpha = N[0,2\pi]\f$ and randomly chooses the sign of the proposal, then shifts \f$\varphi_0\f$ and \f$\psi\f$ by \f$\alpha\f$ and \f$\alpha/2\f$, respectively.
+ 
+ @param params (updates \f$\psi,\varphi_0\f$)
+ @return logQ = 0 (symmetric proposal)
+
  */
 double psi_phi_jump             (UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
 
@@ -172,6 +224,10 @@ double psi_phi_jump             (UNUSED struct Data *data, UNUSED struct Model *
  \brief Same as draw_from_fstatistic() with fm_shift()
  
  Uses the same F-statistics proposal as draw_from_fstatistic() but randomly shifts \f$f_0\f$ with fm_shift() instead of drawing \f$f_0\f$ from prior.
+ 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = evaluate_fstatistic_proposal()
+
  */
 double jump_from_fstatistic     (struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
@@ -179,12 +235,20 @@ double jump_from_fstatistic     (struct Data *data, struct Model *model, struct 
  \brief Draw sky location from galaxy prior defined in set_galaxy_prior()
  
  Rejection samples sky location parameters \f${\cos\theta,\phi}\f$ using galaxy-weighted sky prior.
+ 
+ @param params (updates \f$\cos\theta,\phi\f$)
+ @return logQ = prior->skyhist[]
+
  */
 double draw_from_galaxy_prior   (struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
 
 
 /**
  \brief Fair draw on phase and amplitude calibration parameters
+
+ @param model->calibration (updates dampA,dampE)
+ @return logQ = 
+
  */
 double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed);
 
@@ -203,25 +267,74 @@ double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source 
  */
 double cov_density(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params);
 
-
+/**
+ \brief Sets up different proposals and assigns frequencies with which they are used.
+ */
 void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 
+/**
+ \brief Create 3D histogram for F-statistics proposal
+ 
+  - discretize \f${f_0,\cos\theta,\phi}\f$ space.
+    - frequency resolution is hard-coded to 1/4 of a bin
+    - sky location resolution is hard-coded to 30x30 bins
+  - compute F-statistic in each cell of the grid
+  - cap F-statistic at SNRmax=20
+  - normalize to make it a proper proposal (this part is a pain to get right...)
+
+ TODO: adaptive grid spacing based on Fisher sub-matrix
+ */
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
 
+/**
+ \brief package priors into Proposal structures
+ 
+ Allocates memory for using proposal structure to draw from prior.
+ When the galaxy prior is used for \f${\cos\theta,\phi}\f$ the data
+ are stored in an unintuitive way so take a good look at source code.
+ */
 void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal);
 
+/**
+ \brief Check that covariance matrix proposal is properly normalized
+ 
+ Monte Carlo integration of the covariance proposal rejection sampling on the prior boundaries.  The matrices \f$C_{ij}\f$ and \f$L_{ij}\f$ are re-wighted to keep most of the proposal mass within the prior.
+ */
 void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed);
 
+/**
+ \brief Stores CDF of chain file input with --update flag
+ 
+ Reads chain file, sorts each marginalized distribution, and packages data into Proposal structure.
+ */
 void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, int NMAX);
 
+/**
+ \brief Stores covariance matrices input with --update-cov flag
+ 
+ Reads covariance matrix files and parses weights, means, covariances, LU decompositions, and determinents.  Inverts covariance matrix and packages data into proposal structure
+ */
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal);
 
-//double evaluate_fstatistic_proposal(struct Data *data, struct Proposal *proposal, double *params);
+/**
+ \brief Returns (log) F-statistic proposal density
+ 
+ Find which cell of the \f${f_0,\cos\theta,\phi}\f$ histogram contains the intput parameter values (params).  Assembles joint proposal density from the 3D grid plus prior_density() for the remaining parameters.
+ */
 double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *model, UNUSED struct Source * source, struct Proposal *proposal, double *params);
 
+/**
+ \brief Returns (log) prior density
+ 
+ Typically returns \f$\sum \log\frac{1}{\Delta V}\f$ for each parameter except those that have non-trivial priors due to various run settings e.g., the SNR prior for \f$\mathcal{A}\f$, or the galaxy prior for \f${\cos\theta,\phi}\f$.
+ */
 double prior_density(struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params);
 
-//dummy function for proposal that don't have density functions defined
+/**
+ \brief Placeholder for symmetric proposal.  Returns 0.0
+ 
+ The Proposal structure requires a proposal density function. This function serves that role for proposals which are symmetric and therefore do not need use any resources computing proposal densities that will just cancel in the Hastings ratio.
+ */
 double symmetric_density(UNUSED struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params);
 
 #endif /* GalacticBinaryProposal_h */

@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('Constants_8h_source.html','');});
 <div class="title">Constants.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="Constants_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> *  This program is free software; you can redistribute it and/or modify</span></div>
@@ -116,68 +116,56 @@ $(document).ready(function(){initNavTree('Constants_8h_source.html','');});
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment"> *  MA  02111-1307  USA</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment"> */</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#ifndef Constants_h</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#define Constants_h</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#define FIXME 0</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#define SNRPEAK 10</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment">/* --------------  MATHEMATICAL CONSTANTS  -------------- */</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">/* Some square roots */</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#define SQ2 1.4142135623731</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#define SQ3 1.73205080757</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#define SQ8 2.82842712474619</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment">/* Pi&#39;s and frinds */</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="comment">//use math.h (M_PI) for PI</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#define PI2   6.283185307179586</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#define PIon2 1.57079632679</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define PIon4 0.78539816339</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#define RT2PI 2.5066282746310005024  // sqrt(2 Pi)</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">/* Natural log of 2 */</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#define LN2 0.693147180559945</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">/* ----------------  NATURAL CONSTANTS  ----------------- */</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="comment">/* Speed of light (m/s) */</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">#define CLIGHT 299792458.</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="comment">/* Mass of the Sun (s) */</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#define TSUN  4.9169e-6</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="comment">/* Radius of the Sun (s) */</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#define RSUN 2.32060541029</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="comment">/* Mass of the SUn (kg) */</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor">#define MSUN 1.9889e30</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">/* Number of meters in a parsec */</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#define PC 3.0856775807e16</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment">/* Number of seconds in a year */</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">#define YEAR 31457280.0</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="comment">/* Astronomical unit (meters) */</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">#define AU 1.49597870660e11</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="comment">/* Gravitational Constant (m^3 kg^-1 s^-2) */</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">#define GNEWTON 6.67408e-11</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="comment">/* Orbital radius of the guiding center */</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">#define RGC (1.0*AU)</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#ifndef Constants_h</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#define Constants_h</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#define FIXME 0</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="Constants_8h.html#ad3a09fbcbcf64918b7c19d0d0e3e9a4b">   30</a></span>&#160;<span class="preprocessor">#define SNRPEAK 10 </span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">/* --------------  MATHEMATICAL CONSTANTS  -------------- */</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">/* Some square roots */</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="Constants_8h.html#a0b19f406e0cc4cbaf7a935f155567869">   34</a></span>&#160;<span class="preprocessor">#define SQ2 1.4142135623731  </span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="Constants_8h.html#a85e6b2a01ad8662cb146ebe3d924eb2d">   35</a></span>&#160;<span class="preprocessor">#define SQ3 1.73205080757    </span></div>
+<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="Constants_8h.html#af19e3e6a580d8f4bd58836853534b334">   36</a></span>&#160;<span class="preprocessor">#define SQ8 2.82842712474619 </span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">/* Pi&#39;s and frinds */</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">//use math.h (M_PI) for PI</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="Constants_8h.html#a2750dfdda752269a036f487a4a34b849">   40</a></span>&#160;<span class="preprocessor">#define PI2   6.283185307179586      </span></div>
+<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="Constants_8h.html#aa4e18639f741d8163d826708ffa53cc4">   41</a></span>&#160;<span class="preprocessor">#define PIon2 1.57079632679          </span></div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="Constants_8h.html#a475c9825dc4d9b0fad1ff1f25483913c">   42</a></span>&#160;<span class="preprocessor">#define PIon4 0.78539816339          </span></div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="Constants_8h.html#ac497bbdb512e93211ab80f637c5b29ac">   43</a></span>&#160;<span class="preprocessor">#define RT2PI 2.5066282746310005024  </span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">/* Natural log of 2 */</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="Constants_8h.html#a316db5f7a96e49e413e7e673ffed3ba2">   46</a></span>&#160;<span class="preprocessor">#define LN2 0.693147180559945 </span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="comment">/* ----------------  NATURAL CONSTANTS  ----------------- */</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="Constants_8h.html#a9a79b2355cfb2e80430b63d5bb645330">   52</a></span>&#160;<span class="preprocessor">#define GNEWTON 6.67408e-11</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="Constants_8h.html#a579085cbd9e0993223cae68700a306cf">   55</a></span>&#160;<span class="preprocessor">#define CLIGHT 299792458.</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
+<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="Constants_8h.html#a32a6b190d4d681e2af4c6ce998031557">   58</a></span>&#160;<span class="preprocessor">#define MSUN 1.9889e30</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
+<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="Constants_8h.html#aa5244027c00b642d69d62392f5a60f8b">   61</a></span>&#160;<span class="preprocessor">#define TSUN  4.9169e-6</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="Constants_8h.html#a735fd180f3bfcca3f2422b1c5e2a3019">   64</a></span>&#160;<span class="preprocessor">#define RSUN 2.32060541029</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="Constants_8h.html#a600721f0222b857dc8a3ae59e5077347">   67</a></span>&#160;<span class="preprocessor">#define PC 3.0856775807e16</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="Constants_8h.html#a5871356500f559add06ea81d60331b1b">   70</a></span>&#160;<span class="preprocessor">#define YEAR 31457280.0</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
+<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="Constants_8h.html#ae992e5b7e1e6bc540e74aa4d3f63a269">   73</a></span>&#160;<span class="preprocessor">#define AU 1.49597870660e11</span></div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* Constants_h */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="Constants_8h.html#a45ce4d31ba99b2b7f384297275d79eb1">   80</a></span>&#160;<span class="preprocessor">#define RGC (1.0*AU)</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* Constants_h */</span><span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_f8b0faebf59e148704c9846d694299bd.html">gbmcmc</a></li><li class="navelem"><a class="el" href="dir_103fd8e7a501b92b31ccadd22612fec8.html">src</a></li><li class="navelem"><b>Constants.h</b></li>
+    <li class="navelem"><a class="el" href="dir_f8b0faebf59e148704c9846d694299bd.html">gbmcmc</a></li><li class="navelem"><a class="el" href="dir_103fd8e7a501b92b31ccadd22612fec8.html">src</a></li><li class="navelem"><a class="el" href="Constants_8h.html">Constants.h</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.16 </li>

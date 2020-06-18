@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['inj_39',['inj',['../structData.html#ac136349d39219fa435ca7cbd43c46444',1,'Data']]],
-  ['iseed_40',['iseed',['../structData.html#a377bda85cbfd007855748f4c53d8305c',1,'Data']]],
-  ['installing_20gbmcmc_41',['Installing GBMCMC',['../md_gbmcmc_README.html',1,'']]]
+  ['initialize_5fproposal_45',['initialize_proposal',['../GalacticBinaryProposal_8h.html#a56be2a79ceec1bd3e5ca7813ddd10007',1,'GalacticBinaryProposal.c']]],
+  ['inj_46',['inj',['../structData.html#ac136349d39219fa435ca7cbd43c46444',1,'Data']]],
+  ['iseed_47',['iseed',['../structData.html#a377bda85cbfd007855748f4c53d8305c',1,'Data']]]
 ];

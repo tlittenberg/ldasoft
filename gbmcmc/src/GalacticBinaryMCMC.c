@@ -17,7 +17,17 @@
  *  MA  02111-1307  USA
  */
 
-/// @file GalacticBinaryMCMC.c
+/**
+ @file GalacticBinaryMCMC.c
+ \brief Sampling routines and main function
+ 
+ Including
+  - Fixed dimension galactic binary MCMC
+  - Trans-dimension galactic binary RJMCMC
+  - Parallel tempering chain exchanges ptmcmc()
+  - Fixed dimension noise model MCMC
+  - Fixed dimension data model MCMC
+ */
 
 /***************************  REQUIRED LIBRARIES  ***************************/
 

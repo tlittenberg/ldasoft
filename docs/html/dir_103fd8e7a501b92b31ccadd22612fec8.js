@@ -1,7 +1,7 @@
 var dir_103fd8e7a501b92b31ccadd22612fec8 =
 [
     [ "BayesLine.h", "BayesLine_8h_source.html", null ],
-    [ "Constants.h", "Constants_8h_source.html", null ],
+    [ "Constants.h", "Constants_8h.html", "Constants_8h" ],
     [ "GalacticBinary.h", "GalacticBinary_8h_source.html", null ],
     [ "GalacticBinaryCatalog.h", "GalacticBinaryCatalog_8h_source.html", null ],
     [ "GalacticBinaryData.h", "GalacticBinaryData_8h_source.html", null ],
