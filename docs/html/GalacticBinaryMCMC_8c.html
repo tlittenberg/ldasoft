@@ -99,6 +99,9 @@ $(document).ready(function(){initNavTree('GalacticBinaryMCMC_8c.html','');});
 <div class="title">GalacticBinaryMCMC.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Sampling routines and main function.  
+<a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;stdlib.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
@@ -107,7 +110,7 @@ $(document).ready(function(){initNavTree('GalacticBinaryMCMC_8c.html','');});
 <code>#include &lt;gsl/gsl_rng.h&gt;</code><br />
 <code>#include &lt;gsl/gsl_randist.h&gt;</code><br />
 <code>#include &quot;LISA.h&quot;</code><br />
-<code>#include &quot;Constants.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="Constants_8h_source.html">Constants.h</a>&quot;</code><br />
 <code>#include &quot;BayesLine.h&quot;</code><br />
 <code>#include &quot;GalacticBinary.h&quot;</code><br />
 <code>#include &quot;GalacticBinaryIO.h&quot;</code><br />
@@ -140,7 +143,16 @@ Functions</h2></td></tr>
 <tr class="memitem:a0ddf1224851353fc92bfbff6f499fa97"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryMCMC_8c.html#a0ddf1224851353fc92bfbff6f499fa97">main</a> (int argc, char *argv[])</td></tr>
 <tr class="separator:a0ddf1224851353fc92bfbff6f499fa97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Sampling routines and main function. </p>
+<p>Including</p><ul>
+<li>Fixed dimension galactic binary MCMC</li>
+<li>Trans-dimension galactic binary RJMCMC</li>
+<li>Parallel tempering chain exchanges <a class="el" href="GalacticBinaryMCMC_8c.html#ac3d943895e5a6ba430f9ae78d38c8d51" title="Parallel tempering exchange.">ptmcmc()</a></li>
+<li>Fixed dimension noise model MCMC</li>
+<li>Fixed dimension data model MCMC </li>
+</ul>
+</div><h2 class="groupheader">Function Documentation</h2>
 <a id="ac97ca10801918e6cd12966cc22138e07"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac97ca10801918e6cd12966cc22138e07">&#9670;&nbsp;</a></span>adapt_temperature_ladder()</h2>
 
