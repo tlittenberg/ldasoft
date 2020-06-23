@@ -120,7 +120,7 @@ int main(int argc,char **argv)
     }
   }
   rewind(Infile);
-  NSIM--;
+  //NSIM--;
   
   count=0;
   for(int n=0; n<NSIM; n++)
@@ -133,7 +133,7 @@ int main(int argc,char **argv)
     //theta-=0.5*M_PI;
     
     params[0] = f;
-    params[1] = 0.5*M_PI-theta;
+    params[1] = theta;
     params[2] = phi;
     params[3] = A;
     params[4] = iota;
@@ -143,19 +143,19 @@ int main(int argc,char **argv)
     params[8] = 11.0/3.0*fdot*fdot/f;
     
     
-    N = 32*mult;
-    if(f > 0.001) N = 64*mult;
-    if(f > 0.01) N = 256*mult;
-    if(f > 0.03) N = 512*mult;
-    if(f > 0.1) N = 1024*mult;
+     N = 64*mult;
+    if(f > 0.001) N = 128*mult;
+    if(f > 0.01) N = 512*mult;
+    if(f > 0.03) N = 1024*mult;
+    if(f > 0.1) N = 2048*mult;
     
     
     fonfs = f/LISAorbit->fstar;
     
     q = (long)(f*TOBS);
     
-    SAE  = AEnoise(LISAorbit->L,LISAorbit->fstar,f);
-    SXYZ = XYZnoise(LISAorbit->L,LISAorbit->fstar,f);
+    SAE  = AEnoise_FF(LISAorbit->L,LISAorbit->fstar,f);
+    SXYZ = XYZnoise_FF(LISAorbit->L,LISAorbit->fstar,f);
 
     /*  calculate michelson noise  */
     Sm = SXYZ/(4.0*sin(fonfs)*sin(fonfs));
@@ -168,7 +168,7 @@ int main(int argc,char **argv)
       fprintf(Outfile, "%.16f %.10e %f %f %e %f %f %f\n", f, fdot, theta, phi, A, iota, psi, phase);
     }
     
-    M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
+    M = 2*galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
     XLS = double_vector(2*M);
     AA  = double_vector(2*M);
@@ -211,8 +211,8 @@ int main(int argc,char **argv)
   {
     f = (double)(i)/TOBS;
     fonfs = f/LISAorbit->fstar;
-    SAE  = AEnoise(LISAorbit->L,LISAorbit->fstar,f);
-    SXYZ = XYZnoise(LISAorbit->L,LISAorbit->fstar,f);
+    SAE  = AEnoise_FF(LISAorbit->L,LISAorbit->fstar,f);
+    SXYZ = XYZnoise_FF(LISAorbit->L,LISAorbit->fstar,f);
     XR = 0.5 * sqrt(SXYZ) * gsl_ran_ugaussian(r);
     XI = 0.5 * sqrt(SXYZ) * gsl_ran_ugaussian(r);
     AR = 0.5 * sqrt(SAE)  * gsl_ran_ugaussian(r);
