@@ -150,8 +150,8 @@ int main(int argc,char **argv)
     NSIM++;
   }
   rewind(Infile);
-  NSIM--;
-  
+  //NSIM--; /// \todo why don't I have to do the usual N-- at the end of counting the lines of a file?
+      
   for(int n=0; n<NSIM; n++)
   {
     if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
@@ -159,7 +159,7 @@ int main(int argc,char **argv)
     fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
     
     params[0] = f;
-    params[1] = 0.5*M_PI-theta;
+    params[1] = theta;
     params[2] = phi;
     params[3] = A;
     params[4] = iota;
@@ -168,19 +168,19 @@ int main(int argc,char **argv)
     params[7] = fdot;
     params[8] = 11.0/3.0*fdot*fdot/f;
     
-    N = 32*mult;
-    if(f > 0.001) N = 64*mult;
-    if(f > 0.01) N = 256*mult;
-    if(f > 0.03) N = 512*mult;
-    if(f > 0.1) N = 1024*mult;
+    N = 64*mult;
+    if(f > 0.001) N = 128*mult;
+    if(f > 0.01) N = 512*mult;
+    if(f > 0.03) N = 1024*mult;
+    if(f > 0.1) N = 2048*mult;
     
     
     fonfs = f/fstar;
     
     q = (long)(f*TOBS);
     
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
     
     /*  calculate michelson noise  */
     
@@ -189,7 +189,7 @@ int main(int argc,char **argv)
     
     Acut = A*sqrt(TOBS/Sm);
     
-    M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
+    M = 2*galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
     XLS = double_vector(2*M);
     AA  = double_vector(2*M);
@@ -271,8 +271,8 @@ int main(int argc,char **argv)
   {
     XP[i]  = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    Anoise[i]  = AEnoise(LISAorbit->L,LISAorbit->fstar,(double)i/TOBS);
-    Xnoise[i]  = XYZnoise(LISAorbit->L,LISAorbit->fstar,(double)i/TOBS);
+    Anoise[i]  = AEnoise_FF(LISAorbit->L,LISAorbit->fstar,(double)i/TOBS);
+    Xnoise[i]  = XYZnoise_FF(LISAorbit->L,LISAorbit->fstar,(double)i/TOBS);
 
   }
   

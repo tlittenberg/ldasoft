@@ -114,8 +114,8 @@ int main(int argc,char **argv)
   for(i=imin; i<= imax; i++)
   {
     fscanf(amps,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xc[i], &Anoise[i], &AEc[i]);
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
 
     // printf("%e %e %e\n", f, SXYZ+Xc[i], SAE+AEc[i]);
   }
@@ -186,7 +186,7 @@ int main(int argc,char **argv)
     fscanf(vfile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
     
     params[0] = f;
-    params[1] = 0.5*M_PI-theta;
+    params[1] = theta;
     params[2] = phi;
     params[3] = Amp;
     params[4] = iota;
@@ -214,18 +214,18 @@ int main(int argc,char **argv)
      */
     cntx++;
     
-    N = 32*mult;
-    if(f > 0.001) N = 64*mult;
-    if(f > 0.01) N = 256*mult;
-    if(f > 0.03) N = 512*mult;
-    if(f > 0.1) N = 1024*mult;
+    N = 64*mult;
+    if(f > 0.001) N = 128*mult;
+    if(f > 0.01) N = 512*mult;
+    if(f > 0.03) N = 1024*mult;
+    if(f > 0.1) N = 2048*mult;
     
     fonfs = f/fstar;
     
     q = (long)(f*TOBS);
     
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
 
     if(q <= imax)
     {
@@ -239,7 +239,7 @@ int main(int argc,char **argv)
     
     Acut = A*sqrt(TOBS/Sm);
     
-    M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
+    M = 2*galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     if(M>N)
     {
       printf("bandwidth=%li, max size=%li\n",M,N);
@@ -278,7 +278,7 @@ int main(int argc,char **argv)
       loudSNR[0][loudSNRcount] = log10(SNR);        //1:2
       loudSNR[1][loudSNRcount] = params[0];        //3:4
       loudSNR[2][loudSNRcount] = fabs(params[7]*TOBS*TOBS);      //5:6
-      loudSNR[3][loudSNRcount] = 0.5*M_PI-theta;  //7:8
+      loudSNR[3][loudSNRcount] = theta;  //7:8
       loudSNR[4][loudSNRcount] = phi;        //9:10
       loudSNR[5][loudSNRcount] = Amp;        //11:12
       loudSNR[6][loudSNRcount] = iota;      //13:14
@@ -296,7 +296,7 @@ int main(int argc,char **argv)
       
       f     = DrawAE[0];
       fdot  = DrawAE[7];
-      theta = 0.5*M_PI - DrawAE[1];
+      theta = DrawAE[1];
       phi   = DrawAE[2];
       A     = DrawAE[3];
       iota  = DrawAE[4];
@@ -430,7 +430,7 @@ int main(int argc,char **argv)
   printf("2D sky mapping = %d\n", cnt2);
   printf("3D sky mapping = %d\n", cnt3);
   printf("fdot measured to 20 percent = %d\n", cnt4);
-  printf("fddot measured to 20 percent = %d\n", cnt5);
+  printf("FIXME: fddot measured to 20 percent = %d\n", cnt5);
   
 //  printf("*************** X *****************\n");
 //  printf("SNR > 7  = %d\n", cnt6);
@@ -453,12 +453,15 @@ int main(int argc,char **argv)
   
   for(i=0; i<COUNT; i++)
   {
-    j = COUNT - i;
+    j = COUNT - 1 - i;
     sort_descending[i] = sort_ascending[j];
   }
   
   FILE *outfile = fopen("Brightest.dat","w");
-  for(i=0; i<COUNT; i++)
+    
+    int MAX = 100;
+    if(MAX>COUNT)MAX=COUNT;
+  for(i=0; i<100; i++)
   {
     j = sort_descending[i];
     for(k=0; k<17; k++) fprintf(outfile,"%g ",loudSNR[k][j]);
@@ -486,7 +489,7 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
   double epsilon;
   int d;
   
-  d = 9;
+  d = 8;
   
   epsilon = 1.0e-5;
   
@@ -666,7 +669,10 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
     DrawAE[i] = 0.0;
     for (j = 0; j < 8; j++)
     {
-      DrawAE[i] += evector[i][j]*u[j]/sqrt(evalue[j])/sqrt(8.);
+        /**
+         \todo debug and turn back on Draw
+         */
+        DrawAE[i] += 0.0;//evector[i][j]*u[j]/sqrt(evalue[j])/sqrt(8.);
     }
     if(i==0)DrawAE[i] = DrawAE[i]/TOBS + Params[i];
     else if(i==3)DrawAE[i] = exp(DrawAE[i] + log(Params[i]));
@@ -685,7 +691,7 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
   
   SigmaAE[9] = 2.0*M_PI*sin(Params[1])*sqrt(Cov2[1][1]*Cov2[2][2] - Cov2[2][1]*Cov2[2][1]);
   
-  d = 9;
+  d = 8;
 
   
   evector = double_matrix(d-1,d-1);
@@ -719,7 +725,7 @@ void FISHER(struct Orbit *orbit, double TOBS, double *Params, long N, long M, do
     }
   }
   
-  d = 9;
+  d = 8;
   
   free_double_vector(ParamsP);
   free_double_vector(ParamsM);
