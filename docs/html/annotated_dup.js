@@ -10,7 +10,6 @@ var annotated_dup =
     [ "Entry", "structEntry.html", "structEntry" ],
     [ "Filter", "structFilter.html", "structFilter" ],
     [ "Flags", "structFlags.html", "structFlags" ],
-    [ "lisa_orbit", "structlisa__orbit.html", "structlisa__orbit" ],
     [ "lorentzianParams", "structlorentzianParams.html", "structlorentzianParams" ],
     [ "Model", "structModel.html", "structModel" ],
     [ "Noise", "structNoise.html", "structNoise" ],

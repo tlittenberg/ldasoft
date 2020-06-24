@@ -1,3 +1,5 @@
+# FisherGalaxy Manual
+
 ## Input file format 
 Space-separated ASCII file, one source per row. Columns are <a name="params"></a>
 
@@ -115,7 +117,7 @@ Output files:
 
 `<4-link results file>`,`<6-link results file>`: List of detectable binaries and estimated statistical uncertainties for [4/6]-link ([1/3] interferometer) mission. Columns are
 
-```
+```bash
  1. f (Hz) 
  2. co-latitude (rad) 
  3. longitude (rad) 
@@ -136,7 +138,8 @@ Output files:
  18. sigma_fddot (fractional)
  19. sigma_omega (sq. deg.
  20. SNR
- ```
+```
+
 `Brightest.dat`: 100 highest-SNR signals and their errors.  Columns are the same as the above results files 
 
 `DrawAE.dat`: **UNDER CONSTRUCTION** Fair draws from Gaussian using Fisher as covariance matrix for all detectable binaries. Colums are the same as [input galaxy](#params).
