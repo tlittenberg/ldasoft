@@ -24,6 +24,9 @@
 #include <GalacticBinaryMath.h>
 #include <GalacticBinaryWaveform.h>
 
+#define FISHERGALAXY_FMIN 1.0e-4
+#define FISHERGALAXY_FMAX 4.0e-2
+
 double Sum(double *AA, double *EE, long M, double SN, double TOBS);
 void FAST_LISA(struct Orbit *LISAorbit, double TOBS, double *params, int M, double *XLS, double *AA, double *EE);
 

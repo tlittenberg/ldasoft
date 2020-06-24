@@ -45,6 +45,9 @@
 /* Natural log of 2 */
 #define LN2 0.693147180559945 ///< \f$\ln{2}\f$
 
+/* Convert between angles*/
+#define RAD2DEG 0.01745329251 ///< 1 deg [rad]
+#define DEG2RAD 57.2957795131 ///< 1 rad [deg]
 
 /* ----------------  NATURAL CONSTANTS  ----------------- */
 
@@ -71,6 +74,7 @@
 
 //! Astronomical unit [m]
 #define AU 1.49597870660e11
+
 
 /**
  \brief Orbital radius of the LISA guiding center [m]
