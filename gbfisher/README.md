@@ -97,7 +97,7 @@ where the X_res channel is for a 4-link (single interferometer) residual data st
 
 `BrightAE.dat` List of detectable binares by a 6-link (three interferometer) detector. Columns are the same as [input galaxy](#params).
 
-### Intermediate data products for checking performance (overwriting output from `ConfusionFit`
+### Intermediate data products for checking performance (overwriting output from `ConfusionFit`)
 `Xfit.dat`
 
 `Xf.dat`
@@ -113,7 +113,7 @@ The process assesses tallies statistics of the catalog including overall number 
 
 Output files:
 
-``<4-link results file>`,`<6-link results file>`: List of detectable binaries and estimated statistical uncertainties for [4/6]-link ([1/3] interferometer) mission. Columns are
+`<4-link results file>`,`<6-link results file>`: List of detectable binaries and estimated statistical uncertainties for [4/6]-link ([1/3] interferometer) mission. Columns are
 
 ```
  1. f (Hz) 
