@@ -113,36 +113,33 @@ The process assesses tallies statistics of the catalog including overall number 
 
 Output files:
 
-`<4-link results file>`: **Depricated**
-
-`<6-link results file>`: List of detectable binaries and estimated statistical uncertainties for 6-link (3 interferometer) mission. Columns are
+``<4-link results file>`,`<6-link results file>`: List of detectable binaries and estimated statistical uncertainties for [4/6]-link ([1/3] interferometer) mission. Columns are
 
 ```
  1. f (Hz) 
- 2. df/dt (s^-2)
- 3. d^2f/dt^2 (s^-3)
- 4. co-latitude (rad) 
- 5. longitude (rad) 
- 6. amplitude 
- 7. inclination (rad) 
- 8. polarization angle (rad) 
- 9. ref phase (rad)`
+ 2. co-latitude (rad) 
+ 3. longitude (rad) 
+ 4. amplitude 
+ 5. inclination (rad) 
+ 6. polarization angle (rad) 
+ 7. ref phase (rad)`
+ 8. df/dt (s^-2)
+ 9. d^2f/dt^2 (s^-3)
  10. sigma_f (fractional)
- 11. sigma_fdot (fractional)
- 12. sigma_fddot (fractional)
- 13. sigma_co-latitude (radians)
- 14. sigma_longitude (radians)
- 15. sigma_amplitude (fractional)
- 16. sigma_inclination (radians)
- 17. sigma_polarization (radians)
- 18. sigma_phase (radians)
+ 11. sigma_co-latitude (radians)
+ 12. sigma_longitude (radians)
+ 13. sigma_amplitude (fractional)
+ 14. sigma_inclination (radians)
+ 15. sigma_polarization (radians)
+ 16. sigma_phase (radians)
+ 17. sigma_fdot (fractional)
+ 18. sigma_fddot (fractional)
  19. sigma_omega (sq. deg.
  20. SNR
  ```
+`Brightest.dat`: 100 highest-SNR signals and their errors.  Columns are the same as the above results files 
 
-`Brightest.dat`
-
-`DrawAE.dat`
+`DrawAE.dat`: **UNDER CONSTRUCTION** Fair draws from Gaussian using Fisher as covariance matrix for all detectable binaries. Colums are the same as [input galaxy](#params).
 
 `sky_all.dat`: 3D location (in cartesian coordinates with x-y plane in the ecliptic) of all detected binaries. Columns are
 
@@ -150,7 +147,7 @@ Output files:
 
 `sky_3D.dat`: 3D location (in cartesian coordinates with x-y plane in the ecliptic) of all detected binaries **with distance measured to within 10% and sky location measured to within 1 sq. deg**. Columns are
 
-        x_ecliptic (kpc) | y_ecliptic (kpc) |z_ecliptic (kpc)
+    x_ecliptic (kpc) | y_ecliptic (kpc) |z_ecliptic (kpc)
 
 
 ## Example for input file `FisherGalaxy_LDC_Radler_galaxy_key.dat`:
