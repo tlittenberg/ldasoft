@@ -53,7 +53,7 @@ Edit `ldasoft/gbmcmc/src/Makefile` to change install destination.
 
 <a name="examples"></a>
 # Example use cases for GBMCMC
-See run options with `gb_mcmc --help`
+See run options with `gb_mcmc --help`.  Detailed description of command line options found [here](`doc/running.md`)
 
 <a name="highsnr"></a>
 ## Analyze single high SNR injection
