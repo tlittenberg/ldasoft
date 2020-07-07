@@ -1,13 +1,11 @@
 var searchData=
 [
-  ['t_108',['T',['../structData.html#ae837768c48b47d8df3cd22dd53d383f3',1,'Data']]],
-  ['t0_109',['t0',['../structData.html#aea49bff932eaf931689edccaa155b333',1,'Data']]],
-  ['t0_5fshift_110',['t0_shift',['../GalacticBinaryProposal_8h.html#a99ccaa6a68983e3f6c1dbd27e8f1c78a',1,'GalacticBinaryProposal.c']]],
-  ['tdi_111',['TDI',['../structTDI.html',1,'TDI'],['../structData.html#a98432cd2a586429f74d696da622446d1',1,'Data::tdi()']]],
-  ['tensor_112',['tensor',['../structProposal.html#a638598576e81e94d7268e704e74c983f',1,'Proposal']]],
-  ['test_5fcovariance_5fproposal_113',['test_covariance_proposal',['../GalacticBinaryProposal_8h.html#a2eb3f28b6ca7783cd317fc3798793dfd',1,'GalacticBinaryProposal.c']]],
-  ['tgap_114',['tgap',['../structData.html#a73c788cfea88195d14c53f9e52a8ada1',1,'Data']]],
-  ['todo_20list_115',['Todo List',['../todo.html',1,'']]],
-  ['trial_116',['trial',['../structProposal.html#ac16adfd3c70daf09f553a819fb6e806c',1,'Proposal']]],
-  ['tsun_117',['TSUN',['../Constants_8h.html#aa5244027c00b642d69d62392f5a60f8b',1,'Constants.h']]]
+  ['r_5fpow_116',['r_pow',['../structData.html#a7261769b2611a460f8a6ccc5ce70992f',1,'Data']]],
+  ['rad2deg_117',['RAD2DEG',['../Constants_8h.html#ac5a945020d3528355cda82d383676736',1,'Constants.h']]],
+  ['resume_118',['resume',['../structFlags.html#a726413142f05785554e7149e89a3831f',1,'Flags']]],
+  ['rgc_119',['RGC',['../Constants_8h.html#a45ce4d31ba99b2b7f384297275d79eb1',1,'Constants.h']]],
+  ['rj_120',['rj',['../structFlags.html#a6b41a9235309222d3b4eaee7ec4fab02',1,'Flags']]],
+  ['rjweight_121',['rjweight',['../structProposal.html#a1c7952dc028f17ec1a0c73b60b3387b8',1,'Proposal']]],
+  ['rsun_122',['RSUN',['../Constants_8h.html#a735fd180f3bfcca3f2422b1c5e2a3019',1,'Constants.h']]],
+  ['rt2pi_123',['RT2PI',['../Constants_8h.html#ac497bbdb512e93211ab80f637c5b29ac',1,'Constants.h']]]
 ];

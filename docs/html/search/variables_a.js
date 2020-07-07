@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['rjweight_208',['rjweight',['../structProposal.html#a1c7952dc028f17ec1a0c73b60b3387b8',1,'Proposal']]]
+  ['logfmin_252',['logfmin',['../structData.html#a3d638edc3bb44936e2ffd2ba195aabae',1,'Data']]]
 ];

@@ -1,4 +1,24 @@
 var searchData=
 [
-  ['vector_118',['vector',['../structProposal.html#a22064ba2beaa9f61dd15e81779aad24e',1,'Proposal']]]
+  ['s_5fpow_124',['S_pow',['../structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6',1,'Data']]],
+  ['setup_5fcdf_5fproposal_125',['setup_cdf_proposal',['../GalacticBinaryProposal_8h.html#a840df697159100dca6ef37caf4bf1db2',1,'GalacticBinaryProposal.c']]],
+  ['setup_5fcovariance_5fproposal_126',['setup_covariance_proposal',['../GalacticBinaryProposal_8h.html#a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb',1,'GalacticBinaryProposal.c']]],
+  ['setup_5ffrequency_5fproposal_127',['setup_frequency_proposal',['../GalacticBinaryProposal_8h.html#a2662e53920bbe4d94dc1b22e25f3a52b',1,'GalacticBinaryProposal.c']]],
+  ['setup_5ffstatistic_5fproposal_128',['setup_fstatistic_proposal',['../GalacticBinaryProposal_8h.html#a970c096c5428c06d08846a24c1e1c3d6',1,'GalacticBinaryProposal.c']]],
+  ['setup_5fprior_5fproposal_129',['setup_prior_proposal',['../GalacticBinaryProposal_8h.html#af4d23d535092cc291b8c817e72177ecc',1,'GalacticBinaryProposal.c']]],
+  ['simnoise_130',['simNoise',['../structFlags.html#a84863fdaac48e30b194b1d112e2ae514',1,'Flags']]],
+  ['sine_5ff_5fon_5ffstar_131',['sine_f_on_fstar',['../structData.html#ac4db839b05312ebbaf3a611c0fab1482',1,'Data']]],
+  ['size_132',['size',['../structProposal.html#afb3afbfca750d99d1736f848c5c89187',1,'Proposal']]],
+  ['snr2_133',['SNR2',['../structData.html#a018485652e36524ee3c2b07f35befc76',1,'Data']]],
+  ['snrpeak_134',['SNRPEAK',['../Constants_8h.html#ad3a09fbcbcf64918b7c19d0d0e3e9a4b',1,'Constants.h']]],
+  ['snrprior_135',['snrPrior',['../structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd',1,'Flags']]],
+  ['source_136',['Source',['../structSource.html',1,'']]],
+  ['splineparams_137',['splineParams',['../structsplineParams.html',1,'']]],
+  ['sq2_138',['SQ2',['../Constants_8h.html#a0b19f406e0cc4cbaf7a935f155567869',1,'Constants.h']]],
+  ['sq3_139',['SQ3',['../Constants_8h.html#a85e6b2a01ad8662cb146ebe3d924eb2d',1,'Constants.h']]],
+  ['sq8_140',['SQ8',['../Constants_8h.html#af19e3e6a580d8f4bd58836853534b334',1,'Constants.h']]],
+  ['sqt_141',['sqT',['../structData.html#ad44b894b08062090b76441d16570bca3',1,'Data']]],
+  ['straindata_142',['strainData',['../structFlags.html#a0e7b06500d417cf52b290fecff8dcec7',1,'Flags']]],
+  ['sum_5flog_5ff_143',['sum_log_f',['../structData.html#a2a1500b1864aadb6e713746c7a36c5b7',1,'Data']]],
+  ['symmetric_5fdensity_144',['symmetric_density',['../GalacticBinaryProposal_8h.html#a6411d0cd1ce0b0862365fa63ee9cd28f',1,'GalacticBinaryProposal.c']]]
 ];

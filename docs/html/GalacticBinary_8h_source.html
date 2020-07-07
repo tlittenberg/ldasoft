@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('GalacticBinary_8h_source.html','');});
 <div class="title">GalacticBinary.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
+<a href="GalacticBinary_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> *</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> *  This program is free software; you can redistribute it and/or modify</span></div>
@@ -120,305 +120,349 @@ $(document).ready(function(){initNavTree('GalacticBinary_8h_source.html','');});
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;gsl/gsl_rng.h&gt;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;gsl/gsl_randist.h&gt;</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#define MAXSTRINGSIZE 1024</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="structData.html">   35</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structData.html">Data</a></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;{</div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="structData.html#a3be03de44986fc55905076acc5cdae2e">   37</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a3be03de44986fc55905076acc5cdae2e">N</a>;        </div>
-<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="structData.html#a913af45a251a07eb589171c23afa4f34">   38</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a913af45a251a07eb589171c23afa4f34">NT</a>;       </div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="structData.html#a40984ec8faee6f66f294f19efdffc748">   39</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a40984ec8faee6f66f294f19efdffc748">Nchannel</a>; </div>
-<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">   40</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">DMAX</a>;     </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    </div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">   42</a></span>&#160;    <span class="keywordtype">long</span> <a class="code" href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">cseed</a>; </div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">   43</a></span>&#160;    <span class="keywordtype">long</span> <a class="code" href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">nseed</a>; </div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="structData.html#a377bda85cbfd007855748f4c53d8305c">   44</a></span>&#160;    <span class="keywordtype">long</span> <a class="code" href="structData.html#a377bda85cbfd007855748f4c53d8305c">iseed</a>; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    </div>
-<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="structData.html#ae837768c48b47d8df3cd22dd53d383f3">   46</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ae837768c48b47d8df3cd22dd53d383f3">T</a>; </div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="structData.html#ad44b894b08062090b76441d16570bca3">   47</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ad44b894b08062090b76441d16570bca3">sqT</a>; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    </div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="structData.html#afc6d1d4930961006b7d3593230ce07b7">   49</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#afc6d1d4930961006b7d3593230ce07b7">qmin</a>; </div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="structData.html#aff9d4adb0d0786ca384500f377c7faac">   50</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#aff9d4adb0d0786ca384500f377c7faac">qmax</a>; </div>
-<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="structData.html#a5d1d8220060d2f6b29cc9bbd935113f8">   51</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a5d1d8220060d2f6b29cc9bbd935113f8">qpad</a>; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    </div>
-<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="structData.html#ac91c45dac949a9be16be5751f1eb3695">   53</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ac91c45dac949a9be16be5751f1eb3695">fmin</a>; </div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="structData.html#ae0b4921e57b971170ecb83c234e3f0a8">   54</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ae0b4921e57b971170ecb83c234e3f0a8">fmax</a>; </div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="structData.html#ac4db839b05312ebbaf3a611c0fab1482">   55</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ac4db839b05312ebbaf3a611c0fab1482">sine_f_on_fstar</a>; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="comment">//some manipulations of f,fmin for likelihood calculation</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="structData.html#a2a1500b1864aadb6e713746c7a36c5b7">   58</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a2a1500b1864aadb6e713746c7a36c5b7">sum_log_f</a>; </div>
-<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">   59</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">logfmin</a>; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    </div>
-<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="structData.html#aea49bff932eaf931689edccaa155b333">   61</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="structData.html#aea49bff932eaf931689edccaa155b333">t0</a>;   </div>
-<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">   62</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">tgap</a>; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="comment">//Response</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="structData.html#a98432cd2a586429f74d696da622446d1">   65</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> **<a class="code" href="structData.html#a98432cd2a586429f74d696da622446d1">tdi</a>; </div>
-<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="structData.html#a5646530b83cfb236488c75567a94317d">   66</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structNoise.html">Noise</a> **<a class="code" href="structData.html#a5646530b83cfb236488c75567a94317d">noise</a>; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    </div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="comment">//Reconstructed signal</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">   69</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">Nwave</a>; </div>
-<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="structData.html#abd3208e22c3348f0356e4c2f13f4ffc1">   70</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#abd3208e22c3348f0356e4c2f13f4ffc1">downsample</a>; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordtype">double</span> ****h_rec; <span class="comment">// N x Nchannel x NT x NMCMC</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordtype">double</span> ****h_res; <span class="comment">// N x Nchannel x NT x NMCMC</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordtype">double</span> ****r_pow; <span class="comment">// N x Nchannel x NT x NMCMC</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordtype">double</span> ****h_pow; <span class="comment">// N x Nchannel x NT x NMCMC</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordtype">double</span> ****S_pow; <span class="comment">// N x Nchannel x NT x NMCMC</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">   32</a></span>&#160;<span class="preprocessor">#define MAXSTRINGSIZE 1024 </span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="structData.html">   45</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structData.html">Data</a></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;{</div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="structData.html#a3be03de44986fc55905076acc5cdae2e">   47</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a3be03de44986fc55905076acc5cdae2e">N</a>;        </div>
+<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="structData.html#a913af45a251a07eb589171c23afa4f34">   48</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a913af45a251a07eb589171c23afa4f34">NT</a>;       </div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="structData.html#a40984ec8faee6f66f294f19efdffc748">   49</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a40984ec8faee6f66f294f19efdffc748">Nchannel</a>; </div>
+<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">   50</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">DMAX</a>;     </div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    </div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">   52</a></span>&#160;    <span class="keywordtype">long</span> <a class="code" href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">cseed</a>; </div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">   53</a></span>&#160;    <span class="keywordtype">long</span> <a class="code" href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">nseed</a>; </div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="structData.html#a377bda85cbfd007855748f4c53d8305c">   54</a></span>&#160;    <span class="keywordtype">long</span> <a class="code" href="structData.html#a377bda85cbfd007855748f4c53d8305c">iseed</a>; </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    </div>
+<div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="structData.html#ae837768c48b47d8df3cd22dd53d383f3">   56</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ae837768c48b47d8df3cd22dd53d383f3">T</a>; </div>
+<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="structData.html#ad44b894b08062090b76441d16570bca3">   57</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ad44b894b08062090b76441d16570bca3">sqT</a>; </div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    </div>
+<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="structData.html#afc6d1d4930961006b7d3593230ce07b7">   59</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#afc6d1d4930961006b7d3593230ce07b7">qmin</a>; </div>
+<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="structData.html#aff9d4adb0d0786ca384500f377c7faac">   60</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#aff9d4adb0d0786ca384500f377c7faac">qmax</a>; </div>
+<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="structData.html#a5d1d8220060d2f6b29cc9bbd935113f8">   61</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a5d1d8220060d2f6b29cc9bbd935113f8">qpad</a>; </div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    </div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="structData.html#ac91c45dac949a9be16be5751f1eb3695">   63</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ac91c45dac949a9be16be5751f1eb3695">fmin</a>; </div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="structData.html#ae0b4921e57b971170ecb83c234e3f0a8">   64</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ae0b4921e57b971170ecb83c234e3f0a8">fmax</a>; </div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="structData.html#ac4db839b05312ebbaf3a611c0fab1482">   65</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#ac4db839b05312ebbaf3a611c0fab1482">sine_f_on_fstar</a>; </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    </div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">//some manipulations of f,fmin for likelihood calculation</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="structData.html#a2a1500b1864aadb6e713746c7a36c5b7">   68</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a2a1500b1864aadb6e713746c7a36c5b7">sum_log_f</a>; </div>
+<div class="line"><a name="l00069"></a><span class="lineno"><a class="line" href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">   69</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">logfmin</a>; </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    </div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="structData.html#aea49bff932eaf931689edccaa155b333">   71</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="structData.html#aea49bff932eaf931689edccaa155b333">t0</a>;   </div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">   72</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">tgap</a>; </div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    </div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="comment">//Response</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="structData.html#a98432cd2a586429f74d696da622446d1">   75</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> **<a class="code" href="structData.html#a98432cd2a586429f74d696da622446d1">tdi</a>; </div>
+<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structData.html#a5646530b83cfb236488c75567a94317d">   76</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structNoise.html">Noise</a> **<a class="code" href="structData.html#a5646530b83cfb236488c75567a94317d">noise</a>; </div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="comment">//Injection</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="structData.html#ab456e86e4cf30a20af41383cff94e535">   79</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#ab456e86e4cf30a20af41383cff94e535">NP</a>; </div>
-<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="structData.html#ac136349d39219fa435ca7cbd43c46444">   80</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structSource.html">Source</a> *<a class="code" href="structData.html#ac136349d39219fa435ca7cbd43c46444">inj</a>; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    </div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="comment">//Spectrum proposal</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="structData.html#a30f6e2b62b5480035d01a19b13b23269">   83</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="structData.html#a30f6e2b62b5480035d01a19b13b23269">p</a>; </div>
-<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">   84</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">pmax</a>; </div>
-<div class="line"><a name="l00085"></a><span class="lineno"><a class="line" href="structData.html#a018485652e36524ee3c2b07f35befc76">   85</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a018485652e36524ee3c2b07f35befc76">SNR2</a>; </div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="structData.html#aac66b9dc61783962135088350f5ec2ec">   88</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structData.html#aac66b9dc61783962135088350f5ec2ec">fileName</a>[128]; </div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="comment">/*</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment">     Data format string </span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment">     &#39;phase&#39;     ==&gt; LISA Simulator esque</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment">     &#39;frequency&#39; ==&gt; Synthetic LISA esque</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment">     */</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">   95</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a>[16]; </div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="comment">//Reconstructed signal</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">   79</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">Nwave</a>; </div>
+<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="structData.html#abd3208e22c3348f0356e4c2f13f4ffc1">   80</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#abd3208e22c3348f0356e4c2f13f4ffc1">downsample</a>; </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="structData.html#a8200a4f7f4a97f94dc7500299da945db">   82</a></span>&#160;    <span class="keywordtype">double</span> ****<a class="code" href="structData.html#a8200a4f7f4a97f94dc7500299da945db">h_rec</a>; </div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="structData.html#ad801eb68f47932db30ec701694b72cee">   83</a></span>&#160;    <span class="keywordtype">double</span> ****<a class="code" href="structData.html#ad801eb68f47932db30ec701694b72cee">h_res</a>; </div>
+<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="structData.html#a7261769b2611a460f8a6ccc5ce70992f">   84</a></span>&#160;    <span class="keywordtype">double</span> ****<a class="code" href="structData.html#a7261769b2611a460f8a6ccc5ce70992f">r_pow</a>; </div>
+<div class="line"><a name="l00085"></a><span class="lineno"><a class="line" href="structData.html#a00d4717e62c1120636b7f5b07b71d121">   85</a></span>&#160;    <span class="keywordtype">double</span> ****<a class="code" href="structData.html#a00d4717e62c1120636b7f5b07b71d121">h_pow</a>; </div>
+<div class="line"><a name="l00086"></a><span class="lineno"><a class="line" href="structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6">   86</a></span>&#160;    <span class="keywordtype">double</span> ****<a class="code" href="structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6">S_pow</a>; </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="comment">//Injection</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno"><a class="line" href="structData.html#ab456e86e4cf30a20af41383cff94e535">   89</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structData.html#ab456e86e4cf30a20af41383cff94e535">NP</a>; </div>
+<div class="line"><a name="l00090"></a><span class="lineno"><a class="line" href="structData.html#ac136349d39219fa435ca7cbd43c46444">   90</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structSource.html">Source</a> *<a class="code" href="structData.html#ac136349d39219fa435ca7cbd43c46444">inj</a>; </div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="comment">//Spectrum proposal</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="structData.html#a30f6e2b62b5480035d01a19b13b23269">   93</a></span>&#160;    <span class="keywordtype">double</span> *<a class="code" href="structData.html#a30f6e2b62b5480035d01a19b13b23269">p</a>; </div>
+<div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">   94</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">pmax</a>; </div>
+<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="structData.html#a018485652e36524ee3c2b07f35befc76">   95</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structData.html#a018485652e36524ee3c2b07f35befc76">SNR2</a>; </div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    </div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;};</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
-<div class="line"><a name="l00099"></a><span class="lineno"><a class="line" href="structFlags.html">   99</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structFlags.html">Flags</a></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;{</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordtype">int</span> verbose;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keywordtype">int</span> quiet;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="keywordtype">int</span> NMCMC; <span class="comment">//number of MCMC steps</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="keywordtype">int</span> NBURN; <span class="comment">//number of Burn-in steps</span></div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="keywordtype">int</span> NINJ; <span class="comment">//number of frequency segments;</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keywordtype">int</span> NDATA;  <span class="comment">//number of frequency segments;</span></div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keywordtype">int</span> NT;    <span class="comment">//number of time segments</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordtype">int</span> DMAX;  <span class="comment">//max number of sources</span></div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="keywordtype">int</span> simNoise;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keywordtype">int</span> fixSky;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  <span class="keywordtype">int</span> fixFreq;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  <span class="keywordtype">int</span> galaxyPrior;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="keywordtype">int</span> snrPrior;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keywordtype">int</span> emPrior;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="keywordtype">int</span> knownSource;</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keywordtype">int</span> detached;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keywordtype">int</span> strainData;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keywordtype">int</span> orbit;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="keywordtype">int</span> prior;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="keywordtype">int</span> debug;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="keywordtype">int</span> cheat;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="keywordtype">int</span> burnin;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="keywordtype">int</span> update;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="keywordtype">int</span> updateCov;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keywordtype">int</span> match;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keywordtype">int</span> rj;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="keywordtype">int</span> gap; <span class="comment">//are we fitting for a time-gap in the data?</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keywordtype">int</span> calibration; <span class="comment">//are we marginalizing over calibration  uncertainty?</span></div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="keywordtype">int</span> confNoise; <span class="comment">//include model of confusion noise in Sn(f)</span></div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keywordtype">int</span> resume; <span class="comment">//start chain state from previous run</span></div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="keywordtype">int</span> catalog; <span class="comment">//use list of previously detected sources to clean bandwidth padding</span></div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  </div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <span class="keywordtype">char</span> **injFile;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  <span class="keywordtype">char</span> cdfFile[128];</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  <span class="keywordtype">char</span> covFile[128];</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  <span class="keywordtype">char</span> matchInfile1[128];</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  <span class="keywordtype">char</span> matchInfile2[128];</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  <span class="keywordtype">char</span> pdfFile[128];</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  <span class="keywordtype">char</span> catalogFile[128];</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    <span class="keywordtype">char</span> noiseFile[128];</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;};</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160; </div>
-<div class="line"><a name="l00143"></a><span class="lineno"><a class="line" href="structChain.html">  143</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structChain.html">Chain</a></div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;{</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    <span class="comment">//Number of chains</span></div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    <span class="keywordtype">int</span> NC;</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    <span class="keywordtype">int</span> NP;</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;    <span class="keywordtype">int</span> NS;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <span class="keywordtype">int</span> *index;</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    <span class="keywordtype">int</span> **dimension;</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordtype">double</span> *acceptance;</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keywordtype">double</span> *temperature;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    <span class="keywordtype">double</span> *avgLogL;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="keywordtype">double</span> annealing;</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="keywordtype">double</span> logLmax;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    </div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="comment">//thread-safe RNG</span></div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keyword">const</span> gsl_rng_type **T;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    gsl_rng **r;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    </div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="comment">//chain files</span></div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    FILE **noiseFile;</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    FILE **chainFile;</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    FILE **calibrationFile;</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    FILE **dimensionFile;</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    FILE **parameterFile;</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    FILE *likelihoodFile;</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    FILE *temperatureFile;</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;};</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160; </div>
-<div class="line"><a name="l00171"></a><span class="lineno"><a class="line" href="structSource.html">  171</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structSource.html">Source</a></div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;{</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="comment">//Intrinsic</span></div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="keywordtype">double</span> m1;</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">double</span> m2;</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    <span class="keywordtype">double</span> f0;</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    </div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="comment">//Extrinisic</span></div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="keywordtype">double</span> psi;</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    <span class="keywordtype">double</span> cosi;</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="keywordtype">double</span> phi0;</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    </div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="keywordtype">double</span> D;</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordtype">double</span> phi;</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="keywordtype">double</span> costheta;</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    </div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    <span class="comment">//Derived</span></div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <span class="keywordtype">double</span> amp;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keywordtype">double</span> dfdt;</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    <span class="keywordtype">double</span> d2fdt2;</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <span class="keywordtype">double</span> Mc;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    </div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="comment">//Book-keeping</span></div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keywordtype">int</span> BW;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="keywordtype">int</span> qmin;</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keywordtype">int</span> qmax;</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <span class="keywordtype">int</span> imin;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordtype">int</span> imax;</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    </div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="comment">//Response</span></div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> *tdi;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno"><a class="line" href="structData.html#aac66b9dc61783962135088350f5ec2ec">   98</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structData.html#aac66b9dc61783962135088350f5ec2ec">fileName</a>[128]; </div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    </div>
+<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">  106</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a>[16];</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    </div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;};</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
+<div class="line"><a name="l00117"></a><span class="lineno"><a class="line" href="structFlags.html">  117</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structFlags.html">Flags</a></div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;{</div>
+<div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73">  119</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73">verbose</a>;    </div>
+<div class="line"><a name="l00120"></a><span class="lineno"><a class="line" href="structFlags.html#a80d91ff8879d7d29c3084324f6dbb2fb">  120</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a80d91ff8879d7d29c3084324f6dbb2fb">quiet</a>;      </div>
+<div class="line"><a name="l00121"></a><span class="lineno"><a class="line" href="structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9">  121</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9">NMCMC</a>;      </div>
+<div class="line"><a name="l00122"></a><span class="lineno"><a class="line" href="structFlags.html#a9e2550661ab2f8d07f622fac880b4647">  122</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a9e2550661ab2f8d07f622fac880b4647">NBURN</a>;      </div>
+<div class="line"><a name="l00123"></a><span class="lineno"><a class="line" href="structFlags.html#a070e524517d5e4279407d85e32cfc3b9">  123</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a070e524517d5e4279407d85e32cfc3b9">NINJ</a>;       </div>
+<div class="line"><a name="l00124"></a><span class="lineno"><a class="line" href="structFlags.html#a28b910931d0029fbddb06e09cdd8f608">  124</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a28b910931d0029fbddb06e09cdd8f608">NDATA</a>;      </div>
+<div class="line"><a name="l00125"></a><span class="lineno"><a class="line" href="structFlags.html#a6ba0c4595612c0203d05074338e2dfce">  125</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a6ba0c4595612c0203d05074338e2dfce">NT</a>;         </div>
+<div class="line"><a name="l00126"></a><span class="lineno"><a class="line" href="structFlags.html#a2a1af09cef9b51699937ca508c04fe80">  126</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a2a1af09cef9b51699937ca508c04fe80">DMAX</a>;       </div>
+<div class="line"><a name="l00127"></a><span class="lineno"><a class="line" href="structFlags.html#a84863fdaac48e30b194b1d112e2ae514">  127</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a84863fdaac48e30b194b1d112e2ae514">simNoise</a>;   </div>
+<div class="line"><a name="l00128"></a><span class="lineno"><a class="line" href="structFlags.html#aef0b9b7dcb53cfbbd3f927051fcd4221">  128</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#aef0b9b7dcb53cfbbd3f927051fcd4221">fixSky</a>;     </div>
+<div class="line"><a name="l00129"></a><span class="lineno"><a class="line" href="structFlags.html#a1e7d3202850a04ed91a5a77ad41bdba2">  129</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a1e7d3202850a04ed91a5a77ad41bdba2">fixFreq</a>;    </div>
+<div class="line"><a name="l00130"></a><span class="lineno"><a class="line" href="structFlags.html#ad5269078c6a3f6c29d5ba83b0e5473b7">  130</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#ad5269078c6a3f6c29d5ba83b0e5473b7">galaxyPrior</a>;</div>
+<div class="line"><a name="l00131"></a><span class="lineno"><a class="line" href="structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd">  131</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd">snrPrior</a>;   </div>
+<div class="line"><a name="l00132"></a><span class="lineno"><a class="line" href="structFlags.html#a2814957b2bbbfc36d187f4c73eb954cd">  132</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a2814957b2bbbfc36d187f4c73eb954cd">emPrior</a>;    </div>
+<div class="line"><a name="l00133"></a><span class="lineno"><a class="line" href="structFlags.html#aa404d0e6c616563fe582382a8946eb3c">  133</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#aa404d0e6c616563fe582382a8946eb3c">knownSource</a>;</div>
+<div class="line"><a name="l00134"></a><span class="lineno"><a class="line" href="structFlags.html#aefec4a9462f3b193837da1959a4f76a9">  134</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#aefec4a9462f3b193837da1959a4f76a9">detached</a>;   </div>
+<div class="line"><a name="l00135"></a><span class="lineno"><a class="line" href="structFlags.html#a0e7b06500d417cf52b290fecff8dcec7">  135</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a0e7b06500d417cf52b290fecff8dcec7">strainData</a>; </div>
+<div class="line"><a name="l00136"></a><span class="lineno"><a class="line" href="structFlags.html#ace7f194b2e226c7d5f51e059df05993d">  136</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#ace7f194b2e226c7d5f51e059df05993d">orbit</a>;      </div>
+<div class="line"><a name="l00137"></a><span class="lineno"><a class="line" href="structFlags.html#a2e307dd2b0bf32fd2847ba0af04a7372">  137</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a2e307dd2b0bf32fd2847ba0af04a7372">prior</a>;      </div>
+<div class="line"><a name="l00138"></a><span class="lineno"><a class="line" href="structFlags.html#a676222eb8d31f9415bf2511d59c850b4">  138</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a676222eb8d31f9415bf2511d59c850b4">debug</a>;      </div>
+<div class="line"><a name="l00139"></a><span class="lineno"><a class="line" href="structFlags.html#acb154bf70475aaefee2c8eaef8bf217b">  139</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#acb154bf70475aaefee2c8eaef8bf217b">cheat</a>;      </div>
+<div class="line"><a name="l00140"></a><span class="lineno"><a class="line" href="structFlags.html#aad2794699b324b51c925524cc9565013">  140</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#aad2794699b324b51c925524cc9565013">burnin</a>;     </div>
+<div class="line"><a name="l00141"></a><span class="lineno"><a class="line" href="structFlags.html#a0392b488d222aadf788c59376ca1e205">  141</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a0392b488d222aadf788c59376ca1e205">update</a>;     </div>
+<div class="line"><a name="l00142"></a><span class="lineno"><a class="line" href="structFlags.html#af99ceda5db6df93079aa61bae8c860cf">  142</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#af99ceda5db6df93079aa61bae8c860cf">updateCov</a>;  </div>
+<div class="line"><a name="l00143"></a><span class="lineno"><a class="line" href="structFlags.html#a3b36da1e6e78521e7b4f586184f59687">  143</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a3b36da1e6e78521e7b4f586184f59687">match</a>;      </div>
+<div class="line"><a name="l00144"></a><span class="lineno"><a class="line" href="structFlags.html#a6b41a9235309222d3b4eaee7ec4fab02">  144</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a6b41a9235309222d3b4eaee7ec4fab02">rj</a>;         </div>
+<div class="line"><a name="l00145"></a><span class="lineno"><a class="line" href="structFlags.html#a98ecf043b3368fb93459cc077c880921">  145</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a98ecf043b3368fb93459cc077c880921">gap</a>;        </div>
+<div class="line"><a name="l00146"></a><span class="lineno"><a class="line" href="structFlags.html#ad00e015c84ba7365ecbe9edba0afa24f">  146</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#ad00e015c84ba7365ecbe9edba0afa24f">calibration</a>;</div>
+<div class="line"><a name="l00147"></a><span class="lineno"><a class="line" href="structFlags.html#a3c7fc8f6a94fd9e840d46d0494b1ee86">  147</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a3c7fc8f6a94fd9e840d46d0494b1ee86">confNoise</a>;  </div>
+<div class="line"><a name="l00148"></a><span class="lineno"><a class="line" href="structFlags.html#a726413142f05785554e7149e89a3831f">  148</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a726413142f05785554e7149e89a3831f">resume</a>;     </div>
+<div class="line"><a name="l00149"></a><span class="lineno"><a class="line" href="structFlags.html#a19a05cd59feb4c79c50e76c1df845f54">  149</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="structFlags.html#a19a05cd59feb4c79c50e76c1df845f54">catalog</a>;    </div>
+<div class="line"><a name="l00150"></a><span class="lineno"><a class="line" href="structFlags.html#ab824e717f38a66fb3f58621b46119baa">  150</a></span>&#160;    <span class="keywordtype">char</span> **<a class="code" href="structFlags.html#ab824e717f38a66fb3f58621b46119baa">injFile</a>;                   </div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    </div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160; </div>
+<div class="line"><a name="l00154"></a><span class="lineno"><a class="line" href="structFlags.html#ae81433935b52cd5d64b07724c05f0cef">  154</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structFlags.html#ae81433935b52cd5d64b07724c05f0cef">noiseFile</a>[<a class="code" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>];    </div>
+<div class="line"><a name="l00155"></a><span class="lineno"><a class="line" href="structFlags.html#a40878a4de0e233032b787d04aa225a57">  155</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structFlags.html#a40878a4de0e233032b787d04aa225a57">cdfFile</a>[<a class="code" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>];      </div>
+<div class="line"><a name="l00156"></a><span class="lineno"><a class="line" href="structFlags.html#ae8e752704a7b5a349a4728af988a184e">  156</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structFlags.html#ae8e752704a7b5a349a4728af988a184e">covFile</a>[<a class="code" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>];      </div>
+<div class="line"><a name="l00157"></a><span class="lineno"><a class="line" href="structFlags.html#a4e7f5b5748ccebe98832a0c3944283dc">  157</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structFlags.html#a4e7f5b5748ccebe98832a0c3944283dc">matchInfile1</a>[<a class="code" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]; </div>
+<div class="line"><a name="l00158"></a><span class="lineno"><a class="line" href="structFlags.html#adbaf667291c19d556c653faa5cab5073">  158</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structFlags.html#adbaf667291c19d556c653faa5cab5073">matchInfile2</a>[<a class="code" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]; </div>
+<div class="line"><a name="l00159"></a><span class="lineno"><a class="line" href="structFlags.html#abdafec64ceb3ff7e66f69a469bb340f2">  159</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structFlags.html#abdafec64ceb3ff7e66f69a469bb340f2">pdfFile</a>[<a class="code" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>];      </div>
+<div class="line"><a name="l00160"></a><span class="lineno"><a class="line" href="structFlags.html#a211df6899bf4668dd86cc11cf5ab3c04">  160</a></span>&#160;    <span class="keywordtype">char</span> <a class="code" href="structFlags.html#a211df6899bf4668dd86cc11cf5ab3c04">catalogFile</a>[<a class="code" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>];  </div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;};</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160; </div>
+<div class="line"><a name="l00163"></a><span class="lineno"><a class="line" href="structChain.html">  163</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structChain.html">Chain</a></div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;{</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <span class="comment">//Number of chains</span></div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    <span class="keywordtype">int</span> NC;</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <span class="keywordtype">int</span> NP;</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    <span class="keywordtype">int</span> NS;</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    <span class="keywordtype">int</span> *index;</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <span class="keywordtype">int</span> **dimension;</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordtype">double</span> *acceptance;</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    <span class="keywordtype">double</span> *temperature;</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="keywordtype">double</span> *avgLogL;</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="keywordtype">double</span> annealing;</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">double</span> logLmax;</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    </div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    <span class="comment">//thread-safe RNG</span></div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="keyword">const</span> gsl_rng_type **T;</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    gsl_rng **r;</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    </div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="comment">//chain files</span></div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    FILE **noiseFile;</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    FILE **chainFile;</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    FILE **calibrationFile;</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    FILE **dimensionFile;</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    FILE **parameterFile;</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    FILE *likelihoodFile;</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    FILE *temperatureFile;</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;};</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160; </div>
+<div class="line"><a name="l00191"></a><span class="lineno"><a class="line" href="structSource.html">  191</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structSource.html">Source</a></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;{</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="comment">//Intrinsic</span></div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keywordtype">double</span> m1;</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="keywordtype">double</span> m2;</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keywordtype">double</span> f0;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    </div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="comment">//Extrinisic</span></div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordtype">double</span> psi;</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keywordtype">double</span> cosi;</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <span class="keywordtype">double</span> phi0;</div>
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    </div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="comment">//Fisher matrix</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <span class="keywordtype">double</span> **fisher_matrix;</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <span class="keywordtype">double</span> **fisher_evectr;</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="keywordtype">double</span> *fisher_evalue;</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    </div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="comment">//Package parameters for waveform generator</span></div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <span class="keywordtype">int</span> NP;</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <span class="keywordtype">double</span> *params;</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    </div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;};</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160; </div>
-<div class="line"><a name="l00214"></a><span class="lineno"><a class="line" href="structNoise.html">  214</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structNoise.html">Noise</a></div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;{</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <span class="keywordtype">int</span> N;</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    </div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <span class="comment">//multiplyers of analytic inst. noise model</span></div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    <span class="keywordtype">double</span> etaA;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <span class="keywordtype">double</span> etaE;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="keywordtype">double</span> etaX;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="keywordtype">double</span> D;</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <span class="keywordtype">double</span> phi;</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <span class="keywordtype">double</span> costheta;</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    </div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <span class="comment">//Derived</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="keywordtype">double</span> amp;</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <span class="keywordtype">double</span> dfdt;</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <span class="keywordtype">double</span> d2fdt2;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    <span class="keywordtype">double</span> Mc;</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    </div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="comment">//Book-keeping</span></div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;    <span class="keywordtype">int</span> BW;</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;    <span class="keywordtype">int</span> qmin;</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <span class="keywordtype">int</span> qmax;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    <span class="keywordtype">int</span> imin;</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <span class="keywordtype">int</span> imax;</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    </div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <span class="comment">//Response</span></div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> *tdi;</div>
 <div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    </div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    <span class="comment">//composite noise model</span></div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    <span class="keywordtype">double</span> *SnA;</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    <span class="keywordtype">double</span> *SnE;</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    <span class="keywordtype">double</span> *SnX;</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    <span class="comment">//Fisher matrix</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    <span class="keywordtype">double</span> **fisher_matrix;</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    <span class="keywordtype">double</span> **fisher_evectr;</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    <span class="keywordtype">double</span> *fisher_evalue;</div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    </div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    <span class="comment">//NEW! noise parameters for power-law fit</span></div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    <span class="keywordtype">double</span> SnA_0;</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    <span class="keywordtype">double</span> SnE_0;</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="keywordtype">double</span> SnX_0;</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    <span class="keywordtype">double</span> alpha_A;</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="keywordtype">double</span> alpha_E;</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    <span class="keywordtype">double</span> alpha_X;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    </div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;};</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
-<div class="line"><a name="l00238"></a><span class="lineno"><a class="line" href="structCalibration.html">  238</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structCalibration.html">Calibration</a></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;{</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <span class="keywordtype">double</span> dampA;</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="keywordtype">double</span> dampE;</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keywordtype">double</span> dampX;</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    <span class="keywordtype">double</span> dphiA;</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keywordtype">double</span> dphiE;</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    <span class="keywordtype">double</span> dphiX;</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    <span class="keywordtype">double</span> real_dphiA;</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    <span class="keywordtype">double</span> real_dphiE;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    <span class="keywordtype">double</span> real_dphiX;</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keywordtype">double</span> imag_dphiA;</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordtype">double</span> imag_dphiE;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    <span class="keywordtype">double</span> imag_dphiX;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;};</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160; </div>
-<div class="line"><a name="l00254"></a><span class="lineno"><a class="line" href="structModel.html">  254</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structModel.html">Model</a></div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;{</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    <span class="comment">//Source parameters</span></div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;    <span class="keywordtype">int</span> NT;     <span class="comment">//number of time segments</span></div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;    <span class="keywordtype">int</span> NP;     <span class="comment">//maximum number of signal parameters</span></div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    <span class="keywordtype">int</span> Nmax;   <span class="comment">//maximum number of signals in model</span></div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keywordtype">int</span> Nlive;  <span class="comment">//current number of signals in model</span></div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keyword">struct </span><a class="code" href="structSource.html">Source</a> **source;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    </div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="comment">//Noise parameters</span></div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="keyword">struct </span><a class="code" href="structNoise.html">Noise</a> **noise;</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    </div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="comment">//Calibration parameters</span></div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keyword">struct </span><a class="code" href="structCalibration.html">Calibration</a> **calibration;</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    </div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    <span class="comment">//TDI</span></div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> **tdi;</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> **residual;</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    </div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="comment">//Start time for segment for model</span></div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordtype">double</span> *t0;</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordtype">double</span> *t0_min;</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keywordtype">double</span> *t0_max;</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    </div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="comment">//Source parameter priors</span></div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    <span class="keywordtype">double</span> **prior;</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordtype">double</span> *logPriorVolume;</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    </div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="comment">//Model likelihood</span></div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keywordtype">double</span> logL;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    <span class="keywordtype">double</span> logLnorm;</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;};</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160; </div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160; </div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    <span class="comment">//Package parameters for waveform generator</span></div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    <span class="keywordtype">int</span> NP;</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    <span class="keywordtype">double</span> *params;</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    </div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;};</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160; </div>
+<div class="line"><a name="l00234"></a><span class="lineno"><a class="line" href="structNoise.html">  234</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structNoise.html">Noise</a></div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;{</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <span class="keywordtype">int</span> N;</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    </div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    <span class="comment">//multiplyers of analytic inst. noise model</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    <span class="keywordtype">double</span> etaA;</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <span class="keywordtype">double</span> etaE;</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="keywordtype">double</span> etaX;</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    </div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    <span class="comment">//composite noise model</span></div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keywordtype">double</span> *SnA;</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    <span class="keywordtype">double</span> *SnE;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    <span class="keywordtype">double</span> *SnX;</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    </div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    <span class="comment">//NEW! noise parameters for power-law fit</span></div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keywordtype">double</span> SnA_0;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordtype">double</span> SnE_0;</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    <span class="keywordtype">double</span> SnX_0;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    <span class="keywordtype">double</span> alpha_A;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    <span class="keywordtype">double</span> alpha_E;</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    <span class="keywordtype">double</span> alpha_X;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    </div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;};</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160; </div>
+<div class="line"><a name="l00258"></a><span class="lineno"><a class="line" href="structCalibration.html">  258</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structCalibration.html">Calibration</a></div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;{</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keywordtype">double</span> dampA;</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keywordtype">double</span> dampE;</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="keywordtype">double</span> dampX;</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordtype">double</span> dphiA;</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="keywordtype">double</span> dphiE;</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="keywordtype">double</span> dphiX;</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="keywordtype">double</span> real_dphiA;</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keywordtype">double</span> real_dphiE;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordtype">double</span> real_dphiX;</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    <span class="keywordtype">double</span> imag_dphiA;</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <span class="keywordtype">double</span> imag_dphiE;</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keywordtype">double</span> imag_dphiX;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;};</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160; </div>
+<div class="line"><a name="l00274"></a><span class="lineno"><a class="line" href="structModel.html">  274</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structModel.html">Model</a></div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;{</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="comment">//Source parameters</span></div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordtype">int</span> NT;     <span class="comment">//number of time segments</span></div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="keywordtype">int</span> NP;     <span class="comment">//maximum number of signal parameters</span></div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    <span class="keywordtype">int</span> Nmax;   <span class="comment">//maximum number of signals in model</span></div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordtype">int</span> Nlive;  <span class="comment">//current number of signals in model</span></div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    <span class="keyword">struct </span><a class="code" href="structSource.html">Source</a> **source;</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    </div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="comment">//Noise parameters</span></div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    <span class="keyword">struct </span><a class="code" href="structNoise.html">Noise</a> **noise;</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    </div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    <span class="comment">//Calibration parameters</span></div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <span class="keyword">struct </span><a class="code" href="structCalibration.html">Calibration</a> **calibration;</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    </div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="comment">//TDI</span></div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> **tdi;</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keyword">struct </span><a class="code" href="structTDI.html">TDI</a> **residual;</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    </div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="comment">//Start time for segment for model</span></div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keywordtype">double</span> *t0;</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="keywordtype">double</span> *t0_min;</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    <span class="keywordtype">double</span> *t0_max;</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    </div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="comment">//Source parameter priors</span></div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="keywordtype">double</span> **prior;</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="keywordtype">double</span> *logPriorVolume;</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    </div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    <span class="comment">//Model likelihood</span></div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    <span class="keywordtype">double</span> logL;</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    <span class="keywordtype">double</span> logLnorm;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;};</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160; </div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
-<div class="ttc" id="astructData_html_aff9d4adb0d0786ca384500f377c7faac"><div class="ttname"><a href="structData.html#aff9d4adb0d0786ca384500f377c7faac">Data::qmax</a></div><div class="ttdeci">int qmax</div><div class="ttdoc">maximum frequency bin of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:50</div></div>
-<div class="ttc" id="astructData_html_a0e272a91e2c6739072eea633bfdc8feb"><div class="ttname"><a href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">Data::pmax</a></div><div class="ttdeci">double pmax</div><div class="ttdoc">maximum power spectrial density</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:84</div></div>
-<div class="ttc" id="astructData_html_a018485652e36524ee3c2b07f35befc76"><div class="ttname"><a href="structData.html#a018485652e36524ee3c2b07f35befc76">Data::SNR2</a></div><div class="ttdeci">double SNR2</div><div class="ttdoc">estimated  of data</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:85</div></div>
+<div class="ttc" id="astructFlags_html_acf5ce15c8b6fd59d471ec7b12f4f5ebd"><div class="ttname"><a href="structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd">Flags::snrPrior</a></div><div class="ttdeci">int snrPrior</div><div class="ttdoc">[--snr-prior; default=FALSE]: use SNR prior for amplitude</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:131</div></div>
+<div class="ttc" id="astructData_html_aff9d4adb0d0786ca384500f377c7faac"><div class="ttname"><a href="structData.html#aff9d4adb0d0786ca384500f377c7faac">Data::qmax</a></div><div class="ttdeci">int qmax</div><div class="ttdoc">maximum frequency bin of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:60</div></div>
+<div class="ttc" id="astructData_html_a0e272a91e2c6739072eea633bfdc8feb"><div class="ttname"><a href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">Data::pmax</a></div><div class="ttdeci">double pmax</div><div class="ttdoc">maximum power spectrial density</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:94</div></div>
+<div class="ttc" id="astructFlags_html_aa404d0e6c616563fe582382a8946eb3c"><div class="ttname"><a href="structFlags.html#aa404d0e6c616563fe582382a8946eb3c">Flags::knownSource</a></div><div class="ttdeci">int knownSource</div><div class="ttdoc">[--known-source; default=FALSE]: injection is known binary, will need polarization and phase to be in...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:133</div></div>
+<div class="ttc" id="astructData_html_a018485652e36524ee3c2b07f35befc76"><div class="ttname"><a href="structData.html#a018485652e36524ee3c2b07f35befc76">Data::SNR2</a></div><div class="ttdeci">double SNR2</div><div class="ttdoc">estimated  of data</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:95</div></div>
 <div class="ttc" id="astructTDI_html"><div class="ttname"><a href="structTDI.html">TDI</a></div><div class="ttdef"><b>Definition:</b> LISA.h:64</div></div>
-<div class="ttc" id="astructData_html_ae2e953ef9275991dbefdb9a3b15034c7"><div class="ttname"><a href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">Data::DMAX</a></div><div class="ttdeci">int DMAX</div><div class="ttdoc">max dimension of signal model</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:40</div></div>
-<div class="ttc" id="astructData_html_a2a1500b1864aadb6e713746c7a36c5b7"><div class="ttname"><a href="structData.html#a2a1500b1864aadb6e713746c7a36c5b7">Data::sum_log_f</a></div><div class="ttdeci">double sum_log_f</div><div class="ttdoc">appears in some normalizations</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:58</div></div>
-<div class="ttc" id="astructData_html_a5646530b83cfb236488c75567a94317d"><div class="ttname"><a href="structData.html#a5646530b83cfb236488c75567a94317d">Data::noise</a></div><div class="ttdeci">struct Noise ** noise</div><div class="ttdoc">Reference noise model.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:66</div></div>
-<div class="ttc" id="astructData_html_ad44b894b08062090b76441d16570bca3"><div class="ttname"><a href="structData.html#ad44b894b08062090b76441d16570bca3">Data::sqT</a></div><div class="ttdeci">double sqT</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:47</div></div>
-<div class="ttc" id="astructData_html_ab456e86e4cf30a20af41383cff94e535"><div class="ttname"><a href="structData.html#ab456e86e4cf30a20af41383cff94e535">Data::NP</a></div><div class="ttdeci">int NP</div><div class="ttdoc">number of parameters of injection</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:79</div></div>
-<div class="ttc" id="astructData_html_a758dee275c2a979a3141ee70d7c9ba90"><div class="ttname"><a href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">Data::cseed</a></div><div class="ttdeci">long cseed</div><div class="ttdoc">seed for MCMC</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:42</div></div>
-<div class="ttc" id="astructChain_html"><div class="ttname"><a href="structChain.html">Chain</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:143</div></div>
-<div class="ttc" id="astructData_html_ae837768c48b47d8df3cd22dd53d383f3"><div class="ttname"><a href="structData.html#ae837768c48b47d8df3cd22dd53d383f3">Data::T</a></div><div class="ttdeci">double T</div><div class="ttdoc">observation time</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:46</div></div>
-<div class="ttc" id="astructData_html_aac66b9dc61783962135088350f5ec2ec"><div class="ttname"><a href="structData.html#aac66b9dc61783962135088350f5ec2ec">Data::fileName</a></div><div class="ttdeci">char fileName[128]</div><div class="ttdoc">place holder for filnames</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:88</div></div>
-<div class="ttc" id="astructData_html_ac136349d39219fa435ca7cbd43c46444"><div class="ttname"><a href="structData.html#ac136349d39219fa435ca7cbd43c46444">Data::inj</a></div><div class="ttdeci">struct Source * inj</div><div class="ttdoc">injected source structure</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:80</div></div>
-<div class="ttc" id="astructData_html_a98432cd2a586429f74d696da622446d1"><div class="ttname"><a href="structData.html#a98432cd2a586429f74d696da622446d1">Data::tdi</a></div><div class="ttdeci">struct TDI ** tdi</div><div class="ttdoc">TDI data channels.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:65</div></div>
-<div class="ttc" id="astructData_html_a30f6e2b62b5480035d01a19b13b23269"><div class="ttname"><a href="structData.html#a30f6e2b62b5480035d01a19b13b23269">Data::p</a></div><div class="ttdeci">double * p</div><div class="ttdoc">power spectral density of data</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:83</div></div>
-<div class="ttc" id="astructData_html_afc6d1d4930961006b7d3593230ce07b7"><div class="ttname"><a href="structData.html#afc6d1d4930961006b7d3593230ce07b7">Data::qmin</a></div><div class="ttdeci">int qmin</div><div class="ttdoc">minimum frequency bin of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:49</div></div>
-<div class="ttc" id="astructData_html_aded73ae8e42873e7d905ff7f14a0a354"><div class="ttname"><a href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">Data::nseed</a></div><div class="ttdeci">long nseed</div><div class="ttdoc">seed for noise realization</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:43</div></div>
-<div class="ttc" id="astructData_html_ac4db839b05312ebbaf3a611c0fab1482"><div class="ttname"><a href="structData.html#ac4db839b05312ebbaf3a611c0fab1482">Data::sine_f_on_fstar</a></div><div class="ttdeci">double sine_f_on_fstar</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:55</div></div>
-<div class="ttc" id="astructData_html_a3d638edc3bb44936e2ffd2ba195aabae"><div class="ttname"><a href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">Data::logfmin</a></div><div class="ttdeci">double logfmin</div><div class="ttdoc">appears in some normalizations</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:59</div></div>
-<div class="ttc" id="astructData_html_abd3208e22c3348f0356e4c2f13f4ffc1"><div class="ttname"><a href="structData.html#abd3208e22c3348f0356e4c2f13f4ffc1">Data::downsample</a></div><div class="ttdeci">int downsample</div><div class="ttdoc">Downsample factor for getting the desired number of samples.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:70</div></div>
-<div class="ttc" id="astructCalibration_html"><div class="ttname"><a href="structCalibration.html">Calibration</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:238</div></div>
-<div class="ttc" id="astructData_html_ad89c9b316266fa46dfd5b5b3897fcf6e"><div class="ttname"><a href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">Data::format</a></div><div class="ttdeci">char format[16]</div><div class="ttdoc">string identifying data format (phase/frequency)</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:95</div></div>
-<div class="ttc" id="astructData_html_a3be03de44986fc55905076acc5cdae2e"><div class="ttname"><a href="structData.html#a3be03de44986fc55905076acc5cdae2e">Data::N</a></div><div class="ttdeci">int N</div><div class="ttdoc">number of frequency bins</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:37</div></div>
-<div class="ttc" id="astructFlags_html"><div class="ttname"><a href="structFlags.html">Flags</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:99</div></div>
-<div class="ttc" id="astructData_html_a377bda85cbfd007855748f4c53d8305c"><div class="ttname"><a href="structData.html#a377bda85cbfd007855748f4c53d8305c">Data::iseed</a></div><div class="ttdeci">long iseed</div><div class="ttdoc">seed for injection parameters</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:44</div></div>
-<div class="ttc" id="astructData_html_a40984ec8faee6f66f294f19efdffc748"><div class="ttname"><a href="structData.html#a40984ec8faee6f66f294f19efdffc748">Data::Nchannel</a></div><div class="ttdeci">int Nchannel</div><div class="ttdoc">number of data channels</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:39</div></div>
-<div class="ttc" id="astructData_html_ae0b4921e57b971170ecb83c234e3f0a8"><div class="ttname"><a href="structData.html#ae0b4921e57b971170ecb83c234e3f0a8">Data::fmax</a></div><div class="ttdeci">double fmax</div><div class="ttdoc">maximum frequency of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:54</div></div>
-<div class="ttc" id="astructData_html_a2928c4204fcb0f5213ae9afb88d7ece1"><div class="ttname"><a href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">Data::Nwave</a></div><div class="ttdeci">int Nwave</div><div class="ttdoc">Number of samples for computing posterior reconstructions.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:69</div></div>
-<div class="ttc" id="astructData_html_a913af45a251a07eb589171c23afa4f34"><div class="ttname"><a href="structData.html#a913af45a251a07eb589171c23afa4f34">Data::NT</a></div><div class="ttdeci">int NT</div><div class="ttdoc">number of time segments</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:38</div></div>
-<div class="ttc" id="astructModel_html"><div class="ttname"><a href="structModel.html">Model</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:254</div></div>
-<div class="ttc" id="astructSource_html"><div class="ttname"><a href="structSource.html">Source</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:171</div></div>
-<div class="ttc" id="astructData_html_ac91c45dac949a9be16be5751f1eb3695"><div class="ttname"><a href="structData.html#ac91c45dac949a9be16be5751f1eb3695">Data::fmin</a></div><div class="ttdeci">double fmin</div><div class="ttdoc">minimum frequency of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:53</div></div>
-<div class="ttc" id="astructData_html_a73c788cfea88195d14c53f9e52a8ada1"><div class="ttname"><a href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">Data::tgap</a></div><div class="ttdeci">double * tgap</div><div class="ttdoc">time between segments</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:62</div></div>
-<div class="ttc" id="astructNoise_html"><div class="ttname"><a href="structNoise.html">Noise</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:214</div></div>
-<div class="ttc" id="astructData_html_aea49bff932eaf931689edccaa155b333"><div class="ttname"><a href="structData.html#aea49bff932eaf931689edccaa155b333">Data::t0</a></div><div class="ttdeci">double * t0</div><div class="ttdoc">start times of segments</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:61</div></div>
-<div class="ttc" id="astructData_html_a5d1d8220060d2f6b29cc9bbd935113f8"><div class="ttname"><a href="structData.html#a5d1d8220060d2f6b29cc9bbd935113f8">Data::qpad</a></div><div class="ttdeci">int qpad</div><div class="ttdoc">number of frequency bins padding ends of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:51</div></div>
-<div class="ttc" id="astructData_html"><div class="ttname"><a href="structData.html">Data</a></div><div class="ttdoc">The Data structure stores information about the data being analyzed, including size of data,...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:35</div></div>
+<div class="ttc" id="astructFlags_html_ab824e717f38a66fb3f58621b46119baa"><div class="ttname"><a href="structFlags.html#ab824e717f38a66fb3f58621b46119baa">Flags::injFile</a></div><div class="ttdeci">char ** injFile</div><div class="ttdoc">[--inj=FILENAME]: list of injection files. Can support up to NINJ=10 separate injections.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:150</div></div>
+<div class="ttc" id="astructData_html_ae2e953ef9275991dbefdb9a3b15034c7"><div class="ttname"><a href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">Data::DMAX</a></div><div class="ttdeci">int DMAX</div><div class="ttdoc">max dimension of signal model</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:50</div></div>
+<div class="ttc" id="astructData_html_a2a1500b1864aadb6e713746c7a36c5b7"><div class="ttname"><a href="structData.html#a2a1500b1864aadb6e713746c7a36c5b7">Data::sum_log_f</a></div><div class="ttdeci">double sum_log_f</div><div class="ttdoc">appears in some normalizations</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:68</div></div>
+<div class="ttc" id="astructFlags_html_a1e7d3202850a04ed91a5a77ad41bdba2"><div class="ttname"><a href="structFlags.html#a1e7d3202850a04ed91a5a77ad41bdba2">Flags::fixFreq</a></div><div class="ttdeci">int fixFreq</div><div class="ttdoc">[--fix-freq; default=FALSE]: hold GW frequency fixed to injection parameters</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:129</div></div>
+<div class="ttc" id="astructData_html_a5646530b83cfb236488c75567a94317d"><div class="ttname"><a href="structData.html#a5646530b83cfb236488c75567a94317d">Data::noise</a></div><div class="ttdeci">struct Noise ** noise</div><div class="ttdoc">Reference noise model.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:76</div></div>
+<div class="ttc" id="astructFlags_html_a2814957b2bbbfc36d187f4c73eb954cd"><div class="ttname"><a href="structFlags.html#a2814957b2bbbfc36d187f4c73eb954cd">Flags::emPrior</a></div><div class="ttdeci">int emPrior</div><div class="ttdoc">[--em-prior=FILENAME]: use input data file with EM-derived parameters for priors.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:132</div></div>
+<div class="ttc" id="astructFlags_html_a6b41a9235309222d3b4eaee7ec4fab02"><div class="ttname"><a href="structFlags.html#a6b41a9235309222d3b4eaee7ec4fab02">Flags::rj</a></div><div class="ttdeci">int rj</div><div class="ttdoc">–no-rj; default=TRUE]`: flag for determining if trans dimensional MCMC moves (RJMCMC) are enabled.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:144</div></div>
+<div class="ttc" id="astructData_html_ad44b894b08062090b76441d16570bca3"><div class="ttname"><a href="structData.html#ad44b894b08062090b76441d16570bca3">Data::sqT</a></div><div class="ttdeci">double sqT</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:57</div></div>
+<div class="ttc" id="astructData_html_a4a466b0d0d1d0e685ca3ba3230f331d6"><div class="ttname"><a href="structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6">Data::S_pow</a></div><div class="ttdeci">double **** S_pow</div><div class="ttdoc">Store noise power samples .</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:86</div></div>
+<div class="ttc" id="astructData_html_ab456e86e4cf30a20af41383cff94e535"><div class="ttname"><a href="structData.html#ab456e86e4cf30a20af41383cff94e535">Data::NP</a></div><div class="ttdeci">int NP</div><div class="ttdoc">number of parameters of injection</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:89</div></div>
+<div class="ttc" id="astructData_html_a758dee275c2a979a3141ee70d7c9ba90"><div class="ttname"><a href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">Data::cseed</a></div><div class="ttdeci">long cseed</div><div class="ttdoc">seed for MCMC</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:52</div></div>
+<div class="ttc" id="astructFlags_html_a4e7f5b5748ccebe98832a0c3944283dc"><div class="ttname"><a href="structFlags.html#a4e7f5b5748ccebe98832a0c3944283dc">Flags::matchInfile1</a></div><div class="ttdeci">char matchInfile1[MAXSTRINGSIZE]</div><div class="ttdoc">input waveform  for computing match</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:157</div></div>
+<div class="ttc" id="astructFlags_html_a28b910931d0029fbddb06e09cdd8f608"><div class="ttname"><a href="structFlags.html#a28b910931d0029fbddb06e09cdd8f608">Flags::NDATA</a></div><div class="ttdeci">int NDATA</div><div class="ttdoc">[default=1]: number of frequency segments, equal to Flags::NINJ.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:124</div></div>
+<div class="ttc" id="astructFlags_html_adbaf667291c19d556c653faa5cab5073"><div class="ttname"><a href="structFlags.html#adbaf667291c19d556c653faa5cab5073">Flags::matchInfile2</a></div><div class="ttdeci">char matchInfile2[MAXSTRINGSIZE]</div><div class="ttdoc">input waveform  for computing match</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:158</div></div>
+<div class="ttc" id="astructFlags_html_acb154bf70475aaefee2c8eaef8bf217b"><div class="ttname"><a href="structFlags.html#acb154bf70475aaefee2c8eaef8bf217b">Flags::cheat</a></div><div class="ttdeci">int cheat</div><div class="ttdoc">start sampler at injection values</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:139</div></div>
+<div class="ttc" id="astructChain_html"><div class="ttname"><a href="structChain.html">Chain</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:163</div></div>
+<div class="ttc" id="astructData_html_a8200a4f7f4a97f94dc7500299da945db"><div class="ttname"><a href="structData.html#a8200a4f7f4a97f94dc7500299da945db">Data::h_rec</a></div><div class="ttdeci">double **** h_rec</div><div class="ttdoc">Store waveform reconstruction samples .</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:82</div></div>
+<div class="ttc" id="astructData_html_ae837768c48b47d8df3cd22dd53d383f3"><div class="ttname"><a href="structData.html#ae837768c48b47d8df3cd22dd53d383f3">Data::T</a></div><div class="ttdeci">double T</div><div class="ttdoc">observation time</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:56</div></div>
+<div class="ttc" id="astructData_html_aac66b9dc61783962135088350f5ec2ec"><div class="ttname"><a href="structData.html#aac66b9dc61783962135088350f5ec2ec">Data::fileName</a></div><div class="ttdeci">char fileName[128]</div><div class="ttdoc">place holder for filnames</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:98</div></div>
+<div class="ttc" id="astructFlags_html_a2e307dd2b0bf32fd2847ba0af04a7372"><div class="ttname"><a href="structFlags.html#a2e307dd2b0bf32fd2847ba0af04a7372">Flags::prior</a></div><div class="ttdeci">int prior</div><div class="ttdoc">[--prior; default=FALSE]: set log-likelihood to constant for testing detailed balance.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:137</div></div>
+<div class="ttc" id="astructFlags_html_ad00e015c84ba7365ecbe9edba0afa24f"><div class="ttname"><a href="structFlags.html#ad00e015c84ba7365ecbe9edba0afa24f">Flags::calibration</a></div><div class="ttdeci">int calibration</div><div class="ttdoc">[--calibration; default=FALSE]: flag for determining if model is marginalizing over calibration uncer...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:146</div></div>
+<div class="ttc" id="astructData_html_ac136349d39219fa435ca7cbd43c46444"><div class="ttname"><a href="structData.html#ac136349d39219fa435ca7cbd43c46444">Data::inj</a></div><div class="ttdeci">struct Source * inj</div><div class="ttdoc">injected source structure</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:90</div></div>
+<div class="ttc" id="astructFlags_html_ae8e752704a7b5a349a4728af988a184e"><div class="ttname"><a href="structFlags.html#ae8e752704a7b5a349a4728af988a184e">Flags::covFile</a></div><div class="ttdeci">char covFile[MAXSTRINGSIZE]</div><div class="ttdoc">store FILENAME of input covariance matrix file from Flags::updateCov.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:156</div></div>
+<div class="ttc" id="astructData_html_a98432cd2a586429f74d696da622446d1"><div class="ttname"><a href="structData.html#a98432cd2a586429f74d696da622446d1">Data::tdi</a></div><div class="ttdeci">struct TDI ** tdi</div><div class="ttdoc">TDI data channels.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:75</div></div>
+<div class="ttc" id="astructFlags_html_a211df6899bf4668dd86cc11cf5ab3c04"><div class="ttname"><a href="structFlags.html#a211df6899bf4668dd86cc11cf5ab3c04">Flags::catalogFile</a></div><div class="ttdeci">char catalogFile[MAXSTRINGSIZE]</div><div class="ttdoc">store FILENAME containing previously identified detections from Flags::catalog for cleaning padding r...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:160</div></div>
+<div class="ttc" id="astructData_html_a30f6e2b62b5480035d01a19b13b23269"><div class="ttname"><a href="structData.html#a30f6e2b62b5480035d01a19b13b23269">Data::p</a></div><div class="ttdeci">double * p</div><div class="ttdoc">power spectral density of data</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:93</div></div>
+<div class="ttc" id="astructFlags_html_a3c7fc8f6a94fd9e840d46d0494b1ee86"><div class="ttname"><a href="structFlags.html#a3c7fc8f6a94fd9e840d46d0494b1ee86">Flags::confNoise</a></div><div class="ttdeci">int confNoise</div><div class="ttdoc">[--conf-noise; default=FALSE]: include model of confusion noise in , either for simulating noise or a...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:147</div></div>
+<div class="ttc" id="astructData_html_a00d4717e62c1120636b7f5b07b71d121"><div class="ttname"><a href="structData.html#a00d4717e62c1120636b7f5b07b71d121">Data::h_pow</a></div><div class="ttdeci">double **** h_pow</div><div class="ttdoc">Store waveform power samples .</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:85</div></div>
+<div class="ttc" id="astructData_html_afc6d1d4930961006b7d3593230ce07b7"><div class="ttname"><a href="structData.html#afc6d1d4930961006b7d3593230ce07b7">Data::qmin</a></div><div class="ttdeci">int qmin</div><div class="ttdoc">minimum frequency bin of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:59</div></div>
+<div class="ttc" id="astructFlags_html_aad2794699b324b51c925524cc9565013"><div class="ttname"><a href="structFlags.html#aad2794699b324b51c925524cc9565013">Flags::burnin</a></div><div class="ttdeci">int burnin</div><div class="ttdoc">[--no-burnin; default=TRUE]: chain is in the burn in phase</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:140</div></div>
+<div class="ttc" id="astructData_html_aded73ae8e42873e7d905ff7f14a0a354"><div class="ttname"><a href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">Data::nseed</a></div><div class="ttdeci">long nseed</div><div class="ttdoc">seed for noise realization</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:53</div></div>
+<div class="ttc" id="astructData_html_ac4db839b05312ebbaf3a611c0fab1482"><div class="ttname"><a href="structData.html#ac4db839b05312ebbaf3a611c0fab1482">Data::sine_f_on_fstar</a></div><div class="ttdeci">double sine_f_on_fstar</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:65</div></div>
+<div class="ttc" id="astructData_html_a3d638edc3bb44936e2ffd2ba195aabae"><div class="ttname"><a href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">Data::logfmin</a></div><div class="ttdeci">double logfmin</div><div class="ttdoc">appears in some normalizations</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:69</div></div>
+<div class="ttc" id="astructFlags_html_a84863fdaac48e30b194b1d112e2ae514"><div class="ttname"><a href="structFlags.html#a84863fdaac48e30b194b1d112e2ae514">Flags::simNoise</a></div><div class="ttdeci">int simNoise</div><div class="ttdoc">[--sim-noise; default=FALSE]: simulate random noise realization and add to data</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:127</div></div>
+<div class="ttc" id="astructData_html_abd3208e22c3348f0356e4c2f13f4ffc1"><div class="ttname"><a href="structData.html#abd3208e22c3348f0356e4c2f13f4ffc1">Data::downsample</a></div><div class="ttdeci">int downsample</div><div class="ttdoc">Downsample factor for getting the desired number of samples.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:80</div></div>
+<div class="ttc" id="astructFlags_html_a19a05cd59feb4c79c50e76c1df845f54"><div class="ttname"><a href="structFlags.html#a19a05cd59feb4c79c50e76c1df845f54">Flags::catalog</a></div><div class="ttdeci">int catalog</div><div class="ttdoc">[--catalog=FILENAME; default=FALSE]: use list of previously detected sources supplied in FILENAME to ...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:149</div></div>
+<div class="ttc" id="astructFlags_html_a76aaab8bd934944f5f02d1e8b4596e73"><div class="ttname"><a href="structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73">Flags::verbose</a></div><div class="ttdeci">int verbose</div><div class="ttdoc">[--verbose; default=FALSE]: increases file output (all chains, less downsampling, etc....</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:119</div></div>
+<div class="ttc" id="astructFlags_html_abdafec64ceb3ff7e66f69a469bb340f2"><div class="ttname"><a href="structFlags.html#abdafec64ceb3ff7e66f69a469bb340f2">Flags::pdfFile</a></div><div class="ttdeci">char pdfFile[MAXSTRINGSIZE]</div><div class="ttdoc">store FILENAME of input priors for Flags:knownSource.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:159</div></div>
+<div class="ttc" id="astructData_html_a7261769b2611a460f8a6ccc5ce70992f"><div class="ttname"><a href="structData.html#a7261769b2611a460f8a6ccc5ce70992f">Data::r_pow</a></div><div class="ttdeci">double **** r_pow</div><div class="ttdoc">Store residual power samples .</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:84</div></div>
+<div class="ttc" id="astructFlags_html_a3b36da1e6e78521e7b4f586184f59687"><div class="ttname"><a href="structFlags.html#a3b36da1e6e78521e7b4f586184f59687">Flags::match</a></div><div class="ttdeci">int match</div><div class="ttdoc">[–match=FLOAT; default=0.8]`: match threshold for chain sample clustering in post processing.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:143</div></div>
+<div class="ttc" id="astructFlags_html_a5cce7083d09d31c11f5f4e7d3e37f2a9"><div class="ttname"><a href="structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9">Flags::NMCMC</a></div><div class="ttdeci">int NMCMC</div><div class="ttdoc">[--steps=INT; default=100000]: number of MCMC samples</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:121</div></div>
+<div class="ttc" id="astructCalibration_html"><div class="ttname"><a href="structCalibration.html">Calibration</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:258</div></div>
+<div class="ttc" id="astructFlags_html_ae81433935b52cd5d64b07724c05f0cef"><div class="ttname"><a href="structFlags.html#ae81433935b52cd5d64b07724c05f0cef">Flags::noiseFile</a></div><div class="ttdeci">char noiseFile[MAXSTRINGSIZE]</div><div class="ttdoc">file containing reconstructed noise model for gb_catalog to compute SNRs against.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:154</div></div>
+<div class="ttc" id="astructFlags_html_a6ba0c4595612c0203d05074338e2dfce"><div class="ttname"><a href="structFlags.html#a6ba0c4595612c0203d05074338e2dfce">Flags::NT</a></div><div class="ttdeci">int NT</div><div class="ttdoc">[--segments=INT; default=1]: number of time segments</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:125</div></div>
+<div class="ttc" id="astructData_html_ad801eb68f47932db30ec701694b72cee"><div class="ttname"><a href="structData.html#ad801eb68f47932db30ec701694b72cee">Data::h_res</a></div><div class="ttdeci">double **** h_res</div><div class="ttdoc">Store data residual samples .</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:83</div></div>
+<div class="ttc" id="astructFlags_html_a0e7b06500d417cf52b290fecff8dcec7"><div class="ttname"><a href="structFlags.html#a0e7b06500d417cf52b290fecff8dcec7">Flags::strainData</a></div><div class="ttdeci">int strainData</div><div class="ttdoc">[--data=FILENAME; default=FALSE]: read data from file instead of simulate internally.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:135</div></div>
+<div class="ttc" id="astructFlags_html_a2a1af09cef9b51699937ca508c04fe80"><div class="ttname"><a href="structFlags.html#a2a1af09cef9b51699937ca508c04fe80">Flags::DMAX</a></div><div class="ttdeci">int DMAX</div><div class="ttdoc">[--sources=INT; default=10]: max number of sources</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:126</div></div>
+<div class="ttc" id="astructData_html_ad89c9b316266fa46dfd5b5b3897fcf6e"><div class="ttname"><a href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">Data::format</a></div><div class="ttdeci">char format[16]</div><div class="ttdoc">Convention for data format.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:106</div></div>
+<div class="ttc" id="astructFlags_html_a676222eb8d31f9415bf2511d59c850b4"><div class="ttname"><a href="structFlags.html#a676222eb8d31f9415bf2511d59c850b4">Flags::debug</a></div><div class="ttdeci">int debug</div><div class="ttdoc">[--debug; default=FALSE]: coarser settings for proposals and verbose output for debugging</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:138</div></div>
+<div class="ttc" id="astructFlags_html_a726413142f05785554e7149e89a3831f"><div class="ttname"><a href="structFlags.html#a726413142f05785554e7149e89a3831f">Flags::resume</a></div><div class="ttdeci">int resume</div><div class="ttdoc">[--resume; default=FALSE]: restart sampler from run state saved during checkpointing....</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:148</div></div>
+<div class="ttc" id="astructFlags_html_a98ecf043b3368fb93459cc077c880921"><div class="ttname"><a href="structFlags.html#a98ecf043b3368fb93459cc077c880921">Flags::gap</a></div><div class="ttdeci">int gap</div><div class="ttdoc">[--fit-gap; default=FALSE]: flag for determining if model includes fit to time-gap in the data.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:145</div></div>
+<div class="ttc" id="astructFlags_html_a40878a4de0e233032b787d04aa225a57"><div class="ttname"><a href="structFlags.html#a40878a4de0e233032b787d04aa225a57">Flags::cdfFile</a></div><div class="ttdeci">char cdfFile[MAXSTRINGSIZE]</div><div class="ttdoc">store FILENAME of input chain file from Flags::update.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:155</div></div>
+<div class="ttc" id="astructData_html_a3be03de44986fc55905076acc5cdae2e"><div class="ttname"><a href="structData.html#a3be03de44986fc55905076acc5cdae2e">Data::N</a></div><div class="ttdeci">int N</div><div class="ttdoc">number of frequency bins</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:47</div></div>
+<div class="ttc" id="astructFlags_html_a070e524517d5e4279407d85e32cfc3b9"><div class="ttname"><a href="structFlags.html#a070e524517d5e4279407d85e32cfc3b9">Flags::NINJ</a></div><div class="ttdeci">int NINJ</div><div class="ttdoc">[--inj=FILENAME]: number of injections = number of --inj instances in command line</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:123</div></div>
+<div class="ttc" id="aGalacticBinary_8h_html_a7d43f1bb16e6c80b96fd9183920a8d18"><div class="ttname"><a href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a></div><div class="ttdeci">#define MAXSTRINGSIZE</div><div class="ttdoc">maximum number of characters for path+filename strings</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:32</div></div>
+<div class="ttc" id="astructFlags_html_aefec4a9462f3b193837da1959a4f76a9"><div class="ttname"><a href="structFlags.html#aefec4a9462f3b193837da1959a4f76a9">Flags::detached</a></div><div class="ttdeci">int detached</div><div class="ttdoc">[--detached; default=FALSE]: assume binary is detached, fdot prior becomes</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:134</div></div>
+<div class="ttc" id="astructFlags_html"><div class="ttname"><a href="structFlags.html">Flags</a></div><div class="ttdoc">Run flags set or changed from default values when parsing command line for gb_mcmc and gb_catalog.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:117</div></div>
+<div class="ttc" id="astructData_html_a377bda85cbfd007855748f4c53d8305c"><div class="ttname"><a href="structData.html#a377bda85cbfd007855748f4c53d8305c">Data::iseed</a></div><div class="ttdeci">long iseed</div><div class="ttdoc">seed for injection parameters</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:54</div></div>
+<div class="ttc" id="astructData_html_a40984ec8faee6f66f294f19efdffc748"><div class="ttname"><a href="structData.html#a40984ec8faee6f66f294f19efdffc748">Data::Nchannel</a></div><div class="ttdeci">int Nchannel</div><div class="ttdoc">number of data channels</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:49</div></div>
+<div class="ttc" id="astructFlags_html_ad5269078c6a3f6c29d5ba83b0e5473b7"><div class="ttname"><a href="structFlags.html#ad5269078c6a3f6c29d5ba83b0e5473b7">Flags::galaxyPrior</a></div><div class="ttdeci">int galaxyPrior</div><div class="ttdoc">[--galaxy-prior; default=FALSE]: use model of galaxy for sky location prior</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:130</div></div>
+<div class="ttc" id="astructData_html_ae0b4921e57b971170ecb83c234e3f0a8"><div class="ttname"><a href="structData.html#ae0b4921e57b971170ecb83c234e3f0a8">Data::fmax</a></div><div class="ttdeci">double fmax</div><div class="ttdoc">maximum frequency of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:64</div></div>
+<div class="ttc" id="astructData_html_a2928c4204fcb0f5213ae9afb88d7ece1"><div class="ttname"><a href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">Data::Nwave</a></div><div class="ttdeci">int Nwave</div><div class="ttdoc">Number of samples for computing posterior reconstructions.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:79</div></div>
+<div class="ttc" id="astructFlags_html_af99ceda5db6df93079aa61bae8c860cf"><div class="ttname"><a href="structFlags.html#af99ceda5db6df93079aa61bae8c860cf">Flags::updateCov</a></div><div class="ttdeci">int updateCov</div><div class="ttdoc">[--update-cov=FILENAME; default=FALSE]: updating fit from covariance matrix files built from chain sa...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:142</div></div>
+<div class="ttc" id="astructFlags_html_aef0b9b7dcb53cfbbd3f927051fcd4221"><div class="ttname"><a href="structFlags.html#aef0b9b7dcb53cfbbd3f927051fcd4221">Flags::fixSky</a></div><div class="ttdeci">int fixSky</div><div class="ttdoc">[--fix-sky; default=FALSE]: hold sky location fixed to injection parameters. Set to TRUE if Flags::kn...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:128</div></div>
+<div class="ttc" id="astructData_html_a913af45a251a07eb589171c23afa4f34"><div class="ttname"><a href="structData.html#a913af45a251a07eb589171c23afa4f34">Data::NT</a></div><div class="ttdeci">int NT</div><div class="ttdoc">number of time segments</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:48</div></div>
+<div class="ttc" id="astructModel_html"><div class="ttname"><a href="structModel.html">Model</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:274</div></div>
+<div class="ttc" id="astructFlags_html_ace7f194b2e226c7d5f51e059df05993d"><div class="ttname"><a href="structFlags.html#ace7f194b2e226c7d5f51e059df05993d">Flags::orbit</a></div><div class="ttdeci">int orbit</div><div class="ttdoc">[--orbit=FILENAME; default=FALSE]: use numerical spacecraft ephemerides supplied in FILENAME....</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:136</div></div>
+<div class="ttc" id="astructSource_html"><div class="ttname"><a href="structSource.html">Source</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:191</div></div>
+<div class="ttc" id="astructFlags_html_a0392b488d222aadf788c59376ca1e205"><div class="ttname"><a href="structFlags.html#a0392b488d222aadf788c59376ca1e205">Flags::update</a></div><div class="ttdeci">int update</div><div class="ttdoc">[--update=FILENAME; default=FALSE]: updating fit from previous chain samples passed as FILENAME,...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:141</div></div>
+<div class="ttc" id="astructData_html_ac91c45dac949a9be16be5751f1eb3695"><div class="ttname"><a href="structData.html#ac91c45dac949a9be16be5751f1eb3695">Data::fmin</a></div><div class="ttdeci">double fmin</div><div class="ttdoc">minimum frequency of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:63</div></div>
+<div class="ttc" id="astructData_html_a73c788cfea88195d14c53f9e52a8ada1"><div class="ttname"><a href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">Data::tgap</a></div><div class="ttdeci">double * tgap</div><div class="ttdoc">time between segments</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:72</div></div>
+<div class="ttc" id="astructNoise_html"><div class="ttname"><a href="structNoise.html">Noise</a></div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:234</div></div>
+<div class="ttc" id="astructData_html_aea49bff932eaf931689edccaa155b333"><div class="ttname"><a href="structData.html#aea49bff932eaf931689edccaa155b333">Data::t0</a></div><div class="ttdeci">double * t0</div><div class="ttdoc">start times of segments</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:71</div></div>
+<div class="ttc" id="astructFlags_html_a80d91ff8879d7d29c3084324f6dbb2fb"><div class="ttname"><a href="structFlags.html#a80d91ff8879d7d29c3084324f6dbb2fb">Flags::quiet</a></div><div class="ttdeci">int quiet</div><div class="ttdoc">[--quiet; default=FALSE]: decreases file output (less diagnostic data, only what is needed for post p...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:120</div></div>
+<div class="ttc" id="astructData_html_a5d1d8220060d2f6b29cc9bbd935113f8"><div class="ttname"><a href="structData.html#a5d1d8220060d2f6b29cc9bbd935113f8">Data::qpad</a></div><div class="ttdeci">int qpad</div><div class="ttdoc">number of frequency bins padding ends of segment</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:61</div></div>
+<div class="ttc" id="astructFlags_html_a9e2550661ab2f8d07f622fac880b4647"><div class="ttname"><a href="structFlags.html#a9e2550661ab2f8d07f622fac880b4647">Flags::NBURN</a></div><div class="ttdeci">int NBURN</div><div class="ttdoc">number of burn in samples, equals Flags::NMCMC.</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:122</div></div>
+<div class="ttc" id="astructData_html"><div class="ttname"><a href="structData.html">Data</a></div><div class="ttdoc">Analaysis segment and meta data about size of segment, location in full data stream,...</div><div class="ttdef"><b>Definition:</b> GalacticBinary.h:45</div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_f8b0faebf59e148704c9846d694299bd.html">gbmcmc</a></li><li class="navelem"><a class="el" href="dir_103fd8e7a501b92b31ccadd22612fec8.html">src</a></li><li class="navelem"><b>GalacticBinary.h</b></li>
+    <li class="navelem"><a class="el" href="dir_f8b0faebf59e148704c9846d694299bd.html">gbmcmc</a></li><li class="navelem"><a class="el" href="dir_103fd8e7a501b92b31ccadd22612fec8.html">src</a></li><li class="navelem"><a class="el" href="GalacticBinary_8h.html">GalacticBinary.h</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.16 </li>

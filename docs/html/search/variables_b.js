@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['sine_5ff_5fon_5ffstar_209',['sine_f_on_fstar',['../structData.html#ac4db839b05312ebbaf3a611c0fab1482',1,'Data']]],
-  ['size_210',['size',['../structProposal.html#afb3afbfca750d99d1736f848c5c89187',1,'Proposal']]],
-  ['snr2_211',['SNR2',['../structData.html#a018485652e36524ee3c2b07f35befc76',1,'Data']]],
-  ['sqt_212',['sqT',['../structData.html#ad44b894b08062090b76441d16570bca3',1,'Data']]],
-  ['sum_5flog_5ff_213',['sum_log_f',['../structData.html#a2a1500b1864aadb6e713746c7a36c5b7',1,'Data']]]
+  ['match_253',['match',['../structFlags.html#a3b36da1e6e78521e7b4f586184f59687',1,'Flags']]],
+  ['matchinfile1_254',['matchInfile1',['../structFlags.html#a4e7f5b5748ccebe98832a0c3944283dc',1,'Flags']]],
+  ['matchinfile2_255',['matchInfile2',['../structFlags.html#adbaf667291c19d556c653faa5cab5073',1,'Flags']]],
+  ['matrix_256',['matrix',['../structProposal.html#af23e1e359df0ad1172ab360b440a62e3',1,'Proposal']]],
+  ['maxp_257',['maxp',['../structProposal.html#ab7c7b47c87acc31027fc19fb3a33ef15',1,'Proposal']]]
 ];
