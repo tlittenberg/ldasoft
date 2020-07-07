@@ -101,7 +101,7 @@ $(document).ready(function(){initNavTree('structData.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>The <a class="el" href="structData.html" title="The Data structure stores information about the data being analyzed, including size of data,...">Data</a> structure stores information about the data being analyzed, including size of data, where it is located in the full LISA band, information about gaps, etc.  
+<p>Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.  
  <a href="structData.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&gt;</code></p>
@@ -201,19 +201,24 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 <tr class="memdesc:abd3208e22c3348f0356e4c2f13f4ffc1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Downsample factor for getting the desired number of samples. <br /></td></tr>
 <tr class="separator:abd3208e22c3348f0356e4c2f13f4ffc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8200a4f7f4a97f94dc7500299da945db"><td class="memItemLeft" align="right" valign="top"><a id="a8200a4f7f4a97f94dc7500299da945db"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>h_rec</b></td></tr>
+double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a8200a4f7f4a97f94dc7500299da945db">h_rec</a></td></tr>
+<tr class="memdesc:a8200a4f7f4a97f94dc7500299da945db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store waveform reconstruction samples \( 2N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
 <tr class="separator:a8200a4f7f4a97f94dc7500299da945db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad801eb68f47932db30ec701694b72cee"><td class="memItemLeft" align="right" valign="top"><a id="ad801eb68f47932db30ec701694b72cee"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>h_res</b></td></tr>
+double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad801eb68f47932db30ec701694b72cee">h_res</a></td></tr>
+<tr class="memdesc:ad801eb68f47932db30ec701694b72cee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store data residual samples \( 2N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
 <tr class="separator:ad801eb68f47932db30ec701694b72cee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7261769b2611a460f8a6ccc5ce70992f"><td class="memItemLeft" align="right" valign="top"><a id="a7261769b2611a460f8a6ccc5ce70992f"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>r_pow</b></td></tr>
+double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a7261769b2611a460f8a6ccc5ce70992f">r_pow</a></td></tr>
+<tr class="memdesc:a7261769b2611a460f8a6ccc5ce70992f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store residual power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
 <tr class="separator:a7261769b2611a460f8a6ccc5ce70992f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00d4717e62c1120636b7f5b07b71d121"><td class="memItemLeft" align="right" valign="top"><a id="a00d4717e62c1120636b7f5b07b71d121"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>h_pow</b></td></tr>
+double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a00d4717e62c1120636b7f5b07b71d121">h_pow</a></td></tr>
+<tr class="memdesc:a00d4717e62c1120636b7f5b07b71d121"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store waveform power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
 <tr class="separator:a00d4717e62c1120636b7f5b07b71d121"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="memItemLeft" align="right" valign="top"><a id="a4a466b0d0d1d0e685ca3ba3230f331d6"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>S_pow</b></td></tr>
+double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6">S_pow</a></td></tr>
+<tr class="memdesc:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store noise power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
 <tr class="separator:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab456e86e4cf30a20af41383cff94e535"><td class="memItemLeft" align="right" valign="top"><a id="ab456e86e4cf30a20af41383cff94e535"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ab456e86e4cf30a20af41383cff94e535">NP</a></td></tr>
@@ -239,15 +244,33 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aac66b9dc61783962135088350f5ec2ec">fileName</a> [128]</td></tr>
 <tr class="memdesc:aac66b9dc61783962135088350f5ec2ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">place holder for filnames <br /></td></tr>
 <tr class="separator:aac66b9dc61783962135088350f5ec2ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memItemLeft" align="right" valign="top"><a id="ad89c9b316266fa46dfd5b5b3897fcf6e"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a> [16]</td></tr>
-<tr class="memdesc:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">string identifying data format (phase/frequency) <br /></td></tr>
+<tr class="memitem:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a> [16]</td></tr>
+<tr class="memdesc:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convention for data format.  <a href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">More...</a><br /></td></tr>
 <tr class="separator:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The <a class="el" href="structData.html" title="The Data structure stores information about the data being analyzed, including size of data,...">Data</a> structure stores information about the data being analyzed, including size of data, where it is located in the full LISA band, information about gaps, etc. </p>
+<div class="textblock"><p>Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters. </p>
+<p>The <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> structure stores information about the data being analyzed, including size of data, where it is located in the full LISA band, information about gaps, etc.</p>
 <p>The structure stores the Fourier-domain <a class="el" href="structTDI.html">TDI</a> data channels, and a fiducial model for the instrument noise. It also has memory allocated for storing the reconstructed waveforms, residuals, and noise models. </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="ad89c9b316266fa46dfd5b5b3897fcf6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad89c9b316266fa46dfd5b5b3897fcf6e">&#9670;&nbsp;</a></span>format</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char Data::format[16]</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convention for data format. </p>
+<p>format = "phase" for phase difference (distance) format = "frequency" for fractional frequency (velocity) <b>Use for matching LDC</b> </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
 </ul>
 </div><!-- contents -->

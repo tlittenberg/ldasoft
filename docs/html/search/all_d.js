@@ -1,15 +1,18 @@
 var searchData=
 [
-  ['p_71',['p',['../structData.html#a30f6e2b62b5480035d01a19b13b23269',1,'Data']]],
-  ['pc_72',['PC',['../Constants_8h.html#a600721f0222b857dc8a3ae59e5077347',1,'Constants.h']]],
-  ['pi2_73',['PI2',['../Constants_8h.html#a2750dfdda752269a036f487a4a34b849',1,'Constants.h']]],
-  ['pion2_74',['PIon2',['../Constants_8h.html#aa4e18639f741d8163d826708ffa53cc4',1,'Constants.h']]],
-  ['pion4_75',['PIon4',['../Constants_8h.html#a475c9825dc4d9b0fad1ff1f25483913c',1,'Constants.h']]],
-  ['pmax_76',['pmax',['../structData.html#a0e272a91e2c6739072eea633bfdc8feb',1,'Data']]],
-  ['print_5facceptance_5frates_77',['print_acceptance_rates',['../GalacticBinaryProposal_8h.html#ae8c2b734b1d1527285455a36236470c8',1,'GalacticBinaryProposal.c']]],
-  ['prior_78',['Prior',['../structPrior.html',1,'']]],
-  ['prior_5fdensity_79',['prior_density',['../GalacticBinaryProposal_8h.html#ad42abc9fc4e637728c2206bc88601c3b',1,'GalacticBinaryProposal.c']]],
-  ['proposal_80',['Proposal',['../structProposal.html',1,'']]],
-  ['psi_5fphi_5fjump_81',['psi_phi_jump',['../GalacticBinaryProposal_8h.html#a6a462b2ade2ace48eb864880bc7e33f3',1,'GalacticBinaryProposal.c']]],
-  ['ptmcmc_82',['ptmcmc',['../GalacticBinaryMCMC_8c.html#ac3d943895e5a6ba430f9ae78d38c8d51',1,'GalacticBinaryMCMC.c']]]
+  ['n_83',['N',['../structData.html#a3be03de44986fc55905076acc5cdae2e',1,'Data']]],
+  ['name_84',['name',['../structProposal.html#a51c23d0e80247b1e38f1c1470860e234',1,'Proposal']]],
+  ['nburn_85',['NBURN',['../structFlags.html#a9e2550661ab2f8d07f622fac880b4647',1,'Flags']]],
+  ['nchannel_86',['Nchannel',['../structData.html#a40984ec8faee6f66f294f19efdffc748',1,'Data']]],
+  ['ndata_87',['NDATA',['../structFlags.html#a28b910931d0029fbddb06e09cdd8f608',1,'Flags']]],
+  ['ninj_88',['NINJ',['../structFlags.html#a070e524517d5e4279407d85e32cfc3b9',1,'Flags']]],
+  ['nmcmc_89',['NMCMC',['../structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9',1,'Flags']]],
+  ['noise_90',['Noise',['../structNoise.html',1,'Noise'],['../structData.html#a5646530b83cfb236488c75567a94317d',1,'Data::noise()']]],
+  ['noise_5fmodel_5fmcmc_91',['noise_model_mcmc',['../GalacticBinaryMCMC_8c.html#a0994005e8d92885d46c3fafd99e37029',1,'GalacticBinaryMCMC.c']]],
+  ['noisefile_92',['noiseFile',['../structFlags.html#ae81433935b52cd5d64b07724c05f0cef',1,'Flags']]],
+  ['norm_93',['norm',['../structProposal.html#a91c51efbd6006aa8484de086ebca34ef',1,'Proposal']]],
+  ['np_94',['NP',['../structData.html#ab456e86e4cf30a20af41383cff94e535',1,'Data']]],
+  ['nseed_95',['nseed',['../structData.html#aded73ae8e42873e7d905ff7f14a0a354',1,'Data']]],
+  ['nt_96',['NT',['../structData.html#a913af45a251a07eb589171c23afa4f34',1,'Data::NT()'],['../structFlags.html#a6ba0c4595612c0203d05074338e2dfce',1,'Flags::NT()']]],
+  ['nwave_97',['Nwave',['../structData.html#a2928c4204fcb0f5213ae9afb88d7ece1',1,'Data']]]
 ];

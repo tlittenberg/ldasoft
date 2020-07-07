@@ -1,12 +1,6 @@
 var searchData=
 [
-  ['n_194',['N',['../structData.html#a3be03de44986fc55905076acc5cdae2e',1,'Data']]],
-  ['name_195',['name',['../structProposal.html#a51c23d0e80247b1e38f1c1470860e234',1,'Proposal']]],
-  ['nchannel_196',['Nchannel',['../structData.html#a40984ec8faee6f66f294f19efdffc748',1,'Data']]],
-  ['noise_197',['noise',['../structData.html#a5646530b83cfb236488c75567a94317d',1,'Data']]],
-  ['norm_198',['norm',['../structProposal.html#a91c51efbd6006aa8484de086ebca34ef',1,'Proposal']]],
-  ['np_199',['NP',['../structData.html#ab456e86e4cf30a20af41383cff94e535',1,'Data']]],
-  ['nseed_200',['nseed',['../structData.html#aded73ae8e42873e7d905ff7f14a0a354',1,'Data']]],
-  ['nt_201',['NT',['../structData.html#a913af45a251a07eb589171c23afa4f34',1,'Data']]],
-  ['nwave_202',['Nwave',['../structData.html#a2928c4204fcb0f5213ae9afb88d7ece1',1,'Data']]]
+  ['h_5fpow_245',['h_pow',['../structData.html#a00d4717e62c1120636b7f5b07b71d121',1,'Data']]],
+  ['h_5frec_246',['h_rec',['../structData.html#a8200a4f7f4a97f94dc7500299da945db',1,'Data']]],
+  ['h_5fres_247',['h_res',['../structData.html#ad801eb68f47932db30ec701694b72cee',1,'Data']]]
 ];
