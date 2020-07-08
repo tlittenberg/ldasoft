@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['vector_220',['vector',['../structProposal.html#a22064ba2beaa9f61dd15e81779aad24e',1,'Proposal']]]
+  ['orbit_386',['orbit',['../structFlags.html#ace7f194b2e226c7d5f51e059df05993d',1,'Flags']]]
 ];

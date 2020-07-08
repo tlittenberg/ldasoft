@@ -5,8 +5,18 @@ Space-separated ASCII file, one source per row. Columns are <a name="params"></a
 
     f (Hz) |  df/dt (s^-2) | co-latitude (rad) | longitude (rad) | amplitude | inclination (rad) | polarization angle (rad) | ref phase (rad)`
     
+ - `f`: the gravitational wave frequency when observations begin.  Related to the orbital period via `f = 2/P`
+ - `df/dt`: the (constant) first time derivative of the frequency. Related to orbital period via **FIXME**
+ - `co-latitude` polar sky coordinate. 
+ - `longitude` azimuthal sky coordinate.
+ - `amplitude` gravitational wave amplitude. Related to frequency, chirp mass, and distance via `A = 2 M^5/3 (PI*f)^2/3 / D_L`
+ - `inclination` angle of orbital angular momentum vector `L` w.r.t. the line of sight.  Ranges from `0` to `PI`. A value of `PI/2` corresponds to an edge-on (i.e. eclipsing) binary. For random orientation the parameter should be distributed uniformly in `COS(inclination)` from `U[-1,1]`.
+ - `polarization angle` angle describing the decomposition of the GW signal into `h+` and `hx`.  Ranges from `U[0,PI]`.
+ - `ref phase` phase of the binary orbit when observations begin. Ranges from `U[0,2PI]`.
+ 
+### Note about sky location conventions
 The sky location parameters are in solar system barycenter ecliptic coordinates.  
-We use co-latitude (pi/2 - latitude) so that its cosine is distributed from \[0,1\]
+We use co-latitude (`PI/2 - latitude`) so that its cosine is distributed from `U[-1,1]`
 Converting to these coordinates from galactic coordinates or RA and Dec can be done with `astropy`:
 
 ```python
@@ -136,7 +146,7 @@ Output files:
  16. sigma_phase (radians)
  17. sigma_fdot (fractional)
  18. sigma_fddot (fractional)
- 19. sigma_omega (sq. deg.
+ 19. sigma_omega (sq. deg.)
  20. SNR
 ```
 

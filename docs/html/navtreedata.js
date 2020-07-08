@@ -64,16 +64,18 @@ var NAVTREE =
       [ "Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices", "md_gbmcmc_README_LDC.html#autotoc_md32", null ]
     ] ],
     [ "FisherGalaxy Manual", "md_gbfisher_README.html", [
-      [ "Input file format", "md_gbfisher_README.html#autotoc_md34", null ],
-      [ "Create orbit file with spacecraft ephimeredes", "md_gbfisher_README.html#autotoc_md35", null ],
-      [ "Simulate data with detector response to full galaxy and Gaussian instrument noise", "md_gbfisher_README.html#autotoc_md36", null ],
-      [ "Take data file and produce fit to confusion noise", "md_gbfisher_README.html#autotoc_md37", [
-        [ "Intermediate data products for checking performance", "md_gbfisher_README.html#autotoc_md38", null ]
+      [ "Input file format", "md_gbfisher_README.html#autotoc_md34", [
+        [ "Note about sky location conventions", "md_gbfisher_README.html#autotoc_md35", null ]
       ] ],
-      [ "Compute residual data and detectable catalog", "md_gbfisher_README.html#autotoc_md39", [
-        [ "Intermediate data products for checking performance (overwriting output from <tt>ConfusionFit</tt>)", "md_gbfisher_README.html#autotoc_md40", null ]
+      [ "Create orbit file with spacecraft ephimeredes", "md_gbfisher_README.html#autotoc_md36", null ],
+      [ "Simulate data with detector response to full galaxy and Gaussian instrument noise", "md_gbfisher_README.html#autotoc_md37", null ],
+      [ "Take data file and produce fit to confusion noise", "md_gbfisher_README.html#autotoc_md38", [
+        [ "Intermediate data products for checking performance", "md_gbfisher_README.html#autotoc_md39", null ]
       ] ],
-      [ "Estimate errors", "md_gbfisher_README.html#autotoc_md41", null ]
+      [ "Compute residual data and detectable catalog", "md_gbfisher_README.html#autotoc_md40", [
+        [ "Intermediate data products for checking performance (overwriting output from <tt>ConfusionFit</tt>)", "md_gbfisher_README.html#autotoc_md41", null ]
+      ] ],
+      [ "Estimate errors", "md_gbfisher_README.html#autotoc_md42", null ]
     ] ],
     [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [
@@ -98,7 +100,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "BayesLine_8h_source.html",
-"structFilter.html#a1fe43999b62d2903c78899f456f805ac"
+"structData.html#a5646530b83cfb236488c75567a94317d",
+"structlisa__orbit.html#a945465098e1cf5cbbf769b0d798fef2d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
