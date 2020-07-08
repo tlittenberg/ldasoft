@@ -100,12 +100,21 @@ $(document).ready(function(){initNavTree('structNoise.html','');});
 <div class="title">Noise Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Structure containing parameters and meta data for noise model in narrow-band analysis segment.  
+ <a href="structNoise.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a5c9458b7311d279fff2261cc1aa37787"><td class="memItemLeft" align="right" valign="top"><a id="a5c9458b7311d279fff2261cc1aa37787"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>N</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNoise.html#a5c9458b7311d279fff2261cc1aa37787">N</a></td></tr>
+<tr class="memdesc:a5c9458b7311d279fff2261cc1aa37787"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of data samples fit by noise model. <br /></td></tr>
 <tr class="separator:a5c9458b7311d279fff2261cc1aa37787"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Noise Parameters</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>Each \(\eta\) is a multiplier to the assumed noise level \(S_n\) stored in <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> structure. One per channel (<code>X</code> for 4-link, <code>A</code>,<code>E</code> for 6-link) </p>
+</div></td></tr>
 <tr class="memitem:a9b4d710843a644c03bccd12074f89428"><td class="memItemLeft" align="right" valign="top"><a id="a9b4d710843a644c03bccd12074f89428"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>etaA</b></td></tr>
 <tr class="separator:a9b4d710843a644c03bccd12074f89428"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -115,6 +124,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>etaE</b></td></tr>
 <tr class="memitem:aae2096fb8a971e731f29a0c041310f44"><td class="memItemLeft" align="right" valign="top"><a id="aae2096fb8a971e731f29a0c041310f44"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>etaX</b></td></tr>
 <tr class="separator:aae2096fb8a971e731f29a0c041310f44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Noise Model</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>Composite noise model to use over the analysis window \(\eta_I \times Sn_I\) </p>
+</div></td></tr>
 <tr class="memitem:a91c091da51f1b20e4f39e9f1fa2faaa4"><td class="memItemLeft" align="right" valign="top"><a id="a91c091da51f1b20e4f39e9f1fa2faaa4"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>SnA</b></td></tr>
 <tr class="separator:a91c091da51f1b20e4f39e9f1fa2faaa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -124,6 +136,9 @@ double *&#160;</td><td class="memItemRight" valign="bottom"><b>SnE</b></td></tr>
 <tr class="memitem:a96667b448c24b43ae5ee844b2b717b06"><td class="memItemLeft" align="right" valign="top"><a id="a96667b448c24b43ae5ee844b2b717b06"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>SnX</b></td></tr>
 <tr class="separator:a96667b448c24b43ae5ee844b2b717b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">UNDER CONSTRUCTION! noise parameters for power-law fit</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>Parameters are noise levels at reference frequency \(S_{n,0}\) and power law index \(\alpha\). </p>
+</div></td></tr>
 <tr class="memitem:a08c6188380f7e2c3168380ba60a68836"><td class="memItemLeft" align="right" valign="top"><a id="a08c6188380f7e2c3168380ba60a68836"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>SnA_0</b></td></tr>
 <tr class="separator:a08c6188380f7e2c3168380ba60a68836"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,7 +158,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>alpha_E</b></td></t
 double&#160;</td><td class="memItemRight" valign="bottom"><b>alpha_X</b></td></tr>
 <tr class="separator:ae88d834eaa89ba317ec2e35072e6bff2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Structure containing parameters and meta data for noise model in narrow-band analysis segment. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
 </ul>
 </div><!-- contents -->

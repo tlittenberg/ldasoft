@@ -13,7 +13,6 @@ var structChain =
     [ "NC", "structChain.html#a8ecd4e9da9ab5490971515655a49cae6", null ],
     [ "noiseFile", "structChain.html#a900a8760a27ddacbf6d801c8c817cea2", null ],
     [ "NP", "structChain.html#a50bdfaa9f46519e3c16ac58ca07cd941", null ],
-    [ "NS", "structChain.html#a31f8fd674dca6f3ccb62a2974c941877", null ],
     [ "parameterFile", "structChain.html#a28c3caa18e9b68a2dbde9c490f1c64f4", null ],
     [ "r", "structChain.html#a6ae8537a4979bad68e1e68860e8732c1", null ],
     [ "T", "structChain.html#a1b41dad93ccb01da4f4cd2f2fc7b3007", null ],

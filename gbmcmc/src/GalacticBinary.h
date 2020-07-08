@@ -41,18 +41,32 @@
  */
 struct Data
 {
+    /** @name Size of Data and Model */
+     ///@{
     int N;        //!<number of frequency bins
     int NT;       //!<number of time segments
     int Nchannel; //!<number of data channels
     int DMAX;     //!<max dimension of signal model
-    
-    long cseed; //!<seed for MCMC
-    long nseed; //!<seed for noise realization
-    long iseed; //!<seed for injection parameters
-    
+    ///@}
+
+    /** @name Random Number Generator Seeds */
+     ///@{
+    long cseed; //!<seed for MCMC set by `[--chainseed=INT; default=150914]`
+    long nseed; //!<seed for noise realization set by `[--noiseseed=INT; default=151226]`
+    long iseed; //!<seed for injection parameters set by `[--injseed=INT; default=151012]`
+    ///@}
+
+    /** @name Time of Observations */
+     ///@{
     double T; //!<observation time
     double sqT; //!<\f$\sqrt{T}\f$
+    double *t0;   //!<start times of segments
+    double *tgap; //!<time between segments
+    ///@}
+
     
+    /** @name Analysis Frequency Segment */
+     ///@{
     int qmin; //!<minimum frequency bin of segment
     int qmax; //!<maximum frequency bin of segment
     int qpad; //!<number of frequency bins padding ends of segment
@@ -60,19 +74,32 @@ struct Data
     double fmin; //!<minimum frequency of segment
     double fmax; //!<maximum frequency of segment
     double sine_f_on_fstar; //!<\f$sin(f * 2\pi L/c)\f$
-    
+
     //some manipulations of f,fmin for likelihood calculation
     double sum_log_f; //!<\f$\sum \log(f)\f$ appears in some normalizations
     double logfmin; //!<\f$\log(f_{\rm min})\f$ appears in some normalizations
-    
-    double *t0;   //!<start times of segments
-    double *tgap; //!<time between segments
-    
-    //Response
+    ///@}
+
+    /** @name TDI Data and Noise */
+     ///@{
     struct TDI **tdi; //!<TDI data channels
     struct Noise **noise; //!<Reference noise model
-    
-    //Reconstructed signal
+    /**
+     \brief Convention for data format
+     
+     format = "phase" for phase difference (distance)
+     format = "frequency" for fractional frequency (velocity) **Use for matching LDC**
+     */
+    char format[16];
+
+    //Spectrum proposal
+    double *p; //!<power spectral density of data
+    double pmax; //!<maximum power spectrial density
+    double SNR2; //!<estimated \f${\rm SNR}^2\f$ of data
+    ///@}
+
+    /** @name Model Reconstructions */
+     ///@{
     int Nwave; //!<Number of samples for computing posterior reconstructions
     int downsample; //!<Downsample factor for getting the desired number of samples
 
@@ -81,26 +108,18 @@ struct Data
     double ****r_pow; //!<Store residual power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
     double ****h_pow; //!<Store waveform power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
     double ****S_pow; //!<Store noise power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
-    
-    //Injection
+    char fileName[128]; //!<place holder for filnames
+    ///@}
+
+    /** @name Signal Injections */
+     ///@{
     int NP; //!<number of parameters of injection
     struct Source *inj; //!<injected source structure
+    ///@}
+
     
-    //Spectrum proposal
-    double *p; //!<power spectral density of data
-    double pmax; //!<maximum power spectrial density
-    double SNR2; //!<estimated \f${\rm SNR}^2\f$ of data
     
-    //
-    char fileName[128]; //!<place holder for filnames
     
-    /**
-     \brief Convention for data format
-     
-     format = "phase" for phase difference (distance)
-     format = "frequency" for fractional frequency (velocity) **Use for matching LDC**
-     */
-    char format[16];
     
 };
 
@@ -110,9 +129,14 @@ struct Data
  *Descriptions of each flag includes default settings and command line arguments to change/set flags.
  *Boolean flags are defined as integers with `0==FALSE` and `1==TRUE`.
  *
+ *To see how the defaults are set and then adjusted according to the command line, see parse().
  */
 struct Flags
 {
+    
+    /** @name Run Flags
+     */
+     ///@{
     int verbose;    //!<`[--verbose; default=FALSE]`: increases file output (all chains, less downsampling, etc.)
     int quiet;      //!<`[--quiet; default=FALSE]`: decreases file output (less diagnostic data, only what is needed for post processing/recovery)
     int NMCMC;      //!<`[--steps=INT; default=100000]`: number of MCMC samples
@@ -132,7 +156,7 @@ struct Flags
     int strainData; //!<`[--data=FILENAME; default=FALSE]`: read data from file instead of simulate internally.
     int orbit;      //!<`[--orbit=FILENAME; default=FALSE]`: use numerical spacecraft ephemerides supplied in `FILENAME`. `--orbit` argument sets flag to `TRUE`.
     int prior;      //!<`[--prior; default=FALSE]`: set log-likelihood to constant for testing detailed balance.
-    int debug;      //!<`[--debug; default=FALSE]`: coarser settings for proposals  and verbose output for debugging
+    int debug;      //!<`[--debug; default=FALSE]`: coarser settings for proposals and verbose output for debugging
     int cheat;      //!<start sampler at injection values
     int burnin;     //!<`[--no-burnin; default=TRUE]`: chain is in the burn in phase
     int update;     //!<`[--update=FILENAME; default=FALSE]`: updating fit from previous chain samples passed as `FILENAME`, used in draw_from_cdf().
@@ -144,6 +168,12 @@ struct Flags
     int confNoise;  //!<`[--conf-noise; default=FALSE]`: include model of confusion noise in \f$S_n(f)\f$, either for simulating noise or as starting value for parameterized noise model.
     int resume;     //!<`[--resume; default=FALSE]`: restart sampler from run state saved during checkpointing. Starts from scratch if no checkpointing files are found.
     int catalog;    //!<`[--catalog=FILENAME; default=FALSE]`: use list of previously detected sources supplied in `FILENAME` to clean bandwidth padding (`gb_mcmc`) or for building family tree (`gb_catalog`).
+    ///@}
+
+    
+    /** @name Input File Names
+     */
+     ///@{
     char **injFile;                   //!<`[--inj=FILENAME]`: list of injection files. Can support up to `NINJ=10` separate injections.
     char noiseFile[MAXSTRINGSIZE];    //!<file containing reconstructed noise model for `gb_catalog` to compute SNRs against.
     char cdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input chain file from Flags::update.
@@ -152,101 +182,204 @@ struct Flags
     char matchInfile2[MAXSTRINGSIZE]; //!<input waveform \f$B\f$ for computing match \f$(h_A|h_B)\f$
     char pdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input priors for Flags:knownSource.
     char catalogFile[MAXSTRINGSIZE];  //!<store `FILENAME` containing previously identified detections from Flags::catalog for cleaning padding regions
+     ///@}
 };
 
+/**
+ \brief Structure containing settings and housekeeping data for each of the parallel chains.
+ */
 struct Chain
 {
-    //Number of chains
+    /// Number of chains
     int NC;
+    
+    /// Number of proposals being used by chain
     int NP;
-    int NS;
+
+    /// Array containing current order of chains in temperature ladder
     int *index;
+    
+    /// Size of model being sampled by chain.  Depricated?
     int **dimension;
+    
+    /// Array tracking acceptance rate of parallel chain exchanges.
     double *acceptance;
+    
+    /// Array of chain temperatures
     double *temperature;
+    
+    /// Array storing \f$\langle \log p(d|\vec\theta)^{1/T} \rangle\f$ for thermodynamic integration.
     double *avgLogL;
+    
+    /// Annealing temperature for all chains used during burnin **DEPRICATED**
     double annealing;
+    
+    /// Store the maximum value of \f$\log p(d|\vec\theta)\f$ encountered by the chain.  Used for determining when burn-in is complete.
     double logLmax;
     
-    //thread-safe RNG
+    /** @name Random Number Generator (RNG) Data Types
+     Thread-safe random number generator data types used by `GSL`
+     */
+     ///@{
+    /// Needed for initializing RNG
     const gsl_rng_type **T;
-    gsl_rng **r;
     
-    //chain files
+    /// Seed for RNGs for each parallel chain.
+    gsl_rng **r;
+    ///@}
+    
+    /** @name Chain File Pointers
+     By default only the cold chain `M=0` is saved.  When Flags::verbose = `TRUE` files for each of the parallel chain are written.
+     */
+    ///@{
+    
+    /**
+     \brief Noise parameter chain file: `chains/noise_chain.dat.M`
+     
+     Columns:  `step | logL | logL_norm | etaA | eta E`
+     */
     FILE **noiseFile;
+    
+    /**
+     \brief Markov chain state (iterations, likelihoods, etc.): `chains/model_chain.dat.M`
+     
+     Columns: `step | N_live | logL | logL_norm | t_0`
+     */
     FILE **chainFile;
+    
+    /**
+     \brief Calibration parameter chain file: `chains/calibration_chain.dat.M`
+     
+     Columns:
+     */
     FILE **calibrationFile;
+    
+    /**
+     
+     \brief Signal parameter chain files for discrete models, only for cold chains: `chains/dimension_chain.dat.D`
+     
+     Columns: `f | fdot | A | cos_colat | long | cos_inc | psi | phi`
+     */
     FILE **dimensionFile;
+    
+    /**
+     \brief Full signal parameter chain files: `chains/dimension_chain.dat.M`
+
+     Columns: `f | fdot | A | cos_colat | long | cos_inc | psi | phi`
+     */
     FILE **parameterFile;
+    
+    /**
+     \brief Log-likelhood values for each parallel chain.
+     
+     Columns: `step | logL_0 | logL_1 | ... | logL_NC-1`
+     */
     FILE *likelihoodFile;
+    
+    /**
+     \brief Temperature of each parallel chain to monitor adaptive temperature spacing.
+     
+     Columns: `step | 1/T_0 | 1/T_1 | ... | 1/T_NC-1`
+     */
     FILE *temperatureFile;
+    ///@}
 };
 
+/**
+\brief Structure containing parameters and meta data for a single galactic binary.
+*/
 struct Source
 {
-    //Intrinsic
-    double m1;
-    double m2;
-    double f0;
-    
-    //Extrinisic
-    double psi;
-    double cosi;
-    double phi0;
-    
-    double D;
-    double phi;
-    double costheta;
-    
-    //Derived
-    double amp;
-    double dfdt;
-    double d2fdt2;
-    double Mc;
-    
-    //Book-keeping
-    int BW;
-    int qmin;
-    int qmax;
-    int imin;
-    int imax;
-    
-    //Response
+    /// Number of parameters in signal model
+    int NP;
+
+    /// Array containing parameters to be passed to galactic_binary()
+    double *params;
+
+    /// Instrument response to signal with Source::params \f$ h(\vec\theta) \f$
     struct TDI *tdi;
     
-    //Fisher matrix
-    double **fisher_matrix;
-    double **fisher_evectr;
-    double *fisher_evalue;
+
+    ///@name Intrinsic Parameters
+    ///@{
+    double f0;    //!< Gravitational wave frequency at start of observations \f$f_0 = 2/P\f$
+    double dfdt;  //!< First time derivitive of GW frequemcy \f$ \frac{df}{dt}\f$, see galactic_binary_fdot()
+    double d2fdt2;//!< Second time derivitive of GW frequemcy \f$ \frac{d^2f}{dt^2}\f$
+    double amp;   //!< Gravitational wave amplitude \f$ \mathcal{A} = 2 \frac{\mathcal{M}^{5/3} (\pi f)^{2/3}}{D_L} \f$, see galactic_binary_Amp()
+    ///@}
     
-    //Package parameters for waveform generator
-    int NP;
-    double *params;
+    ///@name Extrinsic Parameters
+    ///@{
+    double psi;      //!< Polarization angle
+    double cosi;     //!< Cosine of orbital inclination angle
+    double phi0;     //!< Gravitational wave phase at start of observations
+    double phi;      //!< Ecliptic longitude
+    double costheta; //!< Cosine of ecliptic co-latitude
+    ///@}
     
+    ///@name Derived Parameters
+    ///See GalacticBinary.c for functions to convert between intrinsic and derived parameters
+    ///@{
+    double m1;  //!< Primary component mass \f$m_1 \geq m_2\f$
+    double m2;  //!< Secondary component mass \f$m_2 \leq m_1\f$
+    double Mc;  //!< Chirp mass \f$\mathcal{M}\f$, see galactic_binary_Mc()
+    double D;   //!< Luminosity Distance \f$D_L\f$, see galactic_binary_dL()
+    ///@}
+    
+    ///@name Template waveform alignment
+    ///See galactic_binary_alignment()
+    ///@{
+    int BW;   //!< Signal bandwidth in frequency bins, see galactic_binary_bandwidth()
+    int qmin; //!< Minimum frequency bin of signal (relative to 0 Hz)
+    int qmax; //!< Maximum frequency bin of signal (relative to 0 Hz)
+    int imin; //!< Minimum frequency bin of signal relative to segment start
+    int imax; //!< Maximum frequency bin of signal relative to segment start
+    ///@}
+
+    ///@name Fisher Information Matrix
+    ///See galactic_binary_fisher()
+    ///@{
+    double **fisher_matrix; //!<Fisher approximation to inverse covariance matrix
+    double **fisher_evectr; //!<Eigenvectors of covariance matrix
+    double *fisher_evalue;  //!<Eigenvalues of covariance matrix
+    ///@}
 };
 
+/**
+\brief Structure containing parameters and meta data for noise model in narrow-band analysis segment.
+*/
 struct Noise
 {
+    /// Number of data samples fit by noise model
     int N;
     
-    //multiplyers of analytic inst. noise model
+    ///@name Noise Parameters
+    ///Each \f$\eta\f$ is a multiplier to the assumed noise level \f$S_n\f$ stored in Data structure. One per channel (`X` for 4-link, `A`,`E` for 6-link)
+    ///@{
     double etaA;
     double etaE;
     double etaX;
+    ///@}
     
-    //composite noise model
+    ///@name Noise Model
+    ///Composite noise model to use over the analysis window \f$\eta_I \times Sn_I\f$
+    ///@{
     double *SnA;
     double *SnE;
     double *SnX;
+    ///@}
     
-    //NEW! noise parameters for power-law fit
+    ///@name UNDER CONSTRUCTION! noise parameters for power-law fit
+    ///Parameters are noise levels at reference frequency \f$S_{n,0}\f$ and power law index \f$\alpha\f$.
+    ///@{
     double SnA_0;
     double SnE_0;
     double SnX_0;
     double alpha_A;
     double alpha_E;
     double alpha_X;
-    
+    ///@}
+
 };
 
 struct Calibration
