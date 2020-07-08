@@ -677,11 +677,8 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     }
     
     //hold frequencies fixed to injected value
-    if(flags->fixFreq)
-    {
-        source_y->params[0] = data->inj->f0*data->T;
-        source_y->params[7] = data->inj->dfdt*data->T*data->T;
-    }
+    if(flags->fixFreq) source_y->params[0] = data->inj->f0*data->T;
+    if(flags->fixFdot) source_y->params[7] = data->inj->dfdt*data->T*data->T;
     
     //call associated proposal density functions
     logQyx = (*proposal[nprop]->density)(data, model_x, source_y, proposal[nprop], source_y->params);

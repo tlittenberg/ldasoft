@@ -109,6 +109,7 @@ struct Flags
   int simNoise;
   int fixSky;
   int fixFreq;
+  int fixFdot;
   int galaxyPrior;
   int snrPrior;
   int emPrior;
