@@ -94,7 +94,6 @@ $(document).ready(function(){initNavTree('structFlags.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structFlags-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Flags Struct Reference</div>  </div>
@@ -108,6 +107,7 @@ $(document).ready(function(){initNavTree('structFlags.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Run Flags</div></td></tr>
 <tr class="memitem:a76aaab8bd934944f5f02d1e8b4596e73"><td class="memItemLeft" align="right" valign="top"><a id="a76aaab8bd934944f5f02d1e8b4596e73"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73">verbose</a></td></tr>
 <tr class="memdesc:a76aaab8bd934944f5f02d1e8b4596e73"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--verbose; default=FALSE]</code>: increases file output (all chains, less downsampling, etc.) <br /></td></tr>
@@ -232,6 +232,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a19a05cd59feb4c79c50e76c1df845f54">catalog</a></td></tr>
 <tr class="memdesc:a19a05cd59feb4c79c50e76c1df845f54"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--catalog=FILENAME; default=FALSE]</code>: use list of previously detected sources supplied in <code>FILENAME</code> to clean bandwidth padding (<code>gb_mcmc</code>) or for building family tree (<code>gb_catalog</code>). <br /></td></tr>
 <tr class="separator:a19a05cd59feb4c79c50e76c1df845f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Input File Names</div></td></tr>
 <tr class="memitem:ab824e717f38a66fb3f58621b46119baa"><td class="memItemLeft" align="right" valign="top"><a id="ab824e717f38a66fb3f58621b46119baa"></a>
 char **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ab824e717f38a66fb3f58621b46119baa">injFile</a></td></tr>
 <tr class="memdesc:ab824e717f38a66fb3f58621b46119baa"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--inj=FILENAME]</code>: list of injection files. Can support up to <code>NINJ=10</code> separate injections. <br /></td></tr>
@@ -267,7 +268,8 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Run flags set or changed from default values when parsing command line for <code>gb_mcmc</code> <b>and</b> <code>gb_catalog</code>. </p>
-<p>Descriptions of each flag includes default settings and command line arguments to change/set flags. Boolean flags are defined as integers with <code>0==FALSE</code> and <code>1==TRUE</code>. </p>
+<p>Descriptions of each flag includes default settings and command line arguments to change/set flags. Boolean flags are defined as integers with <code>0==FALSE</code> and <code>1==TRUE</code>.</p>
+<p>To see how the defaults are set and then adjusted according to the command line, see <a class="el" href="GalacticBinaryIO_8h.html#a58dc11d5260555f6c18dfd8ea87b3cb8" title="Parse command line.">parse()</a>. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
 </ul>

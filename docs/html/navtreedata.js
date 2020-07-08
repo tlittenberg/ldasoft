@@ -100,7 +100,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "BayesLine_8h_source.html",
-"structFilter.html#a0b3eddb96e89e7bf35e32a7c4a0ed882"
+"structData.html#a5646530b83cfb236488c75567a94317d",
+"structlisa__orbit.html#a945465098e1cf5cbbf769b0d798fef2d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -94,7 +94,6 @@ $(document).ready(function(){initNavTree('structData.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structData-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Data Struct Reference</div>  </div>
@@ -108,6 +107,7 @@ $(document).ready(function(){initNavTree('structData.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Size of Data and Model</div></td></tr>
 <tr class="memitem:a3be03de44986fc55905076acc5cdae2e"><td class="memItemLeft" align="right" valign="top"><a id="a3be03de44986fc55905076acc5cdae2e"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a3be03de44986fc55905076acc5cdae2e">N</a></td></tr>
 <tr class="memdesc:a3be03de44986fc55905076acc5cdae2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of frequency bins <br /></td></tr>
@@ -124,18 +124,20 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">DMAX</a></td></tr>
 <tr class="memdesc:ae2e953ef9275991dbefdb9a3b15034c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">max dimension of signal model <br /></td></tr>
 <tr class="separator:ae2e953ef9275991dbefdb9a3b15034c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Random Number Generator Seeds</div></td></tr>
 <tr class="memitem:a758dee275c2a979a3141ee70d7c9ba90"><td class="memItemLeft" align="right" valign="top"><a id="a758dee275c2a979a3141ee70d7c9ba90"></a>
 long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">cseed</a></td></tr>
-<tr class="memdesc:a758dee275c2a979a3141ee70d7c9ba90"><td class="mdescLeft">&#160;</td><td class="mdescRight">seed for MCMC <br /></td></tr>
+<tr class="memdesc:a758dee275c2a979a3141ee70d7c9ba90"><td class="mdescLeft">&#160;</td><td class="mdescRight">seed for MCMC set by <code>[--chainseed=INT; default=150914]</code> <br /></td></tr>
 <tr class="separator:a758dee275c2a979a3141ee70d7c9ba90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aded73ae8e42873e7d905ff7f14a0a354"><td class="memItemLeft" align="right" valign="top"><a id="aded73ae8e42873e7d905ff7f14a0a354"></a>
 long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">nseed</a></td></tr>
-<tr class="memdesc:aded73ae8e42873e7d905ff7f14a0a354"><td class="mdescLeft">&#160;</td><td class="mdescRight">seed for noise realization <br /></td></tr>
+<tr class="memdesc:aded73ae8e42873e7d905ff7f14a0a354"><td class="mdescLeft">&#160;</td><td class="mdescRight">seed for noise realization set by <code>[--noiseseed=INT; default=151226]</code> <br /></td></tr>
 <tr class="separator:aded73ae8e42873e7d905ff7f14a0a354"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a377bda85cbfd007855748f4c53d8305c"><td class="memItemLeft" align="right" valign="top"><a id="a377bda85cbfd007855748f4c53d8305c"></a>
 long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a377bda85cbfd007855748f4c53d8305c">iseed</a></td></tr>
-<tr class="memdesc:a377bda85cbfd007855748f4c53d8305c"><td class="mdescLeft">&#160;</td><td class="mdescRight">seed for injection parameters <br /></td></tr>
+<tr class="memdesc:a377bda85cbfd007855748f4c53d8305c"><td class="mdescLeft">&#160;</td><td class="mdescRight">seed for injection parameters set by <code>[--injseed=INT; default=151012]</code> <br /></td></tr>
 <tr class="separator:a377bda85cbfd007855748f4c53d8305c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Time of Observations</div></td></tr>
 <tr class="memitem:ae837768c48b47d8df3cd22dd53d383f3"><td class="memItemLeft" align="right" valign="top"><a id="ae837768c48b47d8df3cd22dd53d383f3"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ae837768c48b47d8df3cd22dd53d383f3">T</a></td></tr>
 <tr class="memdesc:ae837768c48b47d8df3cd22dd53d383f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">observation time <br /></td></tr>
@@ -144,6 +146,15 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad44b894b08062090b76441d16570bca3">sqT</a></td></tr>
 <tr class="memdesc:ad44b894b08062090b76441d16570bca3"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(\sqrt{T}\) <br /></td></tr>
 <tr class="separator:ad44b894b08062090b76441d16570bca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea49bff932eaf931689edccaa155b333"><td class="memItemLeft" align="right" valign="top"><a id="aea49bff932eaf931689edccaa155b333"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aea49bff932eaf931689edccaa155b333">t0</a></td></tr>
+<tr class="memdesc:aea49bff932eaf931689edccaa155b333"><td class="mdescLeft">&#160;</td><td class="mdescRight">start times of segments <br /></td></tr>
+<tr class="separator:aea49bff932eaf931689edccaa155b333"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73c788cfea88195d14c53f9e52a8ada1"><td class="memItemLeft" align="right" valign="top"><a id="a73c788cfea88195d14c53f9e52a8ada1"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">tgap</a></td></tr>
+<tr class="memdesc:a73c788cfea88195d14c53f9e52a8ada1"><td class="mdescLeft">&#160;</td><td class="mdescRight">time between segments <br /></td></tr>
+<tr class="separator:a73c788cfea88195d14c53f9e52a8ada1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Analysis Frequency Segment</div></td></tr>
 <tr class="memitem:afc6d1d4930961006b7d3593230ce07b7"><td class="memItemLeft" align="right" valign="top"><a id="afc6d1d4930961006b7d3593230ce07b7"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#afc6d1d4930961006b7d3593230ce07b7">qmin</a></td></tr>
 <tr class="memdesc:afc6d1d4930961006b7d3593230ce07b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">minimum frequency bin of segment <br /></td></tr>
@@ -176,14 +187,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">logfmin</a></td></tr>
 <tr class="memdesc:a3d638edc3bb44936e2ffd2ba195aabae"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(\log(f_{\rm min})\) appears in some normalizations <br /></td></tr>
 <tr class="separator:a3d638edc3bb44936e2ffd2ba195aabae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea49bff932eaf931689edccaa155b333"><td class="memItemLeft" align="right" valign="top"><a id="aea49bff932eaf931689edccaa155b333"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aea49bff932eaf931689edccaa155b333">t0</a></td></tr>
-<tr class="memdesc:aea49bff932eaf931689edccaa155b333"><td class="mdescLeft">&#160;</td><td class="mdescRight">start times of segments <br /></td></tr>
-<tr class="separator:aea49bff932eaf931689edccaa155b333"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73c788cfea88195d14c53f9e52a8ada1"><td class="memItemLeft" align="right" valign="top"><a id="a73c788cfea88195d14c53f9e52a8ada1"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a73c788cfea88195d14c53f9e52a8ada1">tgap</a></td></tr>
-<tr class="memdesc:a73c788cfea88195d14c53f9e52a8ada1"><td class="mdescLeft">&#160;</td><td class="mdescRight">time between segments <br /></td></tr>
-<tr class="separator:a73c788cfea88195d14c53f9e52a8ada1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">TDI Data and Noise</div></td></tr>
 <tr class="memitem:a98432cd2a586429f74d696da622446d1"><td class="memItemLeft" align="right" valign="top"><a id="a98432cd2a586429f74d696da622446d1"></a>
 struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a98432cd2a586429f74d696da622446d1">tdi</a></td></tr>
 <tr class="memdesc:a98432cd2a586429f74d696da622446d1"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html">TDI</a> data channels. <br /></td></tr>
@@ -192,6 +196,22 @@ struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memIt
 struct <a class="el" href="structNoise.html">Noise</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a5646530b83cfb236488c75567a94317d">noise</a></td></tr>
 <tr class="memdesc:a5646530b83cfb236488c75567a94317d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference noise model. <br /></td></tr>
 <tr class="separator:a5646530b83cfb236488c75567a94317d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a> [16]</td></tr>
+<tr class="memdesc:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convention for data format.  <a href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">More...</a><br /></td></tr>
+<tr class="separator:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30f6e2b62b5480035d01a19b13b23269"><td class="memItemLeft" align="right" valign="top"><a id="a30f6e2b62b5480035d01a19b13b23269"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a30f6e2b62b5480035d01a19b13b23269">p</a></td></tr>
+<tr class="memdesc:a30f6e2b62b5480035d01a19b13b23269"><td class="mdescLeft">&#160;</td><td class="mdescRight">power spectral density of data <br /></td></tr>
+<tr class="separator:a30f6e2b62b5480035d01a19b13b23269"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e272a91e2c6739072eea633bfdc8feb"><td class="memItemLeft" align="right" valign="top"><a id="a0e272a91e2c6739072eea633bfdc8feb"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">pmax</a></td></tr>
+<tr class="memdesc:a0e272a91e2c6739072eea633bfdc8feb"><td class="mdescLeft">&#160;</td><td class="mdescRight">maximum power spectrial density <br /></td></tr>
+<tr class="separator:a0e272a91e2c6739072eea633bfdc8feb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a018485652e36524ee3c2b07f35befc76"><td class="memItemLeft" align="right" valign="top"><a id="a018485652e36524ee3c2b07f35befc76"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a018485652e36524ee3c2b07f35befc76">SNR2</a></td></tr>
+<tr class="memdesc:a018485652e36524ee3c2b07f35befc76"><td class="mdescLeft">&#160;</td><td class="mdescRight">estimated \({\rm SNR}^2\) of data <br /></td></tr>
+<tr class="separator:a018485652e36524ee3c2b07f35befc76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Model Reconstructions</div></td></tr>
 <tr class="memitem:a2928c4204fcb0f5213ae9afb88d7ece1"><td class="memItemLeft" align="right" valign="top"><a id="a2928c4204fcb0f5213ae9afb88d7ece1"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">Nwave</a></td></tr>
 <tr class="memdesc:a2928c4204fcb0f5213ae9afb88d7ece1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of samples for computing posterior reconstructions. <br /></td></tr>
@@ -220,6 +240,11 @@ double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6">S_pow</a></td></tr>
 <tr class="memdesc:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store noise power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
 <tr class="separator:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac66b9dc61783962135088350f5ec2ec"><td class="memItemLeft" align="right" valign="top"><a id="aac66b9dc61783962135088350f5ec2ec"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aac66b9dc61783962135088350f5ec2ec">fileName</a> [128]</td></tr>
+<tr class="memdesc:aac66b9dc61783962135088350f5ec2ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">place holder for filnames <br /></td></tr>
+<tr class="separator:aac66b9dc61783962135088350f5ec2ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Signal Injections</div></td></tr>
 <tr class="memitem:ab456e86e4cf30a20af41383cff94e535"><td class="memItemLeft" align="right" valign="top"><a id="ab456e86e4cf30a20af41383cff94e535"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ab456e86e4cf30a20af41383cff94e535">NP</a></td></tr>
 <tr class="memdesc:ab456e86e4cf30a20af41383cff94e535"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of parameters of injection <br /></td></tr>
@@ -228,25 +253,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 struct <a class="el" href="structSource.html">Source</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ac136349d39219fa435ca7cbd43c46444">inj</a></td></tr>
 <tr class="memdesc:ac136349d39219fa435ca7cbd43c46444"><td class="mdescLeft">&#160;</td><td class="mdescRight">injected source structure <br /></td></tr>
 <tr class="separator:ac136349d39219fa435ca7cbd43c46444"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30f6e2b62b5480035d01a19b13b23269"><td class="memItemLeft" align="right" valign="top"><a id="a30f6e2b62b5480035d01a19b13b23269"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a30f6e2b62b5480035d01a19b13b23269">p</a></td></tr>
-<tr class="memdesc:a30f6e2b62b5480035d01a19b13b23269"><td class="mdescLeft">&#160;</td><td class="mdescRight">power spectral density of data <br /></td></tr>
-<tr class="separator:a30f6e2b62b5480035d01a19b13b23269"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e272a91e2c6739072eea633bfdc8feb"><td class="memItemLeft" align="right" valign="top"><a id="a0e272a91e2c6739072eea633bfdc8feb"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a0e272a91e2c6739072eea633bfdc8feb">pmax</a></td></tr>
-<tr class="memdesc:a0e272a91e2c6739072eea633bfdc8feb"><td class="mdescLeft">&#160;</td><td class="mdescRight">maximum power spectrial density <br /></td></tr>
-<tr class="separator:a0e272a91e2c6739072eea633bfdc8feb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a018485652e36524ee3c2b07f35befc76"><td class="memItemLeft" align="right" valign="top"><a id="a018485652e36524ee3c2b07f35befc76"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a018485652e36524ee3c2b07f35befc76">SNR2</a></td></tr>
-<tr class="memdesc:a018485652e36524ee3c2b07f35befc76"><td class="mdescLeft">&#160;</td><td class="mdescRight">estimated \({\rm SNR}^2\) of data <br /></td></tr>
-<tr class="separator:a018485652e36524ee3c2b07f35befc76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac66b9dc61783962135088350f5ec2ec"><td class="memItemLeft" align="right" valign="top"><a id="aac66b9dc61783962135088350f5ec2ec"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aac66b9dc61783962135088350f5ec2ec">fileName</a> [128]</td></tr>
-<tr class="memdesc:aac66b9dc61783962135088350f5ec2ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">place holder for filnames <br /></td></tr>
-<tr class="separator:aac66b9dc61783962135088350f5ec2ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a> [16]</td></tr>
-<tr class="memdesc:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convention for data format.  <a href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">More...</a><br /></td></tr>
-<tr class="separator:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters. </p>
