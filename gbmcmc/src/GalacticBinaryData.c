@@ -268,20 +268,7 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         //cosi = -1.0 + gsl_rng_uniform(r)*2.0;
         phi0 = gsl_rng_uniform(r)*M_PI*2.;
         psi  = gsl_rng_uniform(r)*M_PI/4.;
-        
-        if(flags->emPrior)
-        {
-            FILE *priorFile = fopen(flags->pdfFile,"r");
-            char name[16];
-            double min,max;
-            
-            while(fscanf(priorFile,"%s %lg %lg",name,&min,&max) != EOF)
-            {
-                if(strcmp("cosi",name) == 0)
-                    cosi = min + gsl_rng_uniform(r)*(max-min);
-            }
-        }
-        
+                
         
         //compute derived parameters
         Mc  = chirpmass(m1,m2);

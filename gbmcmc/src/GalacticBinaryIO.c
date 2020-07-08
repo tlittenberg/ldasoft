@@ -121,8 +121,10 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
     }
     else                   fprintf(fptr,"  Injection is ........ DISABLED\n");
     if(flags->fixSky)      fprintf(fptr,"  Sky parameters are... DISABLED\n");
-    if(flags->fixFreq)     fprintf(fptr,"  Freq paramseters are. DISABLED\n");
-    else                   fprintf(fptr,"  Sky parameters are... ENABLED\n");
+    if(flags->fixFreq)     fprintf(fptr,"  Freq parameters are.. DISABLED\n");
+    else                   fprintf(fptr,"  Freq parameters are.. ENABLED\n");
+    if(flags->fixFdot)     fprintf(fptr,"  Fdot parameters are.. DISABLED\n");
+    else                   fprintf(fptr,"  Fdot parameters are.. ENABLED\n");
     if(flags->calibration) fprintf(fptr,"  Calibration is....... ENABLED\n");
     else                   fprintf(fptr,"  Calibration is....... DISABLED\n");
     if(flags->galaxyPrior) fprintf(fptr,"  Galaxy prior is ..... ENABLED\n");
@@ -219,6 +221,8 @@ void print_usage()
     //Priors & Proposals
     fprintf(stdout,"       ==== Priors & Proposals ==== \n");
     fprintf(stdout,"       --fix-sky     : pin sky params to injection         \n");
+    fprintf(stdout,"       --fix-freq    : pin frequency to injection          \n");
+    fprintf(stdout,"       --fix-fdot    : pin f && fdot to injection          \n");
     fprintf(stdout,"       --galaxy-prior: use galaxy model for sky prior      \n");
     fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
     fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
@@ -361,6 +365,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         {"frac-freq",   no_argument, 0, 0 },
         {"fix-sky",     no_argument, 0, 0 },
         {"fix-freq",    no_argument, 0, 0 },
+        {"fix-fdot",    no_argument, 0, 0 },
         {"galaxy-prior",no_argument, 0, 0 },
         {"snr-prior",   no_argument, 0, 0 },
         {"known-source",no_argument, 0, 0 },
@@ -434,6 +439,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 {
                     flags->knownSource = 1;
                     flags->fixSky      = 1;
+                }
+                if(strcmp("fix-fdot",long_options[long_index].name) == 0)
+                {
+                    flags->fixFdot = 1;
+                    flags->fixFreq = 1; //if you are fixing fdot you ought to be fixing f as well.
                 }
                 if(strcmp("catalog",long_options[long_index].name) == 0)
                 {

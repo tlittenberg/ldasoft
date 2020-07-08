@@ -424,6 +424,7 @@ int main(int argc, char *argv[])
         
         fprintf(catalogFile,"%s %lg %lg\n",entry->name, entry->SNR, entry->evidence);
     }
+    fflush(catalogFile);
     fprintf(stdout,"\n");
     
     
@@ -624,7 +625,7 @@ int main(int argc, char *argv[])
     
     
     free_noise(noise);
-    free_orbit(orbit);
+    //free_orbit(orbit);TODO: free_orbit() segfaults
     free(detection_index);
 
     return 0;
