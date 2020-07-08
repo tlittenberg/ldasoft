@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['initialize_5fproposal_47',['initialize_proposal',['../GalacticBinaryProposal_8h.html#a56be2a79ceec1bd3e5ca7813ddd10007',1,'GalacticBinaryProposal.c']]],
-  ['inj_48',['inj',['../structData.html#ac136349d39219fa435ca7cbd43c46444',1,'Data']]],
-  ['iseed_49',['iseed',['../structData.html#a377bda85cbfd007855748f4c53d8305c',1,'Data']]]
+  ['h_5fpow_87',['h_pow',['../structData.html#a00d4717e62c1120636b7f5b07b71d121',1,'Data']]],
+  ['h_5frec_88',['h_rec',['../structData.html#a8200a4f7f4a97f94dc7500299da945db',1,'Data']]],
+  ['h_5fres_89',['h_res',['../structData.html#ad801eb68f47932db30ec701694b72cee',1,'Data']]]
 ];

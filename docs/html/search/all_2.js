@@ -1,11 +1,23 @@
 var searchData=
 [
-  ['calibration_5',['Calibration',['../structCalibration.html',1,'']]],
-  ['catalog_6',['Catalog',['../structCatalog.html',1,'']]],
-  ['cdf_5fdensity_7',['cdf_density',['../GalacticBinaryProposal_8h.html#a5299553c610fa57fe95527a5df181f22',1,'GalacticBinaryProposal.h']]],
-  ['chain_8',['Chain',['../structChain.html',1,'']]],
-  ['clight_9',['CLIGHT',['../Constants_8h.html#a579085cbd9e0993223cae68700a306cf',1,'Constants.h']]],
-  ['constants_2eh_10',['Constants.h',['../Constants_8h.html',1,'']]],
-  ['cov_5fdensity_11',['cov_density',['../GalacticBinaryProposal_8h.html#a48c97df4de6815daf57b7f054092a035',1,'GalacticBinaryProposal.c']]],
-  ['cseed_12',['cseed',['../structData.html#a758dee275c2a979a3141ee70d7c9ba90',1,'Data']]]
+  ['calibration_13',['Calibration',['../structCalibration.html',1,'Calibration'],['../structFlags.html#ad00e015c84ba7365ecbe9edba0afa24f',1,'Flags::calibration()']]],
+  ['calibrationfile_14',['calibrationFile',['../structChain.html#aa1656395b51a7969ca0e183e6ab2c8b0',1,'Chain']]],
+  ['catalog_15',['Catalog',['../structCatalog.html',1,'Catalog'],['../structFlags.html#a19a05cd59feb4c79c50e76c1df845f54',1,'Flags::catalog()']]],
+  ['catalogfile_16',['catalogFile',['../structFlags.html#a211df6899bf4668dd86cc11cf5ab3c04',1,'Flags']]],
+  ['cdf_5fdensity_17',['cdf_density',['../GalacticBinaryProposal_8h.html#a5299553c610fa57fe95527a5df181f22',1,'GalacticBinaryProposal.h']]],
+  ['cdffile_18',['cdfFile',['../structFlags.html#a40878a4de0e233032b787d04aa225a57',1,'Flags']]],
+  ['chain_19',['Chain',['../structChain.html',1,'']]],
+  ['chainfile_20',['chainFile',['../structChain.html#addc1b63bd5d588e388881f4420665cee',1,'Chain']]],
+  ['cheat_21',['cheat',['../structFlags.html#acb154bf70475aaefee2c8eaef8bf217b',1,'Flags']]],
+  ['checkfile_22',['checkfile',['../GalacticBinaryIO_8h.html#aec443135900035a8332391fc58a866c4',1,'GalacticBinaryIO.c']]],
+  ['chirpmass_23',['chirpmass',['../GalacticBinaryMath_8h.html#af44d01bd4c020c57a52e5e31f0d303bb',1,'GalacticBinaryMath.c']]],
+  ['cholesky_5fdecomp_24',['cholesky_decomp',['../GalacticBinaryMath_8h.html#a2431c31bce9711b866999db85774919a',1,'GalacticBinaryMath.c']]],
+  ['clight_25',['CLIGHT',['../Constants_8h.html#a579085cbd9e0993223cae68700a306cf',1,'Constants.h']]],
+  ['confnoise_26',['confNoise',['../structFlags.html#a3c7fc8f6a94fd9e840d46d0494b1ee86',1,'Flags']]],
+  ['constants_2eh_27',['Constants.h',['../Constants_8h.html',1,'']]],
+  ['cosi_28',['cosi',['../structSource.html#abff307429aa29e530fa79e2e9cbe1d07',1,'Source']]],
+  ['costheta_29',['costheta',['../structSource.html#a215d5274a04c6b7bc63910d5fe3fd338',1,'Source']]],
+  ['cov_5fdensity_30',['cov_density',['../GalacticBinaryProposal_8h.html#a48c97df4de6815daf57b7f054092a035',1,'GalacticBinaryProposal.c']]],
+  ['covfile_31',['covFile',['../structFlags.html#ae8e752704a7b5a349a4728af988a184e',1,'Flags']]],
+  ['cseed_32',['cseed',['../structData.html#a758dee275c2a979a3141ee70d7c9ba90',1,'Data']]]
 ];

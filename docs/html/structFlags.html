@@ -94,134 +94,183 @@ $(document).ready(function(){initNavTree('structFlags.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structFlags-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Flags Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Run flags set or changed from default values when parsing command line for <code>gb_mcmc</code> <b>and</b> <code>gb_catalog</code>.  
+ <a href="structFlags.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Run Flags</div></td></tr>
 <tr class="memitem:a76aaab8bd934944f5f02d1e8b4596e73"><td class="memItemLeft" align="right" valign="top"><a id="a76aaab8bd934944f5f02d1e8b4596e73"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>verbose</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73">verbose</a></td></tr>
+<tr class="memdesc:a76aaab8bd934944f5f02d1e8b4596e73"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--verbose; default=FALSE]</code>: increases file output (all chains, less downsampling, etc.) <br /></td></tr>
 <tr class="separator:a76aaab8bd934944f5f02d1e8b4596e73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80d91ff8879d7d29c3084324f6dbb2fb"><td class="memItemLeft" align="right" valign="top"><a id="a80d91ff8879d7d29c3084324f6dbb2fb"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>quiet</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a80d91ff8879d7d29c3084324f6dbb2fb">quiet</a></td></tr>
+<tr class="memdesc:a80d91ff8879d7d29c3084324f6dbb2fb"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--quiet; default=FALSE]</code>: decreases file output (less diagnostic data, only what is needed for post processing/recovery) <br /></td></tr>
 <tr class="separator:a80d91ff8879d7d29c3084324f6dbb2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cce7083d09d31c11f5f4e7d3e37f2a9"><td class="memItemLeft" align="right" valign="top"><a id="a5cce7083d09d31c11f5f4e7d3e37f2a9"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NMCMC</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9">NMCMC</a></td></tr>
+<tr class="memdesc:a5cce7083d09d31c11f5f4e7d3e37f2a9"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--steps=INT; default=100000]</code>: number of MCMC samples <br /></td></tr>
 <tr class="separator:a5cce7083d09d31c11f5f4e7d3e37f2a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e2550661ab2f8d07f622fac880b4647"><td class="memItemLeft" align="right" valign="top"><a id="a9e2550661ab2f8d07f622fac880b4647"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NBURN</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a9e2550661ab2f8d07f622fac880b4647">NBURN</a></td></tr>
+<tr class="memdesc:a9e2550661ab2f8d07f622fac880b4647"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of burn in samples, equals <a class="el" href="structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9" title="[--steps=INT; default=100000]: number of MCMC samples">Flags::NMCMC</a>. <br /></td></tr>
 <tr class="separator:a9e2550661ab2f8d07f622fac880b4647"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a070e524517d5e4279407d85e32cfc3b9"><td class="memItemLeft" align="right" valign="top"><a id="a070e524517d5e4279407d85e32cfc3b9"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NINJ</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a070e524517d5e4279407d85e32cfc3b9">NINJ</a></td></tr>
+<tr class="memdesc:a070e524517d5e4279407d85e32cfc3b9"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--inj=FILENAME]</code>: number of injections = number of <code>--inj</code> instances in command line <br /></td></tr>
 <tr class="separator:a070e524517d5e4279407d85e32cfc3b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28b910931d0029fbddb06e09cdd8f608"><td class="memItemLeft" align="right" valign="top"><a id="a28b910931d0029fbddb06e09cdd8f608"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NDATA</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a28b910931d0029fbddb06e09cdd8f608">NDATA</a></td></tr>
+<tr class="memdesc:a28b910931d0029fbddb06e09cdd8f608"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[default=1]</code>: number of frequency segments, equal to <a class="el" href="structFlags.html#a070e524517d5e4279407d85e32cfc3b9" title="[--inj=FILENAME]: number of injections = number of --inj instances in command line">Flags::NINJ</a>. <br /></td></tr>
 <tr class="separator:a28b910931d0029fbddb06e09cdd8f608"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ba0c4595612c0203d05074338e2dfce"><td class="memItemLeft" align="right" valign="top"><a id="a6ba0c4595612c0203d05074338e2dfce"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NT</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a6ba0c4595612c0203d05074338e2dfce">NT</a></td></tr>
+<tr class="memdesc:a6ba0c4595612c0203d05074338e2dfce"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--segments=INT; default=1]</code>: number of time segments <br /></td></tr>
 <tr class="separator:a6ba0c4595612c0203d05074338e2dfce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a1af09cef9b51699937ca508c04fe80"><td class="memItemLeft" align="right" valign="top"><a id="a2a1af09cef9b51699937ca508c04fe80"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>DMAX</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a2a1af09cef9b51699937ca508c04fe80">DMAX</a></td></tr>
+<tr class="memdesc:a2a1af09cef9b51699937ca508c04fe80"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--sources=INT; default=10]</code>: max number of sources <br /></td></tr>
 <tr class="separator:a2a1af09cef9b51699937ca508c04fe80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84863fdaac48e30b194b1d112e2ae514"><td class="memItemLeft" align="right" valign="top"><a id="a84863fdaac48e30b194b1d112e2ae514"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>simNoise</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a84863fdaac48e30b194b1d112e2ae514">simNoise</a></td></tr>
+<tr class="memdesc:a84863fdaac48e30b194b1d112e2ae514"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--sim-noise; default=FALSE]</code>: simulate random noise realization and add to data <br /></td></tr>
 <tr class="separator:a84863fdaac48e30b194b1d112e2ae514"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef0b9b7dcb53cfbbd3f927051fcd4221"><td class="memItemLeft" align="right" valign="top"><a id="aef0b9b7dcb53cfbbd3f927051fcd4221"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>fixSky</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#aef0b9b7dcb53cfbbd3f927051fcd4221">fixSky</a></td></tr>
+<tr class="memdesc:aef0b9b7dcb53cfbbd3f927051fcd4221"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--fix-sky; default=FALSE]</code>: hold sky location fixed to injection parameters. Set to <code>TRUE</code> if <a class="el" href="structFlags.html#aa404d0e6c616563fe582382a8946eb3c" title="[--known-source; default=FALSE]: injection is known binary, will need polarization and phase to be in...">Flags::knownSource</a>=<code>TRUE</code>. <br /></td></tr>
 <tr class="separator:aef0b9b7dcb53cfbbd3f927051fcd4221"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e7d3202850a04ed91a5a77ad41bdba2"><td class="memItemLeft" align="right" valign="top"><a id="a1e7d3202850a04ed91a5a77ad41bdba2"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>fixFreq</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a1e7d3202850a04ed91a5a77ad41bdba2">fixFreq</a></td></tr>
+<tr class="memdesc:a1e7d3202850a04ed91a5a77ad41bdba2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--fix-freq; default=FALSE]</code>: hold GW frequency fixed to injection parameters <br /></td></tr>
 <tr class="separator:a1e7d3202850a04ed91a5a77ad41bdba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5269078c6a3f6c29d5ba83b0e5473b7"><td class="memItemLeft" align="right" valign="top"><a id="ad5269078c6a3f6c29d5ba83b0e5473b7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>galaxyPrior</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ad5269078c6a3f6c29d5ba83b0e5473b7">galaxyPrior</a></td></tr>
+<tr class="memdesc:ad5269078c6a3f6c29d5ba83b0e5473b7"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--galaxy-prior; default=FALSE]</code>: use model of galaxy for sky location prior <br /></td></tr>
 <tr class="separator:ad5269078c6a3f6c29d5ba83b0e5473b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf5ce15c8b6fd59d471ec7b12f4f5ebd"><td class="memItemLeft" align="right" valign="top"><a id="acf5ce15c8b6fd59d471ec7b12f4f5ebd"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>snrPrior</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd">snrPrior</a></td></tr>
+<tr class="memdesc:acf5ce15c8b6fd59d471ec7b12f4f5ebd"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--snr-prior; default=FALSE]</code>: use SNR prior for amplitude <br /></td></tr>
 <tr class="separator:acf5ce15c8b6fd59d471ec7b12f4f5ebd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2814957b2bbbfc36d187f4c73eb954cd"><td class="memItemLeft" align="right" valign="top"><a id="a2814957b2bbbfc36d187f4c73eb954cd"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>emPrior</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a2814957b2bbbfc36d187f4c73eb954cd">emPrior</a></td></tr>
+<tr class="memdesc:a2814957b2bbbfc36d187f4c73eb954cd"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--em-prior=FILENAME]</code>: use input data file with EM-derived parameters for priors. <br /></td></tr>
 <tr class="separator:a2814957b2bbbfc36d187f4c73eb954cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa404d0e6c616563fe582382a8946eb3c"><td class="memItemLeft" align="right" valign="top"><a id="aa404d0e6c616563fe582382a8946eb3c"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>knownSource</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#aa404d0e6c616563fe582382a8946eb3c">knownSource</a></td></tr>
+<tr class="memdesc:aa404d0e6c616563fe582382a8946eb3c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--known-source; default=FALSE]</code>: injection is known binary, will need polarization and phase to be internally generated. Sets <a class="el" href="structFlags.html#aef0b9b7dcb53cfbbd3f927051fcd4221" title="[--fix-sky; default=FALSE]: hold sky location fixed to injection parameters. Set to TRUE if Flags::kn...">Flags::fixSky</a> = <code>TRUE</code>. <br /></td></tr>
 <tr class="separator:aa404d0e6c616563fe582382a8946eb3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aefec4a9462f3b193837da1959a4f76a9"><td class="memItemLeft" align="right" valign="top"><a id="aefec4a9462f3b193837da1959a4f76a9"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>detached</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#aefec4a9462f3b193837da1959a4f76a9">detached</a></td></tr>
+<tr class="memdesc:aefec4a9462f3b193837da1959a4f76a9"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--detached; default=FALSE]</code>: assume binary is detached, fdot prior becomes \(U[\dot{f}(\mathcal{M}_c=0.15),\dot{f}(\mathcal{M}_c=1.00)]\) <br /></td></tr>
 <tr class="separator:aefec4a9462f3b193837da1959a4f76a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e7b06500d417cf52b290fecff8dcec7"><td class="memItemLeft" align="right" valign="top"><a id="a0e7b06500d417cf52b290fecff8dcec7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>strainData</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a0e7b06500d417cf52b290fecff8dcec7">strainData</a></td></tr>
+<tr class="memdesc:a0e7b06500d417cf52b290fecff8dcec7"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--data=FILENAME; default=FALSE]</code>: read data from file instead of simulate internally. <br /></td></tr>
 <tr class="separator:a0e7b06500d417cf52b290fecff8dcec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace7f194b2e226c7d5f51e059df05993d"><td class="memItemLeft" align="right" valign="top"><a id="ace7f194b2e226c7d5f51e059df05993d"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>orbit</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ace7f194b2e226c7d5f51e059df05993d">orbit</a></td></tr>
+<tr class="memdesc:ace7f194b2e226c7d5f51e059df05993d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--orbit=FILENAME; default=FALSE]</code>: use numerical spacecraft ephemerides supplied in <code>FILENAME</code>. <code>--orbit</code> argument sets flag to <code>TRUE</code>. <br /></td></tr>
 <tr class="separator:ace7f194b2e226c7d5f51e059df05993d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e307dd2b0bf32fd2847ba0af04a7372"><td class="memItemLeft" align="right" valign="top"><a id="a2e307dd2b0bf32fd2847ba0af04a7372"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>prior</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a2e307dd2b0bf32fd2847ba0af04a7372">prior</a></td></tr>
+<tr class="memdesc:a2e307dd2b0bf32fd2847ba0af04a7372"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--prior; default=FALSE]</code>: set log-likelihood to constant for testing detailed balance. <br /></td></tr>
 <tr class="separator:a2e307dd2b0bf32fd2847ba0af04a7372"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a676222eb8d31f9415bf2511d59c850b4"><td class="memItemLeft" align="right" valign="top"><a id="a676222eb8d31f9415bf2511d59c850b4"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>debug</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a676222eb8d31f9415bf2511d59c850b4">debug</a></td></tr>
+<tr class="memdesc:a676222eb8d31f9415bf2511d59c850b4"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--debug; default=FALSE]</code>: coarser settings for proposals and verbose output for debugging <br /></td></tr>
 <tr class="separator:a676222eb8d31f9415bf2511d59c850b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb154bf70475aaefee2c8eaef8bf217b"><td class="memItemLeft" align="right" valign="top"><a id="acb154bf70475aaefee2c8eaef8bf217b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>cheat</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#acb154bf70475aaefee2c8eaef8bf217b">cheat</a></td></tr>
+<tr class="memdesc:acb154bf70475aaefee2c8eaef8bf217b"><td class="mdescLeft">&#160;</td><td class="mdescRight">start sampler at injection values <br /></td></tr>
 <tr class="separator:acb154bf70475aaefee2c8eaef8bf217b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad2794699b324b51c925524cc9565013"><td class="memItemLeft" align="right" valign="top"><a id="aad2794699b324b51c925524cc9565013"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>burnin</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#aad2794699b324b51c925524cc9565013">burnin</a></td></tr>
+<tr class="memdesc:aad2794699b324b51c925524cc9565013"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--no-burnin; default=TRUE]</code>: chain is in the burn in phase <br /></td></tr>
 <tr class="separator:aad2794699b324b51c925524cc9565013"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0392b488d222aadf788c59376ca1e205"><td class="memItemLeft" align="right" valign="top"><a id="a0392b488d222aadf788c59376ca1e205"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>update</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a0392b488d222aadf788c59376ca1e205">update</a></td></tr>
+<tr class="memdesc:a0392b488d222aadf788c59376ca1e205"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--update=FILENAME; default=FALSE]</code>: updating fit from previous chain samples passed as <code>FILENAME</code>, used in <a class="el" href="GalacticBinaryProposal_8h.html#a8ac7b844a4a59395d7623f857a96f065" title="Draw each parameter from 1D marginalized CDF.">draw_from_cdf()</a>. <br /></td></tr>
 <tr class="separator:a0392b488d222aadf788c59376ca1e205"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af99ceda5db6df93079aa61bae8c860cf"><td class="memItemLeft" align="right" valign="top"><a id="af99ceda5db6df93079aa61bae8c860cf"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>updateCov</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#af99ceda5db6df93079aa61bae8c860cf">updateCov</a></td></tr>
+<tr class="memdesc:af99ceda5db6df93079aa61bae8c860cf"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--update-cov=FILENAME; default=FALSE]</code>: updating fit from covariance matrix files built from chain samples, passed as <code>FILENAME</code>, used in <a class="el" href="GalacticBinaryProposal_8h.html#a0fdd7a5e44fd29128ee7beaa335a572f" title="Draw from multivariate Gaussian characterized by chain covariance.">draw_from_cov()</a>. <br /></td></tr>
 <tr class="separator:af99ceda5db6df93079aa61bae8c860cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b36da1e6e78521e7b4f586184f59687"><td class="memItemLeft" align="right" valign="top"><a id="a3b36da1e6e78521e7b4f586184f59687"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>match</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a3b36da1e6e78521e7b4f586184f59687">match</a></td></tr>
+<tr class="memdesc:a3b36da1e6e78521e7b4f586184f59687"><td class="mdescLeft">&#160;</td><td class="mdescRight">[&ndash;match=FLOAT; default=0.8]`: match threshold for chain sample clustering in post processing. <br /></td></tr>
 <tr class="separator:a3b36da1e6e78521e7b4f586184f59687"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b41a9235309222d3b4eaee7ec4fab02"><td class="memItemLeft" align="right" valign="top"><a id="a6b41a9235309222d3b4eaee7ec4fab02"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>rj</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a6b41a9235309222d3b4eaee7ec4fab02">rj</a></td></tr>
+<tr class="memdesc:a6b41a9235309222d3b4eaee7ec4fab02"><td class="mdescLeft">&#160;</td><td class="mdescRight">&ndash;no-rj; default=TRUE]`: flag for determining if trans dimensional MCMC moves (RJMCMC) are enabled. <br /></td></tr>
 <tr class="separator:a6b41a9235309222d3b4eaee7ec4fab02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98ecf043b3368fb93459cc077c880921"><td class="memItemLeft" align="right" valign="top"><a id="a98ecf043b3368fb93459cc077c880921"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>gap</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a98ecf043b3368fb93459cc077c880921">gap</a></td></tr>
+<tr class="memdesc:a98ecf043b3368fb93459cc077c880921"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--fit-gap; default=FALSE]</code>: flag for determining if model includes fit to time-gap in the data. <br /></td></tr>
 <tr class="separator:a98ecf043b3368fb93459cc077c880921"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad00e015c84ba7365ecbe9edba0afa24f"><td class="memItemLeft" align="right" valign="top"><a id="ad00e015c84ba7365ecbe9edba0afa24f"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>calibration</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ad00e015c84ba7365ecbe9edba0afa24f">calibration</a></td></tr>
+<tr class="memdesc:ad00e015c84ba7365ecbe9edba0afa24f"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--calibration; default=FALSE]</code>: flag for determining if model is marginalizing over calibration uncertainty. <br /></td></tr>
 <tr class="separator:ad00e015c84ba7365ecbe9edba0afa24f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c7fc8f6a94fd9e840d46d0494b1ee86"><td class="memItemLeft" align="right" valign="top"><a id="a3c7fc8f6a94fd9e840d46d0494b1ee86"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>confNoise</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a3c7fc8f6a94fd9e840d46d0494b1ee86">confNoise</a></td></tr>
+<tr class="memdesc:a3c7fc8f6a94fd9e840d46d0494b1ee86"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--conf-noise; default=FALSE]</code>: include model of confusion noise in \(S_n(f)\), either for simulating noise or as starting value for parameterized noise model. <br /></td></tr>
 <tr class="separator:a3c7fc8f6a94fd9e840d46d0494b1ee86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a726413142f05785554e7149e89a3831f"><td class="memItemLeft" align="right" valign="top"><a id="a726413142f05785554e7149e89a3831f"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>resume</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a726413142f05785554e7149e89a3831f">resume</a></td></tr>
+<tr class="memdesc:a726413142f05785554e7149e89a3831f"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--resume; default=FALSE]</code>: restart sampler from run state saved during checkpointing. Starts from scratch if no checkpointing files are found. <br /></td></tr>
 <tr class="separator:a726413142f05785554e7149e89a3831f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19a05cd59feb4c79c50e76c1df845f54"><td class="memItemLeft" align="right" valign="top"><a id="a19a05cd59feb4c79c50e76c1df845f54"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>catalog</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a19a05cd59feb4c79c50e76c1df845f54">catalog</a></td></tr>
+<tr class="memdesc:a19a05cd59feb4c79c50e76c1df845f54"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--catalog=FILENAME; default=FALSE]</code>: use list of previously detected sources supplied in <code>FILENAME</code> to clean bandwidth padding (<code>gb_mcmc</code>) or for building family tree (<code>gb_catalog</code>). <br /></td></tr>
 <tr class="separator:a19a05cd59feb4c79c50e76c1df845f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Input File Names</div></td></tr>
 <tr class="memitem:ab824e717f38a66fb3f58621b46119baa"><td class="memItemLeft" align="right" valign="top"><a id="ab824e717f38a66fb3f58621b46119baa"></a>
-char **&#160;</td><td class="memItemRight" valign="bottom"><b>injFile</b></td></tr>
+char **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ab824e717f38a66fb3f58621b46119baa">injFile</a></td></tr>
+<tr class="memdesc:ab824e717f38a66fb3f58621b46119baa"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--inj=FILENAME]</code>: list of injection files. Can support up to <code>NINJ=10</code> separate injections. <br /></td></tr>
 <tr class="separator:ab824e717f38a66fb3f58621b46119baa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a106a85c1de150232ca0729dba8d95714"><td class="memItemLeft" align="right" valign="top"><a id="a106a85c1de150232ca0729dba8d95714"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>cdfFile</b> [128]</td></tr>
-<tr class="separator:a106a85c1de150232ca0729dba8d95714"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a132a018b3634be1e93c50cb21a791b93"><td class="memItemLeft" align="right" valign="top"><a id="a132a018b3634be1e93c50cb21a791b93"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>covFile</b> [128]</td></tr>
-<tr class="separator:a132a018b3634be1e93c50cb21a791b93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a7b69fa58e8102b8facc3d924c7316c"><td class="memItemLeft" align="right" valign="top"><a id="a7a7b69fa58e8102b8facc3d924c7316c"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>matchInfile1</b> [128]</td></tr>
-<tr class="separator:a7a7b69fa58e8102b8facc3d924c7316c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af17e8600233a3ea4a8497f9b641d2fb8"><td class="memItemLeft" align="right" valign="top"><a id="af17e8600233a3ea4a8497f9b641d2fb8"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>matchInfile2</b> [128]</td></tr>
-<tr class="separator:af17e8600233a3ea4a8497f9b641d2fb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b77e92979f752e4f00c38528d04fa7b"><td class="memItemLeft" align="right" valign="top"><a id="a9b77e92979f752e4f00c38528d04fa7b"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>pdfFile</b> [128]</td></tr>
-<tr class="separator:a9b77e92979f752e4f00c38528d04fa7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77fef8e0a2c907d086ef23e546c6ae3d"><td class="memItemLeft" align="right" valign="top"><a id="a77fef8e0a2c907d086ef23e546c6ae3d"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>catalogFile</b> [128]</td></tr>
-<tr class="separator:a77fef8e0a2c907d086ef23e546c6ae3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43b9b2f53640ec04ace413fd76cbe21f"><td class="memItemLeft" align="right" valign="top"><a id="a43b9b2f53640ec04ace413fd76cbe21f"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>noiseFile</b> [128]</td></tr>
-<tr class="separator:a43b9b2f53640ec04ace413fd76cbe21f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae81433935b52cd5d64b07724c05f0cef"><td class="memItemLeft" align="right" valign="top"><a id="ae81433935b52cd5d64b07724c05f0cef"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ae81433935b52cd5d64b07724c05f0cef">noiseFile</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:ae81433935b52cd5d64b07724c05f0cef"><td class="mdescLeft">&#160;</td><td class="mdescRight">file containing reconstructed noise model for <code>gb_catalog</code> to compute SNRs against. <br /></td></tr>
+<tr class="separator:ae81433935b52cd5d64b07724c05f0cef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40878a4de0e233032b787d04aa225a57"><td class="memItemLeft" align="right" valign="top"><a id="a40878a4de0e233032b787d04aa225a57"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a40878a4de0e233032b787d04aa225a57">cdfFile</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:a40878a4de0e233032b787d04aa225a57"><td class="mdescLeft">&#160;</td><td class="mdescRight">store <code>FILENAME</code> of input chain file from <a class="el" href="structFlags.html#a0392b488d222aadf788c59376ca1e205" title="[--update=FILENAME; default=FALSE]: updating fit from previous chain samples passed as FILENAME,...">Flags::update</a>. <br /></td></tr>
+<tr class="separator:a40878a4de0e233032b787d04aa225a57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8e752704a7b5a349a4728af988a184e"><td class="memItemLeft" align="right" valign="top"><a id="ae8e752704a7b5a349a4728af988a184e"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ae8e752704a7b5a349a4728af988a184e">covFile</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:ae8e752704a7b5a349a4728af988a184e"><td class="mdescLeft">&#160;</td><td class="mdescRight">store <code>FILENAME</code> of input covariance matrix file from <a class="el" href="structFlags.html#af99ceda5db6df93079aa61bae8c860cf" title="[--update-cov=FILENAME; default=FALSE]: updating fit from covariance matrix files built from chain sa...">Flags::updateCov</a>. <br /></td></tr>
+<tr class="separator:ae8e752704a7b5a349a4728af988a184e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e7f5b5748ccebe98832a0c3944283dc"><td class="memItemLeft" align="right" valign="top"><a id="a4e7f5b5748ccebe98832a0c3944283dc"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a4e7f5b5748ccebe98832a0c3944283dc">matchInfile1</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:a4e7f5b5748ccebe98832a0c3944283dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">input waveform \(A\) for computing match \((h_A|h_B)\) <br /></td></tr>
+<tr class="separator:a4e7f5b5748ccebe98832a0c3944283dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbaf667291c19d556c653faa5cab5073"><td class="memItemLeft" align="right" valign="top"><a id="adbaf667291c19d556c653faa5cab5073"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#adbaf667291c19d556c653faa5cab5073">matchInfile2</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:adbaf667291c19d556c653faa5cab5073"><td class="mdescLeft">&#160;</td><td class="mdescRight">input waveform \(B\) for computing match \((h_A|h_B)\) <br /></td></tr>
+<tr class="separator:adbaf667291c19d556c653faa5cab5073"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdafec64ceb3ff7e66f69a469bb340f2"><td class="memItemLeft" align="right" valign="top"><a id="abdafec64ceb3ff7e66f69a469bb340f2"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#abdafec64ceb3ff7e66f69a469bb340f2">pdfFile</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:abdafec64ceb3ff7e66f69a469bb340f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">store <code>FILENAME</code> of input priors for <a class="el" href="structFlags.html" title="Run flags set or changed from default values when parsing command line for gb_mcmc and gb_catalog.">Flags</a>:knownSource. <br /></td></tr>
+<tr class="separator:abdafec64ceb3ff7e66f69a469bb340f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a211df6899bf4668dd86cc11cf5ab3c04"><td class="memItemLeft" align="right" valign="top"><a id="a211df6899bf4668dd86cc11cf5ab3c04"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a211df6899bf4668dd86cc11cf5ab3c04">catalogFile</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:a211df6899bf4668dd86cc11cf5ab3c04"><td class="mdescLeft">&#160;</td><td class="mdescRight">store <code>FILENAME</code> containing previously identified detections from <a class="el" href="structFlags.html#a19a05cd59feb4c79c50e76c1df845f54" title="[--catalog=FILENAME; default=FALSE]: use list of previously detected sources supplied in FILENAME to ...">Flags::catalog</a> for cleaning padding regions <br /></td></tr>
+<tr class="separator:a211df6899bf4668dd86cc11cf5ab3c04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Run flags set or changed from default values when parsing command line for <code>gb_mcmc</code> <b>and</b> <code>gb_catalog</code>. </p>
+<p>Descriptions of each flag includes default settings and command line arguments to change/set flags. Boolean flags are defined as integers with <code>0==FALSE</code> and <code>1==TRUE</code>.</p>
+<p>To see how the defaults are set and then adjusted according to the command line, see <a class="el" href="GalacticBinaryIO_8h.html#a58dc11d5260555f6c18dfd8ea87b3cb8" title="Parse command line.">parse()</a>. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
 </ul>
 </div><!-- contents -->
