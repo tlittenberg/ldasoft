@@ -37,6 +37,11 @@ void printProgress (double percentage);
 void print_version(FILE *fptr);
 
 /**
+ \brief Print functional example `gb_catalog` bash script based on input args
+ */
+void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbit *orbit);
+
+/**
 \brief Print list of command line arguments and defaults
 */
 void print_usage();

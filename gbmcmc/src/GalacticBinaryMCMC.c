@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
     int DMAX = flags->DMAX;
     int mcmc_start = -flags->NBURN;
     
-    
     /* Allocate model structures */
     struct Model **trial = malloc(sizeof(struct Model*)*NC);//trial[chain]
     struct Model ***model= malloc(sizeof(struct Model**)*NC); //model[chain][source][segment]
@@ -341,6 +340,9 @@ int main(int argc, char *argv[])
     if(flags->updateCov) test_covariance_proposal(data[0], flags, model[0][0], prior, proposal[0][8], chain->r[0]);
 
     
+    /* Write example gb_catalog bash script in run directory */
+    print_gb_catalog_script(flags, data[0], orbit);
+
     
     /* The MCMC loop */
     for(int mcmc = mcmc_start; mcmc < flags->NMCMC; mcmc++)

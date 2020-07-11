@@ -64,6 +64,52 @@ void print_version(FILE *fptr)
     //fprintf(fptr, "  Git commit date: %s\n", GIT_DATE);
 }
 
+void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbit *orbit)
+{
+    
+    //back out original input f & N
+    int samples = data->N - 2*data->qpad;
+    double fmin = data->fmin + data->qpad/data->T;
+    
+    FILE *fptr = fopen("example_gb_catalog.sh","w");
+    
+    fprintf(fptr,"#!/bin/sh\n\n");
+    fprintf(fptr,"if [ \"$#\" -ne 1 ]; then\n");
+    fprintf(fptr,"\t echo \"You must enter model dimension\"\n");
+    fprintf(fptr,"fi\n\n");
+            
+    fprintf(fptr,"gb_catalog ");
+
+    //Required
+    fprintf(fptr,"--fmin %.12g ", fmin);
+    fprintf(fptr,"--samples %i ", samples);
+    fprintf(fptr,"--padding %i ",data->qpad);
+    fprintf(fptr,"--duration %f ",data->T);
+    fprintf(fptr,"--source $1 --chain-file chains/dimension_chaion.dat.$1");
+    
+    //Optional
+    if(strcmp(data->format,"frequency")==0)
+        fprintf(fptr,"--frac-freq ");
+    if(flags->orbit)
+        fprintf(fptr,"--orbit %s ",orbit->OrbitFileName);
+    if(data->NP==9)
+        fprintf(fptr,"--f-double-dot ");
+    if(data->Nchannel==1)
+        fprintf(fptr,"--links 4 ");
+    
+    fprintf(fptr,"\n\n");
+            
+    //Recommendations
+    fprintf(fptr,"# Consider including the following options:\n");
+    fprintf(fptr,"#\t--match       : match threshold for waveforms (0.8)\n");
+    fprintf(fptr,"#\t--noise-file  : reconstructed noise model\n");
+    fprintf(fptr,"#\t\t e.g., data/power_noise_t0_f0.dat\n");
+    fprintf(fptr,"#\t--catalog     : list of known sources\n");
+    fprintf(fptr,"#\t--Tcatalog    : observing time of previous catalog\n");
+ 
+    fclose(fptr);
+}
+
 void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orbit *orbit, struct Flags *flags, FILE *fptr)
 {
     fprintf(fptr,"\n");
@@ -309,6 +355,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         data[i]->tgap = calloc(Nmax,sizeof(double));
         
         data[i]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
+        data[i]->sqT      = sqrt(data[i]->T);
         data[i]->N        = 1024;
         data[i]->NP       = 8; //default includes fdot
         data[i]->Nchannel = 2; //1=X, 2=AE
