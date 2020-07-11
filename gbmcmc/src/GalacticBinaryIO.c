@@ -239,7 +239,7 @@ void print_usage()
     
     fprintf(stdout,"--\n");
     fprintf(stdout,"EXAMPLE:\n");
-    fprintf(stdout,"./gb_mcmc --orbit ../config/OrbitConfig1.txt --verbose --inj ../data/sources/RXJ0806.dat\n");
+    fprintf(stdout,"gb_mcmc --inj [path to]/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt\n");
     fprintf(stdout,"\n");
     fprintf(stdout,"USEFUL TOBS:\n");
     fprintf(stdout,"   1 wk: %.0f\n",62914560./2./52.);
