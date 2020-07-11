@@ -532,7 +532,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
             N++;
         }
         rewind(injectionFile);
-        //        N--;
+        N--;
         
         //set RNG for injection
         const gsl_rng_type *T = gsl_rng_default;
@@ -543,7 +543,6 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         for(int nn=0; nn<N; nn++)
         {
             fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
-            //fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0,&fddot);
             
             
             for(int jj=0; jj<flags->NT; jj++)
@@ -615,7 +614,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
                 
                 //Simulate gravitational wave signal
                 //double t0 = data->t0 + jj*(data->T + data->tgap);
-                printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! t0 = %g\n",data->t0[jj]);
+                printf("   ...t0        : %g\n",data->t0[jj]);
                 galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
                 
                 //Add waveform to data TDI channels
