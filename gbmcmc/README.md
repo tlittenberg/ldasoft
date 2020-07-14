@@ -342,37 +342,39 @@ The source files are uniquely named by the gravitational wave frequency of the b
 The `FFFFFFFFFF` is a 10-digit representation of the **median** gravitational wave frequency, in Hz.  
 For example, a binary at `f_0 = 3 mHz` would be named  `LDC0030000000`.
 
+**NOTE:** There are not necessarily `N` sources found in the `catalog_N` directory.  Additional filtering is done on the chain samples which may remove sources in the "padding" regions of the analysis window, or marginal detection candidates that did not have sufficient evidence to be included in the catalog.
+
 Contents of each indidvidual file are as follows:
 
-**`LDCFFFFFFFFFF_chain.dat`**: The Markov chain samples for parameters consistent with `LDCFFFFFFFFFF`. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from `gb_mcmc` with **three** additional columns appended
+**`catalog_N/LDCFFFFFFFFFF_chain.dat`**: The Markov chain samples for parameters consistent with `LDCFFFFFFFFFF`. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from `gb_mcmc` with **three** additional columns appended
 
     f | fdot | A | cos_colat | long | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance
     
 Where `SNR` is computed relative to the noise level input using `--noise-file` or the analytic noise functions if not specified, `Waveform Match` is the match between the current sample and the reference waveform for the catalog _Entry_, used for filtering the raw chains, and `Waveform Distance` is the waveform distance between the current and reference waveforms--perhaps a future filtering criteria.
 
-**`LDCFFFFFFFFFF_params.dat`**: Point estimate of the candidate source. Parameters correspond to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency
+**`catalog_N/LDCFFFFFFFFFF_params.dat`**: Point estimate of the candidate source. Parameters correspond to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency
 
     f | fdot | A | cos_colat | long | cos_inc | psi | phi
 
-**`LDCFFFFFFFFFF_power_reconstruction.dat`**: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are
+**`catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat`**: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are
 
     f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
     
 Where `hY^2` is the signal power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[hA^2_25--hA^2_75]` encompasses the 50% credible interval for `hY`. For 4-link data there are 6 columns and X replaces A.
 
-**`LDCFFFFFFFFFF_waveform.dat`**: Point estimate of the reconstructed waveform corresponding  to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are
+**`catalog_N/LDCFFFFFFFFFF_waveform.dat`**: Point estimate of the reconstructed waveform corresponding  to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are
 
     f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
     
 For 4-link data there are two columns with the X channel replacing A.
 
-**`entries.dat`**: Summary of sources found in catalog.  Columns are
+**`catalog_N/entries.dat`**: Summary of sources found in catalog.  Columns are
 
     LDCFFFFFFFFFF | SNR | Evidence
     
 Where `SNR` is computed relative to the noise level input using `--noise-file` or the analytic noise functions if not specified.  The evidence, with values from [0,1], is the probability that the candidate source is a member of the catalog, computed by the fraction of chain samples that include a set of parameters consistent with `LDCFFFFFFFFFF`.
 
-**`history.dat`**: File associating current candidate sources to previous catalog input using `--catalog` and `--Tcatalog` arguments for `gb_catalog`.  The columns are
+**`catalog_N/history.dat`**: File associating current candidate sources to previous catalog input using `--catalog` and `--Tcatalog` arguments for `gb_catalog`.  The columns are
 
     LDCMMMMMMMMMM from input catalog | LDCNNNNNNNNNN from current catalog
     
