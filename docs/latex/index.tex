@@ -15,7 +15,16 @@ Prototype data analysis software for L\+I\+SA analysis\hypertarget{index_autotoc
 \href{https://doi.org/10.5281/zenodo.2026177}{\texttt{ }}\hypertarget{index_autotoc_md2}{}\doxysection{Installation}\label{index_autotoc_md2}
 
 \begin{DoxyCode}{0}
+\DoxyCodeLine{\#!/bin/sh}
+\DoxyCodeLine{}
+\DoxyCodeLine{\# make install directories}
+\DoxyCodeLine{mkdir -\/p \$\{HOME\}/ldasoft/master/ \#hard-\/coded installation path in Makefiles (for now)}
+\DoxyCodeLine{}
+\DoxyCodeLine{\# build codes}
 \DoxyCodeLine{./install.sh}
+\DoxyCodeLine{}
+\DoxyCodeLine{\# add location of binaries to PATH (include this in login scripts)}
+\DoxyCodeLine{export PATH=\$\{HOME\}/ldasoft/master/bin/:\$PATH}
 \end{DoxyCode}
 \hypertarget{index_autotoc_md3}{}\doxysection{Issue tracker}\label{index_autotoc_md3}
 \href{https://github.com/tlittenberg/ldasoft/issues}{\texttt{ https\+://github.\+com/tlittenberg/ldasoft/issues}}\hypertarget{index_autotoc_md4}{}\doxysection{Other resources}\label{index_autotoc_md4}

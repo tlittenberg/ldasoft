@@ -100,30 +100,49 @@ $(document).ready(function(){initNavTree('structOrbit.html','');});
 <div class="title">Orbit Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Ephemerides of individual spacecraft and metadata for using orbits in waveform modeling.  
+ <a href="structOrbit.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="LISA_8h_source.html">LISA.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ad07658ffb4648363cef8720dfea57cdc"><td class="memItemLeft" align="right" valign="top"><a id="ad07658ffb4648363cef8720dfea57cdc"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>OrbitFileName</b> [1024]</td></tr>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#ad07658ffb4648363cef8720dfea57cdc">OrbitFileName</a> [1024]</td></tr>
+<tr class="memdesc:ad07658ffb4648363cef8720dfea57cdc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Filename input from <code>--orbit</code> command line argument when using numerical orbits. <br /></td></tr>
 <tr class="separator:ad07658ffb4648363cef8720dfea57cdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad34fcc8be2e6b0aa592d2d2b9ad36a9e"><td class="memItemLeft" align="right" valign="top"><a id="ad34fcc8be2e6b0aa592d2d2b9ad36a9e"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>Norb</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#ad34fcc8be2e6b0aa592d2d2b9ad36a9e">Norb</a></td></tr>
+<tr class="memdesc:ad34fcc8be2e6b0aa592d2d2b9ad36a9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of orbit arrays. <br /></td></tr>
 <tr class="separator:ad34fcc8be2e6b0aa592d2d2b9ad36a9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66613255851cf4f4631f1fde59ea6cc3"><td class="memItemLeft" align="right" valign="top"><a id="a66613255851cf4f4631f1fde59ea6cc3"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#a66613255851cf4f4631f1fde59ea6cc3">t</a></td></tr>
+<tr class="memdesc:a66613255851cf4f4631f1fde59ea6cc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">time step relative to start of mission (seconds) <br /></td></tr>
+<tr class="separator:a66613255851cf4f4631f1fde59ea6cc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1efe94263404202c780d332bcf0ee297"><td class="memItemLeft" align="right" valign="top">void(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#a1efe94263404202c780d332bcf0ee297">orbit_function</a> )(struct <a class="el" href="structOrbit.html">Orbit</a> *, double, double *, double *, double *)</td></tr>
+<tr class="memdesc:a1efe94263404202c780d332bcf0ee297"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function prototyp for retreiving spacecraft locations.  <a href="structOrbit.html#a1efe94263404202c780d332bcf0ee297">More...</a><br /></td></tr>
+<tr class="separator:a1efe94263404202c780d332bcf0ee297"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Constellation Parameters</div></td></tr>
 <tr class="memitem:a76727c710d1dd80d32ef839df5c10424"><td class="memItemLeft" align="right" valign="top"><a id="a76727c710d1dd80d32ef839df5c10424"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>L</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#a76727c710d1dd80d32ef839df5c10424">L</a></td></tr>
+<tr class="memdesc:a76727c710d1dd80d32ef839df5c10424"><td class="mdescLeft">&#160;</td><td class="mdescRight">Average armlength of constellation. <br /></td></tr>
 <tr class="separator:a76727c710d1dd80d32ef839df5c10424"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aadd8dd23be8be3426db5736258fb4631"><td class="memItemLeft" align="right" valign="top"><a id="aadd8dd23be8be3426db5736258fb4631"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>fstar</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#aadd8dd23be8be3426db5736258fb4631">fstar</a></td></tr>
+<tr class="memdesc:aadd8dd23be8be3426db5736258fb4631"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transfer frequency \(f_* = 1/(L/c)\). <br /></td></tr>
 <tr class="separator:aadd8dd23be8be3426db5736258fb4631"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e522c9bea920430a7c63af43124075f"><td class="memItemLeft" align="right" valign="top"><a id="a8e522c9bea920430a7c63af43124075f"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>ecc</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#a8e522c9bea920430a7c63af43124075f">ecc</a></td></tr>
+<tr class="memdesc:a8e522c9bea920430a7c63af43124075f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Eccentricity of spacecraft orbits. <br /></td></tr>
 <tr class="separator:a8e522c9bea920430a7c63af43124075f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a613fbef1728ff317660192a1f869375c"><td class="memItemLeft" align="right" valign="top"><a id="a613fbef1728ff317660192a1f869375c"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>R</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structOrbit.html#a613fbef1728ff317660192a1f869375c">R</a></td></tr>
+<tr class="memdesc:a613fbef1728ff317660192a1f869375c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Distance to constellation guiding center from Sun (1 AU) <br /></td></tr>
 <tr class="separator:a613fbef1728ff317660192a1f869375c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66613255851cf4f4631f1fde59ea6cc3"><td class="memItemLeft" align="right" valign="top"><a id="a66613255851cf4f4631f1fde59ea6cc3"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>t</b></td></tr>
-<tr class="separator:a66613255851cf4f4631f1fde59ea6cc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Spacecraft Ephemerides</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>Cartesian ecliptic coordinates, in meters, where the x-y plane is the ecliptic. </p>
+</div></td></tr>
 <tr class="memitem:ab192ef021f202cf0a2f1a33c72c77292"><td class="memItemLeft" align="right" valign="top"><a id="ab192ef021f202cf0a2f1a33c72c77292"></a>
 double **&#160;</td><td class="memItemRight" valign="bottom"><b>x</b></td></tr>
 <tr class="separator:ab192ef021f202cf0a2f1a33c72c77292"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -133,6 +152,9 @@ double **&#160;</td><td class="memItemRight" valign="bottom"><b>y</b></td></tr>
 <tr class="memitem:ad0712c9898774b88478c48f677cd7c0a"><td class="memItemLeft" align="right" valign="top"><a id="ad0712c9898774b88478c48f677cd7c0a"></a>
 double **&#160;</td><td class="memItemRight" valign="bottom"><b>z</b></td></tr>
 <tr class="separator:ad0712c9898774b88478c48f677cd7c0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Derivatives of Orbits for Cubic Spline Interpolation</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>Stores the derivatives for the cubic spline for the location of each spacecraft ( \(dx,dy,dz\)) and some internal <code>GSL</code> workspace <code>acc</code>. </p>
+</div></td></tr>
 <tr class="memitem:a9e5120fa027ceed1ae0d58bcbc63f13b"><td class="memItemLeft" align="right" valign="top"><a id="a9e5120fa027ceed1ae0d58bcbc63f13b"></a>
 gsl_spline **&#160;</td><td class="memItemRight" valign="bottom"><b>dx</b></td></tr>
 <tr class="separator:a9e5120fa027ceed1ae0d58bcbc63f13b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,10 +167,38 @@ gsl_spline **&#160;</td><td class="memItemRight" valign="bottom"><b>dz</b></td><
 <tr class="memitem:ab10c3ff4b93ab68342af6a0ee6207672"><td class="memItemLeft" align="right" valign="top"><a id="ab10c3ff4b93ab68342af6a0ee6207672"></a>
 gsl_interp_accel *&#160;</td><td class="memItemRight" valign="bottom"><b>acc</b></td></tr>
 <tr class="separator:ab10c3ff4b93ab68342af6a0ee6207672"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1efe94263404202c780d332bcf0ee297"><td class="memItemLeft" align="right" valign="top"><a id="a1efe94263404202c780d332bcf0ee297"></a>
-void(*&#160;</td><td class="memItemRight" valign="bottom"><b>orbit_function</b> )(struct <a class="el" href="structOrbit.html">Orbit</a> *, double, double *, double *, double *)</td></tr>
-<tr class="separator:a1efe94263404202c780d332bcf0ee297"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Ephemerides of individual spacecraft and metadata for using orbits in waveform modeling. </p>
+<p>If numerical orbit files are provided, they are interpolated to the sample rate of the data using <code>GSL</code> cubic spline functions.</p>
+<p>If not, the eccentric inclined analytic model is computed once at the data sampling rate and stored. </p>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a1efe94263404202c780d332bcf0ee297"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1efe94263404202c780d332bcf0ee297">&#9670;&nbsp;</a></span>orbit_function</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void(* Orbit::orbit_function) (struct <a class="el" href="structOrbit.html">Orbit</a> *, double, double *, double *, double *)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Function prototyp for retreiving spacecraft locations. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">time</td><td>(double) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>data (Orbit*) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">eccliptic</td><td>carteisian location of each spacecraft</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>If an orbit file is input this points to interpolate_orbits() which uses <code>GSL</code> cubic splines to interpolate the ephemerides at the needed time steps</p>
+<p>Otherwise this points to analytic_orbits() which is passed an arbitrary time \(t\) and returns the spacecraft location. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="LISA_8h_source.html">LISA.h</a></li>
 </ul>

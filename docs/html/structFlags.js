@@ -12,6 +12,7 @@ var structFlags =
     [ "detached", "structFlags.html#aefec4a9462f3b193837da1959a4f76a9", null ],
     [ "DMAX", "structFlags.html#a2a1af09cef9b51699937ca508c04fe80", null ],
     [ "emPrior", "structFlags.html#a2814957b2bbbfc36d187f4c73eb954cd", null ],
+    [ "fixFdot", "structFlags.html#a337edfe6f7c1436c56e812e7ec307bb4", null ],
     [ "fixFreq", "structFlags.html#a1e7d3202850a04ed91a5a77ad41bdba2", null ],
     [ "fixSky", "structFlags.html#aef0b9b7dcb53cfbbd3f927051fcd4221", null ],
     [ "galaxyPrior", "structFlags.html#ad5269078c6a3f6c29d5ba83b0e5473b7", null ],
