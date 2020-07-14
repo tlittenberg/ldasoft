@@ -113,7 +113,16 @@ Acknowledgment</h1>
 </div><!-- fragment --><p><a href="https://doi.org/10.5281/zenodo.2026177"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.2026177.svg" alt="DOI" class="inline"/></a></p>
 <h1><a class="anchor" id="autotoc_md2"></a>
 Installation</h1>
-<div class="fragment"><div class="line">./install.sh</div>
+<div class="fragment"><div class="line">#!/bin/sh</div>
+<div class="line"> </div>
+<div class="line"># make install directories</div>
+<div class="line">mkdir -p ${HOME}/ldasoft/master/ #hard-coded installation path in Makefiles (for now)</div>
+<div class="line"> </div>
+<div class="line"># build codes</div>
+<div class="line">./install.sh</div>
+<div class="line"> </div>
+<div class="line"># add location of binaries to PATH (include this in login scripts)</div>
+<div class="line">export PATH=${HOME}/ldasoft/master/bin/:$PATH</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md3"></a>
 Issue tracker</h1>
 <p><a href="https://github.com/tlittenberg/ldasoft/issues">https://github.com/tlittenberg/ldasoft/issues</a></p>

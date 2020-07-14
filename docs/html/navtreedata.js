@@ -91,6 +91,7 @@ var NAVTREE =
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
         [ "Functions", "globals_func.html", null ],
+        [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -100,8 +101,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "BayesLine_8h_source.html",
-"structData.html#a5646530b83cfb236488c75567a94317d",
-"structlisa__orbit.html#a945465098e1cf5cbbf769b0d798fef2d"
+"structCatalog.html#af336aab9dee0ceca1e47422f1fe4877f",
+"structSource.html#afd9eb823788fc8e1c59fd74b340ec97d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

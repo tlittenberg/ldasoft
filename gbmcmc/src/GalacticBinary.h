@@ -133,8 +133,7 @@ struct Data
  */
 struct Flags
 {
-    /** @name Run Flags
-     */
+    /** @name Run Flags  */
      ///@{
     int verbose;    //!<`[--verbose; default=FALSE]`: increases file output (all chains, less downsampling, etc.)
     int quiet;      //!<`[--quiet; default=FALSE]`: decreases file output (less diagnostic data, only what is needed for post processing/recovery)

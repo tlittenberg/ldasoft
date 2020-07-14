@@ -21,7 +21,16 @@ https://tlittenberg.github.io/ldasoft/html/index.html
 
 # Installation
 ```bash
+#!/bin/sh
+
+# make install directories
+mkdir -p ${HOME}/ldasoft/master/ #hard-coded installation path in Makefiles (for now)
+
+# build codes
 ./install.sh
+
+# add location of binaries to PATH (include this in login scripts)
+export PATH=${HOME}/ldasoft/master/bin/:$PATH
 ```
 
 
