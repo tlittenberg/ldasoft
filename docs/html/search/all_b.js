@@ -1,13 +1,12 @@
 var searchData=
 [
-  ['n_50',['N',['../structData.html#a3be03de44986fc55905076acc5cdae2e',1,'Data']]],
-  ['name_51',['name',['../structProposal.html#a51c23d0e80247b1e38f1c1470860e234',1,'Proposal']]],
-  ['nchannel_52',['Nchannel',['../structData.html#a40984ec8faee6f66f294f19efdffc748',1,'Data']]],
-  ['noise_53',['Noise',['../structNoise.html',1,'Noise'],['../structData.html#a5646530b83cfb236488c75567a94317d',1,'Data::noise()']]],
-  ['noise_5fmodel_5fmcmc_54',['noise_model_mcmc',['../GalacticBinaryMCMC_8c.html#a0994005e8d92885d46c3fafd99e37029',1,'GalacticBinaryMCMC.c']]],
-  ['norm_55',['norm',['../structProposal.html#a91c51efbd6006aa8484de086ebca34ef',1,'Proposal']]],
-  ['np_56',['NP',['../structData.html#ab456e86e4cf30a20af41383cff94e535',1,'Data']]],
-  ['nseed_57',['nseed',['../structData.html#aded73ae8e42873e7d905ff7f14a0a354',1,'Data']]],
-  ['nt_58',['NT',['../structData.html#a913af45a251a07eb589171c23afa4f34',1,'Data']]],
-  ['nwave_59',['Nwave',['../structData.html#a2928c4204fcb0f5213ae9afb88d7ece1',1,'Data']]]
+  ['l_112',['L',['../structOrbit.html#a76727c710d1dd80d32ef839df5c10424',1,'Orbit']]],
+  ['larm_113',['Larm',['../LISA_8h.html#abc155d81a5e7964da87410656d2f85ca',1,'LISA.h']]],
+  ['likelihoodfile_114',['likelihoodFile',['../structChain.html#a2b7ad1dc61c7253efccffff830affd2a',1,'Chain']]],
+  ['lisa_2eh_115',['LISA.h',['../LISA_8h.html',1,'']]],
+  ['lisa_5forbit_116',['lisa_orbit',['../structlisa__orbit.html',1,'']]],
+  ['ln2_117',['LN2',['../Constants_8h.html#a316db5f7a96e49e413e7e673ffed3ba2',1,'Constants.h']]],
+  ['logfmin_118',['logfmin',['../structData.html#a3d638edc3bb44936e2ffd2ba195aabae',1,'Data']]],
+  ['loglmax_119',['logLmax',['../structChain.html#a3a82adf15d17b2f06fb4d6bebbde667f',1,'Chain']]],
+  ['lorentzianparams_120',['lorentzianParams',['../structlorentzianParams.html',1,'']]]
 ];

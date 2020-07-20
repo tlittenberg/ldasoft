@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['matrix_150',['matrix',['../structProposal.html#af23e1e359df0ad1172ab360b440a62e3',1,'Proposal']]],
-  ['maxp_151',['maxp',['../structProposal.html#ab7c7b47c87acc31027fc19fb3a33ef15',1,'Proposal']]]
+  ['galaxyprior_381',['galaxyPrior',['../structFlags.html#ad5269078c6a3f6c29d5ba83b0e5473b7',1,'Flags']]],
+  ['gap_382',['gap',['../structFlags.html#a98ecf043b3368fb93459cc077c880921',1,'Flags']]],
+  ['gitversion_383',['gitversion',['../gitversion_8h.html#ad63d13b68cb793d2ff81eb54f6ff3cb4',1,'gitversion.h']]]
 ];

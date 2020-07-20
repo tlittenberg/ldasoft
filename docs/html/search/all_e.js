@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['qmax_68',['qmax',['../structData.html#aff9d4adb0d0786ca384500f377c7faac',1,'Data']]],
-  ['qmin_69',['qmin',['../structData.html#afc6d1d4930961006b7d3593230ce07b7',1,'Data']]],
-  ['qpad_70',['qpad',['../structData.html#a5d1d8220060d2f6b29cc9bbd935113f8',1,'Data']]]
+  ['orbit_152',['Orbit',['../structOrbit.html',1,'Orbit'],['../structFlags.html#ace7f194b2e226c7d5f51e059df05993d',1,'Flags::orbit()']]],
+  ['orbit_5ffunction_153',['orbit_function',['../structOrbit.html#a1efe94263404202c780d332bcf0ee297',1,'Orbit']]],
+  ['orbitfilename_154',['OrbitFileName',['../structOrbit.html#ad07658ffb4648363cef8720dfea57cdc',1,'Orbit']]]
 ];

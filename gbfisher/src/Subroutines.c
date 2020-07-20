@@ -59,7 +59,7 @@ void FAST_LISA(struct Orbit *LISAorbit, double TOBS, double *params, int M, doub
   double params_temp[9];
   
   params_temp[0] = params[0]*TOBS;//f;
-  params_temp[1] = cos(params[1]);//0.5*M_PI-theta;
+  params_temp[1] = cos(params[1]);//cosine colatitude;
   params_temp[2] = params[2];//phi;
   params_temp[3] = log(params[3]);//A;
   params_temp[4] = cos(params[4]);//iota;
@@ -69,7 +69,8 @@ void FAST_LISA(struct Orbit *LISAorbit, double TOBS, double *params, int M, doub
   params_temp[8] = params[8]*TOBS*TOBS*TOBS;//11.0/3.0*fdot*fdot/f;
 
   
-  galactic_binary(LISAorbit, "phase", TOBS, 0, params_temp, 9, XLS, AA, EE, M, 2);
+  //galactic_binary(LISAorbit, "phase", TOBS, 0, params_temp, 9, XLS, AA, EE, M, 2);
+    galactic_binary(LISAorbit, "frequency", TOBS, 0, params_temp, 8, XLS, AA, EE, M, 2);
 
 }
 
@@ -129,8 +130,8 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
   {
     for(j=0; j<=100; j++) XX[j] = XP[imin+101*i+j];
     f = (double)(imin+101*i-50)/TOBS;
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
     inst[i] = log(SXYZ*1.0e40);
     chi=quickselect(XX, 101, 51);
     //printf("%e %e\n", f, chi/0.72);
@@ -226,8 +227,8 @@ void medianX(long imin, long imax, double fstar, double L, double *XP, double *X
     lf = log(f);
     j = (long)floor((lf-lfmin)/dlf);
     fit = pcx[j]+((pcx[j+1]-pcx[j])/dlf)*(lf-(lfmin+(double)(j)*dlf));
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
     alpha = exp(fit)*1.0e-40;
     conf = alpha -SXYZ;
     if(conf < SXYZ/30.0) conf = 1.0e-46;
@@ -292,8 +293,8 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
   {
     for(j=0; j<=100; j++) XX[j] = AEP[imin+101*i+j];
     f = (double)(imin+101*i-50)/TOBS;
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
     inst[i] = log(SAE*1.0e40);
     chi=quickselect(XX, 101, 51);
     //printf("%e %e\n", f, chi/0.72);
@@ -379,8 +380,8 @@ void medianAE(long imin, long imax, double fstar, double L, double *AEP, double 
     lf = log(f);
     j = (long)floor((lf-lfmin)/dlf);
     fit = pcx[j]+((pcx[j+1]-pcx[j])/dlf)*(lf-(lfmin+(double)(j)*dlf));
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
     alpha = exp(fit)*1.0e-40;
     conf = alpha -SAE;
     if(conf < SAE/30.0) conf = 1.0e-46;
@@ -488,8 +489,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
     adata[i] = mean;
     sdata[i] = var;
     f = (double)(imin+divsp*i)/T;
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
     if(flag == 0) inst[i] = log(SXYZ*1.0e40);
     if(flag == 1) inst[i] = log(SAE*1.0e40);
     
@@ -503,8 +504,8 @@ void spline_fit(int flag, int divs, long imin, long imax, double *XP, double *Xn
   for(i=imin; i <= imax; i++)
   {
     f = (double)(i)/T;
-    SAE  = AEnoise(L,fstar,f);
-    SXYZ = XYZnoise(L,fstar,f);
+    SAE  = AEnoise_FF(L,fstar,f);
+    SXYZ = XYZnoise_FF(L,fstar,f);
     if(flag == 0)
     {
       conf = Xnoise[i] -SXYZ;

@@ -95,8 +95,8 @@ int main(int argc,char **argv)
     EELS[i] = 0.0;
   }
   
-  imax = (long)ceil(4.0e-2*TOBS);
-  imin = (long)floor(1.0e-4*TOBS);
+  imin = (int)floor(FISHERGALAXY_FMIN*TOBS);
+  imax = (int)ceil(FISHERGALAXY_FMAX*TOBS);
   sqT = sqrt(TOBS);
 
   printf("Reading Data File\n");
@@ -151,15 +151,15 @@ int main(int argc,char **argv)
     params[7] = fdot;
     params[8] = 11.0/3.0*fdot*fdot/f;
     
-    N = 32*mult;
-    if(f > 0.001) N = 64*mult;
-    if(f > 0.01) N = 256*mult;
-    if(f > 0.03) N = 512*mult;
-    if(f > 0.1) N = 1024*mult;
+     N = 64*mult;
+    if(f > 0.001) N = 128*mult;
+    if(f > 0.01) N = 512*mult;
+    if(f > 0.03) N = 1024*mult;
+    if(f > 0.1) N = 2048*mult;
 
     q = (long)(f*TOBS);
     
-    M = galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
+    M = 2*galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
     XLS = double_vector(2*M);
     AA  = double_vector(2*M);
@@ -205,8 +205,8 @@ int main(int argc,char **argv)
   {
     XP[i] = (2.0*(XfLS[2*i]*XfLS[2*i] + XfLS[2*i+1]*XfLS[2*i+1]));
     AEP[i] = (2.0*(AALS[2*i]*AALS[2*i]+AALS[2*i+1]*AALS[2*i+1]));
-    Anoise[i] = AEnoise(LISAorbit->L,LISAorbit->fstar,f);
-    Xnoise[i] = XYZnoise(LISAorbit->L,LISAorbit->fstar,f);
+    Anoise[i] = AEnoise_FF(LISAorbit->L,LISAorbit->fstar,f);
+    Xnoise[i] = XYZnoise_FF(LISAorbit->L,LISAorbit->fstar,f);
 
   }
   printf("Estimate Confusion Noise\n");

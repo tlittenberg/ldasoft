@@ -373,12 +373,12 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
         model->prior[8][1] = fddotmax*data->T*data->T*data->T;
     }
     
-    /******************************************************
+    /*
      
      Learn to parse prior files with flexible format and
      reset uniform priors accordingly (doing the naive thing
      of setting a uniform distribution over the ~90% credible
-     interval for exammple.  Will need to expand to at least
+     interval for example.  Will need to expand to at least
      gaussian priors.
      
      What to do about intervals so small that they are
@@ -386,7 +386,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
      
      GAIA distance accuracy < 20%
      
-     ******************************************************/
+     */
     if(flags->emPrior)
     {
         FILE *priorFile = fopen(flags->pdfFile,"r");

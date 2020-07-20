@@ -99,6 +99,9 @@ $(document).ready(function(){initNavTree('GalacticBinaryMCMC_8c.html','');});
 <div class="title">GalacticBinaryMCMC.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Sampling routines and main function.  
+<a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &lt;stdlib.h&gt;</code><br />
 <code>#include &lt;string.h&gt;</code><br />
@@ -106,12 +109,12 @@ $(document).ready(function(){initNavTree('GalacticBinaryMCMC_8c.html','');});
 <code>#include &lt;time.h&gt;</code><br />
 <code>#include &lt;gsl/gsl_rng.h&gt;</code><br />
 <code>#include &lt;gsl/gsl_randist.h&gt;</code><br />
-<code>#include &quot;LISA.h&quot;</code><br />
-<code>#include &quot;Constants.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="LISA_8h_source.html">LISA.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="Constants_8h_source.html">Constants.h</a>&quot;</code><br />
 <code>#include &quot;BayesLine.h&quot;</code><br />
-<code>#include &quot;GalacticBinary.h&quot;</code><br />
-<code>#include &quot;GalacticBinaryIO.h&quot;</code><br />
-<code>#include &quot;GalacticBinaryData.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="GalacticBinaryIO_8h_source.html">GalacticBinaryIO.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="GalacticBinaryData_8h_source.html">GalacticBinaryData.h</a>&quot;</code><br />
 <code>#include &quot;GalacticBinaryPrior.h&quot;</code><br />
 <code>#include &quot;GalacticBinaryModel.h&quot;</code><br />
 <code>#include &quot;<a class="el" href="GalacticBinaryProposal_8h_source.html">GalacticBinaryProposal.h</a>&quot;</code><br />
@@ -132,15 +135,24 @@ Functions</h2></td></tr>
 <tr class="memdesc:ab5eab905e7e198274d8a2e787d73357d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trans-dimension galactic binary RJMCMC.  <a href="GalacticBinaryMCMC_8c.html#ab5eab905e7e198274d8a2e787d73357d">More...</a><br /></td></tr>
 <tr class="separator:ab5eab905e7e198274d8a2e787d73357d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff72dd63677483236b7841ac1280dddf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryMCMC_8c.html#aff72dd63677483236b7841ac1280dddf">data_mcmc</a> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> **data, struct <a class="el" href="structModel.html">Model</a> **model, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> **proposal, int ic)</td></tr>
-<tr class="memdesc:aff72dd63677483236b7841ac1280dddf"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structData.html" title="The Data structure stores information about the data being analyzed, including size of data,...">Data</a> model MCMC.  <a href="GalacticBinaryMCMC_8c.html#aff72dd63677483236b7841ac1280dddf">More...</a><br /></td></tr>
+<tr class="memdesc:aff72dd63677483236b7841ac1280dddf"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> model MCMC.  <a href="GalacticBinaryMCMC_8c.html#aff72dd63677483236b7841ac1280dddf">More...</a><br /></td></tr>
 <tr class="separator:aff72dd63677483236b7841ac1280dddf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0994005e8d92885d46c3fafd99e37029"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryMCMC_8c.html#a0994005e8d92885d46c3fafd99e37029">noise_model_mcmc</a> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structModel.html">Model</a> *trial, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, int ic)</td></tr>
-<tr class="memdesc:a0994005e8d92885d46c3fafd99e37029"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structNoise.html">Noise</a> model MCMC.  <a href="GalacticBinaryMCMC_8c.html#a0994005e8d92885d46c3fafd99e37029">More...</a><br /></td></tr>
+<tr class="memdesc:a0994005e8d92885d46c3fafd99e37029"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structNoise.html" title="Structure containing parameters and meta data for noise model in narrow-band analysis segment.">Noise</a> model MCMC.  <a href="GalacticBinaryMCMC_8c.html#a0994005e8d92885d46c3fafd99e37029">More...</a><br /></td></tr>
 <tr class="separator:a0994005e8d92885d46c3fafd99e37029"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ddf1224851353fc92bfbff6f499fa97"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryMCMC_8c.html#a0ddf1224851353fc92bfbff6f499fa97">main</a> (int argc, char *argv[])</td></tr>
 <tr class="separator:a0ddf1224851353fc92bfbff6f499fa97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Sampling routines and main function. </p>
+<p>Including</p><ul>
+<li>Fixed dimension galactic binary MCMC</li>
+<li>Trans-dimension galactic binary RJMCMC</li>
+<li>Parallel tempering chain exchanges <a class="el" href="GalacticBinaryMCMC_8c.html#ac3d943895e5a6ba430f9ae78d38c8d51" title="Parallel tempering exchange.">ptmcmc()</a></li>
+<li>Fixed dimension noise model MCMC</li>
+<li>Fixed dimension data model MCMC </li>
+</ul>
+</div><h2 class="groupheader">Function Documentation</h2>
 <a id="ac97ca10801918e6cd12966cc22138e07"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac97ca10801918e6cd12966cc22138e07">&#9670;&nbsp;</a></span>adapt_temperature_ladder()</h2>
 
@@ -228,7 +240,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="structData.html" title="The Data structure stores information about the data being analyzed, including size of data,...">Data</a> model MCMC. </p>
+<p><a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> model MCMC. </p>
 <p>One fixed-dimension MCMC step to update the data model. Currently this includes calibration parameters but could be extended to <a class="el" href="structTDI.html">TDI</a>, etc. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ic</td><td>index for which chain is being updated </td></tr>
@@ -479,7 +491,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="structNoise.html">Noise</a> model MCMC. </p>
+<p><a class="el" href="structNoise.html" title="Structure containing parameters and meta data for noise model in narrow-band analysis segment.">Noise</a> model MCMC. </p>
 <p>One fixed-dimension MCMC step to update the noise model. Currently this only the variance of the orthogonal A and E <a class="el" href="structTDI.html">TDI</a> channels. This will be generalized to include more complete covariance matrices, including non-stationary and non-orthogonal noise. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ic</td><td>index for which chain is being updated </td></tr>

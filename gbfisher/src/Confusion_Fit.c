@@ -68,9 +68,9 @@ int main(int argc,char **argv)
 
   XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1);  EELS = double_vector(NFFT-1);
   
-  
-  imax = (long)ceil(4.0e-2*TOBS);
-  imin = (long)floor(1.0e-4*TOBS);
+
+    imin = (int)floor(FISHERGALAXY_FMIN*TOBS);
+    imax = (int)ceil(FISHERGALAXY_FMAX*TOBS);
   
   XfLS = double_vector(NFFT-1);  AALS = double_vector(NFFT-1); EELS = double_vector(NFFT-1);
   
