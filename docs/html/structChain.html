@@ -100,67 +100,208 @@ $(document).ready(function(){initNavTree('structChain.html','');});
 <div class="title">Chain Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Structure containing settings and housekeeping data for each of the parallel chains.  
+ <a href="structChain.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a8ecd4e9da9ab5490971515655a49cae6"><td class="memItemLeft" align="right" valign="top"><a id="a8ecd4e9da9ab5490971515655a49cae6"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NC</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a8ecd4e9da9ab5490971515655a49cae6">NC</a></td></tr>
+<tr class="memdesc:a8ecd4e9da9ab5490971515655a49cae6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of chains. <br /></td></tr>
 <tr class="separator:a8ecd4e9da9ab5490971515655a49cae6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50bdfaa9f46519e3c16ac58ca07cd941"><td class="memItemLeft" align="right" valign="top"><a id="a50bdfaa9f46519e3c16ac58ca07cd941"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NP</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a50bdfaa9f46519e3c16ac58ca07cd941">NP</a></td></tr>
+<tr class="memdesc:a50bdfaa9f46519e3c16ac58ca07cd941"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of proposals being used by chain. <br /></td></tr>
 <tr class="separator:a50bdfaa9f46519e3c16ac58ca07cd941"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31f8fd674dca6f3ccb62a2974c941877"><td class="memItemLeft" align="right" valign="top"><a id="a31f8fd674dca6f3ccb62a2974c941877"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NS</b></td></tr>
-<tr class="separator:a31f8fd674dca6f3ccb62a2974c941877"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2c84bc7b2a9c8b32b411f75d9180a5c"><td class="memItemLeft" align="right" valign="top"><a id="ae2c84bc7b2a9c8b32b411f75d9180a5c"></a>
-int *&#160;</td><td class="memItemRight" valign="bottom"><b>index</b></td></tr>
+int *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#ae2c84bc7b2a9c8b32b411f75d9180a5c">index</a></td></tr>
+<tr class="memdesc:ae2c84bc7b2a9c8b32b411f75d9180a5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array containing current order of chains in temperature ladder. <br /></td></tr>
 <tr class="separator:ae2c84bc7b2a9c8b32b411f75d9180a5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa63851a8163ac41d4dcf3af2f6a1e3bf"><td class="memItemLeft" align="right" valign="top"><a id="aa63851a8163ac41d4dcf3af2f6a1e3bf"></a>
-int **&#160;</td><td class="memItemRight" valign="bottom"><b>dimension</b></td></tr>
+int **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#aa63851a8163ac41d4dcf3af2f6a1e3bf">dimension</a></td></tr>
+<tr class="memdesc:aa63851a8163ac41d4dcf3af2f6a1e3bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of model being sampled by chain. Depricated? <br /></td></tr>
 <tr class="separator:aa63851a8163ac41d4dcf3af2f6a1e3bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb03d9262839e259360c964c15ce373d"><td class="memItemLeft" align="right" valign="top"><a id="abb03d9262839e259360c964c15ce373d"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>acceptance</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#abb03d9262839e259360c964c15ce373d">acceptance</a></td></tr>
+<tr class="memdesc:abb03d9262839e259360c964c15ce373d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array tracking acceptance rate of parallel chain exchanges. <br /></td></tr>
 <tr class="separator:abb03d9262839e259360c964c15ce373d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ee7c3ffcf5aa3b77b263c617ccedb6d"><td class="memItemLeft" align="right" valign="top"><a id="a8ee7c3ffcf5aa3b77b263c617ccedb6d"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>temperature</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a8ee7c3ffcf5aa3b77b263c617ccedb6d">temperature</a></td></tr>
+<tr class="memdesc:a8ee7c3ffcf5aa3b77b263c617ccedb6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array of chain temperatures. <br /></td></tr>
 <tr class="separator:a8ee7c3ffcf5aa3b77b263c617ccedb6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9210fc4b64295b2b14230f6c3891e32d"><td class="memItemLeft" align="right" valign="top"><a id="a9210fc4b64295b2b14230f6c3891e32d"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>avgLogL</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a9210fc4b64295b2b14230f6c3891e32d">avgLogL</a></td></tr>
+<tr class="memdesc:a9210fc4b64295b2b14230f6c3891e32d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array storing \(\langle \log p(d|\vec\theta)^{1/T} \rangle\) for thermodynamic integration. <br /></td></tr>
 <tr class="separator:a9210fc4b64295b2b14230f6c3891e32d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28f1eacb5d5ec1d2cb7a812400b50880"><td class="memItemLeft" align="right" valign="top"><a id="a28f1eacb5d5ec1d2cb7a812400b50880"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>annealing</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a28f1eacb5d5ec1d2cb7a812400b50880">annealing</a></td></tr>
+<tr class="memdesc:a28f1eacb5d5ec1d2cb7a812400b50880"><td class="mdescLeft">&#160;</td><td class="mdescRight">Annealing temperature for all chains used during burnin <b>DEPRICATED</b> <br /></td></tr>
 <tr class="separator:a28f1eacb5d5ec1d2cb7a812400b50880"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a82adf15d17b2f06fb4d6bebbde667f"><td class="memItemLeft" align="right" valign="top"><a id="a3a82adf15d17b2f06fb4d6bebbde667f"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>logLmax</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a3a82adf15d17b2f06fb4d6bebbde667f">logLmax</a></td></tr>
+<tr class="memdesc:a3a82adf15d17b2f06fb4d6bebbde667f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store the maximum value of \(\log p(d|\vec\theta)\) encountered by the chain. Used for determining when burn-in is complete. <br /></td></tr>
 <tr class="separator:a3a82adf15d17b2f06fb4d6bebbde667f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Random Number Generator (RNG) Data Types</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>Thread-safe random number generator data types used by <code>GSL</code> </p>
+</div></td></tr>
 <tr class="memitem:a1b41dad93ccb01da4f4cd2f2fc7b3007"><td class="memItemLeft" align="right" valign="top"><a id="a1b41dad93ccb01da4f4cd2f2fc7b3007"></a>
-const gsl_rng_type **&#160;</td><td class="memItemRight" valign="bottom"><b>T</b></td></tr>
+const gsl_rng_type **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a1b41dad93ccb01da4f4cd2f2fc7b3007">T</a></td></tr>
+<tr class="memdesc:a1b41dad93ccb01da4f4cd2f2fc7b3007"><td class="mdescLeft">&#160;</td><td class="mdescRight">Needed for initializing RNG. <br /></td></tr>
 <tr class="separator:a1b41dad93ccb01da4f4cd2f2fc7b3007"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ae8537a4979bad68e1e68860e8732c1"><td class="memItemLeft" align="right" valign="top"><a id="a6ae8537a4979bad68e1e68860e8732c1"></a>
-gsl_rng **&#160;</td><td class="memItemRight" valign="bottom"><b>r</b></td></tr>
+gsl_rng **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a6ae8537a4979bad68e1e68860e8732c1">r</a></td></tr>
+<tr class="memdesc:a6ae8537a4979bad68e1e68860e8732c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Seed for RNGs for each parallel chain. <br /></td></tr>
 <tr class="separator:a6ae8537a4979bad68e1e68860e8732c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a900a8760a27ddacbf6d801c8c817cea2"><td class="memItemLeft" align="right" valign="top"><a id="a900a8760a27ddacbf6d801c8c817cea2"></a>
-FILE **&#160;</td><td class="memItemRight" valign="bottom"><b>noiseFile</b></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Chain File Pointers</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><p>By default only the cold chain <code>M=0</code> is saved. When <a class="el" href="structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73" title="[--verbose; default=FALSE]: increases file output (all chains, less downsampling, etc....">Flags::verbose</a> = <code>TRUE</code> files for each of the parallel chain are written. </p>
+</div></td></tr>
+<tr class="memitem:a900a8760a27ddacbf6d801c8c817cea2"><td class="memItemLeft" align="right" valign="top">FILE **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a900a8760a27ddacbf6d801c8c817cea2">noiseFile</a></td></tr>
+<tr class="memdesc:a900a8760a27ddacbf6d801c8c817cea2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structNoise.html" title="Structure containing parameters and meta data for noise model in narrow-band analysis segment.">Noise</a> parameter chain file: <code>chains/noise_chain.dat.M</code>  <a href="structChain.html#a900a8760a27ddacbf6d801c8c817cea2">More...</a><br /></td></tr>
 <tr class="separator:a900a8760a27ddacbf6d801c8c817cea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:addc1b63bd5d588e388881f4420665cee"><td class="memItemLeft" align="right" valign="top"><a id="addc1b63bd5d588e388881f4420665cee"></a>
-FILE **&#160;</td><td class="memItemRight" valign="bottom"><b>chainFile</b></td></tr>
+<tr class="memitem:addc1b63bd5d588e388881f4420665cee"><td class="memItemLeft" align="right" valign="top">FILE **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#addc1b63bd5d588e388881f4420665cee">chainFile</a></td></tr>
+<tr class="memdesc:addc1b63bd5d588e388881f4420665cee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Markov chain state (iterations, likelihoods, etc.): <code>chains/model_chain.dat.M</code>  <a href="structChain.html#addc1b63bd5d588e388881f4420665cee">More...</a><br /></td></tr>
 <tr class="separator:addc1b63bd5d588e388881f4420665cee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1656395b51a7969ca0e183e6ab2c8b0"><td class="memItemLeft" align="right" valign="top"><a id="aa1656395b51a7969ca0e183e6ab2c8b0"></a>
-FILE **&#160;</td><td class="memItemRight" valign="bottom"><b>calibrationFile</b></td></tr>
+<tr class="memitem:aa1656395b51a7969ca0e183e6ab2c8b0"><td class="memItemLeft" align="right" valign="top">FILE **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#aa1656395b51a7969ca0e183e6ab2c8b0">calibrationFile</a></td></tr>
+<tr class="memdesc:aa1656395b51a7969ca0e183e6ab2c8b0"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structCalibration.html">Calibration</a> parameter chain file: <code>chains/calibration_chain.dat.M</code>  <a href="structChain.html#aa1656395b51a7969ca0e183e6ab2c8b0">More...</a><br /></td></tr>
 <tr class="separator:aa1656395b51a7969ca0e183e6ab2c8b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a229f5af69a6a1417256f88a4c76d61f4"><td class="memItemLeft" align="right" valign="top"><a id="a229f5af69a6a1417256f88a4c76d61f4"></a>
-FILE **&#160;</td><td class="memItemRight" valign="bottom"><b>dimensionFile</b></td></tr>
+<tr class="memitem:a229f5af69a6a1417256f88a4c76d61f4"><td class="memItemLeft" align="right" valign="top">FILE **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a229f5af69a6a1417256f88a4c76d61f4">dimensionFile</a></td></tr>
+<tr class="memdesc:a229f5af69a6a1417256f88a4c76d61f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal parameter chain files for discrete models, only for cold chains: <code>chains/dimension_chain.dat.D</code>  <a href="structChain.html#a229f5af69a6a1417256f88a4c76d61f4">More...</a><br /></td></tr>
 <tr class="separator:a229f5af69a6a1417256f88a4c76d61f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28c3caa18e9b68a2dbde9c490f1c64f4"><td class="memItemLeft" align="right" valign="top"><a id="a28c3caa18e9b68a2dbde9c490f1c64f4"></a>
-FILE **&#160;</td><td class="memItemRight" valign="bottom"><b>parameterFile</b></td></tr>
+<tr class="memitem:a28c3caa18e9b68a2dbde9c490f1c64f4"><td class="memItemLeft" align="right" valign="top">FILE **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a28c3caa18e9b68a2dbde9c490f1c64f4">parameterFile</a></td></tr>
+<tr class="memdesc:a28c3caa18e9b68a2dbde9c490f1c64f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Full signal parameter chain files: <code>chains/dimension_chain.dat.M</code>  <a href="structChain.html#a28c3caa18e9b68a2dbde9c490f1c64f4">More...</a><br /></td></tr>
 <tr class="separator:a28c3caa18e9b68a2dbde9c490f1c64f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b7ad1dc61c7253efccffff830affd2a"><td class="memItemLeft" align="right" valign="top"><a id="a2b7ad1dc61c7253efccffff830affd2a"></a>
-FILE *&#160;</td><td class="memItemRight" valign="bottom"><b>likelihoodFile</b></td></tr>
+<tr class="memitem:a2b7ad1dc61c7253efccffff830affd2a"><td class="memItemLeft" align="right" valign="top">FILE *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#a2b7ad1dc61c7253efccffff830affd2a">likelihoodFile</a></td></tr>
+<tr class="memdesc:a2b7ad1dc61c7253efccffff830affd2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Log-likelhood values for each parallel chain.  <a href="structChain.html#a2b7ad1dc61c7253efccffff830affd2a">More...</a><br /></td></tr>
 <tr class="separator:a2b7ad1dc61c7253efccffff830affd2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4792c62796b3a6d3610d1badc70617b"><td class="memItemLeft" align="right" valign="top"><a id="ad4792c62796b3a6d3610d1badc70617b"></a>
-FILE *&#160;</td><td class="memItemRight" valign="bottom"><b>temperatureFile</b></td></tr>
+<tr class="memitem:ad4792c62796b3a6d3610d1badc70617b"><td class="memItemLeft" align="right" valign="top">FILE *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structChain.html#ad4792c62796b3a6d3610d1badc70617b">temperatureFile</a></td></tr>
+<tr class="memdesc:ad4792c62796b3a6d3610d1badc70617b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Temperature of each parallel chain to monitor adaptive temperature spacing.  <a href="structChain.html#ad4792c62796b3a6d3610d1badc70617b">More...</a><br /></td></tr>
 <tr class="separator:ad4792c62796b3a6d3610d1badc70617b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Structure containing settings and housekeeping data for each of the parallel chains. </p>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="aa1656395b51a7969ca0e183e6ab2c8b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1656395b51a7969ca0e183e6ab2c8b0">&#9670;&nbsp;</a></span>calibrationFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE** Chain::calibrationFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="structCalibration.html">Calibration</a> parameter chain file: <code>chains/calibration_chain.dat.M</code> </p>
+<p>Columns: </p>
+
+</div>
+</div>
+<a id="addc1b63bd5d588e388881f4420665cee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#addc1b63bd5d588e388881f4420665cee">&#9670;&nbsp;</a></span>chainFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE** Chain::chainFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Markov chain state (iterations, likelihoods, etc.): <code>chains/model_chain.dat.M</code> </p>
+<p>Columns: <code>step | N_live | logL | logL_norm | t_0</code> </p>
+
+</div>
+</div>
+<a id="a229f5af69a6a1417256f88a4c76d61f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a229f5af69a6a1417256f88a4c76d61f4">&#9670;&nbsp;</a></span>dimensionFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE** Chain::dimensionFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Signal parameter chain files for discrete models, only for cold chains: <code>chains/dimension_chain.dat.D</code> </p>
+<p>Columns: <code>f | fdot | A | cos_colat | long | cos_inc | psi | phi</code> </p>
+
+</div>
+</div>
+<a id="a2b7ad1dc61c7253efccffff830affd2a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b7ad1dc61c7253efccffff830affd2a">&#9670;&nbsp;</a></span>likelihoodFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE* Chain::likelihoodFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Log-likelhood values for each parallel chain. </p>
+<p>Columns: <code>step | logL_0 | logL_1 | ... | logL_NC-1</code> </p>
+
+</div>
+</div>
+<a id="a900a8760a27ddacbf6d801c8c817cea2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a900a8760a27ddacbf6d801c8c817cea2">&#9670;&nbsp;</a></span>noiseFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE** Chain::noiseFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="structNoise.html" title="Structure containing parameters and meta data for noise model in narrow-band analysis segment.">Noise</a> parameter chain file: <code>chains/noise_chain.dat.M</code> </p>
+<p>Columns: <code>step | logL | logL_norm | etaA | eta E</code> </p>
+
+</div>
+</div>
+<a id="a28c3caa18e9b68a2dbde9c490f1c64f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28c3caa18e9b68a2dbde9c490f1c64f4">&#9670;&nbsp;</a></span>parameterFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE** Chain::parameterFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Full signal parameter chain files: <code>chains/dimension_chain.dat.M</code> </p>
+<p>Columns: <code>f | fdot | A | cos_colat | long | cos_inc | psi | phi</code> </p>
+
+</div>
+</div>
+<a id="ad4792c62796b3a6d3610d1badc70617b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4792c62796b3a6d3610d1badc70617b">&#9670;&nbsp;</a></span>temperatureFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">FILE* Chain::temperatureFile</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Temperature of each parallel chain to monitor adaptive temperature spacing. </p>
+<p>Columns: <code>step | 1/T_0 | 1/T_1 | ... | 1/T_NC-1</code> </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
 </ul>

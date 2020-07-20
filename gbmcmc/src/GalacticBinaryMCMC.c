@@ -17,7 +17,17 @@
  *  MA  02111-1307  USA
  */
 
-/// @file GalacticBinaryMCMC.c
+/**
+ @file GalacticBinaryMCMC.c
+ \brief Sampling routines and main function
+ 
+ Including
+  - Fixed dimension galactic binary MCMC
+  - Trans-dimension galactic binary RJMCMC
+  - Parallel tempering chain exchanges ptmcmc()
+  - Fixed dimension noise model MCMC
+  - Fixed dimension data model MCMC
+ */
 
 /***************************  REQUIRED LIBRARIES  ***************************/
 
@@ -126,7 +136,6 @@ int main(int argc, char *argv[])
     int NC = chain->NC;
     int DMAX = flags->DMAX;
     int mcmc_start = -flags->NBURN;
-    
     
     /* Allocate model structures */
     struct Model **trial = malloc(sizeof(struct Model*)*NC);//trial[chain]
@@ -331,6 +340,9 @@ int main(int argc, char *argv[])
     if(flags->updateCov) test_covariance_proposal(data[0], flags, model[0][0], prior, proposal[0][8], chain->r[0]);
 
     
+    /* Write example gb_catalog bash script in run directory */
+    print_gb_catalog_script(flags, data[0], orbit);
+
     
     /* The MCMC loop */
     for(int mcmc = mcmc_start; mcmc < flags->NMCMC; mcmc++)
@@ -667,11 +679,8 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     }
     
     //hold frequencies fixed to injected value
-    if(flags->fixFreq)
-    {
-        source_y->params[0] = data->inj->f0*data->T;
-        source_y->params[7] = data->inj->dfdt*data->T*data->T;
-    }
+    if(flags->fixFreq) source_y->params[0] = data->inj->f0*data->T;
+    if(flags->fixFdot) source_y->params[7] = data->inj->dfdt*data->T*data->T;
     
     //call associated proposal density functions
     logQyx = (*proposal[nprop]->density)(data, model_x, source_y, proposal[nprop], source_y->params);

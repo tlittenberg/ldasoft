@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['cseed_138',['cseed',['../structData.html#a758dee275c2a979a3141ee70d7c9ba90',1,'Data']]]
+  ['burnin_343',['burnin',['../structFlags.html#aad2794699b324b51c925524cc9565013',1,'Flags']]],
+  ['bw_344',['BW',['../structSource.html#afb20adbd6f0f29bdb4fd6c5763f84d61',1,'Source']]]
 ];

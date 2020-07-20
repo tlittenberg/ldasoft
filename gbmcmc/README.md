@@ -16,6 +16,7 @@
     3. [Contents of `data` directory](#data)
     4. [Contents of `run` directory](#run)
 4. [Post Processing](#post)
+    1. [Contents of `catalog_N` directory](#catalog_output)
 
 <a name="intro"></a>
 # Introduction
@@ -53,7 +54,7 @@ Edit `ldasoft/gbmcmc/src/Makefile` to change install destination.
 
 <a name="examples"></a>
 # Example use cases for GBMCMC
-See run options with `gb_mcmc --help`
+See run options with `gb_mcmc --help`.  Detailed description of command line options found [here](doc/running.md)
 
 <a name="highsnr"></a>
 ## Analyze single high SNR injection
@@ -325,4 +326,57 @@ The first row is the target distribution with `T=1`
 <a name="post"></a>
 # Post processing GBMCMC
 
-To be continued...
+Post production of Markov chain output from `gb_mcmc` is done with `gb_catalog`.  
+The post processing is done on a single model from the RJMCMC analysis, identified by the number of sources `N` used in the fit, which the user specifies.
+Results from `gb_catalog` are found in the a subdirectory of the main run directory called `catalog_N/`.  The catalog step can be run several times for different choices of `N`, creating different directories for each run.
+
+For run options with `gb_catalog --help`.  Detailed description of command line options (will eventually be) found [here](doc/running.md).
+
+An example `gb_catalog` run script is created by `gb_mcmc` in the run directory.  See `example_gb_catalog.sh`.
+
+<a name="catalog_output"></a>
+## GB Catalog output format
+Within `catalog_N/` are post production files for each candidate source found by the analysis as well as aggregate files describing the whole catalog.
+The source files are uniquely named by the gravitational wave frequency of the binary as `LDCFFFFFFFFFF`. 
+`LDC` is the prefix for the name to make clear that production-level analysis have been using LISA Data Challenge simulations.
+The `FFFFFFFFFF` is a 10-digit representation of the **median** gravitational wave frequency, in Hz.  
+For example, a binary at `f_0 = 3 mHz` would be named  `LDC0030000000`.
+
+**NOTE:** There are not necessarily `N` sources found in the `catalog_N` directory.  Additional filtering is done on the chain samples which may remove sources in the "padding" regions of the analysis window, or marginal detection candidates that did not have sufficient evidence to be included in the catalog.
+
+Contents of each indidvidual file are as follows:
+
+**`catalog_N/LDCFFFFFFFFFF_chain.dat`**: The Markov chain samples for parameters consistent with `LDCFFFFFFFFFF`. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from `gb_mcmc` with **three** additional columns appended
+
+    f | fdot | A | cos_colat | long | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance
+    
+Where `SNR` is computed relative to the noise level input using `--noise-file` or the analytic noise functions if not specified, `Waveform Match` is the match between the current sample and the reference waveform for the catalog _Entry_, used for filtering the raw chains, and `Waveform Distance` is the waveform distance between the current and reference waveforms--perhaps a future filtering criteria.
+
+**`catalog_N/LDCFFFFFFFFFF_params.dat`**: Point estimate of the candidate source. Parameters correspond to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency
+
+    f | fdot | A | cos_colat | long | cos_inc | psi | phi
+
+**`catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat`**: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are
+
+    f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
+    
+Where `hY^2` is the signal power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[hA^2_25--hA^2_75]` encompasses the 50% credible interval for `hY`. For 4-link data there are 6 columns and X replaces A.
+
+**`catalog_N/LDCFFFFFFFFFF_waveform.dat`**: Point estimate of the reconstructed waveform corresponding  to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are
+
+    f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
+    
+For 4-link data there are two columns with the X channel replacing A.
+
+**`catalog_N/entries.dat`**: Summary of sources found in catalog.  Columns are
+
+    LDCFFFFFFFFFF | SNR | Evidence
+    
+Where `SNR` is computed relative to the noise level input using `--noise-file` or the analytic noise functions if not specified.  The evidence, with values from [0,1], is the probability that the candidate source is a member of the catalog, computed by the fraction of chain samples that include a set of parameters consistent with `LDCFFFFFFFFFF`.
+
+**`catalog_N/history.dat`**: File associating current candidate sources to previous catalog input using `--catalog` and `--Tcatalog` arguments for `gb_catalog`.  The columns are
+
+    LDCMMMMMMMMMM from input catalog | LDCNNNNNNNNNN from current catalog
+    
+Only sources in the current catalog with clearly identified _parent_ sources from the previous analysis are included in the file.
+

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.16"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LDASoft: Installing GBMCMC</title>
+<title>LDASoft: GBMCMC Manual</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -94,16 +94,46 @@ $(document).ready(function(){initNavTree('md_gbmcmc_README.html','');});
 
 <div class="PageDoc"><div class="header">
   <div class="headertitle">
-<div class="title">Installing GBMCMC </div>  </div>
+<div class="title">GBMCMC Manual </div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h1><a class="anchor" id="autotoc_md6"></a>
-Dependencies</h1>
+Table of contents</h1>
+<ol type="1">
+<li><a href="#intro">Introduction</a><ol type="a">
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#post_proc_dependencies">Useful modules</a></li>
+<li><a href="#installation">Installation instructions</a></li>
+</ol>
+</li>
+<li><a href="#examples">Example Use Cases</a><ol type="a">
+<li><a href="#highsnr">High SNR injection</a></li>
+<li><a href="#ldc">LDC data</a></li>
+<li><a href="#verification_binaries">Verification binaries</a></li>
+<li><a href="#other">Other examples</a></li>
+</ol>
+</li>
+<li><a href="#output">Description of Output</a><ol type="a">
+<li><a href="#parameters">Description of source parameters</a></li>
+<li><a href="#chains">Contents of <code>chains</code> directory</a></li>
+<li><a href="#data">Contents of <code>data</code> directory</a></li>
+<li><a href="#run">Contents of <code>run</code> directory</a></li>
+</ol>
+</li>
+<li><a href="#post">Post Processing</a></li>
+</ol>
+<p><a class="anchor" id="intro"></a> </p>
+<h1><a class="anchor" id="autotoc_md7"></a>
+Introduction</h1>
+<p><a class="anchor" id="dependencies"></a> </p>
+<h2><a class="anchor" id="autotoc_md8"></a>
+Dependencies</h2>
 <div class="fragment"><div class="line">gcc</div>
 <div class="line">gsl</div>
 <div class="line">gslcblas</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md7"></a>
-Good things to have for post-production</h1>
+</div><!-- fragment --><p><a class="anchor" id="post_proc_dependencies"></a> </p>
+<h2><a class="anchor" id="autotoc_md9"></a>
+Good things to have for post-production</h2>
 <div class="fragment"><div class="line">numpy</div>
 <div class="line">glob</div>
 <div class="line">pandas</div>
@@ -113,25 +143,31 @@ Good things to have for post-production</h1>
 <div class="line">h5py</div>
 <div class="line">tables</div>
 <div class="line">pydot</div>
-</div><!-- fragment --> <h1><a class="anchor" id="autotoc_md8"></a>
-Installation</h1>
-<p>Build and install binaries in <code>${HOME}/ldasoft/master/bin/</code> </p><div class="fragment"><div class="line">cd &lt;path to&gt;/ldasoft</div>
-<div class="line">./install.sh </div>
-</div><!-- fragment --><p> Edit <code>ldasoft/gbmcmc/src/Makefile</code> and <code>ldasoft/gbfisher/src/Makefile</code> change install destination.</p>
-<h1><a class="anchor" id="autotoc_md9"></a>
-Example use cases for GBMCMC</h1>
-<p>See run options with <code>gb_mcmc --help</code></p>
+</div><!-- fragment --><p> <a class="anchor" id="installation"></a> </p>
 <h2><a class="anchor" id="autotoc_md10"></a>
-Analyze on-the-fly data &amp; source simulation</h2>
+Installation</h2>
+<p>Build and install binaries in <code>${HOME}/ldasoft/master/bin/</code> </p><div class="fragment"><div class="line">cd &lt;path to&gt;/ldasoft/gbmcmc/src</div>
+<div class="line">make</div>
+<div class="line">make install</div>
+</div><!-- fragment --><p> Edit <code>ldasoft/gbmcmc/src/Makefile</code> to change install destination.</p>
+<p><a class="anchor" id="examples"></a> </p>
+<h1><a class="anchor" id="autotoc_md11"></a>
+Example use cases for GBMCMC</h1>
+<p>See run options with <code>gb_mcmc --help</code>. Detailed description of command line options found here</p>
+<p><a class="anchor" id="highsnr"></a> </p>
+<h2><a class="anchor" id="autotoc_md12"></a>
+Analyze single high SNR injection</h2>
 <div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md11"></a>
+</div><!-- fragment --><p> <a class="anchor" id="ldc"></a> </p>
+<h2><a class="anchor" id="autotoc_md13"></a>
 Analyze LDC data</h2>
-<p>See <code>README_LDC.md</code></p>
-<h2><a class="anchor" id="autotoc_md12"></a>
+<p>See <a href="`README_LDC.md`">Running on LDC Documentation</a></p>
+<p><a class="anchor" id="verification_binaries"></a> </p>
+<h2><a class="anchor" id="autotoc_md14"></a>
 Analyze verification binary with EM priors</h2>
 <p>Files containing verification binary parameters and priors are located in <code>ldasoft/gbmcmc/etc/sources/verification</code>. Current best estimates of known binaries and their parameters, with references to source material, are found <a href="https://docs.google.com/spreadsheets/d/1PfwgaPjOpcEz_8RIcf87doyhErnT0cYTYJ9b6fC0yfA/edit">here</a></p>
-<h3><a class="anchor" id="autotoc_md13"></a>
+<h3><a class="anchor" id="autotoc_md15"></a>
 Examples for AM CVn</h3>
 <p>Run with sky-location fixed </p><div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \</div>
@@ -141,9 +177,10 @@ Examples for AM CVn</h3>
 <div class="line">  --samples 128</div>
 </div><!-- fragment --><p>To run with sky-location and EM-constrained priors (currently just U[cosi]) add </p><div class="fragment"><div class="line">--em-prior &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat </div>
 </div><!-- fragment --><p>To run with orbital period P and dP/dt fixed add </p><div class="fragment"><div class="line">--fix-freq</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md14"></a>
+</div><!-- fragment --><p><a class="anchor" id="other"></a> </p>
+<h2><a class="anchor" id="autotoc_md16"></a>
 Other use cases</h2>
-<h3><a class="anchor" id="autotoc_md15"></a>
+<h3><a class="anchor" id="autotoc_md17"></a>
 Use UCBs as calibration sources</h3>
 <div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \</div>
@@ -152,58 +189,120 @@ Use UCBs as calibration sources</h3>
 <div class="line">  --fit-gap \</div>
 <div class="line">  --samples 128 \</div>
 <div class="line">  --no-rj</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md16"></a>
+</div><!-- fragment --><p><a class="anchor" id="output"></a> </p>
+<h1><a class="anchor" id="autotoc_md18"></a>
 GBMCMC output format</h1>
-<h2><a class="anchor" id="autotoc_md17"></a>
+<p><a class="anchor" id="parameters"></a> </p>
+<h2><a class="anchor" id="autotoc_md19"></a>
+Parameterization</h2>
+<p>Each galactic binary is fit with <code>NP</code> parameters, where <code>NP</code> is typically 8, but can be increased to 9 using the <code>--f-double-dot</code>. The parameters are:</p>
+<ul>
+<li><code>f</code> GW frequency at mission start (Hz)</li>
+<li><code>fdot</code> first time derivative of frequency (Hz/s)</li>
+<li><code>A</code> GW amplitude</li>
+<li><code>[long,cos_colat]</code> sky location parameters in solar system barycenter ecliptic coordinates. The latitude parameter is cosine(co-latitude), where colatitude is PI/2 - latitude. We use co-latitude so that the cosine is not double-valued, and U[-1,1] maps to a uniform distribution on the sky.</li>
+<li><code>cos_inc</code> cosine of inclination angle [-1,1]</li>
+<li><code>psi</code> polarization angle [0,PI]</li>
+<li><code>phi</code> phase of GW at mission start [0,2PI]</li>
+<li><b>OPTIONAL</b> <code>f-double-dot</code> Second frequency derivative (Hz/s^2)</li>
+</ul>
+<p>Converting from the internal sky location parameters to galactic coordinates or RA and dec is easy using <code>astropy</code>:</p>
+<div class="fragment"><div class="line">import numpy as np</div>
+<div class="line">from astropy import units as u</div>
+<div class="line">from astropy.coordinates import SkyCoord</div>
+<div class="line"> </div>
+<div class="line">#AM CVn as example</div>
+<div class="line">gbmcmc_phi = 2.9737          </div>
+<div class="line">gbmcmc_costheta = 0.6080   </div>
+<div class="line"> </div>
+<div class="line"># source = SkyCoord(lon, lat, frame)</div>
+<div class="line">source = SkyCoord(gbmcmc_phi*u.rad,(np.pi/2 - np.arccos(gbmcmc_costheta))*u.rad,frame=&#39;barycentrictrueecliptic&#39;)</div>
+<div class="line"> </div>
+<div class="line">#convert to galactic coordiantes</div>
+<div class="line">print(&quot;\n Galactic coordinates:&quot;)</div>
+<div class="line">print(source.galactic)</div>
+<div class="line"> </div>
+<div class="line">#convert to RA &amp; DEC coordiantes</div>
+<div class="line">print(&quot;\n RA &amp; Dec (deg)&quot;)</div>
+<div class="line">print(source.icrs)</div>
+<div class="line"> </div>
+<div class="line">#convert to RA &amp; DEC in h:m:s format</div>
+<div class="line">print(&quot;\n RA &amp; Dec (hhmmss)&quot;)</div>
+<div class="line">print(source.to_string(style=&#39;hmsdms&#39;))</div>
+<div class="line"> </div>
+<div class="line">#check the built in location of AM CVn</div>
+<div class="line">print(&quot;\n Built in location for AM CVn&quot;)</div>
+<div class="line">print(SkyCoord.from_name(&quot;AM CVn&quot;))</div>
+</div><!-- fragment --><p><a class="anchor" id="chains"></a> </p>
+<h2><a class="anchor" id="autotoc_md20"></a>
 &lt;tt&gt;chains&lt;/tt&gt; directory</h2>
-<h3><a class="anchor" id="autotoc_md18"></a>
-&lt;tt&gt;dimension_chain.dat.N&lt;/tt&gt;</h3>
-<p>The <code>dimension_chain.dat.N</code> files contain the post-burnin posterior samples of the binary parameters for the subset of models that have exactly <code>N</code> binaries. The columns are </p><pre class="fragment">f fdot A cos_colat long cos_inc psi phi
+<p>**<code>model_chain.dat.0</code>**: <a class="el" href="structModel.html">Model</a> state information for the chain sampling the target distribution (<em>temperature</em> T=0). Each row of the file is a chain sample. The columns are </p><pre class="fragment">step | N_live | logL | logL_norm | t_0
+</pre><p>where <code>step</code> is the iteration of the sampler, <code>N_live</code> is the number of templates used in the model, <code>logL</code> is the unnormalized log likelihood, i.e -0.5*Chi^2, <code>logL_norm</code> is the log of the likelihood normalization, and <code>t_0</code> is the inferred start time (in seconds) of the data segement.</p>
+<p>Samples with <code>step &lt; 0</code> are considered part of the burn in. The value of <code>step</code> is occasionally reset when the sampler undergoes a sufficiently large change in the maximum log likelihood.</p>
+<p>The total log likelihood at each step is <code>logL + logL_norm</code>. <br  />
+</p>
+<p>If the analysis includes <code>M</code> time segments, there will be <code>M</code> <code>t_[m=0,-1]</code> columns corresponding to the start time of each segment. The <code>t_m</code> values are constant unless the analysis is actively fitting for segment start times with the <code>--fit-gap</code> flag.</p>
+<p>If the run includes the <code>--verbose</code> flag, the file also contains <code>NP x N_live</code> additional columns cycling through the waveform parameters. </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
+</pre><p>Thus, when parsing the file, the <code>N_live</code> column should tell the parser how many additional parameter columns are appended to the end of the row.</p>
+<p>**<code>parameter_chain.dat.0</code>**: Full set of chain samples including burn-in. To properly parse the file into individual chain samples, use in concert with the <code>model_chain.dat.M</code> files to extract the number of templates used at each step <code>N_live</code> . For each chain iteration in the <code>parameter_chain.dat.0</code> file there are <code>N_live</code> lines with each containing the parameters for a single source. <br  />
+</p>
+<p>When running with the <code>--verbose</code> flag, there will be multiple <code>parameter_chain.dat.M</code> files with the index <code>M</code> for referring to the <em>temperature</em> of the parallel-tempered chain that is producing these outputs. <code>M=0</code> is the target distribution; <code>M&gt;0</code> is softened versions of this distribution. If you don't know what this means, you want <code>M=0</code>. <br  />
+</p>
+<p>NOTE: These files contain <em>all</em> samples including burnin. Unless you care deeply about checkpointing or run diagnostics, you do not need these files. Use <code>dimension_chain.dat.N</code> files, as described below.</p>
+<p>**<code>dimension_chain.dat.N</code>**: The post-burnin posterior samples of the binary parameters for the subset of models that have exactly <code>N</code> binaries. The columns are </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
 </pre><p>If there are more than one source, the sources cycle in the output (so line 1 is the first source, first posterior sample; line 2 is the second source, first posterior sample, etc).</p>
-<h3><a class="anchor" id="autotoc_md19"></a>
-&lt;tt&gt;model_chain.dat.0&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md20"></a>
-&lt;tt&gt;parameter_chain.dat.0&lt;/tt&gt;</h3>
-<p>The <code>parameter_chain.dat.M</code> files should be used in concert with the <code>model_chain.dat.M</code> files. <code>model_chain.dat.M</code> records how many binaries were in the model at each MCMC step; there are a corresponding number of lines in <code>parameter_chain.dat.M</code> for that step's binary parameters (i.e. <code>parameter_chain.dat.M</code> contains a mashed-together compilation of the <code>dimension_chain.dat.N</code> files). The index <code>M</code> for these files refers to the <em>temperature</em> of the parallel-tempered chain that is producing these outputs (<code>M = 0</code> is the target distribution; <code>M &gt; 0</code> is softened versions of this distribution; if you don't know what this means, you want <code>M=0</code>). Unlike <code>dimension_chain.dat.N</code> files, these files contain <em>all</em> samples including burnin. Unless you care deeply about checkpointing or run diagnostics, you do not need these files. Use <code>dimension_chain.dat.N</code> files, as described above.</p>
-<h3><a class="anchor" id="autotoc_md21"></a>
-&lt;tt&gt;log_likelihood_chain.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md22"></a>
-&lt;tt&gt;noise_chain.dat.0&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md23"></a>
-&lt;tt&gt;temperature_chain.dat&lt;/tt&gt;</h3>
-<h2><a class="anchor" id="autotoc_md24"></a>
+<p>**<code>noise_chain.dat.0</code>**: Full set of chain samples for noise model parameters. The columns are </p><pre class="fragment">step | logL | logL_norm | etaA | eta E
+</pre><p>where <code>etaY</code> is the PSD parameter for channel <code>Y</code>, which is a constant multiplyer to the predicted noise PSD: <code>Sn_model(f) = eta * Sn_theory(f)</code>.</p>
+<p>For 4-channel data there are only 4 columns and <code>X</code> replaces <code>A</code>. <br  />
+</p>
+<p>When the <code>--quiet</code> flag is in use only the post-burnin samples are recorded.</p>
+<p>**<code>log_likelihood_chain.dat</code>**: The full log likelihood (<code>logL + logLnorm</code>) for each of the <code>NC</code> parallel tempered chains, at each chain step. Columns are </p><pre class="fragment">step | logL_0 | logL_1 | ... | logL_NC-1
+</pre><p>Useful for monitoring the effectiveness of the parallel tempering by checking that adjacent chains are exchanging likelihood values.</p>
+<p>The <code>logL_0</code> column is the likelihood for the target distribution. <b>File is not filled when <code>--quiet</code> flag is in use.</b></p>
+<p>**<code>temperature_chain.dat</code>**: Inverse temperature for each of the <code>NC</code> parallel tempered chains, at each chain step. Columns are </p><pre class="fragment">step | 1/T_0 | 1/T_1 | ... | 1/T_NC-1
+</pre><p>Useful for monitoring the adaptive temperature spacing. <b>File is not filled when <code>--quiet</code> flag is in use.</b></p>
+<p><a class="anchor" id="data"></a> </p>
+<h2><a class="anchor" id="autotoc_md21"></a>
 &lt;tt&gt;data&lt;/tt&gt; directory</h2>
-<h3><a class="anchor" id="autotoc_md25"></a>
-&lt;tt&gt;data_0_0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md26"></a>
-&lt;tt&gt;frequency_proposal.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md27"></a>
-&lt;tt&gt;power_data_0_0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md28"></a>
-&lt;tt&gt;power_injection_0_0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md29"></a>
-&lt;tt&gt;power_noise_t0_f0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md30"></a>
-&lt;tt&gt;power_reconstruction_t0_f0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md31"></a>
-&lt;tt&gt;power_residual_t0_f0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md32"></a>
-&lt;tt&gt;variance_residual_t0_f0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md33"></a>
-&lt;tt&gt;waveform_draw_0.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md34"></a>
-&lt;tt&gt;waveform_injection_0_0.dat&lt;/tt&gt;</h3>
-<h2><a class="anchor" id="autotoc_md35"></a>
+<p>**<code>data_0_0.dat</code>**: Fourier series of input data. For 6-link data columns are </p><pre class="fragment">f [Hz] | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)} 
+</pre><p>For 4-link data there are two columns with the X channel replacing A.</p>
+<p>The <code>0_0</code> in the filename indicate that the data is for the first (0th) time and frequency segment. If the analysis involves multiple time or frequency segments, different <code>data_i_j.dat</code> files will be filled.</p>
+<p>**<code>waveform_injection_0_0.dat</code>**: Fourier series of the injected signals. For 6-link data columns are </p><pre class="fragment">f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
+</pre><p>For 4-link data there are two columns with the X channel replacing A.</p>
+<p>The same <code>i_j.dat</code> naming convention as the <code>data_i_j.dat</code> files is used here. In the absence of an injection for the analysis, the file contains a copy of the data.</p>
+<p>**<code>power_data_0_0.dat</code>**: Power spectrum of input data. For 6-link data columns are </p><pre class="fragment">f [Hz] | A^2(f) | E^2(f) 
+</pre><p>For 4-link data there are two columns with the X channel replacing A.</p>
+<p>The same <code>i_j.dat</code> naming convention as the <code>data_i_j.dat</code> files is used here.</p>
+<p>**<code>power_injection_0_0.dat</code>**: Power spectrum of injected signals. For 6-link data columns are </p><pre class="fragment">f [Hz] | h_A^2(f) | h_E^2(f) 
+</pre><p>For 4-link data there are two columns with the X channel replacing A.</p>
+<p>The same <code>i_j.dat</code> naming convention as the <code>data_i_j.dat</code> files is used here. If no injection is being done, the file contains the power spectrum of the data and is identical to <code>power_data_0_0.dat</code>.</p>
+<p>**<code>frequency_proposal.dat</code>**: Smoothed and normalized power spectrum of data used for frequency proposal. Columns are </p><pre class="fragment">frequency bin number | probability density
+</pre><p><b>THIS FILE COULD BE REMOVED FROM OUTPUT OR PUT IN <code>--verbose</code> OUTPUT</b></p>
+<p>**<code>power_noise_t0_f0.dat</code>**:Quantiles of the posterior distribution for the reconstructed noise model. For 6-link data the columns are </p><pre class="fragment">f | SnA_50 | SnA_25 | SnA_75 | SnA_05 | SnA_95 | SnE_50 | SnE_25 | SnE_75 | SnE_05 | SnE_95
+</pre><p>Where <code>SnY</code> is the noise power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[SnA_25--SnA_75]</code> encompasses the 50% credible interval for <code>SnA</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>If multiple time/frequency segments are being analyzed there will be <code>power_noise_t[i]_f[j].dat</code> files for each time-frequency segment.</p>
+<p>**<code>power_reconstruction_t0_f0.dat</code>**: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are </p><pre class="fragment">f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
+</pre><p>Where <code>hY^2</code> is the signal power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[hA^2_25--hA^2_75]</code> encompasses the 50% credible interval for <code>hY</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>If multiple time/frequency segments are being analyzed there will be <code>power_reconstruction_t[i]_f[j].dat</code> files for each time-frequency segment.</p>
+<p>**<code>power_residual_t0_f0.dat</code>**: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are </p><pre class="fragment">f | rA^2_50 | rA^2_25 | rA^2_75 | rA^2_05 | rA^2_95 | rE^2_50 | rE^2_25 | rE^2_75 | rE^2_05 | rE^2_95
+</pre><p>Where <code>rY^2</code> is the residual power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[rA^2_25--rA^2_75]</code> encompasses the 50% credible interval for <code>rA^2</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>If multiple time/frequency segments are being analyzed there will be <code>power_residual_t[i]_f[j].dat</code> files for each time-frequency segment.</p>
+<p>**<code>variance_residual_t0_f0.dat</code>**: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are </p><pre class="fragment">f | Var(hA) | Var(hE)
+</pre><p>For 4-link data there are only two columns and X replaces A.</p>
+<p>The intent here is that this variance can be added to the noise PSD for a follow-on analysis of the residuals to take into account the uncertainty in the signal model used in the subtraction. <b>This needs to be tested</b></p>
+<p>**<code>waveform_draw_0.dat</code>**: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are </p><pre class="fragment">f | dA^2 | dE^2 | hA^2 | hE^2 | rA^2 | rE^2
+</pre><p>where <code>dY</code>,<code>hY</code>, and <code>rY</code> is the data, waveform, and residual of channel <code>Y</code>. For 4-link data there are four columns and X replaces A.</p>
+<p><a class="anchor" id="run"></a> </p>
+<h2><a class="anchor" id="autotoc_md22"></a>
 main run directory</h2>
-<h3><a class="anchor" id="autotoc_md36"></a>
-&lt;tt&gt;evidence.dat&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md37"></a>
-&lt;tt&gt;gb_mcmc.log&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md38"></a>
-&lt;tt&gt;run.sh&lt;/tt&gt;</h3>
-<h3><a class="anchor" id="autotoc_md39"></a>
-&lt;tt&gt;avg_log_likelihood.dat&lt;/tt&gt;</h3>
-<h1><a class="anchor" id="autotoc_md40"></a>
+<p>**<code>evidence.dat</code>**: Posterior for number of templates used to fit the data. Columns are </p><pre class="fragment">M | NN
+</pre><p>Where <code>M</code> is the model "dimension", i.e. the number of templates in the model, and <code>NN</code> signifies that the sampler spent NN% of iterations in that model.</p>
+<p>**<code>gb_mcmc.log</code>**: Run information including git version number, command line, summary of data settings and run flags, and total run time.</p>
+<p>**<code>run.sh</code>**: Bash script which echos command line used for analysis.</p>
+<p>**<code>avg_log_likelihood.dat</code>**: Average log likelihoood for each parallel tempered chain. These data would serve as the integrand for a thermodynamic integration step to compute the overall evidence for the model (marginalized over the number of galactic binary signals in the data). Columns are </p><pre class="fragment">1/T | &lt;logL+logL_norm&gt;
+</pre><p>The first row is the target distribution with <code>T=1</code></p>
+<p><a class="anchor" id="post"></a> </p>
+<h1><a class="anchor" id="autotoc_md23"></a>
 Post processing GBMCMC</h1>
 <p>To be continued... </p>
 </div></div><!-- contents -->
