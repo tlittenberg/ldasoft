@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('md_gbfisher_README.html','');});
 <div class="title">FisherGalaxy Manual </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md34"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md35"></a>
 Input file format</h1>
 <p>Space-separated ASCII file, one source per row. Columns are <a class="anchor" id="params"></a> </p><pre class="fragment">f (Hz) |  df/dt (s^-2) | co-latitude (rad) | longitude (rad) | amplitude | inclination (rad) | polarization angle (rad) | ref phase (rad)`
 </pre><ul>
@@ -110,7 +110,7 @@ Input file format</h1>
 <li><code>polarization angle</code> angle describing the decomposition of the GW signal into <code>h+</code> and <code>hx</code>. Ranges from <code>U[0,PI]</code>.</li>
 <li><code>ref phase</code> phase of the binary orbit when observations begin. Ranges from <code>U[0,2PI]</code>.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md35"></a>
+<h2><a class="anchor" id="autotoc_md36"></a>
 Note about sky location conventions</h2>
 <p>The sky location parameters are in solar system barycenter ecliptic coordinates. <br  />
  We use co-latitude (<code>PI/2 - latitude</code>) so that its cosine is distributed from <code>U[-1,1]</code> Converting to these coordinates from galactic coordinates or RA and Dec can be done with <code>astropy</code>:</p>
@@ -133,13 +133,13 @@ Note about sky location conventions</h2>
 <div class="line"># Extract sky angles and convert to colatitude</div>
 <div class="line">colatitude = np.pi/2 - amcvn_ecliptic.lat.radian</div>
 <div class="line">longitude = amcvn_ecliptic.lon.radian</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md36"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md37"></a>
 Create orbit file with spacecraft ephimeredes</h1>
 <p>Compute spacecraft coordinates during the observation time. This is a separate step to easily test different orbit models if numerically produced ephemerides are available. The process here uses the "Eccentric Inclined" analytic orbits similar to the LISA <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> Challenges.</p>
 <p><code>&gt;OrbitFile</code></p>
 <p>Output files:</p>
 <p><code>EccentricInclined.txt</code>: Cartesian coordinates x(t),y(t),z(t) in solar system barycentric coordinates of each spacecraft. Columns are </p><pre class="fragment">t (s) | SC1_x (m) | SC1_y (m) | SC1_z (m) | SC2_x (m) | SC2_y (m) | SC2_z (m) | SC3_x (m) | SC3_y (m) | SC3_z (m)
-</pre><h1><a class="anchor" id="autotoc_md37"></a>
+</pre><h1><a class="anchor" id="autotoc_md38"></a>
 Simulate data with detector response to full galaxy and Gaussian instrument noise</h1>
 <p>Take a list of simulated sources and a set of spacecraft coordinates to simulate <a class="el" href="structTDI.html">TDI</a> data streams in the frequency domain for the given observing time. The process also filters the input galaxy for sources that are possibly detectable using a (generous) cut on signal to noise ratio SNR.</p>
 <p><code>&gt;Galaxy &lt;source file&gt; &lt;orbit file&gt; &lt;observation time (s)&gt;</code></p>
@@ -147,19 +147,19 @@ Simulate data with detector response to full galaxy and Gaussian instrument nois
 <p><code>&gt;Galaxy_XAE.dat</code>: Simulated Fourier domain <a class="el" href="structTDI.html">TDI</a> data with instrument noise and LISA response. Columns are </p><pre class="fragment">f (Hz) | Re{X(f)} | Im{X(f)} | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)} 
 </pre><p>where the X channel is for a 4-link (single interferometer) data stream while A and E are the (approximately) orthogonal <a class="el" href="structTDI.html">TDI</a> channels constructed from the 6-link data</p>
 <p><code>Bright.dat</code>: List of plausibly detectable sources from input population, using an approximate analytic expression for the signal to noise ratio, compared only to instrument noise, and thresholding on <code>SNR&gt;~2</code>. Columns are the same as the <a href="#params">input galaxy</a>.</p>
-<h1><a class="anchor" id="autotoc_md38"></a>
+<h1><a class="anchor" id="autotoc_md39"></a>
 Take data file and produce fit to confusion noise</h1>
 <p>Use a running median to determine the frequency-dependent noise level of the input data.</p>
 <p><code>&gt;Confusion_Fit &lt;data file&gt; &lt;orbit file&gt;</code></p>
 <p>Output files:</p>
 <p><code>Confusion_XAE_0.dat</code>: Resulting estimate of the overall and confusion noise levels. Columns are <a class="anchor" id="conf"></a> </p><pre class="fragment">f (Hz) | SnX(f) | SnX_conf(f) | SnA(f) | SnA_conf(f)
 </pre><p>where <code>SnY</code> is the total (instrument plus confusion) noise power spectral density of channel <code>Y</code>, and <code>SnY_conf</code> is the confusion noise component. The <code>E</code> channel noises are identical to their <code>A</code> channel counterparts.</p>
-<h2><a class="anchor" id="autotoc_md39"></a>
+<h2><a class="anchor" id="autotoc_md40"></a>
 Intermediate data products for checking performance</h2>
 <p><code>Xfit.dat</code></p>
 <p><code>Xf.dat</code></p>
 <p><code>Afit.dat</code></p>
-<h1><a class="anchor" id="autotoc_md40"></a>
+<h1><a class="anchor" id="autotoc_md41"></a>
 Compute residual data and detectable catalog</h1>
 <p>Steps through list of input sources, computes their matched filter SNR compared to the current estimate of the confusion noise level, and selects those with an SNR&gt;7 as being detectable. Detectable binaries are removed from the data stream and the median noise estimate is recomputed.</p>
 <p><code>&gt;Bright_Remove &lt;data file&gt; &lt;noise file&gt; &lt;source file&gt; &lt;orbit file&gt;</code></p>
@@ -170,12 +170,12 @@ Compute residual data and detectable catalog</h1>
 <p><code>Confusion_XAE_DS.dat</code>: Same as <code>Confusion_XAE_1.dat</code> but downsampled in frequency by a factor of <code>100</code> to make the file a more manageable size.</p>
 <p><code>BrightX.dat</code>: List of detectable binares by a 4-link (single interferometer) detector. Columns are the same as <a href="#params">input galaxy</a>.</p>
 <p><code>BrightAE.dat</code> List of detectable binares by a 6-link (three interferometer) detector. Columns are the same as <a href="#params">input galaxy</a>.</p>
-<h2><a class="anchor" id="autotoc_md41"></a>
+<h2><a class="anchor" id="autotoc_md42"></a>
 Intermediate data products for checking performance (overwriting output from &lt;tt&gt;ConfusionFit&lt;/tt&gt;)</h2>
 <p><code>Xfit.dat</code></p>
 <p><code>Xf.dat</code></p>
 <p><code>Afit.dat</code></p>
-<h1><a class="anchor" id="autotoc_md42"></a>
+<h1><a class="anchor" id="autotoc_md43"></a>
 Estimate errors</h1>
 <p>From list of detectable binaries, make final detection assessment using input confusion noise estimate and, for detectable binaries, estimate statistical error of parameter estimation with the Fisher approximation to the parameter covariance matrix. The process assesses tallies statistics of the catalog including overall number of detectable sources and the number which are well localized and/or with constrained orbital dynamics.</p>
 <p><code>&gt;Fisher_Galaxy &lt;source file&gt; &lt;noise file&gt; &lt;4-link results file&gt; &lt;6-link results file&gt; &lt;orbit file&gt;</code></p>

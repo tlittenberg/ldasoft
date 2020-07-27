@@ -51,31 +51,33 @@ var NAVTREE =
         [ "<tt>data</tt> directory", "md_gbmcmc_README.html#autotoc_md21", null ],
         [ "main run directory", "md_gbmcmc_README.html#autotoc_md22", null ]
       ] ],
-      [ "Post processing GBMCMC", "md_gbmcmc_README.html#autotoc_md23", null ]
+      [ "Post processing GBMCMC", "md_gbmcmc_README.html#autotoc_md23", [
+        [ "GB Catalog output format", "md_gbmcmc_README.html#autotoc_md24", null ]
+      ] ]
     ] ],
     [ "Workflow for processing LDC Data", "md_gbmcmc_README_LDC.html", [
-      [ "Download LDC GB data", "md_gbmcmc_README_LDC.html#autotoc_md25", null ],
-      [ "FFT LDC data with fft_ldc_data.py", "md_gbmcmc_README_LDC.html#autotoc_md26", null ],
-      [ "Access LDC VGB key parameters with python", "md_gbmcmc_README_LDC.html#autotoc_md27", null ],
-      [ "Access LDC Galaxy key parameters, with python", "md_gbmcmc_README_LDC.html#autotoc_md28", null ],
-      [ "Run gb_mcmc on Fourier transformed LDC data.", "md_gbmcmc_README_LDC.html#autotoc_md29", null ],
-      [ "Use GalacticBinaryCatalog.c (gb_catalog) to produce catalog data with the gb_mcmc output", "md_gbmcmc_README_LDC.html#autotoc_md30", null ],
-      [ "Build covariance matrix proposal from catalog output", "md_gbmcmc_README_LDC.html#autotoc_md31", null ],
-      [ "Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices", "md_gbmcmc_README_LDC.html#autotoc_md32", null ]
+      [ "Download LDC GB data", "md_gbmcmc_README_LDC.html#autotoc_md26", null ],
+      [ "FFT LDC data with fft_ldc_data.py", "md_gbmcmc_README_LDC.html#autotoc_md27", null ],
+      [ "Access LDC VGB key parameters with python", "md_gbmcmc_README_LDC.html#autotoc_md28", null ],
+      [ "Access LDC Galaxy key parameters, with python", "md_gbmcmc_README_LDC.html#autotoc_md29", null ],
+      [ "Run gb_mcmc on Fourier transformed LDC data.", "md_gbmcmc_README_LDC.html#autotoc_md30", null ],
+      [ "Use GalacticBinaryCatalog.c (gb_catalog) to produce catalog data with the gb_mcmc output", "md_gbmcmc_README_LDC.html#autotoc_md31", null ],
+      [ "Build covariance matrix proposal from catalog output", "md_gbmcmc_README_LDC.html#autotoc_md32", null ],
+      [ "Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices", "md_gbmcmc_README_LDC.html#autotoc_md33", null ]
     ] ],
     [ "FisherGalaxy Manual", "md_gbfisher_README.html", [
-      [ "Input file format", "md_gbfisher_README.html#autotoc_md34", [
-        [ "Note about sky location conventions", "md_gbfisher_README.html#autotoc_md35", null ]
+      [ "Input file format", "md_gbfisher_README.html#autotoc_md35", [
+        [ "Note about sky location conventions", "md_gbfisher_README.html#autotoc_md36", null ]
       ] ],
-      [ "Create orbit file with spacecraft ephimeredes", "md_gbfisher_README.html#autotoc_md36", null ],
-      [ "Simulate data with detector response to full galaxy and Gaussian instrument noise", "md_gbfisher_README.html#autotoc_md37", null ],
-      [ "Take data file and produce fit to confusion noise", "md_gbfisher_README.html#autotoc_md38", [
-        [ "Intermediate data products for checking performance", "md_gbfisher_README.html#autotoc_md39", null ]
+      [ "Create orbit file with spacecraft ephimeredes", "md_gbfisher_README.html#autotoc_md37", null ],
+      [ "Simulate data with detector response to full galaxy and Gaussian instrument noise", "md_gbfisher_README.html#autotoc_md38", null ],
+      [ "Take data file and produce fit to confusion noise", "md_gbfisher_README.html#autotoc_md39", [
+        [ "Intermediate data products for checking performance", "md_gbfisher_README.html#autotoc_md40", null ]
       ] ],
-      [ "Compute residual data and detectable catalog", "md_gbfisher_README.html#autotoc_md40", [
-        [ "Intermediate data products for checking performance (overwriting output from <tt>ConfusionFit</tt>)", "md_gbfisher_README.html#autotoc_md41", null ]
+      [ "Compute residual data and detectable catalog", "md_gbfisher_README.html#autotoc_md41", [
+        [ "Intermediate data products for checking performance (overwriting output from <tt>ConfusionFit</tt>)", "md_gbfisher_README.html#autotoc_md42", null ]
       ] ],
-      [ "Estimate errors", "md_gbfisher_README.html#autotoc_md42", null ]
+      [ "Estimate errors", "md_gbfisher_README.html#autotoc_md43", null ]
     ] ],
     [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [
@@ -101,8 +103,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "BayesLine_8h_source.html",
-"structCatalog.html#af336aab9dee0ceca1e47422f1fe4877f",
-"structSource.html#afd9eb823788fc8e1c59fd74b340ec97d"
+"structBayesLinePriors.html#a67266b78521d2837ca45549b26e2bc01",
+"structProposal.html#a91c51efbd6006aa8484de086ebca34ef"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

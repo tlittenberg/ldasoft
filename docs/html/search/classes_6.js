@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['model_256',['Model',['../structModel.html',1,'']]]
+  ['mode_283',['Mode',['../structMode.html',1,'']]],
+  ['model_284',['Model',['../structModel.html',1,'']]]
 ];
