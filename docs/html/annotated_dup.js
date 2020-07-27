@@ -12,11 +12,13 @@ var annotated_dup =
     [ "Flags", "structFlags.html", "structFlags" ],
     [ "lisa_orbit", "structlisa__orbit.html", "structlisa__orbit" ],
     [ "lorentzianParams", "structlorentzianParams.html", "structlorentzianParams" ],
+    [ "Mode", "structMode.html", "structMode" ],
     [ "Model", "structModel.html", "structModel" ],
     [ "Noise", "structNoise.html", "structNoise" ],
     [ "Orbit", "structOrbit.html", "structOrbit" ],
     [ "Prior", "structPrior.html", "structPrior" ],
     [ "Proposal", "structProposal.html", "structProposal" ],
+    [ "Sample", "structSample.html", "structSample" ],
     [ "Source", "structSource.html", "structSource" ],
     [ "splineParams", "structsplineParams.html", "structsplineParams" ],
     [ "TDI", "structTDI.html", "structTDI" ]
