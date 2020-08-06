@@ -120,7 +120,10 @@ Table of contents</h1>
 <li><a href="#run">Contents of <code>run</code> directory</a></li>
 </ol>
 </li>
-<li><a href="#post">Post Processing</a></li>
+<li><a href="#post">Post Processing</a><ol type="a">
+<li><a href="#catalog_output">Contents of <code>catalog_N</code> directory</a></li>
+</ol>
+</li>
 </ol>
 <p><a class="anchor" id="intro"></a> </p>
 <h1><a class="anchor" id="autotoc_md7"></a>
@@ -304,7 +307,28 @@ main run directory</h2>
 <p><a class="anchor" id="post"></a> </p>
 <h1><a class="anchor" id="autotoc_md23"></a>
 Post processing GBMCMC</h1>
-<p>To be continued... </p>
+<p>Post production of Markov chain output from <code>gb_mcmc</code> is done with <code>gb_catalog</code>. <br  />
+ The post processing is done on a single model from the RJMCMC analysis, identified by the number of sources <code>N</code> used in the fit, which the user specifies. Results from <code>gb_catalog</code> are found in the a subdirectory of the main run directory called <code>catalog_N/</code>. The catalog step can be run several times for different choices of <code>N</code>, creating different directories for each run.</p>
+<p>For run options with <code>gb_catalog --help</code>. Detailed description of command line options (will eventually be) found here.</p>
+<p>An example <code>gb_catalog</code> run script is created by <code>gb_mcmc</code> in the run directory. See <code>example_gb_catalog.sh</code>.</p>
+<p><a class="anchor" id="catalog_output"></a> </p>
+<h2><a class="anchor" id="autotoc_md24"></a>
+GB Catalog output format</h2>
+<p>Within <code>catalog_N/</code> are post production files for each candidate source found by the analysis as well as aggregate files describing the whole catalog. The source files are uniquely named by the gravitational wave frequency of the binary as <code>LDCFFFFFFFFFF</code>. <code>LDC</code> is the prefix for the name to make clear that production-level analysis have been using LISA <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> Challenge simulations. The <code>FFFFFFFFFF</code> is a 10-digit representation of the <b>median</b> gravitational wave frequency, in Hz. <br  />
+ For example, a binary at <code>f_0 = 3 mHz</code> would be named <code>LDC0030000000</code>.</p>
+<p><b>NOTE:</b> There are not necessarily <code>N</code> sources found in the <code>catalog_N</code> directory. Additional filtering is done on the chain samples which may remove sources in the "padding" regions of the analysis window, or marginal detection candidates that did not have sufficient evidence to be included in the catalog.</p>
+<p>Contents of each indidvidual file are as follows:</p>
+<p>**<code>catalog_N/LDCFFFFFFFFFF_chain.dat</code>**: The Markov chain samples for parameters consistent with <code>LDCFFFFFFFFFF</code>. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from <code>gb_mcmc</code> with <b>three</b> additional columns appended </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance
+</pre><p>Where <code>SNR</code> is computed relative to the noise level input using <code>--noise-file</code> or the analytic noise functions if not specified, <code>Waveform Match</code> is the match between the current sample and the reference waveform for the catalog <em><a class="el" href="structEntry.html">Entry</a></em>, used for filtering the raw chains, and <code>Waveform Distance</code> is the waveform distance between the current and reference waveforms&ndash;perhaps a future filtering criteria.</p>
+<p>**<code>catalog_N/LDCFFFFFFFFFF_params.dat</code>**: Point estimate of the candidate source. Parameters correspond to the chain sample containing the <b>median</b> of the 1D marginalized distriubtion for the GW frequency </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
+</pre><p>**<code>catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat</code>**: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are </p><pre class="fragment">f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
+</pre><p>Where <code>hY^2</code> is the signal power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[hA^2_25--hA^2_75]</code> encompasses the 50% credible interval for <code>hY</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>**<code>catalog_N/LDCFFFFFFFFFF_waveform.dat</code>**: Point estimate of the reconstructed waveform corresponding to the chain sample containing the <b>median</b> of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are </p><pre class="fragment">f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
+</pre><p>For 4-link data there are two columns with the X channel replacing A.</p>
+<p>**<code>catalog_N/entries.dat</code>**: Summary of sources found in catalog. Columns are </p><pre class="fragment">LDCFFFFFFFFFF | SNR | Evidence
+</pre><p>Where <code>SNR</code> is computed relative to the noise level input using <code>--noise-file</code> or the analytic noise functions if not specified. The evidence, with values from [0,1], is the probability that the candidate source is a member of the catalog, computed by the fraction of chain samples that include a set of parameters consistent with <code>LDCFFFFFFFFFF</code>.</p>
+<p>**<code>catalog_N/history.dat</code>**: File associating current candidate sources to previous catalog input using <code>--catalog</code> and <code>--Tcatalog</code> arguments for <code>gb_catalog</code>. The columns are </p><pre class="fragment">LDCMMMMMMMMMM from input catalog | LDCNNNNNNNNNN from current catalog
+</pre><p>Only sources in the current catalog with clearly identified <em>parent</em> sources from the previous analysis are included in the file. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
