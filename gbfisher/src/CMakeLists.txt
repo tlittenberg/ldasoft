@@ -9,7 +9,7 @@ add_executable(Galaxy Galaxy.c Subroutines.c arrays.c)
 
 add_executable(OrbitFile OrbitFile.c Subroutines.c arrays.c)
 
-add_executable(Setup Setup.c)
+add_executable(Setup Setup.c Subroutines.c arrays.c)
 
 add_executable(Fisher_Galaxy Fisher_Galaxy.c Subroutines.c arrays.c)
 
@@ -51,3 +51,11 @@ target_link_libraries(Fisher_Galaxy m)
 target_link_libraries(Setup GSL::gsl GSL::gslcblas)
 target_link_libraries(Setup gbmcmc)
 target_link_libraries(Setup m)
+
+install(TARGETS Confusion_Fit DESTINATION bin)
+install(TARGETS Full_Residual DESTINATION bin)
+install(TARGETS Bright_Remove DESTINATION bin)
+install(TARGETS Galaxy DESTINATION bin)
+install(TARGETS OrbitFile DESTINATION bin)
+install(TARGETS Setup DESTINATION bin)
+install(TARGETS Fisher_Galaxy DESTINATION bin)

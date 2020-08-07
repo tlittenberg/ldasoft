@@ -17,6 +17,10 @@ endforeach()
 
 project(CMakeTutorial VERSION 1.0.0 LANGUAGES C)
 
+# set cflags
+
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99")
+
 # External packages
 
 find_package(GSL REQUIRED)
@@ -48,7 +52,7 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/gbmcmc/src/gitversion.h"
   )
 
-install (FILES "${PROJECT_BINARY_DIR}/CMCConfig.h"
+install (FILES "${PROJECT_SOURCE_DIR}/gbmcmc/src/gitversion.h"
          DESTINATION include)
 
 message(STATUS "Resolving GIT Version")
