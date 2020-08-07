@@ -62,8 +62,12 @@ int main(int argc,char **argv)
   
   while ( !feof(Input) )
   {
-    fscanf(Input, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
-    
+    int check = fscanf(Input, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &Amp, &iota, &psi, &phase);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",argv[1]);
+        exit(1);
+    }
     i = (int)((f-fmin)/bw1);
     
     if(i <= bins) den[i] += bw2;

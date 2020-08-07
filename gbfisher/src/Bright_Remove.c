@@ -66,8 +66,20 @@ int main(int argc,char **argv)
   Infile = fopen(argv[1],"r");
   double junk;
   double f1,f2;
-  fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f1, &junk, &junk, &junk, &junk, &junk, &junk);
-  fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f2, &junk, &junk, &junk, &junk, &junk, &junk);
+    int check;
+  check = fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f1, &junk, &junk, &junk, &junk, &junk, &junk);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",argv[1]);
+        exit(1);
+    }
+  check = fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f2, &junk, &junk, &junk, &junk, &junk, &junk);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",argv[1]);
+        exit(1);
+    }
+
   double TOBS = 1./(f2-f1);
   int    NFFT = (int)floor(TOBS*DT);
   fclose(Infile);
@@ -131,7 +143,13 @@ int main(int argc,char **argv)
   Outfile = fopen(argv[2],"r");
   for(i=imin; i<= imax; i++)
   {
-    fscanf(Outfile,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xconf[i], &Anoise[i], &Aconf[i]);
+    check = fscanf(Outfile,"%lf%lf%lf%lf%lf\n", &f, &Xnoise[i], &Xconf[i], &Anoise[i], &Aconf[i]);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading %s\n",argv[2]);
+          exit(1);
+      }
+
   }
   fclose(Outfile);
   
@@ -146,7 +164,13 @@ int main(int argc,char **argv)
   int NSIM = 0;
   while ( !feof(Infile) )
   {
-    fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    check = fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading %s\n",argv[3]);
+          exit(1);
+      }
+
     NSIM++;
   }
   rewind(Infile);
@@ -156,8 +180,13 @@ int main(int argc,char **argv)
   {
     if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
     
-    fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
-    
+    check = fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",argv[3]);
+        exit(1);
+    }
+
     params[0] = f;
     params[1] = theta;
     params[2] = phi;
@@ -326,8 +355,14 @@ void readGalaxyFile(const char *filename, int imax, double *XfLS, double *AALS, 
   for(int i=1; i< imax; i++)
   {
     if(i%(imax/100)==0)printProgress((double)i/(double)imax);
-    fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f, &XfLS[2*i], &XfLS[2*i+1],
+    int check = fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f, &XfLS[2*i], &XfLS[2*i+1],
            &AALS[2*i], &AALS[2*i+1], &EELS[2*i], &EELS[2*i+1]);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading %s\n",filename);
+          exit(1);
+      }
+
   }
   printProgress(1.0);
   printf("\n");

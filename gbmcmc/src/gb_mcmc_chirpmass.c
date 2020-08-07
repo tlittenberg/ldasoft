@@ -121,13 +121,27 @@ int main(int argc, char* argv[])
     double fdot = 0.0;
     double fddot = 0.0;
   double Mc,B;
-  
+    int check;
   while(!feof(ifile))
   {
-    if(NP==9)fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+    if(NP==9)
+    {
+        check = fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",argv[1]);
+            exit(1);
+        }
+    }
     if(NP==8)
     {
-      fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase);
+      check = fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",argv[1]);
+            exit(1);
+        }
+
       fddot = 11.0/3.0*fdot*fdot/f;
     }
     

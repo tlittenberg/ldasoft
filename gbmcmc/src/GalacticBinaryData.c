@@ -62,13 +62,27 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
     FILE *fptr = fopen(data->fileName,"r");
     fprintf(stdout,"Finding starting frequency in %s...\n",data->fileName);
     fprintf(stdout,"...Be patient, these can be big files...");
-    for(int n=0; n<data->qmin; n++) fscanf(fptr,"%lg %lg %lg %lg %lg",&f,&junk,&junk,&junk,&junk);
+    for(int n=0; n<data->qmin; n++)
+    {
+        int check = fscanf(fptr,"%lg %lg %lg %lg %lg",&f,&junk,&junk,&junk,&junk);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",data->fileName);
+            exit(1);
+        }
+    }
     
     //add waveform to data TDI channels
     fprintf(stdout,"found it\n");
     for(int n=0; n<data->N; n++)
     {
-        fscanf(fptr,"%lg %lg %lg %lg %lg",&f,&tdi->A[2*n],&tdi->A[2*n+1],&tdi->E[2*n],&tdi->E[2*n+1]);
+        int check = fscanf(fptr,"%lg %lg %lg %lg %lg",&f,&tdi->A[2*n],&tdi->A[2*n+1],&tdi->E[2*n],&tdi->E[2*n+1]);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",data->fileName);
+            exit(1);
+        }
+
     }
     fclose(fptr);
     
@@ -250,7 +264,13 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
         fgets(header, MAXSTRINGSIZE, injectionFile);
         
         //parse injection parameters
-        fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&cosi,&D);
+        int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&cosi,&D);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->injFile[ii]);
+            exit(1);
+        }
+
         
         //incoming distance in kpc, function expects pc
         D *= 1000.0;
@@ -527,8 +547,12 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         int N=0;
         while(!feof(injectionFile))
         {
-            fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
-            //fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0,&fddot);
+            int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+            if(!check)
+            {
+                fprintf(stderr,"Error reading %s\n",flags->injFile[ii]);
+                exit(1);
+            }
             N++;
         }
         rewind(injectionFile);
@@ -542,8 +566,12 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
         
         for(int nn=0; nn<N; nn++)
         {
-            fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
-            
+            int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+            if(!check)
+            {
+                fprintf(stderr,"Error reading %s\n",flags->injFile[ii]);
+                exit(1);
+            }
             
             for(int jj=0; jj<flags->NT; jj++)
             {
@@ -793,7 +821,12 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
     int N=0;
     while(!feof(injectionFile))
     {
-        fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+        int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->injFile[0]);
+            exit(1);
+        }
         N++;
     }
     rewind(injectionFile);
@@ -805,7 +838,12 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
     for(int n=0; n<N; n++)
     {
         
-        fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+        int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->injFile[0]);
+            exit(1);
+        }
         
         //set bandwidth of data segment centered on injection
         data->fmin = f0 - (data->N/2)/data->T;
