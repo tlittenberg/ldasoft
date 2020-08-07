@@ -108,6 +108,7 @@ int main(int argc,char **argv)
   int NSIM = 0;
   int decade = 1;
   long time0 = time(0);
+    int check;
   while ( !feof(Infile) )
   {
     if(fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase)!=8) break;
@@ -127,7 +128,13 @@ int main(int argc,char **argv)
   {
     if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
     
-    fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    check = fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading %s\n",argv[1]);
+          exit(1);
+      }
+
     
     // hack for astrid simulation
     //theta-=0.5*M_PI;

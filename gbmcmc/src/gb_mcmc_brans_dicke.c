@@ -147,10 +147,17 @@ int main(int argc, char* argv[])
   double S2;
   
   double omega_BD;
-
+    int check;
+    
   //get injection parameters
   ifile = fopen("injection_parameters_0_0.dat","r");
-  fscanf(ifile,"%i%lg%lg%lg%lg%lg%lg%lg%lg%lg",&i,&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+  check = fscanf(ifile,"%i%lg%lg%lg%lg%lg%lg%lg%lg%lg",&i,&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading injection_parameters_0_0.dat\n");
+        exit(1);
+    }
+
   Mc  = M_fdot(f, fdot);
   eta = 0.24;
   component_masses(Mc,eta,&m1,&m2);
@@ -167,7 +174,12 @@ int main(int argc, char* argv[])
   while(!feof(ifile))
   {
     //fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase,&fddot);
-    fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase);
+    check = fscanf(ifile,"%lg%lg%lg%lg%lg%lg%lg%lg",&f,&fdot,&A,&phi,&theta,&cosi,&psi,&phase);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading injection_parameters_0_0.dat\n");
+          exit(1);
+      }
     fddot=1.;
     if(fdot>0.0&&fddot>0.0)
     {
