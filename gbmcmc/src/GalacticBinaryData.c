@@ -261,7 +261,12 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
             fprintf(stdout,"Injecting verification binary %s  (%i/%i)\n",flags->injFile[ii],ii+1, flags->NINJ);
         
         //strip off header
-        fgets(header, MAXSTRINGSIZE, injectionFile);
+        char *line = fgets(header, MAXSTRINGSIZE, injectionFile);
+        if(line==NULL)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->injFile[ii]);
+            exit(1);
+        }
         
         //parse injection parameters
         int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&cosi,&D);

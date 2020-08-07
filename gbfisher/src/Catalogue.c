@@ -46,7 +46,7 @@ int main(int argc,char **argv)
   
   NS = 30000000;
   char header[128];
-  fgets(header,128,Infile);
+  char *line = fgets(header,128,Infile);
   for(n=0; n<NS; n++)
   {
     if(n%(NS/100)==0)printf("Converting Binaries: %i/%i\n",n,NS);
