@@ -178,17 +178,23 @@ int main(int argc, char *argv[])
         FILE *noiseFile = fopen(flags->noiseFile,"r");
         for(int n=0; n<data->N; n++)
         {
-            fscanf(noiseFile,"%lg",&junk); //);f
-            fscanf(noiseFile,"%lg",&noise->SnA[n]);//A_med);
-            fscanf(noiseFile,"%lg",&junk); //A_lo_50
-            fscanf(noiseFile,"%lg",&junk);//A_hi_50);
-            fscanf(noiseFile,"%lg",&junk);//A_lo_90);
-            fscanf(noiseFile,"%lg",&junk);//A_hi_90);
-            fscanf(noiseFile,"%lg",&noise->SnE[n]);//E_med);
-            fscanf(noiseFile,"%lg",&junk);//E_lo_50);
-            fscanf(noiseFile,"%lg",&junk);//E_hi_50);
-            fscanf(noiseFile,"%lg",&junk);//E_lo_90);
-            fscanf(noiseFile,"%lg",&junk);//E_hi_90);
+            int check = 0;
+            check += fscanf(noiseFile,"%lg",&junk); //);f
+            check += fscanf(noiseFile,"%lg",&noise->SnA[n]);//A_med);
+            check += fscanf(noiseFile,"%lg",&junk); //A_lo_50
+            check += fscanf(noiseFile,"%lg",&junk);//A_hi_50);
+            check += fscanf(noiseFile,"%lg",&junk);//A_lo_90);
+            check += fscanf(noiseFile,"%lg",&junk);//A_hi_90);
+            check += fscanf(noiseFile,"%lg",&noise->SnE[n]);//E_med);
+            check += fscanf(noiseFile,"%lg",&junk);//E_lo_50);
+            check += fscanf(noiseFile,"%lg",&junk);//E_hi_50);
+            check += fscanf(noiseFile,"%lg",&junk);//E_lo_90);
+            check += fscanf(noiseFile,"%lg",&junk);//E_hi_90);
+            if(!check)
+            {
+                fprintf(stderr,"Error reading %s\n",flags->noiseFile);
+                exit(1);
+            }
         }
         fclose(noiseFile);
     }

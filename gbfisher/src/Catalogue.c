@@ -46,14 +46,19 @@ int main(int argc,char **argv)
   
   NS = 30000000;
   char header[128];
-  fgets(header,128,Infile);
+  char *line = fgets(header,128,Infile);
   for(n=0; n<NS; n++)
   {
     if(n%(NS/100)==0)printf("Converting Binaries: %i/%i\n",n,NS);
     
     /* COSMIC files */
     // index mass1 mass2 porb ecc xGx yGx zGx dist inc OMEGA omega
-    fscanf(Infile, "%i%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg\n", &index, &m1, &m2, &Porb, &ecc, &xgc, &ygc, &zgc, &rec, &iota,&psi,&phi0);
+      int  check = fscanf(Infile, "%i%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg%lg\n", &index, &m1, &m2, &Porb, &ecc, &xgc, &ygc, &zgc, &rec, &iota,&psi,&phi0);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading filename\n");
+          exit(1);
+      }
     
     //convert orbital parameters to GW parameters
     f    =  2.0/(Porb*YEAR);

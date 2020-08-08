@@ -117,7 +117,7 @@ void initialize_numeric_orbit(struct Orbit *orbit)
 {
     fprintf(stdout,"==== Initialize LISA Orbit Structure ====\n\n");
     
-    int n,i;
+    int n,i,check;
     double junk;
     
     FILE *infile = fopen(orbit->OrbitFileName,"r");
@@ -130,7 +130,12 @@ void initialize_numeric_orbit(struct Orbit *orbit)
          t sc1x sc1y sc1z sc2x sc2y sc2z sc3x sc3y sc3z
          */
         n++;
-        fscanf(infile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg %lg",&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk);
+        check = fscanf(infile,"%lg %lg %lg %lg %lg %lg %lg %lg %lg %lg",&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk,&junk);
+        if(!check)
+        {
+            fprintf(stderr,"Failure reading %s\n",orbit->OrbitFileName);
+            exit(1);
+        }
     }
     n--;
     rewind(infile);
@@ -172,9 +177,15 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     for(n=0; n<orbit->Norb; n++)
     {
         //First time sample must be at t=0 for phasing
-        fscanf(infile,"%lg",&t[n]);
-        for(i=0; i<3; i++) fscanf(infile,"%lg %lg %lg",&x[i][n],&y[i][n],&z[i][n]);
+        check = fscanf(infile,"%lg",&t[n]);
+        for(i=0; i<3; i++) check = fscanf(infile,"%lg %lg %lg",&x[i][n],&y[i][n],&z[i][n]);
         
+        if(!check)
+        {
+            fprintf(stderr,"Failure reading %s\n",orbit->OrbitFileName);
+            exit(1);
+        }
+
         orbit->t[n] = t[n];
         
         //Repackage orbit positions into arrays for interpolation

@@ -59,8 +59,15 @@ int main(int argc,char **argv)
   Infile = fopen(argv[1],"r");
   double junk;
   double f1,f2;
-  fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f1, &junk, &junk, &junk, &junk, &junk, &junk);
-  fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f2, &junk, &junk, &junk, &junk, &junk, &junk);
+    int check;
+  check = fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f1, &junk, &junk, &junk, &junk, &junk, &junk);
+  check = fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f2, &junk, &junk, &junk, &junk, &junk, &junk);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",argv[1]);
+        exit(1);
+    }
+
   double TOBS = 1./(f2-f1);
   int    NFFT = (int)floor(TOBS*DT);
   fclose(Infile);
@@ -104,8 +111,14 @@ int main(int argc,char **argv)
   Infile = fopen(argv[1],"r");
   for(i=1; i< imax; i++)
   {
-    fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f, &XfLS[2*i], &XfLS[2*i+1],
+    check = fscanf(Infile,"%lf%lf%lf%lf%lf%lf%lf\n", &f, &XfLS[2*i], &XfLS[2*i+1],
            &AALS[2*i], &AALS[2*i+1], &EELS[2*i], &EELS[2*i+1]);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading %s\n",argv[1]);
+          exit(1);
+      }
+
   }
   fclose(Infile);
   
@@ -127,7 +140,13 @@ int main(int argc,char **argv)
   NSIM = 0;
   while ( !feof(Abright) )
   {
-    fscanf(Abright, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    check = fscanf(Abright, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading %s\n",argv[2]);
+          exit(1);
+      }
+
     NSIM++;
   }
   rewind(Abright);
@@ -139,7 +158,13 @@ int main(int argc,char **argv)
   {
     if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
     
-    fscanf(Abright, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    check = fscanf(Abright, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+      if(!check)
+      {
+          fprintf(stderr,"Error reading %s\n",argv[2]);
+          exit(1);
+      }
+
     
     params[0] = f;
     params[1] = 0.5*M_PI-theta;

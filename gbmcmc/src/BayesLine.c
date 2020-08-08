@@ -2596,16 +2596,16 @@ void print_spline_model(FILE *fptr, struct BayesLineParams *bayesline)
 void parse_line_model(FILE *fptr, struct BayesLineParams *bayesline)
 {
     int j;
-    
-    fscanf(fptr,"%i",&bayesline->lines_x->n);
-    for(j=0; j< bayesline->lines_full->n; j++) fscanf(fptr,"%lg %lg %lg",&bayesline->lines_full->f[j],&bayesline->lines_full->A[j],&bayesline->lines_full->Q[j]);
+    int check;
+    check=fscanf(fptr,"%i",&bayesline->lines_x->n);
+    for(j=0; j< bayesline->lines_full->n; j++) check=fscanf(fptr,"%lg %lg %lg",&bayesline->lines_full->f[j],&bayesline->lines_full->A[j],&bayesline->lines_full->Q[j]);
 }
 void parse_spline_model(FILE *fptr, struct BayesLineParams *bayesline)
 {
     int j;
-    
-    fscanf(fptr,"%i",&bayesline->spline_x->n);
-    for(j=0; j<bayesline->spline_x->n; j++)fscanf(fptr,"%lg %lg",&bayesline->spline_x->points[j],&bayesline->spline_x->data[j]);
+    int check;
+    check=fscanf(fptr,"%i",&bayesline->spline_x->n);
+    for(j=0; j<bayesline->spline_x->n; j++)check=fscanf(fptr,"%lg %lg",&bayesline->spline_x->points[j],&bayesline->spline_x->data[j]);
 }
 
 

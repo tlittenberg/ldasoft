@@ -155,8 +155,14 @@ int main(int argc,char **argv)
     /* Figure out TOBS and NFFT from confusion.dat*/
     double junk;
     double f1,f2;
-    fscanf(noiseFile,"%lf%lf%lf%lf%lf", &f1, &junk, &junk, &junk, &junk);
-    fscanf(noiseFile,"%lf%lf%lf%lf%lf", &f2, &junk, &junk, &junk, &junk);
+    int check;
+    check = fscanf(noiseFile,"%lf%lf%lf%lf%lf", &f1, &junk, &junk, &junk, &junk);
+    check = fscanf(noiseFile,"%lf%lf%lf%lf%lf", &f2, &junk, &junk, &junk, &junk);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",argv[2]);
+        exit(1);
+    }
     double TOBS = 1./(f2-f1);
     rewind(noiseFile);
     
@@ -186,7 +192,16 @@ int main(int argc,char **argv)
     Anoise = double_vector(imax);
     
     noiseFile = fopen(argv[2],"r");
-    for(i=imin; i<=imax; i++) fscanf(noiseFile,"%lf%lf%lf%lf%lf", &f, &Xnoise[i], &Xc[i], &Anoise[i], &AEc[i]);
+    for(i=imin; i<=imax; i++)
+    {
+        check = fscanf(noiseFile,"%lf%lf%lf%lf%lf", &f, &Xnoise[i], &Xc[i], &Anoise[i], &AEc[i]);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",argv[2]);
+            exit(1);
+        }
+
+    }
     fclose(noiseFile);
     
     
@@ -206,7 +221,13 @@ int main(int argc,char **argv)
     int loudSNRcount=0;
     while ( !feof(sourceFile) )
     {
-        fscanf(sourceFile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &amp, &iota, &psi, &phase);
+        check = fscanf(sourceFile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &amp, &iota, &psi, &phase);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",argv[1]);
+            exit(1);
+        }
+
         COUNT++;
     }
     double **loudSNR = double_matrix(19,COUNT-1);
@@ -227,7 +248,13 @@ int main(int argc,char **argv)
         if(n%(COUNT/100)==0)printProgress((double)n/(double)COUNT);
         
         //parse input file
-        fscanf(sourceFile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &amp, &iota, &psi, &phase);
+        check = fscanf(sourceFile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &amp, &iota, &psi, &phase);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",argv[1]);
+            exit(1);
+        }
+
         
         //map parameters to array for waveform generator
         params[0] = f;
