@@ -1076,7 +1076,15 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     proposal->size=0;
     while(!feof(fptr))
     {
-        for(int j=0; j<data->NP; j++) fscanf(fptr,"%lg",&junk);
+        for(int j=0; j<data->NP; j++)
+        {
+            int check = fscanf(fptr,"%lg",&junk);
+            if(!check)
+            {
+                fprintf(stderr,"Error reading %s\n",flags->cdfFile);
+                exit(1);
+            }
+        }
         proposal->size++;
     }
     rewind(fptr);
@@ -1209,10 +1217,17 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     
     fprintf(stdout,"   reading covariance matrix %s...\n",flags->covFile);
     FILE *fptr;
+    int check;
     fptr = fopen(flags->covFile,"r");
     int no_sources;
     double junk;
-    fscanf(fptr, "%d%lg%lg%lg%lg%lg%lg%lg", &no_sources, &junk, &junk, &junk, &junk, &junk, &junk , &junk);
+    check = fscanf(fptr, "%d%lg%lg%lg%lg%lg%lg%lg", &no_sources, &junk, &junk, &junk, &junk, &junk, &junk , &junk);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",flags->covFile);
+        exit(1);
+    }
+    
     proposal->size = no_sources;
     printf("\nproposal->size=%d\n",proposal->size);
     int Ncov=proposal->size*2;
@@ -1249,8 +1264,12 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     {
         
         //second row has the weight, determinant, and then a bunch of zeroes
-        fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg", &alpha, &detCij, &junk, &junk, &junk, &junk, &junk, &junk);
-        
+        check = fscanf(fptr, "%lg%lg%lg%lg%lg%lg%lg%lg", &alpha, &detCij, &junk, &junk, &junk, &junk, &junk, &junk);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->covFile);
+            exit(1);
+        }
         //relative weighting of mode
         proposal->vector[n*2]=alpha;
         
@@ -1260,11 +1279,25 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
         
         //second row has the centroids
         mean = proposal->matrix[n];
-        for(int i=0; i<NP; i++) fscanf(fptr, "%lg", &mean[i]);
+        for(int i=0; i<NP; i++)
+        {
+            check = fscanf(fptr, "%lg", &mean[i]);
+            if(!check)
+            {
+                fprintf(stderr,"Error reading %s\n",flags->covFile);
+                exit(1);
+            }
+        }
         
         //next NP rows have the covariance matrix
         Cij = proposal->tensor[Ncov+n];
-        for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) fscanf(fptr, "%lg", &Cij[i][j]);
+        check=0.0;
+        for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) check+=fscanf(fptr, "%lg", &Cij[i][j]);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->covFile);
+            exit(1);
+        }
         
         //use gsl cholesky decomposition, preserving Cij
         /*
@@ -1275,8 +1308,14 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
         
         //next NP rows are the lower half of the cholesky decomp.
         Lij = proposal->tensor[n];
-        for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) fscanf(fptr, "%lg", &Lij[i][j]);
-        
+        check=0;
+        for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) check+=fscanf(fptr, "%lg", &Lij[i][j]);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->covFile);
+            exit(1);
+        }
+
         //get inverse of Cij (invert_matrix writes over contents of input)
         invert_matrix(Cij,NP);
         
