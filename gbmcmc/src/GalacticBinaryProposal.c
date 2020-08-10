@@ -19,6 +19,7 @@
 
 
 #include <math.h>
+#include <string.h>
 
 #include <gsl/gsl_blas.h>
 
@@ -31,6 +32,8 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_eigen.h>
+
+#include <GMM_with_EM.h>
 
 #include "LISA.h"
 #include "Constants.h"
@@ -1322,6 +1325,103 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     }
     
     fclose(fptr);
+    
+    fprintf(stdout,"\n================================================\n");
+}
+
+void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, gsl_rng *seed)
+{
+    fprintf(stdout,"\n======= Gaussian mixture model proposal ========\n\n");
+
+    // chain file
+    FILE *chainFile=NULL;
+    
+    // dimension of model
+    size_t NP = (size_t)data->NP;
+    
+    // maximum number of modes
+    size_t NMODE = 4;
+    
+    // number of samples
+    size_t NMCMC = 0;
+        
+    // number of EM iterations
+    size_t NSTEP = 500;
+
+    // thinning rate of input chain
+    size_t NTHIN = 1;
+        
+    /* count lines in file */
+    char* line;
+    char lineBuffer[BUFFER_SIZE];
+    while((line = fgets(lineBuffer, BUFFER_SIZE, chainFile)) != NULL) NMCMC++;
+    rewind(chainFile);
+    
+    //thin chain
+    NMCMC /= NTHIN;
+    
+    
+    /* allocate memory in data structures*/
+    
+    // chain samples
+    struct Sample **samples = malloc(NMCMC*sizeof(struct Sample*));
+    for(size_t n=0; n<NMCMC; n++)
+    {
+        samples[n] = malloc(sizeof(struct Sample));
+        samples[n]->x = gsl_vector_alloc(NP);
+        samples[n]->p = gsl_vector_alloc(NMODE);
+        samples[n]->w = gsl_vector_alloc(NMODE);
+    }
+    
+    // covariance matrices for different modes
+    struct MVG **modes = malloc(NMODE*sizeof(struct MVG*));
+    for(size_t n=0; n<NMODE; n++)
+    {
+        modes[n] = malloc(sizeof(struct MVG));
+        alloc_MVG(modes[n],NP);
+    }
+    
+    /* parse chain file */
+    //double value;
+    char *column;
+    for(size_t i=0; i<NMCMC; i++)
+    {
+        for(size_t j=0; j<NTHIN; j++) line = fgets(lineBuffer, BUFFER_SIZE, chainFile);
+        
+        column=strtok(line," ");
+        
+        for(size_t n=0; n<NP; n++)
+        {
+            //sscanf(column, "%lg", &value);
+            //if(LFLAG[n]) value = log(value);
+            //gsl_vector_set(samples[i]->x,n,value);
+            //column=strtok(NULL," ");
+        }
+    }
+
+    /* The main Gaussian Mixture Model with Expectation Maximization function */
+    double logL,BIC;
+    GMM_with_EM(modes, samples, NMCMC, NSTEP, seed, &logL, &BIC);
+
+    //if verbose, plot some stuff
+    if(flags->verbose) print_model(modes, samples, NMCMC, logL, BIC, NMODE);
+
+    /* package into proposal structure */
+    
+    /* clean up */
+    for(size_t n=0; n<NMCMC; n++)
+    {
+        gsl_vector_free(samples[n]->x);
+        gsl_vector_free(samples[n]->p);
+        gsl_vector_free(samples[n]->w);
+        free(samples[n]);
+    }
+    free(samples);
+    
+    // covariance matrices for different modes
+    for(size_t n=0; n<NMODE; n++) free_MVG(modes[n]);
+    free(modes);
+
     
     fprintf(stdout,"\n================================================\n");
 }

@@ -29,7 +29,7 @@
   - Fixed dimension data model MCMC
  */
 
-/***************************  REQUIRED LIBRARIES  ***************************/
+/*  REQUIRED LIBRARIES  */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,9 +40,6 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-//#include <omp.h>
-
-/*************  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS  **************/
 
 #include "LISA.h"
 #include "Constants.h"
@@ -54,6 +51,8 @@
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryProposal.h"
 #include "GalacticBinaryWaveform.h"
+
+/* PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS  */
 
 /** \brief Parallel tempering exchange
  
