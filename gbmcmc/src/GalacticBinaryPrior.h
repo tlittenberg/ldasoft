@@ -65,6 +65,11 @@ struct Prior
     double skymaxp;
     int ncostheta;
     int nphi;
+    
+    double *vector;  //!<utility 1D array for prior metadata
+    double **matrix; //!<utility 2D array for prior metadata
+    double ***tensor;//!<utility 3D array for prior metadata
+
 };
 
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior);
