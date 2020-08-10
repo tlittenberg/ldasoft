@@ -34,8 +34,6 @@
 #define UNUSED
 #endif
 
-#include <stdio.h>
-
 /*!
  \brief Prototype structure for proposal distributions.
  
@@ -75,6 +73,8 @@ struct Proposal
     double *vector;  //!<utility 1D array for proposal metadata
     double **matrix; //!<utility 2D array for proposal metadata
     double ***tensor;//!<utility 3D array for proposal metadata
+    
+    struct MVG **modes; //!<data structure for multivariate Gaussian
 };
 
 /** Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power */
@@ -89,7 +89,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fp
  @param model->t0 (updates data start times)
  @return logQ = 0 (symmetric proposal)
  */
-double t0_shift                 (UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed);
+double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, UNUSED double *params, gsl_rng *seed);
 
 /**
 \brief Fair draw from prior for each parameter
@@ -98,7 +98,7 @@ double t0_shift                 (UNUSED struct Data *data, struct Model *model, 
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_prior          (UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
 \brief Fair draw from prior for location and orientation parameters
@@ -131,7 +131,7 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
  
 
  */
-double draw_from_fisher         (UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw each parameter from 1D marginalized CDF
@@ -142,7 +142,7 @@ double draw_from_fisher         (UNUSED struct Data *data, struct Model *model, 
 @return logQ = cdf_density()
  
  */
-double draw_from_cdf            (UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw from multivariate Gaussian characterized by chain covariance
@@ -162,7 +162,7 @@ double draw_from_cdf            (UNUSED struct Data *data, struct Model *model, 
  @return logQ = cov_density()
 
  */
-double draw_from_cov            (UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw from 3D F-statistic distribution
@@ -173,7 +173,7 @@ double draw_from_cov            (UNUSED struct Data *data, struct Model *model, 
  @return logQ = evaluate_fstatistic_proposal()
 
  */
-double draw_from_fstatistic     (struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw \f$\mathcal{A}\f$ from SNR-based amplitude prior
@@ -182,7 +182,7 @@ double draw_from_fstatistic     (struct Data *data, UNUSED struct Model *model, 
  @return logQ = evaluate_snr_prior()
 
  */
-double draw_signal_amplitude    (struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw \f$f_0\f$ weighted by power spectrum of data
@@ -191,7 +191,7 @@ double draw_signal_amplitude    (struct Data *data, struct Model *model, UNUSED 
  @return logQ = 0
 
  */
-double draw_from_spectrum       (struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Shift \f$f_0\f$ by orbital modulation frequency
@@ -204,7 +204,7 @@ double draw_from_spectrum       (struct Data *data, struct Model *model, struct 
  @return logQ = 0 (symmetric proposal)
 
  */
-double fm_shift                 (struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Jumps between modes in \f$\psi\f$--\f$\varphi_0\f$ plane.
@@ -218,7 +218,7 @@ double fm_shift                 (struct Data *data, struct Model *model, struct 
  @return logQ = 0 (symmetric proposal)
 
  */
-double psi_phi_jump             (UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Same as draw_from_fstatistic() with fm_shift()
@@ -229,7 +229,7 @@ double psi_phi_jump             (UNUSED struct Data *data, UNUSED struct Model *
  @return logQ = evaluate_fstatistic_proposal()
 
  */
-double jump_from_fstatistic     (struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
  \brief Draw sky location from galaxy prior defined in set_galaxy_prior()
@@ -240,7 +240,7 @@ double jump_from_fstatistic     (struct Data *data, struct Model *model, struct 
  @return logQ = prior->skyhist[]
 
  */
-double draw_from_galaxy_prior   (struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
+double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
 
 
 /**
@@ -315,6 +315,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
  Reads covariance matrix files and parses weights, means, covariances, LU decompositions, and determinents.  Inverts covariance matrix and packages data into proposal structure
  */
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal);
+void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, gsl_rng *seed);
 
 /**
  \brief Returns (log) F-statistic proposal density

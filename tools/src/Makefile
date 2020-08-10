@@ -12,12 +12,18 @@ CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
 # include gb_mcmc routines
 #CCFLAGS += -I../../gbmcmc/src/
 
+OBJS = GMM_with_EM.o
 
-all: $(OBJS) gaussian_mixture_model
+all: $(OBJS) gaussian_mixture_model libtools.a
+
+GMM_with_EM.o : GMM_with_EM.c GMM_with_EM.h
+	$(CC) $(CCFLAGS) -c GMM_with_EM.c
 
 gaussian_mixture_model : gaussian_mixture_model.c
-	$(CC) $(CCFLAGS) -o gaussian_mixture_model gaussian_mixture_model.c $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -o gaussian_mixture_model gaussian_mixture_model.c $(OBJS) $(LIBS:%=-l%)
 
+libtools.a : $(OBJS)
+	ar rcs libtools.a $(OBJS)
 
 install : gaussian_mixture_model
 	install gaussian_mixture_model ${HOME}/ldasoft/master/bin/
