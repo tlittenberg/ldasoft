@@ -33,6 +33,18 @@ mkdir -p ${HOME}/ldasoft/master/ #hard-coded installation path in Makefiles (for
 export PATH=${HOME}/ldasoft/master/bin/:$PATH
 ```
 
+## cmake
+```bash
+#!/bin/sh
+
+mkdir build
+cd build/
+# choose where you want to install it
+cmake .. -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
+make
+make install
+```
+
 
 # Issue tracker
 https://github.com/tlittenberg/ldasoft/issues
