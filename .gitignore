@@ -79,3 +79,4 @@ tdir/src/run.sh
 tdir/src/sinc.dat
 tdir/src/sinc_0.dat
 tdir/src/sinc_D.dat
+gbmcmc/src/gitversion.h
