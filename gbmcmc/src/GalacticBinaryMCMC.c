@@ -380,7 +380,8 @@ int main(int argc, char *argv[])
                     //for(int j=0; j<model_ptr->Nlive; j++)
                     galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
                     
-                    noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
+                    if(flags->strainData || flags->simNoise)
+                        noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
                 }//loop over MCMC steps
                 
                 //reverse jump birth/death move
