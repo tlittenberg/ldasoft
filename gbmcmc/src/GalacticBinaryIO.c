@@ -59,7 +59,7 @@ void print_version(FILE *fptr)
     fprintf(fptr, "============== GBMCMC Version: =============\n\n");
     //fprintf(fptr, "  Git remote origin: %s\n", GIT_URL);
     //fprintf(fptr, "  Git version: %s\n", GIT_VER);
-    fprintf(fptr, "  Git commit: %s\n", GITVERSION);
+    fprintf(fptr, "  Git commit: %s\n", gitversion);
     //fprintf(fptr, "  Git commit author: %s\n",GIT_AUTHOR);
     //fprintf(fptr, "  Git commit date: %s\n", GIT_DATE);
 }

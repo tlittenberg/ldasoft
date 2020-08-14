@@ -40,6 +40,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include <omp.h>
+
 
 #include "LISA.h"
 #include "Constants.h"
@@ -343,8 +345,24 @@ int main(int argc, char *argv[])
     /* Write example gb_catalog bash script in run directory */
     print_gb_catalog_script(flags, data[0], orbit);
 
-    
-    /* The MCMC loop */
+    int threads;
+    printf("How many threads to run: ");
+    scanf("%d",&threads);
+
+    int numThreads;
+    #pragma omp parallel num_threads(threads)
+    {   
+        int threadID;
+        threadID = omp_get_thread_num();
+
+        if(threadID==0){
+            numThreads = omp_get_num_threads();
+            printf("Got %i threads.\n",numThreads);
+        }
+
+        #pragma omp barrier
+
+    /* The MCMC loop */    
     for(int mcmc = mcmc_start; mcmc < flags->NMCMC; mcmc++)
     {
         if(mcmc<0) flags->burnin=1;
@@ -363,8 +381,8 @@ int main(int argc, char *argv[])
         chain->annealing=1.0;
         
         // (parallel) loop over chains
-        //#pragma omp parallel for private(ic) shared(flags,model,trial,chain,orbit,proposal)
-        for(int ic=0; ic<NC; ic++)
+        //#pragma omp parallel private(ic) shared(flags,model,trial,chain,orbit,proposal)
+        for(int ic=threadID; ic<NC; ic+=numThreads)
         {
             
             //loop over frequency segments
@@ -379,11 +397,12 @@ int main(int argc, char *argv[])
                 {
                     //for(int j=0; j<model_ptr->Nlive; j++)
                     galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
-                    
+
                     if(flags->strainData || flags->simNoise)
                         noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
+                    
                 }//loop over MCMC steps
-                
+
                 //reverse jump birth/death move
                 if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
                 
@@ -401,53 +420,58 @@ int main(int argc, char *argv[])
             if(flags->gap) data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal[0], ic);
             
         }// end (parallel) loop over chains
+
+        #pragma omp barrier
+        if(threadID==0){
+            ptmcmc(model,chain,flags);
+            adapt_temperature_ladder(chain, mcmc+flags->NBURN);
         
-        ptmcmc(model,chain,flags);
-        adapt_temperature_ladder(chain, mcmc+flags->NBURN);
+            print_chain_files(data[FIXME], model, chain, flags, mcmc);
         
-        print_chain_files(data[FIXME], model, chain, flags, mcmc);
-        
-        //track maximum log Likelihood
-        if(mcmc%100)
-        {
-            if(update_max_log_likelihood(model, chain, flags)) mcmc = -flags->NBURN;
-        }
-        
-        //store reconstructed waveform
-        if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
-        
-        //update run status
-        if(mcmc%data[FIXME]->downsample==0)
-        {
-            
-            if(!flags->quiet)
+            //track maximum log Likelihood
+            if(mcmc%100)
             {
-                for(int i=0; i<flags->NDATA; i++)
+                if(update_max_log_likelihood(model, chain, flags)) mcmc = -flags->NBURN;
+            }
+        
+            //store reconstructed waveform
+            if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
+        
+            //update run status
+            if(mcmc%data[FIXME]->downsample==0)
+            {
+            
+                if(!flags->quiet)
                 {
-                    print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
-                    fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
-                    print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
+                    for(int i=0; i<flags->NDATA; i++)
+                    {
+                        print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc); //writing to file
+                        fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
+                        print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
+                    }
+                }
+            
+                //save chain state to resume sampler
+                save_chain_state(data, model, chain, flags, mcmc);
+            
+            }
+        
+            //dump waveforms to file, update avgLogL for thermodynamic integration
+            if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
+            {
+                for(int i=0; i<flags->NDATA; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
+                for(int ic=0; ic<NC; ic++)
+                {
+                    chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
+                    for(int i=0; i<flags->NDATA; i++)
+                        chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
                 }
             }
-            
-            //save chain state to resume sampler
-            save_chain_state(data, model, chain, flags, mcmc);
-            
         }
-        
-        //dump waveforms to file, update avgLogL for thermodynamic integration
-        if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
-        {
-            for(int i=0; i<flags->NDATA; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
-            for(int ic=0; ic<NC; ic++)
-            {
-                chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
-                for(int i=0; i<flags->NDATA; i++)
-                    chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
-            }
-        }
-        
+        #pragma omp barrier
     }// end MCMC loop
+
+    }
     
     //print aggregate run files/results
     for(int i=0; i<flags->NDATA; i++)print_waveforms_reconstruction(data[i],i);
