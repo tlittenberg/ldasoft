@@ -100,7 +100,13 @@ int main(int argc, char *argv[])
     fprintf(stdout,"Counting sources in catalog file %s:\n",flags->injFile[0]);
     while(!feof(catalogFile))
     {
-        fscanf(catalogFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&theta,&iota,&psi,&phi0);
+        int check = fscanf(catalogFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&theta,&iota,&psi,&phi0);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->covFile);
+            exit(1);
+        }
+        
         N++;
     }
     rewind(catalogFile);
@@ -143,7 +149,13 @@ int main(int argc, char *argv[])
     for(int nn=0; nn<N; nn++)
     {
         if(N>100 && nn%(N/100)==0)printProgress( (double)nn / (double)N );
-        fscanf(catalogFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&theta,&iota,&psi,&phi0);
+        int check = fscanf(catalogFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&amp,&phi,&theta,&iota,&psi,&phi0);
+        
+        if(!check)
+        {
+            fprintf(stderr,"Error reading catalogFile\n");
+            exit(1);
+        }
         
         //set bandwidth of data segment centered on injection
         data->fmin = f0 - (data->N/2)/data->T;

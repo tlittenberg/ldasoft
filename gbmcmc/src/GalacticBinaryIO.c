@@ -59,7 +59,7 @@ void print_version(FILE *fptr)
     fprintf(fptr, "============== GBMCMC Version: =============\n\n");
     //fprintf(fptr, "  Git remote origin: %s\n", GIT_URL);
     //fprintf(fptr, "  Git version: %s\n", GIT_VER);
-    fprintf(fptr, "  Git commit: %s\n", gitversion);
+    fprintf(fptr, "  Git commit: %s\n", GITVERSION);
     //fprintf(fptr, "  Git commit author: %s\n",GIT_AUTHOR);
     //fprintf(fptr, "  Git commit date: %s\n", GIT_DATE);
 }
@@ -714,8 +714,12 @@ void restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model *
         
         int n = chain->index[ic];
         
-        fscanf(stateFile,"%lg",&chain->logLmax);
-        
+        int check = fscanf(stateFile,"%lg",&chain->logLmax);
+        if(!check)
+        {
+            fprintf(stderr,"Error reading checkpoint file\n");
+            exit(1);
+        }
         for(int j=0; j<flags->NDATA; j++)
         {
             scan_chain_state(data[j], chain, model[n][j], flags, stateFile, step);
@@ -837,11 +841,17 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
 
 void scan_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int *step)
 {
-    fscanf(fptr, "%i",step);
-    fscanf(fptr, "%i",&model->Nlive);
-    fscanf(fptr, "%lg",&model->logL);
-    fscanf(fptr, "%lg",&model->logLnorm);
-    for(int j=0; j<flags->NT; j++)fscanf(fptr, "%lg",&model->t0[j]);
+    int check = 0;
+    check += fscanf(fptr, "%i",step);
+    check += fscanf(fptr, "%i",&model->Nlive);
+    check += fscanf(fptr, "%lg",&model->logL);
+    check += fscanf(fptr, "%lg",&model->logLnorm);
+    for(int j=0; j<flags->NT; j++) check += fscanf(fptr, "%lg",&model->t0[j]);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading checkpoint files\n");
+        exit(1);
+    }
     if(flags->verbose)
     {
         for(int i=0; i<model->Nlive; i++)
@@ -849,6 +859,7 @@ void scan_chain_state(struct Data *data, struct Chain *chain, struct Model *mode
             scan_source_params(data,model->source[i],fptr);
         }
     }
+    
 }
 
 void print_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int step)
@@ -870,23 +881,29 @@ void print_chain_state(struct Data *data, struct Chain *chain, struct Model *mod
 
 void scan_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int *step)
 {
-    fscanf(fptr, "%i %lg %lg",step, &model->logL,&model->logLnorm);
+    int check = fscanf(fptr, "%i %lg %lg",step, &model->logL,&model->logLnorm);
     
     for(int i=0; i<model->NT; i++)
     {
         switch(data->Nchannel)
         {
             case 1:
-                fscanf(fptr, "%lg", &model->calibration[i]->dampX);
-                fscanf(fptr, "%lg", &model->calibration[i]->dphiX);
+                check += fscanf(fptr, "%lg", &model->calibration[i]->dampX);
+                check += fscanf(fptr, "%lg", &model->calibration[i]->dphiX);
                 break;
             case 2:
-                fscanf(fptr, "%lg", &model->calibration[i]->dampA);
-                fscanf(fptr, "%lg", &model->calibration[i]->dphiA);
-                fscanf(fptr, "%lg", &model->calibration[i]->dampE);
-                fscanf(fptr, "%lg", &model->calibration[i]->dphiE);
+                check += fscanf(fptr, "%lg", &model->calibration[i]->dampA);
+                check += fscanf(fptr, "%lg", &model->calibration[i]->dphiA);
+                check += fscanf(fptr, "%lg", &model->calibration[i]->dampE);
+                check += fscanf(fptr, "%lg", &model->calibration[i]->dphiE);
                 break;
         }
+    }
+    
+    if(!check)
+    {
+        fprintf(stderr,"Error reading calibration files\n");
+        exit(1);
     }
 }
 void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int step)
@@ -915,21 +932,27 @@ void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr,
 
 void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *step)
 {
-    fscanf(fptr, "%i ",step);
-    fscanf(fptr, "%lg %lg ", &model->logL, &model->logLnorm);
+    int check=0;
+    check+=fscanf(fptr, "%i ",step);
+    check+=fscanf(fptr, "%lg %lg ", &model->logL, &model->logLnorm);
     
     for(int i=0; i<model->NT; i++)
     {
         switch(data->Nchannel)
         {
             case 1:
-                fscanf(fptr, "%lg", &model->noise[i]->etaX);
+                check+=fscanf(fptr, "%lg", &model->noise[i]->etaX);
                 break;
             case 2:
-                fscanf(fptr, "%lg", &model->noise[i]->etaA);
-                fscanf(fptr, "%lg", &model->noise[i]->etaE);
+                check+=fscanf(fptr, "%lg", &model->noise[i]->etaA);
+                check+=fscanf(fptr, "%lg", &model->noise[i]->etaE);
                 break;
         }
+    }
+    if(!check)
+    {
+        fprintf(stderr,"Error reading noise file\n");
+        exit(1);
     }
 }
 
@@ -973,17 +996,23 @@ void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
 
 void scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
 {
-    
-    fscanf(fptr,"%lg",&source->f0);
-    fscanf(fptr,"%lg",&source->dfdt);
-    fscanf(fptr,"%lg",&source->amp);
-    fscanf(fptr,"%lg",&source->phi);
-    fscanf(fptr,"%lg",&source->costheta);
-    fscanf(fptr,"%lg",&source->cosi);
-    fscanf(fptr,"%lg",&source->psi);
-    fscanf(fptr,"%lg",&source->phi0);
+    int check = 0;
+    check+=fscanf(fptr,"%lg",&source->f0);
+    check+=fscanf(fptr,"%lg",&source->dfdt);
+    check+=fscanf(fptr,"%lg",&source->amp);
+    check+=fscanf(fptr,"%lg",&source->phi);
+    check+=fscanf(fptr,"%lg",&source->costheta);
+    check+=fscanf(fptr,"%lg",&source->cosi);
+    check+=fscanf(fptr,"%lg",&source->psi);
+    check+=fscanf(fptr,"%lg",&source->phi0);
     if(source->NP>8)
-        fscanf(fptr,"%lg",&source->d2fdt2);
+        check+=fscanf(fptr,"%lg",&source->d2fdt2);
+    
+    if(!check)
+    {
+        fprintf(stdout,"Error reading source file\n");
+        exit(1);
+    }
     
     //map to parameter names (just to make code readable)
     map_params_to_array(source, source->params, data->T);
