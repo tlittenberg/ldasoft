@@ -62,5 +62,6 @@ set (GITVERSION "\"${_build_version}\"")
 
 # Internal products
 
+add_subdirectory(tools)
 add_subdirectory(gbmcmc)
 add_subdirectory(gbfisher)
