@@ -33,6 +33,9 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+
+#include <GMM_with_EM.h>
+
 /* ===============  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS ========= */
 
 #include "LISA.h"
@@ -47,6 +50,7 @@
 /* ============================  MAIN PROGRAM  ============================ */
 static void print_usage_catalog();
 static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog);
+static void gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP);
 
 int main(int argc, char *argv[])
 {
@@ -618,6 +622,11 @@ int main(int argc, char *argv[])
         fclose(out);
         
         
+        /* Gaussian mixture model fit to posterior */
+        gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP);
+
+        /* ********************** */
+        
         for(int i=0; i<data->N; i++)
         {
             for(int j=0; j<data->Nchannel; j++)
@@ -931,4 +940,93 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     print_version(runlog);
     
     fclose(runlog);
+}
+
+static void gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP)
+{
+    fprintf(stdout,"\nGaussian Mixture Model fit to event %s\n",entry->name);
+    
+    // number of samples
+    size_t NMCMC = entry->I;
+    
+    // number of EM iterations
+    size_t NSTEP = 500;
+    
+    // thinning rate of input chain
+    size_t NTHIN = 1;
+    
+    // maximum number of modes
+    size_t NMODE = 6;
+    
+    // rng
+    const gsl_rng_type *T = gsl_rng_default;
+    gsl_rng *r = gsl_rng_alloc(T);
+    gsl_rng_env_setup();
+    gsl_rng_set (r, 190521);
+    
+    struct Sample **samples = malloc(NMCMC*sizeof(struct Sample*));
+    for(size_t n=0; n<NMCMC; n++)
+    {
+        samples[n] = malloc(sizeof(struct Sample));
+        samples[n]->x = gsl_vector_alloc(NP);
+        samples[n]->p = gsl_vector_alloc(NMODE);
+        samples[n]->w = gsl_vector_alloc(NMODE);
+    }
+    
+    // covariance matrices for different modes
+    struct MVG **modes = malloc(NMODE*sizeof(struct MVG*));
+    for(size_t n=0; n<NMODE; n++)
+    {
+        modes[n] = malloc(sizeof(struct MVG));
+        alloc_MVG(modes[n],NP);
+    }
+    
+    /* parse chain file */
+    double value[NP];
+    char *column;
+    for(size_t i=0; i<NMCMC; i++)
+    {
+        value[0] = entry->source[i]->f0;
+        value[1] = entry->source[i]->costheta;
+        value[2] = entry->source[i]->phi;
+        value[3] = log(entry->source[i]->amp);
+        value[4] = entry->source[i]->cosi;
+        value[5] = entry->source[i]->psi;
+        value[6] = entry->source[i]->phi0;
+        if(NP>7)
+            value[7] = entry->source[i]->dfdt;
+        if(NP>8)
+            value[8] = entry->source[i]->d2fdt2;
+        
+        for(size_t n=0; n<NP; n++) gsl_vector_set(samples[i]->x,n,value[n]);
+    }
+    
+    /* The main Gaussian Mixture Model with Expectation Maximization function */
+    double logL, BIC;
+    GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC);
+    
+    
+    /* Write GMM results to binary for pick up by other processes */
+    char filename[BUFFER_SIZE];
+    sprintf(filename,"%s/%s_gmm.bin",outdir,entry->name);
+    FILE *fptr = fopen(filename,"wb");
+    for(size_t n=0; n<NMODE; n++) write_MVG(modes[n],fptr);
+    fclose(fptr);
+    
+    /* clean up */
+    for(size_t n=0; n<NMCMC; n++)
+    {
+        gsl_vector_free(samples[n]->x);
+        gsl_vector_free(samples[n]->p);
+        gsl_vector_free(samples[n]->w);
+        free(samples[n]);
+    }
+    free(samples);
+    
+    // covariance matrices for different modes
+    for(size_t n=0; n<NMODE; n++) free_MVG(modes[n]);
+    free(modes);
+    
+    gsl_rng_free(r);
+    
 }
