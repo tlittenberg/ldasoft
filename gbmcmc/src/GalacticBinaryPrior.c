@@ -22,6 +22,16 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_eigen.h>
+
+#include <GMM_with_EM.h>
+
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
@@ -456,6 +466,30 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     //set prior volume
     for(int n=0; n<data->NP; n++) model->logPriorVolume[n] = log(model->prior[n][1]-model->prior[n][0]);
     
+}
+
+void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior)
+{
+    /* allocate GMM structure */
+
+    size_t NP = (size_t)data->NP;
+    
+    size_t NMODE = 6;
+    prior->modes = malloc(NMODE*sizeof(struct MVG*));
+    for(size_t n=0; n<NMODE; n++)
+    {
+        prior->modes[n] = malloc(sizeof(struct MVG));
+        alloc_MVG(prior->modes[n],NP);
+    }
+    
+    /* Read GMM results to binary for pick up by other processes */
+    char filename[BUFFER_SIZE];
+    sprintf(filename,"/Users/tyson/Research/GalacticBinaries/dev/gmm/catalog_1/LDC0089943057_gmm.bin");
+    FILE *fptr = fopen(filename,"rb");
+    
+    for(size_t n=0; n<NMODE; n++) read_MVG(prior->modes[n],fptr);
+    fclose(fptr);
+
 }
 
 double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params)
