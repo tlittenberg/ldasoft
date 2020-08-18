@@ -20,6 +20,8 @@ https://tlittenberg.github.io/ldasoft/html/index.html
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2026177.svg)](https://doi.org/10.5281/zenodo.2026177)
 
 # Installation
+
+Example build script:
 ```bash
 #!/bin/bash
 
