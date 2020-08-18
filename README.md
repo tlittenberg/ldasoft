@@ -27,13 +27,13 @@ https://tlittenberg.github.io/ldasoft/html/index.html
 export LDASOFT_PREFIX=<EDIT: path to desired install directories>
 
 # build codes
-./install.sh LDASOFT_PREFIX
+./install.sh ${LDASOFT_PREFIX}
 
 # add location of binaries to PATH 
 export PATH=${LDASOFT_PREFIX}/bin:${PATH}
 ```
 
-The directory tree ldasoft installation:
+Directory tree for the ldasoft installation:
 ```
 ├── bin
 │   ├── Bright_Remove
