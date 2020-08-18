@@ -201,6 +201,21 @@ int main(int argc, char* argv[])
     double logL, BIC;
     GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC);
     
+
+    /* Write GMM results to binary for pick up by other processes */
+    char filename[BUFFER_SIZE];
+    sprintf(filename,"gmm_%i.bin",(int)NMODE);
+    FILE *fptr = fopen(filename,"wb");
+    for(size_t n=0; n<NMODE; n++) write_MVG(modes[n],fptr);
+    fclose(fptr);
+
+    /* Read GMM results to binary for pick up by other processes */
+    sprintf(filename,"gmm_%i.bin",(int)NMODE);
+    fptr = fopen(filename,"rb");
+    for(size_t n=0; n<NMODE; n++) read_MVG(modes[n],fptr);
+    fclose(fptr);
+
+    
     print_model(modes, samples, NMCMC, logL, BIC, NMODE);
 
     

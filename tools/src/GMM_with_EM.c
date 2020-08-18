@@ -94,6 +94,48 @@ void free_MVG(struct MVG *mode)
     free(mode);
 }
 
+void write_MVG(struct MVG *mode, FILE *fptr)
+{
+    //pack detC,p,and Neff into a vector to make life easier
+    gsl_vector *temp = gsl_vector_alloc(3);
+    gsl_vector_set(temp,0,mode->detC);
+    gsl_vector_set(temp,1,mode->p);
+    gsl_vector_set(temp,2,mode->Neff);
+
+    //write 'em!
+    gsl_vector_fwrite(fptr,mode->mu);
+    gsl_matrix_fwrite(fptr,mode->C);
+    gsl_matrix_fwrite(fptr,mode->L);
+    gsl_matrix_fwrite(fptr,mode->Cinv);
+    gsl_matrix_fwrite(fptr,mode->evectors);
+    gsl_vector_fwrite(fptr,mode->evalues);
+    gsl_vector_fwrite(fptr,temp);
+
+    gsl_vector_free(temp);
+}
+
+void read_MVG(struct MVG *mode, FILE *fptr)
+{
+    //vector for holding packed detC,p,and Neff
+    gsl_vector *temp = gsl_vector_alloc(3);
+
+    //read 'em!
+    gsl_vector_fread(fptr,mode->mu);
+    gsl_matrix_fread(fptr,mode->C);
+    gsl_matrix_fread(fptr,mode->L);
+    gsl_matrix_fread(fptr,mode->Cinv);
+    gsl_matrix_fread(fptr,mode->evectors);
+    gsl_vector_fread(fptr,mode->evalues);
+    gsl_vector_fread(fptr,temp);
+
+    //unpack 'em!
+    mode->detC = gsl_vector_get(temp,0);
+    mode->p = gsl_vector_get(temp,1);
+    mode->Neff = gsl_vector_get(temp,2);
+
+    gsl_vector_free(temp);
+}
+
 double multivariate_gaussian(gsl_vector *x, struct MVG *mvg)
 {
     

@@ -6,7 +6,7 @@ add_library(gbmcmc STATIC BayesLine.c GalacticBinaryFStatistic.c GalacticBinaryM
 include_directories ("${PROJECT_SOURCE_DIR}/tools/src/")              
 include_directories ("${PROJECT_SOURCE_DIR}/gbmcmc/src/")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
-target_link_libraries(gbmcmc ${GSL_LIBRARIES})
+target_link_libraries(gbmcmc tools ${GSL_LIBRARIES})
 
 install(TARGETS gbmcmc DESTINATION lib)
 

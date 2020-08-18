@@ -90,6 +90,17 @@ void alloc_MVG(struct MVG *mode, size_t N);
 void free_MVG(struct MVG *mode);
 
 /**
+ * \brief This function writes the contents of MVG structure `mode` to the stream `fptr` in binary format.
+ */
+void write_MVG(struct MVG *mode, FILE *fptr);
+
+
+/**
+ * \brief This function reads the  contents of MVG structure `mode` from the stream `fptr` in binary format.
+ */
+void read_MVG(struct MVG *mode, FILE *fptr);
+
+/**
  * \brief Evaluates the probability density of a multviariate Gaussian with input mean \f$\mu\f$
  * and covariance matrix \f$ C \f$.
  * \param[in] x vector of location to evaluate multivariate gaussian
