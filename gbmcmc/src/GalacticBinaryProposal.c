@@ -843,6 +843,8 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 }
                 check   += proposal[i]->weight;
                 rjcheck += proposal[i]->rjweight;
+                setup_gmm_proposal(data, flags, proposal[i]);
+                exit(1);
                 break;
             case 8:
                 sprintf(proposal[i]->name,"cov draw");
@@ -1329,13 +1331,13 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     fprintf(stdout,"\n================================================\n");
 }
 
-void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, gsl_rng *seed)
+void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal)
 {
     fprintf(stdout,"\n======= Gaussian mixture model proposal ========\n\n");
 
     // chain file
-    FILE *chainFile=NULL;
-    
+    FILE *chainFile=fopen(flags->cdfFile,"r");
+
     // dimension of model
     size_t NP = (size_t)data->NP;
     
@@ -1351,6 +1353,12 @@ void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     // thinning rate of input chain
     size_t NTHIN = 1;
         
+    // rng
+    const gsl_rng_type *T = gsl_rng_default;
+    gsl_rng *seed = gsl_rng_alloc(T);
+    gsl_rng_env_setup();
+    gsl_rng_set (seed, 190521);
+
     /* count lines in file */
     char* line;
     char lineBuffer[BUFFER_SIZE];
@@ -1382,7 +1390,7 @@ void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     }
     
     /* parse chain file */
-    //double value;
+    double value;
     char *column;
     for(size_t i=0; i<NMCMC; i++)
     {
@@ -1392,10 +1400,10 @@ void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal 
         
         for(size_t n=0; n<NP; n++)
         {
-            //sscanf(column, "%lg", &value);
-            //if(LFLAG[n]) value = log(value);
-            //gsl_vector_set(samples[i]->x,n,value);
-            //column=strtok(NULL," ");
+            sscanf(column, "%lg", &value);
+            if(n==2) value = log(value);
+            gsl_vector_set(samples[i]->x,n,value);
+            column=strtok(NULL," ");
         }
     }
 
@@ -1422,7 +1430,8 @@ void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     for(size_t n=0; n<NMODE; n++) free_MVG(modes[n]);
     free(modes);
 
-    
+    fclose(chainFile);
+    gsl_rng_free(seed);
     fprintf(stdout,"\n================================================\n");
 }
 

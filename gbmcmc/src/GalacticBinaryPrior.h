@@ -21,8 +21,6 @@
 #ifndef GalacticBinaryPrior_h
 #define GalacticBinaryPrior_h
 
-#include <stdio.h>
-
 /* ----------------  MILKY WAY MODEL  ------------------- */
 
 /* distance from solar BC to GC (kpc) */
@@ -69,10 +67,13 @@ struct Prior
     double *vector;  //!<utility 1D array for prior metadata
     double **matrix; //!<utility 2D array for prior metadata
     double ***tensor;//!<utility 3D array for prior metadata
+    
+    struct MVG **modes; //!<data structure for multivariate Gaussian
 
 };
 
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior);
+void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior);
 void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose);
 double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params);
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params);
