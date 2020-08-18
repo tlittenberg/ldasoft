@@ -21,28 +21,40 @@ https://tlittenberg.github.io/ldasoft/html/index.html
 
 # Installation
 ```bash
-#!/bin/sh
+#!/bin/bash
 
-# make install directories
-mkdir -p ${HOME}/ldasoft/master/ #hard-coded installation path in Makefiles (for now)
+# set prefix for install directories
+export LDASOFT_PREFIX=<EDIT: path to desired install directories>
 
 # build codes
-./install.sh
+./install.sh LDASOFT_PREFIX
 
-# add location of binaries to PATH (include this in login scripts)
-export PATH=${HOME}/ldasoft/master/bin/:$PATH
+# add location of binaries to PATH 
+export PATH=${LDASOFT_PREFIX}/bin:${PATH}
 ```
 
-## cmake
-```bash
-#!/bin/sh
-
-mkdir build
-cd build/
-# choose where you want to install it
-cmake .. -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}
-make
-make install
+The directory tree ldasoft installation:
+```
+├── bin
+│   ├── Bright_Remove
+│   ├── Confusion_Fit
+│   ├── Fisher_Galaxy
+│   ├── Full_Residual
+│   ├── Galaxy
+│   ├── OrbitFile
+│   ├── Setup
+│   ├── gaussian_mixture_model
+│   ├── gb_catalog
+│   ├── gb_match
+│   ├── gb_mcmc
+│   ├── gb_mcmc_brans_dicke
+│   ├── gb_mcmc_chirpmass
+│   └── gb_residual
+├── include
+│   └── gitversion.h
+└── lib
+    ├── libgbmcmc.a
+    └── libtools.a
 ```
 
 
