@@ -274,8 +274,8 @@ void print_usage()
     fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
     fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
     fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
-    fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
-    fprintf(stdout,"       --update-cov  : use cov mtrx proposal [filename]    \n");
+    fprintf(stdout,"       --update      : gmm of posterior as prior [filename]\n");
+    fprintf(stdout,"       --update-cov  : use cov matrix proposal [filename]  \n");
     fprintf(stdout,"\n");
     
     //Misc.
@@ -531,7 +531,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 {
                     checkfile(optarg);
                     flags->update=1;
-                    sprintf(flags->cdfFile,"%s",optarg);
+                    sprintf(flags->gmmFile,"%s",optarg);
                 }
                 if(strcmp("update-cov", long_options[long_index].name) == 0)
                 {
