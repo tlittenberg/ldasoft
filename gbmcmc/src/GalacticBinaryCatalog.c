@@ -50,7 +50,7 @@
 /* ============================  MAIN PROGRAM  ============================ */
 static void print_usage_catalog();
 static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog);
-static void gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP);
+static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC);
 
 int main(int argc, char *argv[])
 {
@@ -623,7 +623,63 @@ int main(int argc, char *argv[])
         
         
         /* Gaussian mixture model fit to posterior */
-        gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP);
+        fprintf(stdout,"\nGaussian Mixture Model fit:\n");
+        const gsl_rng_type *T = gsl_rng_default;
+        const gsl_rng_type *Tsave = gsl_rng_default;
+        const gsl_rng_type *Ttemp = gsl_rng_default;
+        gsl_rng *r = gsl_rng_alloc(T);
+        gsl_rng *rsave = gsl_rng_alloc(Tsave);
+        gsl_rng *rtemp = gsl_rng_alloc(Ttemp);
+        gsl_rng_env_setup();
+        gsl_rng_set (r, 190521);
+
+
+        int counter;
+        int CMAX = 10;
+        double BIC;
+        double minBIC = 0.0;
+        size_t minMODE = 0;
+
+        sprintf(filename, "%s/%s_gmm_bic.dat", outdir,entry->name);
+        out = fopen( filename, "w");
+
+        for(size_t NMODE=6; NMODE<=12; NMODE++)
+        {
+            counter = 0;
+            gsl_rng_memcpy(rtemp, r);
+            while(gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP, NMODE, r, &BIC))
+            {
+                counter++;
+                if(counter>CMAX)
+                {
+                    fprintf(stderr,"WARNING:\n");
+                    fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
+                    break;
+                }
+                printf("\nRetry %i/%i: ",counter,CMAX);
+            }
+            
+            fprintf(out,"%i %lg\n",(int)NMODE,BIC);
+            
+            if(BIC<minBIC)
+            {
+                gsl_rng_memcpy(rsave, rtemp);
+                minBIC = BIC;
+                minMODE = NMODE;
+            }
+        }
+        counter=0;
+        while(gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP, minMODE, rsave, &BIC))
+        {
+            counter++;
+            if(counter>CMAX)
+            {
+                fprintf(stderr,"WARNING:\n");
+                fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
+                break;
+            }
+            printf("\nRetry %i/%i: ",counter,CMAX);
+        }
 
         /* ********************** */
         
@@ -942,9 +998,9 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     fclose(runlog);
 }
 
-static void gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP)
+static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC)
 {
-    fprintf(stdout,"\nGaussian Mixture Model fit to event %s\n",entry->name);
+    fprintf(stdout,"Event %s, NMODE=%i\n",entry->name,(int)NMODE);
     
     // number of samples
     size_t NMCMC = entry->I;
@@ -953,17 +1009,11 @@ static void gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, si
     size_t NSTEP = 500;
     
     // thinning rate of input chain
-    size_t NTHIN = 1;
+    size_t NTHIN = 10;
     
-    // maximum number of modes
-    size_t NMODE = 6;
-    
-    // rng
-    const gsl_rng_type *T = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, 190521);
-    
+    // thin chain
+    NMCMC /= NTHIN;
+            
     struct Sample **samples = malloc(NMCMC*sizeof(struct Sample*));
     for(size_t n=0; n<NMCMC; n++)
     {
@@ -986,30 +1036,30 @@ static void gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, si
     char *column;
     for(size_t i=0; i<NMCMC; i++)
     {
-        value[0] = entry->source[i]->f0;
-        value[1] = entry->source[i]->costheta;
-        value[2] = entry->source[i]->phi;
-        value[3] = log(entry->source[i]->amp);
-        value[4] = entry->source[i]->cosi;
-        value[5] = entry->source[i]->psi;
-        value[6] = entry->source[i]->phi0;
+        value[0] = entry->source[i*NTHIN]->f0;
+        value[1] = entry->source[i*NTHIN]->costheta;
+        value[2] = entry->source[i*NTHIN]->phi;
+        value[3] = log(entry->source[i*NTHIN]->amp);
+        value[4] = acos(entry->source[i*NTHIN]->cosi);
+        value[5] = entry->source[i*NTHIN]->psi;
+        value[6] = entry->source[i*NTHIN]->phi0;
         if(NP>7)
-            value[7] = entry->source[i]->dfdt;
+            value[7] = entry->source[i*NTHIN]->dfdt;
         if(NP>8)
-            value[8] = entry->source[i]->d2fdt2;
+            value[8] = entry->source[i*NTHIN]->d2fdt2;
         
         for(size_t n=0; n<NP; n++) gsl_vector_set(samples[i]->x,n,value[n]);
     }
     
     /* The main Gaussian Mixture Model with Expectation Maximization function */
-    double logL, BIC;
-    GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC);
-    
+    double logL;
+    if(GMM_with_EM(modes,samples,NMCMC,NSTEP,seed,&logL,BIC)) return 1;
     
     /* Write GMM results to binary for pick up by other processes */
     char filename[BUFFER_SIZE];
     sprintf(filename,"%s/%s_gmm.bin",outdir,entry->name);
     FILE *fptr = fopen(filename,"wb");
+    fwrite(&NMODE, sizeof NMODE, 1, fptr);
     for(size_t n=0; n<NMODE; n++) write_MVG(modes[n],fptr);
     fclose(fptr);
     
@@ -1026,7 +1076,6 @@ static void gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, si
     // covariance matrices for different modes
     for(size_t n=0; n<NMODE; n++) free_MVG(modes[n]);
     free(modes);
-    
-    gsl_rng_free(r);
-    
+ 
+    return 0;
 }

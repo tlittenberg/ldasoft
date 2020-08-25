@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
     
     /* The main Gaussian Mixture Model with Expectation Maximization function */
     double logL, BIC;
-    GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC);
+    if(GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC)) return 1;
     
 
     /* Write GMM results to binary for pick up by other processes */
