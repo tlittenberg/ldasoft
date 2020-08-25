@@ -192,6 +192,7 @@ int main(int argc, char *argv[])
     /* Initialize priors */
     struct Prior *prior = malloc(sizeof(struct Prior));
     if(flags->galaxyPrior) set_galaxy_prior(flags, prior);
+    if(flags->update) set_gmm_prior(flags, data[0], prior);
     
     /* Initialize MCMC proposals */
     struct Proposal ***proposal = malloc(NMAX*sizeof(struct Proposal**));

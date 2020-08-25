@@ -315,7 +315,6 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
  Reads covariance matrix files and parses weights, means, covariances, LU decompositions, and determinents.  Inverts covariance matrix and packages data into proposal structure
  */
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal);
-void setup_gmm_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal);
 
 /**
  \brief Returns (log) F-statistic proposal density

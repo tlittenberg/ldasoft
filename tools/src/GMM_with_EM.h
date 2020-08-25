@@ -171,8 +171,9 @@ void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, doub
  * \param[out] logL log-likelihood of input model
  * \param[out] BIC Bayesian Information Criteria (BIC) for input model
  * \param[in,out] modes parameters of each Gaussian including relative weights \f$\alpha_{k}\f$, updated by M-step.
+ * \return `0` if successful, `1` if singular due to zero weight in one of the modes.
  */
-void expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NMCMC, double *logL, double *BIC);
+int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NMCMC, double *logL, double *BIC);
 
 /**
  * \brief Gaussian Mixture Model fit with Expectation-Maximization (EM) Algorithm
@@ -186,7 +187,8 @@ void expectation_maximization(struct Sample **samples, struct MVG **modes, size_
  * \param[in] r `GSL` random number generator seed
  * \param[out] logL log-likelihood of input model
  * \param[out] BIC Bayesian Information Criteria (BIC) for input model
+ * \return `0` if successfule, `1` if singular due to zero weight in one of the modes
 */
-void GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC);
+int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC);
 
 #endif /* GMM_with_EM_h */
