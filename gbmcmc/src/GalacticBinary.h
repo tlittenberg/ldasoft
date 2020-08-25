@@ -158,7 +158,7 @@ struct Flags
     int debug;      //!<`[--debug; default=FALSE]`: coarser settings for proposals and verbose output for debugging
     int cheat;      //!<start sampler at injection values
     int burnin;     //!<`[--no-burnin; default=TRUE]`: chain is in the burn in phase
-    int update;     //!<`[--update=FILENAME; default=FALSE]`: updating fit from previous chain samples passed as `FILENAME`, used in draw_from_cdf().
+    int update;     //!<`[--update=FILENAME; default=FALSE]`: use Gaussian Mixture Model approximation to previous posterior as current prior.
     int updateCov;  //!<`[--update-cov=FILENAME; default=FALSE]`: updating fit from covariance matrix files built from chain samples, passed as `FILENAME`, used in draw_from_cov().
     int match;      //!<[--match=FLOAT; default=0.8]`: match threshold for chain sample clustering in post processing.
     int rj;         //!<--no-rj; default=TRUE]`: flag for determining if trans dimensional MCMC moves (RJMCMC) are enabled.
@@ -176,6 +176,7 @@ struct Flags
     char **injFile;                   //!<`[--inj=FILENAME]`: list of injection files. Can support up to `NINJ=10` separate injections.
     char noiseFile[MAXSTRINGSIZE];    //!<file containing reconstructed noise model for `gb_catalog` to compute SNRs against.
     char cdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input chain file from Flags::update.
+    char gmmFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input gmm file from Flags::update.
     char covFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input covariance matrix file from Flags::updateCov.
     char matchInfile1[MAXSTRINGSIZE]; //!<input waveform \f$A\f$ for computing match \f$(h_A|h_B)\f$
     char matchInfile2[MAXSTRINGSIZE]; //!<input waveform \f$B\f$ for computing match \f$(h_A|h_B)\f$

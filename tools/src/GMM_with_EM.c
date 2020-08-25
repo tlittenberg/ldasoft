@@ -249,12 +249,11 @@ double log_likelihood(struct MVG **modes, struct Sample **samples, int NMCMC, in
     double logL = 0.0;
     for(size_t i=0; i<NMCMC; i++)
     {
-        double P = 0.0;
+        double P = PMIN;
         for(size_t k=0; k<NMODE; k++)
         {
             P += modes[k]->p*gsl_vector_get(samples[i]->p,k);
         }
-        if(P==0) exit(1);
         logL += log(P);
     }
     return logL;
@@ -397,7 +396,7 @@ void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, doub
 }
 
 
-void expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NMCMC, double *logL, double *BIC)
+int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NMCMC, double *logL, double *BIC)
 {
     size_t NP    = samples[0]->x->size;
     size_t NMODE = samples[0]->p->size;
@@ -445,10 +444,7 @@ void expectation_maximization(struct Sample **samples, struct MVG **modes, size_
     {
         modes[k]->Neff = 0;
         for(size_t i=0; i<NMCMC; i++) modes[k]->Neff += gsl_vector_get(samples[i]->w,k);
-        if(modes[k]->Neff < 1.0)
-        {
-            exit(1);
-        }
+        if(modes[k]->Neff < 1.0 || modes[k]->Neff != modes[k]->Neff) return 1;
         modes[k]->p = modes[k]->Neff/(double)NMCMC;
     }
     
@@ -503,9 +499,11 @@ void expectation_maximization(struct Sample **samples, struct MVG **modes, size_
         //invert new matrix to evaluate the probabilities
         invert_gsl_matrix(modes[k]->C, modes[k]->Cinv, modes[k]->L, &modes[k]->detC, &R);
     }
+    
+    return 0;
 }
 
-void GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC)
+int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC)
 {
     size_t NP    = samples[0]->x->size;
     size_t NMODE = samples[0]->p->size;
@@ -545,13 +543,17 @@ void GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size
     while(step<NSTEP)
     {
         printProgress((double)(step+1)/NSTEP);
-        expectation_maximization(samples, modes, NMCMC, logL, BIC);
-        if(floor(*BIC) < floor(BICmin))
+        if(expectation_maximization(samples, modes, NMCMC, logL, BIC)) return 1;
+        else
         {
-            BICmin = *BIC;
-            step=0;
+            if(floor(*BIC) < floor(BICmin))
+            {
+                BICmin = *BIC;
+                step=0;
+            }
+            step++;
         }
-        step++;
     }
     printf("\n");
+    return 0;
 }
