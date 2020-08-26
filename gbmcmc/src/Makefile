@@ -6,7 +6,7 @@ CC = gcc
 
 #LIBS  = gsl gslcblas m fftw3
 LIBS  = gsl gslcblas m 
-CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -fopenmp #-Werror
+CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 #-Werror
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
@@ -47,7 +47,7 @@ GalacticBinaryProposal.o : GalacticBinaryProposal.c GalacticBinary.h GalacticBin
 	$(CC) $(CCFLAGS) -c GalacticBinaryProposal.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
 gb_mcmc : GalacticBinaryMCMC.c $(OBJS) GalacticBinary.h
-	$(CC) $(CCFLAGS) -o gb_mcmc GalacticBinaryMCMC.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -fopenmp -o gb_mcmc GalacticBinaryMCMC.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
 
 gb_catalog : GalacticBinaryCatalog.c $(OBJS) GalacticBinary.h
 	$(CC) $(CCFLAGS) -o gb_catalog GalacticBinaryCatalog.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
