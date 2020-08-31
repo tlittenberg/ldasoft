@@ -643,43 +643,22 @@ int main(int argc, char *argv[])
         sprintf(filename, "%s/%s_gmm_bic.dat", outdir,entry->name);
         out = fopen( filename, "w");
 
-        for(size_t NMODE=6; NMODE<=12; NMODE++)
-        {
-            counter = 0;
-            gsl_rng_memcpy(rtemp, r);
-            while(gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP, NMODE, r, &BIC))
-            {
-                counter++;
-                if(counter>CMAX)
-                {
-                    fprintf(stderr,"WARNING:\n");
-                    fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
-                    break;
-                }
-                printf("\nRetry %i/%i: ",counter,CMAX);
-            }
-            
-            fprintf(out,"%i %lg\n",(int)NMODE,BIC);
-            
-            if(BIC<minBIC)
-            {
-                gsl_rng_memcpy(rsave, rtemp);
-                minBIC = BIC;
-                minMODE = NMODE;
-            }
-        }
-        counter=0;
-        while(gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP, minMODE, rsave, &BIC))
+        size_t NMODE = 32;
+        counter = 0;
+        gsl_rng_memcpy(rtemp, r);
+        while(gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP, NMODE, r, &BIC))
         {
             counter++;
             if(counter>CMAX)
             {
                 fprintf(stderr,"WARNING:\n");
                 fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
-                break;
+                NMODE/=2;
+                counter = 0;
             }
-            printf("\nRetry %i/%i: ",counter,CMAX);
+            printf("\rRetry %i/%i: ",counter,CMAX);
         }
+            
 
         /* ********************** */
         
@@ -1006,10 +985,10 @@ static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, siz
     size_t NMCMC = entry->I;
     
     // number of EM iterations
-    size_t NSTEP = 500;
+    size_t NSTEP = 100;
     
     // thinning rate of input chain
-    size_t NTHIN = 10;
+    size_t NTHIN = 1;
     
     // thin chain
     NMCMC /= NTHIN;
@@ -1040,7 +1019,7 @@ static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, siz
         value[1] = entry->source[i*NTHIN]->costheta;
         value[2] = entry->source[i*NTHIN]->phi;
         value[3] = log(entry->source[i*NTHIN]->amp);
-        value[4] = acos(entry->source[i*NTHIN]->cosi);
+        value[4] = entry->source[i*NTHIN]->cosi;
         value[5] = entry->source[i*NTHIN]->psi;
         value[6] = entry->source[i*NTHIN]->phi0;
         if(NP>7)
