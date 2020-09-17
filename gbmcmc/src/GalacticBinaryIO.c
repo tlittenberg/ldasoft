@@ -317,6 +317,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     flags->NINJ        = 0;
     flags->simNoise    = 0;
     flags->confNoise   = 0;
+    flags->fixFdot     = 0;
     flags->fixSky      = 0;
     flags->fixFreq     = 0;
     flags->galaxyPrior = 0;

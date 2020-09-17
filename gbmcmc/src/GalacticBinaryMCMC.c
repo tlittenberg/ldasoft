@@ -343,14 +343,17 @@ int main(int argc, char *argv[])
     /* Write example gb_catalog bash script in run directory */
     print_gb_catalog_script(flags, data[0], orbit);
 
-    /* Temporary! Ask for thread count*/
+    /*
+    // Temporary! Ask for thread count
     int threads;
     printf("How many threads to run: ");
     scanf("%d",&threads);
+    */
+
 
     //For saving the number of threads actually given
     int numThreads;
-    #pragma omp parallel num_threads(threads)
+    #pragma omp parallel //num_threads(threads)
     {   
         int threadID;
         //Save individual thread number
@@ -367,21 +370,25 @@ int main(int argc, char *argv[])
         /* The MCMC loop */    
         for(int mcmc = mcmc_start; mcmc < flags->NMCMC; mcmc++)
         {
-            if(mcmc<0) flags->burnin=1;
-            else       flags->burnin=0;
-        
-            //set annealinging tempurature during burnin
-            /*
-            if(flags->burnin)
-            {  
-            chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
-            if(chain->annealing<1.0)chain->annealing=1.0;
-            chain->annealing=1.0;
-            //printf("annealing=%g\n",chain->annealing);
+            if(threadID==0){
+                if(mcmc<0) flags->burnin=1;
+                else       flags->burnin=0;
+
+                //set annealinging tempurature during burnin
+                /*
+                if(flags->burnin)
+                {  
+                chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
+                if(chain->annealing<1.0)chain->annealing=1.0;
+                chain->annealing=1.0;
+                //printf("annealing=%g\n",chain->annealing);
+                }
+                */
+
+                chain->annealing=1.0;
             }
-            */
-            chain->annealing=1.0;
-        
+
+            #pragma omp barrier
             // (parallel) loop over chains
             for(int ic=threadID; ic<NC; ic+=numThreads)
             {
