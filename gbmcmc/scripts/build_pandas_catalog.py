@@ -14,7 +14,7 @@ import time
 from datetime import datetime
     
 # argument parsing
-parser = argparse.ArgumentParser(description='Build a list of GBMCMC catalog objects that can be used by make_panda_cat.py to build a PANDAS-accessible catalog.')
+parser = argparse.ArgumentParser(description='Parse a set of GBMCMC catalog outputs and build a PANDAS-accessible catalog for detections and chains.')
 
 parser.add_argument("pattern", help="the pattern to search for in either the S3 buckets or the local directory")
 
@@ -35,6 +35,9 @@ parser.add_argument("-n", "--name", help="Name for the catalog (different than t
 parser.add_argument("-p","--parent", help = "Name for the parent catalog (if it exists. For use in tracking sources across catalogs)")
 
 parser.add_argument("-d","--duration", help = "Observation duration of catalog (in seconds)")
+
+parser.add_argument("-s","--spectralPattern", help = "Pattern for additional GBMCMC outputs to parse and build PANDAS DataFrame for frequency-series residuals, data, etc. If empty residual will not be processed.")
+
 
 
 
@@ -67,7 +70,7 @@ if v:
 # AWS S3 version
 if args.aws:
     if v:
-        print("searching for objects matching pattern %s on AWS S3 within bucket %s." % (args.pattern, args.bucket))
+        print("searching for catalog objects matching pattern %s on AWS S3 within bucket %s." % (args.pattern, args.bucket))
         # Build header on output file
         print("LOCAITON: AWS \r")
         print("BUCKET: %s \r" % args.bucket)
@@ -91,7 +94,9 @@ if args.aws:
       
     
 else :
-    print("searching local directories for objects matching pattern %s" % args.pattern)
+    if v:
+        print("searching local directories for objects matching pattern %s" % args.pattern)
+        print("Not yet implemented")
     
 
 
@@ -198,5 +203,206 @@ totcat_df = pd.concat(cat_list)
 totcat_df = totcat_df.replace(np.nan, '', regex=True)
 totcat_df.to_hdf(catOutFile, key='detections',mode='a')
 
+
 if v:
-    print('Catalog processing completed in %0.1f '  % (time.time() - bigtic))
+    print('Catalog complete after %0.1f/n/n' % (time.time()-bigtic))
+    
+
+
+# Section for building frequency-series residual data frame
+rp = args.spectralPattern
+if rp is None:
+    if v:
+        print('No spectral processing pattern specified')
+else :
+    medtic = time.time()
+    # AWS S3 version
+    if args.aws:
+        if v:
+            print("searching for spectral data objects matching pattern %s on AWS S3 within bucket %s." % (rp, args.bucket))
+            # Build header on output file
+            print("LOCAITON: AWS \r")
+            print("BUCKET: %s \r" % args.bucket)
+            print("PATTERN: %s \r" % rp)
+
+
+        # set up S3 connection and get list of all objects in the bucket
+        s3 = boto3.resource('s3')
+        bucket = s3.Bucket(args.bucket)
+        objs = bucket.objects.all()
+
+        # pick out objects matching pattern
+        keys = list()
+        for obj in objs:
+            k = obj.key
+            if fnmatch.fnmatch(k,rp):
+                keys.append(k)
+
+
+
+
+    else :
+        if v:
+            print("searching local directories for residuals matching pattern %s" % rp)
+            print("Not yet implemented")
+
+
+
+    if v:
+        print("%i residual segments located" % len(keys))
+
+
+        
+    # First set up the pandas DF that will hold all of the frequency series data
+    freq_df = pd.DataFrame([],['Frequency',
+                              'Median AE noise',
+                              '25 AE noise', 
+                              '75 AE noise',
+                              '5 AE noise',
+                              '95 AE noise',
+                              'Median A residual',
+                              '25 A residual', 
+                              '75 A residual',
+                              '5 A residual',
+                              '95 A residual',
+                              'Median E residual',
+                              '25 E residual', 
+                              '75 E residual',
+                              '5 E residual',
+                              '95 E residual',
+                              'Real A data',
+                              'Imag A data',
+                              'Real E data',
+                              'Imag E data',
+                              'A residual variance',
+                              'E residual variance'])
+
+    # Write the file (which is empty now)
+    freq_df.to_hdf(catOutFile, key='spectrum',mode='a')  
+
+    # begin the loop over keys    
+    for key in keys:
+        tic = time.time()
+        if v:
+            print("Beginning processing for %s" % str(key))
+        # get the number of expected samples from the file name
+        nstr = key.split('_')
+        Nsamp = np.int(nstr[len(nstr)-1].split('.')[0])/1.0
+        # get the ZIP file and extract it to a temporary directory
+        s3 = boto3.client('s3')
+        s3.download_file(args.bucket, key, 'tempcat.zip')   
+        zip = zipfile.ZipFile('tempcat.zip')
+        zip.extractall()  
+
+        # find the data directory 
+        rootDir = (os.path.basename(key)).split('.')[0]
+        dataDir = rootDir + '/data' 
+
+
+        # read the noise data 
+        dfn = pd.read_csv(dataDir+'/power_noise_t0_f0.dat',
+                          sep= ' ',
+                          usecols=np.arange(0,6),
+                          index_col = False, 
+                          names=[
+                              'Frequency',
+                              'Median AE noise',
+                              '25 AE noise', 
+                              '75 AE noise',
+                              '5 AE noise',
+                              '95 AE noise'])
+
+
+        # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
+        N = len(dfn)
+        Npad = (N-Nsamp)/2.0
+        dfn.drop(N-np.arange(Npad,0,-1),inplace=True)
+        dfn.drop(np.arange(0,Npad),inplace=True)
+
+
+        # read the residual data 
+        dfr = pd.read_csv(dataDir+'/power_residual_t0_f0.dat',
+                          sep= ' ',
+                          usecols=np.arange(0,11),
+                          index_col = False, 
+                          names=[
+                              'Frequency',
+                              'Median A residual',
+                              '25 A residual', 
+                              '75 A residual',
+                              '5 A residual',
+                              '95 A residual',
+                              'Median E residual',
+                              '25 E residual', 
+                              '75 E residual',
+                              '5 E residual',
+                              '95 E residual'])
+
+        # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
+        N = len(dfr)
+        Npad = (N-Nsamp)/2.0
+        dfr.drop(N-np.arange(Npad,0,-1),inplace=True)
+        dfr.drop(np.arange(0,Npad),inplace=True)
+
+        # read the residual variance data 
+        dfv = pd.read_csv(dataDir+'/variance_residual_t0_f0.dat',
+                          sep= ' ',
+                          usecols=np.arange(0,3),
+                          index_col = False, 
+                          names=[
+                              'Frequency',
+                              'A residual variance',
+                              'E residual variance'])
+
+        # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
+        N = len(dfv)
+        Npad = (N-Nsamp)/2.0
+        dfv.drop(N-np.arange(Npad,0,-1),inplace=True)
+        dfv.drop(np.arange(0,Npad),inplace=True)
+
+        # read the input data 
+        dfd = pd.read_csv(dataDir+'/data_0_0.dat',
+                          sep= ' ',
+                          usecols=np.arange(0,5),
+                          index_col = False, 
+                          names=[
+                              'Frequency',
+                              'Real A data',
+                              'Imag A data',
+                              'Real E data',
+                              'Imag E data'])
+
+        # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
+        N = len(dfd)
+        Npad = (N-Nsamp)/2.0
+        dfd.drop(N-np.arange(Npad,0,-1),inplace=True)
+        dfd.drop(np.arange(0,Npad),inplace=True)
+
+
+        # concatenate the columns together to make the data frame for this segment
+        df = dfn.merge(dfr)
+        df = df.merge(dfv)
+        df = df.merge(dfd)
+        df.set_index('Frequency')
+
+        # clean up the temp directories
+        shutil.rmtree(rootDir)
+        os.remove('tempcat.zip')
+
+        # load the concatenated dataframe form disk and add on the portion for this segment
+        freq_df = pd.read_hdf(catOutFile, key='spectrum',mode='r')  
+        freq_df = pd.concat([freq_df,df],axis=0)
+
+        # write the concatenated dataframe back to disk
+        freq_df.to_hdf(catOutFile, key='spectrum',mode='a')
+
+        # Print status
+        if v:
+            print('Completed after %0.1f' %  (time.time() - tic))
+
+    if v:
+        print('Spectral data processing completed in %0.1f\n\n' % (time.time()-medtic))
+        
+        
+if v:
+    print('Processing completed in %0.1f. Enjoy your data!\n\n'  % (time.time() - bigtic))
