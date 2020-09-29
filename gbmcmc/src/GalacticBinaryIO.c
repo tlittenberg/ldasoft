@@ -85,7 +85,7 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"--samples %i ", samples);
     fprintf(fptr,"--padding %i ",data->qpad);
     fprintf(fptr,"--duration %f ",data->T);
-    fprintf(fptr,"--source $1 --chain-file chains/dimension_chain.dat.$1");
+    fprintf(fptr,"--source $1 --chain-file chains/dimension_chain.dat.$1 ");
     
     //Optional
     if(strcmp(data->format,"frequency")==0)
