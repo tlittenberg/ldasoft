@@ -38,6 +38,9 @@ parser.add_argument("-d","--duration", help = "Observation duration of catalog (
 
 parser.add_argument("-s","--spectralPattern", help = "Pattern for additional GBMCMC outputs to parse and build PANDAS DataFrame for frequency-series residuals, data, etc. If empty residual will not be processed.")
 
+parser.add_argument("-N","--samples", help = "Number of samples argument passed to GBMCMC. Used to properly overlap adjacent segments. If empty, uses filename for AWS data or zero for local data.")
+
+
 
 
 
@@ -51,7 +54,10 @@ bigtic = time.time()
 outDir = os.path.dirname(args.catalogFile)
 catFile = os.path.basename(args.catalogFile)
 tmpDir = os.path.join(outDir,'temp')
-os.chdir(tmpDir)
+if args.aws:
+    if not os.path.exists(tmpDir):
+        os.makedirs(tmpDir)
+    os.chdir(tmpDir)
 
 # Build metadata 
 catName = args.name # name of the catalog
@@ -88,20 +94,19 @@ if args.aws:
     for obj in objs:
         k = obj.key
         if fnmatch.fnmatch(k,pat):
-            keys.append(k)
+            keys.append(k)        
 
-
-      
-    
+# Local directory version
 else :
     if v:
         print("searching local directories for objects matching pattern %s" % args.pattern)
-        print("Not yet implemented")
+    
+    keys = glob.glob(args.pattern+'*')
     
 
 
 if v:
-    print("%i segment catalogs located" % len(keys))
+    print("%i catalogs located" % len(keys))
 
     
 # build the metadata data Frame and write to the file
@@ -111,22 +116,32 @@ metaDF.to_hdf(catOutFile, key='metadata',mode='w')  # this overwrites so you get
 
 # Iterate over all the keys to make catalog (takes a little while)
 cat_list = list()
+ss = 0;
 for key in keys:
     tic = time.time()
     if v:
         print("Beginning processing for %s" % key)
-    # first get the file and extract it
+    # For AWS, first download the file and extract it
     if args.aws:
         s3 = boto3.client('s3')
         s3.download_file(args.bucket, key, 'tempcat.zip')
         
-    zip = zipfile.ZipFile('tempcat.zip')
-    zip.extractall()  
+        zip = zipfile.ZipFile('tempcat.zip')
+        zip.extractall() 
+    # For local, change to the relevant directory
+    else:
+        os.chdir(key)
     
     # find the catalog directory and use the number to infer the segment
-    catDir = glob.glob('catalog_*')[0]  # what if there is more than 1?
-    seg = np.int(catDir[8:])
-
+    catDir = glob.glob('catalog_*[!.sh]')[0]  # what if there is more than 1?
+    
+    if args.aws:
+        # for our AWS examples, the catalog directory includes the segment
+        seg = np.int(catDir[8:])
+    else:
+        seg = ss;
+        ss = ss+1;
+    
     # check if there is anything in the entries file
     catSize = os.path.getsize(catDir+'/'+'entries.dat')
     if catSize > 1:
@@ -187,9 +202,10 @@ for key in keys:
         # add the data for this segment into the list of dataframes
         cat_list.append(cat_df)
 
-    # clean up the temp directories
-    shutil.rmtree(catDir)
-    os.remove('tempcat.zip')
+    # for AWS S3 clean up the temp directories
+    if args.aws:
+        shutil.rmtree(catDir)
+        os.remove('tempcat.zip')
     
     # Print status
     if v:
@@ -243,13 +259,14 @@ else :
 
     else :
         if v:
-            print("searching local directories for residuals matching pattern %s" % rp)
-            print("Not yet implemented")
+            print("searching local directories for spectral data matching pattern %s" % rp)
+            
+        keys = glob.glob(args.spectralPattern+'*')
 
 
 
     if v:
-        print("%i residual segments located" % len(keys))
+        print("%i spectrum directories located" % len(keys))
 
 
         
@@ -286,17 +303,31 @@ else :
         if v:
             print("Beginning processing for %s" % str(key))
         # get the number of expected samples from the file name
-        nstr = key.split('_')
-        Nsamp = np.int(nstr[len(nstr)-1].split('.')[0])/1.0
-        # get the ZIP file and extract it to a temporary directory
-        s3 = boto3.client('s3')
-        s3.download_file(args.bucket, key, 'tempcat.zip')   
-        zip = zipfile.ZipFile('tempcat.zip')
-        zip.extractall()  
+        if args.samples is None:
+            if args.aws:
+                nstr = key.split('_')
+                Nsamp = np.int(nstr[len(nstr)-1].split('.')[0])/1.0
+            else:
+                Nsamp = 0
+        else:
+            Nsamp = np.int(args.samples)
+            
+        # for AWS, get the ZIP file and extract it to a temporary directory
+        if args.aws:
+            s3 = boto3.client('s3')
+            s3.download_file(args.bucket, key, 'tempcat.zip')   
+            zip = zipfile.ZipFile('tempcat.zip')
+            zip.extractall()
+        
 
-        # find the data directory 
-        rootDir = (os.path.basename(key)).split('.')[0]
-        dataDir = rootDir + '/data' 
+            # find the data directory 
+            rootDir = (os.path.basename(key)).split('.')[0]
+            dataDir = rootDir + '/data' 
+        
+        # For local, we just change to the right director
+        else:
+            os.chdir(key)
+            dataDir = 'data'
 
 
         # read the noise data 
@@ -386,8 +417,9 @@ else :
         df.set_index('Frequency')
 
         # clean up the temp directories
-        shutil.rmtree(rootDir)
-        os.remove('tempcat.zip')
+        if args.aws:
+            shutil.rmtree(rootDir)
+            os.remove('tempcat.zip')
 
         # load the concatenated dataframe form disk and add on the portion for this segment
         freq_df = pd.read_hdf(catOutFile, key='spectrum',mode='r')  
