@@ -177,7 +177,7 @@ for key in keys:
             # Build data frame for chain for this particular source
             chain_cols = ['Frequency','Frequency Derivative','Amplitude','Ecliptic Longitude','coslat','cosinc','Initial Phase','Polarization','SNR','entry match', 'waveform measure'];
             chain_df = pd.read_table(catDir+'/'+entryName +'_chain.dat',delimiter = ' ',index_col = False, names=chain_cols)
-            chain_df['Ecliptic Latitude']=np.arccos(chain_df['coslat'])-np.pi/2.0  # I think the conventions are correct, should check
+            chain_df['Ecliptic Latitude']=np.pi/2.0-np.arccos(chain_df['coslat'])  # I think the conventions are correct, should check
             chain_df['Inclination']=np.arccos(chain_df['cosinc']) - np.pi/2.0 # I think the conventions are correct, should check
             #chain_df = chain_df.drop(columns=['coslat','cosinc'])
 
@@ -187,7 +187,7 @@ for key in keys:
 
         # combine the parameters and entries catalogs
         entry_df = pd.concat(dfs)
-        entry_df['Ecliptic Latitude']=np.arccos(entry_df['coslat'])-np.pi/2.0
+        entry_df['Ecliptic Latitude']=-np.pi/2.0-np.arccos(entry_df['coslat'])
         entry_df['Inclination']=np.arccos(entry_df['cosinc']) - np.pi/2.0
         #entry_df = entry_df.drop(columns=['coslat','cosinc'])
         entry_df = entry_df.rename(columns={
