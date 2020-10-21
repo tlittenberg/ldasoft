@@ -222,7 +222,118 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
     return 0;
 }
 
-double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+{
+    return draw_from_uniform_prior(data,model,source,proposal,params,seed);
+}
+
+double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+{
+    int NP = source->NP;
+    int NMODES = proposal->size;
+    double ran_no[NP];
+    double logP = 0.0;
+    
+    struct MVG *mode = NULL;
+    
+    //pick which mode
+    int k;
+    double p = 1.;
+    do {
+        k = (int)floor(gsl_rng_uniform(seed)*NMODES);
+        mode = proposal->modes[k];
+        p = gsl_rng_uniform(seed);
+    } while (p>mode->p);
+    
+
+    //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
+    for(int n=0; n<NP; n++)
+    {
+        ran_no[n] = gsl_ran_gaussian(seed,1.0);
+    }
+    
+    double x[NP];
+    //the matrix multiplication...
+    for(int n=0; n<NP; n++)
+    {
+        //start at mean
+        x[n] = gsl_vector_get(mode->mu,n);
+        
+        //add contribution from each row of invC
+        for(int m=0; m<NP; m++) x[n] += ran_no[m]*gsl_matrix_get(mode->L,n,m);
+        
+        //map params from R back to interval
+        double min = gsl_matrix_get(mode->minmax,n,0);
+        double max = gsl_matrix_get(mode->minmax,n,1);
+        
+        //Jacobian?
+        logP += log( (max-min) * exp(-x[n])/pow(1. + exp(-x[n]),2.)   );
+        
+        x[n] = sigmoid(x[n],min,max);
+        //if(n==0)printf("mu=%lg, [min,max]=[%lg, %lg], draw=%lg\n",sigmoid(gsl_vector_get(mode->mu,n),min,max),min,max,x[n]);
+    }
+    
+    //map to parameters
+    source->f0 = x[0];
+    source->costheta = x[1];
+    source->phi = x[2];
+    source->amp = exp(x[3]);
+    //source->cosi = cos(x[4]);
+    source->cosi = x[4];
+    source->psi = x[5];
+    source->phi0 = x[6];
+    if(NP>7) source->dfdt = x[7];
+    if(NP>8) source->d2fdt2 = x[8];
+    map_params_to_array(source, params, data->T);
+    
+    logP += evaluate_gmm_prior(data, proposal->modes, NMODES, params);
+    
+    //printf("draw from gmm prior: logP = %g\n", logP);
+    
+    return logP;
+}
+
+double gmm_prior_density(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params)
+{
+//    double logP = 0.0;
+//    int NP = source->NP;
+//    struct MVG *mode = proposal->modes[0];
+//
+//    double x[NP];
+//
+//    x[0] = source->f0;
+//    x[1]=source->costheta;
+//    x[2]=source->phi;
+//    x[3]=log(source->amp);
+//    x[4] = source->cosi;
+//    x[5] = source->psi;
+//    x[6] = source->phi0;
+//    if(NP>7)
+//        x[7] = source->dfdt;
+//    if(NP>8)
+//        x[8] = source->d2fdt2;
+//
+//    for(int n=0; n<NP; n++)
+//    {
+//
+//        //map params from R back to interval
+//        double xmin = gsl_matrix_get(mode->minmax,n,0);
+//        double xmax = gsl_matrix_get(mode->minmax,n,1);
+//
+//        x[n] = logit(x[n],xmin,xmax);
+//
+//        logP -= log( (xmax-xmin) * exp(-x[n])/pow(1. + exp(-x[n]),2.)   );
+//
+//    }
+//
+//    logP += evaluate_gmm_prior(data, proposal->modes, proposal->size, params);
+//
+   // printf("logP = %g\n",logP);
+    
+    return evaluate_gmm_prior(data, proposal->modes, proposal->size, params);
+}
+
+double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
     
     double logQ = 0.0;
@@ -294,11 +405,6 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
     {
         params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
         logP -= model->logPriorVolume[n];
-    }
-    
-    for(int j=0; j<source->NP; j++)
-    {
-        if(params[j]!=params[j]) fprintf(stderr,"draw_from_prior: params[%i]=%g, U[%g,%g]\n",j,params[j],model->prior[j][0],model->prior[j][1]);
     }
     
     return logP;
@@ -758,7 +864,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         {
             case 0:
                 sprintf(proposal[i]->name,"prior");
-                proposal[i]->function = &draw_from_prior;
+                proposal[i]->function = &draw_from_uniform_prior;
                 proposal[i]->density  = &prior_density;
                 proposal[i]->weight   = 0.1;
                 proposal[i]->rjweight = 0.2;
@@ -830,6 +936,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 rjcheck += proposal[i]->rjweight;
                 break;
             case 7:
+                /*
                 sprintf(proposal[i]->name,"cdf draw");
                 proposal[i]->function = &draw_from_cdf;
                 proposal[i]->density  = &cdf_density;
@@ -838,6 +945,21 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 if(flags->update)
                 {
                     //setup_cdf_proposal(data, flags, proposal[i], NMAX);
+                    proposal[i]->weight   = 0.0;
+                    proposal[i]->rjweight = 0.0;
+                }
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+                 */
+                sprintf(proposal[i]->name,"gmm draw");
+                proposal[i]->function = &draw_from_gmm_prior;
+                proposal[i]->density = &gmm_prior_density;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                if(flags->update)
+                {
+                    setup_gmm_proposal(flags, prior, proposal[i]);
                     proposal[i]->weight   = 0.0;
                     proposal[i]->rjweight = 0.0;
                 }
@@ -1042,6 +1164,36 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     free(Fparams);
     fprintf(stdout,"\n==============================================\n\n");
     fflush(stdout);
+}
+
+void setup_gmm_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)
+{
+    int err=0;
+    int NP = prior->NP;
+    int NMODE = prior->NMODE;
+    proposal->size = NMODE;
+    proposal->modes = malloc(proposal->size*sizeof(struct MVG*));
+
+    for(size_t n=0; n<NMODE; n++)
+    {
+        proposal->modes[n] = malloc(sizeof(struct MVG));
+        alloc_MVG(proposal->modes[n],NP);
+        
+        err += gsl_vector_memcpy(proposal->modes[n]->mu, prior->modes[n]->mu);
+        err += gsl_vector_memcpy(proposal->modes[n]->evalues, prior->modes[n]->evalues);
+        
+        err += gsl_matrix_memcpy(proposal->modes[n]->C, prior->modes[n]->C);
+        err += gsl_matrix_memcpy(proposal->modes[n]->Cinv, prior->modes[n]->Cinv);
+        err += gsl_matrix_memcpy(proposal->modes[n]->L, prior->modes[n]->L);
+        err += gsl_matrix_memcpy(proposal->modes[n]->evectors, prior->modes[n]->evectors);
+        err += gsl_matrix_memcpy(proposal->modes[n]->minmax, prior->modes[n]->minmax);
+
+        proposal->modes[n]->detC = prior->modes[n]->detC;
+        proposal->modes[n]->p = prior->modes[n]->p;
+        proposal->modes[n]->Neff = prior->modes[n]->Neff;
+
+    }
+
 }
 
 void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)
@@ -1346,7 +1498,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
     double i,j,k;
     
     //first draw from prior
-    draw_from_prior(data, model, source, proposal, params, seed);
+    draw_from_uniform_prior(data, model, source, proposal, params, seed);
     
     //now rejection sample on f,theta,phi
     int check=1;

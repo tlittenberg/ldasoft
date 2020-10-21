@@ -98,7 +98,25 @@ double t0_shift(UNUSED struct Data *data, struct Model *model, UNUSED struct Sou
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+\brief Fair draw from gaussian mixture model prior for each parameter
+ 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = \f$\ln p(\f$ \c params \f$)\f$
+
+ */
+double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+
+/**
+\brief Fair draw from uniform ranges for each parameter
+ 
+ @param params (updates \f$\vec\theta\f$)
+ @return logQ = \f$\ln p(\f$ \c params \f$)\f$
+
+ */
+double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
 \brief Fair draw from prior for location and orientation parameters
@@ -310,6 +328,12 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
 void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, int NMAX);
 
 /**
+ \brief Copies gaussian mixture model prior into proposal when given --update flag
+ 
+ */
+void setup_gmm_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal);
+
+/**
  \brief Stores covariance matrices input with --update-cov flag
  
  Reads covariance matrix files and parses weights, means, covariances, LU decompositions, and determinents.  Inverts covariance matrix and packages data into proposal structure
@@ -329,6 +353,12 @@ double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *mode
  Typically returns \f$\sum \log\frac{1}{\Delta V}\f$ for each parameter except those that have non-trivial priors due to various run settings e.g., the SNR prior for \f$\mathcal{A}\f$, or the galaxy prior for \f${\cos\theta,\phi}\f$.
  */
 double prior_density(struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params);
+
+/**
+ \brief Returns (log) prior density of gaussian mixture model
+ */
+double gmm_prior_density(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params);
+
 
 /**
  \brief Placeholder for symmetric proposal.  Returns 0.0

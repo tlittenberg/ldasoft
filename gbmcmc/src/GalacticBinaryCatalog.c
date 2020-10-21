@@ -32,6 +32,7 @@
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_sort_vector.h>
 
 
 #include <GMM_with_EM.h>
@@ -44,13 +45,14 @@
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
+#include "GalacticBinaryPrior.h"
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryCatalog.h"
 
 /* ============================  MAIN PROGRAM  ============================ */
 static void print_usage_catalog();
-static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog);
-static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC);
+static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog, size_t *NMODE);
+static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC);
 
 int main(int argc, char *argv[])
 {
@@ -59,8 +61,9 @@ int main(int argc, char *argv[])
     /*             Allocate & Initialize Data Structures              */
     /* ************************************************************** */
     
-    int NTEMP = 1;   //needed size of data structure
-    
+    int NTEMP = 1;     //needed size of data structure
+    size_t NMODE = 16; //default size of GMM
+
     /* Allocate data structures */
     struct Flags *flags = malloc(sizeof(struct Flags));
     struct Orbit *orbit = malloc(sizeof(struct Orbit));
@@ -75,7 +78,7 @@ int main(int argc, char *argv[])
         data_tmp[i] = malloc(sizeof(struct Data));
         data_tmp[i]->t0   = malloc( NTEMP * sizeof(double) );
     }
-    parse_catalog(argc,argv,data_tmp,orbit,flags,NTEMP,&Tcatalog);
+    parse_catalog(argc,argv,data_tmp,orbit,flags,NTEMP,&Tcatalog,&NMODE);
     alloc_data(data_tmp, flags);
     struct Data *data  = data_tmp[0];
     data->qmin = (int)(data->fmin*data->T);
@@ -105,7 +108,27 @@ int main(int argc, char *argv[])
             break;
     }
     
-    
+    // Get priors
+    /* Load priors as used in MCMC */
+    struct Model *model = malloc(sizeof(struct Model));
+    alloc_model(model,data->DMAX,data->N,data->Nchannel, data->NP, flags->NT);
+    set_uniform_prior(flags, model, data, 1);
+
+    /* Reformat for catalog */
+    //frequency & derivatives
+    model->prior[0][0] /= data->T;
+    model->prior[0][1] /= data->T;
+    if(data->NP>7)
+    {
+        model->prior[7][0] /= data->T*data->T;
+        model->prior[7][1] /= data->T*data->T;
+    }
+    if(data->NP>8)
+    {
+        model->prior[8][0] /= data->T*data->T*data->T;
+        model->prior[8][1] /= data->T*data->T*data->T;
+    }
+
     //alias for catalog->entry pointers used later on
     struct Entry *entry = NULL;
     
@@ -643,10 +666,9 @@ int main(int argc, char *argv[])
         sprintf(filename, "%s/%s_gmm_bic.dat", outdir,entry->name);
         out = fopen( filename, "w");
 
-        size_t NMODE = 32;
         counter = 0;
         gsl_rng_memcpy(rtemp, r);
-        while(gaussian_mixture_model_wrapper(entry, outdir, (size_t)data->NP, NMODE, r, &BIC))
+        while(gaussian_mixture_model_wrapper(model->prior, entry, outdir, (size_t)data->NP, NMODE, r, &BIC))
         {
             counter++;
             if(counter>CMAX)
@@ -750,10 +772,11 @@ static void print_usage_catalog()
     fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
     fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
     fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
-    fprintf(stdout,"       --noise-file  : reconstructed noise model         \n");
-    fprintf(stdout,"                       e.g., data/power_noise_t0_f0.dat  \n");
+    fprintf(stdout,"       --noise-file  : reconstructed noise model           \n");
+    fprintf(stdout,"                       e.g., data/power_noise_t0_f0.dat    \n");
     fprintf(stdout,"       --catalog     : list of known sources               \n");
     fprintf(stdout,"       --Tcatalog    : observing time of previous catalog  \n");
+    fprintf(stdout,"       --Nmode       : max number of GMM modes (16)        \n");
     fprintf(stdout,"--\n");
     fprintf(stdout,"EXAMPLE:\n");
     fprintf(stdout,"./gb_catalog --fmin 0.004 --samples 256 --duration 31457280 --sources 5 --chain-file chains/dimension_chain.dat.5");
@@ -762,7 +785,7 @@ static void print_usage_catalog()
     exit(EXIT_FAILURE);
 }
 
-static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog)
+static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog, size_t *NMODE)
 {
     print_LISA_ASCII_art(stdout);
     print_version(stdout);
@@ -828,7 +851,8 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
         {"noise-file",required_argument, 0, 0},
         {"match",     required_argument, 0, 0},
         {"catalog",   required_argument, 0, 0},
-        {"Tcatalog",   required_argument, 0, 0},
+        {"Tcatalog",  required_argument, 0, 0},
+        {"Nmode",     required_argument, 0, 0},
         
         /* These options don’t set a flag.
          We distinguish them by their indices. */
@@ -855,6 +879,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
                 if(strcmp("duration",    long_options[long_index].name) == 0) data_ptr->T    = (double)atof(optarg);
                 if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin = (double)atof(optarg);
                 if(strcmp("Tcatalog",    long_options[long_index].name) == 0) *Tcatalog      = (double)atof(optarg);
+                if(strcmp("Nmode",       long_options[long_index].name) == 0) *NMODE         = (size_t)atoi(optarg);
                 if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP   = 9;
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
@@ -977,7 +1002,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     fclose(runlog);
 }
 
-static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC)
+static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC)
 {
     fprintf(stdout,"Event %s, NMODE=%i\n",entry->name,(int)NMODE);
     
@@ -1010,7 +1035,14 @@ static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, siz
         alloc_MVG(modes[n],NP);
     }
     
+    // Logistic mapping of samples onto R
+    double y;
+    double pmin,pmax;
+    gsl_vector *y_vec = gsl_vector_alloc(NMCMC);
+
     /* parse chain file */
+    gsl_vector **params = malloc(NP*sizeof(gsl_vector *));
+    for(size_t n=0; n<NP; n++) params[n] = gsl_vector_alloc(NMCMC);
     double value[NP];
     char *column;
     for(size_t i=0; i<NMCMC; i++)
@@ -1019,6 +1051,7 @@ static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, siz
         value[1] = entry->source[i*NTHIN]->costheta;
         value[2] = entry->source[i*NTHIN]->phi;
         value[3] = log(entry->source[i*NTHIN]->amp);
+        //value[4] = acos(entry->source[i*NTHIN]->cosi);
         value[4] = entry->source[i*NTHIN]->cosi;
         value[5] = entry->source[i*NTHIN]->psi;
         value[6] = entry->source[i*NTHIN]->phi0;
@@ -1027,7 +1060,59 @@ static int gaussian_mixture_model_wrapper(struct Entry *entry, char *outdir, siz
         if(NP>8)
             value[8] = entry->source[i*NTHIN]->d2fdt2;
         
-        for(size_t n=0; n<NP; n++) gsl_vector_set(samples[i]->x,n,value[n]);
+        for(size_t n=0; n<NP; n++)
+        {
+            //gsl_vector_set(samples[i]->x,n,value[n]);
+            gsl_vector_set(params[n],i,value[n]);
+        }
+    }
+    
+    //ranges[4][0] = acos(ranges[4][1]);
+    //ranges[4][1] = acos(ranges[4][0]);
+
+    /* Get max and min for each parameter
+    for(size_t n=0; n<NP; n++)
+    {
+        int err = 0;
+        double *temp = malloc(10*sizeof(double));
+        err = gsl_sort_vector_smallest(temp, 10, params[n]);
+        pmin = temp[0] - (temp[9]-temp[0]); //pad min to avoid infs in mapping
+        
+        err = gsl_sort_vector_largest(temp, 10, params[n]);
+        pmax = temp[0] + (temp[0]-temp[9]); //pad max to avoid infs in mapping
+        
+        // copy max and min into each MVG structure
+        for(size_t k=0; k<NMODE; k++)
+        {
+            gsl_matrix_set(modes[k]->minmax,n,0,pmin);
+            gsl_matrix_set(modes[k]->minmax,n,1,pmax);
+        }
+    }*/
+    
+    /* Use priors to set min and max of each parameter */
+    for(size_t n=0; n<NP; n++)
+    {
+        // copy max and min into each MVG structure
+        for(size_t k=0; k<NMODE; k++)
+        {
+            gsl_matrix_set(modes[k]->minmax,n,0,ranges[n][0]);
+            gsl_matrix_set(modes[k]->minmax,n,1,ranges[n][1]);
+        }
+    }
+
+    
+    /* map params to R with logit function */
+    for(size_t n=0; n<NP; n++)
+    {
+        pmin = gsl_matrix_get(modes[0]->minmax,n,0);
+        pmax = gsl_matrix_get(modes[0]->minmax,n,1);
+        logit_mapping(params[n], y_vec, pmin, pmax);
+
+        for(size_t i=0; i<NMCMC; i++)
+        {
+            y = gsl_vector_get(y_vec,i);
+            gsl_vector_set(samples[i]->x,n,y);
+        }
     }
     
     /* The main Gaussian Mixture Model with Expectation Maximization function */

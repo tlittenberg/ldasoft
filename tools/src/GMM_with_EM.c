@@ -81,6 +81,7 @@ void alloc_MVG(struct MVG *mode, size_t N)
     mode->Cinv = gsl_matrix_calloc(mode->size,mode->size);
     mode->evectors = gsl_matrix_calloc(mode->size,mode->size);
     mode->evalues = gsl_vector_calloc(mode->size);
+    mode->minmax = gsl_matrix_calloc(mode->size,2);
 }
 
 void free_MVG(struct MVG *mode)
@@ -91,6 +92,7 @@ void free_MVG(struct MVG *mode)
     gsl_matrix_free(mode->Cinv);
     gsl_matrix_free(mode->evectors);
     gsl_vector_free(mode->evalues);
+    gsl_matrix_free(mode->minmax);
     free(mode);
 }
 
@@ -110,7 +112,7 @@ void write_MVG(struct MVG *mode, FILE *fptr)
     gsl_matrix_fwrite(fptr,mode->evectors);
     gsl_vector_fwrite(fptr,mode->evalues);
     gsl_vector_fwrite(fptr,temp);
-
+    gsl_matrix_fwrite(fptr,mode->minmax);
     gsl_vector_free(temp);
 }
 
@@ -127,6 +129,7 @@ void read_MVG(struct MVG *mode, FILE *fptr)
     gsl_matrix_fread(fptr,mode->evectors);
     gsl_vector_fread(fptr,mode->evalues);
     gsl_vector_fread(fptr,temp);
+    gsl_matrix_fread(fptr,mode->minmax);
 
     //unpack 'em!
     mode->detC = gsl_vector_get(temp,0);
@@ -267,6 +270,10 @@ void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     
     size_t NMODE = samples[0]->p->size;
     
+    //get original parameter boundaries
+    double pmin = gsl_matrix_get(modes[0]->minmax,ix,0);
+    double pmax = gsl_matrix_get(modes[0]->minmax,ix,1);
+    
     double *xvec = malloc(NMCMC*sizeof(double));
     double xmin,xmax;
     double x0 =  1e60;
@@ -292,7 +299,9 @@ void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
             double var  = gsl_matrix_get(modes[k]->C,ix,ix);
             p += modes[k]->p*exp( -0.5*(x-mean)*(x-mean)/var )/sqrt(2*M_PI*var);
         }
-        fprintf(fptr,"%.16g %.16g\n",x,p);
+        
+        
+        fprintf(fptr,"%.16g %.16g\n",sigmoid(x,pmin,pmax),p);
     }
     
     fclose(fptr);
@@ -312,6 +321,11 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
         submodes[k] = malloc(sizeof(struct MVG));
         alloc_MVG(submodes[k], 2);
     }
+    
+    //get original parameter boundaries
+    double pmin[2] = {gsl_matrix_get(modes[0]->minmax,x1,0),gsl_matrix_get(modes[0]->minmax,x2,0)};
+    double pmax[2] = {gsl_matrix_get(modes[0]->minmax,x1,1),gsl_matrix_get(modes[0]->minmax,x2,1)};
+
     
     //Pick parameters
     size_t X[2] = {x1,x2};
@@ -344,14 +358,20 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
             double angle = n*(2.*M_PI/100.);
             x = 1.*( Rx*cos(angle)*cos(theta) + Ry*sin(angle)*sin(theta) ) + Cx;
             y = 1.*(-Rx*cos(angle)*sin(theta) + Ry*sin(angle)*cos(theta) ) + Cy;
+            x = sigmoid(x,pmin[0],pmax[0]);
+            y = sigmoid(y,pmin[1],pmax[1]);
             fprintf(fptr,"%.16lg %.16lg ",x,y);
             
             x = 2.*( Rx*cos(angle)*cos(theta) + Ry*sin(angle)*sin(theta) ) + Cx;
             y = 2.*(-Rx*cos(angle)*sin(theta) + Ry*sin(angle)*cos(theta) ) + Cy;
+            x = sigmoid(x,pmin[0],pmax[0]);
+            y = sigmoid(y,pmin[1],pmax[1]);
             fprintf(fptr,"%.16lg %.16lg ",x,y);
             
             x = 3.*( Rx*cos(angle)*cos(theta) + Ry*sin(angle)*sin(theta) ) + Cx;
             y = 3.*(-Rx*cos(angle)*sin(theta) + Ry*sin(angle)*cos(theta) ) + Cy;
+            x = sigmoid(x,pmin[0],pmax[0]);
+            y = sigmoid(y,pmin[1],pmax[1]);
             fprintf(fptr,"%.16lg %.16lg ",x,y);
             
             fprintf(fptr,"\n");
@@ -556,4 +576,40 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
     }
     printf("\n");
     return 0;
+}
+
+double logit(double x,double xmin,double xmax)
+{
+    return log( (x-xmin)/(xmax-x) );
+}
+
+double sigmoid(double x,double xmin,double xmax)
+{
+    return xmin + (1./(1. + exp(-x)))*(xmax - xmin);
+}
+
+
+void logit_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax)
+{
+    size_t N = x_vec->size;
+
+    for(size_t n=0; n<N; n++)
+    {
+        double x = gsl_vector_get(x_vec,n);
+        double y = logit(x,xmin,xmax);//log( (x - xmin)/(xmax - x) );
+        gsl_vector_set(y_vec,n,y);
+    }
+}
+
+/* sigmoid function */
+void sigmoid_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax)
+{
+    size_t N = x_vec->size;
+
+    for(size_t n=0; n<N; n++)
+    {
+        double y = gsl_vector_get(y_vec,n);
+        double x = sigmoid(y,xmin,xmax);//xmin + (1./(1. + exp(-y)))*(xmax - xmin);
+        gsl_vector_set(x_vec,n,y);
+    }
 }
