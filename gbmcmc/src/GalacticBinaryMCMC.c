@@ -260,11 +260,11 @@ int main(int argc, char *argv[])
                 }
                 else if(flags->update)
                 {
-                    draw_from_cdf(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
+                    draw_from_gmm_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[i][7], model_ptr->source[n]->params , chain->r[ic]);
                 }
                 else
                 {
-                    draw_from_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[i][0], model_ptr->source[n]->params , chain->r[ic]);
+                    draw_from_uniform_prior(data_ptr, model_ptr, model_ptr->source[n], proposal[i][0], model_ptr->source[n]->params , chain->r[ic]);
                 }
                 map_array_to_params(model_ptr->source[n], model_ptr->source[n]->params, data_ptr->T);
                 galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[0]);
@@ -325,17 +325,18 @@ int main(int argc, char *argv[])
         fprintf(stdout,"============================================\n\n");
     }
     
-    //test covariance proposal
-    /*
+    /*test proposals
      FILE *test=fopen("proposal_test.dat","w");
      for(int i=0; i<100000; i++)
      {
-     double logP = draw_from_cov(data[0], model[0][0], model[0][0]->source[0], proposal[0][8], model[0][0]->source[0]->params, chain->r[0]);
-     print_source_params(data[0], model[0][0]->source[0], test);
-     fprintf(test,"%lg\n",logP);
+         //double logP = draw_from_cov(data[0], model[0][0], model[0][0]->source[0], proposal[0][8], model[0][0]->source[0]->params, chain->r[0]);
+         double logP = draw_from_gmm_prior(data[0], model[0][0], model[0][0]->source[0], proposal[0][7], model[0][0]->source[0]->params, chain->r[0]);
+         print_source_params(data[0], model[0][0]->source[0], test);
+         fprintf(test,"%lg\n",logP);
      }
-     fclose(test);
-     */
+     fclose(test);*/
+    //exit(1);
+    
     //test covariance proposal
     if(flags->updateCov) test_covariance_proposal(data[0], flags, model[0][0], prior, proposal[0][8], chain->r[0]);
 
@@ -742,15 +743,14 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         
         if(isfinite(logH) && logH > loga)
         {
-            
-            //KAL? Print something for cov draw here??
-            
-            if(ic==0  && model_y->logL - model_x->logL < -20.)
+                        
+            if(ic==0 && model_y->logL - model_x->logL < -20.)
             {
                 
                 printf("%s logH=%g, logLx=%g, logLy=%g\n",proposal[nprop]->name,logH,model_x->logL , model_y->logL);
                 printf("   dlogQ=%g, logQxy=%g, logQyx=%g\n",logQxy - logQyx,logQxy,logQyx);
-                
+                printf("   dlogP=%g, logPy=%g,  logPx=%g\n",logPy - logPx,logPy,logPx);
+
                 /*
                  FILE *fptr = fopen("crazyhop.dat","a");
                  for(int k=0; k<data->NP; k++)fprintf(fptr,"%.12g ",source_x->params[k]);
@@ -809,7 +809,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         if(model_y->Nlive<model_x->Nmax)
         {
             //draw new parameters
-            //TODO: insert draw fro galaxy prior into draw_from_prior()
+            //TODO: insert draw from galaxy prior into draw_from_uniform_prior()
             logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
             logQxy = 0;
             

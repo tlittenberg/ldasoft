@@ -80,6 +80,7 @@ struct MVG
     gsl_matrix *Cinv; //!< inverse covariance matrix
     gsl_matrix *evectors; //!< eigenvectors
     gsl_vector *evalues; //!< eigenvalues
+    gsl_matrix *minmax; //!< min and max range for samples
     double detC; //!< determinant of covariance matrix
     double p; //!< prior for Mode (i.e. weighting)
     double Neff; //!< effective number of samples in mode
@@ -190,5 +191,11 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
  * \return `0` if successfule, `1` if singular due to zero weight in one of the modes
 */
 int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC);
+
+
+double logit(double x,double xmin,double xmax);
+double sigmoid(double x,double xmin,double xmax);
+void logit_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax);
+void sigmoid_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax);
 
 #endif /* GMM_with_EM_h */

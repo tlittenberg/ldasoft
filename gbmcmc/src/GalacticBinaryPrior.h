@@ -84,7 +84,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params);
 double evalaute_sky_location_prior(double *params, double **uniform_prior, double *logPriorVolume, int galaxyFlag, double *skyhist, double dcostheta, double dphi, int nphi);
 double evaluate_uniform_priors(double *params, double **uniform_prior, double *logPriorVolume, int NP);
-double evaluate_gmm_prior(struct Data *data, struct Prior *prior, double *params);
+double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, double *params);
 
 
 

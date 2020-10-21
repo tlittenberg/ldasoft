@@ -546,11 +546,12 @@ void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior)
     fprintf(stdout,"\n================================================\n\n");
 }
 
-double evaluate_gmm_prior(struct Data *data, struct Prior *prior, double *params)
+double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, double *params)
 {
-    size_t NP = prior->NP;
+    size_t NP = data->NP;
     gsl_vector *x = gsl_vector_alloc(NP);
     
+    double logP = 0.0;
     
     //pack parameters into gsl_vector with correct units
     struct Source *source = malloc(sizeof(struct Source));
@@ -561,6 +562,7 @@ double evaluate_gmm_prior(struct Data *data, struct Prior *prior, double *params
     gsl_vector_set(x,1,source->costheta);
     gsl_vector_set(x,2,source->phi);
     gsl_vector_set(x,3,log(source->amp));
+    //gsl_vector_set(x,4,acos(source->cosi));
     gsl_vector_set(x,4,source->cosi);
     gsl_vector_set(x,5,source->psi);
     gsl_vector_set(x,6,source->phi0);
@@ -569,18 +571,41 @@ double evaluate_gmm_prior(struct Data *data, struct Prior *prior, double *params
     if(NP>8)
         gsl_vector_set(x,8,source->d2fdt2);
 
+    //map parameters to R
+    double xmin,xmax,xn,yn;
+    for(size_t n=0; n<NP; n++)
+    {
+        xmin = gsl_matrix_get(modes[0]->minmax,n,0);
+        xmax = gsl_matrix_get(modes[0]->minmax,n,1);
+        xn = gsl_vector_get(x,n);
+        if(xn < xmin || xn >= xmax)
+        {            
+            //clean up
+            gsl_vector_free(x);
+            free_source(source);
+            return -INFINITY;
+        }
+        yn = logit(xn,xmin,xmax);
+        gsl_vector_set(x,n,yn);
+        
+        //Jacobian?
+        //logP -= log( (xmax-xmin) * exp(-yn)/pow(1. + exp(-yn),2.)   );
+        logP -= log(xmax-xmin) - yn - 2.*log(1. + exp(-yn));
+    }
+    
     //sum over modes
     double P=0.0;
-    for(size_t k=0; k<prior->NMODE; k++)
-        P += prior->modes[k]->p*multivariate_gaussian(x,prior->modes[k]);
+    for(size_t k=0; k<NMODES; k++)
+        P += modes[k]->p*multivariate_gaussian(x,modes[k]);
     
     //Jacobian?
-
+    //logP -= log(1./sqrt(1. - source->cosi*source->cosi));
+    
     //clean up
     gsl_vector_free(x);
     free_source(source);
     
-    return log(P);
+    return log(P) + logP;
 }
 
 double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params)
@@ -592,7 +617,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     if(check_range(params, uniform_prior, model->NP)) return -INFINITY;
 
     //update from existing runs prior
-    if(flags->update) logP = evaluate_gmm_prior(data, prior, params);
+    if(flags->update) logP = evaluate_gmm_prior(data, prior->modes, prior->NMODE, params);
     
     //blind search prior
     else
