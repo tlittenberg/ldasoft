@@ -57,7 +57,6 @@
 
 #include "GMM_with_EM.h"
 
-<<<<<<< HEAD
 
 
 
@@ -73,8 +72,6 @@ for(size_t n=0; n<NP; n++)
     }
 }*/
 
-=======
->>>>>>> e947b4fe514e4f1c02118b1a32e3668eb2e85c35
 /**
  * \brief Main function for data handling and calling GM_with_EM() algorithm
  *
@@ -201,7 +198,6 @@ int main(int argc, char* argv[])
         modes[n] = malloc(sizeof(struct MVG));
         alloc_MVG(modes[n],NP);
     }
-<<<<<<< HEAD
 
     // Logistic mapping of samples onto R
     double x,y,p;
@@ -211,9 +207,6 @@ int main(int argc, char* argv[])
     gsl_vector *x_vec = gsl_vector_alloc(NMCMC);
     gsl_vector *y_vec = gsl_vector_alloc(NMCMC);
 
-=======
-    
->>>>>>> e947b4fe514e4f1c02118b1a32e3668eb2e85c35
     /* parse chain file */
     double value;
     char *column;
@@ -233,11 +226,7 @@ int main(int argc, char* argv[])
         }
     }
     
-    /* The main Gaussian Mixture Model with Expectation Maximization function */
-    double logL, BIC;
-    if(GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC)) return 1;
     
-<<<<<<< HEAD
     
     
     /* Get max and min for each parameter */
@@ -280,9 +269,6 @@ int main(int argc, char* argv[])
     if(GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC)) return 1;
     
 
-=======
-
->>>>>>> e947b4fe514e4f1c02118b1a32e3668eb2e85c35
     /* Write GMM results to binary for pick up by other processes */
     char filename[BUFFER_SIZE];
     sprintf(filename,"gmm_%i.bin",(int)NMODE);
