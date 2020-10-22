@@ -343,16 +343,17 @@ int main(int argc, char *argv[])
     /* Write example gb_catalog bash script in run directory */
     print_gb_catalog_script(flags, data[0], orbit);
 
-    /*
+    
     // Temporary! Ask for thread count
     int threads;
     printf("How many threads to run: ");
     scanf("%d",&threads);
-    */
+    
 
 
     //For saving the number of threads actually given
     int numThreads;
+    int mcmc = mcmc_start;
     #pragma omp parallel //num_threads(threads)
     {   
         int threadID;
@@ -368,7 +369,7 @@ int main(int argc, char *argv[])
         #pragma omp barrier
 
         /* The MCMC loop */    
-        for(int mcmc = mcmc_start; mcmc < flags->NMCMC; mcmc++)
+        for(; mcmc < flags->NMCMC;)
         {
             if(threadID==0){
                 if(mcmc<0) flags->burnin=1;
@@ -478,6 +479,7 @@ int main(int argc, char *argv[])
                             chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
                     }
                 }
+                mcmc++;
             }
             //Can't continue MCMC until single thread is finished
             #pragma omp barrier
