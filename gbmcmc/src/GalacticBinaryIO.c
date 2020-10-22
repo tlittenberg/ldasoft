@@ -320,6 +320,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     flags->fixFdot     = 0;
     flags->fixSky      = 0;
     flags->fixFreq     = 0;
+    flags->fixFdot     = 0;
     flags->galaxyPrior = 0;
     flags->snrPrior    = 0;
     flags->emPrior     = 0;
