@@ -182,6 +182,8 @@ double multivariate_gaussian(gsl_vector *x, struct MVG *mvg)
 
 void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *detA, double *R)
 {
+    int i,j;
+    
     gsl_set_error_handler_off();
     
     //error catchers
@@ -197,7 +199,6 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
     gsl_matrix_memcpy(Ainv,A);
     
     //cholesky decomposition
-    int i;
     err += gsl_linalg_cholesky_decomp(Ainv);
     
     //get condition number
@@ -212,10 +213,11 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
     gsl_linalg_LU_decomp(L,permutation,&i);
     *detA = gsl_linalg_LU_det(L,i);
     
-    //zero upper half of matrix (copy of A)
-    int j;
+    //recompute and save L
+    gsl_matrix_memcpy(L,A);
+    gsl_linalg_cholesky_decomp(L);
     for(i=0; i<N; i++) for(j=i+1; j<N; j++) gsl_matrix_set(L,i,j,0.0);
-    
+
     //clean up
     gsl_vector_free (work);
     gsl_permutation_free (permutation);
@@ -292,12 +294,16 @@ void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     for(int n=0; n<=100; n++)
     {
         p = 0.0;
-        x = xmin + (double)n*dx;
+        x = x0 + (double)n*dx;
         for(size_t k=0; k<NMODE; k++)
         {
             double mean = gsl_vector_get(modes[k]->mu,ix);
             double var  = gsl_matrix_get(modes[k]->C,ix,ix);
-            p += modes[k]->p*exp( -0.5*(x-mean)*(x-mean)/var )/sqrt(2*M_PI*var);
+            
+            /*
+             Probability density p is weight * normal / Jacobian
+             */
+            p += modes[k]->p * exp( -0.5*(x-mean)*(x-mean)/var )/sqrt(2*M_PI*var) / ((pmax-pmin)*exp(-x)/pow(1. + exp(-x),2));
         }
         
         
@@ -610,6 +616,6 @@ void sigmoid_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double x
     {
         double y = gsl_vector_get(y_vec,n);
         double x = sigmoid(y,xmin,xmax);//xmin + (1./(1. + exp(-y)))*(xmax - xmin);
-        gsl_vector_set(x_vec,n,y);
+        gsl_vector_set(x_vec,n,x);
     }
 }

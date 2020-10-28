@@ -262,7 +262,18 @@ int main(int argc, char* argv[])
             gsl_vector_set(samples[i]->x,n,y);
         }
     }
-
+    
+    /* scatter plot of remapped parameters */
+    FILE *scatter = fopen("remapped_samples.dat","w");
+    for(size_t i=0; i<NMCMC; i++)
+    {
+        for(size_t n=0; n<NP; n++)
+        {
+            fprintf(scatter, "%lg ", gsl_vector_get(samples[i]->x,n));
+        }
+        fprintf(scatter,"\n");
+    }
+    fclose(scatter);
 
     /* The main Gaussian Mixture Model with Expectation Maximization function */
     double logL, BIC;

@@ -51,8 +51,8 @@
 
 /* ============================  MAIN PROGRAM  ============================ */
 static void print_usage_catalog();
-static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog, size_t *NMODE);
-static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC);
+static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog, size_t *NMODE, size_t *NTHIN);
+static int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, size_t NTHIN, gsl_rng *seed, double *BIC);
 
 int main(int argc, char *argv[])
 {
@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
     
     int NTEMP = 1;     //needed size of data structure
     size_t NMODE = 16; //default size of GMM
+    size_t NTHIN = 1;  //thinning rate of chain
 
     /* Allocate data structures */
     struct Flags *flags = malloc(sizeof(struct Flags));
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
         data_tmp[i] = malloc(sizeof(struct Data));
         data_tmp[i]->t0   = malloc( NTEMP * sizeof(double) );
     }
-    parse_catalog(argc,argv,data_tmp,orbit,flags,NTEMP,&Tcatalog,&NMODE);
+    parse_catalog(argc,argv,data_tmp,orbit,flags,NTEMP,&Tcatalog,&NMODE,&NTHIN);
     alloc_data(data_tmp, flags);
     struct Data *data  = data_tmp[0];
     data->qmin = (int)(data->fmin*data->T);
@@ -668,7 +669,7 @@ int main(int argc, char *argv[])
 
         counter = 0;
         gsl_rng_memcpy(rtemp, r);
-        while(gaussian_mixture_model_wrapper(model->prior, entry, outdir, (size_t)data->NP, NMODE, r, &BIC))
+        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, (size_t)data->NP, NMODE, NTHIN, r, &BIC))
         {
             counter++;
             if(counter>CMAX)
@@ -777,6 +778,7 @@ static void print_usage_catalog()
     fprintf(stdout,"       --catalog     : list of known sources               \n");
     fprintf(stdout,"       --Tcatalog    : observing time of previous catalog  \n");
     fprintf(stdout,"       --Nmode       : max number of GMM modes (16)        \n");
+    fprintf(stdout,"       --thin        : factor for thinning chains in GMM   \n");
     fprintf(stdout,"--\n");
     fprintf(stdout,"EXAMPLE:\n");
     fprintf(stdout,"./gb_catalog --fmin 0.004 --samples 256 --duration 31457280 --sources 5 --chain-file chains/dimension_chain.dat.5");
@@ -785,7 +787,7 @@ static void print_usage_catalog()
     exit(EXIT_FAILURE);
 }
 
-static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog, size_t *NMODE)
+static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, int Nmax, double *Tcatalog, size_t *NMODE, size_t *NTHIN)
 {
     print_LISA_ASCII_art(stdout);
     print_version(stdout);
@@ -853,7 +855,8 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
         {"catalog",   required_argument, 0, 0},
         {"Tcatalog",  required_argument, 0, 0},
         {"Nmode",     required_argument, 0, 0},
-        
+        {"thin",      required_argument, 0, 0},
+
         /* These options don’t set a flag.
          We distinguish them by their indices. */
         {"help",        no_argument, 0,'h'},
@@ -880,6 +883,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
                 if(strcmp("fmin",        long_options[long_index].name) == 0) data_ptr->fmin = (double)atof(optarg);
                 if(strcmp("Tcatalog",    long_options[long_index].name) == 0) *Tcatalog      = (double)atof(optarg);
                 if(strcmp("Nmode",       long_options[long_index].name) == 0) *NMODE         = (size_t)atoi(optarg);
+                if(strcmp("thin",        long_options[long_index].name) == 0) *NTHIN         = (size_t)atoi(optarg);
                 if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP   = 9;
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
@@ -1002,7 +1006,7 @@ static void parse_catalog(int argc, char **argv, struct Data **data, struct Orbi
     fclose(runlog);
 }
 
-static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, gsl_rng *seed, double *BIC)
+static int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, size_t NTHIN, gsl_rng *seed, double *BIC)
 {
     fprintf(stdout,"Event %s, NMODE=%i\n",entry->name,(int)NMODE);
     
@@ -1011,9 +1015,6 @@ static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, 
     
     // number of EM iterations
     size_t NSTEP = 100;
-    
-    // thinning rate of input chain
-    size_t NTHIN = 1;
     
     // thin chain
     NMCMC /= NTHIN;
@@ -1067,9 +1068,6 @@ static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, 
         }
     }
     
-    //ranges[4][0] = acos(ranges[4][1]);
-    //ranges[4][1] = acos(ranges[4][0]);
-
     /* Get max and min for each parameter
     for(size_t n=0; n<NP; n++)
     {
@@ -1087,9 +1085,10 @@ static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, 
             gsl_matrix_set(modes[k]->minmax,n,0,pmin);
             gsl_matrix_set(modes[k]->minmax,n,1,pmax);
         }
+        
     }*/
     
-    /* Use priors to set min and max of each parameter */
+    /* Use priors to set min and max of each parameter*/
     for(size_t n=0; n<NP; n++)
     {
         // copy max and min into each MVG structure
@@ -1127,6 +1126,9 @@ static int gaussian_mixture_model_wrapper(double **ranges, struct Entry *entry, 
     for(size_t n=0; n<NMODE; n++) write_MVG(modes[n],fptr);
     fclose(fptr);
     
+    /* print 1D PDFs and 2D contours of GMM model */
+    if(flags->verbose) print_model(modes, samples, NMCMC, logL, *BIC, NMODE);
+
     /* clean up */
     for(size_t n=0; n<NMCMC; n++)
     {

@@ -232,7 +232,6 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     int NP = source->NP;
     int NMODES = proposal->size;
     double ran_no[NP];
-    double logP = 0.0;
     
     struct MVG *mode = NULL;
     
@@ -266,11 +265,7 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
         double min = gsl_matrix_get(mode->minmax,n,0);
         double max = gsl_matrix_get(mode->minmax,n,1);
         
-        //Jacobian?
-        logP += log( (max-min) * exp(-x[n])/pow(1. + exp(-x[n]),2.)   );
-        
         x[n] = sigmoid(x[n],min,max);
-        //if(n==0)printf("mu=%lg, [min,max]=[%lg, %lg], draw=%lg\n",sigmoid(gsl_vector_get(mode->mu,n),min,max),min,max,x[n]);
     }
     
     //map to parameters
@@ -278,58 +273,18 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     source->costheta = x[1];
     source->phi = x[2];
     source->amp = exp(x[3]);
-    //source->cosi = cos(x[4]);
     source->cosi = x[4];
     source->psi = x[5];
     source->phi0 = x[6];
     if(NP>7) source->dfdt = x[7];
     if(NP>8) source->d2fdt2 = x[8];
     map_params_to_array(source, params, data->T);
-    
-    logP += evaluate_gmm_prior(data, proposal->modes, NMODES, params);
-    
-    //printf("draw from gmm prior: logP = %g\n", logP);
-    
-    return logP;
+            
+    return evaluate_gmm_prior(data, proposal->modes, NMODES, params);
 }
 
 double gmm_prior_density(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params)
 {
-//    double logP = 0.0;
-//    int NP = source->NP;
-//    struct MVG *mode = proposal->modes[0];
-//
-//    double x[NP];
-//
-//    x[0] = source->f0;
-//    x[1]=source->costheta;
-//    x[2]=source->phi;
-//    x[3]=log(source->amp);
-//    x[4] = source->cosi;
-//    x[5] = source->psi;
-//    x[6] = source->phi0;
-//    if(NP>7)
-//        x[7] = source->dfdt;
-//    if(NP>8)
-//        x[8] = source->d2fdt2;
-//
-//    for(int n=0; n<NP; n++)
-//    {
-//
-//        //map params from R back to interval
-//        double xmin = gsl_matrix_get(mode->minmax,n,0);
-//        double xmax = gsl_matrix_get(mode->minmax,n,1);
-//
-//        x[n] = logit(x[n],xmin,xmax);
-//
-//        logP -= log( (xmax-xmin) * exp(-x[n])/pow(1. + exp(-x[n]),2.)   );
-//
-//    }
-//
-//    logP += evaluate_gmm_prior(data, proposal->modes, proposal->size, params);
-//
-   // printf("logP = %g\n",logP);
-    
     return evaluate_gmm_prior(data, proposal->modes, proposal->size, params);
 }
 
@@ -960,7 +915,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 if(flags->update)
                 {
                     setup_gmm_proposal(flags, prior, proposal[i]);
-                    proposal[i]->weight   = 0.0;
+                    proposal[i]->weight   = 0.2;
                     proposal[i]->rjweight = 0.0;
                 }
                 check   += proposal[i]->weight;
