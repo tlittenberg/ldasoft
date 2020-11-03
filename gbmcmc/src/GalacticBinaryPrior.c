@@ -22,10 +22,21 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_eigen.h>
+
+#include <GMM_with_EM.h>
+
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
+#include "GalacticBinaryModel.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryPrior.h"
@@ -331,9 +342,14 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     double fmin = model->prior[0][0]/data->T;
     double fmax = model->prior[0][1]/data->T;
     
-    /* emprical envolope functions from Gijs' MLDC catalog */
+    /* emprical envelope functions from Gijs' MLDC catalog */
     double fdotmin = -0.000005*pow(fmin,(13./3.));
     double fdotmax = 0.0000008*pow(fmax,(11./3.));
+    
+    /* unphysically broad priors
+    double fdotmin = -pow(fmin,(13./3.));
+    double fdotmax = pow(fmax,(13./3.)); */
+     
     
     /* use prior on chirp mass to convert to priors on frequency evolution */
     if(flags->detached)
@@ -458,77 +474,191 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     
 }
 
+int check_range(double *params, double **uniform_prior, int NP)
+{
+    //nan check
+    for(int n=0; n<NP; n++) if(params[n]!=params[n]) return 1;
+    
+    //frequency bin (uniform)
+    if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return 1;
+    
+    //cosine co-latitude
+    if(params[1]<uniform_prior[1][0] || params[1]>uniform_prior[1][1]) return 1;
+
+    //longitude
+    if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
+    {
+        params[2] = atan2(sin(params[2]),cos(params[2]));
+        if(params[2] < 0.0) params[2] += PI2;
+    }
+
+    //cosine inclination
+    if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return 1;
+    
+    //polarization
+    while(params[5]<uniform_prior[5][0]) params[5] += M_PI;
+    while(params[5]>uniform_prior[5][1]) params[5] -= M_PI;
+
+    //phase
+    while(params[6]<uniform_prior[6][0]) params[6] += PI2;
+    while(params[6]>uniform_prior[6][1]) params[6] -= PI2;
+    
+    //fdot (bins/Tobs)
+    if(NP>7) if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return 1;
+    
+    //fddot
+    if(NP>8) if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return 1;
+
+    return 0;
+}
+
+void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior)
+{
+    fprintf(stdout,"\n========= Gaussian Mixture Model prior =========\n\n");
+    /* allocate GMM structure */
+
+    prior->NP = (size_t)data->NP;
+        
+    FILE *fptr = NULL;
+    /* Read GMM results to binary for pick up by other processes */
+    if( (fptr = fopen(flags->gmmFile,"rb"))!=NULL)
+    {
+        fprintf(stdout,"   Found GMM file %s\n",flags->gmmFile);
+        fread(&prior->NMODE, sizeof prior->NMODE, 1, fptr);
+        fprintf(stdout,"   GMM uses %i modes\n",(int)prior->NMODE);
+
+        prior->modes = malloc(prior->NMODE*sizeof(struct MVG*));
+        for(size_t n=0; n<prior->NMODE; n++)
+        {
+            prior->modes[n] = malloc(sizeof(struct MVG));
+            alloc_MVG(prior->modes[n],prior->NP);
+        }
+
+        for(size_t n=0; n<prior->NMODE; n++) read_MVG(prior->modes[n],fptr);
+        fclose(fptr);
+    }
+    else
+    {
+        fprintf(stderr,"Error reading %s\n",flags->gmmFile);
+        fprintf(stderr,"Exiting to system\n");
+        exit(1);
+    }
+    fprintf(stdout,"\n================================================\n\n");
+}
+
+double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, double *params)
+{
+    size_t NP = data->NP;
+    gsl_vector *x = gsl_vector_alloc(NP);
+        
+    //pack parameters into gsl_vector with correct units
+    struct Source *source = malloc(sizeof(struct Source));
+    alloc_source(source, data->N, data->Nchannel, data->NP);
+    
+    map_array_to_params(source, params, data->T);
+    gsl_vector_set(x,0,source->f0);
+    gsl_vector_set(x,1,source->costheta);
+    gsl_vector_set(x,2,source->phi);
+    gsl_vector_set(x,3,log(source->amp));
+    //gsl_vector_set(x,4,acos(source->cosi));
+    gsl_vector_set(x,4,source->cosi);
+    gsl_vector_set(x,5,source->psi);
+    gsl_vector_set(x,6,source->phi0);
+    if(NP>7)
+        gsl_vector_set(x,7,source->dfdt);
+    if(NP>8)
+        gsl_vector_set(x,8,source->d2fdt2);
+
+    //map parameters to R
+    double xmin,xmax,xn,yn, logJ = 0;
+    for(size_t n=0; n<NP; n++)
+    {
+        xmin = gsl_matrix_get(modes[0]->minmax,n,0);
+        xmax = gsl_matrix_get(modes[0]->minmax,n,1);
+        xn = gsl_vector_get(x,n);
+        if(xn < xmin || xn >= xmax)
+        {            
+            //clean up
+            gsl_vector_free(x);
+            free_source(source);
+            return -INFINITY;
+        }
+        yn = logit(xn,xmin,xmax);
+        gsl_vector_set(x,n,yn);
+        
+        //Jacobian
+        logJ -= log(dsigmoid(yn, xmin, xmax));
+    }
+    
+    //sum over modes
+    double P=0.0;
+    for(size_t k=0; k<NMODES; k++)
+        P += modes[k]->p*multivariate_gaussian(x,modes[k]);
+    
+    //clean up
+    gsl_vector_free(x);
+    free_source(source);
+    
+    return log(P) + logJ;
+}
+
 double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params)
 {
     double logP=0.0;
     double **uniform_prior = model->prior;
     
     //guard against nan's, but do so loudly
-    for(int i=0; i<model->NP; i++)
+    if(check_range(params, uniform_prior, model->NP)) return -INFINITY;
+
+    //update from existing runs prior
+    if(flags->update) logP = evaluate_gmm_prior(data, prior->modes, prior->NMODE, params);
+    
+    //blind search prior
+    else
     {
-        if(params[i]!=params[i])
-        {
-            fprintf(stderr,"parameter %i not a number\n",i);
-            return -INFINITY;
-        }
+        //sky location prior
+        logP += evalaute_sky_location_prior(params, uniform_prior, model->logPriorVolume, flags->galaxyPrior, prior->skyhist, prior->dcostheta, prior->dphi, prior->nphi);
+        
+        //amplitude prior
+        logP += evaluate_snr_prior(data, model, params);
+        
+        //everything else uses simple uniform priors
+        logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume, model->NP);
     }
-    
-    //sky location prior
-    logP += evalaute_sky_location_prior(params, uniform_prior, model->logPriorVolume, flags->galaxyPrior, prior->skyhist, prior->dcostheta, prior->dphi, prior->nphi);
-    
-    //amplitude prior
-    logP += evaluate_snr_prior(data, model, params);
-    
-    //everything else uses simple uniform priors
-    logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume, model->NP);
-    
     
     return logP;
 }
 
 double evaluate_uniform_priors(double *params, double **uniform_prior, double *logPriorVolume, int NP)
 {
-    //nan check
-    for(int n=0; n<NP; n++) if(params[n]!=params[n]) return -INFINITY;
+    if(check_range(params, uniform_prior, NP)) return -INFINITY;
     
     double logP = 0.0;
     //frequency bin (uniform)
-    if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return -INFINITY;
     //TODO: is frequency logPriorVolume up to date?
-    else logP -= log(uniform_prior[0][1]-uniform_prior[0][0]);
+    logP -= log(uniform_prior[0][1]-uniform_prior[0][0]);
     
     //cosine inclination
-    if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return -INFINITY;
-    else logP -= logPriorVolume[4];
+    logP -= logPriorVolume[4];
     
     //polarization
-    while(params[5]<uniform_prior[5][0]) params[5] += M_PI;
-    while(params[5]>uniform_prior[5][1]) params[5] -= M_PI;
     logP -= logPriorVolume[5];
     
     //phase
-    while(params[6]<uniform_prior[6][0]) params[6] += PI2;
-    while(params[6]>uniform_prior[6][1]) params[6] -= PI2;
     logP -= logPriorVolume[6];
     
     //fdot (bins/Tobs)
-    if(NP>7)
-    {
-        if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return -INFINITY;
-        else logP -= logPriorVolume[7];
-    }
+    if(NP>7) logP -= logPriorVolume[7];
     
     //fddot
-    if(NP>8)
-    {
-        if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return -INFINITY;
-        else logP -= logPriorVolume[8];
-    }
+    if(NP>8) logP -= logPriorVolume[8];
+    
     return logP;
 }
 
 double evalaute_sky_location_prior(double *params, double **uniform_prior, double *logPriorVolume, int galaxyFlag, double *skyhist, double dcostheta, double dphi, int nphi)
 {
+    
     double logP = 0.0;
     if(galaxyFlag)
     {

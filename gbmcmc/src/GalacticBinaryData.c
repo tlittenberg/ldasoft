@@ -171,11 +171,11 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
         
         for(int n=0; n<data->N; n++)
         {
-            tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
-            tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+            tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
+            tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
             
-            tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
-            tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+            tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
+            tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
         }
     }
     
@@ -439,11 +439,11 @@ void GalacticBinaryInjectVerificationSource(struct Data **data_vec, struct Orbit
                 
                 for(int n=0; n<data->N; n++)
                 {
-                    tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
-                    tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+                    tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
+                    tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
                     
-                    tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
-                    tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+                    tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
+                    tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
                 }
             }
             
@@ -734,11 +734,11 @@ void GalacticBinaryInjectSimulatedSource(struct Data **data_vec, struct Orbit *o
                     
                     for(int n=0; n<data->N; n++)
                     {
-                        tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
-                        tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n])/2.);
+                        tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
+                        tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
                         
-                        tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
-                        tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n])/2.);
+                        tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
+                        tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
                     }
                 }
                 
