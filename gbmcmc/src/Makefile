@@ -5,12 +5,17 @@ CC = gcc
 #CCFLAGS = -fopenmp 
 
 #LIBS  = gsl gslcblas m fftw3
-LIBS  = gsl gslcblas m 
+LIBS  = gsl gslcblas m tools
+LDFLAGS = -L../../tools/src
 CCFLAGS += -O3 -g -ffast-math -Wall -ftree-vectorize -std=gnu99 -Werror
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 CCFLAGS += -DVERSION=\"$(GIT_VERSION)\"
+
+# include tools routines
+CCFLAGS += -I../../tools/src/
+
 
 OBJS = LISA.o GalacticBinaryIO.o GalacticBinaryModel.o GalacticBinaryWaveform.o GalacticBinaryMath.o GalacticBinaryData.o GalacticBinaryPrior.o GalacticBinaryProposal.o GalacticBinaryFStatistic.o 
 
@@ -47,30 +52,29 @@ GalacticBinaryProposal.o : GalacticBinaryProposal.c GalacticBinary.h GalacticBin
 	$(CC) $(CCFLAGS) -c GalacticBinaryProposal.c $(INCDIR:%=-I%) $(LIBDIR:%=-L%)
 
 gb_mcmc : GalacticBinaryMCMC.c $(OBJS) GalacticBinary.h
-	$(CC) $(CCFLAGS) -o gb_mcmc GalacticBinaryMCMC.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -o gb_mcmc GalacticBinaryMCMC.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%) $(LDFLAGS)
 
 gb_catalog : GalacticBinaryCatalog.c $(OBJS) GalacticBinary.h
-	$(CC) $(CCFLAGS) -o gb_catalog GalacticBinaryCatalog.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -o gb_catalog GalacticBinaryCatalog.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%) $(LDFLAGS)
 
 gb_residual : GalacticBinaryResidual.c $(OBJS) GalacticBinary.h
-	$(CC) $(CCFLAGS) -o gb_residual GalacticBinaryResidual.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -o gb_residual GalacticBinaryResidual.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%) $(LDFLAGS)
 
 gb_mcmc_chirpmass : gb_mcmc_chirpmass.c 
-	$(CC) -o gb_mcmc_chirpmass gb_mcmc_chirpmass.c $(LIBS:%=-l%)
+	$(CC) -o gb_mcmc_chirpmass gb_mcmc_chirpmass.c $(LIBS:%=-l%) $(LDFLAGS)
 
 gb_match : GalacticBinaryMatch.c $(OBJS) GalacticBinary.h
-	$(CC) $(CCFLAGS) -o gb_match GalacticBinaryMatch.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -o gb_match GalacticBinaryMatch.c $(OBJS) $(INCDIR:%=-I%) $(LIBDIR:%=-L%) $(LIBS:%=-l%) $(LDFLAGS)
 
 gb_mcmc_brans_dicke : gb_mcmc_brans_dicke.c
-	$(CC) $(CCFLAGS) -o gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c $(LIBS:%=-l%)
+	$(CC) $(CCFLAGS) -o gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c $(LIBS:%=-l%) $(LDFLAGS)
 
 libgbmcmc.a : $(OBJS)
-#	$(CC) -shared -o libgb.so $(OBJS) $(LIBS:%=-l%)
 	ar rcs libgbmcmc.a $(OBJS)
 
 install : gitversion.h gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual libgbmcmc.a
 	install gb_mcmc gb_match gb_catalog gb_mcmc_chirpmass gb_mcmc_brans_dicke ${HOME}/ldasoft/master/bin/
 
 clean:
-	rm *.o *.a gb_mcmc gb_match gb_catalog gb.so gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual gitversion.h
+	rm *.a gb_mcmc gb_match gb_catalog gb.so gb_mcmc_chirpmass gb_mcmc_brans_dicke gb_residual gitversion.h
 

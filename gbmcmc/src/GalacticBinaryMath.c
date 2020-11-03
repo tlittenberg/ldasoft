@@ -76,7 +76,7 @@ double fourier_nwip(double *a, double *b, double *Sn, int n)
         arg += product/Sn[i];
     }
     
-    return(4.0*arg);
+    return(2.0*arg);
 }
 
 double analytic_snr(double A, double Sn, double Sf, double sqT)

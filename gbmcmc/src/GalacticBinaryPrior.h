@@ -21,8 +21,6 @@
 #ifndef GalacticBinaryPrior_h
 #define GalacticBinaryPrior_h
 
-#include <stdio.h>
-
 /* ----------------  MILKY WAY MODEL  ------------------- */
 
 /* distance from solar BC to GC (kpc) */
@@ -54,7 +52,7 @@
 
 struct Prior
 {
-    //Source parameter priors
+    //uniform prior
     double **prior;
     double logPriorVolume;
     
@@ -65,14 +63,29 @@ struct Prior
     double skymaxp;
     int ncostheta;
     int nphi;
+        
+    //gaussian mixture model prior
+    size_t NP;
+    size_t NMODE;
+    struct MVG **modes; //!<data structure for multivariate Gaussian
+
+    //workspace
+    double *vector;  //!<utility 1D array for prior metadata
+    double **matrix; //!<utility 2D array for prior metadata
+    double ***tensor;//!<utility 3D array for prior metadata
+
 };
 
+int check_range(double *params, double **uniform_prior, int NP);
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior);
+void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior);
 void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose);
 double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params);
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params);
 double evalaute_sky_location_prior(double *params, double **uniform_prior, double *logPriorVolume, int galaxyFlag, double *skyhist, double dcostheta, double dphi, int nphi);
 double evaluate_uniform_priors(double *params, double **uniform_prior, double *logPriorVolume, int NP);
+double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, double *params);
+
 
 
 #endif /* GalacticBinaryPrior_h */

@@ -77,15 +77,15 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"if [ \"$#\" -ne 1 ]; then\n");
     fprintf(fptr,"\t echo \"You must enter model dimension\"\n");
     fprintf(fptr,"fi\n\n");
-            
+    
     fprintf(fptr,"gb_catalog ");
-
+    
     //Required
     fprintf(fptr,"--fmin %.12g ", fmin);
     fprintf(fptr,"--samples %i ", samples);
     fprintf(fptr,"--padding %i ",data->qpad);
     fprintf(fptr,"--duration %f ",data->T);
-    fprintf(fptr,"--source $1 --chain-file chains/dimension_chaion.dat.$1");
+    fprintf(fptr,"--source $1 --chain-file chains/dimension_chain.dat.$1 ");
     
     //Optional
     if(strcmp(data->format,"frequency")==0)
@@ -98,7 +98,7 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
         fprintf(fptr,"--links 4 ");
     
     fprintf(fptr,"\n\n");
-            
+    
     //Recommendations
     fprintf(fptr,"# Consider including the following options:\n");
     fprintf(fptr,"#\t--match       : match threshold for waveforms (0.8)\n");
@@ -106,7 +106,7 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"#\t\t e.g., data/power_noise_t0_f0.dat\n");
     fprintf(fptr,"#\t--catalog     : list of known sources\n");
     fprintf(fptr,"#\t--Tcatalog    : observing time of previous catalog\n");
- 
+
     fclose(fptr);
 }
 
@@ -274,8 +274,8 @@ void print_usage()
     fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
     fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
     fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
-    fprintf(stdout,"       --update      : use chain as proposal [filename]    \n");
-    fprintf(stdout,"       --update-cov  : use cov mtrx proposal [filename]    \n");
+    fprintf(stdout,"       --update      : gmm of posterior as prior [filename]\n");
+    fprintf(stdout,"       --update-cov  : use cov matrix proposal [filename]  \n");
     fprintf(stdout,"\n");
     
     //Misc.
@@ -532,7 +532,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 {
                     checkfile(optarg);
                     flags->update=1;
-                    sprintf(flags->cdfFile,"%s",optarg);
+                    sprintf(flags->gmmFile,"%s",optarg);
                 }
                 if(strcmp("update-cov", long_options[long_index].name) == 0)
                 {
