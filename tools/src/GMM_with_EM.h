@@ -147,6 +147,11 @@ double log_likelihood(struct MVG **modes, struct Sample **samples, int NMCMC, in
 void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, char root[], size_t ix);
 
 /**
+ * \brief Print joint 2D distributions for each parameter to file
+ */
+void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, char root[], size_t ix, size_t iy);
+
+/**
  * \brief Print 1,2, and 3\f$\sigma\f$ contours of each individual
  *  Gaussian for in the model for each parameter pair
  */
@@ -195,6 +200,7 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
 
 double logit(double x,double xmin,double xmax);
 double sigmoid(double x,double xmin,double xmax);
+double dsigmoid(double x, double xmin, double xmax);
 void logit_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax);
 void sigmoid_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax);
 

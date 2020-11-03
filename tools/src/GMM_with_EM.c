@@ -316,11 +316,102 @@ void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     free(xvec);
 }
 
+void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, char root[], size_t ix, size_t iy)
+{
+    char filename[128];
+    sprintf(filename,"%s_%i_%i.dat",root,(int)ix,(int)iy);
+    FILE *fptr = fopen(filename,"w");
+    
+    size_t NMODE = samples[0]->p->size;
+    
+    //get original parameter boundaries
+    double pmin_x = gsl_matrix_get(modes[0]->minmax,ix,0);
+    double pmax_x = gsl_matrix_get(modes[0]->minmax,ix,1);
+    double pmin_y = gsl_matrix_get(modes[0]->minmax,iy,0);
+    double pmax_y = gsl_matrix_get(modes[0]->minmax,iy,1);
+
+    double *xvec = malloc(NMCMC*sizeof(double));
+    double *yvec = malloc(NMCMC*sizeof(double));
+    double xmin,xmax;
+    double ymin,ymax;
+    double x0 =  1e60;
+    double xf = -1e60;
+    double y0 =  1e60;
+    double yf = -1e60;
+    for(size_t k=0; k<NMODE; k++)
+    {
+        for(size_t i=0; i<NMCMC; i++) xvec[i] = gsl_vector_get(samples[i]->x,ix);
+        gsl_stats_minmax(&xmin,&xmax,xvec,1,NMCMC);
+        if(xmin<x0) x0 = xmin;
+        if(xmax>xf) xf = xmax;
+        
+        for(size_t i=0; i<NMCMC; i++) yvec[i] = gsl_vector_get(samples[i]->x,iy);
+        gsl_stats_minmax(&ymin,&ymax,yvec,1,NMCMC);
+        if(ymin<y0) y0 = ymin;
+        if(ymax>yf) yf = ymax;
+    }
+    
+    double p;
+    double x,y;
+    //double dx = (xf-x0)/100.;
+    //double dy = (yf-y0)/100.;
+    double dx = (pmax_x-pmin_x)/100.;
+    double dy = (pmax_y-pmin_y)/100.;
+    for(int n=1; n<100; n++)
+    {
+        //x = x0 + (double)n*dx;
+        x = pmin_x + (double)n*dx;
+        x = logit(x,pmin_x,pmax_x);
+        
+        for(int m=1; m<100; m++)
+        {
+            p = 0.0;
+
+            //y = y0 + (double)m*dy;
+            y = pmin_y + (double)m*dy;
+            y = logit(y,pmin_y,pmax_y);
+            
+            for(size_t k=0; k<NMODE; k++)
+            {
+                double mean_x = gsl_vector_get(modes[k]->mu,ix);
+                double mean_y = gsl_vector_get(modes[k]->mu,iy);
+                if(n==0 && m==0 && ix==2 && iy==5)
+                {
+                    printf("means: %g %g -> %g %g\n",mean_x,mean_y, sigmoid(mean_x,pmin_x,pmax_x),sigmoid(mean_y,pmin_y,pmax_y));
+                }
+                double C_xx  = gsl_matrix_get(modes[k]->C,ix,ix);
+                double C_xy  = gsl_matrix_get(modes[k]->C,ix,iy);
+                double C_yy  = gsl_matrix_get(modes[k]->C,iy,iy);
+                double detC = C_xx*C_yy - C_xy*C_xy;
+                double iC_xx = C_yy/detC;
+                double iC_yy = C_xx/detC;
+                double iC_xy = -C_xy/detC;
+
+                /*
+                 Probability density p is weight * normal / Jacobian
+                 */
+                p += modes[k]->p * exp( -0.5*( (x-mean_x)*(x-mean_x)*iC_xx + (y-mean_y)*(y-mean_y)*iC_yy + 2*(x-mean_x)*(y-mean_y)*iC_xy) )  * 1./(2.*M_PI*sqrt(detC)) / ((pmax_x-pmin_x)*exp(-x)/pow(1. + exp(-x),2)) / ((pmax_y-pmin_y)*exp(-y)/pow(1. + exp(-y),2)) ;
+            }
+            
+            
+            fprintf(fptr,"%.16g %.16g %.16g\n",sigmoid(x,pmin_x,pmax_x),sigmoid(y,pmin_y,pmax_y),p);
+        }
+    }
+    
+    fclose(fptr);
+
+    
+    free(xvec);
+    free(yvec);
+}
+
 void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1, size_t x2)
 {
     char filename[128];
+    char filename2[128];
     FILE *fptr = NULL;
-    
+    FILE *fptr2 = NULL;
+
     struct MVG **submodes = malloc(NMODE*sizeof(struct MVG*));
     for(size_t k=0; k<NMODE; k++)
     {
@@ -353,6 +444,8 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
     {
         sprintf(filename,"%s_%i_%i_%i.dat",root,(int)x1,(int)x2,(int)k);
         fptr=fopen(filename,"w");
+        sprintf(filename2,"remapped_%s_%i_%i_%i.dat",root,(int)x1,(int)x2,(int)k);
+        fptr2=fopen(filename2,"w");
         for(int n=0; n<=100; n++)
         {
             double theta = atan2(gsl_matrix_get(submodes[k]->evectors,0,1),gsl_matrix_get(submodes[k]->evectors,0,0));
@@ -364,25 +457,30 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
             double angle = n*(2.*M_PI/100.);
             x = 1.*( Rx*cos(angle)*cos(theta) + Ry*sin(angle)*sin(theta) ) + Cx;
             y = 1.*(-Rx*cos(angle)*sin(theta) + Ry*sin(angle)*cos(theta) ) + Cy;
+            fprintf(fptr2,"%.16lg %.16lg ",x,y);
             x = sigmoid(x,pmin[0],pmax[0]);
             y = sigmoid(y,pmin[1],pmax[1]);
             fprintf(fptr,"%.16lg %.16lg ",x,y);
             
             x = 2.*( Rx*cos(angle)*cos(theta) + Ry*sin(angle)*sin(theta) ) + Cx;
             y = 2.*(-Rx*cos(angle)*sin(theta) + Ry*sin(angle)*cos(theta) ) + Cy;
+            fprintf(fptr2,"%.16lg %.16lg ",x,y);
             x = sigmoid(x,pmin[0],pmax[0]);
             y = sigmoid(y,pmin[1],pmax[1]);
             fprintf(fptr,"%.16lg %.16lg ",x,y);
             
             x = 3.*( Rx*cos(angle)*cos(theta) + Ry*sin(angle)*sin(theta) ) + Cx;
             y = 3.*(-Rx*cos(angle)*sin(theta) + Ry*sin(angle)*cos(theta) ) + Cy;
+            fprintf(fptr2,"%.16lg %.16lg ",x,y);
             x = sigmoid(x,pmin[0],pmax[0]);
             y = sigmoid(y,pmin[1],pmax[1]);
             fprintf(fptr,"%.16lg %.16lg ",x,y);
             
             fprintf(fptr,"\n");
+            fprintf(fptr2,"\n");
         }
         fclose(fptr);
+        fclose(fptr2);
     }
     
     for(size_t k=0; k<NMODE; k++) free_MVG(submodes[k]);
@@ -416,6 +514,10 @@ void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, doub
             {
                 sprintf(filename,"contours_%i",(int)step);
                 print_2D_contours(modes, NMODE, filename, m, n);
+                
+                sprintf(filename,"2Dpdf_%i",(int)step);
+                print_2D_pdfs(modes, samples, NMCMC, filename, m, n);
+
             }
         }
     }
@@ -592,6 +694,13 @@ double logit(double x,double xmin,double xmax)
 double sigmoid(double x,double xmin,double xmax)
 {
     return xmin + (1./(1. + exp(-x)))*(xmax - xmin);
+}
+
+
+double dsigmoid(double x, double xmin, double xmax)
+{
+    double expyn = exp(-x);
+    return (xmax-xmin) * expyn/((1.+expyn)*(1.+expyn));
 }
 
 
