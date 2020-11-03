@@ -587,8 +587,7 @@ double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, dou
         gsl_vector_set(x,n,yn);
         
         //Jacobian
-        double expyn = exp(-yn);
-        logJ -= log( (xmax-xmin) * expyn/intpow(1.+expyn,2)   );
+        logJ -= log(dsigmoid(yn, xmin, xmax));
     }
     
     //sum over modes
