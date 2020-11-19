@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <omp.h>
 
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
@@ -251,6 +252,7 @@ void print_usage()
     fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
     fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
     fprintf(stdout,"       --no-burnin   : skip burn in steps                  \n");
+    fprintf(stdout,"       --threads     : number of threads to run parallel (number of cores)\n");
     fprintf(stdout,"\n");
     
     //Model
@@ -342,6 +344,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     flags->DMAX        = DMAX_default;
     flags->NMCMC       = 100000;
     flags->NBURN       = 100000;
+    flags->threads     = omp_get_max_threads();
     chain->NP          = 9; //number of proposals
     chain->NC          = 12;//number of chains
     
@@ -401,6 +404,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         {"steps",     required_argument, 0, 0},
         {"em-prior",  required_argument, 0, 0},
         {"catalog",   required_argument, 0, 0},
+        {"threads",   required_argument, 0, 0},
         
         /* These options don’t set a flag.
          We distinguish them by their indices. */
@@ -464,7 +468,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
                 if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
                 if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
-                if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume=1;
+                if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
+                if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
                 if(strcmp("duration",    long_options[long_index].name) == 0)
                 {   data_ptr->T   = (double)atof(optarg);
                     data_ptr->sqT = sqrt(data_ptr->T);
