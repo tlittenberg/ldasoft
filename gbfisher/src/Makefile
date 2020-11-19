@@ -6,7 +6,7 @@ CC = gcc
 LIBS  = gsl gslcblas m gbmcmc # fftw3
 LDFLAGS = -L../../gbmcmc/src
 #CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -Werror
-CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99
+CCFLAGS += -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99 -fopenmp
 
 # Compile src with git hash
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)

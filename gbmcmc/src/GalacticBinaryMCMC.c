@@ -345,18 +345,18 @@ int main(int argc, char *argv[])
     /* Write example gb_catalog bash script in run directory */
     print_gb_catalog_script(flags, data[0], orbit);
 
-    
+    /*
     // Temporary! Ask for thread count
     int threads;
     printf("How many threads to run: ");
     scanf("%d",&threads);
-    
-
+    */
+    omp_get_max_threads();
 
     //For saving the number of threads actually given
     int numThreads;
     int mcmc = mcmc_start;
-    #pragma omp parallel //num_threads(threads)
+    #pragma omp parallel num_threads(flags->threads)//num_threads(threads)
     {   
         int threadID;
         //Save individual thread number
@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
         //Only one thread runs this section
         if(threadID==0){
             numThreads = omp_get_num_threads();
-            printf("Got %i threads.\n",numThreads);
+            printf("Running on %i thread(s).\n",numThreads);
         }
 
         #pragma omp barrier
@@ -504,9 +504,9 @@ int main(int argc, char *argv[])
     //print total run time
     stop = time(NULL);
     
-    printf(" ELAPSED TIME = %g second\n",(double)(stop-start));
+    printf(" ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
     FILE *runlog = fopen("gb_mcmc.log","a");
-    fprintf(runlog," ELAPSED TIME = %g second\n",(double)(stop-start));
+    fprintf(runlog," ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
     fclose(runlog);
     
     //free memory and exit cleanly
