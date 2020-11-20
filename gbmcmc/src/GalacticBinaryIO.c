@@ -151,6 +151,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
     fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
     fprintf(fptr,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
+    fprintf(fptr,"  Number of threads ... %i   \n",flags->threads);
     fprintf(fptr,"\n");
     fprintf(fptr,"================= RUN FLAGS ================\n");
     if(flags->verbose)  fprintf(fptr,"  Verbose flag ........ ENABLED \n");
@@ -598,6 +599,11 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         exit(1);
     }
     
+    //Chains should be a multiple of threads for best usage of cores
+    if(chain->NC % flags->threads !=0){
+        chain->NC += flags->threads - (chain->NC % flags->threads);
+    }
+
     //pad data
     data[0]->N += 2*data[0]->qpad;
     data[0]->fmin -= data[0]->qpad/data[0]->T;
