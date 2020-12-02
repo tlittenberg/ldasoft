@@ -487,6 +487,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 {
                     flags->knownSource = 1;
                     flags->fixSky      = 1;
+                    flags->fixFreq     = 1;
                 }
                 if(strcmp("fix-fdot",long_options[long_index].name) == 0)
                 {
