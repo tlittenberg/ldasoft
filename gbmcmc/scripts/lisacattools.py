@@ -66,8 +66,24 @@ def eclp2gal(lamb, beta, ep = ep_const, a_G = a_G_const, d_G = d_G_const, l_NCP 
 # getGalcoord
 def getGalcoord(df, ep = ep_const, a_G = a_G_const, d_G = d_G_const, l_NCP = l_NCP_const):
     # convert Pandas dataframe (either of sources or a chain) from Ecliptic to Galactic Coords
-    lamb = df['Ecliptic Longitude']
-    beta = np.pi/2-np.arccos(np.array(df['coslat']))
+    try:
+        lamb = df['Ecliptic Longitude']
+    except :
+        try:
+            lamb = df['ecliptic longitude']
+        except:
+            print('ERROR: Unable to find ecliptic longitude in data frame')
+            return
+            
+    try:
+        beta = np.pi/2-np.arccos(np.array(df['coslat']))
+    except:
+        try:
+            beta = np.pi/2-np.arccos(np.array(df['cos ecliptic colatitude']))
+        except :
+            print('ERROR: Unable to fine cosine colatitude')
+            return           
+        
     lamb = np.rad2deg(lamb)
     beta = np.rad2deg(beta)
     l,b = eclp2gal(lamb,beta)
