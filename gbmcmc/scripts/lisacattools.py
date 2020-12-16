@@ -153,8 +153,8 @@ else :
             lat = np.deg2rad(np.array(df['Galactic Latitude']))
             lon = np.deg2rad(np.array(df['Galactic Longitude']))
         elif system == 'Ecliptic':
-            lat = np.deg2rad(np.array(df['Ecliptic Latitude']))
-            lon = np.deg2rad(np.array(df['Ecliptic Longitude']))
+            lat = np.array(df['Ecliptic Latitude'])
+            lon = np.array(df['Ecliptic Longitude'])
         else: 
             print('%s is not a valid coordinate system, please choose Galactic or Ecliptic' % system)
             return
@@ -211,6 +211,33 @@ def getChain(cat,idx,path = ''):
     # load the MCMC chain corresponding to a particular source in the catalog
     chain = pd.read_hdf(os.path.join(path,cat.loc[idx]['chain file']),key = idx + '_chain')
     return chain
+
+# getLineage
+def getLineage(catMeta,catName,srcName):
+    # produce a time-dependent catalog for the evolution of a particular source in a series of catalogs
+    dfs = list()
+    while (srcName != '') & ((catName != 'None') | (catName != '')):
+        catFile = catMeta.loc[catName]['location']
+        cat = pd.read_hdf(catFile,key='detections')
+        src = cat.loc[[srcName]]
+        try:
+            wk = catMeta.loc[catName]['observation week']
+        except:
+            wk = catMeta.loc[catName]['Observation Week']
+        
+        src.insert(0,'Observation Week',wk,True)
+        src.insert(1,'Catalog',catName, True)
+        dfs.append(src)
+        try:
+            prnt = catMeta.loc[catName]['parent']
+        except:
+            prnt = catMeta.loc[catName]['Parent']
+            
+        catName = prnt
+        srcName = src.iloc[0]['Parent']
+
+    histDF = pd.concat(dfs,axis=0)
+    return histDF
 
 # getSciRD
 def getSciRD(f,Tobs):
