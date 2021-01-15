@@ -158,7 +158,8 @@ for key in keys:
             if  (os.path.getsize(histFile) > 2 ):
                 hist_df = pd.read_table(histFile,delimiter = ' ', index_col=1,names=['parent'])
                 hist_df = hist_df[~hist_df.index.duplicated(keep='first')]
-                cat_df = pd.concat([cat_df,hist_df],axis=1)
+                cat_df = cat_df.join(hist_df, how='left')
+                cat_df.replace(np.nan,'',regex=True,inplace=True)
             else :
                 cat_df['parent']=''
         else:
