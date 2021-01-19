@@ -60,7 +60,7 @@ void print_version(FILE *fptr)
     fprintf(fptr, "============== GBMCMC Version: =============\n\n");
     //fprintf(fptr, "  Git remote origin: %s\n", GIT_URL);
     //fprintf(fptr, "  Git version: %s\n", GIT_VER);
-    fprintf(fptr, "  Git commit: %s\n", gitversion);
+    fprintf(fptr, "  Git commit: %s\n", GITVERSION);
     //fprintf(fptr, "  Git commit author: %s\n",GIT_AUTHOR);
     //fprintf(fptr, "  Git commit date: %s\n", GIT_DATE);
 }
@@ -253,7 +253,8 @@ void print_usage()
     fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
     fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
     fprintf(stdout,"       --no-burnin   : skip burn in steps                  \n");
-    fprintf(stdout,"       --threads     : number of threads to run parallel (number of cores)\n");
+    fprintf(stdout,"       --resume      : restart from checkpoin.             \n");
+    fprintf(stdout,"       --threads     : number of parallel threads (max)    \n");
     fprintf(stdout,"\n");
     
     //Model
@@ -320,7 +321,6 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     flags->NINJ        = 0;
     flags->simNoise    = 0;
     flags->confNoise   = 0;
-    flags->fixFdot     = 0;
     flags->fixSky      = 0;
     flags->fixFreq     = 0;
     flags->fixFdot     = 0;
@@ -604,6 +604,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     if(chain->NC % flags->threads !=0){
         chain->NC += flags->threads - (chain->NC % flags->threads);
     }
+    
+    printf("number of threads = %i\n",flags->threads);
 
     //pad data
     data[0]->N += 2*data[0]->qpad;

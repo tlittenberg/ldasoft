@@ -65,8 +65,12 @@ Up to `10` injection files can be passed at once using multiple instances of `--
 
 `[--chains=INT; default=12]`: Number of chains used for parallel tempering MCMC.
 
-`[--no-burnin]`: Skip burn-in steps and assume that every chain sample is a fair draw from the posterior. **Use when only interested in parameter estimation studies of individual sources**.                  
+`[--no-burnin]`: Skip burn-in steps and assume that every chain sample is a fair draw from the posterior. **Use when only interested in parameter estimation studies of individual sources**.    
+
 `[--resume]`: Restart sampler from run state saved during checkpointing. Starts from scratch if no checkpointing files are found.
+
+`[--threads]`: number of threads to run parallel (number of cores)
+
 
 ### Signal model settings
 

@@ -24,6 +24,11 @@ project(CMakeTutorial VERSION 1.0.0 LANGUAGES C)
 # External packages
 
 find_package(GSL REQUIRED)
+find_package(OpenMP REQUIRED)
+
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xpreprocessor -fopenmp")
 
 
 # Set git version header file
