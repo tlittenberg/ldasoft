@@ -40,6 +40,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include <omp.h>
+
 
 #include "LISA.h"
 #include "Constants.h"
@@ -343,111 +345,150 @@ int main(int argc, char *argv[])
     /* Write example gb_catalog bash script in run directory */
     print_gb_catalog_script(flags, data[0], orbit);
 
-    
-    /* The MCMC loop */
-    for(int mcmc = mcmc_start; mcmc < flags->NMCMC; mcmc++)
-    {
-        if(mcmc<0) flags->burnin=1;
-        else       flags->burnin=0;
-        
-        //set annealinging tempurature during burnin
-        /*
-         if(flags->burnin)
-         {
-         chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
-         if(chain->annealing<1.0)chain->annealing=1.0;
-         chain->annealing=1.0;
-         //printf("annealing=%g\n",chain->annealing);
-         }
-         */
-        chain->annealing=1.0;
-        
-        // (parallel) loop over chains
-        //#pragma omp parallel for private(ic) shared(flags,model,trial,chain,orbit,proposal)
-        for(int ic=0; ic<NC; ic++)
+    /*
+    // Temporary! Ask for thread count
+    int threads;
+    printf("How many threads to run: ");
+    scanf("%d",&threads);
+    */
+    omp_get_max_threads();
+
+    //For saving the number of threads actually given
+    int numThreads;
+    int mcmc = mcmc_start;
+    #pragma omp parallel num_threads(flags->threads)//num_threads(threads)
+    {   
+        int threadID;
+        //Save individual thread number
+        threadID = omp_get_thread_num();
+
+        //Only one thread runs this section
+        if(threadID==0){
+            numThreads = omp_get_num_threads();
+            printf("Running on %i thread(s).\n",numThreads);
+        }
+
+        #pragma omp barrier
+
+        /* The MCMC loop */    
+        for(; mcmc < flags->NMCMC;)
         {
-            
-            //loop over frequency segments
-            for(int i=0; i<flags->NDATA; i++)
+            if(threadID==0){
+                if(mcmc<0) flags->burnin=1;
+                else       flags->burnin=0;
+
+                //set annealinging tempurature during burnin
+                /*
+                if(flags->burnin)
+                {  
+                chain->annealing = data[0]->SNR2*pow(data[0]->SNR2,-((double)mcmc+(double)flags->NBURN)/((double)flags->NBURN/(double)10))/40.;
+                if(chain->annealing<1.0)chain->annealing=1.0;
+                chain->annealing=1.0;
+                //printf("annealing=%g\n",chain->annealing);
+                }
+                */
+
+                chain->annealing=1.0;
+            }
+
+            #pragma omp barrier
+            // (parallel) loop over chains
+            for(int ic=threadID; ic<NC; ic+=numThreads)
             {
-                struct Model *model_ptr = model[chain->index[ic]][i];
-                struct Model *trial_ptr = trial[chain->index[ic]];
-                struct Data  *data_ptr  = data[i];
-                
-                
-                for(int steps=0; steps < 100; steps++)
+            
+                //loop over frequency segments
+                for(int i=0; i<flags->NDATA; i++)
                 {
-                    //for(int j=0; j<model_ptr->Nlive; j++)
-                    galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
-                    
-                    if(flags->strainData || flags->simNoise)
-                        noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
-                }//loop over MCMC steps
+                    struct Model *model_ptr = model[chain->index[ic]][i];
+                    struct Model *trial_ptr = trial[chain->index[ic]];
+                    struct Data  *data_ptr  = data[i];
                 
-                //reverse jump birth/death move
-                if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
                 
-                //update fisher matrix for each chain
-                if(mcmc%100==0)
-                {
-                    for(int n=0; n<model_ptr->Nlive; n++)
+                    for(int steps=0; steps < 100; steps++)
                     {
-                        galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[FIXME]);
+                        //for(int j=0; j<model_ptr->Nlive; j++)
+                        galactic_binary_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
+
+                        if(flags->strainData || flags->simNoise)
+                            noise_model_mcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, ic);
+                    
+                    }//loop over MCMC steps
+
+                    //reverse jump birth/death move
+                    if(flags->rj)galactic_binary_rjmcmc(orbit, data_ptr, model_ptr, trial_ptr, chain, flags, prior, proposal[i], ic);
+                
+                    //update fisher matrix for each chain
+                    if(mcmc%100==0)
+                    {
+                        for(int n=0; n<model_ptr->Nlive; n++)
+                        {
+                            galactic_binary_fisher(orbit, data_ptr, model_ptr->source[n], data_ptr->noise[FIXME]);
+                        }
+                    }
+                }//end loop over frequency segments
+            
+                //update start time for data segments
+                if(flags->gap) data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal[0], ic);
+            
+            }// end (parallel) loop over chains
+
+            //Next section is single threaded. Every thread must get here before continuing
+            #pragma omp barrier
+            if(threadID==0){
+                ptmcmc(model,chain,flags);
+                adapt_temperature_ladder(chain, mcmc+flags->NBURN);
+        
+                print_chain_files(data[FIXME], model, chain, flags, mcmc);
+        
+                //track maximum log Likelihood
+                if(mcmc%100)
+                {
+                    if(update_max_log_likelihood(model, chain, flags)) mcmc = -flags->NBURN;
+                }
+        
+                //store reconstructed waveform
+                if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
+        
+                //update run status
+                if(mcmc%data[FIXME]->downsample==0)
+                {  
+            
+                    if(!flags->quiet)
+                    {
+                        for(int i=0; i<flags->NDATA; i++)
+                        {
+                            print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc); //writing to file
+                            fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
+                            print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
+                        }
+                    }
+            
+                    //save chain state to resume sampler
+                    save_chain_state(data, model, chain, flags, mcmc);
+            
+                }
+        
+                //dump waveforms to file, update avgLogL for thermodynamic integration
+                if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
+                {
+                    for(int i=0; i<flags->NDATA; i++)
+                        save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
+                    
+                    for(int ic=0; ic<NC; ic++)
+                    {
+                        chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
+                        for(int i=0; i<flags->NDATA; i++)
+                            chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
                     }
                 }
-            }//end loop over frequency segments
-            
-            //update start time for data segments
-            if(flags->gap) data_mcmc(orbit, data, model[chain->index[ic]], chain, flags, proposal[0], ic);
-            
-        }// end (parallel) loop over chains
-        
-        ptmcmc(model,chain,flags);
-        adapt_temperature_ladder(chain, mcmc+flags->NBURN);
-        
-        print_chain_files(data[FIXME], model, chain, flags, mcmc);
-        
-        //track maximum log Likelihood
-        if(mcmc%100)
-        {
-            if(update_max_log_likelihood(model, chain, flags)) mcmc = -flags->NBURN;
-        }
-        
-        //store reconstructed waveform
-        if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
-        
-        //update run status
-        if(mcmc%data[FIXME]->downsample==0)
-        {
-            
-            if(!flags->quiet)
-            {
-                for(int i=0; i<flags->NDATA; i++)
-                {
-                    print_chain_state(data[i], chain, model[chain->index[0]][i], flags, stdout, mcmc);
-                    fprintf(stdout,"Sources: %i\n",model[chain->index[0]][i]->Nlive);
-                    print_acceptance_rates(proposal[i], chain->NP, 0, stdout);
-                }
+                mcmc++;
             }
+            //Can't continue MCMC until single thread is finished
+            #pragma omp barrier
             
-            //save chain state to resume sampler
-            save_chain_state(data, model, chain, flags, mcmc);
-            
-        }
-        
-        //dump waveforms to file, update avgLogL for thermodynamic integration
-        if(mcmc>0 && mcmc%data[FIXME]->downsample==0)
-        {
-            for(int i=0; i<flags->NDATA; i++)save_waveforms(data[i], model[chain->index[0]][i], mcmc/data[i]->downsample);
-            for(int ic=0; ic<NC; ic++)
-            {
-                chain->dimension[ic][model[chain->index[ic]][0]->Nlive]++;
-                for(int i=0; i<flags->NDATA; i++)
-                    chain->avgLogL[ic] += model[chain->index[ic]][i]->logL + model[chain->index[ic]][i]->logLnorm;
-            }
-        }
-        
-    }// end MCMC loop
+        }// end MCMC loop
+
+    }// End of parallelization
     
     //print aggregate run files/results
     for(int i=0; i<flags->NDATA; i++)print_waveforms_reconstruction(data[i],i);
@@ -463,9 +504,9 @@ int main(int argc, char *argv[])
     //print total run time
     stop = time(NULL);
     
-    printf(" ELAPSED TIME = %g second\n",(double)(stop-start));
+    printf(" ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
     FILE *runlog = fopen("gb_mcmc.log","a");
-    fprintf(runlog," ELAPSED TIME = %g second\n",(double)(stop-start));
+    fprintf(runlog," ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
     fclose(runlog);
     
     //free memory and exit cleanly

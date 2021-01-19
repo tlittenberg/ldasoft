@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <omp.h>
 
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
@@ -150,6 +151,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
     fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
     fprintf(fptr,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
+    fprintf(fptr,"  Number of threads ... %i   \n",flags->threads);
     fprintf(fptr,"\n");
     fprintf(fptr,"================= RUN FLAGS ================\n");
     if(flags->verbose)  fprintf(fptr,"  Verbose flag ........ ENABLED \n");
@@ -251,6 +253,8 @@ void print_usage()
     fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
     fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
     fprintf(stdout,"       --no-burnin   : skip burn in steps                  \n");
+    fprintf(stdout,"       --resume      : restart from checkpoin.             \n");
+    fprintf(stdout,"       --threads     : number of parallel threads (max)    \n");
     fprintf(stdout,"\n");
     
     //Model
@@ -341,6 +345,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     flags->DMAX        = DMAX_default;
     flags->NMCMC       = 100000;
     flags->NBURN       = 100000;
+    flags->threads     = omp_get_max_threads();
     chain->NP          = 9; //number of proposals
     chain->NC          = 12;//number of chains
     
@@ -400,6 +405,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         {"steps",     required_argument, 0, 0},
         {"em-prior",  required_argument, 0, 0},
         {"catalog",   required_argument, 0, 0},
+        {"threads",   required_argument, 0, 0},
         
         /* These options don’t set a flag.
          We distinguish them by their indices. */
@@ -463,7 +469,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
                 if(strcmp("fit-gap",     long_options[long_index].name) == 0) flags->gap        = 1;
                 if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
-                if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume=1;
+                if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
+                if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
                 if(strcmp("duration",    long_options[long_index].name) == 0)
                 {   data_ptr->T   = (double)atof(optarg);
                     data_ptr->sqT = sqrt(data_ptr->T);
@@ -487,6 +494,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 {
                     flags->knownSource = 1;
                     flags->fixSky      = 1;
+                    flags->fixFreq     = 1;
                 }
                 if(strcmp("fix-fdot",long_options[long_index].name) == 0)
                 {
@@ -592,6 +600,13 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         exit(1);
     }
     
+    //Chains should be a multiple of threads for best usage of cores
+    if(chain->NC % flags->threads !=0){
+        chain->NC += flags->threads - (chain->NC % flags->threads);
+    }
+    
+    printf("number of threads = %i\n",flags->threads);
+
     //pad data
     data[0]->N += 2*data[0]->qpad;
     data[0]->fmin -= data[0]->qpad/data[0]->T;
