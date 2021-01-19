@@ -27,6 +27,7 @@
 gcc
 gsl
 gslcblas
+openmp
 ```
 
 <a name="post_proc_dependencies"></a>
@@ -44,13 +45,10 @@ pydot
 ```
 <a name="installation"></a>
 ## Installation
-Build and install binaries in `${HOME}/ldasoft/master/bin/` 
+Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`
 ```bash
-cd <path to>/ldasoft/gbmcmc/src
-make
-make install
+./install.sh ${HOME}/ldasoft/master
 ```
-Edit `ldasoft/gbmcmc/src/Makefile` to change install destination.
 
 <a name="examples"></a>
 # Example use cases for GBMCMC
