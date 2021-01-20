@@ -27,6 +27,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include "hdf5.h"
+
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
@@ -36,6 +38,98 @@
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
 
+
+#define LDCFILE "/Users/tyson/Research/GalacticBinaries/Sangria/LDC2_sangria_blind_v1.h5"
+#define DATASET "/obs/tdi"
+
+
+void GalacticBinaryReadHDF5(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
+{
+    fprintf(stdout,"\n==== GalacticBinaryReadHDF5 ====\n");
+
+    struct Data *data_ptr = data_vec[0];
+    struct TDI *tdi_ptr = data_ptr->tdi[0];
+
+    /* LDASOFT-formatted structure for TDI data */
+    struct TDI *tdi_ldc = malloc(sizeof(struct TDI));
+
+    /* LDC-formatted structure for compound HDF5 dataset */
+    typedef struct tdi_dataset {
+        double time;
+        double    X;
+        double    Y;
+        double    Z;
+    } tdi_dataset;
+    static tdi_dataset *s1;
+
+    /* ============================================================================ */
+    /*                THIS SHOULD ALL GO INTO A SEPARATE FUNCTION                   */
+    /* ============================================================================ */
+
+    hid_t  file, dataset, dspace; /* identifiers */
+    herr_t status; /* error handling */
+    int ndims, Nrow, Ncol; /* dimension of dataset */
+    double *data; /* array for dataset */
+
+    /* Open an existing file. */
+    file = H5Fopen(data_ptr->fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+    /* Open an existing dataset. */
+    dataset = H5Dopen(file, DATASET, H5P_DEFAULT);
+
+    /* Get size of dataset */
+    dspace = H5Dget_space(dataset);
+    ndims = H5Sget_simple_extent_ndims(dspace);
+    hsize_t dims[ndims];
+    H5Sget_simple_extent_dims(dspace, dims, NULL);
+    int Nsamples = dims[0];
+        
+    s1 = malloc(Nsamples*sizeof(struct tdi_dataset));
+    alloc_tdi(tdi_ldc, Nsamples/2, 3);
+
+    hid_t s1_tid; /* Memory datatype handle */
+
+    s1_tid = H5Tcreate(H5T_COMPOUND, sizeof(struct tdi_dataset));
+    H5Tinsert(s1_tid, "time", HOFFSET(struct tdi_dataset, time), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "X", HOFFSET(struct tdi_dataset, X), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "Y", HOFFSET(struct tdi_dataset, Y), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
+
+    status = H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
+
+    /* Close the dataset. */
+    status = H5Dclose(dataset);
+
+    /* Close the file. */
+    status = H5Fclose(file);
+
+    /* ============================================================================ */
+    /* ============================================================================ */
+
+    
+    /* Copy LDC-formatted structure into ldasoft format */
+    for(int i=0; i<Nsamples; i++)
+    {
+        double X = s1[i].X;
+        double Y = s1[i].Y;
+        double Z = s1[i].Z;
+        
+        tdi_ldc->X[i] = X;
+        tdi_ldc->Y[i] = Y;
+        tdi_ldc->Z[i] = Z;
+        
+        tdi_ldc->A[i] = (2.0*X-Y-Z)/3.0;
+        tdi_ldc->E[i] = (Z-Y)/sqrt(3.0);
+        tdi_ldc->T[i] = (X+Y+Z)/3.0;
+
+    }
+    tdi_ldc->delta = s1[1].time - s1[0].time;
+
+    
+    /* Free up memory */
+    free(s1);
+
+}
 void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
 {
     fprintf(stdout,"\n==== GalacticBinaryReadData ====\n");
@@ -85,25 +179,6 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
 
     }
     fclose(fptr);
-    
-    //TODO: LDC data needs a factor of 1/sqrt(2) normalization?
-    /*
-     if(strcmp(data->format,"frequency")==0)
-     {
-     fprintf(stdout,"\n");
-     fprintf(stdout,"!!!!!!!!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!!!!!\n");
-     fprintf(stdout,"Using fractional frequency data from LDC\n");
-     fprintf(stdout,"Mysterious 1/sqrt(2) being applied to A&E data\n");
-     fprintf(stdout,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-     fprintf(stdout,"\n");
-     for(int n=0; n<data->N; n++)
-     {
-     tdi->A[2*n]/=sqrt(2.0);
-     tdi->A[2*n+1]/=sqrt(2.0);
-     tdi->E[2*n]/=sqrt(2.0);
-     tdi->E[2*n+1]/=sqrt(2.0);
-     }
-     }*/
     
     sprintf(filename,"data/waveform_injection_%i_%i.dat",0,0);
     fptr=fopen(filename,"w");
