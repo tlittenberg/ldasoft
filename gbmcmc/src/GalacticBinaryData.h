@@ -35,6 +35,12 @@
 void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
 
 /**
+ \brief Reads LDC-formatted HDF5 data using `--ldc-data` flag
+ */
+void GalacticBinaryReadHDF5(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
+
+
+/**
 \brief WIP:
  \todo GalacticBinarySimulateData() is empty, need to strip out simulation steps in injection codes.
 */

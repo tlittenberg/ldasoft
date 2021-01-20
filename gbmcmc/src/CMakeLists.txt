@@ -15,18 +15,21 @@ add_executable(gb_mcmc GalacticBinaryMCMC.c LISA.c GalacticBinaryIO.c GalacticBi
 target_link_libraries(gb_mcmc ${GSL_LIBRARIES})
 target_link_libraries(gb_mcmc tools)
 target_link_libraries(gb_mcmc omp)
+target_link_libraries(gb_mcmc hdf5)
 install(TARGETS gb_mcmc DESTINATION bin)
 
 add_executable(gb_catalog GalacticBinaryCatalog.c LISA.c GalacticBinaryIO.c GalacticBinaryModel.c GalacticBinaryWaveform.c GalacticBinaryMath.c GalacticBinaryData.c GalacticBinaryPrior.c GalacticBinaryProposal.c GalacticBinaryFStatistic.c)
 target_link_libraries(gb_catalog ${GSL_LIBRARIES})
 target_link_libraries(gb_catalog tools)
 target_link_libraries(gb_catalog omp)
+target_link_libraries(gb_catalog hdf5)
 install(TARGETS gb_catalog DESTINATION bin)
 
 add_executable(gb_residual GalacticBinaryResidual.c LISA.c GalacticBinaryIO.c GalacticBinaryModel.c GalacticBinaryWaveform.c GalacticBinaryMath.c GalacticBinaryData.c GalacticBinaryPrior.c GalacticBinaryProposal.c GalacticBinaryFStatistic.c)
 target_link_libraries(gb_residual ${GSL_LIBRARIES})
 target_link_libraries(gb_residual tools)
 target_link_libraries(gb_residual omp)
+target_link_libraries(gb_residual hdf5)
 install(TARGETS gb_residual DESTINATION bin)
 
 add_executable(gb_mcmc_chirpmass gb_mcmc_chirpmass.c)
@@ -37,6 +40,7 @@ add_executable(gb_match GalacticBinaryMatch.c LISA.c GalacticBinaryIO.c Galactic
 target_link_libraries(gb_match ${GSL_LIBRARIES})
 target_link_libraries(gb_match tools)
 target_link_libraries(gb_match omp)
+target_link_libraries(gb_match hdf5)
 install(TARGETS gb_match DESTINATION bin)
 
 add_executable(gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c)

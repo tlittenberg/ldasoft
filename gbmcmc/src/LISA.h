@@ -119,8 +119,11 @@ struct TDI
     //Number of data channels
     int Nchannel;
     
-    //Number of frequency bins
+    //Number of data bins
     int N;
+    
+    //Data cadence
+    double delta;
 };
 
 
