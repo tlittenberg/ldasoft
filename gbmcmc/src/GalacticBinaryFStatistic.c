@@ -30,8 +30,8 @@
 //
 #include <math.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryWaveform.h"

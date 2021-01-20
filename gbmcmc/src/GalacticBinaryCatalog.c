@@ -34,13 +34,10 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sort_vector.h>
 
-
+#include <LISA.h>
 #include <GMM_with_EM.h>
 
-/* ===============  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS ========= */
 
-#include "LISA.h"
-#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryMath.h"

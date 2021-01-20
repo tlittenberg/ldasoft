@@ -42,10 +42,8 @@
 
 #include <omp.h>
 
+#include <LISA.h>
 
-#include "LISA.h"
-#include "Constants.h"
-#include "BayesLine.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryData.h"

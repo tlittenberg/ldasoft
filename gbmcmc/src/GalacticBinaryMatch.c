@@ -29,12 +29,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-//#include "omp.h"
+#include <LISA.h>
 
-/*************  PROTOTYPE DECLARATIONS FOR INTERNAL FUNCTIONS  **************/
-
-#include "LISA.h"
-#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryMath.h"

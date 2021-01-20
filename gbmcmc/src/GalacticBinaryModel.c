@@ -22,8 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
@@ -495,63 +495,6 @@ void free_model(struct Model *model)
     free(model);
 }
 
-void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
-{
-    //Number of frequency bins (2*N samples)
-    tdi->N = NFFT;
-    
-    //Michelson
-    tdi->X = calloc(2*tdi->N,sizeof(double));
-    tdi->Y = calloc(2*tdi->N,sizeof(double));
-    tdi->Z = calloc(2*tdi->N,sizeof(double));
-    
-    //Noise-orthogonal
-    tdi->A = calloc(2*tdi->N,sizeof(double));
-    tdi->E = calloc(2*tdi->N,sizeof(double));
-    tdi->T = calloc(2*tdi->N,sizeof(double));
-    
-    int n;
-    for(n=0; n<2*tdi->N; n++)
-    {
-        tdi->X[n] = 0.0;
-        tdi->Y[n] = 0.0;
-        tdi->Z[n] = 0.0;
-        tdi->A[n] = 0.0;
-        tdi->E[n] = 0.0;
-        tdi->T[n] = 0.0;
-    }
-    
-    //Number of TDI channels (X or A&E or maybe one day A,E,&T)
-    tdi->Nchannel = Nchannel;
-}
-
-void copy_tdi(struct TDI *origin, struct TDI *copy)
-{
-    copy->N        = origin->N;
-    copy->Nchannel = origin->Nchannel;
-    
-    for(int n=0; n<2*origin->N; n++)
-    {
-        copy->X[n] = origin->X[n];
-        copy->Y[n] = origin->Y[n];
-        copy->Z[n] = origin->Z[n];
-        copy->A[n] = origin->A[n];
-        copy->E[n] = origin->E[n];
-        copy->T[n] = origin->T[n];
-    }
-}
-
-void free_tdi(struct TDI *tdi)
-{
-    free(tdi->X);
-    free(tdi->Y);
-    free(tdi->Z);
-    free(tdi->A);
-    free(tdi->E);
-    free(tdi->T);
-    
-    free(tdi);
-}
 
 void alloc_noise(struct Noise *noise, int NFFT)
 {
