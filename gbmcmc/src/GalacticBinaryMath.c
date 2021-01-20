@@ -20,7 +20,6 @@
 
 #include <math.h>
 #include <stdlib.h>
-/*#include <fftw3.h>*/
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
@@ -28,9 +27,8 @@
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sf.h>
 
+#include <LISA.h>
 
-#include "LISA.h"
-#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 

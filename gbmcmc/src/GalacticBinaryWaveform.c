@@ -23,8 +23,8 @@
 
 #include <gsl/gsl_fft_complex.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"

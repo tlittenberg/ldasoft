@@ -30,7 +30,8 @@
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
 
-#include "LISA.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryMath.h"
