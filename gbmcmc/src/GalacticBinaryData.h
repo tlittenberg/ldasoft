@@ -35,9 +35,14 @@
 void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
 
 /**
- \brief Reads LDC-formatted HDF5 data using `--ldc-data` flag
+ \brief Reads LDC-formatted HDF5 data using `--h5-data` flag
  */
-void GalacticBinaryReadHDF5(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags);
+void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi);
+
+/**
+ \brief Reads ASCII data using `--data` flag
+ */
+void GalacticBinaryReadASCII(struct Data *data, struct TDI *tdi);
 
 
 /**
