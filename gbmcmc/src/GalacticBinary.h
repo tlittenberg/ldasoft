@@ -152,7 +152,8 @@ struct Flags
     int emPrior;    //!<`[--em-prior=FILENAME]`: use input data file with EM-derived parameters for priors.
     int knownSource;//!<`[--known-source; default=FALSE]`: injection is known binary, will need polarization and phase to be internally generated. Sets Flags::fixSky = `TRUE`.
     int detached;   //!<`[--detached; default=FALSE]`: assume binary is detached, fdot prior becomes \f$U[\dot{f}(\mathcal{M}_c=0.15),\dot{f}(\mathcal{M}_c=1.00)]\f$
-    int strainData; //!<`[--data=FILENAME; default=FALSE]`: read data from file instead of simulate internally.
+    int strainData; //!<`[--data=FILENAME; default=FALSE]`: read data from ASCII file instead of simulate internally.
+    int hdf5Data;   //!<'[--hdf5Data=FILENAME; default=FALSE]`: read data from LDC HDF5 file (compatible w/ Sangria dataset).
     int orbit;      //!<`[--orbit=FILENAME; default=FALSE]`: use numerical spacecraft ephemerides supplied in `FILENAME`. `--orbit` argument sets flag to `TRUE`.
     int prior;      //!<`[--prior; default=FALSE]`: set log-likelihood to constant for testing detailed balance.
     int debug;      //!<`[--debug; default=FALSE]`: coarser settings for proposals and verbose output for debugging

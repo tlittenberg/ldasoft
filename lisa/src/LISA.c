@@ -778,11 +778,7 @@ void free_tdi(struct TDI *tdi)
 #define DATASET "/obs/tdi"
 
 void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
-{
-    /* ============================================================================ */
-    /*                THIS SHOULD ALL GO INTO A SEPARATE FUNCTION                   */
-    /* ============================================================================ */
-    
+{    
     /* LDC-formatted structure for compound HDF5 dataset */
     typedef struct tdi_dataset {
         double time;
@@ -822,16 +818,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
     
     status = H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
-    
-    /* Close the dataset. */
-    status = H5Dclose(dataset);
-    
-    /* Close the file. */
-    status = H5Fclose(file);
-    
-    /* Free up memory */
-    free(s1);
-    
+        
     
     /* Copy LDC-formatted structure into ldasoft format */
     for(int i=0; i<Nsamples; i++)
@@ -851,9 +838,14 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     }
     tdi->delta = s1[1].time - s1[0].time;
     
-    /* ============================================================================ */
-    /* ============================================================================ */
+    /* Close the dataset. */
+    status = H5Dclose(dataset);
     
+    /* Close the file. */
+    status = H5Fclose(file);
     
+    /* Free up memory */
+    free(s1);
+
 }
 

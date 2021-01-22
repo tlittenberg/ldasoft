@@ -26,6 +26,7 @@
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_fft_real.h>
 
 #include <LISA.h>
 
@@ -36,41 +37,136 @@
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
 
+#define TUKEY_FILTER_LENGTH 1e5 //seconds
+#define N_TDI_CHANNELS 3
 
-void GalacticBinaryReadHDF5(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
+static void tukey(double *data, double alpha, int N)
 {
-    fprintf(stdout,"\n==== GalacticBinaryReadHDF5 ====\n");
+    int i, imin, imax;
+    double filter;
+    
+    imin = (int)(alpha*(double)(N-1)/2.0);
+    imax = (int)((double)(N-1)*(1.0-alpha/2.0));
+    
+    for(i=0; i< N; i++)
+    {
+        filter = 1.0;
+        if(i < imin) filter = 0.5*(1.0+cos(M_PI*( (double)(i)/(double)(imin)-1.0 )));
+        if(i>imax) filter = 0.5*(1.0+cos(M_PI*( (double)(i)/(double)(imin)-2.0/alpha+1.0 )));
+        data[i] *= filter;
+    }
+    
+}
 
-    struct Data *data_ptr = data_vec[0];
-    struct TDI *tdi_ptr = data_ptr->tdi[0];
-
+void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
+{
     /* LDASOFT-formatted structure for TDI data */
-    struct TDI *tdi = malloc(sizeof(struct TDI));
+    struct TDI *tdi_td = malloc(sizeof(struct TDI));
 
-    LISA_Read_HDF5_LDC_TDI(tdi, data_ptr->fileName);
+    LISA_Read_HDF5_LDC_TDI(tdi_td, data->fileName);
+    
+    /* Select time segment of full data set */
+    double start_time = data->t0[0];
+    double stop_time = start_time + data->T;
+    double dt = tdi_td->delta;
+    double Tobs = stop_time - start_time;
+    int N = (int)floor(Tobs/dt);
+    int NFFT = pow(2, floor( log2(N) ));
+    int n_start = (int)floor(start_time/dt); /* first sample of time segment */
+    
+    /* Truncate time series to be NFFT samples */
+    double *X = malloc(NFFT*sizeof(double));
+    double *Y = malloc(NFFT*sizeof(double));
+    double *Z = malloc(NFFT*sizeof(double));
+    double *A = malloc(NFFT*sizeof(double));
+    double *E = malloc(NFFT*sizeof(double));
+    double *T = malloc(NFFT*sizeof(double));
+    for(int n=0; n<NFFT; n++)
+    {
+        int m = n_start+n;
+        X[n] = tdi_td->X[m];
+        Y[n] = tdi_td->Y[m];
+        Z[n] = tdi_td->Z[m];
+        A[n] = tdi_td->A[m];
+        E[n] = tdi_td->E[m];
+        T[n] = tdi_td->T[m];
+    }
+
+    /* Tukey window time-domain TDI channels tdi_td */
+    double alpha = (2.0*TUKEY_FILTER_LENGTH/Tobs);
+    
+    tukey(X, alpha, NFFT);
+    tukey(Y, alpha, NFFT);
+    tukey(Z, alpha, NFFT);
+    tukey(A, alpha, NFFT);
+    tukey(E, alpha, NFFT);
+    tukey(T, alpha, NFFT);
+
+    /* Fourier transform time-domain TDI channels */
+    gsl_fft_real_radix2_transform(X, 1, NFFT);
+    gsl_fft_real_radix2_transform(Y, 1, NFFT);
+    gsl_fft_real_radix2_transform(Z, 1, NFFT);
+    gsl_fft_real_radix2_transform(A, 1, NFFT);
+    gsl_fft_real_radix2_transform(E, 1, NFFT);
+    gsl_fft_real_radix2_transform(T, 1, NFFT);
+    
+    /* Normalize FD data */
+    double fft_norm = 2./sqrt((double)(NFFT));   // Fourier scaling
+    for(int n=0; n<NFFT; n++)
+    {
+        X[n] *= fft_norm;
+        Y[n] *= fft_norm;
+        Z[n] *= fft_norm;
+        A[n] *= fft_norm;
+        E[n] *= fft_norm;
+        T[n] *= fft_norm;
+    }
+
+    /* Allocate and fill data->tdi structure */
+    alloc_tdi(tdi, NFFT/2, N_TDI_CHANNELS);
+    tdi->delta = 1./Tobs;
+
+    /* unpack GSL-formatted arrays to the way GBMCMC expects them */
+    for(int n=0; n<NFFT/2; n++)
+    {
+        int re = 2*n;
+        int im = re+1;
+        
+        /* real part */
+        tdi->X[re] = X[n];
+        tdi->Y[re] = Y[n];
+        tdi->Z[re] = Z[n];
+        tdi->A[re] = A[n];
+        tdi->E[re] = E[n];
+        tdi->T[re] = T[n];
+        
+        /* imaginary part*/
+        if(n>0) //DC part is zero (initialized in alloc_tdi())
+        {
+            tdi->X[im] = X[NFFT-n];
+            tdi->Y[im] = Y[NFFT-n];
+            tdi->Z[im] = Z[NFFT-n];
+            tdi->A[im] = A[NFFT-n];
+            tdi->E[im] = E[NFFT-n];
+            tdi->T[im] = T[NFFT-n];
+        }
+    }
+    
+    /* Free memory */
+    free_tdi(tdi_td);
+    free(X);
+    free(Y);
+    free(Z);
+    free(A);
+    free(E);
+    free(T);
 
 }
-void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
+
+void GalacticBinaryReadASCII(struct Data *data, struct TDI *tdi)
 {
-    fprintf(stdout,"\n==== GalacticBinaryReadData ====\n");
-    
-    struct Data *data = data_vec[0];
-    struct TDI *tdi = data->tdi[0];
-    
-    //set RNG for noise
-    const gsl_rng_type *T = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, data->iseed);
-    
-    //find first frequency bin of data segment
-    //set bandwidth of data segment centered on injection
-    data->fmax = data->fmin + data->N/data->T;
-    data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
-    double f, junk;
-    char filename[128];
-    
+    double f;
+    double junk;
     
     //burn off low frequency bins
     FILE *fptr = fopen(data->fileName,"r");
@@ -96,10 +192,50 @@ void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct 
             fprintf(stderr,"Error reading %s\n",data->fileName);
             exit(1);
         }
-
+        
     }
     fclose(fptr);
+}
+
+void GalacticBinaryReadData(struct Data **data_vec, struct Orbit *orbit, struct Flags *flags)
+{
+    fprintf(stdout,"\n==== GalacticBinaryReadData ====\n");
     
+    struct Data *data = data_vec[0];
+    struct TDI *tdi = data->tdi[0];
+    
+    //set RNG for noise
+    const gsl_rng_type *T = gsl_rng_default;
+    gsl_rng *r = gsl_rng_alloc(T);
+    gsl_rng_env_setup();
+    gsl_rng_set (r, data->iseed);
+    
+    //find first frequency bin of data segment
+    //set bandwidth of data segment centered on injection
+    data->fmax = data->fmin + data->N/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+    
+    if(flags->hdf5Data)
+    {
+        struct TDI *tdi_full = malloc(sizeof(struct TDI));
+        GalacticBinaryReadHDF5(data,tdi_full);
+        
+        //select frequency segment
+        for(int n=0; n<2*data->N; n++)
+        {
+            int m = data->qmin*2+n;
+            tdi->A[n] = tdi_full->A[m];
+            tdi->E[n] = tdi_full->E[m];
+        }
+        
+        free_tdi(tdi_full);
+    }
+    else GalacticBinaryReadASCII(data,tdi);
+    
+    char filename[128];
+    FILE *fptr;
+
     sprintf(filename,"data/waveform_injection_%i_%i.dat",0,0);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
