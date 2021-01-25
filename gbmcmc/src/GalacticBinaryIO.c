@@ -145,7 +145,8 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
     fprintf(fptr,"  Data start time ..... %.0f \n",data_ptr->t0[0]);
     fprintf(fptr,"  Data start frequency. %.16g\n",data_ptr->fmin);
     fprintf(fptr,"  Data duration ....... %.0f \n",data_ptr->T);
-    fprintf(fptr,"  Data segments ....... %i   \n",flags->NT);
+    fprintf(fptr,"  Data epochs ......... %i   \n",flags->NT);
+    fprintf(fptr,"  Data segments ....... %i   \n",flags->NDATA);
     fprintf(fptr,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
     fprintf(fptr,"  Data format is........%s   \n",data_ptr->format);
     fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX);
@@ -236,11 +237,12 @@ void print_usage()
     fprintf(stdout,"       --h5-data     : strain data file (HDF5)             \n");
     fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
     fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
-    fprintf(stdout,"       --segments    : number of data segments (1)         \n");
-    fprintf(stdout,"       --start-time  : initial time of segment  (0)        \n");
+    fprintf(stdout,"       --epochs      : number of time segments (1)         \n");
+    fprintf(stdout,"       --segments    : number of frequency segments     (1)\n");
+    fprintf(stdout,"       --start-time  : initial time of epoch  (0)          \n");
     fprintf(stdout,"       --gap-time    : duration of data gaps (0)           \n");
     fprintf(stdout,"       --fmin        : minimum frequency                   \n");
-    fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
+    fprintf(stdout,"       --duration    : duration of epoch (62914560)        \n");
     fprintf(stdout,"       --sim-noise   : data w/out noise realization        \n");
     fprintf(stdout,"       --conf-noise  : include model for confusion noise   \n");
     fprintf(stdout,"       --noiseseed   : seed for noise RNG                  \n");
@@ -267,7 +269,7 @@ void print_usage()
     fprintf(stdout,"       --prior       : sample from prior                   \n");
     fprintf(stdout,"       --no-rj       : used fixed dimension                \n");
     fprintf(stdout,"       --calibration : marginalize over calibration errors \n");
-    fprintf(stdout,"       --fit-gap     : fit for time gaps between segments  \n");
+    fprintf(stdout,"       --fit-gap     : fit for time gaps between epochs    \n");
     fprintf(stdout,"\n");
     
     //Priors & Proposals
@@ -388,6 +390,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         {"samples",   required_argument, 0, 0},
         {"padding",   required_argument, 0, 0},
         {"duration",  required_argument, 0, 0},
+        {"epochs",    required_argument, 0, 0},
         {"segments",  required_argument, 0, 0},
         {"sources",   required_argument, 0, 0},
         {"start-time",required_argument, 0, 0},
@@ -451,7 +454,8 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
             case 0:
                 if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
                 if(strcmp("padding",     long_options[long_index].name) == 0) data_ptr->qpad    = atoi(optarg);
-                if(strcmp("segments",    long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
+                if(strcmp("epochs",      long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
+                if(strcmp("segments",    long_options[long_index].name) == 0) flags->NDATA      = atoi(optarg);
                 if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
                 if(strcmp("fmin",        long_options[long_index].name) == 0) sscanf(optarg, "%lg", &data_ptr->fmin);
                 if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap[0] = (double)atof(optarg);
@@ -639,7 +643,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         data[i]->NP       = data[0]->NP;
         data[i]->Nchannel = data[0]->Nchannel;
         data[i]->DMAX     = data[0]->DMAX;
-        data[i]->fmin     = data[0]->fmin;
+        data[i]->fmin     = data[0]->fmin + (double)(i * (data[0]->N)  - data[0]->qpad )/data[0]->T;
         
         data[i]->cseed = data[0]->cseed+i*flags->NDATA;
         data[i]->nseed = data[0]->nseed+i*flags->NDATA;
@@ -1313,6 +1317,80 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
         free(res_var[n]);
     }
     free(res_var);
+}
+
+void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index)
+{
+    char filename[128];
+    FILE *fptr;
+    
+    sprintf(filename,"data/waveform_injection_%i_%i.dat",t_index,f_index);
+    fptr=fopen(filename,"w");
+    for(int i=0; i<data->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%lg %lg %lg %lg %lg",
+                f,
+                tdi->A[2*i],tdi->A[2*i+1],
+                tdi->E[2*i],tdi->E[2*i+1]);
+        fprintf(fptr,"\n");
+    }
+    fclose(fptr);
+    
+    sprintf(filename,"data/power_injection_%i_%i.dat",t_index,f_index);
+    fptr=fopen(filename,"w");
+    for(int i=0; i<data->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%.12g %lg %lg ",
+                f,
+                tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
+                tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+        fprintf(fptr,"\n");
+    }
+    fclose(fptr);
+    
+    sprintf(filename,"data/power_data_%i_%i.dat",t_index,f_index);
+    fptr=fopen(filename,"w");
+    
+    for(int i=0; i<data->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%.12g %lg %lg ",
+                f,
+                tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
+                tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+        fprintf(fptr,"\n");
+    }
+    fclose(fptr);
+    
+    sprintf(filename,"data/data_%i_%i.dat",t_index,f_index);
+    fptr=fopen(filename,"w");
+    
+    for(int i=0; i<data->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%.12g %lg %lg %lg %lg",
+                f,
+                tdi->A[2*i],tdi->A[2*i+1],
+                tdi->E[2*i],tdi->E[2*i+1]);
+        fprintf(fptr,"\n");
+    }
+    fclose(fptr);
+    
+    sprintf(filename,"data/power_noise_%i_%i.dat",t_index,f_index);
+    fptr=fopen(filename,"w");
+    
+    for(int i=0; i<data->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        fprintf(fptr,"%.12g %lg %lg ",
+                f,
+                data->noise[t_index]->SnA[i],
+                data->noise[t_index]->SnE[i]);
+        fprintf(fptr,"\n");
+    }
+    fclose(fptr);
 }
 
 

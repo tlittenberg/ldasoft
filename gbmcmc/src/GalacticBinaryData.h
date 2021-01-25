@@ -44,6 +44,15 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi);
  */
 void GalacticBinaryReadASCII(struct Data *data, struct TDI *tdi);
 
+/**
+ \brief Get theoretical noise PSDs for TDI channels
+ */
+void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags);
+
+/**
+ \brief Add simulated Gaussian noise realization to data
+ */
+void GalacticBinaryAddNoise(struct Data *data, struct TDI *tdi);
 
 /**
 \brief WIP:

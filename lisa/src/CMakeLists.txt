@@ -6,4 +6,5 @@ include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 target_link_libraries(lisa hdf5 ${GSL_LIBRARIES})
 
 install(TARGETS lisa DESTINATION lib)
+install(DIRECTORY "./" DESTINATION include FILES_MATCHING PATTERN "*.h")
 
