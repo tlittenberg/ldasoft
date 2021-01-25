@@ -97,7 +97,7 @@ void scan_source_params(struct Data *data, struct Source *source, FILE *fptr);
 ///@}
 
 /**
- \brief Wrapper function that calls all of the print functions
+ \brief Wrapper function that calls all of the chain print functions
  */
 void print_chain_files(struct Data *data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step);
 
@@ -118,5 +118,10 @@ void print_waveforms_reconstruction(struct Data *data, int seg);
 /// Print current state of waveform and residuals during run for diagnostics. Disabled when Flags::quiet=`TRUE`.
 void print_waveform_draw(struct Data **data, struct Model **model, struct Flags *flags);
 ///@}
+
+/**
+ \brief Wrapper function that calls data print functions
+ */
+void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index);
 
 #endif /* GalacticBinaryIO_h */
