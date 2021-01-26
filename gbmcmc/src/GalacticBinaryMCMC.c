@@ -40,7 +40,7 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryMCMC.h"
 
-void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags)
+void ptmcmc(struct Model **model, struct Chain *chain, struct Flags *flags)
 {
     int a, b;
     int olda, oldb;
@@ -66,13 +66,8 @@ void ptmcmc(struct Model ***model, struct Chain *chain, struct Flags *flags)
         heat1 = chain->temperature[a];
         heat2 = chain->temperature[b];
         
-        logL1 = 0.0;
-        logL2 = 0.0;
-        for(int i=0; i<flags->NDATA; i++)
-        {
-            logL1 += model[olda][i]->logL + model[olda][i]->logLnorm;
-            logL2 += model[oldb][i]->logL + model[oldb][i]->logLnorm;
-        }
+        logL1 = model[olda]->logL + model[olda]->logLnorm;
+        logL2 = model[oldb]->logL + model[oldb]->logLnorm;
         
         //Hot chains jump more rarely
         if(gsl_rng_uniform(chain->r[a])<1.0)
@@ -196,7 +191,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     double logPy  = 0.0; //(log) prior density for model y (proposed state)
     double logQyx = 0.0; //(log) proposal denstiy from x->y
     double logQxy = 0.0; //(log) proposal density from y->x
-                         
+    
     //shorthand pointers
     struct Model *model_x = model;
     struct Model *model_y = trial;
@@ -427,80 +422,48 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     
 }
 
-void data_mcmc(struct Orbit *orbit, struct Data **data, struct Model **model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
+void data_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
     double logQ  = 0.0;
     
-    struct Model **trial = malloc(sizeof(struct Model *) * flags->NDATA);
+    struct Model *trial = malloc(sizeof(struct Model));
     
-    for(int i=0; i<flags->NDATA; i++)
+    
+    alloc_model(trial,model->Nmax,data->N,data->Nchannel, data->NP, flags->NT);
+    
+    set_uniform_prior(flags, trial, data, 0);
+    
+    copy_model(model,trial);
+    
+    logQ += t0_shift(data, trial, trial->source[0], proposal[0], trial->source[0]->params, chain->r[ic]);
+    
+    // Form master template
+    /*
+     passing generate_signal_model -1 results in full recalculation of waveform model
+     */
+    generate_signal_model(orbit, data, trial, -1);
+    
+    /*
+     H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+     */
+    if(!flags->prior)
     {
-        trial[i] = malloc(sizeof(struct Model));
+        // get likelihood for y
+        trial->logL = gaussian_log_likelihood(orbit, data, trial);
+        //model->logL = gaussian_log_likelihood(orbit, data, model);
         
-        
-        alloc_model(trial[i],model[i]->Nmax,data[i]->N,data[i]->Nchannel, data[i]->NP, flags->NT);
-        
-        set_uniform_prior(flags, trial[i], data[i], 0);
-        
-        copy_model(model[i],trial[i]);
+        logH += (trial->logL - model->logL)/chain->temperature[ic];
     }
+    logH += logQ; //delta logL
     
-    logQ += t0_shift(data[0], trial[0], trial[0]->source[0], proposal[0], trial[0]->source[0]->params, chain->r[ic]);
-    
-    for(int j=1; j<flags->NDATA; j++)
-    {
-        for(int i=0; i<flags->NT; i++)
-        {
-            trial[j]->t0[i] = trial[0]->t0[i];
-            //      for(int n=0; n<trial[0]->Nlive; n++)
-            //      {
-            //        double dt = trial[j]->t0[i] - model[j]->t0[i];
-            //        trial[0]->source[n]->params[0] += -(1.e-7/5.)*dt;
-            //      }
-        }
-    }
-    
-    for(int j=0; j<flags->NDATA; j++)
-    {
-        // Form master template
-        /*
-         passing generate_signal_model -1 results in full recalculation of waveform model
-         */
-        generate_signal_model(orbit, data[j], trial[j], -1);
-        //generate_signal_model(orbit, data[j], model[j], -1);
-        
-        /*
-         H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
-         */
-        if(!flags->prior)
-        {
-            // get likelihood for y
-            trial[j]->logL = gaussian_log_likelihood(orbit, data[j], trial[j]);
-            //model[j]->logL = gaussian_log_likelihood(orbit, data[j], model[j]);
-            
-            logH += (trial[j]->logL - model[j]->logL)/chain->temperature[ic];
-        }
-        logH += logQ; //delta logL
-        
-    }
     
     loga = log(gsl_rng_uniform(chain->r[ic]));
     
-    if(logH > loga)
-    {
-        for(int j=0; j<flags->NDATA; j++)
-        {
-            copy_model(trial[j],model[j]);
-        }
-    }
+    if(logH > loga) copy_model(trial,model);
     
-    for(int i=0; i<flags->NDATA; i++)
-    {
-        free_model(trial[i]);
-    }
-    free(trial);
+    free_model(trial);
     
 }
 

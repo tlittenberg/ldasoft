@@ -61,82 +61,79 @@ void map_params_to_array(struct Source *source, double *params, double T)
         params[8] = source->d2fdt2*T*T*T;
 }
 
-void alloc_data(struct Data **data_vec, struct Flags *flags)
+void alloc_data(struct Data *data, struct Flags *flags)
 {
     int NMCMC = flags->NMCMC;
-    for(int m=0; m<flags->NDATA; m++)
+    
+    
+    data->NT = flags->NT;
+    
+    data->inj = malloc(sizeof(struct Source));
+    alloc_source(data->inj,data->N,data->Nchannel,data->NP);
+    
+    data->tdi   = malloc(flags->NT*sizeof(struct TDI*));
+    data->noise = malloc(flags->NT*sizeof(struct Noise*));
+    
+    for(int n=0; n<flags->NT; n++)
     {
-        struct Data *data = data_vec[m];
+        data->tdi[n]   = malloc(sizeof(struct TDI));
+        data->noise[n] = malloc(sizeof(struct Noise));
         
-        data->NT = flags->NT;
+        alloc_tdi(data->tdi[n], data->N, data->Nchannel);
+        alloc_noise(data->noise[n], data->N);
+    }
+    
+    //reconstructed signal model
+    int i_re,i_im;
+    data->h_rec = malloc(data->N*2*sizeof(double ***));
+    data->h_res = malloc(data->N*2*sizeof(double ***));
+    data->r_pow = malloc(data->N*sizeof(double ***));
+    data->h_pow = malloc(data->N*sizeof(double ***));
+    data->S_pow = malloc(data->N*sizeof(double ***));
+    
+    //number of waveform samples to save
+    data->Nwave=100;
+    
+    //downsampling rate of post-burn-in samples
+    data->downsample = NMCMC/data->Nwave;
+    
+    for(int i=0; i<data->N; i++)
+    {
+        i_re = i*2;
+        i_im = i_re+1;
         
-        data->inj = malloc(sizeof(struct Source));
-        alloc_source(data->inj,data->N,data->Nchannel,data->NP);
-        
-        data->tdi   = malloc(flags->NT*sizeof(struct TDI*));
-        data->noise = malloc(flags->NT*sizeof(struct Noise*));
-        
-        for(int n=0; n<flags->NT; n++)
+        data->S_pow[i]    = malloc(data->Nchannel*sizeof(double **));
+        data->h_pow[i]    = malloc(data->Nchannel*sizeof(double **));
+        data->r_pow[i]    = malloc(data->Nchannel*sizeof(double **));
+        data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double **));
+        data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double **));
+        data->h_res[i_re] = malloc(data->Nchannel*sizeof(double **));
+        data->h_res[i_im] = malloc(data->Nchannel*sizeof(double **));
+        for(int l=0; l<data->Nchannel; l++)
         {
-            data->tdi[n]   = malloc(sizeof(struct TDI));
-            data->noise[n] = malloc(sizeof(struct Noise));
+            data->S_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
+            data->h_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
+            data->r_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
+            data->h_rec[i_re][l] = malloc(data->Nwave*sizeof(double *));
+            data->h_rec[i_im][l] = malloc(data->Nwave*sizeof(double *));
+            data->h_res[i_re][l] = malloc(data->Nwave*sizeof(double *));
+            data->h_res[i_im][l] = malloc(data->Nwave*sizeof(double *));
             
-            alloc_tdi(data->tdi[n], data->N, data->Nchannel);
-            alloc_noise(data->noise[n], data->N);
-        }
-        
-        //reconstructed signal model
-        int i_re,i_im;
-        data->h_rec = malloc(data->N*2*sizeof(double ***));
-        data->h_res = malloc(data->N*2*sizeof(double ***));
-        data->r_pow = malloc(data->N*sizeof(double ***));
-        data->h_pow = malloc(data->N*sizeof(double ***));
-        data->S_pow = malloc(data->N*sizeof(double ***));
-        
-        //number of waveform samples to save
-        data->Nwave=100;
-        
-        //downsampling rate of post-burn-in samples
-        data->downsample = NMCMC/data->Nwave;
-        
-        for(int i=0; i<data->N; i++)
-        {
-            i_re = i*2;
-            i_im = i_re+1;
-            
-            data->S_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-            data->h_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-            data->r_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-            data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double **));
-            data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double **));
-            data->h_res[i_re] = malloc(data->Nchannel*sizeof(double **));
-            data->h_res[i_im] = malloc(data->Nchannel*sizeof(double **));
-            for(int l=0; l<data->Nchannel; l++)
+            for(int n=0; n<flags->NT; n++)
             {
-                data->S_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-                data->h_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-                data->r_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-                data->h_rec[i_re][l] = malloc(data->Nwave*sizeof(double *));
-                data->h_rec[i_im][l] = malloc(data->Nwave*sizeof(double *));
-                data->h_res[i_re][l] = malloc(data->Nwave*sizeof(double *));
-                data->h_res[i_im][l] = malloc(data->Nwave*sizeof(double *));
-                
-                for(int n=0; n<flags->NT; n++)
-                {
-                    data->S_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
-                    data->h_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
-                    data->r_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
-                    data->h_rec[i_re][l][n] = calloc(data->Nwave,sizeof(double));
-                    data->h_rec[i_im][l][n] = calloc(data->Nwave,sizeof(double));
-                    data->h_res[i_re][l][n] = calloc(data->Nwave,sizeof(double));
-                    data->h_res[i_im][l][n] = calloc(data->Nwave,sizeof(double));
-                }
+                data->S_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                data->h_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                data->r_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                data->h_rec[i_re][l][n] = calloc(data->Nwave,sizeof(double));
+                data->h_rec[i_im][l][n] = calloc(data->Nwave,sizeof(double));
+                data->h_res[i_re][l][n] = calloc(data->Nwave,sizeof(double));
+                data->h_res[i_im][l][n] = calloc(data->Nwave,sizeof(double));
             }
         }
-        
-        //Spectrum proposal
-        data->p = calloc(data->N,sizeof(double));
     }
+    
+    //Spectrum proposal
+    data->p = calloc(data->N,sizeof(double));
 }
 
 void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode)
@@ -295,7 +292,7 @@ void copy_model(struct Model *origin, struct Model *copy)
     copy->Nmax           = origin->Nmax;
     copy->Nlive          = origin->Nlive;
     for(int n=0; n<origin->Nmax; n++)
-        copy_source(origin->source[n],copy->source[n]);
+    copy_source(origin->source[n],copy->source[n]);
     
     for(int n=0; n<origin->NT; n++)
     {
@@ -810,18 +807,18 @@ void generate_power_law_noise_model(struct Data *data, struct Model *model)
         {
             case 1:
                 for(int n=0; n<data->N; n++)
-                {
-                    //Taylor expansion Sn(f/fmin)^alpha
-                    noise->SnX[n] = noise->SnX_0*(1.0 + noise->alpha_X * df_on_fmin);
-                }
+            {
+                //Taylor expansion Sn(f/fmin)^alpha
+                noise->SnX[n] = noise->SnX_0*(1.0 + noise->alpha_X * df_on_fmin);
+            }
                 break;
             case 2:
                 for(int n=0; n<data->N; n++)
-                {
-                    //Taylor expansion Sn(f/fmin)^alpha
-                    noise->SnA[n] = noise->SnA_0*(1.0 + noise->alpha_A * df_on_fmin);
-                    noise->SnE[n] = noise->SnE_0*(1.0 + noise->alpha_E * df_on_fmin);
-                }
+            {
+                //Taylor expansion Sn(f/fmin)^alpha
+                noise->SnA[n] = noise->SnA_0*(1.0 + noise->alpha_A * df_on_fmin);
+                noise->SnE[n] = noise->SnE_0*(1.0 + noise->alpha_E * df_on_fmin);
+            }
                 break;
             default:
                 break;
@@ -841,10 +838,10 @@ void generate_noise_model(struct Data *data, struct Model *model)
                 break;
             case 2:
                 for(int n=0; n<data->N; n++)
-                {
-                    model->noise[m]->SnA[n] = data->noise[m]->SnA[n]*model->noise[m]->etaA;
-                    model->noise[m]->SnE[n] = data->noise[m]->SnE[n]*model->noise[m]->etaE;
-                }
+            {
+                model->noise[m]->SnA[n] = data->noise[m]->SnA[n]*model->noise[m]->etaA;
+                model->noise[m]->SnE[n] = data->noise[m]->SnE[n]*model->noise[m]->etaE;
+            }
                 break;
             default:
                 break;
@@ -950,7 +947,7 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
     /*                        */
     /**************************/
     
-    /*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+    /*
      struct TDI *residual = model->residual;
      alloc_tdi(residual, data->N, data->Nchannel);
      */
@@ -1044,7 +1041,7 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
     return logLnorm;
 }
 
-int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags)
+int update_max_log_likelihood(struct Model **model, struct Chain *chain, struct Flags *flags)
 {
     int n = chain->index[0];
     int N = flags->NDATA;
@@ -1053,7 +1050,7 @@ int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct
     double dlogL= 0.0;
     
     // get full likelihood
-    for(int i=0; i<flags->NDATA; i++) logL += model[n][i]->logL + model[n][i]->logLnorm;
+    logL = model[n]->logL + model[n]->logLnorm;
     
     // update max
     if(logL > chain->logLmax)
@@ -1069,7 +1066,7 @@ int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct
             for(int ic=1; ic<chain->NC; ic++)
             {
                 int m = chain->index[ic];
-                for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
+                copy_model(model[n],model[m]);
             }
             if(flags->burnin)return 1;
         }

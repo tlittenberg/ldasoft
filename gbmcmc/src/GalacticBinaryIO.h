@@ -18,22 +18,22 @@
  */
 
 /**
-@file GalacticBinaryIO.h
-\brief Functions handling I/O for `gbmcmc`.
-*/
+ @file GalacticBinaryIO.h
+ \brief Functions handling I/O for `gbmcmc`.
+ */
 
 
 #ifndef GalacticBinaryIO_h
 #define GalacticBinaryIO_h
 
 /**
-\brief Show progress bar
-*/
+ \brief Show progress bar
+ */
 void printProgress (double percentage);
 
 /**
-\brief Print git hash of running version
-*/
+ \brief Print git hash of running version
+ */
 void print_version(FILE *fptr);
 
 /**
@@ -42,55 +42,55 @@ void print_version(FILE *fptr);
 void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbit *orbit);
 
 /**
-\brief Print list of command line arguments and defaults
-*/
+ \brief Print list of command line arguments and defaults
+ */
 void print_usage();
 
 /**
  \brief Parse command line
  */
-void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax);
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax);
 
 /**
-\brief Check if file exists and handle missing files cleanly
-*/
+ \brief Check if file exists and handle missing files cleanly
+ */
 int checkfile(char filename[]);
 
 /** @name Full Sampler State Files
-Print/read to file the full chain state for checkpointing
-*/
+ Print/read to file the full chain state for checkpointing
+ */
 ///@{
-void save_chain_state(struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step);
-void restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step);
+void save_chain_state(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step);
+void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int *step);
 ///@}
 
 /** @name Chain State File
-Print/read current state of sampler, e.g. to Chain::chainFile
-*/
+ Print/read current state of sampler, e.g. to Chain::chainFile
+ */
 ///@{
 void print_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int step);
 void scan_chain_state(struct Data *data, struct Chain *chain, struct Model *model, struct Flags *flags, FILE *fptr, int *step);
 ///@}
 
 /** @name Noise Chain File
-Print/read current state of noise model, e.g. to Chain::noiseFile
-*/
+ Print/read current state of noise model, e.g. to Chain::noiseFile
+ */
 ///@{
 void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int step);
 void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *step);
 ///@}
 
 /** @name Calibration Chain File
-**WORK IN PROGRESS** Print/read current state of calibration model, e.g. to Chain::calibrationFile
-*/
+ **WORK IN PROGRESS** Print/read current state of calibration model, e.g. to Chain::calibrationFile
+ */
 ///@{
 void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int step);
 void scan_calibration_state(struct Data *data, struct Model *model, FILE *fptr, int *step);
 ///@}
 
 /** @name Galactic Binary Chain File
-Print/read current state of source model, e.g. to Chain::parameterFile
-*/
+ Print/read current state of source model, e.g. to Chain::parameterFile
+ */
 ///@{
 void print_source_params(struct Data *data, struct Source *source, FILE *fptr);
 void scan_source_params(struct Data *data, struct Source *source, FILE *fptr);
@@ -99,7 +99,7 @@ void scan_source_params(struct Data *data, struct Source *source, FILE *fptr);
 /**
  \brief Wrapper function that calls all of the chain print functions
  */
-void print_chain_files(struct Data *data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step);
+void print_chain_files(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step);
 
 /** @name Waveform Files
  Save various representations of waveform reconstructions
@@ -113,15 +113,15 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc);
 void print_waveform(struct Data *data, struct Model *model, FILE *fptr);
 
 /// Print waveform 5, 25, 50, 75, and 95 quantiles of waveform power spectrum posteriors
-void print_waveforms_reconstruction(struct Data *data, int seg);
+void print_waveforms_reconstruction(struct Data *data);
 
 /// Print current state of waveform and residuals during run for diagnostics. Disabled when Flags::quiet=`TRUE`.
-void print_waveform_draw(struct Data **data, struct Model **model, struct Flags *flags);
+void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags);
 ///@}
 
 /**
  \brief Wrapper function that calls data print functions
  */
-void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index);
+void print_data(struct Data *data, struct TDI *tdi, int t_index);
 
 #endif /* GalacticBinaryIO_h */

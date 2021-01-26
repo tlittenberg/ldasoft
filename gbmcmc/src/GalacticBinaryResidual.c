@@ -47,17 +47,12 @@ int main(int argc, char *argv[])
     
     
     /* Allocate data structures */
-    struct Flags *flags       = malloc(sizeof(struct Flags));
-    struct Orbit *orbit       = malloc(sizeof(struct Orbit));
-    struct Data  **data_ptr   = malloc(sizeof(struct Data*)*NMAX);
-    struct Chain *chain       = malloc(sizeof(struct Chain));
+    struct Flags *flags = malloc(sizeof(struct Flags));
+    struct Orbit *orbit = malloc(sizeof(struct Orbit));
+    struct Data  *data  = malloc(sizeof(struct Data));
+    struct Chain *chain = malloc(sizeof(struct Chain));
     
-    /* Parse command line and set defaults/flags */
-    for(int i=0; i<NMAX; i++)
-    {
-        data_ptr[i] = malloc(sizeof(struct Data));
-    }
-    parse(argc,argv,data_ptr,orbit,flags,chain,NMAX);
+    parse(argc,argv,data,orbit,flags,chain,NMAX);
     
     /* Load spacecraft ephemerides */
     switch(flags->orbit)
@@ -75,9 +70,7 @@ int main(int argc, char *argv[])
     }
     
     /* Initialize data structures */
-    alloc_data(data_ptr, flags);
-    
-    struct Data *data = data_ptr[0];
+    alloc_data(data, flags);
     
     fprintf(stdout,"\n==== GalacticBinarySubtractDetectedSources ====\n");
     
@@ -91,7 +84,7 @@ int main(int argc, char *argv[])
         fprintf(stdout,"Subtracting binary catalog %s\n",flags->injFile[0]);
     
     /* Get Galaxy File */
-    GalacticBinaryReadData(data_ptr,orbit,flags);
+    GalacticBinaryReadData(data,orbit,flags);
     
     //count sources in file
     int N=0;
