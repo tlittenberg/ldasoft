@@ -55,20 +55,15 @@ int main(int argc, char *argv[])
     struct Flags *flags = malloc(sizeof(struct Flags));
     struct Orbit *orbit = malloc(sizeof(struct Orbit));
     struct Chain *chain = malloc(sizeof(struct Chain));
-    struct Data  **data = malloc(sizeof(struct Data*)*NMAX); //data[NF]
+    struct Data  *data  = malloc(sizeof(struct Data));
     
     
     //   Parse command line and set defaults/flags
-    for(int i=0; i<NMAX; i++)
-    {
-        data[i] = malloc(sizeof(struct Data));
-        data[i]->t0   = malloc( NMAX * sizeof(double) );
-    }
+    data->t0 = malloc( NMAX * sizeof(double) );
+    
     parse(argc,argv,data,orbit,flags,chain,NMAX);
     alloc_data(data, flags);
-    struct Data **data_vec = data;
-    struct Data *data2  = data_vec[0];
-    data2->qmin = (int)(data2->fmin*data2->T);
+    data->qmin = (int)(data->fmin*data->T);
     
     /* Load spacecraft ephemerides */
     switch(flags->orbit)
@@ -102,18 +97,18 @@ int main(int argc, char *argv[])
     //allocate memory for two sources and noise
     struct Source *src1 = NULL;
     src1 = malloc(sizeof(struct Source));
-    alloc_source(src1, data2->N,2,data2->NP);
+    alloc_source(src1, data->N,2,data->NP);
     
     struct Source *src2 = NULL;
     src2 = malloc(sizeof(struct Source));
-    alloc_source(src2, data2->N,2,data2->NP);
+    alloc_source(src2, data->N,2,data->NP);
     
     struct Noise *noise = NULL;
     noise = malloc(flags->NT*sizeof(struct Noise));
-    alloc_noise(noise, data2->N);
+    alloc_noise(noise, data->N);
     
     
-    for(int n=0; n<2*data2->N; n++)
+    for(int n=0; n<2*data->N; n++)
     {
         src1->tdi->A[n] = 0.0;
         src1->tdi->E[n] = 0.0;
@@ -123,38 +118,38 @@ int main(int argc, char *argv[])
         src2->tdi->X[n] = 0.0;
     }
     
-    scan_source_params(data2, src1, chain_file1);
-    scan_source_params(data2, src2, chain_file2);
+    scan_source_params(data, src1, chain_file1);
+    scan_source_params(data, src2, chain_file2);
     
     //Book-keeping of injection time-frequency volume
-    galactic_binary_alignment(orbit, data2, src1);
+    galactic_binary_alignment(orbit, data, src1);
     
-    galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src1->params, data2->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], src1->params, data->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
     
-    galactic_binary_alignment(orbit, data2, src2);
+    galactic_binary_alignment(orbit, data, src2);
     
-    galactic_binary(orbit, data2->format, data2->T, data2->t0[0], src2->params, data2->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], src2->params, data->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
     
     
     
     
     //Get noise spectrum for data segment
-    for(int n=0; n<data2->N; n++)
+    for(int n=0; n<data->N; n++)
     {
-        double f = data2->fmin + (double)(n)/data2->T;
-        if(strcmp(data2->format,"phase")==0)
+        double f = data->fmin + (double)(n)/data->T;
+        if(strcmp(data->format,"phase")==0)
         {
             noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
             noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
         }
-        else if(strcmp(data2->format,"frequency")==0)
+        else if(strcmp(data->format,"frequency")==0)
         {
             noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
             noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
         }
         else
         {
-            fprintf(stderr,"Unsupported data format %s",data2->format);
+            fprintf(stderr,"Unsupported data format %s",data->format);
             exit(1);
         }
     }

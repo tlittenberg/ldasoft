@@ -108,11 +108,11 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"#\t\t e.g., data/power_noise_t0_f0.dat\n");
     fprintf(fptr,"#\t--catalog     : list of known sources\n");
     fprintf(fptr,"#\t--Tcatalog    : observing time of previous catalog\n");
-
+    
     fclose(fptr);
 }
 
-void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orbit *orbit, struct Flags *flags, FILE *fptr)
+void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, FILE *fptr)
 {
     fprintf(fptr,"\n");
     fprintf(fptr,"=============== RUN SETTINGS ===============\n");
@@ -131,7 +131,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
             break;
     }
     fprintf(fptr,"  Data channels ........");
-    switch(data_ptr->Nchannel)
+    switch(data->Nchannel)
     {
         case 1:
             fprintf(fptr,"X\n");
@@ -140,19 +140,19 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
             fprintf(fptr,"AE\n");
             break;
     }
-    fprintf(fptr,"  Data sample size .... %i   \n",data_ptr->N);
-    fprintf(fptr,"  Data padding size ... %i   \n",data_ptr->qpad);
-    fprintf(fptr,"  Data start time ..... %.0f \n",data_ptr->t0[0]);
-    fprintf(fptr,"  Data start frequency. %.16g\n",data_ptr->fmin);
-    fprintf(fptr,"  Data duration ....... %.0f \n",data_ptr->T);
+    fprintf(fptr,"  Data sample size .... %i   \n",data->N);
+    fprintf(fptr,"  Data padding size ... %i   \n",data->qpad);
+    fprintf(fptr,"  Data start time ..... %.0f \n",data->t0[0]);
+    fprintf(fptr,"  Data start frequency. %.16g\n",data->fmin);
+    fprintf(fptr,"  Data duration ....... %.0f \n",data->T);
     fprintf(fptr,"  Data epochs ......... %i   \n",flags->NT);
     fprintf(fptr,"  Data segments ....... %i   \n",flags->NDATA);
-    fprintf(fptr,"  Data gap duration.....%.0f \n",data_ptr->tgap[0]);
-    fprintf(fptr,"  Data format is........%s   \n",data_ptr->format);
+    fprintf(fptr,"  Data gap duration.....%.0f \n",data->tgap[0]);
+    fprintf(fptr,"  Data format is........%s   \n",data->format);
     fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX);
     fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
-    fprintf(fptr,"  MCMC chain seed ..... %li  \n",data_ptr->cseed);
+    fprintf(fptr,"  MCMC chain seed ..... %li  \n",data->cseed);
     fprintf(fptr,"  Number of threads ... %i   \n",flags->threads);
     fprintf(fptr,"\n");
     fprintf(fptr,"================= RUN FLAGS ================\n");
@@ -163,7 +163,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
     if(flags->NINJ>0)
     {
         fprintf(fptr,"  Injected sources..... %i\n",flags->NINJ);
-        fprintf(fptr,"     seed ............. %li\n",data_ptr->iseed);
+        fprintf(fptr,"     seed ............. %li\n",data->iseed);
         for(int i=0; i<flags->NINJ; i++)
         {
             fprintf(fptr,"     source ........... %s\n",flags->injFile[i]);
@@ -184,7 +184,7 @@ void print_run_settings(int argc, char **argv, struct Data *data_ptr, struct Orb
     if(flags->simNoise)
     {
         fprintf(fptr,"  Noise simulation is.. ENABLED\n");
-        fprintf(fptr,"  Noise seed .......... %li  \n",data_ptr->nseed);
+        fprintf(fptr,"  Noise seed .......... %li  \n",data->nseed);
     }
     else                fprintf(fptr,"  Noise simulation is.. DISABLED\n");
     if(flags->rj)       fprintf(fptr,"  RJMCMC is ........... ENABLED\n");
@@ -304,15 +304,11 @@ void print_usage()
     fprintf(stdout,"   5 yr: %.0f \n",5.*62914560./2.);
     fprintf(stdout,"  10 yr: %.0f \n",10.*62914560./2.);
     fprintf(stdout,"\n");
-    exit(EXIT_FAILURE);
+    exit(0);
 }
 
-void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
 {
-    print_LISA_ASCII_art(stdout);
-    print_version(stdout);
-    
-    if(argc==1) print_usage();
     
     int DMAX_default = 10;
     
@@ -354,29 +350,28 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     chain->NP          = 9; //number of proposals
     chain->NC          = 12;//number of chains
     
-    for(int i=0; i<Nmax; i++)
-    {
-        /*
-         default data format is 'phase' 
-         optional support for 'frequency' a la LDCs
-         */
-        sprintf(data[i]->format,"phase");
-        
-        data[i]->t0   = calloc(Nmax,sizeof(double));
-        data[i]->tgap = calloc(Nmax,sizeof(double));
-        
-        data[i]->T        = 62914560.0; /* two "mldc years" at 15s sampling */
-        data[i]->sqT      = sqrt(data[i]->T);
-        data[i]->N        = 1024;
-        data[i]->NP       = 8; //default includes fdot
-        data[i]->Nchannel = 2; //1=X, 2=AE
-        data[i]->DMAX     = DMAX_default;//maximum number of sources
-        data[i]->qpad     = 0;
-        
-        data[i]->cseed = 150914+i*Nmax;
-        data[i]->nseed = 151226+i*Nmax;
-        data[i]->iseed = 151012+i*Nmax;
-    }
+    
+    /*
+     default data format is 'phase'
+     optional support for 'frequency' a la LDCs
+     */
+    sprintf(data->format,"phase");
+    
+    data->t0   = calloc(Nmax,sizeof(double));
+    data->tgap = calloc(Nmax,sizeof(double));
+    
+    data->T        = 62914560.0; /* two "mldc years" at 15s sampling */
+    data->sqT      = sqrt(data->T);
+    data->N        = 1024;
+    data->NP       = 8; //default includes fdot
+    data->Nchannel = 2; //1=X, 2=AE
+    data->DMAX     = DMAX_default;//maximum number of sources
+    data->qpad     = 0;
+    
+    data->cseed = 150914;
+    data->nseed = 151226;
+    data->iseed = 151012;
+    
     
     flags->injFile = malloc(10*sizeof(char *));
     for(int n=0; n<10; n++) flags->injFile[n] = malloc(1024*sizeof(char));
@@ -445,24 +440,23 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     int long_index=0;
     
     //Loop through argv string and pluck out arguments
-    struct Data *data_ptr = data[0];
     while ((opt = getopt_long_only(argc, argv,"apl:b:", long_options, &long_index )) != -1)
     {
         switch (opt)
         {
                 
             case 0:
-                if(strcmp("samples",     long_options[long_index].name) == 0) data_ptr->N       = atoi(optarg);
-                if(strcmp("padding",     long_options[long_index].name) == 0) data_ptr->qpad    = atoi(optarg);
+                if(strcmp("samples",     long_options[long_index].name) == 0) data->N       = atoi(optarg);
+                if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad    = atoi(optarg);
                 if(strcmp("epochs",      long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
                 if(strcmp("segments",    long_options[long_index].name) == 0) flags->NDATA      = atoi(optarg);
-                if(strcmp("start-time",  long_options[long_index].name) == 0) data_ptr->t0[0]   = (double)atof(optarg);
-                if(strcmp("fmin",        long_options[long_index].name) == 0) sscanf(optarg, "%lg", &data_ptr->fmin);
-                if(strcmp("gap-time",    long_options[long_index].name) == 0) data_ptr->tgap[0] = (double)atof(optarg);
+                if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0[0]   = (double)atof(optarg);
+                if(strcmp("fmin",        long_options[long_index].name) == 0) sscanf(optarg, "%lg", &data->fmin);
+                if(strcmp("gap-time",    long_options[long_index].name) == 0) data->tgap[0] = (double)atof(optarg);
                 if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
-                if(strcmp("chainseed",   long_options[long_index].name) == 0) data_ptr->cseed   = (long)atoi(optarg);
-                if(strcmp("noiseseed",   long_options[long_index].name) == 0) data_ptr->nseed   = (long)atoi(optarg);
-                if(strcmp("injseed",     long_options[long_index].name) == 0) data_ptr->iseed   = (long)atoi(optarg);
+                if(strcmp("chainseed",   long_options[long_index].name) == 0) data->cseed   = (long)atoi(optarg);
+                if(strcmp("noiseseed",   long_options[long_index].name) == 0) data->nseed   = (long)atoi(optarg);
+                if(strcmp("injseed",     long_options[long_index].name) == 0) data->iseed   = (long)atoi(optarg);
                 if(strcmp("sim-noise",   long_options[long_index].name) == 0) flags->simNoise   = 1;
                 if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
                 if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
@@ -470,7 +464,7 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 if(strcmp("galaxy-prior",long_options[long_index].name) == 0) flags->galaxyPrior= 1;
                 if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
                 if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
-                if(strcmp("f-double-dot",long_options[long_index].name) == 0) data_ptr->NP      = 9;
+                if(strcmp("f-double-dot",long_options[long_index].name) == 0) data->NP      = 9;
                 if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
                 if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
                 if(strcmp("no-burnin",   long_options[long_index].name) == 0) flags->burnin     = 0;
@@ -480,12 +474,12 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
                 if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
                 if(strcmp("duration",    long_options[long_index].name) == 0)
-                {   data_ptr->T   = (double)atof(optarg);
-                    data_ptr->sqT = sqrt(data_ptr->T);
+                {   data->T   = (double)atof(optarg);
+                    data->sqT = sqrt(data->T);
                 }
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
-                    data_ptr->DMAX    = atoi(optarg);
+                    data->DMAX    = atoi(optarg);
                     flags->DMAX       = atoi(optarg);
                 }
                 if(strcmp("em-prior",    long_options[long_index].name) == 0)
@@ -518,18 +512,18 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                 {
                     checkfile(optarg);
                     flags->strainData = 1;
-                    sprintf(data_ptr->fileName,"%s",optarg);
+                    sprintf(data->fileName,"%s",optarg);
                 }
                 if(strcmp("h5-data", long_options[long_index].name) == 0)
                 {
                     checkfile(optarg);
                     flags->hdf5Data = 1;
                     flags->strainData = 1;
-                    sprintf(data_ptr->fileName,"%s",optarg);
+                    sprintf(data->fileName,"%s",optarg);
                 }
                 if(strcmp("frac-freq",   long_options[long_index].name) == 0)
                 {
-                    for(int i=0; i<Nmax; i++) sprintf(data[i]->format,"frequency");
+                    for(int i=0; i<Nmax; i++) sprintf(data->format,"frequency");
                 }
                 if(strcmp("orbit", long_options[long_index].name) == 0)
                 {
@@ -579,10 +573,10 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
                     switch(Nlinks)
                     {
                         case 4:
-                            data_ptr->Nchannel=1;
+                            data->Nchannel=1;
                             break;
                         case 6:
-                            data_ptr->Nchannel=2;
+                            data->Nchannel=2;
                             break;
                         default:
                             fprintf(stderr,"Requested umber of links (%i) not supported\n",Nlinks);
@@ -619,46 +613,27 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
         chain->NC += flags->threads - (chain->NC % flags->threads);
     }
     
-    printf("number of threads = %i\n",flags->threads);
-
     //pad data
-    data[0]->N += 2*data[0]->qpad;
-    data[0]->fmin -= data[0]->qpad/data[0]->T;
-    
+    data->N += 2*data->qpad;
+    data->fmin -= data->qpad/data->T;    
     
     // copy command line args to other data structures
-    for(int i=0; i<flags->NDATA; i++)
+    data->NT = flags->NT;
+    for(int j=0; j<flags->NT; j++)
     {
-        data[i]->NT = flags->NT;
-        for(int j=0; j<flags->NT; j++)
-        {
-            data[i]->t0[j]   = data[0]->t0[0] + j*(data[0]->T + data[0]->tgap[0]);
-            data[i]->tgap[j] = data[0]->tgap[0];
-        }
-        data[i]->T        = data[0]->T;
-        data[i]->sqT      = data[0]->sqT;
-        data[i]->qpad     = data[0]->qpad;
-        data[i]->N        = data[0]->N;
-        data[i]->NT       = data[0]->N;
-        data[i]->NP       = data[0]->NP;
-        data[i]->Nchannel = data[0]->Nchannel;
-        data[i]->DMAX     = data[0]->DMAX;
-        data[i]->fmin     = data[0]->fmin + (double)(i * (data[0]->N)  - data[0]->qpad )/data[0]->T;
-        
-        data[i]->cseed = data[0]->cseed+i*flags->NDATA;
-        data[i]->nseed = data[0]->nseed+i*flags->NDATA;
-        data[i]->iseed = data[0]->iseed+i*flags->NDATA;
-        
-        //map fmin to nearest bin
-        data[i]->fmin = floor(data[i]->fmin*data[i]->T)/data[i]->T;
-        
-        //calculate helper quantities for likelihood normalizations
-        data[i]->logfmin   = log(data[i]->fmin);
-        data[i]->sum_log_f = 0.0;
-        for(int n=0; n<data[i]->N; n++)
-        {
-            data[i]->sum_log_f += log(data[i]->fmin + (double)n/data[i]->T);
-        }
+        data->t0[j]   = data->t0[0] + j*(data->T + data->tgap[0]);
+        data->tgap[j] = data->tgap[0];
+    }
+    
+    //map fmin to nearest bin
+    data->fmin = floor(data->fmin*data->T)/data->T;
+    
+    //calculate helper quantities for likelihood normalizations
+    data->logfmin   = log(data->fmin);
+    data->sum_log_f = 0.0;
+    for(int n=0; n<data->N; n++)
+    {
+        data->sum_log_f += log(data->fmin + (double)n/data->T);
     }
     
     
@@ -693,14 +668,14 @@ void parse(int argc, char **argv, struct Data **data, struct Orbit *orbit, struc
     print_version(runlog);
     
     //Report on set parameters
-    print_run_settings(argc, argv, data_ptr, orbit, flags, stdout);
-    print_run_settings(argc, argv, data_ptr, orbit, flags, runlog);
+    print_run_settings(argc, argv, data, orbit, flags, stdout);
+    print_run_settings(argc, argv, data, orbit, flags, runlog);
     
     fclose(runlog);
     
 }
 
-void save_chain_state(struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step)
+void save_chain_state(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
 {
     char filename[128];
     FILE *stateFile;
@@ -713,26 +688,23 @@ void save_chain_state(struct Data **data, struct Model ***model, struct Chain *c
         
         fprintf(stateFile,"%.12g\n",chain->logLmax);
         
-        for(int j=0; j<flags->NDATA; j++)
+        print_chain_state(data, chain, model[n], flags, stateFile, step);
+        print_noise_state(data, model[n], stateFile, step);
+        if(flags->calibration)
+            print_calibration_state(data, model[n], stateFile, step);
+        
+        int D = model[n]->Nlive;
+        for(int i=0; i<D; i++)
         {
-            print_chain_state(data[j], chain, model[n][j], flags, stateFile, step);
-            print_noise_state(data[j], model[n][j], stateFile, step);
-            if(flags->calibration)
-                print_calibration_state(data[j], model[n][j], stateFile, step);
-            
-            int D = model[n][j]->Nlive;
-            for(int i=0; i<D; i++)
-            {
-                print_source_params(data[j],model[n][j]->source[i],stateFile);
-                fprintf(stateFile,"\n");
-            }
+            print_source_params(data,model[n]->source[i],stateFile);
+            fprintf(stateFile,"\n");
         }
         
         fclose(stateFile);
     }
 }
 
-void restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model ***model, struct Chain *chain, struct Flags *flags, int *step)
+void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int *step)
 {
     char filename[128];
     FILE *stateFile;
@@ -750,37 +722,35 @@ void restore_chain_state(struct Orbit *orbit, struct Data **data, struct Model *
             fprintf(stderr,"Error reading checkpoint file\n");
             exit(1);
         }
-        for(int j=0; j<flags->NDATA; j++)
+        
+        scan_chain_state(data, chain, model[n], flags, stateFile, step);
+        scan_noise_state(data, model[n], stateFile, step);
+        if(flags->calibration)
+            scan_calibration_state(data, model[n], stateFile, step);
+        
+        int D = model[n]->Nlive;
+        for(int i=0; i<D; i++)
         {
-            scan_chain_state(data[j], chain, model[n][j], flags, stateFile, step);
-            scan_noise_state(data[j], model[n][j], stateFile, step);
-            if(flags->calibration)
-                scan_calibration_state(data[j], model[n][j], stateFile, step);
-            
-            int D = model[n][j]->Nlive;
-            for(int i=0; i<D; i++)
-            {
-                scan_source_params(data[j],model[n][j]->source[i], stateFile);
-                galactic_binary_fisher(orbit, data[j], model[n][j]->source[i], data[j]->noise[0]);
-            }
-            
-            generate_noise_model(data[j], model[n][j]);
-            generate_signal_model(orbit, data[j], model[n][j], -1);
-            
-            if(!flags->prior)
-            {
-                model[n][j]->logL = gaussian_log_likelihood(orbit, data[j], model[n][j]);
-                model[n][j]->logLnorm = gaussian_log_likelihood_constant_norm(data[j], model[n][j]);
-            }
-            else model[n][j]->logL = model[n][j]->logLnorm = 0.0;
-            
+            scan_source_params(data,model[n]->source[i], stateFile);
+            galactic_binary_fisher(orbit, data, model[n]->source[i], data->noise[0]);
         }
+        
+        generate_noise_model(data, model[n]);
+        generate_signal_model(orbit, data, model[n], -1);
+        
+        if(!flags->prior)
+        {
+            model[n]->logL = gaussian_log_likelihood(orbit, data, model[n]);
+            model[n]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[n]);
+        }
+        else model[n]->logL = model[n]->logLnorm = 0.0;
+        
         
         fclose(stateFile);
     }
 }
 
-void print_chain_files(struct Data *data, struct Model ***model, struct Chain *chain, struct Flags *flags, int step)
+void print_chain_files(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
 {
     int i,j,n,ic;
     
@@ -794,7 +764,7 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
         {
             n = chain->index[ic];
             logL=0.0;
-            for(i=0; i<flags->NDATA; i++) logL += model[n][i]->logL+model[n][i]->logLnorm;
+            logL += model[n]->logL+model[n]->logLnorm;
             fprintf(chain->likelihoodFile,  "%lg ",logL);
             fprintf(chain->temperatureFile, "%lg ",1./chain->temperature[ic]);
         }
@@ -804,14 +774,13 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
     
     //Print cold chains
     n = chain->index[0];
-    for(i=0; i<flags->NDATA; i++)
-    {
-        print_chain_state(data, chain, model[n][i], flags, chain->chainFile[0], step);
-        if(!flags->quiet || step>0)
-            print_noise_state(data, model[n][i], chain->noiseFile[0], step);
-        if(flags->calibration)
-            print_calibration_state(data, model[n][i], chain->calibrationFile[0], step);
-    }
+    
+    print_chain_state(data, chain, model[n], flags, chain->chainFile[0], step);
+    if(!flags->quiet || step>0)
+        print_noise_state(data, model[n], chain->noiseFile[0], step);
+    if(flags->calibration)
+        print_calibration_state(data, model[n], chain->calibrationFile[0], step);
+    
     if(flags->verbose)
     {
         fflush(chain->chainFile[0]);
@@ -820,52 +789,42 @@ void print_chain_files(struct Data *data, struct Model ***model, struct Chain *c
     }
     
     //Print sampling parameters
-    for(j=0; j<flags->NDATA; j++)
+    int D = model[n]->Nlive;
+    for(i=0; i<D; i++)
     {
-        int D = model[n][j]->Nlive;
-        for(i=0; i<D; i++)
+        if(!flags->quiet || step>0)
         {
-            if(!flags->quiet || step>0)
+            print_source_params(data,model[n]->source[i],chain->parameterFile[0]);
+            if(flags->verbose)
             {
-                print_source_params(data,model[n][j]->source[i],chain->parameterFile[0]);
-                if(flags->verbose)
-                {
-                    //numerical SNR
-                    double snr_n = snr(model[n][j]->source[i], data->noise[0]);
-                    //analytic SNR
-                    double snr_a = analytic_snr(exp(model[n][j]->source[i]->params[3]), data->noise[0]->SnA[0], data->sine_f_on_fstar, data->sqT);
-                    
-                    fprintf(chain->parameterFile[0],"%lg %lg ",snr_a,snr_n);
-                }
-                fprintf(chain->parameterFile[0],"\n");
-                if(flags->verbose)fflush(chain->parameterFile[0]);
+                //numerical SNR
+                double snr_n = snr(model[n]->source[i], data->noise[0]);
+                //analytic SNR
+                double snr_a = analytic_snr(exp(model[n]->source[i]->params[3]), data->noise[0]->SnA[0], data->sine_f_on_fstar, data->sqT);
+                
+                fprintf(chain->parameterFile[0],"%lg %lg ",snr_a,snr_n);
             }
-            if(step>0)
-            {
-                print_source_params(data,model[n][j]->source[i],chain->dimensionFile[D]);
-                fprintf(chain->dimensionFile[D],"\n");
-            }
+            fprintf(chain->parameterFile[0],"\n");
+            if(flags->verbose)fflush(chain->parameterFile[0]);
+        }
+        if(step>0)
+        {
+            print_source_params(data,model[n]->source[i],chain->dimensionFile[D]);
+            fprintf(chain->dimensionFile[D],"\n");
         }
     }
     
     //Print calibration parameters
-    for(j=0; j<flags->NDATA; j++)
-    {
-        
-    }
     
     //Print hot chains if verbose flag
     if(flags->verbose)
     {
-        for(j=0; j<flags->NDATA; j++)
+        for(ic=1; ic<chain->NC; ic++)
         {
-            for(ic=1; ic<chain->NC; ic++)
-            {
-                n = chain->index[ic];
-                print_chain_state(data, chain, model[n][j], flags, chain->chainFile[ic], step);
-                print_noise_state(data, model[n][j], chain->noiseFile[ic], step);
-            }//loop over chains
-        }//end loop over
+            n = chain->index[ic];
+            print_chain_state(data, chain, model[n], flags, chain->chainFile[ic], step);
+            print_noise_state(data, model[n], chain->noiseFile[ic], step);
+        }//loop over chains
     }//verbose flag
 }
 
@@ -1060,66 +1019,66 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
         {
             case 1:
                 for(int n=0; n<data->N; n++)
-                {
-                    n_re = 2*n;
-                    n_im = n_re++;
-                    
-                    X_re = model->tdi[i]->X[n_re];
-                    X_im = model->tdi[i]->X[n_im];
-                    
-                    data->h_rec[n_re][0][i][mcmc] = X_re;
-                    data->h_rec[n_im][0][i][mcmc] = X_im;
-                    
-                    R_re = data->tdi[i]->X[n_re] - X_re;
-                    R_im = data->tdi[i]->X[n_im] - X_im;
-                    
-                    data->h_res[n_re][0][i][mcmc] = R_re;
-                    data->h_res[n_im][0][i][mcmc] = R_im;
-                    
-                    data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
-                    data->h_pow[n][0][i][mcmc] = X_re*X_re + X_im*X_im;
-                    
-                    data->S_pow[n][0][i][mcmc] = model->noise[i]->SnX[n];
-                }
+            {
+                n_re = 2*n;
+                n_im = n_re++;
+                
+                X_re = model->tdi[i]->X[n_re];
+                X_im = model->tdi[i]->X[n_im];
+                
+                data->h_rec[n_re][0][i][mcmc] = X_re;
+                data->h_rec[n_im][0][i][mcmc] = X_im;
+                
+                R_re = data->tdi[i]->X[n_re] - X_re;
+                R_im = data->tdi[i]->X[n_im] - X_im;
+                
+                data->h_res[n_re][0][i][mcmc] = R_re;
+                data->h_res[n_im][0][i][mcmc] = R_im;
+                
+                data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
+                data->h_pow[n][0][i][mcmc] = X_re*X_re + X_im*X_im;
+                
+                data->S_pow[n][0][i][mcmc] = model->noise[i]->SnX[n];
+            }
                 break;
             case 2:
                 for(int n=0; n<data->N; n++)
-                {
-                    n_re = 2*n;
-                    n_im = n_re++;
-                    
-                    A_re = model->tdi[i]->A[n_re];
-                    A_im = model->tdi[i]->A[n_im];
-                    E_re = model->tdi[i]->E[n_re];
-                    E_im = model->tdi[i]->E[n_im];
-                    
-                    data->h_rec[n_re][0][i][mcmc] = A_re;
-                    data->h_rec[n_im][0][i][mcmc] = A_im;
-                    data->h_rec[n_re][1][i][mcmc] = E_re;
-                    data->h_rec[n_im][1][i][mcmc] = E_im;
-                    
-                    R_re = data->tdi[i]->A[n_re] - A_re;
-                    R_im = data->tdi[i]->A[n_im] - A_im;
-                    
-                    data->h_res[n_re][0][i][mcmc] = R_re;
-                    data->h_res[n_im][0][i][mcmc] = R_im;
-                    
-                    data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
-                    
-                    R_re = data->tdi[i]->E[n_re] - E_re;
-                    R_im = data->tdi[i]->E[n_im] - E_im;
-                    
-                    data->h_res[n_re][1][i][mcmc] = R_re;
-                    data->h_res[n_im][1][i][mcmc] = R_im;
-                    
-                    data->r_pow[n][1][i][mcmc] = R_re*R_re + R_im*R_im;
-                    
-                    data->h_pow[n][0][i][mcmc] = A_re*A_re + A_im*A_im;
-                    data->h_pow[n][1][i][mcmc] = E_re*E_re + E_im*E_im;
-                    
-                    data->S_pow[n][0][i][mcmc] = model->noise[i]->SnA[n];
-                    data->S_pow[n][1][i][mcmc] = model->noise[i]->SnE[n];
-                }
+            {
+                n_re = 2*n;
+                n_im = n_re++;
+                
+                A_re = model->tdi[i]->A[n_re];
+                A_im = model->tdi[i]->A[n_im];
+                E_re = model->tdi[i]->E[n_re];
+                E_im = model->tdi[i]->E[n_im];
+                
+                data->h_rec[n_re][0][i][mcmc] = A_re;
+                data->h_rec[n_im][0][i][mcmc] = A_im;
+                data->h_rec[n_re][1][i][mcmc] = E_re;
+                data->h_rec[n_im][1][i][mcmc] = E_im;
+                
+                R_re = data->tdi[i]->A[n_re] - A_re;
+                R_im = data->tdi[i]->A[n_im] - A_im;
+                
+                data->h_res[n_re][0][i][mcmc] = R_re;
+                data->h_res[n_im][0][i][mcmc] = R_im;
+                
+                data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
+                
+                R_re = data->tdi[i]->E[n_re] - E_re;
+                R_im = data->tdi[i]->E[n_im] - E_im;
+                
+                data->h_res[n_re][1][i][mcmc] = R_re;
+                data->h_res[n_im][1][i][mcmc] = R_im;
+                
+                data->r_pow[n][1][i][mcmc] = R_re*R_re + R_im*R_im;
+                
+                data->h_pow[n][0][i][mcmc] = A_re*A_re + A_im*A_im;
+                data->h_pow[n][1][i][mcmc] = E_re*E_re + E_im*E_im;
+                
+                data->S_pow[n][0][i][mcmc] = model->noise[i]->SnA[n];
+                data->S_pow[n][1][i][mcmc] = model->noise[i]->SnE[n];
+            }
                 break;
         }
     }
@@ -1147,23 +1106,18 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
     }
 }
 
-void print_waveform_draw(struct Data **data, struct Model **model, struct Flags *flags)
+void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags)
 {
     FILE *fptr;
     char filename[128];
     
-    int N = 1;
-    if(flags->NINJ>1) N = flags->NINJ;
-    for(int i=0; i<N; i++)
-    {
-        sprintf(filename,"data/waveform_draw_%i.dat",i);
-        fptr=fopen(filename,"w");
-        print_waveform(data[i], model[i], fptr);
-        fclose(fptr);
-    }
+    sprintf(filename,"data/waveform_draw.dat");
+    fptr=fopen(filename,"w");
+    print_waveform(data, model, fptr);
+    fclose(fptr);
 }
 
-void print_waveforms_reconstruction(struct Data *data, int seg)
+void print_waveforms_reconstruction(struct Data *data)
 {
     char filename[1024];
     FILE *fptr_rec;
@@ -1204,13 +1158,13 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
             }
         }
         
-        sprintf(filename,"data/power_reconstruction_t%i_f%i.dat",k,seg);
+        sprintf(filename,"data/power_reconstruction_t%i.dat",k);
         fptr_rec=fopen(filename,"w");
-        sprintf(filename,"data/power_residual_t%i_f%i.dat",k,seg);
+        sprintf(filename,"data/power_residual_t%i.dat",k);
         fptr_res=fopen(filename,"w");
-        sprintf(filename,"data/power_noise_t%i_f%i.dat",k,seg);
+        sprintf(filename,"data/power_noise_t%i.dat",k);
         fptr_Snf=fopen(filename,"w");
-        sprintf(filename,"data/variance_residual_t%i_f%i.dat",k,seg);
+        sprintf(filename,"data/variance_residual_t%i.dat",k);
         fptr_var=fopen(filename,"w");
         
         //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
@@ -1319,12 +1273,12 @@ void print_waveforms_reconstruction(struct Data *data, int seg)
     free(res_var);
 }
 
-void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index)
+void print_data(struct Data *data, struct TDI *tdi, int t_index)
 {
     char filename[128];
     FILE *fptr;
     
-    sprintf(filename,"data/waveform_injection_%i_%i.dat",t_index,f_index);
+    sprintf(filename,"data/waveform_injection_%i.dat",t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1337,7 +1291,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/power_injection_%i_%i.dat",t_index,f_index);
+    sprintf(filename,"data/power_injection_%i.dat",t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1350,7 +1304,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/power_data_%i_%i.dat",t_index,f_index);
+    sprintf(filename,"data/power_data_%i.dat",t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1364,7 +1318,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/data_%i_%i.dat",t_index,f_index);
+    sprintf(filename,"data/data_%i.dat",t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1378,7 +1332,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index, int f_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/power_noise_%i_%i.dat",t_index,f_index);
+    sprintf(filename,"data/power_noise_%i.dat",t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
