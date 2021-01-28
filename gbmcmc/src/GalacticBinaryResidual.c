@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     struct Data  *data  = malloc(sizeof(struct Data));
     struct Chain *chain = malloc(sizeof(struct Chain));
     
-    parse(argc,argv,data,orbit,flags,chain,NMAX);
+    parse(argc,argv,data,orbit,flags,chain,NMAX,0,0);
     
     /* Load spacecraft ephemerides */
     switch(flags->orbit)

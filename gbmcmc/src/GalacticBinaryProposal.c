@@ -125,12 +125,14 @@ static void write_Fstat_animation(double fmin, double T, struct Proposal *propos
     fclose(fptr);
 }
 
-void setup_frequency_proposal(struct Data *data)
+void setup_frequency_proposal(struct Data *data, struct Flags *flags)
 {
     int BW = 20;
     double *power = data->p;
     double total  = 0.0;
-    FILE *temp = fopen("data/frequency_proposal.dat","w");
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/data/frequency_proposal.dat",flags->runDir);
+    FILE *temp = fopen(filename,"w");
     for(int i=0; i<data->N-BW; i++)
     {
         power[i]=0.0;

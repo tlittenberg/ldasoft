@@ -467,6 +467,83 @@ void data_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, stru
     
 }
 
+void initialize_gbmcmc_sampler(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, struct Proposal **proposal, struct Model **model, struct Model **trial)
+{
+    int NC = chain->NC;
+    int DMAX = flags->DMAX;
+    for(int ic=0; ic<NC; ic++)
+    {
+        
+        trial[ic] = malloc(sizeof(struct Model));
+        alloc_model(trial[ic],DMAX,data->N,data->Nchannel,data->NP, data->NT);
+        
+        model[ic] = malloc(sizeof(struct Model));
+        alloc_model(model[ic],DMAX,data->N,data->Nchannel, data->NP, flags->NT);
+                
+        if(ic==0)set_uniform_prior(flags, model[ic], data, 1);
+        else     set_uniform_prior(flags, model[ic], data, 0);
+        
+        //set noise model
+        for(int j=0; j<flags->NT; j++) copy_noise(data->noise[j], model[ic]->noise[j]);
+        
+        //draw signal model
+        for(int n=0; n<DMAX; n++)
+        {
+            if(flags->cheat)
+            {
+                struct Source *inj = data->inj;
+                //map parameters to vector
+                model[ic]->source[n]->NP       = inj->NP;
+                model[ic]->source[n]->f0       = inj->f0;
+                model[ic]->source[n]->dfdt     = inj->dfdt;
+                model[ic]->source[n]->costheta = inj->costheta;
+                model[ic]->source[n]->phi      = inj->phi;
+                model[ic]->source[n]->amp      = inj->amp;
+                model[ic]->source[n]->cosi     = inj->cosi;
+                model[ic]->source[n]->phi0     = inj->phi0;
+                model[ic]->source[n]->psi      = inj->psi;
+                model[ic]->source[n]->d2fdt2   = inj->d2fdt2;
+                map_params_to_array(model[ic]->source[n], model[ic]->source[n]->params, data->T);
+                
+            }
+            else if(flags->updateCov)
+            {
+                while ( !isfinite(draw_from_cov(data, model[ic], model[ic]->source[n], proposal[8], model[ic]->source[n]->params , chain->r[ic])));
+            }
+            else if(flags->update)
+            {
+                draw_from_gmm_prior(data, model[ic], model[ic]->source[n], proposal[7], model[ic]->source[n]->params , chain->r[ic]);
+            }
+            else
+            {
+                draw_from_uniform_prior(data, model[ic], model[ic]->source[n], proposal[0], model[ic]->source[n]->params , chain->r[ic]);
+            }
+            map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
+            galactic_binary_fisher(orbit, data, model[ic]->source[n], data->noise[0]);
+        }
+        
+        // Form master model & compute likelihood of starting position
+        generate_noise_model(data, model[ic]);
+        generate_signal_model(orbit, data, model[ic], -1);
+        
+        //calibration error
+        if(flags->calibration)
+        {
+            draw_calibration_parameters(data, model[ic], chain->r[ic]);
+            generate_calibration_model(data, model[ic]);
+            apply_calibration_model(data, model[ic]);
+        }
+        if(!flags->prior)
+        {
+            model[ic]->logL     = gaussian_log_likelihood(orbit, data, model[ic]);
+            model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[ic]);
+        }
+        else model[ic]->logL = model[ic]->logLnorm = 0.0;
+        
+        if(ic==0) chain->logLmax += model[ic]->logL + model[ic]->logLnorm;
+        
+    }//end loop over chains
 
+}
 
 

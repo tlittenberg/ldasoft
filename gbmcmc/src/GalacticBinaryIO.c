@@ -73,7 +73,9 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     int samples = data->N - 2*data->qpad;
     double fmin = data->fmin + data->qpad/data->T;
     
-    FILE *fptr = fopen("example_gb_catalog.sh","w");
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/example_gb_catalog.sh",flags->runDir);
+    FILE *fptr = fopen(filename,"w");
     
     fprintf(fptr,"#!/bin/sh\n\n");
     fprintf(fptr,"if [ \"$#\" -ne 1 ]; then\n");
@@ -146,7 +148,6 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     fprintf(fptr,"  Data start frequency. %.16g\n",data->fmin);
     fprintf(fptr,"  Data duration ....... %.0f \n",data->T);
     fprintf(fptr,"  Data epochs ......... %i   \n",flags->NT);
-    fprintf(fptr,"  Data segments ....... %i   \n",flags->NDATA);
     fprintf(fptr,"  Data gap duration.....%.0f \n",data->tgap[0]);
     fprintf(fptr,"  Data format is........%s   \n",data->format);
     fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX);
@@ -154,6 +155,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
     fprintf(fptr,"  MCMC chain seed ..... %li  \n",data->cseed);
     fprintf(fptr,"  Number of threads ... %i   \n",flags->threads);
+    fprintf(fptr,"  Run Directory is .... %s\n",flags->runDir);
     fprintf(fptr,"\n");
     fprintf(fptr,"================= RUN FLAGS ================\n");
     if(flags->verbose)  fprintf(fptr,"  Verbose flag ........ ENABLED \n");
@@ -238,7 +240,6 @@ void print_usage()
     fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
     fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
     fprintf(stdout,"       --epochs      : number of time segments (1)         \n");
-    fprintf(stdout,"       --segments    : number of frequency segments     (1)\n");
     fprintf(stdout,"       --start-time  : initial time of epoch  (0)          \n");
     fprintf(stdout,"       --gap-time    : duration of data gaps (0)           \n");
     fprintf(stdout,"       --fmin        : minimum frequency                   \n");
@@ -288,6 +289,7 @@ void print_usage()
     
     //Misc.
     fprintf(stdout,"       =========== Misc =========== \n");
+    fprintf(stdout,"       --runDir      : top level run directory ['./']\n");
     fprintf(stdout,"       --match-in1   : input paramaters for overlap [filename] \n");
     fprintf(stdout,"       --match-in2   : output match values [filename] \n");
     
@@ -307,7 +309,7 @@ void print_usage()
     exit(0);
 }
 
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int numProc, int procID)
 {
     
     int DMAX_default = 10;
@@ -347,6 +349,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     flags->NMCMC       = 100000;
     flags->NBURN       = 100000;
     flags->threads     = omp_get_max_threads();
+    sprintf(flags->runDir,"./");
     chain->NP          = 9; //number of proposals
     chain->NC          = 12;//number of chains
     
@@ -386,7 +389,6 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {"padding",   required_argument, 0, 0},
         {"duration",  required_argument, 0, 0},
         {"epochs",    required_argument, 0, 0},
-        {"segments",  required_argument, 0, 0},
         {"sources",   required_argument, 0, 0},
         {"start-time",required_argument, 0, 0},
         {"gap-time",  required_argument, 0, 0},
@@ -408,6 +410,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {"em-prior",  required_argument, 0, 0},
         {"catalog",   required_argument, 0, 0},
         {"threads",   required_argument, 0, 0},
+        {"rundir",    required_argument, 0, 0},
         
         /* These options don’t set a flag.
          We distinguish them by their indices. */
@@ -446,17 +449,16 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {
                 
             case 0:
-                if(strcmp("samples",     long_options[long_index].name) == 0) data->N       = atoi(optarg);
-                if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad    = atoi(optarg);
+                if(strcmp("samples",     long_options[long_index].name) == 0) data->N           = atoi(optarg);
+                if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad        = atoi(optarg);
                 if(strcmp("epochs",      long_options[long_index].name) == 0) flags->NT         = atoi(optarg);
-                if(strcmp("segments",    long_options[long_index].name) == 0) flags->NDATA      = atoi(optarg);
-                if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0[0]   = (double)atof(optarg);
+                if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0[0]       = (double)atof(optarg);
                 if(strcmp("fmin",        long_options[long_index].name) == 0) sscanf(optarg, "%lg", &data->fmin);
-                if(strcmp("gap-time",    long_options[long_index].name) == 0) data->tgap[0] = (double)atof(optarg);
+                if(strcmp("gap-time",    long_options[long_index].name) == 0) data->tgap[0]     = (double)atof(optarg);
                 if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
-                if(strcmp("chainseed",   long_options[long_index].name) == 0) data->cseed   = (long)atoi(optarg);
-                if(strcmp("noiseseed",   long_options[long_index].name) == 0) data->nseed   = (long)atoi(optarg);
-                if(strcmp("injseed",     long_options[long_index].name) == 0) data->iseed   = (long)atoi(optarg);
+                if(strcmp("chainseed",   long_options[long_index].name) == 0) data->cseed       = (long)atoi(optarg);
+                if(strcmp("noiseseed",   long_options[long_index].name) == 0) data->nseed       = (long)atoi(optarg);
+                if(strcmp("injseed",     long_options[long_index].name) == 0) data->iseed       = (long)atoi(optarg);
                 if(strcmp("sim-noise",   long_options[long_index].name) == 0) flags->simNoise   = 1;
                 if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
                 if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
@@ -464,7 +466,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 if(strcmp("galaxy-prior",long_options[long_index].name) == 0) flags->galaxyPrior= 1;
                 if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
                 if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
-                if(strcmp("f-double-dot",long_options[long_index].name) == 0) data->NP      = 9;
+                if(strcmp("f-double-dot",long_options[long_index].name) == 0) data->NP          = 9;
                 if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
                 if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
                 if(strcmp("no-burnin",   long_options[long_index].name) == 0) flags->burnin     = 0;
@@ -473,6 +475,12 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
                 if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
                 if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
+                if(strcmp("rundir",      long_options[long_index].name) == 0)
+                {
+                    strcpy(flags->runDir,optarg);
+                    if(numProc>0) sprintf(flags->runDir,"%s_%i/",flags->runDir,procID);
+                    mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+                }
                 if(strcmp("duration",    long_options[long_index].name) == 0)
                 {   data->T   = (double)atof(optarg);
                     data->sqT = sqrt(data->T);
@@ -637,34 +645,29 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     }
     
     
-    // check for required arguments
-    int abort=0;
-    
-    //  if(data->duration[0]=='\0')
-    //  {
-    //    printf("Missing required argument: --duration\n");
-    //    abort++;
-    //  }
-    //  else data->T = (double)atof(data->duration);
-    
-    if(abort>0)exit(EXIT_FAILURE);
-    
     // run looks good to go, make directories and save command line
     mode_t process_mask = umask(0);
-    mkdir("checkpoint",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    mkdir("chains",    S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    mkdir("data",      S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    char dirname[MAXSTRINGSIZE];
+    sprintf(dirname,"%s/checkpoint",flags->runDir);
+    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    sprintf(dirname,"%s/chains",flags->runDir);
+    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    sprintf(dirname,"%s/data",flags->runDir);
+    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     umask(process_mask);
     
     //Print command line
-    FILE *out = fopen("run.sh","w");
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"run.sh");
+    FILE *out = fopen(filename,"w");
     fprintf(out,"#!/bin/sh\n\n");
     for(opt=0; opt<argc; opt++) fprintf(out,"%s ",argv[opt]);
     fprintf(out,"\n\n");
     fclose(out);
     
     //Print version control
-    FILE *runlog = fopen("gb_mcmc.log","w");
+    sprintf(filename,"gb_mcmc.log");
+    FILE *runlog = fopen(filename,"w");
     print_version(runlog);
     
     //Report on set parameters
@@ -681,7 +684,7 @@ void save_chain_state(struct Data *data, struct Model **model, struct Chain *cha
     FILE *stateFile;
     for(int ic=0; ic<chain->NC; ic++)
     {
-        sprintf(filename,"checkpoint/chain_state_%i.dat",ic);
+        sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
         stateFile = fopen(filename,"w");
         
         int n = chain->index[ic];
@@ -711,7 +714,7 @@ void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **
     chain->logLmax=0.0;
     for(int ic=0; ic<chain->NC; ic++)
     {
-        sprintf(filename,"checkpoint/chain_state_%i.dat",ic);
+        sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
         stateFile = fopen(filename,"r");
         
         int n = chain->index[ic];
@@ -1111,13 +1114,13 @@ void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *f
     FILE *fptr;
     char filename[128];
     
-    sprintf(filename,"data/waveform_draw.dat");
+    sprintf(filename,"%s/data/waveform_draw.dat",flags->runDir);
     fptr=fopen(filename,"w");
     print_waveform(data, model, fptr);
     fclose(fptr);
 }
 
-void print_waveforms_reconstruction(struct Data *data)
+void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
 {
     char filename[1024];
     FILE *fptr_rec;
@@ -1158,13 +1161,13 @@ void print_waveforms_reconstruction(struct Data *data)
             }
         }
         
-        sprintf(filename,"data/power_reconstruction_t%i.dat",k);
+        sprintf(filename,"%s/data/power_reconstruction_t%i.dat",flags->runDir,k);
         fptr_rec=fopen(filename,"w");
-        sprintf(filename,"data/power_residual_t%i.dat",k);
+        sprintf(filename,"%s/data/power_residual_t%i.dat",flags->runDir,k);
         fptr_res=fopen(filename,"w");
-        sprintf(filename,"data/power_noise_t%i.dat",k);
+        sprintf(filename,"%s/data/power_noise_t%i.dat",flags->runDir,k);
         fptr_Snf=fopen(filename,"w");
-        sprintf(filename,"data/variance_residual_t%i.dat",k);
+        sprintf(filename,"%s/data/variance_residual_t%i.dat",flags->runDir,k);
         fptr_var=fopen(filename,"w");
         
         //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
@@ -1273,12 +1276,12 @@ void print_waveforms_reconstruction(struct Data *data)
     free(res_var);
 }
 
-void print_data(struct Data *data, struct TDI *tdi, int t_index)
+void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_index)
 {
     char filename[128];
     FILE *fptr;
     
-    sprintf(filename,"data/waveform_injection_%i.dat",t_index);
+    sprintf(filename,"%s/data/waveform_injection_%i.dat",flags->runDir,t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1291,7 +1294,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/power_injection_%i.dat",t_index);
+    sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1304,7 +1307,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/power_data_%i.dat",t_index);
+    sprintf(filename,"%s/data/power_data_%i.dat",flags->runDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1318,7 +1321,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/data_%i.dat",t_index);
+    sprintf(filename,"%s/data/data_%i.dat",flags->runDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1332,7 +1335,7 @@ void print_data(struct Data *data, struct TDI *tdi, int t_index)
     }
     fclose(fptr);
     
-    sprintf(filename,"data/power_noise_%i.dat",t_index);
+    sprintf(filename,"%s/data/power_noise_%i.dat",flags->runDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)

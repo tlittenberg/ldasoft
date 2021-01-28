@@ -78,7 +78,7 @@ struct Proposal
 };
 
 /** Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power */
-void setup_frequency_proposal(struct Data *data);
+void setup_frequency_proposal(struct Data *data, struct Flags *flags);
 
 /** Compute and print acceptance ratios for each proposal */
 void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr);

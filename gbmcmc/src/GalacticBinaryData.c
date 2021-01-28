@@ -238,7 +238,7 @@ void GalacticBinaryReadData(struct Data *data, struct Orbit *orbit, struct Flags
     if(flags->simNoise) GalacticBinaryAddNoise(data,tdi);
     
     //print various data products for plotting
-    print_data(data, tdi, 0);
+    print_data(data, tdi, flags, 0);
     
     //free memory
     free_tdi(tdi_full);
@@ -956,7 +956,7 @@ void GalacticBinaryCleanEdges(struct Data *data, struct Orbit *orbit, struct Fla
     }
     
     char filename[128];
-    sprintf(filename,"data/power_residual_%i_%i.dat",0,0);
+    sprintf(filename,"%s/data/power_residual_%i_%i.dat",flags->runDir,0,0);
     FILE *fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
