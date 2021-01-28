@@ -49,7 +49,7 @@ void print_usage();
 /**
  \brief Parse command line
  */
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax);
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int numProc, int procID);
 
 /**
  \brief Check if file exists and handle missing files cleanly
@@ -113,7 +113,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc);
 void print_waveform(struct Data *data, struct Model *model, FILE *fptr);
 
 /// Print waveform 5, 25, 50, 75, and 95 quantiles of waveform power spectrum posteriors
-void print_waveforms_reconstruction(struct Data *data);
+void print_waveforms_reconstruction(struct Data *data, struct Flags *flags);
 
 /// Print current state of waveform and residuals during run for diagnostics. Disabled when Flags::quiet=`TRUE`.
 void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags);
@@ -122,6 +122,6 @@ void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *f
 /**
  \brief Wrapper function that calls data print functions
  */
-void print_data(struct Data *data, struct TDI *tdi, int t_index);
+void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_index);
 
 #endif /* GalacticBinaryIO_h */

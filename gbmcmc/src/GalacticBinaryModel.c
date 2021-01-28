@@ -136,11 +136,32 @@ void alloc_data(struct Data *data, struct Flags *flags)
     data->p = calloc(data->N,sizeof(double));
 }
 
+void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flags)
+{
+    /* Load spacecraft ephemerides */
+    switch(flags->orbit)
+    {
+        case 0:
+            initialize_analytic_orbit(orbit);
+            break;
+        case 1:
+            initialize_numeric_orbit(orbit);
+            break;
+        default:
+            fprintf(stderr,"unsupported orbit type\n");
+            exit(1);
+            break;
+    }
+    
+    /* set approximate f/fstar for segment */
+    data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
+}
+
 void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode)
 {
     int ic;
     int NC = chain->NC;
-    char filename[1024];
+    char filename[MAXSTRINGSIZE];
     
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));
@@ -172,43 +193,49 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
         *seed = (long)gsl_rng_get(chain->r[ic]);
     }
     
-    chain->likelihoodFile = fopen("chains/log_likelihood_chain.dat",mode);
+    sprintf(filename,"%s/chains/log_likelihood_chain.dat",flags->runDir);
+    chain->likelihoodFile = fopen(filename,mode);
     
-    chain->temperatureFile = fopen("chains/temperature_chain.dat",mode);
+    sprintf(filename,"%s/chains/temperature_chain.dat",flags->runDir);
+    chain->temperatureFile = fopen(filename,mode);
     
     chain->chainFile = malloc(NC*sizeof(FILE *));
-    chain->chainFile[0] = fopen("chains/model_chain.dat.0",mode);
+    sprintf(filename,"%s/chains/model_chain.dat.0",flags->runDir);
+    chain->chainFile[0] = fopen(filename,mode);
     
     chain->parameterFile = malloc(NC*sizeof(FILE *));
-    chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0",mode);
+    sprintf(filename,"%s/chains/parameter_chain.dat.0",flags->runDir);
+    chain->parameterFile[0] = fopen(filename,mode);
     
     chain->dimensionFile = malloc(flags->DMAX*sizeof(FILE *));
     for(int i=0; i<flags->DMAX; i++)
     {
-        sprintf(filename,"chains/dimension_chain.dat.%i",i);
+        sprintf(filename,"%s/chains/dimension_chain.dat.%i",flags->runDir,i);
         chain->dimensionFile[i] = fopen(filename,mode);
     }
     
     chain->noiseFile = malloc(NC*sizeof(FILE *));
-    chain->noiseFile[0] = fopen("chains/noise_chain.dat.0",mode);
+    sprintf(filename,"%s/chains/noise_chain.dat.0",flags->runDir);
+    chain->noiseFile[0] = fopen(filename,mode);
     
     if(flags->calibration)
     {
         chain->calibrationFile = malloc(NC*sizeof(FILE *));
-        chain->calibrationFile[0] = fopen("chains/calibration_chain.dat.0",mode);
+        sprintf(filename,"%s/chains/calibration_chain.dat.0",flags->runDir);
+        chain->calibrationFile[0] = fopen(filename,mode);
     }
     
     if(flags->verbose)
     {
         for(ic=1; ic<NC; ic++)
         {
-            sprintf(filename,"chains/parameter_chain.dat.%i",ic);
+            sprintf(filename,"%s/chains/parameter_chain.dat.%i",flags->runDir,ic);
             chain->parameterFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"chains/model_chain.dat.%i",ic);
+            sprintf(filename,"%s/chains/model_chain.dat.%i",flags->runDir,ic);
             chain->chainFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"chains/noise_chain.dat.%i",ic);
+            sprintf(filename,"%s/chains/noise_chain.dat.%i",flags->runDir,ic);
             chain->noiseFile[ic] = fopen(filename,mode);
         }
     }
