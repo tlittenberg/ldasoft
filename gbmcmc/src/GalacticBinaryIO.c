@@ -50,7 +50,7 @@ void printProgress (double percentage)
     int val = (int) (percentage * 100);
     int lpad = (int) (percentage * PBWIDTH);
     int rpad = PBWIDTH - lpad;
-    printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+    fprintf(stdout, "\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
     fflush (stdout);
 }
 
@@ -353,6 +353,11 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     chain->NP          = 9; //number of proposals
     chain->NC          = 12;//number of chains
     
+    /*
+     * Set quiet flag for non-root parallel processes
+     * Note: assumes process 0 is always root.
+     */
+    if(procID>0) flags->quiet=1;
     
     /*
      default data format is 'phase'
@@ -671,7 +676,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     print_version(runlog);
     
     //Report on set parameters
-    print_run_settings(argc, argv, data, orbit, flags, stdout);
+    if(!flags->quiet) print_run_settings(argc, argv, data, orbit, flags, stdout);
     print_run_settings(argc, argv, data, orbit, flags, runlog);
     
     fclose(runlog);
@@ -795,8 +800,8 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
     int D = model[n]->Nlive;
     for(i=0; i<D; i++)
     {
-        if(!flags->quiet || step>0)
-        {
+//        if(!flags->quiet || step>0)
+//        {
             print_source_params(data,model[n]->source[i],chain->parameterFile[0]);
             if(flags->verbose)
             {
@@ -809,9 +814,16 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
             }
             fprintf(chain->parameterFile[0],"\n");
             if(flags->verbose)fflush(chain->parameterFile[0]);
-        }
+//        }
         if(step>0)
         {
+            if(chain->dimensionFile[D]==NULL)
+            {
+                char filename[MAXSTRINGSIZE];
+                sprintf(filename,"%s/chains/dimension_chain.dat.%i",flags->runDir,D);
+                if(flags->resume)chain->dimensionFile[D] = fopen(filename,"a");
+                else             chain->dimensionFile[D] = fopen(filename,"w");
+            }
             print_source_params(data,model[n]->source[i],chain->dimensionFile[D]);
             fprintf(chain->dimensionFile[D],"\n");
         }
@@ -1120,13 +1132,60 @@ void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *f
     fclose(fptr);
 }
 
+void print_noise_reconstruction(struct Data *data, struct Flags *flags)
+{
+    FILE *fptr_Snf;
+    char filename[MAXSTRINGSIZE];
+    
+    for(int k=0; k<data->NT; k++)
+    {
+        sprintf(filename,"%s/data/power_noise_t%i.dat",flags->runDir,k);
+        fptr_Snf=fopen(filename,"w");
+
+        for(int i=0; i<data->N; i++)
+        {
+            gsl_sort(data->S_pow[i][0][k],1,data->Nwave);
+            gsl_sort(data->S_pow[i][1][k],1,data->Nwave);
+
+            
+            double f = (double)(i+data->qmin)/data->T;
+            
+            double A_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][0][k], 1, data->Nwave);
+            double A_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.25);
+            double A_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.75);
+            double A_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.05);
+            double A_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.95);
+            
+            double E_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][1][k], 1, data->Nwave);
+            double E_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.25);
+            double E_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.75);
+            double E_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.05);
+            double E_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.95);
+                        
+            fprintf(fptr_Snf,"%.12g ",f);
+            fprintf(fptr_Snf,"%lg ",A_med);
+            fprintf(fptr_Snf,"%lg ",A_lo_50);
+            fprintf(fptr_Snf,"%lg ",A_hi_50);
+            fprintf(fptr_Snf,"%lg ",A_lo_90);
+            fprintf(fptr_Snf,"%lg ",A_hi_90);
+            fprintf(fptr_Snf,"%lg ",E_med);
+            fprintf(fptr_Snf,"%lg ",E_lo_50);
+            fprintf(fptr_Snf,"%lg ",E_hi_50);
+            fprintf(fptr_Snf,"%lg ",E_lo_90);
+            fprintf(fptr_Snf,"%lg ",E_hi_90);
+            fprintf(fptr_Snf,"\n");
+        }
+        fclose(fptr_Snf);
+    }
+    
+}
+
 void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
 {
     char filename[1024];
     FILE *fptr_rec;
     FILE *fptr_res;
     FILE *fptr_var;
-    FILE *fptr_Snf;
     
     //get variance of residual
     double ***res_var = malloc(data->N*sizeof(double **));
@@ -1165,8 +1224,6 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
         fptr_rec=fopen(filename,"w");
         sprintf(filename,"%s/data/power_residual_t%i.dat",flags->runDir,k);
         fptr_res=fopen(filename,"w");
-        sprintf(filename,"%s/data/power_noise_t%i.dat",flags->runDir,k);
-        fptr_Snf=fopen(filename,"w");
         sprintf(filename,"%s/data/variance_residual_t%i.dat",flags->runDir,k);
         fptr_var=fopen(filename,"w");
         
@@ -1230,39 +1287,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
             fprintf(fptr_rec,"%lg ",E_hi_90);
             fprintf(fptr_rec,"\n");
             
-            
-            A_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][0][k], 1, data->Nwave);
-            A_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.25);
-            A_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.75);
-            A_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.05);
-            A_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.95);
-            
-            E_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][1][k], 1, data->Nwave);
-            E_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.25);
-            E_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.75);
-            E_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.05);
-            E_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.95);
-            
-            
-            fprintf(fptr_Snf,"%.12g ",f);
-            fprintf(fptr_Snf,"%lg ",A_med);
-            fprintf(fptr_Snf,"%lg ",A_lo_50);
-            fprintf(fptr_Snf,"%lg ",A_hi_50);
-            fprintf(fptr_Snf,"%lg ",A_lo_90);
-            fprintf(fptr_Snf,"%lg ",A_hi_90);
-            fprintf(fptr_Snf,"%lg ",E_med);
-            fprintf(fptr_Snf,"%lg ",E_lo_50);
-            fprintf(fptr_Snf,"%lg ",E_hi_50);
-            fprintf(fptr_Snf,"%lg ",E_lo_90);
-            fprintf(fptr_Snf,"%lg ",E_hi_90);
-            fprintf(fptr_Snf,"\n");
-            
         }
         
         fclose(fptr_var);
         fclose(fptr_res);
         fclose(fptr_rec);
-        fclose(fptr_Snf);
     }
     
     for(int n=0; n<data->N; n++)

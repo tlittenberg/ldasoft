@@ -72,14 +72,17 @@ void alloc_data(struct Data *data, struct Flags *flags)
     alloc_source(data->inj,data->N,data->Nchannel,data->NP);
     
     data->tdi   = malloc(flags->NT*sizeof(struct TDI*));
+    data->raw   = malloc(flags->NT*sizeof(struct TDI*));
     data->noise = malloc(flags->NT*sizeof(struct Noise*));
     
     for(int n=0; n<flags->NT; n++)
     {
         data->tdi[n]   = malloc(sizeof(struct TDI));
+        data->raw[n]   = malloc(sizeof(struct TDI));
         data->noise[n] = malloc(sizeof(struct Noise));
         
         alloc_tdi(data->tdi[n], data->N, data->Nchannel);
+        alloc_tdi(data->raw[n], data->N, data->Nchannel);
         alloc_noise(data->noise[n], data->N);
     }
     
@@ -193,11 +196,14 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
         *seed = (long)gsl_rng_get(chain->r[ic]);
     }
     
-    sprintf(filename,"%s/chains/log_likelihood_chain.dat",flags->runDir);
-    chain->likelihoodFile = fopen(filename,mode);
-    
-    sprintf(filename,"%s/chains/temperature_chain.dat",flags->runDir);
-    chain->temperatureFile = fopen(filename,mode);
+    if(!flags->quiet)
+    {
+        sprintf(filename,"%s/chains/log_likelihood_chain.dat",flags->runDir);
+        chain->likelihoodFile = fopen(filename,mode);
+        
+        sprintf(filename,"%s/chains/temperature_chain.dat",flags->runDir);
+        chain->temperatureFile = fopen(filename,mode);
+    }
     
     chain->chainFile = malloc(NC*sizeof(FILE *));
     sprintf(filename,"%s/chains/model_chain.dat.0",flags->runDir);
@@ -210,8 +216,8 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     chain->dimensionFile = malloc(flags->DMAX*sizeof(FILE *));
     for(int i=0; i<flags->DMAX; i++)
     {
-        sprintf(filename,"%s/chains/dimension_chain.dat.%i",flags->runDir,i);
-        chain->dimensionFile[i] = fopen(filename,mode);
+        /* only create these files when needed */
+        chain->dimensionFile[i]=NULL;
     }
     
     chain->noiseFile = malloc(NC*sizeof(FILE *));
@@ -965,28 +971,19 @@ void apply_calibration_model(struct Data *data, struct Model *model)
 double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
 {
     
-    int N2=data->N*2;
-    
-    
-    /**************************/
-    /*                        */
-    /* Form residual and sum  */
-    /*                        */
-    /**************************/
-    
     /*
-     struct TDI *residual = model->residual;
-     alloc_tdi(residual, data->N, data->Nchannel);
-     */
+    *
+    * Form residual and sum
+    *
+    */
     
-    struct TDI *residual = NULL;
-    
+    int N2 = data->N*2;
     double logL = 0.0;
     
     //loop over time segments
     for(int n=0; n<model->NT; n++)
     {
-        residual = model->residual[n];
+        struct TDI *residual = model->residual[n];
         
         for(int i=0; i<N2; i++)
         {
@@ -1009,7 +1006,6 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
                 exit(1);
         }
     }
-    //free_tdi(residual);
     
     return logL;
 }
@@ -1071,7 +1067,7 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
 int update_max_log_likelihood(struct Model **model, struct Chain *chain, struct Flags *flags)
 {
     int n = chain->index[0];
-    int N = flags->NDATA;
+    int N = model[n]->Nlive;
     
     double logL = 0.0;
     double dlogL= 0.0;
