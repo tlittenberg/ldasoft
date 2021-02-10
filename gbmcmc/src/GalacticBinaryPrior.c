@@ -71,14 +71,16 @@ static void rotate_galtoeclip(double *xg, double *xe)
 
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
 {
-    fprintf(stdout,"\n============ Galaxy model sky prior ============\n");
-    fprintf(stdout,"Monte carlo over galaxy model\n");
-    fprintf(stdout,"   Distance to GC = %g kpc\n",GALAXY_RGC);
-    fprintf(stdout,"   Disk Radius    = %g kpc\n",GALAXY_Rd);
-    fprintf(stdout,"   Disk Height    = %g kpc\n",GALAXY_Zd);
-    fprintf(stdout,"   Bulge Radius   = %g kpc\n",GALAXY_Rb);
-    fprintf(stdout,"   Bulge Fraction = %g\n",    GALAXY_A);
-    
+    if(!flags->quiet)
+    {
+        fprintf(stdout,"\n============ Galaxy model sky prior ============\n");
+        fprintf(stdout,"Monte carlo over galaxy model\n");
+        fprintf(stdout,"   Distance to GC = %g kpc\n",GALAXY_RGC);
+        fprintf(stdout,"   Disk Radius    = %g kpc\n",GALAXY_Rd);
+        fprintf(stdout,"   Disk Height    = %g kpc\n",GALAXY_Zd);
+        fprintf(stdout,"   Bulge Radius   = %g kpc\n",GALAXY_Rb);
+        fprintf(stdout,"   Bulge Fraction = %g\n",    GALAXY_A);
+    }
     double *x, *y;  // current and proposed parameters
     int D = 3;  // number of parameters
     int Nth = 200;  // bins in cos theta
@@ -278,7 +280,7 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
     free(xe);
     free(xg);
     gsl_rng_free (r);
-    fprintf(stdout,"\n================================================\n\n");
+    if(!flags->quiet)fprintf(stdout,"\n================================================\n\n");
     fflush(stdout);
     
 }
@@ -368,7 +370,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     {
         fddotmin = -fddotmax;
     }
-    if(verbose)
+    if(verbose && !flags->quiet)
     {
         fprintf(stdout,"\n============== PRIORS ==============\n");
         if(flags->detached)fprintf(stdout,"  Assuming detached binary, Mchirp = [0.15,1]\n");

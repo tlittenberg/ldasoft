@@ -120,6 +120,12 @@ void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *f
 ///@}
 
 /**
+ \brief Print PSD 5, 25, 50, 75, and 95 quantiles of noise model posteriors
+ */
+void print_noise_reconstruction(struct Data *data, struct Flags *flags);
+
+
+/**
  \brief Wrapper function that calls data print functions
  */
 void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_index);

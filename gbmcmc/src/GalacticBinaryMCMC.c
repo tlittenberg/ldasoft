@@ -467,7 +467,7 @@ void data_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, stru
     
 }
 
-void initialize_gbmcmc_sampler(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, struct Proposal **proposal, struct Model **model, struct Model **trial)
+void initialize_gbmcmc_state(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, struct Proposal **proposal, struct Model **model, struct Model **trial)
 {
     int NC = chain->NC;
     int DMAX = flags->DMAX;
@@ -475,9 +475,9 @@ void initialize_gbmcmc_sampler(struct Data *data, struct Orbit *orbit, struct Fl
     {
         
         trial[ic] = malloc(sizeof(struct Model));
-        alloc_model(trial[ic],DMAX,data->N,data->Nchannel,data->NP, data->NT);
-        
         model[ic] = malloc(sizeof(struct Model));
+        
+        alloc_model(trial[ic],DMAX,data->N,data->Nchannel,data->NP, data->NT);
         alloc_model(model[ic],DMAX,data->N,data->Nchannel, data->NP, flags->NT);
                 
         if(ic==0)set_uniform_prior(flags, model[ic], data, 1);

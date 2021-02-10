@@ -203,7 +203,7 @@ void GalacticBinaryReadASCII(struct Data *data, struct TDI *tdi)
 
 void GalacticBinaryReadData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
-    fprintf(stdout,"\n==== GalacticBinaryReadData ====\n");
+    if(!flags->quiet) fprintf(stdout,"\n==== GalacticBinaryReadData ====\n");
     
     struct TDI *tdi = data->tdi[0];
     
@@ -307,7 +307,7 @@ void GalacticBinarySimulateData(struct Data *data)
 void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
     //TODO: support Michelson-only injection
-    fprintf(stdout,"\n==== GalacticBinaryInjectVerificationSource ====\n");
+    if(!flags->quiet) fprintf(stdout,"\n==== GalacticBinaryInjectVerificationSource ====\n");
     
     FILE *fptr;
     
@@ -384,8 +384,8 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             data->fmin = data->qmin/data->T;
             data->fmax = data->qmax/data->T;
             
-            if(jj==0)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
-            fprintf(stdout,"   ...start time  %g\n",data->t0[jj]);
+            if(jj==0 && !flags->quiet)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
+            if(!flags->quiet) fprintf(stdout,"   ...start time  %g\n",data->t0[jj]);
             
             
             struct Source *inj = data->inj;
@@ -468,7 +468,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             GalacticBinaryGetNoiseModel(data,orbit,flags);
             
             //Get injected SNR
-            fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data->noise[jj]));
+            if(!flags->quiet) fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data->noise[jj]));
             
             //Add Gaussian noise to injection
             if(flags->simNoise)
@@ -478,27 +478,9 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             }
             
             //Compute fisher information matrix of injection
-            printf("   ...computing Fisher Information Matrix of injection\n");
+            if(!flags->quiet) fprintf(stdout,"   ...computing Fisher Information Matrix of injection\n");
             
             galactic_binary_fisher(orbit, data, inj, data->noise[jj]);
-            
-            /*
-             printf("\n Fisher Matrix:\n");
-             for(int i=0; i<8; i++)
-             {
-             fprintf(stdout," ");
-             for(int j=0; j<8; j++)
-             {
-             if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
-             else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
-             }
-             fprintf(stdout,"\n");
-             }
-             
-             printf("\n Fisher std. errors:\n");
-             for(int j=0; j<8; j++)  fprintf(stdout," %.4e\n", 1./sqrt(inj->fisher_evalue[j]));
-             */
-            
             
             sprintf(filename,"data/power_data_%i_%i.dat",ii,jj);
             fptr=fopen(filename,"w");
@@ -540,15 +522,10 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
         gsl_rng_free(r);
     }
     
-    fprintf(stdout,"================================================\n\n");
+    if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
 void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
-    //TODO: support Michelson-only injection
-    //  fprintf(stdout,"\n==== GalacticBinaryInjectSimulatedSource ====\n");
-    //  fprintf(stdout,"==== !!!!!!!!!!!!!WARNING!!!!!!!!!!!!!!!!====\n");
-    //  fprintf(stdout,"==== HACKED CODE TO READ fddot FROM FILE ====\n");
-    //  fprintf(stdout,"====    INCOMPATABLE WITH EVERYTHING     ====\n");
     FILE *fptr;
     
     /* Get injection parameters */
@@ -624,8 +601,8 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                     data->fmin = data->qmin/data->T;
                     data->fmax = data->qmax/data->T;
                     
-                    if(jj==0)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
-                    fprintf(stdout,"   ...start time: %g\n",data->t0[jj]);
+                    if(jj==0 && !flags->quiet)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
+                    if(!flags->quiet)fprintf(stdout,"   ...start time: %g\n",data->t0[jj]);
                 }
                 
                 
@@ -723,7 +700,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 GalacticBinaryGetNoiseModel(data,orbit,flags);
                 
                 //Get injected SNR
-                fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data->noise[jj]));
+                if(!flags->quiet)fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data->noise[jj]));
                 
                 //Add Gaussian noise to injection
                 if(flags->simNoise && nn==0)
@@ -733,27 +710,29 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 }
                 
                 //Compute fisher information matrix of injection
-                printf("   ...computing Fisher Information Matrix of injection\n");
+                if(!flags->quiet)fprintf(stdout,"   ...computing Fisher Information Matrix of injection\n");
                 
                 galactic_binary_fisher(orbit, data, inj, data->noise[jj]);
                 
                 
-                printf("\n Fisher Matrix:\n");
-                for(int i=0; i<data->NP; i++)
+                if(!flags->quiet)
                 {
-                    fprintf(stdout," ");
-                    for(int j=0; j<data->NP; j++)
+                    fprintf(stdout,"\n Fisher Matrix:\n");
+                    for(int i=0; i<data->NP; i++)
                     {
-                        if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
-                        else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
+                        fprintf(stdout," ");
+                        for(int j=0; j<data->NP; j++)
+                        {
+                            if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
+                            else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
+                        }
+                        fprintf(stdout,"\n");
                     }
-                    fprintf(stdout,"\n");
+                    
+                    
+                    printf("\n Fisher std. errors:\n");
+                    for(int j=0; j<data->NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
                 }
-                
-                printf("\n Fisher std. errors:\n");
-                for(int j=0; j<data->NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
-                
-                
                 
                 sprintf(filename,"data/power_data_%i_%i.dat",ii,jj);
                 fptr=fopen(filename,"w");
@@ -796,7 +775,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
         gsl_rng_free(r);
     }
     
-    fprintf(stdout,"================================================\n\n");
+    if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
 
 void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Flags *flags)

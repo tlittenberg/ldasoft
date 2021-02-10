@@ -82,7 +82,8 @@ struct Data
 
     /** @name TDI Data and Noise */
      ///@{
-    struct TDI **tdi; //!<TDI data channels
+    struct TDI **tdi; //!<TDI data channels as seen by sampler
+    struct TDI **raw; //!<TDI data channels unaltered from input
     struct Noise **noise; //!<Reference noise model
     /**
      \brief Convention for data format
