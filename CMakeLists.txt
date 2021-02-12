@@ -21,6 +21,9 @@ project(CMakeTutorial VERSION 1.0.0 LANGUAGES C)
 find_package(GSL REQUIRED)
 find_package(OpenMP REQUIRED)
 
+# Set compiler
+set(CMAKE_C_COMPILER mpicc)
+
 # set cflags
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -66,3 +69,4 @@ add_subdirectory(tools)
 add_subdirectory(lisa)
 add_subdirectory(gbmcmc)
 add_subdirectory(gbfisher)
+add_subdirectory(globalfit)
