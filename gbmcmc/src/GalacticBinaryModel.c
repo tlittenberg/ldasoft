@@ -25,9 +25,11 @@
 #include "LISA.h"
 #include "Constants.h"
 #include "GalacticBinary.h"
+#include "GalacticBinaryIO.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
+#include "GalacticBinaryFStatistic.h"
 
 #define FIXME 0
 
@@ -784,7 +786,7 @@ void simualte_data(struct Data *data, struct Flags *flags, struct Source **injec
     
 }
 
-void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int index)
+void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
 {
     int i,j,n,m;
     int N2=data->N*2;
@@ -806,7 +808,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     {
         source = model->source[n];
         
-        if(index==-1 || index==n)
+        if(source_id==-1 || source_id==n)
         {
             for(i=0; i<N2; i++)
             {
@@ -825,8 +827,8 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         for(m=0; m<NT; m++)
         {
             //Simulate gravitational wave signal
-            /* the index = -1 condition is redundent if the model->tdi structure is up to date...*/
-            if(index==-1 || index==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+            /* the source_id = -1 condition is redundent if the model->tdi structure is up to date...*/
+            if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
             
             //Add waveform to model TDI channels
             for(i=0; i<source->BW; i++)
@@ -848,7 +850,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
                     
                     model->tdi[m]->E[j_re] += source->tdi->E[i_re];
                     model->tdi[m]->E[j_im] += source->tdi->E[i_im];
-                }//check that index is in range
+                }//check that source_id is in range
             }//loop over waveform bins
         }//end loop over time segments
     }//loop over sources
@@ -995,6 +997,73 @@ void apply_calibration_model(struct Data *data, struct Model *model)
     }//end loop over segments
 }
 
+void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
+{
+    double logL_X,logL_AE;
+    double *Fparams = calloc(4,sizeof(double));
+    
+    struct Source *source = model->source[source_id];
+
+    /* save original data */
+//    struct TDI *data_save = malloc(sizeof(struct TDI));
+//    alloc_tdi(data_save, data->N, data->Nchannel);
+//    copy_tdi(data->tdi[FIXME],data_save);
+//
+//    /* save original noise */
+//    struct Noise *noise_save = malloc(sizeof(struct Noise));
+//    alloc_noise(noise_save, data->N);
+//    copy_noise(data->noise[FIXME], noise_save);
+//
+//    /* put current noise model in data structure for get_Fstat_logL() */
+//    copy_noise(model->noise[FIXME],data->noise[FIXME]);
+
+    
+    /* create residual of all sources but n for F-statistic */
+//    for(int m=0; m<model->Nlive; m++)
+//    {
+//        if(m!=source_id)
+//        {
+//            for(int i=0; i<data->N*2; i++)
+//            {
+//                data->tdi[FIXME]->A[i] -= model->source[m]->tdi->A[i];
+//                data->tdi[FIXME]->E[i] -= model->source[m]->tdi->E[i];
+//                data->tdi[FIXME]->X[i] -= model->source[m]->tdi->X[i];
+//            }
+//        }
+//    }
+    
+    /* get input parameters */
+    double f0 = source->f0;
+    double fdot = source->dfdt;
+    double theta = acos(source->costheta);
+    double phi = source->phi0;
+    
+    /* get F-statistic */
+    get_Fstat_logL(orbit, data, f0, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
+    
+    /* get maximized parameters */
+    source->amp  = Fparams[0];
+    source->cosi = cos(Fparams[1]);
+    source->psi  = Fparams[2];
+    source->phi0 = Fparams[3];
+    map_params_to_array(source, source->params, data->T);
+    
+//    print_source_params(data, source, stdout);
+//    fprintf(stdout,"\n");
+    
+    /* restore original data */
+//    copy_tdi(data_save,data->tdi[FIXME]);
+//    free_tdi(data_save);
+//
+//    /* restore original noise */
+//    copy_noise(noise_save,data->noise[FIXME]);
+//    free_noise(noise_save);
+
+    free(Fparams);
+
+    /* get meta template w/ new parameters */
+    generate_signal_model(orbit, data, model, source_id);
+}
 double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
 {
     

@@ -757,6 +757,8 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(!flags->prior)
         {
             //  Form master template
+            //if(flags->burnin) maximize_signal_model(orbit, data, model_y, n);
+            //else generate_signal_model(orbit, data, model_y, n);
             generate_signal_model(orbit, data, model_y, n);
             
             //calibration error
@@ -892,7 +894,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
          passing model_x->Nlive is a trick to skip waveform generation for kill move
          and to only calculate new source for create move
          */
-        generate_signal_model(orbit, data, model_y, model_x->Nlive);
+        //if(flags->burnin)maximize_signal_model(orbit, data, model_y, model_x->Nlive);
+        //else generate_signal_model(orbit, data, model_y, model_x->Nlive);
+        generate_signal_model(orbit, data, model_y, n);
         
         //calibration error
         if(flags->calibration)
