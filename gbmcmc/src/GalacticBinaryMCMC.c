@@ -374,8 +374,9 @@ int main(int argc, char *argv[])
         for(; mcmc < flags->NMCMC;)
         {
             if(threadID==0){
-                if(mcmc<0) flags->burnin=1;
-                else       flags->burnin=0;
+                flags->burnin=0;
+                if(mcmc<0) flags->burnin++;
+                if(mcmc<-flags->NBURN/2) flags->burnin++;
 
                 //set annealinging tempurature during burnin
                 /*
@@ -757,8 +758,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(!flags->prior)
         {
             //  Form master template
-            //if(flags->burnin) maximize_signal_model(orbit, data, model_y, n);
-            //else generate_signal_model(orbit, data, model_y, n);
+            if(flags->burnin==2) maximize_signal_model(orbit, data, model_y, n);
             generate_signal_model(orbit, data, model_y, n);
             
             //calibration error
@@ -894,9 +894,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
          passing model_x->Nlive is a trick to skip waveform generation for kill move
          and to only calculate new source for create move
          */
-        //if(flags->burnin)maximize_signal_model(orbit, data, model_y, model_x->Nlive);
-        //else generate_signal_model(orbit, data, model_y, model_x->Nlive);
-        generate_signal_model(orbit, data, model_y, n);
+        if(flags->burnin==2)maximize_signal_model(orbit, data, model_y, model_x->Nlive);
+        generate_signal_model(orbit, data, model_y, model_x->Nlive);
         
         //calibration error
         if(flags->calibration)

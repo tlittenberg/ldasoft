@@ -999,70 +999,65 @@ void apply_calibration_model(struct Data *data, struct Model *model)
 
 void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
 {
-    double logL_X,logL_AE;
-    double *Fparams = calloc(4,sizeof(double));
-    
-    struct Source *source = model->source[source_id];
-
-    /* save original data */
-//    struct TDI *data_save = malloc(sizeof(struct TDI));
-//    alloc_tdi(data_save, data->N, data->Nchannel);
-//    copy_tdi(data->tdi[FIXME],data_save);
-//
-//    /* save original noise */
-//    struct Noise *noise_save = malloc(sizeof(struct Noise));
-//    alloc_noise(noise_save, data->N);
-//    copy_noise(data->noise[FIXME], noise_save);
-//
-//    /* put current noise model in data structure for get_Fstat_logL() */
-//    copy_noise(model->noise[FIXME],data->noise[FIXME]);
-
-    
-    /* create residual of all sources but n for F-statistic */
-//    for(int m=0; m<model->Nlive; m++)
-//    {
-//        if(m!=source_id)
-//        {
-//            for(int i=0; i<data->N*2; i++)
-//            {
-//                data->tdi[FIXME]->A[i] -= model->source[m]->tdi->A[i];
-//                data->tdi[FIXME]->E[i] -= model->source[m]->tdi->E[i];
-//                data->tdi[FIXME]->X[i] -= model->source[m]->tdi->X[i];
-//            }
-//        }
-//    }
-    
-    /* get input parameters */
-    double f0 = source->f0;
-    double fdot = source->dfdt;
-    double theta = acos(source->costheta);
-    double phi = source->phi0;
-    
-    /* get F-statistic */
-    get_Fstat_logL(orbit, data, f0, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
-    
-    /* get maximized parameters */
-    source->amp  = Fparams[0];
-    source->cosi = cos(Fparams[1]);
-    source->psi  = Fparams[2];
-    source->phi0 = Fparams[3];
-    map_params_to_array(source, source->params, data->T);
-    
-//    print_source_params(data, source, stdout);
-//    fprintf(stdout,"\n");
-    
-    /* restore original data */
-//    copy_tdi(data_save,data->tdi[FIXME]);
-//    free_tdi(data_save);
-//
-//    /* restore original noise */
-//    copy_noise(noise_save,data->noise[FIXME]);
-//    free_noise(noise_save);
-
-    free(Fparams);
-
-    /* get meta template w/ new parameters */
-    generate_signal_model(orbit, data, model, source_id);
+    if(source_id < model->Nlive)
+    {
+        double *Fparams = calloc(data->NP,sizeof(double));
+        
+        struct Source *source = model->source[source_id];
+        
+        /* save original data */
+        //    struct TDI *data_save = malloc(sizeof(struct TDI));
+        //    alloc_tdi(data_save, data->N, data->Nchannel);
+        //    copy_tdi(data->tdi[FIXME],data_save);
+        //
+        //    /* save original noise */
+        //    struct Noise *noise_save = malloc(sizeof(struct Noise));
+        //    alloc_noise(noise_save, data->N);
+        //    copy_noise(data->noise[FIXME], noise_save);
+        //
+        //    /* put current noise model in data structure for get_Fstat_logL() */
+        //    copy_noise(model->noise[FIXME],data->noise[FIXME]);
+        
+        
+        /* create residual of all sources but n for F-statistic */
+        //    for(int m=0; m<model->Nlive; m++)
+        //    {
+        //        if(m!=source_id)
+        //        {
+        //            for(int i=0; i<data->N*2; i++)
+        //            {
+        //                data->tdi[FIXME]->A[i] -= model->source[m]->tdi->A[i];
+        //                data->tdi[FIXME]->E[i] -= model->source[m]->tdi->E[i];
+        //                data->tdi[FIXME]->X[i] -= model->source[m]->tdi->X[i];
+        //            }
+        //        }
+        //    }
+        
+        /* get input parameters */
+        double f0 = source->f0;
+        double fdot = source->dfdt;
+        double theta = acos(source->costheta);
+        double phi = source->phi0;
+        
+        /* maximize parameters w/ F-statistic */
+        get_Fstat_xmax(orbit, data, source->params, Fparams);
+        
+        /* unpack maximized parameters */
+        source->amp  = exp(Fparams[3]);
+        source->cosi = Fparams[4];
+        source->psi  = Fparams[5];
+        source->phi0 = Fparams[6];
+        map_params_to_array(source, source->params, data->T);
+        
+        /* restore original data */
+        //    copy_tdi(data_save,data->tdi[FIXME]);
+        //    free_tdi(data_save);
+        //
+        //    /* restore original noise */
+        //    copy_noise(noise_save,data->noise[FIXME]);
+        //    free_noise(noise_save);
+        free(Fparams);
+    }
 }
 double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
 {
