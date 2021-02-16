@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['bayeslineparams_271',['BayesLineParams',['../structBayesLineParams.html',1,'']]],
-  ['bayeslinepriors_272',['BayesLinePriors',['../structBayesLinePriors.html',1,'']]]
+  ['bayeslineparams_290',['BayesLineParams',['../structBayesLineParams.html',1,'']]],
+  ['bayeslinepriors_291',['BayesLinePriors',['../structBayesLinePriors.html',1,'']]]
 ];

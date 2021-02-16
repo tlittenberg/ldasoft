@@ -17,6 +17,7 @@ var structFlags =
     [ "fixSky", "structFlags.html#aef0b9b7dcb53cfbbd3f927051fcd4221", null ],
     [ "galaxyPrior", "structFlags.html#ad5269078c6a3f6c29d5ba83b0e5473b7", null ],
     [ "gap", "structFlags.html#a98ecf043b3368fb93459cc077c880921", null ],
+    [ "gmmFile", "structFlags.html#a25dfd15e488fe42b88521de66ca3c5f0", null ],
     [ "injFile", "structFlags.html#ab824e717f38a66fb3f58621b46119baa", null ],
     [ "knownSource", "structFlags.html#aa404d0e6c616563fe582382a8946eb3c", null ],
     [ "match", "structFlags.html#a3b36da1e6e78521e7b4f586184f59687", null ],
@@ -37,6 +38,7 @@ var structFlags =
     [ "simNoise", "structFlags.html#a84863fdaac48e30b194b1d112e2ae514", null ],
     [ "snrPrior", "structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd", null ],
     [ "strainData", "structFlags.html#a0e7b06500d417cf52b290fecff8dcec7", null ],
+    [ "threads", "structFlags.html#ac5948da1f28e92b5e60603f6d75c969b", null ],
     [ "update", "structFlags.html#a0392b488d222aadf788c59376ca1e205", null ],
     [ "updateCov", "structFlags.html#af99ceda5db6df93079aa61bae8c860cf", null ],
     [ "verbose", "structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73", null ]
