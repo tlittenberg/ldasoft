@@ -1,5 +1,6 @@
 var NAVTREEINDEX1 =
 {
+"structBayesLineParams.html#a4011f9cb2cd31472d538db266f8ab676":[9,0,0,17],
 "structBayesLineParams.html#a473bea242c6bf1cd99def089eb6518e7":[9,0,0,3],
 "structBayesLineParams.html#a5669797beb61eb94b732a36ae7a73bc8":[9,0,0,11],
 "structBayesLineParams.html#a748ec469d79ef86f06a3593909e8910e":[9,0,0,19],
@@ -248,6 +249,5 @@ var NAVTREEINDEX1 =
 "structOrbit.html#a9e5120fa027ceed1ae0d58bcbc63f13b":[9,0,15,1],
 "structOrbit.html#aadd8dd23be8be3426db5736258fb4631":[9,0,15,5],
 "structOrbit.html#ab10c3ff4b93ab68342af6a0ee6207672":[9,0,15,0],
-"structOrbit.html#ab192ef021f202cf0a2f1a33c72c77292":[9,0,15,12],
-"structOrbit.html#ad0712c9898774b88478c48f677cd7c0a":[9,0,15,14]
+"structOrbit.html#ab192ef021f202cf0a2f1a33c72c77292":[9,0,15,12]
 };

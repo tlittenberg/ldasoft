@@ -58,9 +58,10 @@ var NAVTREEINDEX0 =
 "GalacticBinaryData_8h.html":[10,0,1,0,4],
 "GalacticBinaryData_8h.html#a1f465485795a890561f640a72473d9a4":[10,0,1,0,4,4],
 "GalacticBinaryData_8h.html#a6aabba35a5b6c6a8b9474af6a5a32863":[10,0,1,0,4,0],
-"GalacticBinaryData_8h.html#a94a5a09a9f745bf545919fe8d4326a06":[10,0,1,0,4,5],
+"GalacticBinaryData_8h.html#a94a5a09a9f745bf545919fe8d4326a06":[10,0,1,0,4,6],
 "GalacticBinaryData_8h.html#a9a3e53f07650365052129e2db33b0d71":[10,0,1,0,4,2],
 "GalacticBinaryData_8h.html#a9a87f9f04a250667e89e6cc3c6f02a84":[10,0,1,0,4,3],
+"GalacticBinaryData_8h.html#a9c7fb5f183132f6915e38250185169e9":[10,0,1,0,4,5],
 "GalacticBinaryData_8h.html#ac9f9b6862a9b974e9a079ed9587b18bd":[10,0,1,0,4,1],
 "GalacticBinaryData_8h_source.html":[10,0,1,0,4],
 "GalacticBinaryFStatistic_8h_source.html":[10,0,1,0,5],
@@ -248,6 +249,5 @@ var NAVTREEINDEX0 =
 "structBayesLineParams.html#a29140650ac1893719d7aee46dcfcfde5":[9,0,0,15],
 "structBayesLineParams.html#a2dc286c4c2c4d2c2ed55c0c8322253dd":[9,0,0,12],
 "structBayesLineParams.html#a34bb673761cba101dd0a50814b5c3b38":[9,0,0,8],
-"structBayesLineParams.html#a3a56f483b177ac6609aca5bcda6919e9":[9,0,0,5],
-"structBayesLineParams.html#a4011f9cb2cd31472d538db266f8ab676":[9,0,0,17]
+"structBayesLineParams.html#a3a56f483b177ac6609aca5bcda6919e9":[9,0,0,5]
 };
