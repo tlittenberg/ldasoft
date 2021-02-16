@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['prior_306',['Prior',['../structPrior.html',1,'']]],
-  ['proposal_307',['Proposal',['../structProposal.html',1,'']]]
+  ['prior_307',['Prior',['../structPrior.html',1,'']]],
+  ['proposal_308',['Proposal',['../structProposal.html',1,'']]]
 ];
