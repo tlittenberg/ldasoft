@@ -127,6 +127,7 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 </li>
 <li>calibration
 : <a class="el" href="structFlags.html#ad00e015c84ba7365ecbe9edba0afa24f">Flags</a>
+, <a class="el" href="structModel.html#a9ab3bf5c810c3309d3618a55f9ecf5f1">Model</a>
 </li>
 <li>calibrationFile
 : <a class="el" href="structChain.html#aa1656395b51a7969ca0e183e6ab2c8b0">Chain</a>
@@ -174,6 +175,9 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>d2fdt2
 : <a class="el" href="structSource.html#afaace88d39505cd67763f4bca5254530">Source</a>
 </li>
+<li>dcostheta
+: <a class="el" href="structPrior.html#a874d4ccb5911577ee5604188a1fc4db3">Prior</a>
+</li>
 <li>debug
 : <a class="el" href="structFlags.html#a676222eb8d31f9415bf2511d59c850b4">Flags</a>
 </li>
@@ -201,6 +205,9 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 </li>
 <li>downsample
 : <a class="el" href="structData.html#abd3208e22c3348f0356e4c2f13f4ffc1">Data</a>
+</li>
+<li>dphi
+: <a class="el" href="structPrior.html#a438aed9a92f28b0dac656757dd329984">Prior</a>
 </li>
 </ul>
 
@@ -327,8 +334,18 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>logfmin
 : <a class="el" href="structData.html#a3d638edc3bb44936e2ffd2ba195aabae">Data</a>
 </li>
+<li>logL
+: <a class="el" href="structModel.html#aabf6d3b2b5933ce823b10d6dfcd93fd2">Model</a>
+</li>
 <li>logLmax
 : <a class="el" href="structChain.html#a3a82adf15d17b2f06fb4d6bebbde667f">Chain</a>
+</li>
+<li>logLnorm
+: <a class="el" href="structModel.html#ab8faeefe5487ef4ce6a25b6b597991ad">Model</a>
+</li>
+<li>logPriorVolume
+: <a class="el" href="structModel.html#a337d32ac51cef7213df1107d352c4c4b">Model</a>
+, <a class="el" href="structPrior.html#ae12d3d2e05569e071324958d794bb2a7">Prior</a>
 </li>
 </ul>
 
@@ -352,6 +369,9 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>matrix
 : <a class="el" href="structPrior.html#a9062a6fcfc57e0434beebd124d7b2e22">Prior</a>
 , <a class="el" href="structProposal.html#af23e1e359df0ad1172ab360b440a62e3">Proposal</a>
+</li>
+<li>maximize
+: <a class="el" href="structFlags.html#a56dfe39c6db42f388d182255cd85d1ed">Flags</a>
 </li>
 <li>maxp
 : <a class="el" href="structProposal.html#ab7c7b47c87acc31027fc19fb3a33ef15">Proposal</a>
@@ -389,6 +409,9 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>Nchannel
 : <a class="el" href="structData.html#a40984ec8faee6f66f294f19efdffc748">Data</a>
 </li>
+<li>ncostheta
+: <a class="el" href="structPrior.html#ae6fc05ca6b787c70012ba397b9d19111">Prior</a>
+</li>
 <li>NDATA
 : <a class="el" href="structFlags.html#a28b910931d0029fbddb06e09cdd8f608">Flags</a>
 </li>
@@ -398,11 +421,21 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>NINJ
 : <a class="el" href="structFlags.html#a070e524517d5e4279407d85e32cfc3b9">Flags</a>
 </li>
+<li>Nlive
+: <a class="el" href="structModel.html#af43347a7d352e5d54d81dd978eb4ef4e">Model</a>
+</li>
+<li>Nmax
+: <a class="el" href="structModel.html#a2da9aaae74e2162dda40d9c8fa2a1856">Model</a>
+</li>
 <li>NMCMC
 : <a class="el" href="structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9">Flags</a>
 </li>
+<li>NMODE
+: <a class="el" href="structPrior.html#ade3228402fdd115ded1bd3f61d52ef7d">Prior</a>
+</li>
 <li>noise
 : <a class="el" href="structData.html#a5646530b83cfb236488c75567a94317d">Data</a>
+, <a class="el" href="structModel.html#adced92eeab92e42d27de208972882aab">Model</a>
 </li>
 <li>noiseFile
 : <a class="el" href="structChain.html#a900a8760a27ddacbf6d801c8c817cea2">Chain</a>
@@ -417,7 +450,12 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>NP
 : <a class="el" href="structChain.html#a50bdfaa9f46519e3c16ac58ca07cd941">Chain</a>
 , <a class="el" href="structData.html#ab456e86e4cf30a20af41383cff94e535">Data</a>
+, <a class="el" href="structModel.html#aa0ebba1b58980637cb128e3c0b4709d8">Model</a>
+, <a class="el" href="structPrior.html#abf9142cc6a6fec7c228ead2165a18990">Prior</a>
 , <a class="el" href="structSource.html#a64518fc0bb8e1ed531af5b80d8a3afe7">Source</a>
+</li>
+<li>nphi
+: <a class="el" href="structPrior.html#a2b8b7ade7f208e199c4a94a0033cfb1f">Prior</a>
 </li>
 <li>nseed
 : <a class="el" href="structData.html#aded73ae8e42873e7d905ff7f14a0a354">Data</a>
@@ -425,6 +463,7 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>NT
 : <a class="el" href="structData.html#a913af45a251a07eb589171c23afa4f34">Data</a>
 , <a class="el" href="structFlags.html#a6ba0c4595612c0203d05074338e2dfce">Flags</a>
+, <a class="el" href="structModel.html#ac619e2d78a787aa102a15972d03a8337">Model</a>
 </li>
 <li>Nwave
 : <a class="el" href="structData.html#a2928c4204fcb0f5213ae9afb88d7ece1">Data</a>
@@ -471,6 +510,8 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 </li>
 <li>prior
 : <a class="el" href="structFlags.html#a2e307dd2b0bf32fd2847ba0af04a7372">Flags</a>
+, <a class="el" href="structModel.html#aa1fc3b5e3c12cba547c4b6eeaddb7dcf">Model</a>
+, <a class="el" href="structPrior.html#af1887d407bba270ac2aafda2495f0add">Prior</a>
 </li>
 <li>psi
 : <a class="el" href="structSource.html#accca5b54fca0f86a3b230c06e06ab8d7">Source</a>
@@ -506,6 +547,9 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 <li>r_pow
 : <a class="el" href="structData.html#a7261769b2611a460f8a6ccc5ce70992f">Data</a>
 </li>
+<li>residual
+: <a class="el" href="structModel.html#a27a2365daa037da5089cca2ae0cd85eb">Model</a>
+</li>
 <li>resume
 : <a class="el" href="structFlags.html#a726413142f05785554e7149e89a3831f">Flags</a>
 </li>
@@ -532,11 +576,20 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 : <a class="el" href="structMVG.html#aa36b2f5abc2b6d71e5e4549e4b0f2ef2">MVG</a>
 , <a class="el" href="structProposal.html#afb3afbfca750d99d1736f848c5c89187">Proposal</a>
 </li>
+<li>skyhist
+: <a class="el" href="structPrior.html#a6ac0fee42f8d57c9a2e170629b7ceb24">Prior</a>
+</li>
+<li>skymaxp
+: <a class="el" href="structPrior.html#acf187cc5dc79f924ab37903ec3606244">Prior</a>
+</li>
 <li>SNR2
 : <a class="el" href="structData.html#a018485652e36524ee3c2b07f35befc76">Data</a>
 </li>
 <li>snrPrior
 : <a class="el" href="structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd">Flags</a>
+</li>
+<li>source
+: <a class="el" href="structModel.html#a1498a4fc5574f28c6805293a3b31df25">Model</a>
 </li>
 <li>sqT
 : <a class="el" href="structData.html#ad44b894b08062090b76441d16570bca3">Data</a>
@@ -560,9 +613,17 @@ $(document).ready(function(){initNavTree('functions_vars.html',''); initResizabl
 </li>
 <li>t0
 : <a class="el" href="structData.html#aea49bff932eaf931689edccaa155b333">Data</a>
+, <a class="el" href="structModel.html#a188e25877cf465835bf67448f4cfd954">Model</a>
+</li>
+<li>t0_max
+: <a class="el" href="structModel.html#a13a16e9be6560c1ed2c42a3002c68e13">Model</a>
+</li>
+<li>t0_min
+: <a class="el" href="structModel.html#aabe6598c9debdc70f706113e1dcd5c75">Model</a>
 </li>
 <li>tdi
 : <a class="el" href="structData.html#a98432cd2a586429f74d696da622446d1">Data</a>
+, <a class="el" href="structModel.html#a80296d338501e362817c9c427eaa1e61">Model</a>
 , <a class="el" href="structSource.html#ac74563913c9e6fca51c9120e54bcfeb0">Source</a>
 </li>
 <li>temperature

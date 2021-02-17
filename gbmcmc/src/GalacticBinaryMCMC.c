@@ -363,7 +363,8 @@ int main(int argc, char *argv[])
         threadID = omp_get_thread_num();
 
         //Only one thread runs this section
-        if(threadID==0){
+        if(threadID==0)
+        {
             numThreads = omp_get_num_threads();
             printf("Running on %i thread(s).\n",numThreads);
         }
@@ -373,11 +374,12 @@ int main(int argc, char *argv[])
         /* The MCMC loop */    
         for(; mcmc < flags->NMCMC;)
         {
-            if(threadID==0){
-                flags->burnin=0;
-                if(mcmc<0) flags->burnin++;
-                if(mcmc<-flags->NBURN/2) flags->burnin++;
-
+            if(threadID==0)
+            {
+                //set search flags
+                flags->burnin   = (mcmc<0) ? 1 : 0;
+                flags->maximize = (mcmc<-flags->NBURN/2) ? 1 : 0;
+                
                 //set annealinging tempurature during burnin
                 /*
                 if(flags->burnin)
@@ -758,7 +760,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(!flags->prior)
         {
             //  Form master template
-            if(flags->burnin==2) maximize_signal_model(orbit, data, model_y, n);
+            if(flags->maximize) maximize_signal_model(orbit, data, model_y, n);
             generate_signal_model(orbit, data, model_y, n);
             
             //calibration error
@@ -894,7 +896,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
          passing model_x->Nlive is a trick to skip waveform generation for kill move
          and to only calculate new source for create move
          */
-        if(flags->burnin==2)maximize_signal_model(orbit, data, model_y, model_x->Nlive);
+        if(flags->maximize)maximize_signal_model(orbit, data, model_y, model_x->Nlive);
         generate_signal_model(orbit, data, model_y, model_x->Nlive);
         
         //calibration error

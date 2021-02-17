@@ -10,7 +10,7 @@ var dir_103fd8e7a501b92b31ccadd22612fec8 =
     [ "GalacticBinaryMath.h", "GalacticBinaryMath_8h.html", "GalacticBinaryMath_8h" ],
     [ "GalacticBinaryMCMC.c", "GalacticBinaryMCMC_8c.html", "GalacticBinaryMCMC_8c" ],
     [ "GalacticBinaryModel.h", "GalacticBinaryModel_8h_source.html", null ],
-    [ "GalacticBinaryPrior.h", "GalacticBinaryPrior_8h_source.html", null ],
+    [ "GalacticBinaryPrior.h", "GalacticBinaryPrior_8h.html", "GalacticBinaryPrior_8h" ],
     [ "GalacticBinaryProposal.h", "GalacticBinaryProposal_8h.html", "GalacticBinaryProposal_8h" ],
     [ "GalacticBinaryWaveform.h", "GalacticBinaryWaveform_8h_source.html", null ],
     [ "gitversion.h", "gitversion_8h_source.html", null ],
