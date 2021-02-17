@@ -1,6 +1,7 @@
 var structTDI =
 [
     [ "A", "structTDI.html#a24bf46f010217c055a56506b435c87e8", null ],
+    [ "delta", "structTDI.html#a04093b976b5a17e50262ef1b124d1286", null ],
     [ "E", "structTDI.html#a840803c3847bccb9995c7800ba52cbe1", null ],
     [ "N", "structTDI.html#a31100d0f3e6c6e4fb99e5c021ad0c60b", null ],
     [ "Nchannel", "structTDI.html#a7b7dbe108742f9737f0c239177d48fdb", null ],
