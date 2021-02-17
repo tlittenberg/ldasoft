@@ -91,49 +91,66 @@ $(document).ready(function(){initNavTree('structPrior.html',''); initResizable()
 
 <div class="header">
   <div class="summary">
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structPrior-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Prior Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Prototype structure for prior distributions.  
+ <a href="structPrior.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="GalacticBinaryPrior_8h_source.html">GalacticBinaryPrior.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Uniform prior</div></td></tr>
 <tr class="memitem:af1887d407bba270ac2aafda2495f0add"><td class="memItemLeft" align="right" valign="top"><a id="af1887d407bba270ac2aafda2495f0add"></a>
-double **&#160;</td><td class="memItemRight" valign="bottom"><b>prior</b></td></tr>
+double **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#af1887d407bba270ac2aafda2495f0add">prior</a></td></tr>
+<tr class="memdesc:af1887d407bba270ac2aafda2495f0add"><td class="mdescLeft">&#160;</td><td class="mdescRight">upper and lower bounds for uniform priors \( [\theta_{\rm min},\theta_{\rm max}]\) <br /></td></tr>
 <tr class="separator:af1887d407bba270ac2aafda2495f0add"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae12d3d2e05569e071324958d794bb2a7"><td class="memItemLeft" align="right" valign="top"><a id="ae12d3d2e05569e071324958d794bb2a7"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>logPriorVolume</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#ae12d3d2e05569e071324958d794bb2a7">logPriorVolume</a></td></tr>
+<tr class="memdesc:ae12d3d2e05569e071324958d794bb2a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">prior volume \( -\sum \log(\theta_{\rm max}-\theta_{\rm min})\) <br /></td></tr>
 <tr class="separator:ae12d3d2e05569e071324958d794bb2a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ac0fee42f8d57c9a2e170629b7ceb24"><td class="memItemLeft" align="right" valign="top"><a id="a6ac0fee42f8d57c9a2e170629b7ceb24"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>skyhist</b></td></tr>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#a6ac0fee42f8d57c9a2e170629b7ceb24">skyhist</a></td></tr>
+<tr class="memdesc:a6ac0fee42f8d57c9a2e170629b7ceb24"><td class="mdescLeft">&#160;</td><td class="mdescRight">2D histogram of prior density on sky <br /></td></tr>
 <tr class="separator:a6ac0fee42f8d57c9a2e170629b7ceb24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a874d4ccb5911577ee5604188a1fc4db3"><td class="memItemLeft" align="right" valign="top"><a id="a874d4ccb5911577ee5604188a1fc4db3"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>dcostheta</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#a874d4ccb5911577ee5604188a1fc4db3">dcostheta</a></td></tr>
+<tr class="memdesc:a874d4ccb5911577ee5604188a1fc4db3"><td class="mdescLeft">&#160;</td><td class="mdescRight">size of <code>skyhist</code> bins in \(\cos\theta\) direction <br /></td></tr>
 <tr class="separator:a874d4ccb5911577ee5604188a1fc4db3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a438aed9a92f28b0dac656757dd329984"><td class="memItemLeft" align="right" valign="top"><a id="a438aed9a92f28b0dac656757dd329984"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>dphi</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#a438aed9a92f28b0dac656757dd329984">dphi</a></td></tr>
+<tr class="memdesc:a438aed9a92f28b0dac656757dd329984"><td class="mdescLeft">&#160;</td><td class="mdescRight">size of <code>skyhist</code> bins in \(\phi\) direction <br /></td></tr>
 <tr class="separator:a438aed9a92f28b0dac656757dd329984"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf187cc5dc79f924ab37903ec3606244"><td class="memItemLeft" align="right" valign="top"><a id="acf187cc5dc79f924ab37903ec3606244"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>skymaxp</b></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#acf187cc5dc79f924ab37903ec3606244">skymaxp</a></td></tr>
+<tr class="memdesc:acf187cc5dc79f924ab37903ec3606244"><td class="mdescLeft">&#160;</td><td class="mdescRight">max prior density of <code>skyhist</code> <br /></td></tr>
 <tr class="separator:acf187cc5dc79f924ab37903ec3606244"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6fc05ca6b787c70012ba397b9d19111"><td class="memItemLeft" align="right" valign="top"><a id="ae6fc05ca6b787c70012ba397b9d19111"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>ncostheta</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#ae6fc05ca6b787c70012ba397b9d19111">ncostheta</a></td></tr>
+<tr class="memdesc:ae6fc05ca6b787c70012ba397b9d19111"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of <code>skyhist</code> bins in \(\cos\theta\) direction <br /></td></tr>
 <tr class="separator:ae6fc05ca6b787c70012ba397b9d19111"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b8b7ade7f208e199c4a94a0033cfb1f"><td class="memItemLeft" align="right" valign="top"><a id="a2b8b7ade7f208e199c4a94a0033cfb1f"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>nphi</b></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#a2b8b7ade7f208e199c4a94a0033cfb1f">nphi</a></td></tr>
+<tr class="memdesc:a2b8b7ade7f208e199c4a94a0033cfb1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of <code>skyhist</code> bins in \(\phi\) direction <br /></td></tr>
 <tr class="separator:a2b8b7ade7f208e199c4a94a0033cfb1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Gaussian Mixture Model prior</div></td></tr>
 <tr class="memitem:abf9142cc6a6fec7c228ead2165a18990"><td class="memItemLeft" align="right" valign="top"><a id="abf9142cc6a6fec7c228ead2165a18990"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NP</b></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#abf9142cc6a6fec7c228ead2165a18990">NP</a></td></tr>
+<tr class="memdesc:abf9142cc6a6fec7c228ead2165a18990"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of parameters in mixture model <br /></td></tr>
 <tr class="separator:abf9142cc6a6fec7c228ead2165a18990"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade3228402fdd115ded1bd3f61d52ef7d"><td class="memItemLeft" align="right" valign="top"><a id="ade3228402fdd115ded1bd3f61d52ef7d"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NMODE</b></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#ade3228402fdd115ded1bd3f61d52ef7d">NMODE</a></td></tr>
+<tr class="memdesc:ade3228402fdd115ded1bd3f61d52ef7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of modes in mixture model <br /></td></tr>
 <tr class="separator:ade3228402fdd115ded1bd3f61d52ef7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace14806ae4c39bde2d8a610ff12a670f"><td class="memItemLeft" align="right" valign="top"><a id="ace14806ae4c39bde2d8a610ff12a670f"></a>
 struct <a class="el" href="structMVG.html">MVG</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#ace14806ae4c39bde2d8a610ff12a670f">modes</a></td></tr>
 <tr class="memdesc:ace14806ae4c39bde2d8a610ff12a670f"><td class="mdescLeft">&#160;</td><td class="mdescRight">data structure for multivariate Gaussian <br /></td></tr>
 <tr class="separator:ace14806ae4c39bde2d8a610ff12a670f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">workspace</div></td></tr>
 <tr class="memitem:ad8c522fad614f0163f5948c513d80467"><td class="memItemLeft" align="right" valign="top"><a id="ad8c522fad614f0163f5948c513d80467"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPrior.html#ad8c522fad614f0163f5948c513d80467">vector</a></td></tr>
 <tr class="memdesc:ad8c522fad614f0163f5948c513d80467"><td class="mdescLeft">&#160;</td><td class="mdescRight">utility 1D array for prior metadata <br /></td></tr>
@@ -147,7 +164,10 @@ double ***&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href
 <tr class="memdesc:a36caf5fc4acf1471c73c5dfa56b1c82e"><td class="mdescLeft">&#160;</td><td class="mdescRight">utility 3D array for prior metadata <br /></td></tr>
 <tr class="separator:a36caf5fc4acf1471c73c5dfa56b1c82e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Prototype structure for prior distributions. </p>
+<p>Generic data structure for holding all information needed by prior distributions. Structure contains parameters for different supported priors and various book-keeping scalars, vectors, and matrices to hold needed metadata. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinaryPrior_8h_source.html">GalacticBinaryPrior.h</a></li>
 </ul>
 </div><!-- contents -->

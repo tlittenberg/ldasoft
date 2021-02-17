@@ -253,7 +253,7 @@ void print_usage()
     fprintf(stdout,"       --chainseed   : seed for MCMC RNG                   \n");
     fprintf(stdout,"       --chains      : number of parallel chains (20)      \n");
     fprintf(stdout,"       --no-burnin   : skip burn in steps                  \n");
-    fprintf(stdout,"       --resume      : restart from checkpoin.             \n");
+    fprintf(stdout,"       --resume      : restart from checkpoint             \n");
     fprintf(stdout,"       --threads     : number of parallel threads (max)    \n");
     fprintf(stdout,"\n");
     

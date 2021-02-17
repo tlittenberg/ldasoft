@@ -23,6 +23,7 @@ var structFlags =
     [ "match", "structFlags.html#a3b36da1e6e78521e7b4f586184f59687", null ],
     [ "matchInfile1", "structFlags.html#a4e7f5b5748ccebe98832a0c3944283dc", null ],
     [ "matchInfile2", "structFlags.html#adbaf667291c19d556c653faa5cab5073", null ],
+    [ "maximize", "structFlags.html#a56dfe39c6db42f388d182255cd85d1ed", null ],
     [ "NBURN", "structFlags.html#a9e2550661ab2f8d07f622fac880b4647", null ],
     [ "NDATA", "structFlags.html#a28b910931d0029fbddb06e09cdd8f608", null ],
     [ "NINJ", "structFlags.html#a070e524517d5e4279407d85e32cfc3b9", null ],

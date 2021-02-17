@@ -235,7 +235,7 @@ Parameterization</h2>
 </div><!-- fragment --><p><a class="anchor" id="chains"></a> </p>
 <h2><a class="anchor" id="autotoc_md20"></a>
 &lt;tt&gt;chains&lt;/tt&gt; directory</h2>
-<p>**<code>model_chain.dat.0</code>**: <a class="el" href="structModel.html">Model</a> state information for the chain sampling the target distribution (<em>temperature</em> T=0). Each row of the file is a chain sample. The columns are </p><pre class="fragment">step | N_live | logL | logL_norm | t_0
+<p>**<code>model_chain.dat.0</code>**: <a class="el" href="structModel.html" title="Hierarchical structure of GBMCMC model.">Model</a> state information for the chain sampling the target distribution (<em>temperature</em> T=0). Each row of the file is a chain sample. The columns are </p><pre class="fragment">step | N_live | logL | logL_norm | t_0
 </pre><p> where <code>step</code> is the iteration of the sampler, <code>N_live</code> is the number of templates used in the model, <code>logL</code> is the unnormalized log likelihood, i.e -0.5*Chi^2, <code>logL_norm</code> is the log of the likelihood normalization, and <code>t_0</code> is the inferred start time (in seconds) of the data segement.</p>
 <p>Samples with <code>step &lt; 0</code> are considered part of the burn in. The value of <code>step</code> is occasionally reset when the sampler undergoes a sufficiently large change in the maximum log likelihood.</p>
 <p>The total log likelihood at each step is <code>logL + logL_norm</code>. <br  />
