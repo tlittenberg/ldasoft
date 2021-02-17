@@ -308,6 +308,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     double logQyx = 0.0; //(log) proposal denstiy from x->y
     double logQxy = 0.0; //(log) proposal density from y->x
     
+    double dlogL  = 0.0; //delta log likelihood
+    double penalty= -3.*log(2*data->N*data->Nchannel); //BIC-inspired likelihood penalty
+
     //shorthand pointers
     struct Model *model_x = model;
     struct Model *model_y = trial;
@@ -394,10 +397,16 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         //get likelihood for y
         model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
         
+        //get likelihood difference
+        dlogL = model_y->logL - model_x->logL;
+        
+        //penalize likelihood when using maximized parameters
+        if(flags->maximize) dlogL += (model_y->Nlive - model_x->Nlive)*penalty;
+
         /*
          H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
          */
-        logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+        logH += dlogL/chain->temperature[ic]; //delta logL
     }
     
     
