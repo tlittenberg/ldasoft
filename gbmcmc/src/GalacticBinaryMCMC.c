@@ -238,7 +238,13 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     logQxy = (*proposal[nprop]->density)(data, model_x, source_x, proposal[nprop], source_x->params);
     
     map_array_to_params(source_y, source_y->params, data->T);
-    
+
+    /*
+     if(flags->maximize &&
+       !check_range(source_y->params, model->prior, model->NP) )
+        maximize_signal_model(orbit, data, model_y, n);
+     */
+
     
     //update calibration parameters
     if(flags->calibration) draw_calibration_parameters(data, model_y, chain->r[ic]);
@@ -266,7 +272,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(!flags->prior)
         {
             //  Form master template
-            if(flags->maximize) maximize_signal_model(orbit, data, model_y, n);
             generate_signal_model(orbit, data, model_y, n);
             
             //calibration error
@@ -309,7 +314,12 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     double logQxy = 0.0; //(log) proposal density from y->x
     
     double dlogL  = 0.0; //delta log likelihood
-    double penalty= -3.*log(2*data->N*data->Nchannel); //BIC-inspired likelihood penalty
+    
+    /*
+     * BIC-inspired likelihood penalty -klogN/2
+     * k = [A, inc, psi, phi]
+     */
+    double penalty= -2.*data->logN;
 
     //shorthand pointers
     struct Model *model_x = model;
@@ -346,6 +356,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
             logQxy = 0;
             
             map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
+            
+            if(flags->maximize) maximize_signal_model(orbit, data, model_y, create);
+
         }
         else logPy = -INFINITY;
     }
@@ -384,7 +397,6 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
          passing model_x->Nlive is a trick to skip waveform generation for kill move
          and to only calculate new source for create move
          */
-        if(flags->maximize)maximize_signal_model(orbit, data, model_y, model_x->Nlive);
         generate_signal_model(orbit, data, model_y, model_x->Nlive);
         
         //calibration error

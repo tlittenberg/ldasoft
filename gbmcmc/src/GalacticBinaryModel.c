@@ -70,6 +70,7 @@ void alloc_data(struct Data *data, struct Flags *flags)
     
     
     data->NT = flags->NT;
+    data->logN = log((double)(2*data->N*data->Nchannel*data->NT));
     
     data->inj = malloc(sizeof(struct Source));
     alloc_source(data->inj,data->N,data->Nchannel,data->NP);

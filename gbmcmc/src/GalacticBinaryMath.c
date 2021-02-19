@@ -295,7 +295,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
     {
         for(j=0; j<N; j++)
         {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:83: WARNING: nan matrix element, now what?\n");
+            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
             gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
         }
     }
@@ -384,7 +384,7 @@ void invert_matrix(double **matrix, int N)
     {
         for(j=0; j<N; j++)
         {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan matrix element, now what?\n");
+            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
             gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
         }
     }
