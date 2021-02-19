@@ -309,8 +309,8 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
         
         if(threadID==0)
         {
-            if(gbmcmc_data->mcmc_step<0) flags->burnin=1;
-            else       flags->burnin=0;
+            flags->burnin   = (gbmcmc_data->mcmc_step<0) ? 1 : 0;
+            flags->maximize = (gbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
         }
         
 #pragma omp barrier

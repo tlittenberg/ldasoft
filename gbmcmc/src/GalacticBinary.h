@@ -47,6 +47,7 @@ struct Data
     int NT;       //!<number of time segments
     int Nchannel; //!<number of data channels
     int DMAX;     //!<max dimension of signal model
+    double logN;  //!<log total number of data points \f$ \log ( 2 \times N \times N_{\rm channel} \times N_{\rm T} )\f$
     ///@}
 
     /** @name Random Number Generator Seeds */
@@ -160,7 +161,7 @@ struct Flags
     int debug;      //!<`[--debug; default=FALSE]`: coarser settings for proposals and verbose output for debugging
     int cheat;      //!<start sampler at injection values
     int burnin;     //!<`[--no-burnin; default=TRUE]`: chain is in the burn in phase
-    int maximize;   //!<`[--no-maximize; default=TRUE]`: maximize over extrinsic parameter.
+    int maximize;   //!<maximize over extrinsic parameter during burn in phase.
     int update;     //!<`[--update=FILENAME; default=FALSE]`: use Gaussian Mixture Model approximation to previous posterior as current prior.
     int updateCov;  //!<`[--update-cov=FILENAME; default=FALSE]`: updating fit from covariance matrix files built from chain samples, passed as `FILENAME`, used in draw_from_cov().
     int match;      //!<[--match=FLOAT; default=0.8]`: match threshold for chain sample clustering in post processing.
