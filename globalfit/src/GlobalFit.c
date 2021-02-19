@@ -167,6 +167,7 @@ int main(int argc, char *argv[])
     {
         GBMCMC_Flag = 1;
         initialize_gbmcmc_sampler(gbmcmc_data);
+        print_gb_catalog_script(flags, data, orbit);
     }
     
     /* ssign processes to Noise model */
@@ -188,8 +189,7 @@ int main(int argc, char *argv[])
         /* ============================= */
 
         /* gbmcmc sampler gibbs update */
-        if(GBMCMC_Flag)
-            gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+        if(GBMCMC_Flag) gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
 
         /* get global status of gbmcmc samplers */
         gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
         if(Noise_Flag)
             noise_data->status = update_noise_sampler(noise_data);
         
-        /* send noise model with other worker nodes */
+        /* share noise model with other worker nodes */
         share_noise_model(gbmcmc_data, noise_data, GBMCMC_Flag, Noise_Flag, root);
         
         /* ============================= */
