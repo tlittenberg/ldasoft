@@ -218,8 +218,21 @@ int main(int argc, char *argv[])
 
     }while(gbmcmc_data->status!=0);
     
-    
-    if(GBMCMC_Flag) print_waveforms_reconstruction(gbmcmc_data->data, gbmcmc_data->flags);
+    /*
+     * Post processing model components
+     *
+     */
+    if(GBMCMC_Flag)
+    {
+        /* waveform reconstructions */
+        print_waveforms_reconstruction(gbmcmc_data->data, gbmcmc_data->flags);
+                
+        /* evidence results */
+        print_evidence(chain,flags);
+
+        /* flush & close chain files */
+        free_chain(chain,flags);
+    }
     if(Noise_Flag)  print_noise_reconstruction(noise_data->data, noise_data->flags);
     
     /* clean up */

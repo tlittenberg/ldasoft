@@ -130,4 +130,9 @@ void print_noise_reconstruction(struct Data *data, struct Flags *flags);
  */
 void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_index);
 
+/**
+ \brief Print evidence for each dimension model
+ */
+void print_evidence(struct Chain *chain,struct Flags *flags);
+
 #endif /* GalacticBinaryIO_h */
