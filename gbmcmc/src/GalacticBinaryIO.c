@@ -1379,4 +1379,13 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     fclose(fptr);
 }
 
+void print_evidence(struct Chain *chain,struct Flags *flags)
+{
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/evidence.dat",flags->runDir);
+    FILE *zFile = fopen(filename,"w");
+    for(int i=0; i<flags->DMAX; i++) fprintf(zFile,"%i %i\n",i,chain->dimension[0][i]);
+    fclose(zFile);
+}
+
 

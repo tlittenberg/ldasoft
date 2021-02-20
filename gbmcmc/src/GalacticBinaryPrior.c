@@ -562,7 +562,6 @@ double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, dou
     gsl_vector_set(x,1,source->costheta);
     gsl_vector_set(x,2,source->phi);
     gsl_vector_set(x,3,log(source->amp));
-    //gsl_vector_set(x,4,acos(source->cosi));
     gsl_vector_set(x,4,source->cosi);
     gsl_vector_set(x,5,source->psi);
     gsl_vector_set(x,6,source->phi0);
