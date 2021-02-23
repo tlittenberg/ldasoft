@@ -120,9 +120,12 @@ struct Data
     ///@}
 
     
-    
-    
-    
+    /** @name Already known sources */
+    ///@{
+    int Ncache; //!<number of sources in the cache file
+    char **cache; //!<contents of cache file
+    struct Catalog *catalog; //!< data and metadata for known sources
+    ///@}
 };
 
 /*!

@@ -36,6 +36,7 @@
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
+#include "GalacticBinaryCatalog.h"
 
 
 int main(int argc, char *argv[])

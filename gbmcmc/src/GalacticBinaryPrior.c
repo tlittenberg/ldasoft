@@ -40,6 +40,7 @@
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryPrior.h"
+#include "GalacticBinaryCatalog.h"
 
 static double loglike(double *x, int D)
 {
@@ -516,43 +517,19 @@ int check_range(double *params, double **uniform_prior, int NP)
 
 void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior)
 {
-    fprintf(stdout,"\n========= Gaussian Mixture Model prior =========\n\n");
-    /* allocate GMM structure */
-
-    prior->NP = (size_t)data->NP;
-        
-    FILE *fptr = NULL;
-    /* Read GMM results to binary for pick up by other processes */
-    if( (fptr = fopen(flags->gmmFile,"rb"))!=NULL)
-    {
-        fprintf(stdout,"   Found GMM file %s\n",flags->gmmFile);
-        fread(&prior->NMODE, sizeof prior->NMODE, 1, fptr);
-        fprintf(stdout,"   GMM uses %i modes\n",(int)prior->NMODE);
-
-        prior->modes = malloc(prior->NMODE*sizeof(struct MVG*));
-        for(size_t n=0; n<prior->NMODE; n++)
-        {
-            prior->modes[n] = malloc(sizeof(struct MVG));
-            alloc_MVG(prior->modes[n],prior->NP);
-        }
-
-        for(size_t n=0; n<prior->NMODE; n++) read_MVG(prior->modes[n],fptr);
-        fclose(fptr);
-    }
-    else
-    {
-        fprintf(stderr,"Error reading %s\n",flags->gmmFile);
-        fprintf(stderr,"Exiting to system\n");
-        exit(1);
-    }
-    fprintf(stdout,"\n================================================\n\n");
+    prior->gmm = data->catalog->entry[0]->gmm;
 }
 
-double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, double *params)
+double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
 {
     size_t NP = data->NP;
     gsl_vector *x = gsl_vector_alloc(NP);
-        
+    
+    /* pointers to GMM contents */
+    struct MVG **modes = gmm->modes;
+    size_t NMODES = gmm->NMODE;
+    
+
     //pack parameters into gsl_vector with correct units
     struct Source *source = malloc(sizeof(struct Source));
     alloc_source(source, data->N, data->Nchannel, data->NP);
@@ -612,7 +589,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     if(check_range(params, uniform_prior, model->NP)) return -INFINITY;
 
     //update from existing runs prior
-    if(flags->update) logP = evaluate_gmm_prior(data, prior->modes, prior->NMODE, params);
+    if(flags->update) logP = evaluate_gmm_prior(data, prior->gmm, params);
     
     //blind search prior
     else

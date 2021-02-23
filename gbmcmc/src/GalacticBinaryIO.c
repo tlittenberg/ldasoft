@@ -407,7 +407,6 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {"h5-data",   required_argument, 0, 0},
         {"fmin",      required_argument, 0, 0},
         {"links",     required_argument, 0, 0},
-        {"update",    required_argument, 0, 0},
         {"update-cov",required_argument, 0, 0},
         {"match-in1", required_argument, 0, 0},
         {"match-in2", required_argument, 0, 0},
@@ -427,6 +426,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {"sim-noise",   no_argument, 0, 0 },
         {"conf-noise",  no_argument, 0, 0 },
         {"frac-freq",   no_argument, 0, 0 },
+        {"update",      no_argument, 0, 0 },
         {"fix-sky",     no_argument, 0, 0 },
         {"fix-freq",    no_argument, 0, 0 },
         {"fix-fdot",    no_argument, 0, 0 },
@@ -468,6 +468,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
                 if(strcmp("fix-sky",     long_options[long_index].name) == 0) flags->fixSky     = 1;
                 if(strcmp("fix-freq",    long_options[long_index].name) == 0) flags->fixFreq    = 1;
+                if(strcmp("update",      long_options[long_index].name) == 0) flags->update     = 1;
                 if(strcmp("galaxy-prior",long_options[long_index].name) == 0) flags->galaxyPrior= 1;
                 if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
                 if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
@@ -518,6 +519,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 }
                 if(strcmp("catalog",long_options[long_index].name) == 0)
                 {
+                    checkfile(optarg);
                     flags->catalog = 1;
                     sprintf(flags->catalogFile,"%s",optarg);
                 }
@@ -556,12 +558,6 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                         fprintf(stderr,"Now exiting to system\n");
                         exit(1);
                     }
-                }
-                if(strcmp("update", long_options[long_index].name) == 0)
-                {
-                    checkfile(optarg);
-                    flags->update=1;
-                    sprintf(flags->gmmFile,"%s",optarg);
                 }
                 if(strcmp("update-cov", long_options[long_index].name) == 0)
                 {

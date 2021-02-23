@@ -29,12 +29,14 @@
 #include <gsl/gsl_fft_real.h>
 
 #include <LISA.h>
+#include <GMM_with_EM.h>
 
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryData.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
+#include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryWaveform.h"
 
 #define TUKEY_FILTER_LENGTH 1e5 //seconds
@@ -867,6 +869,113 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
     fclose(injectionFile);
     
     fprintf(stdout,"================================================\n\n");
+}
+
+void GalacticBinaryLoadCatalogCache(struct Data *data, struct Flags *flags)
+{
+    /* check that file exists */
+    FILE *catalog_file = NULL;
+    if((catalog_file = fopen(flags->catalogFile, "r")) == NULL)
+    {
+        fprintf(stderr,"Error opening %s\n", flags->catalogFile);
+        exit(1);
+    }
+    
+    /* count sources in catalog cache file */
+    char* line;
+    char lineBuffer[MAXSTRINGSIZE];
+    data->Ncache=0;
+    while((line = fgets(lineBuffer, MAXSTRINGSIZE, catalog_file)) != NULL) data->Ncache++;
+    rewind(catalog_file);
+            
+    
+    /* store entire cache file */
+    data->cache = malloc(data->Ncache*sizeof(char *));
+    for(int n=0; n<data->Ncache; n++)
+    {
+        //data->cache[n] = fgets(lineBuffer, MAXSTRINGSIZE, catalog_file);
+        data->cache[n] = (char *)malloc(MAXSTRINGSIZE);
+        
+        line = fgets(lineBuffer, MAXSTRINGSIZE, catalog_file);
+        strcpy(data->cache[n],line);
+
+    }
+
+    fclose(catalog_file);
+}
+
+void GalacticBinaryParseCatalogCache(struct Data *data)
+{
+    /* allocate enough space for the entire catalog */
+    struct Catalog *catalog = data->catalog;
+    catalog->entry = malloc(data->Ncache*sizeof(struct Entry *));
+    catalog->N = 0;
+    
+    /* only store catalog sources in current segment */
+    double fmin = data->fmin + data->qpad/data->T;
+    double fmax = data->fmax - data->qpad/data->T;
+
+    /* parse catalog cache file */
+    char *token[6];
+    double f0;
+    
+    for(int n=0; n<data->Ncache; n++)
+    {
+        //split long string in cache file into tokens
+        int i=0;
+        token[i] = strtok(data->cache[n]," ");
+        while(token[i]!=NULL)
+        {
+            i++;
+            token[i] = strtok(NULL," \n");
+        }
+
+        f0 = atof(token[1]);
+        
+        if(f0>fmin && f0<fmax)
+        {
+            /* allocate  memory for catalog entry */
+            create_empty_source(catalog, data->N, data->Nchannel, data->NP);
+            
+            /* assign contents of cache file to entry */
+            struct Entry *entry = catalog->entry[catalog->N-1];
+            strcpy(entry->name,token[0]);
+            entry->SNR = atof(token[2]);
+            entry->evidence = atof(token[3]);
+            strcpy(entry->path,token[4]);
+        }
+    }
+}
+
+void GalacticBinaryLoadCatalog(struct Data *data)
+{
+        
+    /* load catalog from cache file */
+    for(int n=0; n<data->catalog->N; n++)
+    {
+        char filename[MAXSTRINGSIZE];
+        
+        struct Entry *entry = data->catalog->entry[n];
+        struct Source *source = data->catalog->entry[n]->source[0];
+        struct GMM *gmm = data->catalog->entry[n]->gmm;
+        
+        /* gaussian mixture model */
+        gmm->NP = (size_t)data->NP;
+        sprintf(filename,"%s%s_gmm.bin",entry->path,entry->name);
+        read_gmm_binary(gmm, filename);
+        printf("read %s\n",filename);
+        /* source parameters */
+        sprintf(filename,"%s%s_params.dat",entry->path,entry->name);
+        FILE *fptr = NULL;
+        if((fptr = fopen(filename,"r")) == NULL)
+        {
+            fprintf(stderr,"Error opening %s\n", filename);
+            exit(1);
+        }
+        scan_source_params(data, source, fptr);
+        fclose(fptr);
+
+    }
 }
 
 void GalacticBinaryCleanEdges(struct Data *data, struct Orbit *orbit, struct Flags *flags)
