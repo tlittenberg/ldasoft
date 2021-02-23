@@ -29,6 +29,7 @@
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryPrior.h"
 #include "GalacticBinaryModel.h"
+#include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryFStatistic.h"
 
@@ -141,6 +142,10 @@ void alloc_data(struct Data *data, struct Flags *flags)
     
     //Spectrum proposal
     data->p = calloc(data->N,sizeof(double));
+
+    //catalog of previously detected sources
+    data->catalog = malloc(sizeof(struct Catalog));
+
 }
 
 void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flags)

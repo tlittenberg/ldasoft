@@ -80,6 +80,21 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
  */
 void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
+/**
+ \brief Store full contents of input cache file from `--catalog` argument
+ */
+void GalacticBinaryLoadCatalogCache(struct Data *data, struct Flags *flags);
+
+/**
+ \brief Select sources in `--catalog` that are in frequency segment and store metadata
+ */
+void GalacticBinaryParseCatalogCache(struct Data *data);
+
+/**
+ \brief Get data for sources in `--catalog`.
+ */
+void GalacticBinaryLoadCatalog(struct Data *data);
+
 
 /**
  \brief Removes known sources which are outside of analysis window but whose signal power may extend into the region of interest.

@@ -74,13 +74,18 @@ struct Proposal
     double **matrix; //!<utility 2D array for proposal metadata
     double ***tensor;//!<utility 3D array for proposal metadata
     
-    struct MVG **modes; //!<data structure for multivariate Gaussian
+    /// Gaussian mixture model
+    struct GMM *gmm;
 };
 
-/** Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power */
+/**
+ \brief Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power
+ */
 void setup_frequency_proposal(struct Data *data, struct Flags *flags);
 
-/** Compute and print acceptance ratios for each proposal */
+/**
+ \brief Compute and print acceptance ratios for each proposal
+ */
 void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr);
 
 /**

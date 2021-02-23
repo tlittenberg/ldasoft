@@ -235,6 +235,7 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     int NMODES = proposal->size;
     double ran_no[NP];
     
+    struct MVG **modes = proposal->gmm->modes;
     struct MVG *mode = NULL;
     
     //pick which mode
@@ -242,7 +243,7 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     double p = 1.;
     do {
         k = (int)floor(gsl_rng_uniform(seed)*NMODES);
-        mode = proposal->modes[k];
+        mode = modes[k];
         p = gsl_rng_uniform(seed);
     } while (p>mode->p);
     
@@ -282,12 +283,12 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     if(NP>8) source->d2fdt2 = x[8];
     map_params_to_array(source, params, data->T);
             
-    return evaluate_gmm_prior(data, proposal->modes, NMODES, params);
+    return evaluate_gmm_prior(data, proposal->gmm, params);
 }
 
 double gmm_prior_density(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params)
 {
-    return evaluate_gmm_prior(data, proposal->modes, proposal->size, params);
+    return evaluate_gmm_prior(data, proposal->gmm, params);
 }
 
 double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -894,22 +895,6 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 rjcheck += proposal[i]->rjweight;
                 break;
             case 7:
-                /*
-                sprintf(proposal[i]->name,"cdf draw");
-                proposal[i]->function = &draw_from_cdf;
-                proposal[i]->density  = &cdf_density;
-                proposal[i]->weight   = 0.0;
-                proposal[i]->rjweight = 0.0;
-                if(flags->update)
-                {
-                    //setup_cdf_proposal(data, flags, proposal[i], NMAX);
-                    proposal[i]->weight   = 0.0;
-                    proposal[i]->rjweight = 0.0;
-                }
-                check   += proposal[i]->weight;
-                rjcheck += proposal[i]->rjweight;
-                break;
-                 */
                 sprintf(proposal[i]->name,"gmm draw");
                 proposal[i]->function = &draw_from_gmm_prior;
                 proposal[i]->density = &gmm_prior_density;
@@ -919,7 +904,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 {
                     setup_gmm_proposal(flags, prior, proposal[i]);
                     proposal[i]->weight   = 0.2;
-                    proposal[i]->rjweight = 0.0;
+                    proposal[i]->rjweight = 0.2;
                 }
                 check   += proposal[i]->weight;
                 rjcheck += proposal[i]->rjweight;
@@ -1133,32 +1118,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
 
 void setup_gmm_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)
 {
-    int err=0;
-    int NP = prior->NP;
-    int NMODE = prior->NMODE;
-    proposal->size = NMODE;
-    proposal->modes = malloc(proposal->size*sizeof(struct MVG*));
-
-    for(size_t n=0; n<NMODE; n++)
-    {
-        proposal->modes[n] = malloc(sizeof(struct MVG));
-        alloc_MVG(proposal->modes[n],NP);
-        
-        err += gsl_vector_memcpy(proposal->modes[n]->mu, prior->modes[n]->mu);
-        err += gsl_vector_memcpy(proposal->modes[n]->evalues, prior->modes[n]->evalues);
-        
-        err += gsl_matrix_memcpy(proposal->modes[n]->C, prior->modes[n]->C);
-        err += gsl_matrix_memcpy(proposal->modes[n]->Cinv, prior->modes[n]->Cinv);
-        err += gsl_matrix_memcpy(proposal->modes[n]->L, prior->modes[n]->L);
-        err += gsl_matrix_memcpy(proposal->modes[n]->evectors, prior->modes[n]->evectors);
-        err += gsl_matrix_memcpy(proposal->modes[n]->minmax, prior->modes[n]->minmax);
-
-        proposal->modes[n]->detC = prior->modes[n]->detC;
-        proposal->modes[n]->p = prior->modes[n]->p;
-        proposal->modes[n]->Neff = prior->modes[n]->Neff;
-
-    }
-
+    proposal->gmm = prior->gmm;
 }
 
 void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)
