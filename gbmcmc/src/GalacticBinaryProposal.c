@@ -44,6 +44,7 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryFStatistic.h"
 #include "GalacticBinaryProposal.h"
+#include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryMath.h"
 
 
@@ -232,10 +233,13 @@ double draw_from_prior(struct Data *data, struct Model *model, struct Source *so
 double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
     int NP = source->NP;
-    int NMODES = proposal->size;
     double ran_no[NP];
     
-    struct MVG **modes = proposal->gmm->modes;
+    //choose which entry
+    int ngmm = (int)floor(gsl_rng_uniform(seed)*proposal->Ngmm);
+    int NMODES = proposal->gmm[ngmm]->NMODE;
+    
+    struct MVG **modes = proposal->gmm[ngmm]->modes;
     struct MVG *mode = NULL;
     
     //pick which mode
@@ -282,13 +286,21 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     if(NP>7) source->dfdt = x[7];
     if(NP>8) source->d2fdt2 = x[8];
     map_params_to_array(source, params, data->T);
-            
-    return evaluate_gmm_prior(data, proposal->gmm, params);
+    
+    return gmm_prior_density(data, model, source, proposal, params);
 }
 
 double gmm_prior_density(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params)
 {
-    return evaluate_gmm_prior(data, proposal->gmm, params);
+    double p = 0;
+    
+    /* sum over modes */
+    for(int n=0; n<proposal->Ngmm; n++)
+    {
+        p += exp(evaluate_gmm_prior(data, proposal->gmm[n], params));
+    }
+        
+    return log(p/(double)proposal->Ngmm);
 }
 
 double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -900,9 +912,9 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 proposal[i]->density = &gmm_prior_density;
                 proposal[i]->weight   = 0.0;
                 proposal[i]->rjweight = 0.0;
-                if(flags->update)
+                if(flags->catalog)
                 {
-                    setup_gmm_proposal(flags, prior, proposal[i]);
+                    setup_gmm_proposal(data, proposal[i]);
                     proposal[i]->weight   = 0.2;
                     proposal[i]->rjweight = 0.2;
                 }
@@ -1116,9 +1128,16 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     fflush(stdout);
 }
 
-void setup_gmm_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)
+void setup_gmm_proposal(struct Data *data, struct Proposal *proposal)
 {
-    proposal->gmm = prior->gmm;
+    /* size of joint gmm */
+    proposal->Ngmm = data->catalog->N;
+    
+    /* allocate space for gmm */
+    proposal->gmm = malloc(proposal->Ngmm*sizeof(struct GMM*));
+    
+    /* point to different entries in catalog */
+    for(int n=0; n<proposal->Ngmm; n++) proposal->gmm[n] = data->catalog->entry[n]->gmm;
 }
 
 void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)

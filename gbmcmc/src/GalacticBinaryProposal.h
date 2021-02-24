@@ -75,7 +75,8 @@ struct Proposal
     double ***tensor;//!<utility 3D array for proposal metadata
     
     /// Gaussian mixture model
-    struct GMM *gmm;
+    size_t Ngmm;
+    struct GMM **gmm;
 };
 
 /**
@@ -336,7 +337,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
  \brief Copies gaussian mixture model prior into proposal when given --update flag
  
  */
-void setup_gmm_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal);
+void setup_gmm_proposal(struct Data *data, struct Proposal *proposal);
 
 /**
  \brief Stores covariance matrices input with --update-cov flag

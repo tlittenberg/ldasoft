@@ -152,6 +152,18 @@ int main(int argc, char *argv[])
 
     /* Initialize LISA orbit model */
     initialize_orbit(data,orbit,flags);
+    
+    /* Load gb catalog cache file for proposals/priors */
+    if(flags->catalog)
+    {
+        if(procID==root) GalacticBinaryLoadCatalogCache(data, flags);
+        
+        broadcast_cache(data, root, procID);
+        
+        GalacticBinaryParseCatalogCache(data);
+        GalacticBinaryLoadCatalog(data);
+    }
+
 
     /*
      * Initialize all of the samplers

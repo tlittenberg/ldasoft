@@ -33,6 +33,8 @@ void select_frequency_segment(struct Data *data, struct TDI *tdi_full, int procI
 
 void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples, int root, int procID);
 
+void broadcast_cache(struct Data *data, int root, int procID);
+
 void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data);
 
 void run_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data);
