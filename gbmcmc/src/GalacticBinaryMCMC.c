@@ -236,7 +236,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     //call associated proposal density functions
     logQyx = (*proposal[nprop]->density)(data, model_x, source_y, proposal[nprop], source_y->params);
     logQxy = (*proposal[nprop]->density)(data, model_x, source_x, proposal[nprop], source_x->params);
-    
+        
     map_array_to_params(source_y, source_y->params, data->T);
 
     /*
@@ -294,7 +294,11 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         
         loga = log(gsl_rng_uniform(chain->r[ic]));
         
-        
+//        if(nprop==7)
+//        {
+//            printf("logQyx=%g, logQxy=%g, logLy=%g, logLx=%g\n",logQyx,logQxy,model_y->logL, model_x->logL);
+//        }
+
         if(isfinite(logH) && logH > loga)
         {
             proposal[nprop]->accept[ic]++;
@@ -319,7 +323,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
      * BIC-inspired likelihood penalty -klogN/2
      * k = [A, inc, psi, phi]
      */
-    double penalty= -2.*data->logN;
+    double penalty= -2.;//1.*data->logN;
 
     //shorthand pointers
     struct Model *model_x = model;

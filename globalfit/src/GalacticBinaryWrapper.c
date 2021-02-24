@@ -7,6 +7,7 @@
 
 #include <mpi.h>
 #include <omp.h>
+#include <string.h>
 
 #include <stdio.h>
 
@@ -92,6 +93,26 @@ void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples
     select_frequency_segment(data, tdi_full, procID-1);
 }
 
+void broadcast_cache(struct Data *data, int root, int procID)
+{
+
+    /* broadcast number of each lines in the cache */
+    MPI_Bcast(&data->Ncache, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+    /* all but root process need to allocate memory for cache sructure */
+    if(procID!=root)
+    {
+        data->cache = malloc(data->Ncache*sizeof(char *));
+        for(int n=0; n<data->Ncache; n++)
+            data->cache[n] = (char *) malloc(MAXSTRINGSIZE);
+    }
+    
+    /* broadcast each line */
+    for(int n=0; n<data->Ncache; n++)
+        MPI_Bcast(data->cache[n], MAXSTRINGSIZE, MPI_CHAR, root, MPI_COMM_WORLD);
+
+}
+
 void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 {
     /* Aliases to gbmcmc structures */
@@ -106,7 +127,6 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     
     /* Lowest rank process has extra IO */
     if(gbmcmc_data->procID==gbmcmc_data->procID_min) flags->quiet=0;
-
     
     /* Get noise spectrum for data segment */
     GalacticBinaryGetNoiseModel(data,orbit,flags);

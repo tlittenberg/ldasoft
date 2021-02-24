@@ -898,7 +898,7 @@ void GalacticBinaryLoadCatalogCache(struct Data *data, struct Flags *flags)
         
         line = fgets(lineBuffer, MAXSTRINGSIZE, catalog_file);
         strcpy(data->cache[n],line);
-
+        strtok(data->cache[n],"\n");
     }
 
     fclose(catalog_file);
@@ -963,7 +963,7 @@ void GalacticBinaryLoadCatalog(struct Data *data)
         gmm->NP = (size_t)data->NP;
         sprintf(filename,"%s%s_gmm.bin",entry->path,entry->name);
         read_gmm_binary(gmm, filename);
-        printf("read %s\n",filename);
+        
         /* source parameters */
         sprintf(filename,"%s%s_params.dat",entry->path,entry->name);
         FILE *fptr = NULL;
