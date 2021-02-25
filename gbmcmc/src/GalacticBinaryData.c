@@ -74,6 +74,15 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     double Tobs = stop_time - start_time;
     int N = (int)floor(Tobs/dt);
     int NFFT = pow(2, floor( log2(N) ));
+    Tobs = NFFT*tdi_td->delta;
+    data->T = Tobs;
+
+    fprintf(stdout,"\nFrom GalacticBinaryReadHDF5:\n");
+    fprintf(stdout,"  Requested data duration of %.0f s\n",stop_time - start_time);
+    fprintf(stdout,"  Requested data segment has %i samples\n",N);
+    fprintf(stdout,"  Nearest 2^N is %i samples\n",NFFT);
+    fprintf(stdout,"  Duration of analyzed data is %.0f s\n\n",Tobs);
+    
     int n_start = (int)floor(start_time/dt); /* first sample of time segment */
     
     /* Truncate time series to be NFFT samples */
@@ -634,7 +643,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 map_params_to_array(inj, inj->params, data->T);
                 
                 //save parameters to file
-                sprintf(filename,"injection_parameters_%i_%i.dat",ii,jj);
+                sprintf(filename,"%s/injection_parameters_%i_%i.dat",flags->runDir,ii,jj);
                 if(nn==0)paramFile=fopen(filename,"w");
                 else     paramFile=fopen(filename,"a");
                 fprintf(paramFile,"%lg ",data->t0[jj]);
@@ -668,7 +677,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                     tdi->E[2*i+1] += inj->tdi->E[2*n+1];
                 }
                 
-                sprintf(filename,"data/waveform_injection_%i_%i.dat",ii,jj);
+                sprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 for(int i=0; i<data->N; i++)
                 {
@@ -681,7 +690,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 }
                 fclose(fptr);
                 
-                sprintf(filename,"data/power_injection_%i_%i.dat",ii,jj);
+                sprintf(filename,"%s/data/power_injection_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 for(int i=0; i<data->N; i++)
                 {
@@ -732,7 +741,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                     for(int j=0; j<data->NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
                 }
                 
-                sprintf(filename,"data/power_data_%i_%i.dat",ii,jj);
+                sprintf(filename,"%s/data/power_data_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 
                 for(int i=0; i<data->N; i++)
@@ -746,7 +755,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 }
                 fclose(fptr);
                 
-                sprintf(filename,"data/data_%i_%i.dat",ii,jj);
+                sprintf(filename,"%s/data/data_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 
                 for(int i=0; i<data->N; i++)

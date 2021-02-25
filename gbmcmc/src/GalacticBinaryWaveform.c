@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
+
 #include <gsl/gsl_fft_complex.h>
 
 #include <LISA.h>
@@ -171,7 +173,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             }
             if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
             {
-                fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,_FILE__);
+                fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,__FILE__);
                 fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->SnA[data->N/2],noise->SnE[data->N/2]);
                 for(int k=0; k<NP; k++)
                 {
