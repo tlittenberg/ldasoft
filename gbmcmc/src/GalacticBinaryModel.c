@@ -432,17 +432,11 @@ int compare_model(struct Model *a, struct Model *b)
             if(tsa->T[i] != tsb->T[i]) err++;
         }
         
-        //Fisher matrix
-        //double **fisher_matrix;
-        //double **fisher_evectr;
-        //double *fisher_evalue;
-        
         //Package parameters for waveform generator
         if(sa->NP != sb->NP) err++;
         for(int j=0; j<sa->NP; j++) if(sa->params[j] != sb->params[j]) err++;
         
     }
-    printf("   errorcheck1 %i\n",err);
     
     //Noise parameters
     for(int n=0; n<a->NT; n++)
@@ -492,8 +486,6 @@ int compare_model(struct Model *a, struct Model *b)
         if(a->t0_min[n] != b->t0_min[n]) err++;
         if(a->t0_max[n] != b->t0_max[n]) err++;
     }
-    printf("   errorcheck2 %i\n",err);
-    
     
     //Source parameter priors
     //double **prior;
@@ -1158,7 +1150,6 @@ int update_max_log_likelihood(struct Model **model, struct Chain *chain, struct 
         {
             chain->logLmax = logL;
             
-            //      fprintf(stdout,"New max logL = %.2f  Cloning chains...\n",logL);
             for(int ic=1; ic<chain->NC; ic++)
             {
                 int m = chain->index[ic];

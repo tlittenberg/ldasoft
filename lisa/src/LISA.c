@@ -56,9 +56,9 @@ void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, dou
     }
 }
 
-/*************************************************************************/
+/* ********************************************************************* */
 /*        Rigid approximation position of each LISA spacecraft           */
-/*************************************************************************/
+/* ********************************************************************* */
 void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
 {
     
@@ -274,7 +274,6 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     fprintf(stdout,"=========================================\n\n");
     
 }
-/*************************************************************************/
 
 void free_orbit(struct Orbit *orbit)
 {

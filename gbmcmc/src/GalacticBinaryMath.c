@@ -193,7 +193,6 @@ double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise
   for(int i=0; i<a->BW; i++)
   {
     int j = i+a->qmin-qmin;
-   // printf("data->qmin=%i,i=%i, imin=%i, qmin=%i, j=%i\n",qmin,i,a->imin,a->qmin,j);
     
     if(j>-1 && j<N)
     {
@@ -341,9 +340,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
                 if(evector[i][j] != evector[i][j]) evector[i][j] = 0.;
             }
         }
-        
-        //for(i=0;i<N-1;i++)for(j=i+1;j<N;j++) gsl_matrix_set(GSLcovari,j,i, gsl_matrix_get(GSLcovari,i,j) );
-        
+                
         //copy covariance matrix back into Fisher
         for(i=0; i<N; i++)
         {

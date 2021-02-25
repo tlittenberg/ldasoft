@@ -377,13 +377,10 @@ void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     
     double p;
     double x,y;
-    //double dx = (xf-x0)/100.;
-    //double dy = (yf-y0)/100.;
     double dx = (pmax_x-pmin_x)/100.;
     double dy = (pmax_y-pmin_y)/100.;
     for(int n=1; n<100; n++)
     {
-        //x = x0 + (double)n*dx;
         x = pmin_x + (double)n*dx;
         x = logit(x,pmin_x,pmax_x);
         
@@ -391,7 +388,6 @@ void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
         {
             p = 0.0;
 
-            //y = y0 + (double)m*dy;
             y = pmin_y + (double)m*dy;
             y = logit(y,pmin_y,pmax_y);
             

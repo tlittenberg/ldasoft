@@ -216,9 +216,8 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
         q = (int)(params[0]-data->qmin);
         if(alpha<data->p[q]) check = 0;
         count++;
-        //    printf("params[0]=%.12g, q=%i, alpha=%g, p=%g, pmax=%g\n",params[0],q,alpha,data->p[q],data->pmax);
     }
-    //  printf("============>params[0]=%.12g, q=%i, alpha=%g, p=%g, pmax=%g\n",params[0],q,alpha,data->p[q],data->pmax);
+
     //random draws for other parameters
     for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
     
@@ -513,13 +512,6 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
         jump[i] = 0.0;
     }
     
-    //decompose eigenjumps into paramter directions
-    /*for(i=0; i<NP; i++) for (j=0; j<NP; j++)
-     {
-     jump[j] += Amps[i]*source->fisher_evectr[j][i];
-     if(jump[j]!=jump[j])jump[j]=0.0;
-     }*/
-    
     //choose one eigenvector to jump along
     i = (int)(gsl_rng_uniform(seed)*(double)NP);
     for (j=0; j<NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
@@ -579,26 +571,15 @@ double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source 
     
     for(int n=0; n<NP; n++)
     {
-        if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1])
-        {
-            //          printf(" \ncdf: n=%d and params[n]=%g\n",n,params[n]);
-            return -INFINITY;
-            
-        }
+        if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
         
         //find samples either end of p-value
-        if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
-        {
-            return -INFINITY;
-            
-        }
-        else
-        {
-            i=binary_search(cdf[n],0,N,params[n]);
-            j=i+1;
-            while(cdf[n][j]==cdf[n][i]) j++;
-            logP += log(  ((double)(j-i)/N) /  (cdf[n][j]-cdf[n][i])  );
-        }
+        if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1]) return -INFINITY;
+        
+        i=binary_search(cdf[n],0,N,params[n]);
+        j=i+1;
+        while(cdf[n][j]==cdf[n][i]) j++;
+        logP += log(  ((double)(j-i)/N) /  (cdf[n][j]-cdf[n][i])  );
     }
     return logP;
 }
@@ -607,10 +588,9 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
 {
     int NP = source->NP;
     double ran_no[NP];
-    int ns=0;
-    //  proposal->size = 1;
-    ns=(int)floor(gsl_rng_uniform(seed)*proposal->size);
-    //  printf("\nproposing from from ns=%d\n",ns);
+
+    int ns=(int)floor(gsl_rng_uniform(seed)*proposal->size);
+
     //pick which mode to propose to
     int mode;
     if (gsl_rng_uniform(seed) > (1.0-proposal->vector[4*ns])) mode = 2*ns;
@@ -639,17 +619,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
         for(int k=0; k<NP; k++) params[n] += ran_no[k]*Lij[n][k];
         
     }
-    
-    //  printf("mode %i:{",mode);
-    //  for(int k=0; k<NP; k++)printf("%.12g ",params[k]);
-    //  printf("}\n");
-    /*
-     FILE *fptr = fopen("proposal.dat","a");
-     for(int k=0; k<NP; k++)fprintf(fptr,"%.12g ",params[k]);
-     fprintf(fptr,"\n");
-     fclose(fptr);
-     */
-    
+        
     return cov_density(data, model, source, proposal, params);
 }
 
@@ -1455,9 +1425,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
         q        = (double)(data->qmin) + i*d_f;
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
-        
-        //printf("q=%g, costheta=%g, phi=%g --> i=%i, j=%i, k=%i\n",q,costheta,phi,(int)i,(int)j,(int)k);
-        
+                
         p = proposal->tensor[(int)i][(int)j][(int)k];
         alpha = gsl_rng_uniform(seed)*proposal->maxp;
         
@@ -1516,7 +1484,6 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
         
-        //printf("q=%g, costheta=%g, phi=%g --> i=%i, j=%i, k=%i\n",q,costheta,phi,(int)i,(int)j,(int)k);
         if(
            ((int)i < 0 || (int)i > n_f-1)     ||
            ((int)j < 0 || (int)j > n_theta-1) ||

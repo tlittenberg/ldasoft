@@ -159,7 +159,6 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
         value[1] = entry->source[i*NTHIN]->costheta;
         value[2] = entry->source[i*NTHIN]->phi;
         value[3] = log(entry->source[i*NTHIN]->amp);
-        //value[4] = acos(entry->source[i*NTHIN]->cosi);
         value[4] = entry->source[i*NTHIN]->cosi;
         value[5] = entry->source[i*NTHIN]->psi;
         value[6] = entry->source[i*NTHIN]->phi0;
@@ -174,26 +173,6 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
             gsl_vector_set(params[n],i,value[n]);
         }
     }
-    
-    /* Get max and min for each parameter
-     for(size_t n=0; n<NP; n++)
-     {
-     int err = 0;
-     double *temp = malloc(10*sizeof(double));
-     err = gsl_sort_vector_smallest(temp, 10, params[n]);
-     pmin = temp[0] - (temp[9]-temp[0]); //pad min to avoid infs in mapping
-     
-     err = gsl_sort_vector_largest(temp, 10, params[n]);
-     pmax = temp[0] + (temp[0]-temp[9]); //pad max to avoid infs in mapping
-     
-     // copy max and min into each MVG structure
-     for(size_t k=0; k<NMODE; k++)
-     {
-     gsl_matrix_set(modes[k]->minmax,n,0,pmin);
-     gsl_matrix_set(modes[k]->minmax,n,1,pmax);
-     }
-     
-     }*/
     
     /* Use priors to set min and max of each parameter*/
     for(size_t n=0; n<NP; n++)
