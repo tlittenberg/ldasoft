@@ -901,9 +901,6 @@ int main(int argc, char *argv[])
             printf("\rRetry %i/%i: ",counter,CMAX);
         }
         
-        
-        /* ********************** */
-        
         for(int i=0; i<data->N; i++)
         {
             for(int j=0; j<data->Nchannel; j++)

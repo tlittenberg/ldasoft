@@ -143,9 +143,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
     
     cnt = 0;
     
-    //  if(flags->verbose)chain = fopen("chain.dat", "w");
-    
-    //int MCMC=1000000000;
     for(mc=0; mc<MCMC; mc++)
     {
         if(mc%(MCMC/100)==0)printProgress((double)mc/(double)MCMC);
@@ -235,8 +232,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         
     }
     
-    //  if(flags->verbose)fclose(chain);
-    
     dOmega = 4.0*M_PI/(double)(Nth*Nph);
     
     double uni = 0.1;
@@ -252,7 +247,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         for(iph=0; iph< Nph; iph++)
         {
             xx = yy*prior->skyhist[ith*Nph+iph];
-            //if(fabs(xx)  > 0.0) printf("%e %e %e\n", xx, zz, yy);
             prior->skyhist[ith*Nph+iph] = log(xx + zz);
             if(prior->skyhist[ith*Nph+iph]>prior->skymaxp) prior->skymaxp = prior->skyhist[ith*Nph+iph];
         }
@@ -264,11 +258,9 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         for(ith=0; ith< Nth; ith++)
         {
             xx = -1.0+2.0*((double)(ith)+0.5)/(double)(Nth);
-            //xx *= -1.0;    // plotting flip?
             for(iph=0; iph< Nph; iph++)
             {
                 yy = 2.0*M_PI*((double)(iph)+0.5)/(double)(Nph);
-                //yy = 2.0*M_PI - yy;  // plotting flip?
                 fprintf(fptr,"%e %e %e\n", yy, xx, prior->skyhist[ith*Nph+iph]);
             }
             fprintf(fptr,"\n");
@@ -311,9 +303,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
     
     //frequency bin
-    //double qpad = 10;
-    model->prior[0][0] = data->qmin;// + data->qpad;
-    model->prior[0][1] = data->qmax;// - data->qpad;
+    model->prior[0][0] = data->qmin;
+    model->prior[0][1] = data->qmax;
     
     //colatitude
     model->prior[1][0] = -1.0;
@@ -324,7 +315,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     model->prior[2][1] = PI2;
     
     //log amplitude
-    model->prior[3][0] = -60.0;//-54
+    model->prior[3][0] = -60.0;
     model->prior[3][1] = -48.0;
     
     //cos inclination
@@ -679,8 +670,6 @@ double evalaute_sky_location_prior(double *params, double **uniform_prior, doubl
         }
         else
         {
-            //while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
-            //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
             if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
             {
                 params[2] = atan2(sin(params[2]),cos(params[2]));
@@ -709,7 +698,7 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
     
     double snr = analytic_snr(amp,sn,sf,data->sqT);
     
-    return log(snr_prior(snr));// * snr/amp);
+    return log(snr_prior(snr));
 }
 
 

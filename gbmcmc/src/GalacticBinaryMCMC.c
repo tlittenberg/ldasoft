@@ -98,7 +98,6 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc)
     double A[NC][2];
     
     double nu=10;
-    //double t0=100;
     double t0=10000.;
     
     for(ic=1; ic<NC-1; ic++)
@@ -111,7 +110,6 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc)
     for(ic=1; ic<NC-1; ic++)
     {
         S[ic] += (A[ic][0] - A[ic][1])*(t0/((double)mcmc+t0))/nu;
-        //S[ic] += (A[ic][0] - A[ic][1])/nu;
         
         chain->temperature[ic] = chain->temperature[ic-1] + exp(S[ic]);
         
@@ -294,11 +292,6 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         
         loga = log(gsl_rng_uniform(chain->r[ic]));
         
-//        if(nprop==7)
-//        {
-//            printf("logQyx=%g, logQxy=%g, logLy=%g, logLx=%g\n",logQyx,logQxy,model_y->logL, model_x->logL);
-//        }
-
         if(isfinite(logH) && logH > loga)
         {
             proposal[nprop]->accept[ic]++;
@@ -479,7 +472,6 @@ void data_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, stru
     {
         // get likelihood for y
         trial->logL = gaussian_log_likelihood(orbit, data, trial);
-        //model->logL = gaussian_log_likelihood(orbit, data, model);
         
         logH += (trial->logL - model->logL)/chain->temperature[ic];
     }

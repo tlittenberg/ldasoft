@@ -383,9 +383,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     
     flags->injFile = malloc(10*sizeof(char *));
     for(int n=0; n<10; n++) flags->injFile[n] = malloc(1024*sizeof(char));
-    
-    //if(argc==1) print_usage();
-    
+        
     //Specifying the expected options
     static struct option long_options[] =
     {
@@ -796,21 +794,19 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
     int D = model[n]->Nlive;
     for(i=0; i<D; i++)
     {
-//        if(!flags->quiet || step>0)
-//        {
-            print_source_params(data,model[n]->source[i],chain->parameterFile[0]);
-            if(flags->verbose)
-            {
-                //numerical SNR
-                double snr_n = snr(model[n]->source[i], data->noise[0]);
-                //analytic SNR
-                double snr_a = analytic_snr(exp(model[n]->source[i]->params[3]), data->noise[0]->SnA[0], data->sine_f_on_fstar, data->sqT);
-                
-                fprintf(chain->parameterFile[0],"%lg %lg ",snr_a,snr_n);
-            }
-            fprintf(chain->parameterFile[0],"\n");
-            if(flags->verbose)fflush(chain->parameterFile[0]);
-//        }
+        print_source_params(data,model[n]->source[i],chain->parameterFile[0]);
+        if(flags->verbose)
+        {
+            //numerical SNR
+            double snr_n = snr(model[n]->source[i], data->noise[0]);
+            //analytic SNR
+            double snr_a = analytic_snr(exp(model[n]->source[i]->params[3]), data->noise[0]->SnA[0], data->sine_f_on_fstar, data->sqT);
+            
+            fprintf(chain->parameterFile[0],"%lg %lg ",snr_a,snr_n);
+        }
+        fprintf(chain->parameterFile[0],"\n");
+        if(flags->verbose)fflush(chain->parameterFile[0]);
+        
         if(step>0)
         {
             if(chain->dimensionFile[D]==NULL)
@@ -1223,7 +1219,6 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
         sprintf(filename,"%s/data/variance_residual_t%i.dat",flags->runDir,k);
         fptr_var=fopen(filename,"w");
         
-        //double X_med,X_lo_50,X_hi_50,X_lo_90,X_hi_90;
         double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
         double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
         

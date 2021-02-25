@@ -362,7 +362,6 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
         gsl_rng_set (r, data->iseed);
         
         //TODO: support for verification binary priors
-        //cosi = -1.0 + gsl_rng_uniform(r)*2.0;
         phi0 = gsl_rng_uniform(r)*M_PI*2.;
         psi  = gsl_rng_uniform(r)*M_PI/4.;
         
@@ -422,7 +421,6 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             galactic_binary_alignment(orbit, data, inj);
             
             //Simulate gravitational wave signal
-            //double t0 = data->t0 + jj*(data->T + data->tgap);
             galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
             
             //Add waveform to data TDI channels
@@ -531,7 +529,6 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
     FILE *fptr;
     
     /* Get injection parameters */
-    //double f0,dfdt,theta,phi,amp,iota,phi0,psi,fddot;//read from injection file
     double f0,dfdt,theta,phi,amp,iota,phi0,psi;//read from injection file
     
     FILE *injectionFile;
@@ -653,7 +650,6 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 printf("   ...fddot     : %g\n",inj->d2fdt2*data->T*data->T*data->T);
                 
                 //Simulate gravitational wave signal
-                //double t0 = data->t0 + jj*(data->T + data->tgap);
                 printf("   ...t0        : %g\n",data->t0[jj]);
                 galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
                 
