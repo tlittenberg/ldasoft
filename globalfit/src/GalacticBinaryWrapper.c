@@ -76,7 +76,9 @@ void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples
 {
     //first tell all processes how large the dataset is
     MPI_Bcast(&Nsamples, 1, MPI_INT, root, MPI_COMM_WORLD);
-    
+    //MPI_Bcast(&data->T, 1, MPI_DOUBLE, root, MPI_COMM_WORLD); //only needed if read data maps to 2^N
+    //MPI_Bcast(&data->sqT, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+
     //all but root process need to allocate memory for TDI structure
     if(procID!=root) alloc_tdi(tdi_full, Nsamples, N_TDI_CHANNELS);
     

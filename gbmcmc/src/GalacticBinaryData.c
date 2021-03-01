@@ -72,26 +72,32 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     double stop_time = start_time + data->T;
     double dt = tdi_td->delta;
     double Tobs = stop_time - start_time;
+    
+    /* Truncate time series request to be NFFT samples
     int N = (int)floor(Tobs/dt);
     int NFFT = pow(2, floor( log2(N) ));
     Tobs = NFFT*tdi_td->delta;
     data->T = Tobs;
+    data->sqT = sqrt(Tobs);
 
     fprintf(stdout,"\nFrom GalacticBinaryReadHDF5:\n");
     fprintf(stdout,"  Requested data duration of %.0f s\n",stop_time - start_time);
     fprintf(stdout,"  Requested data segment has %i samples\n",N);
     fprintf(stdout,"  Nearest 2^N is %i samples\n",NFFT);
     fprintf(stdout,"  Duration of analyzed data is %.0f s\n\n",Tobs);
-    
-    int n_start = (int)floor(start_time/dt); /* first sample of time segment */
-    
-    /* Truncate time series to be NFFT samples */
+    */
+    int NFFT = (int)floor(Tobs/dt);
     double *X = malloc(NFFT*sizeof(double));
     double *Y = malloc(NFFT*sizeof(double));
     double *Z = malloc(NFFT*sizeof(double));
     double *A = malloc(NFFT*sizeof(double));
     double *E = malloc(NFFT*sizeof(double));
     double *T = malloc(NFFT*sizeof(double));
+
+
+    /* Select requested time segment */
+    int n_start = (int)floor(start_time/dt); // first sample of time segment
+    
     for(int n=0; n<NFFT; n++)
     {
         int m = n_start+n;
@@ -113,13 +119,28 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     tukey(E, alpha, NFFT);
     tukey(T, alpha, NFFT);
     
-    /* Fourier transform time-domain TDI channels */
+    /* Fast Fourier transform time-domain TDI channels
     gsl_fft_real_radix2_transform(X, 1, NFFT);
     gsl_fft_real_radix2_transform(Y, 1, NFFT);
     gsl_fft_real_radix2_transform(Z, 1, NFFT);
     gsl_fft_real_radix2_transform(A, 1, NFFT);
     gsl_fft_real_radix2_transform(E, 1, NFFT);
-    gsl_fft_real_radix2_transform(T, 1, NFFT);
+    gsl_fft_real_radix2_transform(T, 1, NFFT);*/
+    
+    /* Fourier transform time-domain TDI channels */
+    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (NFFT);;
+    gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (NFFT);;
+
+    gsl_fft_real_transform (X, 1, NFFT, real, work);
+    gsl_fft_real_transform (Y, 1, NFFT, real, work);
+    gsl_fft_real_transform (Z, 1, NFFT, real, work);
+    gsl_fft_real_transform (A, 1, NFFT, real, work);
+    gsl_fft_real_transform (E, 1, NFFT, real, work);
+    gsl_fft_real_transform (T, 1, NFFT, real, work);
+
+    gsl_fft_real_wavetable_free (real);
+    gsl_fft_real_workspace_free (work);
+
     
     /* Normalize FD data */
     double fft_norm = 2./sqrt((double)(NFFT));   // Fourier scaling
@@ -138,29 +159,61 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     tdi->delta = 1./Tobs;
     
     /* unpack GSL-formatted arrays to the way GBMCMC expects them */
-    for(int n=0; n<NFFT/2; n++)
+//    for(int n=0; n<NFFT/2; n++)
+//    {
+//        int re = 2*n;
+//        int im = re+1;
+//
+//        /* real part */
+//        tdi->X[re] = X[n];
+//        tdi->Y[re] = Y[n];
+//        tdi->Z[re] = Z[n];
+//        tdi->A[re] = A[n];
+//        tdi->E[re] = E[n];
+//        tdi->T[re] = T[n];
+//
+//        /* imaginary part*/
+//        if(n>0) //DC part is zero (initialized in alloc_tdi())
+//        {
+//            tdi->X[im] = X[NFFT-n];
+//            tdi->Y[im] = Y[NFFT-n];
+//            tdi->Z[im] = Z[NFFT-n];
+//            tdi->A[im] = A[NFFT-n];
+//            tdi->E[im] = E[NFFT-n];
+//            tdi->T[im] = T[NFFT-n];
+//        }
+//    }*/
+    tdi->X[0] = X[0];
+    tdi->X[1] = 0;
+    tdi->Y[0] = Y[0];
+    tdi->Y[1] = 0;
+    tdi->Z[0] = Z[0];
+    tdi->Z[1] = 0;
+    tdi->A[0] = A[0];
+    tdi->A[1] = 0;
+    tdi->E[0] = E[0];
+    tdi->E[1] = 0;
+    tdi->T[0] = T[0];
+    tdi->T[1] = 0;
+    for(int n=1; n<NFFT/2; n++)
     {
-        int re = 2*n;
-        int im = re+1;
-        
-        /* real part */
-        tdi->X[re] = X[n];
-        tdi->Y[re] = Y[n];
-        tdi->Z[re] = Z[n];
-        tdi->A[re] = A[n];
-        tdi->E[re] = E[n];
-        tdi->T[re] = T[n];
-        
-        /* imaginary part*/
-        if(n>0) //DC part is zero (initialized in alloc_tdi())
-        {
-            tdi->X[im] = X[NFFT-n];
-            tdi->Y[im] = Y[NFFT-n];
-            tdi->Z[im] = Z[NFFT-n];
-            tdi->A[im] = A[NFFT-n];
-            tdi->E[im] = E[NFFT-n];
-            tdi->T[im] = T[NFFT-n];
-        }
+        tdi->X[2*n]   = X[2*n-1];
+        tdi->X[2*n+1] = X[2*n];
+
+        tdi->Y[2*n]   = Y[2*n-1];
+        tdi->Y[2*n+1] = Y[2*n];
+
+        tdi->Z[2*n]   = Z[2*n-1];
+        tdi->Z[2*n+1] = Z[2*n];
+
+        tdi->A[2*n]   = A[2*n-1];
+        tdi->A[2*n+1] = A[2*n];
+
+        tdi->E[2*n]   = E[2*n-1];
+        tdi->E[2*n+1] = E[2*n];
+
+        tdi->T[2*n]   = T[2*n-1];
+        tdi->T[2*n+1] = T[2*n];
     }
     
     /* Free memory */
