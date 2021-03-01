@@ -165,7 +165,7 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
         generate_noise_model(data, model_y);
         
         //get likelihood for y
-        model_y->logL     = gaussian_log_likelihood(orbit, data, model_y);
+        model_y->logL     = gaussian_log_likelihood(data, model_y);
         model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
         
         /*
@@ -280,7 +280,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
             }
             
             //get likelihood for y
-            model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
+            model_y->logL = gaussian_log_likelihood(data, model_y);
             
             /*
              H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
@@ -404,7 +404,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         }
         
         //get likelihood for y
-        model_y->logL = gaussian_log_likelihood(orbit, data, model_y);
+        model_y->logL = gaussian_log_likelihood(data, model_y);
         
         //get likelihood difference
         dlogL = model_y->logL - model_x->logL;
@@ -471,7 +471,7 @@ void data_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, stru
     if(!flags->prior)
     {
         // get likelihood for y
-        trial->logL = gaussian_log_likelihood(orbit, data, trial);
+        trial->logL = gaussian_log_likelihood(data, trial);
         
         logH += (trial->logL - model->logL)/chain->temperature[ic];
     }
@@ -554,7 +554,7 @@ void initialize_gbmcmc_state(struct Data *data, struct Orbit *orbit, struct Flag
         }
         if(!flags->prior)
         {
-            model[ic]->logL     = gaussian_log_likelihood(orbit, data, model[ic]);
+            model[ic]->logL     = gaussian_log_likelihood(data, model[ic]);
             model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[ic]);
         }
         else model[ic]->logL = model[ic]->logLnorm = 0.0;

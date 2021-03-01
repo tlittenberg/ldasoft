@@ -121,6 +121,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ae2e953ef9275991dbefdb9a3b15034c7">DMAX</a></td></tr>
 <tr class="memdesc:ae2e953ef9275991dbefdb9a3b15034c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">max dimension of signal model <br /></td></tr>
 <tr class="separator:ae2e953ef9275991dbefdb9a3b15034c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab634a9fe8447ceeb5175886e5bc8d6fa"><td class="memItemLeft" align="right" valign="top"><a id="ab634a9fe8447ceeb5175886e5bc8d6fa"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ab634a9fe8447ceeb5175886e5bc8d6fa">logN</a></td></tr>
+<tr class="memdesc:ab634a9fe8447ceeb5175886e5bc8d6fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">log total number of data points \( \log ( 2 \times N \times N_{\rm channel} \times N_{\rm T} )\) <br /></td></tr>
+<tr class="separator:ab634a9fe8447ceeb5175886e5bc8d6fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Random Number Generator Seeds</div></td></tr>
 <tr class="memitem:a758dee275c2a979a3141ee70d7c9ba90"><td class="memItemLeft" align="right" valign="top"><a id="a758dee275c2a979a3141ee70d7c9ba90"></a>
 long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a758dee275c2a979a3141ee70d7c9ba90">cseed</a></td></tr>
@@ -186,9 +190,13 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="separator:a3d638edc3bb44936e2ffd2ba195aabae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">TDI Data and Noise</div></td></tr>
 <tr class="memitem:a98432cd2a586429f74d696da622446d1"><td class="memItemLeft" align="right" valign="top"><a id="a98432cd2a586429f74d696da622446d1"></a>
-struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a98432cd2a586429f74d696da622446d1">tdi</a></td></tr>
-<tr class="memdesc:a98432cd2a586429f74d696da622446d1"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html">TDI</a> data channels. <br /></td></tr>
+struct TDI **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a98432cd2a586429f74d696da622446d1">tdi</a></td></tr>
+<tr class="memdesc:a98432cd2a586429f74d696da622446d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">TDI data channels as seen by sampler. <br /></td></tr>
 <tr class="separator:a98432cd2a586429f74d696da622446d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95a114acc26b62ac61915fc086bfb9d9"><td class="memItemLeft" align="right" valign="top"><a id="a95a114acc26b62ac61915fc086bfb9d9"></a>
+struct TDI **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a95a114acc26b62ac61915fc086bfb9d9">raw</a></td></tr>
+<tr class="memdesc:a95a114acc26b62ac61915fc086bfb9d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">TDI data channels unaltered from input. <br /></td></tr>
+<tr class="separator:a95a114acc26b62ac61915fc086bfb9d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5646530b83cfb236488c75567a94317d"><td class="memItemLeft" align="right" valign="top"><a id="a5646530b83cfb236488c75567a94317d"></a>
 struct <a class="el" href="structNoise.html">Noise</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a5646530b83cfb236488c75567a94317d">noise</a></td></tr>
 <tr class="memdesc:a5646530b83cfb236488c75567a94317d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference noise model. <br /></td></tr>
@@ -250,11 +258,24 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 struct <a class="el" href="structSource.html">Source</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ac136349d39219fa435ca7cbd43c46444">inj</a></td></tr>
 <tr class="memdesc:ac136349d39219fa435ca7cbd43c46444"><td class="mdescLeft">&#160;</td><td class="mdescRight">injected source structure <br /></td></tr>
 <tr class="separator:ac136349d39219fa435ca7cbd43c46444"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Already known sources</div></td></tr>
+<tr class="memitem:aba071f495515063b39189865ea5516ed"><td class="memItemLeft" align="right" valign="top"><a id="aba071f495515063b39189865ea5516ed"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aba071f495515063b39189865ea5516ed">Ncache</a></td></tr>
+<tr class="memdesc:aba071f495515063b39189865ea5516ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of sources in the cache file <br /></td></tr>
+<tr class="separator:aba071f495515063b39189865ea5516ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19aaf9e0c4c84ac528228d2c5d12198e"><td class="memItemLeft" align="right" valign="top"><a id="a19aaf9e0c4c84ac528228d2c5d12198e"></a>
+char **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a19aaf9e0c4c84ac528228d2c5d12198e">cache</a></td></tr>
+<tr class="memdesc:a19aaf9e0c4c84ac528228d2c5d12198e"><td class="mdescLeft">&#160;</td><td class="mdescRight">contents of cache file <br /></td></tr>
+<tr class="separator:a19aaf9e0c4c84ac528228d2c5d12198e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abed85a6931aef1878aa9a5e1492a4677"><td class="memItemLeft" align="right" valign="top"><a id="abed85a6931aef1878aa9a5e1492a4677"></a>
+struct <a class="el" href="structCatalog.html">Catalog</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#abed85a6931aef1878aa9a5e1492a4677">catalog</a></td></tr>
+<tr class="memdesc:abed85a6931aef1878aa9a5e1492a4677"><td class="mdescLeft">&#160;</td><td class="mdescRight">data and metadata for known sources <br /></td></tr>
+<tr class="separator:abed85a6931aef1878aa9a5e1492a4677"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters. </p>
 <p>The <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> structure stores information about the data being analyzed, including size of data, where it is located in the full LISA band, information about gaps, etc.</p>
-<p>The structure stores the Fourier-domain <a class="el" href="structTDI.html">TDI</a> data channels, and a fiducial model for the instrument noise. It also has memory allocated for storing the reconstructed waveforms, residuals, and noise models. </p>
+<p>The structure stores the Fourier-domain TDI data channels, and a fiducial model for the instrument noise. It also has memory allocated for storing the reconstructed waveforms, residuals, and noise models. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="ad89c9b316266fa46dfd5b5b3897fcf6e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad89c9b316266fa46dfd5b5b3897fcf6e">&#9670;&nbsp;</a></span>format</h2>

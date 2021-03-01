@@ -214,7 +214,7 @@ void run_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
                 struct Model *trial_ptr = trial[chain->index[ic]];
                 
                 //update likelihood
-                model_ptr->logL     = gaussian_log_likelihood(orbit, data, model_ptr);
+                model_ptr->logL     = gaussian_log_likelihood(data, model_ptr);
                 model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data, model_ptr);
 
                 for(int steps=0; steps < 100; steps++)
@@ -560,7 +560,7 @@ void exchange_gbmcmc_source_params(struct GBMCMCData *gbmcmc_data)
             model = gbmcmc_data->model[chain->index[ic]];
             if(!flags->prior)
             {
-                model->logL     = gaussian_log_likelihood(orbit, data, model);
+                model->logL     = gaussian_log_likelihood(data, model);
                 model->logLnorm = gaussian_log_likelihood_constant_norm(data, model);
             }
             else model->logL = model->logLnorm = 0.0;

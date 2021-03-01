@@ -33,8 +33,8 @@ var NAVTREE =
     [ "GBMCMC Manual", "md_gbmcmc_README.html", [
       [ "Table of contents", "md_gbmcmc_README.html#autotoc_md6", null ],
       [ "Introduction", "md_gbmcmc_README.html#autotoc_md7", [
-        [ "Dependencies", "md_gbmcmc_README.html#autotoc_md8", null ],
-        [ "Good things to have for post-production", "md_gbmcmc_README.html#autotoc_md9", null ],
+        [ "C Dependencies", "md_gbmcmc_README.html#autotoc_md8", null ],
+        [ "Python packages for post-production", "md_gbmcmc_README.html#autotoc_md9", null ],
         [ "Installation", "md_gbmcmc_README.html#autotoc_md10", null ]
       ] ],
       [ "Example use cases for GBMCMC", "md_gbmcmc_README.html#autotoc_md11", [
@@ -49,15 +49,15 @@ var NAVTREE =
       ] ],
       [ "GBMCMC output format", "md_gbmcmc_README.html#autotoc_md18", [
         [ "Parameterization", "md_gbmcmc_README.html#autotoc_md19", null ],
-        [ "<tt>chains</tt> directory", "md_gbmcmc_README.html#autotoc_md20", null ],
-        [ "<tt>data</tt> directory", "md_gbmcmc_README.html#autotoc_md21", null ],
+        [ "chains directory", "md_gbmcmc_README.html#autotoc_md20", null ],
+        [ "data directory", "md_gbmcmc_README.html#autotoc_md21", null ],
         [ "main run directory", "md_gbmcmc_README.html#autotoc_md22", null ]
       ] ],
       [ "Post processing GBMCMC", "md_gbmcmc_README.html#autotoc_md23", [
         [ "GB Catalog output format", "md_gbmcmc_README.html#autotoc_md24", null ]
       ] ]
     ] ],
-    [ "Workflow for processing LDC Data", "md_gbmcmc_README_LDC.html", [
+    [ "Workflow for processing LDC Radler Data", "md_gbmcmc_README_LDC.html", [
       [ "Download LDC GB data", "md_gbmcmc_README_LDC.html#autotoc_md26", null ],
       [ "FFT LDC data with fft_ldc_data.py", "md_gbmcmc_README_LDC.html#autotoc_md27", null ],
       [ "Access LDC VGB key parameters with python", "md_gbmcmc_README_LDC.html#autotoc_md28", null ],
@@ -104,9 +104,9 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"BayesLine_8h_source.html",
-"md_gbmcmc_README_LDC.html#autotoc_md28",
-"structNoise.html#aae2096fb8a971e731f29a0c041310f44"
+"Detector_8h_source.html",
+"md_gbmcmc_README_LDC.html",
+"structPrior.html#ae6fc05ca6b787c70012ba397b9d19111"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

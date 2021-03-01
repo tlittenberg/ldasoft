@@ -742,7 +742,7 @@ void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **
         
         if(!flags->prior)
         {
-            model[n]->logL = gaussian_log_likelihood(orbit, data, model[n]);
+            model[n]->logL = gaussian_log_likelihood(data, model[n]);
             model[n]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[n]);
         }
         else model[n]->logL = model[n]->logLnorm = 0.0;

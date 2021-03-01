@@ -749,15 +749,12 @@ void copy_tdi(struct TDI *origin, struct TDI *copy)
     copy->N        = origin->N;
     copy->Nchannel = origin->Nchannel;
     
-    for(int n=0; n<2*origin->N; n++)
-    {
-        copy->X[n] = origin->X[n];
-        copy->Y[n] = origin->Y[n];
-        copy->Z[n] = origin->Z[n];
-        copy->A[n] = origin->A[n];
-        copy->E[n] = origin->E[n];
-        copy->T[n] = origin->T[n];
-    }
+    memcpy(copy->X, origin->X, 2*origin->N*sizeof(double));
+    memcpy(copy->Y, origin->Y, 2*origin->N*sizeof(double));
+    memcpy(copy->Z, origin->Z, 2*origin->N*sizeof(double));
+    memcpy(copy->A, origin->A, 2*origin->N*sizeof(double));
+    memcpy(copy->E, origin->E, 2*origin->N*sizeof(double));
+    memcpy(copy->T, origin->Y, 2*origin->N*sizeof(double));
 }
 
 void free_tdi(struct TDI *tdi)

@@ -133,7 +133,7 @@ void initialize_noise_state(struct Data *data, struct Orbit *orbit, struct Flags
         
         if(!flags->prior)
         {
-            model[ic]->logL     = gaussian_log_likelihood(orbit, data, model[ic]);
+            model[ic]->logL     = gaussian_log_likelihood(data, model[ic]);
             model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[ic]);
         }
         else model[ic]->logL = model[ic]->logLnorm = 0.0;
@@ -190,7 +190,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
             }
             
             //update likelihood
-            model_ptr->logL     = gaussian_log_likelihood(orbit, data, model_ptr);
+            model_ptr->logL     = gaussian_log_likelihood(data, model_ptr);
             model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data, model_ptr);
 
             //evolve sampler

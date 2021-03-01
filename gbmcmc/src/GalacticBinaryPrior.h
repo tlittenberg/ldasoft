@@ -79,14 +79,73 @@ struct Prior
     /// Gaussian Mixture Model prior
     struct GMM *gmm;
 };
-
+/**
+ \brief Checks that parameters \f$\vec x\f$ are within prior volume \f$V\f$.
+ 
+ @returns 0 if \f$\vec x \in V\f$
+ @returns 1 else
+ */
 int check_range(double *params, double **uniform_prior, int NP);
+
+/**
+\brief Set up sky location prior assuming galactic distribution
+ 
+ Uses axially symmetric disk and bulge model of galaxy,
+ randomly distributes points within the assumed distribution,
+ and bins the points based on their sky location from Earth
+ to use as a prior.
+ */
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior);
+
+/**
+\brief Sets Gaussian Mixture Model prior for source model
+ */
 void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior);
+
+/**
+ \brief Sets Uniform prior for source model
+ */
 void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *data, int verbose);
+
+/**
+ \brief Computes joint prior for input parameters `params`
+ 
+ @param UCB parameters `params` \f$ \vec x\f$
+ @returns \f$ \log p(\vec x)\f$
+ */
 double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params);
+
+
+/**
+ \brief Computes prior amplitude parameter `params`
+ 
+ Uses analytic approximation to signal to noise ratio
+ and computes prior via snr_prior().
+ 
+ @param UCB parameters `params` \f$ \vec x\f$
+ @returns \f$ \log p({\rm SNR})\f$
+ */
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params);
+
+/**
+ \brief Computes prior for sky location parameters \f$\vec\Omega\f$
+ 
+ Depending on Flags::galaxyFlag, evaluates either uniform or galaxy prior
+ for sky location parameters
+ 
+ @param UCB parameters `params` \f$ \vec x\f$
+ @returns \f$ \log p({\vec\Omega})\f$
+ */
 double evalaute_sky_location_prior(double *params, double **uniform_prior, double *logPriorVolume, int galaxyFlag, double *skyhist, double dcostheta, double dphi, int nphi);
+
+/**
+ \brief Computes uniform prior for parameters \f$\vec x\f$
+
+ \f$ p(\vec x) = \prod_i \frac{1}{\Delta x_i} \f$
+ 
+ @param UCB parameters `params` \f$ \vec x\f$
+ @returns \f$ \log p({\vec x})\f$
+ */
 double evaluate_uniform_priors(double *params, double **uniform_prior, double *logPriorVolume, int NP);
 double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params);
 

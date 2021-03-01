@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['entry_323',['Entry',['../structEntry.html',1,'']]]
+  ['filter_337',['Filter',['../structFilter.html',1,'']]],
+  ['flags_338',['Flags',['../structFlags.html',1,'']]]
 ];

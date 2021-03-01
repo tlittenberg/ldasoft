@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['data_321',['Data',['../structData.html',1,'']]],
-  ['dataparams_322',['dataParams',['../structdataParams.html',1,'']]]
+  ['entry_336',['Entry',['../structEntry.html',1,'']]]
 ];

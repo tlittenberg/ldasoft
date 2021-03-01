@@ -174,8 +174,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 <tr class="separator:aefec4a9462f3b193837da1959a4f76a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e7b06500d417cf52b290fecff8dcec7"><td class="memItemLeft" align="right" valign="top"><a id="a0e7b06500d417cf52b290fecff8dcec7"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a0e7b06500d417cf52b290fecff8dcec7">strainData</a></td></tr>
-<tr class="memdesc:a0e7b06500d417cf52b290fecff8dcec7"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--data=FILENAME; default=FALSE]</code>: read data from file instead of simulate internally. <br /></td></tr>
+<tr class="memdesc:a0e7b06500d417cf52b290fecff8dcec7"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--data=FILENAME; default=FALSE]</code>: read data from ASCII file instead of simulate internally. <br /></td></tr>
 <tr class="separator:a0e7b06500d417cf52b290fecff8dcec7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc434747943ebc22a1c862f16be1e779"><td class="memItemLeft" align="right" valign="top"><a id="afc434747943ebc22a1c862f16be1e779"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#afc434747943ebc22a1c862f16be1e779">hdf5Data</a></td></tr>
+<tr class="memdesc:afc434747943ebc22a1c862f16be1e779"><td class="mdescLeft">&#160;</td><td class="mdescRight">'[&ndash;hdf5Data=FILENAME; default=FALSE]`: read data from LDC HDF5 file (compatible w/ Sangria dataset). <br /></td></tr>
+<tr class="separator:afc434747943ebc22a1c862f16be1e779"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace7f194b2e226c7d5f51e059df05993d"><td class="memItemLeft" align="right" valign="top"><a id="ace7f194b2e226c7d5f51e059df05993d"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ace7f194b2e226c7d5f51e059df05993d">orbit</a></td></tr>
 <tr class="memdesc:ace7f194b2e226c7d5f51e059df05993d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--orbit=FILENAME; default=FALSE]</code>: use numerical spacecraft ephemerides supplied in <code>FILENAME</code>. <code>--orbit</code> argument sets flag to <code>TRUE</code>. <br /></td></tr>
@@ -198,7 +202,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 <tr class="separator:aad2794699b324b51c925524cc9565013"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56dfe39c6db42f388d182255cd85d1ed"><td class="memItemLeft" align="right" valign="top"><a id="a56dfe39c6db42f388d182255cd85d1ed"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a56dfe39c6db42f388d182255cd85d1ed">maximize</a></td></tr>
-<tr class="memdesc:a56dfe39c6db42f388d182255cd85d1ed"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--no-maximize; default=TRUE]</code>: maximize over extrinsic parameter. <br /></td></tr>
+<tr class="memdesc:a56dfe39c6db42f388d182255cd85d1ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">maximize over extrinsic parameter during burn in phase. <br /></td></tr>
 <tr class="separator:a56dfe39c6db42f388d182255cd85d1ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0392b488d222aadf788c59376ca1e205"><td class="memItemLeft" align="right" valign="top"><a id="a0392b488d222aadf788c59376ca1e205"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a0392b488d222aadf788c59376ca1e205">update</a></td></tr>
@@ -240,6 +244,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&#160;</td><td class="memItemRight" valign="bottom"><b>threads</b></td></tr>
 <tr class="separator:ac5948da1f28e92b5e60603f6d75c969b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Input File Names</div></td></tr>
+<tr class="memitem:a0e180de144de26732c748a0d5aa04375"><td class="memItemLeft" align="right" valign="top"><a id="a0e180de144de26732c748a0d5aa04375"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a0e180de144de26732c748a0d5aa04375">runDir</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:a0e180de144de26732c748a0d5aa04375"><td class="mdescLeft">&#160;</td><td class="mdescRight">store <code>DIRECTORY</code> to serve as top level directory for output files. <br /></td></tr>
+<tr class="separator:a0e180de144de26732c748a0d5aa04375"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab824e717f38a66fb3f58621b46119baa"><td class="memItemLeft" align="right" valign="top"><a id="ab824e717f38a66fb3f58621b46119baa"></a>
 char **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ab824e717f38a66fb3f58621b46119baa">injFile</a></td></tr>
 <tr class="memdesc:ab824e717f38a66fb3f58621b46119baa"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--inj=FILENAME]</code>: list of injection files. Can support up to <code>NINJ=10</code> separate injections. <br /></td></tr>
@@ -280,7 +288,7 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Run flags set or changed from default values when parsing command line for <code>gb_mcmc</code> <b>and</b> <code>gb_catalog</code>. </p>
 <p>Descriptions of each flag includes default settings and command line arguments to change/set flags. Boolean flags are defined as integers with <code>0==FALSE</code> and <code>1==TRUE</code>.</p>
-<p>To see how the defaults are set and then adjusted according to the command line, see <a class="el" href="GalacticBinaryIO_8h.html#a58dc11d5260555f6c18dfd8ea87b3cb8" title="Parse command line.">parse()</a>. </p>
+<p>To see how the defaults are set and then adjusted according to the command line, see <a class="el" href="GalacticBinaryIO_8h.html#ab5bb85c1537451547378c054ffbbf4ac" title="Parse command line.">parse()</a>. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
 </ul>

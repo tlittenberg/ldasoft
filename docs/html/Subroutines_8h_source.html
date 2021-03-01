@@ -113,8 +113,8 @@ $(document).ready(function(){initNavTree('Subroutines_8h_source.html',''); initR
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">*  MA  02111-1307  USA</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">*/</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="LISA_8h.html">LISA.h</a>&gt;</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="Constants_8h.html">Constants.h</a>&gt;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;LISA.h&gt;</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;Constants.h&gt;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="GalacticBinary_8h.html">GalacticBinary.h</a>&gt;</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="GalacticBinaryIO_8h.html">GalacticBinaryIO.h</a>&gt;</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="GalacticBinaryMath_8h.html">GalacticBinaryMath.h</a>&gt;</span></div>
@@ -124,7 +124,7 @@ $(document).ready(function(){initNavTree('Subroutines_8h_source.html',''); initR
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define FISHERGALAXY_FMAX 4.0e-2</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keywordtype">double</span> Sum(<span class="keywordtype">double</span> *AA, <span class="keywordtype">double</span> *EE, <span class="keywordtype">long</span> M, <span class="keywordtype">double</span> SN, <span class="keywordtype">double</span> TOBS);</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">void</span> FAST_LISA(<span class="keyword">struct</span> <a class="code" href="structOrbit.html">Orbit</a> *LISAorbit, <span class="keywordtype">double</span> TOBS, <span class="keywordtype">double</span> *params, <span class="keywordtype">int</span> M, <span class="keywordtype">double</span> *XLS, <span class="keywordtype">double</span> *AA, <span class="keywordtype">double</span> *EE);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">void</span> FAST_LISA(<span class="keyword">struct</span> Orbit *LISAorbit, <span class="keywordtype">double</span> TOBS, <span class="keywordtype">double</span> *params, <span class="keywordtype">int</span> M, <span class="keywordtype">double</span> *XLS, <span class="keywordtype">double</span> *AA, <span class="keywordtype">double</span> *EE);</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment">/*****************************************************/</span></div>
@@ -150,12 +150,9 @@ $(document).ready(function(){initNavTree('Subroutines_8h_source.html',''); initR
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keywordtype">double</span> confusion_fit(<span class="keywordtype">double</span> f, <span class="keywordtype">double</span> logA, <span class="keywordtype">double</span> alpha, <span class="keywordtype">double</span> beta, <span class="keywordtype">double</span> kappa, <span class="keywordtype">double</span> gamma, <span class="keywordtype">double</span> fk);</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keywordtype">void</span> confusion_mcmc(<span class="keywordtype">double</span> *data, <span class="keywordtype">double</span> *noise, <span class="keywordtype">double</span> *conf, <span class="keywordtype">int</span> imin, <span class="keywordtype">int</span> imax, <span class="keywordtype">double</span> T);</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="ttc" id="aConstants_8h_html"><div class="ttname"><a href="Constants_8h.html">Constants.h</a></div><div class="ttdoc">Mathematical and physical constants.</div></div>
 <div class="ttc" id="aGalacticBinaryIO_8h_html"><div class="ttname"><a href="GalacticBinaryIO_8h.html">GalacticBinaryIO.h</a></div><div class="ttdoc">Functions handling I/O for gbmcmc.</div></div>
 <div class="ttc" id="aGalacticBinaryMath_8h_html"><div class="ttname"><a href="GalacticBinaryMath_8h.html">GalacticBinaryMath.h</a></div><div class="ttdoc">Frequently encountered math functions for gbmcmc.</div></div>
 <div class="ttc" id="aGalacticBinary_8h_html"><div class="ttname"><a href="GalacticBinary_8h.html">GalacticBinary.h</a></div><div class="ttdoc">Definition of data structures.</div></div>
-<div class="ttc" id="aLISA_8h_html"><div class="ttname"><a href="LISA_8h.html">LISA.h</a></div><div class="ttdoc">Codes defining LISA orbits, noise assumptions, and TDI method.</div></div>
-<div class="ttc" id="astructOrbit_html"><div class="ttname"><a href="structOrbit.html">Orbit</a></div><div class="ttdoc">Ephemerides of individual spacecraft and metadata for using orbits in waveform modeling.</div><div class="ttdef"><b>Definition:</b> LISA.h:57</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

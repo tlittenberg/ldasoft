@@ -112,9 +112,13 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a2662e53920bbe4d94dc1b22e25f3a52b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a2662e53920bbe4d94dc1b22e25f3a52b">setup_frequency_proposal</a> (struct <a class="el" href="structData.html">Data</a> *data)</td></tr>
-<tr class="separator:a2662e53920bbe4d94dc1b22e25f3a52b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8c2b734b1d1527285455a36236470c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#ae8c2b734b1d1527285455a36236470c8">print_acceptance_rates</a> (struct <a class="el" href="structProposal.html">Proposal</a> **proposal, int NP, int ic, FILE *fptr)</td></tr>
+<tr class="memitem:a56cc6d95dba3a4ce604e9e5648822715"><td class="memItemLeft" align="right" valign="top"><a id="a56cc6d95dba3a4ce604e9e5648822715"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a56cc6d95dba3a4ce604e9e5648822715">setup_frequency_proposal</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structFlags.html">Flags</a> *flags)</td></tr>
+<tr class="memdesc:a56cc6d95dba3a4ce604e9e5648822715"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power. <br /></td></tr>
+<tr class="separator:a56cc6d95dba3a4ce604e9e5648822715"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8c2b734b1d1527285455a36236470c8"><td class="memItemLeft" align="right" valign="top"><a id="ae8c2b734b1d1527285455a36236470c8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#ae8c2b734b1d1527285455a36236470c8">print_acceptance_rates</a> (struct <a class="el" href="structProposal.html">Proposal</a> **proposal, int NP, int ic, FILE *fptr)</td></tr>
+<tr class="memdesc:ae8c2b734b1d1527285455a36236470c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute and print acceptance ratios for each proposal. <br /></td></tr>
 <tr class="separator:ae8c2b734b1d1527285455a36236470c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99ccaa6a68983e3f6c1dbd27e8f1c78a"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a99ccaa6a68983e3f6c1dbd27e8f1c78a">t0_shift</a> (UNUSED struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, UNUSED struct <a class="el" href="structSource.html">Source</a> *source, UNUSED struct <a class="el" href="structProposal.html">Proposal</a> *proposal, UNUSED double *params, gsl_rng *seed)</td></tr>
 <tr class="memdesc:a99ccaa6a68983e3f6c1dbd27e8f1c78a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shift start time of data segment.  <a href="GalacticBinaryProposal_8h.html#a99ccaa6a68983e3f6c1dbd27e8f1c78a">More...</a><br /></td></tr>
@@ -159,7 +163,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:afd202d0b69e6c8d622ec85a1b18fdd6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as <a class="el" href="GalacticBinaryProposal_8h.html#aafb096baebfddf86f0e38100ddc176a3" title="Draw from 3D F-statistic distribution.">draw_from_fstatistic()</a> with <a class="el" href="GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff" title="Shift  by orbital modulation frequency.">fm_shift()</a>  <a href="GalacticBinaryProposal_8h.html#afd202d0b69e6c8d622ec85a1b18fdd6e">More...</a><br /></td></tr>
 <tr class="separator:afd202d0b69e6c8d622ec85a1b18fdd6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a42e3e5ae65a52afab2bcec1dd1b365fd">draw_from_galaxy_prior</a> (struct <a class="el" href="structModel.html">Model</a> *model, struct <a class="el" href="structPrior.html">Prior</a> *prior, double *params, gsl_rng *seed)</td></tr>
-<tr class="memdesc:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draw sky location from galaxy prior defined in set_galaxy_prior()  <a href="GalacticBinaryProposal_8h.html#a42e3e5ae65a52afab2bcec1dd1b365fd">More...</a><br /></td></tr>
+<tr class="memdesc:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draw sky location from galaxy prior defined in <a class="el" href="GalacticBinaryPrior_8h.html#a0ed9791e0240bd9a6c9f8ed6d4bca2dc" title="Set up sky location prior assuming galactic distribution.">set_galaxy_prior()</a>  <a href="GalacticBinaryProposal_8h.html#a42e3e5ae65a52afab2bcec1dd1b365fd">More...</a><br /></td></tr>
 <tr class="separator:a42e3e5ae65a52afab2bcec1dd1b365fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a970124673a0953fd0ead32795be431ef"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a970124673a0953fd0ead32795be431ef">draw_calibration_parameters</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, gsl_rng *seed)</td></tr>
 <tr class="memdesc:a970124673a0953fd0ead32795be431ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fair draw on phase and amplitude calibration parameters.  <a href="GalacticBinaryProposal_8h.html#a970124673a0953fd0ead32795be431ef">More...</a><br /></td></tr>
@@ -171,10 +175,10 @@ Functions</h2></td></tr>
 <tr class="memdesc:a48c97df4de6815daf57b7f054092a035"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate probability density of multimode, multivariate Gaussians given covariance matrices of each Gaussian and relative weights between them.  <a href="GalacticBinaryProposal_8h.html#a48c97df4de6815daf57b7f054092a035">More...</a><br /></td></tr>
 <tr class="separator:a48c97df4de6815daf57b7f054092a035"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56be2a79ceec1bd3e5ca7813ddd10007"><td class="memItemLeft" align="right" valign="top"><a id="a56be2a79ceec1bd3e5ca7813ddd10007"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a56be2a79ceec1bd3e5ca7813ddd10007">initialize_proposal</a> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structPrior.html">Prior</a> *prior, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> **proposal, int NMAX)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a56be2a79ceec1bd3e5ca7813ddd10007">initialize_proposal</a> (struct Orbit *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structPrior.html">Prior</a> *prior, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> **proposal, int NMAX)</td></tr>
 <tr class="memdesc:a56be2a79ceec1bd3e5ca7813ddd10007"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up different proposals and assigns frequencies with which they are used. <br /></td></tr>
 <tr class="separator:a56be2a79ceec1bd3e5ca7813ddd10007"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a970c096c5428c06d08846a24c1e1c3d6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a970c096c5428c06d08846a24c1e1c3d6">setup_fstatistic_proposal</a> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> *proposal)</td></tr>
+<tr class="memitem:a970c096c5428c06d08846a24c1e1c3d6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a970c096c5428c06d08846a24c1e1c3d6">setup_fstatistic_proposal</a> (struct Orbit *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> *proposal)</td></tr>
 <tr class="memdesc:a970c096c5428c06d08846a24c1e1c3d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create 3D histogram for F-statistics proposal.  <a href="GalacticBinaryProposal_8h.html#a970c096c5428c06d08846a24c1e1c3d6">More...</a><br /></td></tr>
 <tr class="separator:a970c096c5428c06d08846a24c1e1c3d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4d23d535092cc291b8c817e72177ecc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#af4d23d535092cc291b8c817e72177ecc">setup_prior_proposal</a> (struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structPrior.html">Prior</a> *prior, struct <a class="el" href="structProposal.html">Proposal</a> *proposal)</td></tr>
@@ -186,10 +190,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Gala
 <tr class="memitem:a840df697159100dca6ef37caf4bf1db2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a840df697159100dca6ef37caf4bf1db2">setup_cdf_proposal</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> *proposal, int NMAX)</td></tr>
 <tr class="memdesc:a840df697159100dca6ef37caf4bf1db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores CDF of chain file input with &ndash;update flag.  <a href="GalacticBinaryProposal_8h.html#a840df697159100dca6ef37caf4bf1db2">More...</a><br /></td></tr>
 <tr class="separator:a840df697159100dca6ef37caf4bf1db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af39c692af6a488d90e26a2e1433db9db"><td class="memItemLeft" align="right" valign="top"><a id="af39c692af6a488d90e26a2e1433db9db"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#af39c692af6a488d90e26a2e1433db9db">setup_gmm_proposal</a> (struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structPrior.html">Prior</a> *prior, struct <a class="el" href="structProposal.html">Proposal</a> *proposal)</td></tr>
-<tr class="memdesc:af39c692af6a488d90e26a2e1433db9db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies gaussian mixture model prior into proposal when given &ndash;update flag. <br /></td></tr>
-<tr class="separator:af39c692af6a488d90e26a2e1433db9db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa32dbb977a47e8e1e10392b17d93cef7"><td class="memItemLeft" align="right" valign="top"><a id="aa32dbb977a47e8e1e10392b17d93cef7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#aa32dbb977a47e8e1e10392b17d93cef7">setup_gmm_proposal</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structProposal.html">Proposal</a> *proposal)</td></tr>
+<tr class="memdesc:aa32dbb977a47e8e1e10392b17d93cef7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies gaussian mixture model prior into proposal when given &ndash;update flag. <br /></td></tr>
+<tr class="separator:aa32dbb977a47e8e1e10392b17d93cef7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryProposal_8h.html#a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb">setup_covariance_proposal</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structFlags.html">Flags</a> *flags, struct <a class="el" href="structProposal.html">Proposal</a> *proposal)</td></tr>
 <tr class="memdesc:a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores covariance matrices input with &ndash;update-cov flag.  <a href="GalacticBinaryProposal_8h.html#a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb">More...</a><br /></td></tr>
 <tr class="separator:a7fa3b80b4bd6b1fb7fbf5ac35a28a2eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -704,7 +708,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Ga
       </table>
 </div><div class="memdoc">
 
-<p>Draw sky location from galaxy prior defined in set_galaxy_prior() </p>
+<p>Draw sky location from galaxy prior defined in <a class="el" href="GalacticBinaryPrior_8h.html#a0ed9791e0240bd9a6c9f8ed6d4bca2dc" title="Set up sky location prior assuming galactic distribution.">set_galaxy_prior()</a> </p>
 <p>Rejection samples sky location parameters \({\cos\theta,\phi}\) using galaxy-weighted sky prior.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1017,7 +1021,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Ga
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>logQ = evaluate_snr_prior() </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>logQ = <a class="el" href="GalacticBinaryPrior_8h.html#a6ee03939465c46feba5faba1bd1f3a36" title="Computes prior amplitude parameter params">evaluate_snr_prior()</a> </dd></dl>
 
 </div>
 </div>
@@ -1191,47 +1195,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Ga
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>logQ = <a class="el" href="GalacticBinaryProposal_8h.html#aaaea7bf91a5ca99c7c29d1d6b7a8de12" title="Returns (log) F-statistic proposal density.">evaluate_fstatistic_proposal()</a> </dd></dl>
-
-</div>
-</div>
-<a id="ae8c2b734b1d1527285455a36236470c8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae8c2b734b1d1527285455a36236470c8">&#9670;&nbsp;</a></span>print_acceptance_rates()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void print_acceptance_rates </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="structProposal.html">Proposal</a> **&#160;</td>
-          <td class="paramname"><em>proposal</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>NP</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>ic</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">FILE *&#160;</td>
-          <td class="paramname"><em>fptr</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compute and print acceptance ratios for each proposal </p>
 
 </div>
 </div>
@@ -1426,25 +1389,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Ga
 
 </div>
 </div>
-<a id="a2662e53920bbe4d94dc1b22e25f3a52b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2662e53920bbe4d94dc1b22e25f3a52b">&#9670;&nbsp;</a></span>setup_frequency_proposal()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void setup_frequency_proposal </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="structData.html">Data</a> *&#160;</td>
-          <td class="paramname"><em>data</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power </p>
-
-</div>
-</div>
 <a id="a970c096c5428c06d08846a24c1e1c3d6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a970c096c5428c06d08846a24c1e1c3d6">&#9670;&nbsp;</a></span>setup_fstatistic_proposal()</h2>
 
@@ -1454,7 +1398,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Ga
         <tr>
           <td class="memname">void setup_fstatistic_proposal </td>
           <td>(</td>
-          <td class="paramtype">struct <a class="el" href="structOrbit.html">Orbit</a> *&#160;</td>
+          <td class="paramtype">struct Orbit *&#160;</td>
           <td class="paramname"><em>orbit</em>, </td>
         </tr>
         <tr>

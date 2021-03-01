@@ -1,5 +1,7 @@
 var structData =
 [
+    [ "cache", "structData.html#a19aaf9e0c4c84ac528228d2c5d12198e", null ],
+    [ "catalog", "structData.html#abed85a6931aef1878aa9a5e1492a4677", null ],
     [ "cseed", "structData.html#a758dee275c2a979a3141ee70d7c9ba90", null ],
     [ "DMAX", "structData.html#ae2e953ef9275991dbefdb9a3b15034c7", null ],
     [ "downsample", "structData.html#abd3208e22c3348f0356e4c2f13f4ffc1", null ],
@@ -13,7 +15,9 @@ var structData =
     [ "inj", "structData.html#ac136349d39219fa435ca7cbd43c46444", null ],
     [ "iseed", "structData.html#a377bda85cbfd007855748f4c53d8305c", null ],
     [ "logfmin", "structData.html#a3d638edc3bb44936e2ffd2ba195aabae", null ],
+    [ "logN", "structData.html#ab634a9fe8447ceeb5175886e5bc8d6fa", null ],
     [ "N", "structData.html#a3be03de44986fc55905076acc5cdae2e", null ],
+    [ "Ncache", "structData.html#aba071f495515063b39189865ea5516ed", null ],
     [ "Nchannel", "structData.html#a40984ec8faee6f66f294f19efdffc748", null ],
     [ "noise", "structData.html#a5646530b83cfb236488c75567a94317d", null ],
     [ "NP", "structData.html#ab456e86e4cf30a20af41383cff94e535", null ],
@@ -26,6 +30,7 @@ var structData =
     [ "qmin", "structData.html#afc6d1d4930961006b7d3593230ce07b7", null ],
     [ "qpad", "structData.html#a5d1d8220060d2f6b29cc9bbd935113f8", null ],
     [ "r_pow", "structData.html#a7261769b2611a460f8a6ccc5ce70992f", null ],
+    [ "raw", "structData.html#a95a114acc26b62ac61915fc086bfb9d9", null ],
     [ "S_pow", "structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6", null ],
     [ "sine_f_on_fstar", "structData.html#ac4db839b05312ebbaf3a611c0fab1482", null ],
     [ "SNR2", "structData.html#a018485652e36524ee3c2b07f35befc76", null ],

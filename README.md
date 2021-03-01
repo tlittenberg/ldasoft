@@ -38,24 +38,39 @@ export PATH=${LDASOFT_PREFIX}/bin:${PATH}
 Directory tree for the ldasoft installation:
 ```
 ├── bin
-│   ├── Bright_Remove
-│   ├── Confusion_Fit
-│   ├── Fisher_Galaxy
-│   ├── Full_Residual
-│   ├── Galaxy
-│   ├── OrbitFile
-│   ├── Setup
-│   ├── gaussian_mixture_model
-│   ├── gb_catalog
-│   ├── gb_match
-│   ├── gb_mcmc
-│   ├── gb_mcmc_brans_dicke
-│   ├── gb_mcmc_chirpmass
-│   └── gb_residual
+│   ├── Bright_Remove
+│   ├── Confusion_Fit
+│   ├── Fisher_Galaxy
+│   ├── Full_Residual
+│   ├── Galaxy
+│   ├── OrbitFile
+│   ├── Setup
+│   ├── gaussian_mixture_model
+│   ├── gb_catalog
+│   ├── gb_match
+│   ├── gb_mcmc
+│   ├── gb_mcmc_brans_dicke
+│   ├── gb_mcmc_chirpmass
+│   ├── gb_residual
+│   └── global_fit
 ├── include
-│   └── gitversion.h
+│   ├── Constants.h
+│   ├── GalacticBinary.h
+│   ├── GalacticBinaryCatalog.h
+│   ├── GalacticBinaryData.h
+│   ├── GalacticBinaryFStatistic.h
+│   ├── GalacticBinaryIO.h
+│   ├── GalacticBinaryMCMC.h
+│   ├── GalacticBinaryMath.h
+│   ├── GalacticBinaryModel.h
+│   ├── GalacticBinaryPrior.h
+│   ├── GalacticBinaryProposal.h
+│   ├── GalacticBinaryWaveform.h
+│   ├── LISA.h
+│   └── gitversion.h
 └── lib
     ├── libgbmcmc.a
+    ├── liblisa.a
     └── libtools.a
 ```
 
@@ -65,3 +80,4 @@ https://github.com/tlittenberg/ldasoft/issues
 
 # Other resources
  + [Example LISA analysis flow chart](https://www.draw.io/#Htlittenberg%2Fldasoft%2Fmaster%2FLISADataFlow.drawio)
+ + [Global Fit block diagram]{https://app.diagrams.net/#Htlittenberg%2Fldasoft%2Fmaster%2FGlobalFit.drawio}

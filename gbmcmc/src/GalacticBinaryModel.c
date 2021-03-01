@@ -21,6 +21,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <LISA.h>
 
@@ -334,7 +335,7 @@ void copy_model(struct Model *origin, struct Model *copy)
     copy->Nmax           = origin->Nmax;
     copy->Nlive          = origin->Nlive;
     for(int n=0; n<origin->Nmax; n++)
-    copy_source(origin->source[n],copy->source[n]);
+        copy_source(origin->source[n],copy->source[n]);
     
     for(int n=0; n<origin->NT; n++)
     {
@@ -370,12 +371,11 @@ void copy_model(struct Model *origin, struct Model *copy)
 
 int compare_model(struct Model *a, struct Model *b)
 {
-    int err = 0;
     
     //Source parameters
-    if(a->NP    != b->NP)    err++;  //maximum number of signal parameters
-    if(a->Nmax  != b->Nmax)  err++;  //maximum number of signals in model
-    if(a->Nlive != b->Nlive) err++;  //current number of signals in model
+    if(a->NP    != b->NP)    return 1;  //maximum number of signal parameters
+    if(a->Nmax  != b->Nmax)  return 1;  //maximum number of signals in model
+    if(a->Nlive != b->Nlive) return 1;  //current number of signals in model
     
     //struct Source **source;
     for(int i=0; i<a->Nlive; i++)
@@ -384,57 +384,57 @@ int compare_model(struct Model *a, struct Model *b)
         struct Source *sb = b->source[i];
         
         //Intrinsic
-        if(sa->m1 != sb->m1) err++;
-        if(sa->m2 != sb->m2) err++;
-        if(sa->f0 != sb->f0) err++;
+        if(sa->m1 != sb->m1) return 1;
+        if(sa->m2 != sb->m2) return 1;
+        if(sa->f0 != sb->f0) return 1;
         
         //Extrinisic
-        if(sa->psi  != sb->psi)  err++;
-        if(sa->cosi != sb->cosi) err++;
-        if(sa->phi0 != sb->phi0) err++;
+        if(sa->psi  != sb->psi)  return 1;
+        if(sa->cosi != sb->cosi) return 1;
+        if(sa->phi0 != sb->phi0) return 1;
         
-        if(sa->D        != sb->D)        err++;
-        if(sa->phi      != sb->phi)      err++;
-        if(sa->costheta != sb->costheta) err++;
+        if(sa->D        != sb->D)        return 1;
+        if(sa->phi      != sb->phi)      return 1;
+        if(sa->costheta != sb->costheta) return 1;
         
         //Derived
-        if(sa->amp    != sb->amp)    err++;
-        if(sa->dfdt   != sb->dfdt)   err++;
-        if(sa->d2fdt2 != sb->d2fdt2) err++;
-        if(sa->Mc     != sb->Mc)     err++;
+        if(sa->amp    != sb->amp)    return 1;
+        if(sa->dfdt   != sb->dfdt)   return 1;
+        if(sa->d2fdt2 != sb->d2fdt2) return 1;
+        if(sa->Mc     != sb->Mc)     return 1;
         
         //Book-keeping
-        if(sa->BW   != sb->BW)   err++;
-        if(sa->qmin != sb->qmin) err++;
-        if(sa->qmax != sb->qmax) err++;
-        if(sa->imin != sb->imin) err++;
-        if(sa->imax != sb->imax) err++;
+        if(sa->BW   != sb->BW)   return 1;
+        if(sa->qmin != sb->qmin) return 1;
+        if(sa->qmax != sb->qmax) return 1;
+        if(sa->imin != sb->imin) return 1;
+        if(sa->imax != sb->imax) return 1;
         
         //Response
         //TDI
         struct TDI *tsa = sa->tdi;
         struct TDI *tsb = sb->tdi;
         
-        if(tsa->N != tsb->N) err++;
-        if(tsa->Nchannel != tsb->Nchannel) err++;
+        if(tsa->N != tsb->N) return 1;
+        if(tsa->Nchannel != tsb->Nchannel) return 1;
         
         for(int i=0; i<2*tsa->N; i++)
         {
             
             //Michelson
-            if(tsa->X[i] != tsb->X[i]) err++;
-            if(tsa->Y[i] != tsb->Y[i]) err++;
-            if(tsa->Z[i] != tsb->Z[i]) err++;
+            if(tsa->X[i] != tsb->X[i]) return 1;
+            if(tsa->Y[i] != tsb->Y[i]) return 1;
+            if(tsa->Z[i] != tsb->Z[i]) return 1;
             
             //Noise-orthogonal
-            if(tsa->A[i] != tsb->A[i]) err++;
-            if(tsa->E[i] != tsb->E[i]) err++;
-            if(tsa->T[i] != tsb->T[i]) err++;
+            if(tsa->A[i] != tsb->A[i]) return 1;
+            if(tsa->E[i] != tsb->E[i]) return 1;
+            if(tsa->T[i] != tsb->T[i]) return 1;
         }
         
         //Package parameters for waveform generator
-        if(sa->NP != sb->NP) err++;
-        for(int j=0; j<sa->NP; j++) if(sa->params[j] != sb->params[j]) err++;
+        if(sa->NP != sb->NP) return 1;
+        for(int j=0; j<sa->NP; j++) if(sa->params[j] != sb->params[j]) return 1;
         
     }
     
@@ -444,17 +444,17 @@ int compare_model(struct Model *a, struct Model *b)
         struct Noise *na = a->noise[n];
         struct Noise *nb = b->noise[n];
         
-        if(na->N != nb->N) err++;
+        if(na->N != nb->N) return 1;
         
-        if(na->etaA != nb->etaA) err++;
-        if(na->etaE != nb->etaE) err++;
-        if(na->etaX != nb->etaX) err++;
+        if(na->etaA != nb->etaA) return 1;
+        if(na->etaE != nb->etaE) return 1;
+        if(na->etaX != nb->etaX) return 1;
         
         for(int i=0; i<na->N; i++)
         {
-            if(na->SnA[i] != nb->SnA[i]) err++;
-            if(na->SnE[i] != nb->SnE[i]) err++;
-            if(na->SnX[i] != nb->SnX[i]) err++;
+            if(na->SnA[i] != nb->SnA[i]) return 1;
+            if(na->SnE[i] != nb->SnE[i]) return 1;
+            if(na->SnX[i] != nb->SnX[i]) return 1;
         }
     }
     
@@ -464,38 +464,38 @@ int compare_model(struct Model *a, struct Model *b)
         struct TDI *ta = a->tdi[n];
         struct TDI *tb = b->tdi[n];
         
-        if(ta->N != tb->N) err++;
-        if(ta->Nchannel != tb->Nchannel) err++;
+        if(ta->N != tb->N) return 1;
+        if(ta->Nchannel != tb->Nchannel) return 1;
         
         for(int i=0; i<2*ta->N; i++)
         {
             
             //Michelson
-            if(ta->X[i] != tb->X[i]) err++;
-            if(ta->Y[i] != tb->Y[i]) err++;
-            if(ta->Z[i] != tb->Z[i]) err++;
+            if(ta->X[i] != tb->X[i]) return 1;
+            if(ta->Y[i] != tb->Y[i]) return 1;
+            if(ta->Z[i] != tb->Z[i]) return 1;
             
             //Noise-orthogonal
-            if(ta->A[i] != tb->A[i]) err++;
-            if(ta->E[i] != tb->E[i]) err++;
-            if(ta->T[i] != tb->T[i]) err++;
+            if(ta->A[i] != tb->A[i]) return 1;
+            if(ta->E[i] != tb->E[i]) return 1;
+            if(ta->T[i] != tb->T[i]) return 1;
         }
         
         //Start time for segment for model
-        if(a->t0[n]     != b->t0[n])     err++;
-        if(a->t0_min[n] != b->t0_min[n]) err++;
-        if(a->t0_max[n] != b->t0_max[n]) err++;
+        if(a->t0[n]     != b->t0[n])     return 1;
+        if(a->t0_min[n] != b->t0_min[n]) return 1;
+        if(a->t0_max[n] != b->t0_max[n]) return 1;
     }
     
     //Source parameter priors
     //double **prior;
-    if(a->logPriorVolume != b->logPriorVolume) err++;
+    if(a->logPriorVolume != b->logPriorVolume) return 1;
     
     //Model likelihood
-    if(a->logL     != b->logL)     err++;
-    if(a->logLnorm != b->logLnorm) err++;
+    if(a->logL     != b->logL)     return 1;
+    if(a->logLnorm != b->logLnorm) return 1;
     
-    return err;
+    return 0;
 }
 
 
@@ -554,12 +554,9 @@ void copy_noise(struct Noise *origin, struct Noise *copy)
     copy->etaE = origin->etaE;
     copy->etaX = origin->etaX;
     
-    for(int n=0; n<origin->N; n++)
-    {
-        copy->SnX[n] = origin->SnX[n];
-        copy->SnA[n] = origin->SnA[n];
-        copy->SnE[n] = origin->SnE[n];
-    }
+    memcpy(copy->SnX, origin->SnX, origin->N*sizeof(double));
+    memcpy(copy->SnA, origin->SnA, origin->N*sizeof(double));
+    memcpy(copy->SnE, origin->SnE, origin->N*sizeof(double));
 }
 
 void free_noise(struct Noise *noise)
@@ -588,6 +585,8 @@ void alloc_calibration(struct Calibration *calibration)
 
 void copy_calibration(struct Calibration *origin, struct Calibration *copy)
 {
+    copy=origin;
+    /*
     copy->dampA   = origin->dampA;
     copy->dampE   = origin->dampE;
     copy->dampX   = origin->dampX;
@@ -600,6 +599,7 @@ void copy_calibration(struct Calibration *origin, struct Calibration *copy)
     copy->imag_dphiA = origin->imag_dphiA;
     copy->imag_dphiE = origin->imag_dphiE;
     copy->imag_dphiX = origin->imag_dphiX;
+     */
 }
 
 void free_calibration(struct Calibration *calibration)
@@ -720,42 +720,6 @@ void free_source(struct Source *source)
     free_tdi(source->tdi);
     
     free(source);
-}
-
-
-void simualte_data(struct Data *data, struct Flags *flags, struct Source **injections, int Ninj)
-{
-    int i;
-    
-    double f,fmin,fmax;
-    
-    //find minimum and frequency of injections
-    fmin = 1.0e6;
-    fmax =-1.0e6;
-    
-    for(i=0; i<Ninj; i++)
-    {
-        f = injections[i]->f0;
-        if(f<fmin) fmin=f;
-        if(f>fmax) fmax=f;
-    }
-    
-    //get boundaries of data segment
-    data->fmin = fmin;
-    data->fmin = fmax;
-    data->qmin = (int)floor(data->fmin*data->T) - data->N/2;
-    data->qmax = data->qmin + data->N;
-    
-    //check we have enough data for all of the injections
-    if( data->qmax < (int)floor(data->fmax*data->T) )
-    {
-        fprintf(stdout,"Error:  Data bandwdith does not contain all of the injections\n");
-        fprintf(stdout,"        Injections covere frequences [%g,%g]\n",data->fmin,data->fmax);
-        fprintf(stdout,"        Data covers frequencies      [%g,%g]\n",data->qmin/data->T,data->qmax/data->T);
-        fprintf(stdout,"        Use large N or less injections\n");
-        exit(255);
-    }
-    
 }
 
 void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
@@ -1033,7 +997,7 @@ void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         free(Fparams);
     }
 }
-double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
+double gaussian_log_likelihood(struct Data *data, struct Model *model)
 {
     
     /*
