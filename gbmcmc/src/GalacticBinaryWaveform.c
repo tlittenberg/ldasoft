@@ -21,10 +21,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
+
 #include <gsl/gsl_fft_complex.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
@@ -52,7 +54,7 @@ double galactic_binary_Mc(double f0, double dfdt, double T)
     double f = f0;///T;
     double fd = dfdt;//(T*T);
     double pi83 = 21.170591578193; //pow(pi,8./3.)
-                                   //printf("!!!%g,%g,%g\n",f,fd,TSUN);
+
     return pow(fd/(96./5.)/pi83/pow(f,11./3.), 3./5.)/TSUN;
 }
 
@@ -92,19 +94,13 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         dhdx[n] = malloc(sizeof(struct TDI));
         alloc_tdi(dhdx[n], data->N, data->Nchannel);
     }
-    //  printf("Parameters = {\n");
-    //  for(j=0; j<NP; j++)
-    //  {
-    //    printf("   %g\n", source->params[j]);
-    //  }
-    //  printf("}\n");
     
     /* assumes all the parameters are log or angle */
     int N2 = data->N*2;
     for(i=0; i<NP; i++)
     {
         //step size for derivatives
-        invstep = invepsilon2;///source->params[i];
+        invstep = invepsilon2;
         
         // copy parameters
         for(j=0; j<NP; j++)
@@ -114,8 +110,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         }
         
         // perturb parameters
-        wave_p->params[i] += epsilon;//*source->params[i];
-        wave_m->params[i] -= epsilon;//*source->params[i];
+        wave_p->params[i] += epsilon;
+        wave_m->params[i] -= epsilon;
         
         // complete info in source structure
         map_array_to_params(wave_p, wave_p->params, data->T);
@@ -177,21 +173,17 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             }
             if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
             {
-                fprintf(stderr,"GalacticBinaryWaveform.c:141: WARNING: nan matrix element, setting contribution to matrix element to 0?\n");
+                fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,__FILE__);
                 fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->SnA[data->N/2],noise->SnE[data->N/2]);
                 for(int k=0; k<NP; k++)
                 {
                     fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
                 }
-                //exit(1);
                 source->fisher_matrix[i][j] = 10.0;
             }
-            //fprintf(stderr, "F%i%i = %g ",i,j,source->fisher_matrix[i][j]);
             source->fisher_matrix[j][i] = source->fisher_matrix[i][j];
         }
-        //fprintf(stderr, "\n");
     }
-    //fprintf(stderr, "\n");
     
     // Calculate eigenvalues and eigenvectors of fisher matrix
     matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, NP);
@@ -375,7 +367,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     }
     
     
-    /*****************************   Main Loop   **********************************/
+    /* Main loop over signal bandwidth */
     for(n=1; n<=BW; n++)
     {
         //First time sample must be at t=0 for phasing

@@ -29,6 +29,7 @@ gsl
 gslcblas
 openmp
 ```
+Note: For OpenMP on OSX, use `sudo port install libomp +top_level`
 
 <a name="post_proc_dependencies"></a>
 ## Good things to have for post-production

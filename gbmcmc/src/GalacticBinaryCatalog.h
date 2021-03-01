@@ -27,7 +27,7 @@
 struct Catalog
 {
     int N; //number of discrete sources in catalog
-    struct Entry **entry; //discrete catalog entry
+    struct Entry **entry; //discrete catalog entries
 };
 
 struct Entry
@@ -35,17 +35,22 @@ struct Entry
     int I;                  //number of chain samples
     char name[128];         //source name
     char parent[128];       //source parent name
+    char path[1024];        //path to catalog entry
     struct Source **source; //source structure contains parameters, defined in GalacticBinary.h
     double *match;          //match between sample and ref. source
     double *distance;       //distance between sample and ref. source
     double evidence;        //source evidence
     double SNR;             //reference SNR of source
     int i;                  //sample containing med. freq.
+    
+    struct GMM *gmm;
 };
 
 void alloc_entry(struct Entry *entry, int IMAX);
+void create_empty_source(struct Catalog *catalog, int NFFT, int Nchannel, int NP);
 void create_new_source(struct Catalog *catalog, struct Source *sample, struct Noise *noise, int IMAX, int NFFT, int Nchannel, int NP);
 void append_sample_to_entry(struct Entry *entry, struct Source *sample, int IMAX, int NFFT, int Nchannel, int NP);
+int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, size_t NTHIN, gsl_rng *seed, double *BIC);
 
 
 #endif /* GalacticBinaryCatalog_h */

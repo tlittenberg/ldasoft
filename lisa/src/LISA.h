@@ -26,8 +26,10 @@
 #define LISA_h
 
 #include <stdio.h>
+#include <hdf5.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_spline.h>
+#include "Constants.h"
 
 /// Mean arm length of constellation (m) for baseline LISA configuration
 #define Larm 2.5e9
@@ -119,8 +121,11 @@ struct TDI
     //Number of data channels
     int Nchannel;
     
-    //Number of frequency bins
+    //Number of data bins
     int N;
+    
+    //Data cadence
+    double delta;
 };
 
 
@@ -146,5 +151,12 @@ double GBnoise_FF(double T, double fstar, double f);
 double XYZnoise_FF(double L, double fstar, double f);
 
 void test_noise_model(struct Orbit *orbit);
+
+void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel);
+void copy_tdi(struct TDI *origin, struct TDI *copy);
+void free_tdi(struct TDI *tdi);
+
+/* LDC HDF5 */
+void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName);
 
 #endif /* LISA_h */

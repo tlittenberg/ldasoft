@@ -17,63 +17,67 @@
  *  MA  02111-1307  USA
  */
 
+/**
+ @file GalacticBinaryPrior.h
+ \brief Functions supporting prior distributions.
+ 
+ Includes functions for createing and evaluating model priors.
+ */
+
 
 #ifndef GalacticBinaryPrior_h
 #define GalacticBinaryPrior_h
 
-/* ----------------  MILKY WAY MODEL  ------------------- */
+///@name Galaxy Prior
+///@{
+#define GALAXY_RGC 7.2 //!<distance from solar BC to GC (kpc)
+#define GALAXY_A  0.25 //!<bulge fraction
+#define GALAXY_Rb 0.8  //!< bulge radius (kpc)
+#define GALAXY_Rd 2.5  //!< disk radius (kpc)
+#define GALAXY_Zd 0.4  //!< disk height (kpc)
+///@}
 
-/* distance from solar BC to GC (kpc) */
-#define GALAXY_RGC 7.2
+///@name Calibration prior
+///@{
+#define CAL_SIGMA_PHASE 0.35 //!< 1-\f$\sigma\f$ phase error (rad) \f${\sim}30^\circ\f$
+#define CAL_SIGMA_AMP 0.20 //!< 1-\f$\sigma\f$ fractional amplitude error
+///@}
 
-/* bulge fraction */
-#define GALAXY_A  0.25
+/*!
+ \brief Prototype structure for prior distributions.
+ 
+ Generic data structure for holding all information needed by prior distributions.
+ Structure contains parameters for different supported priors and various book-keeping scalars, vectors, and matrices to
+ hold needed metadata.
 
-/* bulge radius (kpc) */
-#define GALAXY_Rb 0.8
-
-/* disk radius (kpc) */
-#define GALAXY_Rd 2.5
-
-/* disk height (kpc) */
-#define GALAXY_Zd 0.4
-
-/* ----------------  CALIBRATION MODEL  ------------------- */
-
-/* stddev in phase error (radians) */
-//#define CAL_SIGMA_PHASE 0.175 // ~10^deg
-#define CAL_SIGMA_PHASE 0.35 // ~30^deg
-
-/* stddev in fractional amplitude error */
-//#define CAL_SIGMA_AMP 0.1 // 10%
-#define CAL_SIGMA_AMP 0.20 // 20%
-
-/* ----------------  MISC  ------------------- */
-
+*/
 struct Prior
-{
-    //uniform prior
-    double **prior;
-    double logPriorVolume;
-    
-    //galaxy prior
-    double *skyhist;
-    double dcostheta;
-    double dphi;
-    double skymaxp;
-    int ncostheta;
-    int nphi;
-        
-    //gaussian mixture model prior
-    size_t NP;
-    size_t NMODE;
-    struct MVG **modes; //!<data structure for multivariate Gaussian
+{    
+    ///@name Uniform prior
+    ///@{
+    double **prior; //!<upper and lower bounds for uniform priors \f$ [\theta_{\rm min},\theta_{\rm max}]\f$
+    double logPriorVolume; //!<prior volume \f$ -\sum \log(\theta_{\rm max}-\theta_{\rm min})\f$
+    ///@}
 
-    //workspace
+    ///@name Uniform prior
+    ///@{
+    double *skyhist; //!<2D histogram of prior density on sky
+    double dcostheta; //!<size of `skyhist` bins in \f$\cos\theta\f$ direction
+    double dphi; //!<size of `skyhist` bins in \f$\phi\f$ direction
+    double skymaxp; //!<max prior density of `skyhist`
+    int ncostheta; //!<number of `skyhist` bins in \f$\cos\theta\f$ direction
+    int nphi; //!<number of `skyhist` bins in \f$\phi\f$ direction
+    ///@}
+    
+    ///@name workspace
+    ///@{
     double *vector;  //!<utility 1D array for prior metadata
     double **matrix; //!<utility 2D array for prior metadata
     double ***tensor;//!<utility 3D array for prior metadata
+    ///@}
 
+    /// Gaussian Mixture Model prior
+    struct GMM *gmm;
 };
 
 int check_range(double *params, double **uniform_prior, int NP);
@@ -84,7 +88,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
 double evaluate_snr_prior(struct Data *data, struct Model *model, double *params);
 double evalaute_sky_location_prior(double *params, double **uniform_prior, double *logPriorVolume, int galaxyFlag, double *skyhist, double dcostheta, double dphi, int nphi);
 double evaluate_uniform_priors(double *params, double **uniform_prior, double *logPriorVolume, int NP);
-double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, double *params);
+double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params);
 
 
 

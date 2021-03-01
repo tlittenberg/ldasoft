@@ -47,6 +47,7 @@ struct Data
     int NT;       //!<number of time segments
     int Nchannel; //!<number of data channels
     int DMAX;     //!<max dimension of signal model
+    double logN;  //!<log total number of data points \f$ \log ( 2 \times N \times N_{\rm channel} \times N_{\rm T} )\f$
     ///@}
 
     /** @name Random Number Generator Seeds */
@@ -82,7 +83,8 @@ struct Data
 
     /** @name TDI Data and Noise */
      ///@{
-    struct TDI **tdi; //!<TDI data channels
+    struct TDI **tdi; //!<TDI data channels as seen by sampler
+    struct TDI **raw; //!<TDI data channels unaltered from input
     struct Noise **noise; //!<Reference noise model
     /**
      \brief Convention for data format
@@ -118,9 +120,12 @@ struct Data
     ///@}
 
     
-    
-    
-    
+    /** @name Already known sources */
+    ///@{
+    int Ncache; //!<number of sources in the cache file
+    char **cache; //!<contents of cache file
+    struct Catalog *catalog; //!< data and metadata for known sources
+    ///@}
 };
 
 /*!
@@ -152,12 +157,14 @@ struct Flags
     int emPrior;    //!<`[--em-prior=FILENAME]`: use input data file with EM-derived parameters for priors.
     int knownSource;//!<`[--known-source; default=FALSE]`: injection is known binary, will need polarization and phase to be internally generated. Sets Flags::fixSky = `TRUE`.
     int detached;   //!<`[--detached; default=FALSE]`: assume binary is detached, fdot prior becomes \f$U[\dot{f}(\mathcal{M}_c=0.15),\dot{f}(\mathcal{M}_c=1.00)]\f$
-    int strainData; //!<`[--data=FILENAME; default=FALSE]`: read data from file instead of simulate internally.
+    int strainData; //!<`[--data=FILENAME; default=FALSE]`: read data from ASCII file instead of simulate internally.
+    int hdf5Data;   //!<'[--hdf5Data=FILENAME; default=FALSE]`: read data from LDC HDF5 file (compatible w/ Sangria dataset).
     int orbit;      //!<`[--orbit=FILENAME; default=FALSE]`: use numerical spacecraft ephemerides supplied in `FILENAME`. `--orbit` argument sets flag to `TRUE`.
     int prior;      //!<`[--prior; default=FALSE]`: set log-likelihood to constant for testing detailed balance.
     int debug;      //!<`[--debug; default=FALSE]`: coarser settings for proposals and verbose output for debugging
     int cheat;      //!<start sampler at injection values
     int burnin;     //!<`[--no-burnin; default=TRUE]`: chain is in the burn in phase
+    int maximize;   //!<maximize over extrinsic parameter during burn in phase.
     int update;     //!<`[--update=FILENAME; default=FALSE]`: use Gaussian Mixture Model approximation to previous posterior as current prior.
     int updateCov;  //!<`[--update-cov=FILENAME; default=FALSE]`: updating fit from covariance matrix files built from chain samples, passed as `FILENAME`, used in draw_from_cov().
     int match;      //!<[--match=FLOAT; default=0.8]`: match threshold for chain sample clustering in post processing.
@@ -174,6 +181,7 @@ struct Flags
     /** @name Input File Names
      */
      ///@{
+    char runDir[MAXSTRINGSIZE];       //!<store `DIRECTORY` to serve as top level directory for output files.
     char **injFile;                   //!<`[--inj=FILENAME]`: list of injection files. Can support up to `NINJ=10` separate injections.
     char noiseFile[MAXSTRINGSIZE];    //!<file containing reconstructed noise model for `gb_catalog` to compute SNRs against.
     char cdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input chain file from Flags::update.
@@ -383,53 +391,81 @@ struct Noise
 
 };
 
+/**
+\brief Structure containing calibration parameters
+ */
 struct Calibration
 {
+    ///@name Amplitude parameters for each TDI channel
+    ///@{
     double dampA;
     double dampE;
     double dampX;
+    ///@}
+    
+    ///@name Overall phase parameters for each TDI channel
+    ///@{
     double dphiA;
     double dphiE;
     double dphiX;
+    ///@}
+
+    ///@name Phase correction to Re and Im part of TDI channels
+    ///@{
     double real_dphiA;
     double real_dphiE;
     double real_dphiX;
     double imag_dphiA;
     double imag_dphiE;
     double imag_dphiX;
+    ///@}
+
 };
 
+/**
+\brief Hierarchical structure of GBMCMC model
+ */
 struct Model
 {
-    //Source parameters
-    int NT;     //number of time segments
-    int NP;     //maximum number of signal parameters
-    int Nmax;   //maximum number of signals in model
-    int Nlive;  //current number of signals in model
-    struct Source **source;
+    ///@name Source parameters
+    ///@{
+    int NT;     //!<number of time segments
+    int NP;     //!<maximum number of signal parameters
+    int Nmax;   //!<maximum number of signals in model
+    int Nlive;  //!<current number of signals in model
+    struct Source **source; //!<source structures for each signal in the model
+    ///@}
     
-    //Noise parameters
+    /// Noise parameters
     struct Noise **noise;
     
-    //Calibration parameters
+    /// Calibration parameters
     struct Calibration **calibration;
     
-    //TDI
-    struct TDI **tdi;
-    struct TDI **residual;
+    ///@name TDI structures
+    ///@{
+    struct TDI **tdi; //!<joint signal model
+    struct TDI **residual; //!<joint residual
+    ///@}
     
-    //Start time for segment for model
-    double *t0;
-    double *t0_min;
-    double *t0_max;
+    ///@name Segment start time
+    ///@{
+    double *t0; //!<start time
+    double *t0_min; //!<lower prior bound on start time
+    double *t0_max; //!<upper prior bound on start time
+    ///@}
     
-    //Source parameter priors
-    double **prior;
-    double *logPriorVolume;
+    ///@name Source parameter priors
+    ///@{
+    double **prior; //!<upper and lower bounds for uniform priors \f$ [\theta_{\rm min},\theta_{\rm max}]\f$
+    double *logPriorVolume; //!<prior volume \f$ -\Sum \log(\theta_{\rm max}-\theta_{\rm min})\f$
+    ///@}
     
-    //Model likelihood
-    double logL;
-    double logLnorm;
+    ///@name Model likelihood
+    ///@{
+    double logL; //!<unnormalized log likelihood \f$ -(d-h|d-h)/2 \f$
+    double logLnorm; //!<normalization of log likelihood \f$ \propto -\log \det C \f$
+    ///@}
 };
 
 

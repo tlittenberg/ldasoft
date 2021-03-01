@@ -20,7 +20,6 @@
 
 #include <math.h>
 #include <stdlib.h>
-/*#include <fftw3.h>*/
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
@@ -28,9 +27,8 @@
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_sf.h>
 
+#include <LISA.h>
 
-#include "LISA.h"
-#include "Constants.h"
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 
@@ -195,7 +193,6 @@ double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise
   for(int i=0; i<a->BW; i++)
   {
     int j = i+a->qmin-qmin;
-   // printf("data->qmin=%i,i=%i, imin=%i, qmin=%i, j=%i\n",qmin,i,a->imin,a->qmin,j);
     
     if(j>-1 && j<N)
     {
@@ -297,7 +294,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
     {
         for(j=0; j<N; j++)
         {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:83: WARNING: nan matrix element, now what?\n");
+            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
             gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
         }
     }
@@ -343,9 +340,7 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
                 if(evector[i][j] != evector[i][j]) evector[i][j] = 0.;
             }
         }
-        
-        //for(i=0;i<N-1;i++)for(j=i+1;j<N;j++) gsl_matrix_set(GSLcovari,j,i, gsl_matrix_get(GSLcovari,i,j) );
-        
+                
         //copy covariance matrix back into Fisher
         for(i=0; i<N; i++)
         {
@@ -386,7 +381,7 @@ void invert_matrix(double **matrix, int N)
     {
         for(j=0; j<N; j++)
         {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"GalacticBinaryMath.c:172: WARNING: nan matrix element, now what?\n");
+            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
             gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
         }
     }

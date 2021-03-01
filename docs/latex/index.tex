@@ -1,34 +1,62 @@
-Prototype data analysis software for L\+I\+SA analysis\hypertarget{index_autotoc_md0}{}\doxysection{Doxygen code documentation}\label{index_autotoc_md0}
+Prototype data analysis software for LISA analysis\hypertarget{index_autotoc_md0}{}\doxysection{Doxygen code documentation}\label{index_autotoc_md0}
 \href{https://tlittenberg.github.io/ldasoft/html/index.html}{\texttt{ https\+://tlittenberg.\+github.\+io/ldasoft/html/index.\+html}}\hypertarget{index_autotoc_md1}{}\doxysection{Acknowledgment}\label{index_autotoc_md1}
 
 \begin{DoxyCode}{0}
 \DoxyCodeLine{@misc\{ldasoft,}
-\DoxyCodeLine{    author = "Tyson B. Littenberg, Neil J. Cornish, Kristen Lackeos, Travis Robson",}
-\DoxyCodeLine{    title = "LDASoft",}
-\DoxyCodeLine{    howpublished = "free software (GPL)"}
-\DoxyCodeLine{    doi = "10.5281/zenodo.2026177"}
-\DoxyCodeLine{    year = "2020"}
+\DoxyCodeLine{    author = "{}Tyson B. Littenberg, Neil J. Cornish, Kristen Lackeos, Travis Robson"{},}
+\DoxyCodeLine{    title = "{}LDASoft"{},}
+\DoxyCodeLine{    howpublished = "{}free software (GPL)"{}}
+\DoxyCodeLine{    doi = "{}10.5281/zenodo.2026177"{}}
+\DoxyCodeLine{    year = "{}2020"{}}
 \DoxyCodeLine{\}}
+
 \end{DoxyCode}
 
 
 \href{https://doi.org/10.5281/zenodo.2026177}{\texttt{ }}\hypertarget{index_autotoc_md2}{}\doxysection{Installation}\label{index_autotoc_md2}
-
+Example build script\+: 
 \begin{DoxyCode}{0}
-\DoxyCodeLine{\#!/bin/sh}
+\DoxyCodeLine{\#!/bin/bash}
 \DoxyCodeLine{}
-\DoxyCodeLine{\# make install directories}
-\DoxyCodeLine{mkdir -\/p \$\{HOME\}/ldasoft/master/ \#hard-\/coded installation path in Makefiles (for now)}
+\DoxyCodeLine{\# set prefix for install directories}
+\DoxyCodeLine{export LDASOFT\_PREFIX=<EDIT: path to desired install directories>}
 \DoxyCodeLine{}
 \DoxyCodeLine{\# build codes}
-\DoxyCodeLine{./install.sh}
+\DoxyCodeLine{./install.sh \$\{LDASOFT\_PREFIX\}}
 \DoxyCodeLine{}
-\DoxyCodeLine{\# add location of binaries to PATH (include this in login scripts)}
-\DoxyCodeLine{export PATH=\$\{HOME\}/ldasoft/master/bin/:\$PATH}
+\DoxyCodeLine{\# add location of binaries to PATH }
+\DoxyCodeLine{export PATH=\$\{LDASOFT\_PREFIX\}/bin:\$\{PATH\}}
+
+\end{DoxyCode}
+
+
+Directory tree for the ldasoft installation\+: 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{├── bin}
+\DoxyCodeLine{│   ├── Bright\_Remove}
+\DoxyCodeLine{│   ├── Confusion\_Fit}
+\DoxyCodeLine{│   ├── Fisher\_Galaxy}
+\DoxyCodeLine{│   ├── Full\_Residual}
+\DoxyCodeLine{│   ├── Galaxy}
+\DoxyCodeLine{│   ├── OrbitFile}
+\DoxyCodeLine{│   ├── Setup}
+\DoxyCodeLine{│   ├── gaussian\_mixture\_model}
+\DoxyCodeLine{│   ├── gb\_catalog}
+\DoxyCodeLine{│   ├── gb\_match}
+\DoxyCodeLine{│   ├── gb\_mcmc}
+\DoxyCodeLine{│   ├── gb\_mcmc\_brans\_dicke}
+\DoxyCodeLine{│   ├── gb\_mcmc\_chirpmass}
+\DoxyCodeLine{│   └── gb\_residual}
+\DoxyCodeLine{├── include}
+\DoxyCodeLine{│   └── gitversion.h}
+\DoxyCodeLine{└── lib}
+\DoxyCodeLine{    ├── libgbmcmc.a}
+\DoxyCodeLine{    └── libtools.a}
+
 \end{DoxyCode}
 \hypertarget{index_autotoc_md3}{}\doxysection{Issue tracker}\label{index_autotoc_md3}
 \href{https://github.com/tlittenberg/ldasoft/issues}{\texttt{ https\+://github.\+com/tlittenberg/ldasoft/issues}}\hypertarget{index_autotoc_md4}{}\doxysection{Other resources}\label{index_autotoc_md4}
 
 \begin{DoxyItemize}
-\item \href{https://www.draw.io/\#Htlittenberg\%2Fldasoft\%2Fmaster\%2FLISADataFlow.drawio}{\texttt{ Example L\+I\+SA analysis flow chart}} 
+\item \href{https://www.draw.io/\#Htlittenberg\%2Fldasoft\%2Fmaster\%2FLISADataFlow.drawio}{\texttt{ Example LISA analysis flow chart}} 
 \end{DoxyItemize}

@@ -22,12 +22,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
+#include "GalacticBinaryIO.h"
 #include "GalacticBinaryMath.h"
+#include "GalacticBinaryPrior.h"
 #include "GalacticBinaryModel.h"
+#include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryWaveform.h"
+#include "GalacticBinaryFStatistic.h"
 
 #define FIXME 0
 
@@ -61,89 +65,115 @@ void map_params_to_array(struct Source *source, double *params, double T)
         params[8] = source->d2fdt2*T*T*T;
 }
 
-void alloc_data(struct Data **data_vec, struct Flags *flags)
+void alloc_data(struct Data *data, struct Flags *flags)
 {
     int NMCMC = flags->NMCMC;
-    for(int m=0; m<flags->NDATA; m++)
+    
+    
+    data->NT = flags->NT;
+    data->logN = log((double)(2*data->N*data->Nchannel*data->NT));
+    
+    data->inj = malloc(sizeof(struct Source));
+    alloc_source(data->inj,data->N,data->Nchannel,data->NP);
+    
+    data->tdi   = malloc(flags->NT*sizeof(struct TDI*));
+    data->raw   = malloc(flags->NT*sizeof(struct TDI*));
+    data->noise = malloc(flags->NT*sizeof(struct Noise*));
+    
+    for(int n=0; n<flags->NT; n++)
     {
-        struct Data *data = data_vec[m];
+        data->tdi[n]   = malloc(sizeof(struct TDI));
+        data->raw[n]   = malloc(sizeof(struct TDI));
+        data->noise[n] = malloc(sizeof(struct Noise));
         
-        data->NT = flags->NT;
+        alloc_tdi(data->tdi[n], data->N, data->Nchannel);
+        alloc_tdi(data->raw[n], data->N, data->Nchannel);
+        alloc_noise(data->noise[n], data->N);
+    }
+    
+    //reconstructed signal model
+    int i_re,i_im;
+    data->h_rec = malloc(data->N*2*sizeof(double ***));
+    data->h_res = malloc(data->N*2*sizeof(double ***));
+    data->r_pow = malloc(data->N*sizeof(double ***));
+    data->h_pow = malloc(data->N*sizeof(double ***));
+    data->S_pow = malloc(data->N*sizeof(double ***));
+    
+    //number of waveform samples to save
+    data->Nwave=100;
+    
+    //downsampling rate of post-burn-in samples
+    data->downsample = NMCMC/data->Nwave;
+    
+    for(int i=0; i<data->N; i++)
+    {
+        i_re = i*2;
+        i_im = i_re+1;
         
-        data->inj = malloc(sizeof(struct Source));
-        alloc_source(data->inj,data->N,data->Nchannel,data->NP);
-        
-        data->tdi   = malloc(flags->NT*sizeof(struct TDI*));
-        data->noise = malloc(flags->NT*sizeof(struct Noise*));
-        
-        for(int n=0; n<flags->NT; n++)
+        data->S_pow[i]    = malloc(data->Nchannel*sizeof(double **));
+        data->h_pow[i]    = malloc(data->Nchannel*sizeof(double **));
+        data->r_pow[i]    = malloc(data->Nchannel*sizeof(double **));
+        data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double **));
+        data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double **));
+        data->h_res[i_re] = malloc(data->Nchannel*sizeof(double **));
+        data->h_res[i_im] = malloc(data->Nchannel*sizeof(double **));
+        for(int l=0; l<data->Nchannel; l++)
         {
-            data->tdi[n]   = malloc(sizeof(struct TDI));
-            data->noise[n] = malloc(sizeof(struct Noise));
+            data->S_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
+            data->h_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
+            data->r_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
+            data->h_rec[i_re][l] = malloc(data->Nwave*sizeof(double *));
+            data->h_rec[i_im][l] = malloc(data->Nwave*sizeof(double *));
+            data->h_res[i_re][l] = malloc(data->Nwave*sizeof(double *));
+            data->h_res[i_im][l] = malloc(data->Nwave*sizeof(double *));
             
-            alloc_tdi(data->tdi[n], data->N, data->Nchannel);
-            alloc_noise(data->noise[n], data->N);
-        }
-        
-        //reconstructed signal model
-        int i_re,i_im;
-        data->h_rec = malloc(data->N*2*sizeof(double ***));
-        data->h_res = malloc(data->N*2*sizeof(double ***));
-        data->r_pow = malloc(data->N*sizeof(double ***));
-        data->h_pow = malloc(data->N*sizeof(double ***));
-        data->S_pow = malloc(data->N*sizeof(double ***));
-        
-        //number of waveform samples to save
-        data->Nwave=100;
-        
-        //downsampling rate of post-burn-in samples
-        data->downsample = NMCMC/data->Nwave;
-        
-        for(int i=0; i<data->N; i++)
-        {
-            i_re = i*2;
-            i_im = i_re+1;
-            
-            data->S_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-            data->h_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-            data->r_pow[i]    = malloc(data->Nchannel*sizeof(double **));
-            data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double **));
-            data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double **));
-            data->h_res[i_re] = malloc(data->Nchannel*sizeof(double **));
-            data->h_res[i_im] = malloc(data->Nchannel*sizeof(double **));
-            for(int l=0; l<data->Nchannel; l++)
+            for(int n=0; n<flags->NT; n++)
             {
-                data->S_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-                data->h_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-                data->r_pow[i][l]    = malloc(data->Nwave*sizeof(double *));
-                data->h_rec[i_re][l] = malloc(data->Nwave*sizeof(double *));
-                data->h_rec[i_im][l] = malloc(data->Nwave*sizeof(double *));
-                data->h_res[i_re][l] = malloc(data->Nwave*sizeof(double *));
-                data->h_res[i_im][l] = malloc(data->Nwave*sizeof(double *));
-                
-                for(int n=0; n<flags->NT; n++)
-                {
-                    data->S_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
-                    data->h_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
-                    data->r_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
-                    data->h_rec[i_re][l][n] = calloc(data->Nwave,sizeof(double));
-                    data->h_rec[i_im][l][n] = calloc(data->Nwave,sizeof(double));
-                    data->h_res[i_re][l][n] = calloc(data->Nwave,sizeof(double));
-                    data->h_res[i_im][l][n] = calloc(data->Nwave,sizeof(double));
-                }
+                data->S_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                data->h_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                data->r_pow[i][l][n]    = calloc(data->Nwave,sizeof(double));
+                data->h_rec[i_re][l][n] = calloc(data->Nwave,sizeof(double));
+                data->h_rec[i_im][l][n] = calloc(data->Nwave,sizeof(double));
+                data->h_res[i_re][l][n] = calloc(data->Nwave,sizeof(double));
+                data->h_res[i_im][l][n] = calloc(data->Nwave,sizeof(double));
             }
         }
-        
-        //Spectrum proposal
-        data->p = calloc(data->N,sizeof(double));
     }
+    
+    //Spectrum proposal
+    data->p = calloc(data->N,sizeof(double));
+
+    //catalog of previously detected sources
+    data->catalog = malloc(sizeof(struct Catalog));
+
+}
+
+void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flags)
+{
+    /* Load spacecraft ephemerides */
+    switch(flags->orbit)
+    {
+        case 0:
+            initialize_analytic_orbit(orbit);
+            break;
+        case 1:
+            initialize_numeric_orbit(orbit);
+            break;
+        default:
+            fprintf(stderr,"unsupported orbit type\n");
+            exit(1);
+            break;
+    }
+    
+    /* set approximate f/fstar for segment */
+    data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
 }
 
 void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode)
 {
     int ic;
     int NC = chain->NC;
-    char filename[1024];
+    char filename[MAXSTRINGSIZE];
     
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));
@@ -175,43 +205,52 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
         *seed = (long)gsl_rng_get(chain->r[ic]);
     }
     
-    chain->likelihoodFile = fopen("chains/log_likelihood_chain.dat",mode);
-    
-    chain->temperatureFile = fopen("chains/temperature_chain.dat",mode);
+    if(!flags->quiet)
+    {
+        sprintf(filename,"%s/chains/log_likelihood_chain.dat",flags->runDir);
+        chain->likelihoodFile = fopen(filename,mode);
+        
+        sprintf(filename,"%s/chains/temperature_chain.dat",flags->runDir);
+        chain->temperatureFile = fopen(filename,mode);
+    }
     
     chain->chainFile = malloc(NC*sizeof(FILE *));
-    chain->chainFile[0] = fopen("chains/model_chain.dat.0",mode);
+    sprintf(filename,"%s/chains/model_chain.dat.0",flags->runDir);
+    chain->chainFile[0] = fopen(filename,mode);
     
     chain->parameterFile = malloc(NC*sizeof(FILE *));
-    chain->parameterFile[0] = fopen("chains/parameter_chain.dat.0",mode);
+    sprintf(filename,"%s/chains/parameter_chain.dat.0",flags->runDir);
+    chain->parameterFile[0] = fopen(filename,mode);
     
     chain->dimensionFile = malloc(flags->DMAX*sizeof(FILE *));
     for(int i=0; i<flags->DMAX; i++)
     {
-        sprintf(filename,"chains/dimension_chain.dat.%i",i);
-        chain->dimensionFile[i] = fopen(filename,mode);
+        /* only create these files when needed */
+        chain->dimensionFile[i]=NULL;
     }
     
     chain->noiseFile = malloc(NC*sizeof(FILE *));
-    chain->noiseFile[0] = fopen("chains/noise_chain.dat.0",mode);
+    sprintf(filename,"%s/chains/noise_chain.dat.0",flags->runDir);
+    chain->noiseFile[0] = fopen(filename,mode);
     
     if(flags->calibration)
     {
         chain->calibrationFile = malloc(NC*sizeof(FILE *));
-        chain->calibrationFile[0] = fopen("chains/calibration_chain.dat.0",mode);
+        sprintf(filename,"%s/chains/calibration_chain.dat.0",flags->runDir);
+        chain->calibrationFile[0] = fopen(filename,mode);
     }
     
     if(flags->verbose)
     {
         for(ic=1; ic<NC; ic++)
         {
-            sprintf(filename,"chains/parameter_chain.dat.%i",ic);
+            sprintf(filename,"%s/chains/parameter_chain.dat.%i",flags->runDir,ic);
             chain->parameterFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"chains/model_chain.dat.%i",ic);
+            sprintf(filename,"%s/chains/model_chain.dat.%i",flags->runDir,ic);
             chain->chainFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"chains/noise_chain.dat.%i",ic);
+            sprintf(filename,"%s/chains/noise_chain.dat.%i",flags->runDir,ic);
             chain->noiseFile[ic] = fopen(filename,mode);
         }
     }
@@ -295,7 +334,7 @@ void copy_model(struct Model *origin, struct Model *copy)
     copy->Nmax           = origin->Nmax;
     copy->Nlive          = origin->Nlive;
     for(int n=0; n<origin->Nmax; n++)
-        copy_source(origin->source[n],copy->source[n]);
+    copy_source(origin->source[n],copy->source[n]);
     
     for(int n=0; n<origin->NT; n++)
     {
@@ -393,17 +432,11 @@ int compare_model(struct Model *a, struct Model *b)
             if(tsa->T[i] != tsb->T[i]) err++;
         }
         
-        //Fisher matrix
-        //double **fisher_matrix;
-        //double **fisher_evectr;
-        //double *fisher_evalue;
-        
         //Package parameters for waveform generator
         if(sa->NP != sb->NP) err++;
         for(int j=0; j<sa->NP; j++) if(sa->params[j] != sb->params[j]) err++;
         
     }
-    printf("   errorcheck1 %i\n",err);
     
     //Noise parameters
     for(int n=0; n<a->NT; n++)
@@ -453,8 +486,6 @@ int compare_model(struct Model *a, struct Model *b)
         if(a->t0_min[n] != b->t0_min[n]) err++;
         if(a->t0_max[n] != b->t0_max[n]) err++;
     }
-    printf("   errorcheck2 %i\n",err);
-    
     
     //Source parameter priors
     //double **prior;
@@ -495,63 +526,6 @@ void free_model(struct Model *model)
     free(model);
 }
 
-void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
-{
-    //Number of frequency bins (2*N samples)
-    tdi->N = NFFT;
-    
-    //Michelson
-    tdi->X = calloc(2*tdi->N,sizeof(double));
-    tdi->Y = calloc(2*tdi->N,sizeof(double));
-    tdi->Z = calloc(2*tdi->N,sizeof(double));
-    
-    //Noise-orthogonal
-    tdi->A = calloc(2*tdi->N,sizeof(double));
-    tdi->E = calloc(2*tdi->N,sizeof(double));
-    tdi->T = calloc(2*tdi->N,sizeof(double));
-    
-    int n;
-    for(n=0; n<2*tdi->N; n++)
-    {
-        tdi->X[n] = 0.0;
-        tdi->Y[n] = 0.0;
-        tdi->Z[n] = 0.0;
-        tdi->A[n] = 0.0;
-        tdi->E[n] = 0.0;
-        tdi->T[n] = 0.0;
-    }
-    
-    //Number of TDI channels (X or A&E or maybe one day A,E,&T)
-    tdi->Nchannel = Nchannel;
-}
-
-void copy_tdi(struct TDI *origin, struct TDI *copy)
-{
-    copy->N        = origin->N;
-    copy->Nchannel = origin->Nchannel;
-    
-    for(int n=0; n<2*origin->N; n++)
-    {
-        copy->X[n] = origin->X[n];
-        copy->Y[n] = origin->Y[n];
-        copy->Z[n] = origin->Z[n];
-        copy->A[n] = origin->A[n];
-        copy->E[n] = origin->E[n];
-        copy->T[n] = origin->T[n];
-    }
-}
-
-void free_tdi(struct TDI *tdi)
-{
-    free(tdi->X);
-    free(tdi->Y);
-    free(tdi->Z);
-    free(tdi->A);
-    free(tdi->E);
-    free(tdi->T);
-    
-    free(tdi);
-}
 
 void alloc_noise(struct Noise *noise, int NFFT)
 {
@@ -784,7 +758,7 @@ void simualte_data(struct Data *data, struct Flags *flags, struct Source **injec
     
 }
 
-void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int index)
+void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
 {
     int i,j,n,m;
     int N2=data->N*2;
@@ -806,7 +780,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     {
         source = model->source[n];
         
-        if(index==-1 || index==n)
+        if(source_id==-1 || source_id==n)
         {
             for(i=0; i<N2; i++)
             {
@@ -825,8 +799,8 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         for(m=0; m<NT; m++)
         {
             //Simulate gravitational wave signal
-            /* the index = -1 condition is redundent if the model->tdi structure is up to date...*/
-            if(index==-1 || index==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+            /* the source_id = -1 condition is redundent if the model->tdi structure is up to date...*/
+            if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
             
             //Add waveform to model TDI channels
             for(i=0; i<source->BW; i++)
@@ -848,7 +822,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
                     
                     model->tdi[m]->E[j_re] += source->tdi->E[i_re];
                     model->tdi[m]->E[j_im] += source->tdi->E[i_im];
-                }//check that index is in range
+                }//check that source_id is in range
             }//loop over waveform bins
         }//end loop over time segments
     }//loop over sources
@@ -867,18 +841,18 @@ void generate_power_law_noise_model(struct Data *data, struct Model *model)
         {
             case 1:
                 for(int n=0; n<data->N; n++)
-                {
-                    //Taylor expansion Sn(f/fmin)^alpha
-                    noise->SnX[n] = noise->SnX_0*(1.0 + noise->alpha_X * df_on_fmin);
-                }
+            {
+                //Taylor expansion Sn(f/fmin)^alpha
+                noise->SnX[n] = noise->SnX_0*(1.0 + noise->alpha_X * df_on_fmin);
+            }
                 break;
             case 2:
                 for(int n=0; n<data->N; n++)
-                {
-                    //Taylor expansion Sn(f/fmin)^alpha
-                    noise->SnA[n] = noise->SnA_0*(1.0 + noise->alpha_A * df_on_fmin);
-                    noise->SnE[n] = noise->SnE_0*(1.0 + noise->alpha_E * df_on_fmin);
-                }
+            {
+                //Taylor expansion Sn(f/fmin)^alpha
+                noise->SnA[n] = noise->SnA_0*(1.0 + noise->alpha_A * df_on_fmin);
+                noise->SnE[n] = noise->SnE_0*(1.0 + noise->alpha_E * df_on_fmin);
+            }
                 break;
             default:
                 break;
@@ -898,10 +872,10 @@ void generate_noise_model(struct Data *data, struct Model *model)
                 break;
             case 2:
                 for(int n=0; n<data->N; n++)
-                {
-                    model->noise[m]->SnA[n] = data->noise[m]->SnA[n]*model->noise[m]->etaA;
-                    model->noise[m]->SnE[n] = data->noise[m]->SnE[n]*model->noise[m]->etaE;
-                }
+            {
+                model->noise[m]->SnA[n] = data->noise[m]->SnA[n]*model->noise[m]->etaA;
+                model->noise[m]->SnE[n] = data->noise[m]->SnE[n]*model->noise[m]->etaE;
+            }
                 break;
             default:
                 break;
@@ -995,31 +969,86 @@ void apply_calibration_model(struct Data *data, struct Model *model)
     }//end loop over segments
 }
 
+void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
+{
+    if(source_id < model->Nlive)
+    {
+        double *Fparams = calloc(data->NP,sizeof(double));
+        
+        struct Source *source = model->source[source_id];
+        
+        /* save original data */
+        //    struct TDI *data_save = malloc(sizeof(struct TDI));
+        //    alloc_tdi(data_save, data->N, data->Nchannel);
+        //    copy_tdi(data->tdi[FIXME],data_save);
+        //
+        //    /* save original noise */
+        //    struct Noise *noise_save = malloc(sizeof(struct Noise));
+        //    alloc_noise(noise_save, data->N);
+        //    copy_noise(data->noise[FIXME], noise_save);
+        //
+        //    /* put current noise model in data structure for get_Fstat_logL() */
+        //    copy_noise(model->noise[FIXME],data->noise[FIXME]);
+        
+        
+        /* create residual of all sources but n for F-statistic */
+        //    for(int m=0; m<model->Nlive; m++)
+        //    {
+        //        if(m!=source_id)
+        //        {
+        //            for(int i=0; i<data->N*2; i++)
+        //            {
+        //                data->tdi[FIXME]->A[i] -= model->source[m]->tdi->A[i];
+        //                data->tdi[FIXME]->E[i] -= model->source[m]->tdi->E[i];
+        //                data->tdi[FIXME]->X[i] -= model->source[m]->tdi->X[i];
+        //            }
+        //        }
+        //    }
+        
+        /* get input parameters */
+        double f0 = source->f0;
+        double fdot = source->dfdt;
+        double theta = acos(source->costheta);
+        double phi = source->phi0;
+        
+        /* maximize parameters w/ F-statistic */
+        get_Fstat_xmax(orbit, data, source->params, Fparams);
+        
+        /* unpack maximized parameters */
+        source->amp  = exp(Fparams[3]);
+        source->cosi = Fparams[4];
+        source->psi  = Fparams[5];
+        source->phi0 = Fparams[6];
+        map_params_to_array(source, source->params, data->T);
+        
+        check_range(source->params, model->prior, model->NP);
+        
+        /* restore original data */
+        //    copy_tdi(data_save,data->tdi[FIXME]);
+        //    free_tdi(data_save);
+        //
+        //    /* restore original noise */
+        //    copy_noise(noise_save,data->noise[FIXME]);
+        //    free_noise(noise_save);
+        free(Fparams);
+    }
+}
 double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Model *model)
 {
     
-    int N2=data->N*2;
+    /*
+    *
+    * Form residual and sum
+    *
+    */
     
-    
-    /**************************/
-    /*                        */
-    /* Form residual and sum  */
-    /*                        */
-    /**************************/
-    
-    /*                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-     struct TDI *residual = model->residual;
-     alloc_tdi(residual, data->N, data->Nchannel);
-     */
-    
-    struct TDI *residual = NULL;
-    
+    int N2 = data->N*2;
     double logL = 0.0;
     
     //loop over time segments
     for(int n=0; n<model->NT; n++)
     {
-        residual = model->residual[n];
+        struct TDI *residual = model->residual[n];
         
         for(int i=0; i<N2; i++)
         {
@@ -1042,7 +1071,6 @@ double gaussian_log_likelihood(struct Orbit *orbit, struct Data *data, struct Mo
                 exit(1);
         }
     }
-    //free_tdi(residual);
     
     return logL;
 }
@@ -1101,16 +1129,16 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
     return logLnorm;
 }
 
-int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct Flags *flags)
+int update_max_log_likelihood(struct Model **model, struct Chain *chain, struct Flags *flags)
 {
     int n = chain->index[0];
-    int N = flags->NDATA;
+    int N = model[n]->Nlive;
     
     double logL = 0.0;
     double dlogL= 0.0;
     
     // get full likelihood
-    for(int i=0; i<flags->NDATA; i++) logL += model[n][i]->logL + model[n][i]->logLnorm;
+    logL = model[n]->logL + model[n]->logLnorm;
     
     // update max
     if(logL > chain->logLmax)
@@ -1122,11 +1150,10 @@ int update_max_log_likelihood(struct Model ***model, struct Chain *chain, struct
         {
             chain->logLmax = logL;
             
-            //      fprintf(stdout,"New max logL = %.2f  Cloning chains...\n",logL);
             for(int ic=1; ic<chain->NC; ic++)
             {
                 int m = chain->index[ic];
-                for(int i=0; i<N; i++) copy_model(model[n][i],model[m][i]);
+                copy_model(model[n],model[m]);
             }
             if(flags->burnin)return 1;
         }

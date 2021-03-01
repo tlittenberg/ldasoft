@@ -164,7 +164,7 @@ int main(int argc,char **argv)
   int NSIM = 0;
   while ( !feof(Infile) )
   {
-    check = fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+    check = fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
       if(!check)
       {
           fprintf(stderr,"Error reading %s\n",argv[3]);
@@ -178,14 +178,20 @@ int main(int argc,char **argv)
       
   for(int n=0; n<NSIM; n++)
   {
-    if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
-    
-    check = fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf\n", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+      printf("n=%i\n",n);
+    //if(n%(NSIM/100)==0)printProgress((double)n/(double)NSIM);
+    printf("n2=%i\n",n);
+
+    fscanf(Infile, "%lf%lf%lf%lf%lf%lf%lf%lf", &f, &fdot, &theta, &phi, &A, &iota, &psi, &phase);
+      
+      printf("check=%i\n",check);
     if(!check)
     {
         fprintf(stderr,"Error reading %s\n",argv[3]);
         exit(1);
     }
+      
+      printf("f=%g\n",f);
 
     params[0] = f;
     params[1] = theta;
@@ -218,6 +224,7 @@ int main(int argc,char **argv)
     
     Acut = A*sqrt(TOBS/Sm);
     
+      printf("Acut=%g\n",Acut);
     M = 2*galactic_binary_bandwidth(LISAorbit->L, LISAorbit->fstar, f, fdot, cos(params[1]), params[3], TOBS, N);
     
     XLS = double_vector(2*M);
@@ -241,6 +248,8 @@ int main(int argc,char **argv)
     SNRX  /= SNX;
     SNRAE  = sqrt(SNRAE);
     SNRX   = sqrt(SNRX);
+      
+      printf("SNR = %g\n",SNRAE);
     
     if(SNRX > SNRthres)
     {

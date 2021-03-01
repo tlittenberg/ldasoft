@@ -30,8 +30,8 @@
 //
 #include <math.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryWaveform.h"
@@ -154,6 +154,7 @@ void free_Filter(struct Filter *F_filter)
     }
     free(F_filter->M_inv_X);
     free(F_filter->M_inv_AE);
+    free(F_filter);
 }
 
 void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct Filter *F_filter)
@@ -210,9 +211,9 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         
         //FAST_LISA(params, N_filter, M_filter, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE);
         // map to conventions for waveform generator
-        //params[3]=log(params[3]);
+        params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0[0], params, 9, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE, M_filter, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0[0], params, data->NP, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE, M_filter, 2);
         
     } else if (filter_id == 2){
         
@@ -229,9 +230,9 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         
         //FAST_LISA(params, N_filter, M_filter, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE);
         // map to conventions for waveform generator
-        //params[3]=log(params[3]);
+        params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0[0], params, 9, F_filter->A2_fX, F_filter->A2_fA, F_filter->A2_fE, M_filter, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0[0], params, data->NP, F_filter->A2_fX, F_filter->A2_fA, F_filter->A2_fE, M_filter, 2);
         
     } else if (filter_id == 3){
         
@@ -248,9 +249,9 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         
         //FAST_LISA(params, N_filter, M_filter, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE);
         // map to conventions for waveform generator
-        //params[3]=log(params[3]);
+        params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0[0], params, 9, F_filter->A3_fX, F_filter->A3_fA, F_filter->A3_fE, M_filter, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0[0], params, data->NP, F_filter->A3_fX, F_filter->A3_fA, F_filter->A3_fE, M_filter, 2);
         
     } else {
         
@@ -267,7 +268,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         
         //FAST_LISA(params, N_filter, M_filter, F_filter->A1_fX, F_filter->A1_fA, F_filter->A1_fE);
         // map to conventions for waveform generator
-        //params[3]=log(params[3]);
+        params[3]=log(params[3]);
         params[4]=cos(params[4]);
         galactic_binary(orbit, data->format, data->T, data->t0[0], params, 9, F_filter->A4_fX, F_filter->A4_fA, F_filter->A4_fE, M_filter, 2);
     }
@@ -486,14 +487,17 @@ void get_F_params(struct Filter *F_filter)
     Across_AE = sqrt( a1p4AE*a1p4AE + a2m3AE*a2m3AE  ) - sqrt( a1m4AE*a1m4AE + a2p3AE*a2p3AE );
     
     
-    psi_AE_Fstat   = 0.5*atan2(Aplus_AE*F_filter->a4_AE - Across_AE*F_filter->a1_AE,
+    psi_AE_Fstat   = atan2(Aplus_AE*F_filter->a4_AE - Across_AE*F_filter->a1_AE,
                                -(Across_AE*F_filter->a2_AE + Aplus_AE*F_filter->a3_AE) );
+    
+    psi_AE_Fstat *= 0.5;
+    
     cAE            = (double)sgn(sin(2.0*psi_X_Fstat));
     A_AE_Fstat     = 0.5*(  Aplus_AE + sqrt(Aplus_AE*Aplus_AE - Across_AE*Across_AE)  );
     iota_AE_Fstat  = acos(  -Across_AE/(Aplus_AE + sqrt(Aplus_AE*Aplus_AE - Across_AE*Across_AE))  );
     phase_AE_Fstat = atan2(  cAE*(Aplus_AE*F_filter->a4_AE - Across_AE*F_filter->a1_AE),
                            -cAE*(Across_AE*F_filter->a3_AE + Aplus_AE*F_filter->a2_AE)  );
-    
+
     // 	printf("\nX F-stat ML Values                         AE F-stat ML Values\n");
     // 	printf("-------------------------------            -------------------------------\n");
     // 	printf("psi X:   	%e               psi AE:   	%e\n",  tan(psi_X_Fstat),   tan(psi_AE_Fstat));
@@ -571,8 +575,8 @@ void calc_a_i(struct Filter *F_filter)
 void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fdot, double theta, double phi, double *logL_X, double *logL_AE, double *Fparams)
 {
     long M_filter, N_filter;
-    M_filter = 64;
-    N_filter = 64;
+    M_filter = (data->N-2*data->qpad)/4;
+    N_filter = (data->N-2*data->qpad)/4;
     long q;
     
     q = (long)(f0*data->T); 	// carrier frequency bin
@@ -628,9 +632,8 @@ void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *x
 {
     long M_filter, N_filter;
     
-    //TODO: Filter size hard coded?
-    M_filter = 64;
-    N_filter = 64;
+    M_filter = (data->N-2*data->qpad)/4;
+    N_filter = (data->N-2*data->qpad)/4;
         
     struct Filter *F_filter = malloc(sizeof(struct Filter));
     

@@ -23,7 +23,6 @@
 #include <math.h>
 
 #include "LISA.h"
-#include "Constants.h"
 
 void print_LISA_ASCII_art(FILE *fptr)
 {
@@ -57,9 +56,9 @@ void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, dou
     }
 }
 
-/*************************************************************************/
+/* ********************************************************************* */
 /*        Rigid approximation position of each LISA spacecraft           */
-/*************************************************************************/
+/* ********************************************************************* */
 void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
 {
     
@@ -275,7 +274,6 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     fprintf(stdout,"=========================================\n\n");
     
 }
-/*************************************************************************/
 
 void free_orbit(struct Orbit *orbit)
 {
@@ -700,40 +698,6 @@ double GBnoise(double T, double f)
     return A*pow(f,-7./3.)*exp(-pow(f,alpha) + beta*f*sin(kappa*f))*(1. + tanh(gamma*(fk-f)));
 }
 
-//double AEnoise(double L, double fstar, double f)
-//{
-//  //Power spectral density of the detector noise and transfer frequency
-//  double Sn;
-//
-//
-//  // Calculate the power spectral density of the detector noise at the given frequency
-//  Sn = 16.0/3.0*ipow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*(1.0/ipow(2.0*M_PI*f,4))) / ipow(2.0*L,2.0));
-//
-//  return Sn;
-//}
-//
-//void instrument_noise(double f, double *SAE, double *SXYZ)
-//{
-//  //Power spectral density of the detector noise and transfer frequency
-//  double Sn, red, confusion_noise;
-//  double Sloc;
-//  double f1, f2;
-//  double A1, A2, slope;
-//  FILE *outfile;
-//
-//
-//  red = 16.0*(pow((2.0e-5/f), 10.0)+ (1.0e-4/f)*(1.0e-4/f));
-//
-//  Sloc = 2.89e-24;
-//
-//  // Calculate the power spectral density of the detector noise at the given frequency
-//
-//  *SAE = 16.0/3.0*pow(sin(f/fstar),2.0)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
-//
-//  *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( 4.0*(Sps+Sloc) + 8.0*(1.0+pow(cos(f/fstar),2.0))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
-//  
-//}
-
 void test_noise_model(struct Orbit *orbit)
 {
     double fstart = log10(1e-5);
@@ -748,3 +712,139 @@ void test_noise_model(struct Orbit *orbit)
     }
     fclose(psdfile);
 }
+
+
+void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
+{
+    //Number of frequency bins (2*N samples)
+    tdi->N = NFFT;
+    
+    //Michelson
+    tdi->X = calloc(2*tdi->N,sizeof(double));
+    tdi->Y = calloc(2*tdi->N,sizeof(double));
+    tdi->Z = calloc(2*tdi->N,sizeof(double));
+    
+    //Noise-orthogonal
+    tdi->A = calloc(2*tdi->N,sizeof(double));
+    tdi->E = calloc(2*tdi->N,sizeof(double));
+    tdi->T = calloc(2*tdi->N,sizeof(double));
+    
+    int n;
+    for(n=0; n<2*tdi->N; n++)
+    {
+        tdi->X[n] = 0.0;
+        tdi->Y[n] = 0.0;
+        tdi->Z[n] = 0.0;
+        tdi->A[n] = 0.0;
+        tdi->E[n] = 0.0;
+        tdi->T[n] = 0.0;
+    }
+    
+    //Number of TDI channels (X or A&E or maybe one day A,E,&T)
+    tdi->Nchannel = Nchannel;
+}
+
+void copy_tdi(struct TDI *origin, struct TDI *copy)
+{
+    copy->N        = origin->N;
+    copy->Nchannel = origin->Nchannel;
+    
+    for(int n=0; n<2*origin->N; n++)
+    {
+        copy->X[n] = origin->X[n];
+        copy->Y[n] = origin->Y[n];
+        copy->Z[n] = origin->Z[n];
+        copy->A[n] = origin->A[n];
+        copy->E[n] = origin->E[n];
+        copy->T[n] = origin->T[n];
+    }
+}
+
+void free_tdi(struct TDI *tdi)
+{
+    free(tdi->X);
+    free(tdi->Y);
+    free(tdi->Z);
+    free(tdi->A);
+    free(tdi->E);
+    free(tdi->T);
+    
+    free(tdi);
+}
+
+/* LDC HDF5 */
+
+#define DATASET "/obs/tdi"
+
+void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
+{    
+    /* LDC-formatted structure for compound HDF5 dataset */
+    typedef struct tdi_dataset {
+        double time;
+        double    X;
+        double    Y;
+        double    Z;
+    } tdi_dataset;
+    static tdi_dataset *s1;
+    
+    hid_t  file, dataset, dspace; /* identifiers */
+    herr_t status; /* error handling */
+    int ndims, Nrow, Ncol; /* dimension of dataset */
+    double *data; /* array for dataset */
+    
+    /* Open an existing file. */
+    file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+    
+    /* Open an existing dataset. */
+    dataset = H5Dopen(file, DATASET, H5P_DEFAULT);
+    
+    /* Get size of dataset */
+    dspace = H5Dget_space(dataset);
+    ndims = H5Sget_simple_extent_ndims(dspace);
+    hsize_t dims[ndims];
+    H5Sget_simple_extent_dims(dspace, dims, NULL);
+    int Nsamples = dims[0];
+    
+    s1 = malloc(Nsamples*sizeof(struct tdi_dataset));
+    alloc_tdi(tdi, Nsamples/2, 3);
+    
+    hid_t s1_tid; /* Memory datatype handle */
+    
+    s1_tid = H5Tcreate(H5T_COMPOUND, sizeof(struct tdi_dataset));
+    H5Tinsert(s1_tid, "time", HOFFSET(struct tdi_dataset, time), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "X", HOFFSET(struct tdi_dataset, X), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "Y", HOFFSET(struct tdi_dataset, Y), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
+    
+    status = H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
+        
+    
+    /* Copy LDC-formatted structure into ldasoft format */
+    for(int i=0; i<Nsamples; i++)
+    {
+        double X = s1[i].X;
+        double Y = s1[i].Y;
+        double Z = s1[i].Z;
+        
+        tdi->X[i] = X;
+        tdi->Y[i] = Y;
+        tdi->Z[i] = Z;
+        
+        tdi->A[i] = (2.0*X-Y-Z)/3.0;
+        tdi->E[i] = (Z-Y)/sqrt(3.0);
+        tdi->T[i] = (X+Y+Z)/3.0;
+        
+    }
+    tdi->delta = s1[1].time - s1[0].time;
+    
+    /* Close the dataset. */
+    status = H5Dclose(dataset);
+    
+    /* Close the file. */
+    status = H5Fclose(file);
+    
+    /* Free up memory */
+    free(s1);
+
+}
+

@@ -5,6 +5,7 @@ var structProposal =
     [ "function", "structProposal.html#a4ea081b1905164a990c8a2d2239bcd34", null ],
     [ "matrix", "structProposal.html#af23e1e359df0ad1172ab360b440a62e3", null ],
     [ "maxp", "structProposal.html#ab7c7b47c87acc31027fc19fb3a33ef15", null ],
+    [ "modes", "structProposal.html#ac33f52fa061c43fd6834058a5b733acd", null ],
     [ "name", "structProposal.html#a51c23d0e80247b1e38f1c1470860e234", null ],
     [ "norm", "structProposal.html#a91c51efbd6006aa8484de086ebca34ef", null ],
     [ "rjweight", "structProposal.html#a1c7952dc028f17ec1a0c73b60b3387b8", null ],
