@@ -146,29 +146,38 @@ Python packages for post-production</h2>
 <div class="line">h5py</div>
 <div class="line">tables</div>
 <div class="line">pydot</div>
+<div class="line">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</div>
 <div class="line">lisacattools</div>
 </div><!-- fragment --><p> <a class="anchor" id="installation"></a> </p>
 <h2><a class="anchor" id="autotoc_md10"></a>
 Installation</h2>
-<p>Build and install binaries in <code>${HOME}/ldasoft/master/bin/</code> with <code>cmake</code>. Destination directory for install is supplied via command line to install script. Example: </p><div class="fragment"><div class="line">./install.sh ${HOME}/ldasoft/master</div>
-</div><!-- fragment --><p><a class="anchor" id="examples"></a> </p>
+<p>Build and install binaries in <code>${HOME}/ldasoft/master/bin/</code> with <code>cmake</code>. </p>
 <h1><a class="anchor" id="autotoc_md11"></a>
+Destination directory for install is supplied via command line to install script.  Example:</h1>
+<div class="fragment"><div class="line">&lt;a name=&quot;installation&quot;&gt;&lt;/a&gt;</div>
+<div class="line">## Installation</div>
+<div class="line">Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`</div>
+<div class="line">&gt;&gt;&gt;&gt;&gt;&gt;&gt; 3848e2f8e40eaadda41c5966f615a685041c9b4e</div>
+<div class="line">```bash</div>
+<div class="line">./install.sh ${HOME}/ldasoft/master</div>
+</div><!-- fragment --><p><a class="anchor" id="examples"></a> </p>
+<h1><a class="anchor" id="autotoc_md12"></a>
 Example use cases for GBMCMC</h1>
 <p>See run options with <code>gb_mcmc --help</code>. Detailed description of command line options found here</p>
 <p><a class="anchor" id="highsnr"></a> </p>
-<h2><a class="anchor" id="autotoc_md12"></a>
+<h2><a class="anchor" id="autotoc_md13"></a>
 Analyze single high SNR injection</h2>
 <div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt</div>
 </div><!-- fragment --><p> <a class="anchor" id="ldc"></a> </p>
-<h2><a class="anchor" id="autotoc_md13"></a>
+<h2><a class="anchor" id="autotoc_md14"></a>
 Analyze LDC data</h2>
 <p>See <a href="`README_LDC.md`">Running on LDC Documentation</a></p>
 <p><a class="anchor" id="verification_binaries"></a> </p>
-<h2><a class="anchor" id="autotoc_md14"></a>
+<h2><a class="anchor" id="autotoc_md15"></a>
 Analyze verification binary with EM priors</h2>
 <p>Files containing verification binary parameters and priors are located in <code>ldasoft/gbmcmc/etc/sources/verification</code>. Current best estimates of known binaries and their parameters, with references to source material, are found <a href="https://docs.google.com/spreadsheets/d/1PfwgaPjOpcEz_8RIcf87doyhErnT0cYTYJ9b6fC0yfA/edit">here</a></p>
-<h3><a class="anchor" id="autotoc_md15"></a>
+<h3><a class="anchor" id="autotoc_md16"></a>
 Examples for AM CVn</h3>
 <p>Run with sky-location fixed </p><div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \</div>
@@ -179,9 +188,9 @@ Examples for AM CVn</h3>
 </div><!-- fragment --><p>To run with sky-location and EM-constrained priors (currently just U[cosi]) add </p><div class="fragment"><div class="line">--em-prior &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat </div>
 </div><!-- fragment --><p>To run with orbital period P and dP/dt fixed add </p><div class="fragment"><div class="line">--fix-freq</div>
 </div><!-- fragment --><p><a class="anchor" id="other"></a> </p>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md17"></a>
 Other use cases</h2>
-<h3><a class="anchor" id="autotoc_md17"></a>
+<h3><a class="anchor" id="autotoc_md18"></a>
 Use UCBs as calibration sources</h3>
 <div class="fragment"><div class="line">gb_mcmc \</div>
 <div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \</div>
@@ -191,10 +200,10 @@ Use UCBs as calibration sources</h3>
 <div class="line">  --samples 128 \</div>
 <div class="line">  --no-rj</div>
 </div><!-- fragment --><p><a class="anchor" id="output"></a> </p>
-<h1><a class="anchor" id="autotoc_md18"></a>
+<h1><a class="anchor" id="autotoc_md19"></a>
 GBMCMC output format</h1>
 <p><a class="anchor" id="parameters"></a> </p>
-<h2><a class="anchor" id="autotoc_md19"></a>
+<h2><a class="anchor" id="autotoc_md20"></a>
 Parameterization</h2>
 <p>Each galactic binary is fit with <code>NP</code> parameters, where <code>NP</code> is typically 8, but can be increased to 9 using the <code>--f-double-dot</code>. The parameters are:</p>
 <ul>
@@ -234,99 +243,534 @@ Parameterization</h2>
 <div class="line">#check the built in location of AM CVn</div>
 <div class="line">print(&quot;\n Built in location for AM CVn&quot;)</div>
 <div class="line">print(SkyCoord.from_name(&quot;AM CVn&quot;))</div>
-</div><!-- fragment --><p><a class="anchor" id="chains"></a> </p>
-<h2><a class="anchor" id="autotoc_md20"></a>
+</div><!-- fragment --><p><a class="anchor" id="chains"></a> &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h2><a class="anchor" id="autotoc_md21"></a>
 chains directory</h2>
-<p><code>model_chain.dat.0</code>: <a class="el" href="structModel.html" title="Hierarchical structure of GBMCMC model.">Model</a> state information for the chain sampling the target distribution (<em>temperature</em> T=0). Each row of the file is a chain sample. The columns are </p><pre class="fragment">step | N_live | logL | logL_norm | t_0
-</pre><p> where <code>step</code> is the iteration of the sampler, <code>N_live</code> is the number of templates used in the model, <code>logL</code> is the unnormalized log likelihood, i.e -0.5*Chi^2, <code>logL_norm</code> is the log of the likelihood normalization, and <code>t_0</code> is the inferred start time (in seconds) of the data segement.</p>
+<h1><a class="anchor" id="autotoc_md22"></a>
+&lt;tt&gt;model_chain.dat.0&lt;/tt&gt;: Model state information for the chain sampling the target distribution (&lt;em&gt;temperature&lt;/em&gt; T=0). Each row of the file is a chain sample. The columns are</h1>
+<h2><a class="anchor" id="autotoc_md23"></a>
+&lt;tt&gt;chains&lt;/tt&gt; directory</h2>
+<p>**<code>model_chain.dat.0</code>**: <a class="el" href="structModel.html" title="Hierarchical structure of GBMCMC model.">Model</a> state information for the chain sampling the target distribution (<em>temperature</em> T=0). Each row of the file is a chain sample. The columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>step | N_live | logL | logL_norm | t_0</p>
+<p>where <code>step</code> is the iteration of the sampler, <code>N_live</code> is the number of templates used in the model, <code>logL</code> is the unnormalized log likelihood, i.e -0.5*Chi^2, <code>logL_norm</code> is the log of the likelihood normalization, and <code>t_0</code> is the inferred start time (in seconds) of the data segement.</p>
 <p>Samples with <code>step &lt; 0</code> are considered part of the burn in. The value of <code>step</code> is occasionally reset when the sampler undergoes a sufficiently large change in the maximum log likelihood.</p>
 <p>The total log likelihood at each step is <code>logL + logL_norm</code>. <br  />
 </p>
 <p>If the analysis includes <code>M</code> time segments, there will be <code>M</code> <code>t_[m=0,-1]</code> columns corresponding to the start time of each segment. The <code>t_m</code> values are constant unless the analysis is actively fitting for segment start times with the <code>--fit-gap</code> flag.</p>
 <p>If the run includes the <code>--verbose</code> flag, the file also contains <code>NP x N_live</code> additional columns cycling through the waveform parameters. </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
 </pre><p> Thus, when parsing the file, the <code>N_live</code> column should tell the parser how many additional parameter columns are appended to the end of the row.</p>
-<p><code>parameter_chain.dat.0</code>: Full set of chain samples including burn-in. To properly parse the file into individual chain samples, use in concert with the <code>model_chain.dat.M</code> files to extract the number of templates used at each step <code>N_live</code> . For each chain iteration in the <code>parameter_chain.dat.0</code> file there are <code>N_live</code> lines with each containing the parameters for a single source. <br  />
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md24"></a>
+&lt;tt&gt;parameter_chain.dat.0&lt;/tt&gt;: Full set of chain samples including burn-in.</h1>
+<p>**<code>parameter_chain.dat.0</code>**: Full set of chain samples including burn-in. </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>To properly parse the file into individual chain samples, use in concert with the <code>model_chain.dat.M</code> files to extract the number of templates used at each step <code>N_live</code> . For each chain iteration in the <code>parameter_chain.dat.0</code> file there are <code>N_live</code> lines with each containing the parameters for a single source. <br  />
 </p>
 <p>When running with the <code>--verbose</code> flag, there will be multiple <code>parameter_chain.dat.M</code> files with the index <code>M</code> for referring to the <em>temperature</em> of the parallel-tempered chain that is producing these outputs. <code>M=0</code> is the target distribution; <code>M&gt;0</code> is softened versions of this distribution. If you don't know what this means, you want <code>M=0</code>. <br  />
 </p>
 <p>NOTE: These files contain <em>all</em> samples including burnin. Unless you care deeply about checkpointing or run diagnostics, you do not need these files. Use <code>dimension_chain.dat.N</code> files, as described below.</p>
-<p><code>dimension_chain.dat.N</code>: The post-burnin posterior samples of the binary parameters for the subset of models that have exactly <code>N</code> binaries. The columns are </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md25"></a>
+&lt;tt&gt;dimension_chain.dat.N&lt;/tt&gt;:  The post-burnin posterior samples of</h1>
+<p>**<code>dimension_chain.dat.N</code>**: The post-burnin posterior samples of </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>the binary parameters for the subset of models that have exactly <code>N</code> binaries. The columns are </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
 </pre><p> If there are more than one source, the sources cycle in the output (so line 1 is the first source, first posterior sample; line 2 is the second source, first posterior sample, etc).</p>
-<p><code>noise_chain.dat.0</code>: Full set of chain samples for noise model parameters. The columns are </p><pre class="fragment">step | logL | logL_norm | etaA | eta E
-</pre><p> where <code>etaY</code> is the PSD parameter for channel <code>Y</code>, which is a constant multiplyer to the predicted noise PSD: <code>Sn_model(f) = eta * Sn_theory(f)</code>.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md26"></a>
+&lt;tt&gt;noise_chain.dat.0&lt;/tt&gt;: Full set of chain samples for noise model parameters. The columns are</h1>
+<p>**<code>noise_chain.dat.0</code>**: Full set of chain samples for noise model parameters. The columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>step | logL | logL_norm | etaA | eta E</p>
+<p>where <code>etaY</code> is the PSD parameter for channel <code>Y</code>, which is a constant multiplyer to the predicted noise PSD: <code>Sn_model(f) = eta * Sn_theory(f)</code>.</p>
 <p>For 4-channel data there are only 4 columns and <code>X</code> replaces <code>A</code>. <br  />
 </p>
 <p>When the <code>--quiet</code> flag is in use only the post-burnin samples are recorded.</p>
-<p><code>log_likelihood_chain.dat</code>: The full log likelihood (<code>logL + logLnorm</code>) for each of the <code>NC</code> parallel tempered chains, at each chain step. Columns are </p><pre class="fragment">step | logL_0 | logL_1 | ... | logL_NC-1
-</pre><p> Useful for monitoring the effectiveness of the parallel tempering by checking that adjacent chains are exchanging likelihood values.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md27"></a>
+&lt;tt&gt;log_likelihood_chain.dat&lt;/tt&gt;: The full log likelihood (&lt;tt&gt;logL + logLnorm&lt;/tt&gt;) for each of the &lt;tt&gt;NC&lt;/tt&gt; parallel tempered chains, at each chain step. Columns are</h1>
+<p>**<code>log_likelihood_chain.dat</code>**: The full log likelihood (<code>logL + logLnorm</code>) for each of the <code>NC</code> parallel tempered chains, at each chain step. Columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>step | logL_0 | logL_1 | ... | logL_NC-1</p>
+<p>Useful for monitoring the effectiveness of the parallel tempering by checking that adjacent chains are exchanging likelihood values.</p>
 <p>The <code>logL_0</code> column is the likelihood for the target distribution. <b>File is not filled when <code>--quiet</code> flag is in use.</b></p>
-<p><code>temperature_chain.dat</code>: Inverse temperature for each of the <code>NC</code> parallel tempered chains, at each chain step. Columns are </p><pre class="fragment">step | 1/T_0 | 1/T_1 | ... | 1/T_NC-1
-</pre><p> Useful for monitoring the adaptive temperature spacing. <b>File is not filled when <code>--quiet</code> flag is in use.</b></p>
-<p><a class="anchor" id="data"></a> </p>
-<h2><a class="anchor" id="autotoc_md21"></a>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md28"></a>
+&lt;tt&gt;temperature_chain.dat&lt;/tt&gt;: Inverse temperature for each of the &lt;tt&gt;NC&lt;/tt&gt; parallel tempered chains, at each chain step. Columns are</h1>
+<p>**<code>temperature_chain.dat</code>**: Inverse temperature for each of the <code>NC</code> parallel tempered chains, at each chain step. Columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>step | 1/T_0 | 1/T_1 | ... | 1/T_NC-1</p>
+<p>Useful for monitoring the adaptive temperature spacing. <b>File is not filled when <code>--quiet</code> flag is in use.</b></p>
+<p><a class="anchor" id="data"></a> &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h2><a class="anchor" id="autotoc_md29"></a>
 data directory</h2>
-<p><code>data_0_0.dat</code>: Fourier series of input data. For 6-link data columns are </p><pre class="fragment">f [Hz] | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)} 
-</pre><p> For 4-link data there are two columns with the X channel replacing A.</p>
+<h1><a class="anchor" id="autotoc_md30"></a>
+&lt;tt&gt;data_0_0.dat&lt;/tt&gt;: Fourier series of input data. For 6-link data columns are</h1>
+<h2><a class="anchor" id="autotoc_md31"></a>
+&lt;tt&gt;data&lt;/tt&gt; directory</h2>
+<p>**<code>data_0_0.dat</code>**: Fourier series of input data. For 6-link data columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f [Hz] | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)}</p>
+<p>For 4-link data there are two columns with the X channel replacing A.</p>
 <p>The <code>0_0</code> in the filename indicate that the data is for the first (0th) time and frequency segment. If the analysis involves multiple time or frequency segments, different <code>data_i_j.dat</code> files will be filled.</p>
-<p><code>waveform_injection_0_0.dat</code>: Fourier series of the injected signals. For 6-link data columns are </p><pre class="fragment">f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
-</pre><p> For 4-link data there are two columns with the X channel replacing A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md32"></a>
+&lt;tt&gt;waveform_injection_0_0.dat&lt;/tt&gt;: Fourier series of the injected signals. For 6-link data columns are</h1>
+<p>**<code>waveform_injection_0_0.dat</code>**: Fourier series of the injected signals. For 6-link data columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)}</p>
+<p>For 4-link data there are two columns with the X channel replacing A.</p>
 <p>The same <code>i_j.dat</code> naming convention as the <code>data_i_j.dat</code> files is used here. In the absence of an injection for the analysis, the file contains a copy of the data.</p>
-<p><code>power_data_0_0.dat</code>: Power spectrum of input data. For 6-link data columns are </p><pre class="fragment">f [Hz] | A^2(f) | E^2(f) 
-</pre><p> For 4-link data there are two columns with the X channel replacing A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md33"></a>
+&lt;tt&gt;power_data_0_0.dat&lt;/tt&gt;: Power spectrum of input data. For 6-link data columns are</h1>
+<p>**<code>power_data_0_0.dat</code>**: Power spectrum of input data. For 6-link data columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f [Hz] | A^2(f) | E^2(f)</p>
+<p>For 4-link data there are two columns with the X channel replacing A.</p>
 <p>The same <code>i_j.dat</code> naming convention as the <code>data_i_j.dat</code> files is used here.</p>
-<p><code>power_injection_0_0.dat</code>: Power spectrum of injected signals. For 6-link data columns are </p><pre class="fragment">f [Hz] | h_A^2(f) | h_E^2(f) 
-</pre><p> For 4-link data there are two columns with the X channel replacing A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md34"></a>
+&lt;tt&gt;power_injection_0_0.dat&lt;/tt&gt;: Power spectrum of injected signals. For 6-link data columns are</h1>
+<p>**<code>power_injection_0_0.dat</code>**: Power spectrum of injected signals. For 6-link data columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f [Hz] | h_A^2(f) | h_E^2(f)</p>
+<p>For 4-link data there are two columns with the X channel replacing A.</p>
 <p>The same <code>i_j.dat</code> naming convention as the <code>data_i_j.dat</code> files is used here. If no injection is being done, the file contains the power spectrum of the data and is identical to <code>power_data_0_0.dat</code>.</p>
-<p><code>frequency_proposal.dat</code>: Smoothed and normalized power spectrum of data used for frequency proposal. Columns are </p><pre class="fragment">frequency bin number | probability density
-</pre><p> <b>THIS FILE COULD BE REMOVED FROM OUTPUT OR PUT IN <code>--verbose</code> OUTPUT</b></p>
-<p><code>power_noise_t0_f0.dat</code>: Quantiles of the posterior distribution for the reconstructed noise model. For 6-link data the columns are </p><pre class="fragment">f | SnA_50 | SnA_25 | SnA_75 | SnA_05 | SnA_95 | SnE_50 | SnE_25 | SnE_75 | SnE_05 | SnE_95
-</pre><p> Where <code>SnY</code> is the noise power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[SnA_25--SnA_75]</code> encompasses the 50% credible interval for <code>SnA</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md35"></a>
+&lt;tt&gt;frequency_proposal.dat&lt;/tt&gt;: Smoothed and normalized power spectrum of data used for frequency proposal. Columns are</h1>
+<p>**<code>frequency_proposal.dat</code>**: Smoothed and normalized power spectrum of data used for frequency proposal. Columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>frequency bin number | probability density</p>
+<p><b>THIS FILE COULD BE REMOVED FROM OUTPUT OR PUT IN <code>--verbose</code> OUTPUT</b></p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md36"></a>
+&lt;tt&gt;power_noise_t0_f0.dat&lt;/tt&gt;: Quantiles of the posterior distribution for the reconstructed noise model. For 6-link data the columns are</h1>
+<p>**<code>power_noise_t0_f0.dat</code>**:Quantiles of the posterior distribution for the reconstructed noise model. For 6-link data the columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f | SnA_50 | SnA_25 | SnA_75 | SnA_05 | SnA_95 | SnE_50 | SnE_25 | SnE_75 | SnE_05 | SnE_95</p>
+<p>Where <code>SnY</code> is the noise power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[SnA_25--SnA_75]</code> encompasses the 50% credible interval for <code>SnA</code>. For 4-link data there are 6 columns and X replaces A.</p>
 <p>If multiple time/frequency segments are being analyzed there will be <code>power_noise_t[i]_f[j].dat</code> files for each time-frequency segment.</p>
-<p><code>power_reconstruction_t0_f0.dat</code>: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are </p><pre class="fragment">f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
-</pre><p> Where <code>hY^2</code> is the signal power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[hA^2_25--hA^2_75]</code> encompasses the 50% credible interval for <code>hY</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md37"></a>
+&lt;tt&gt;power_reconstruction_t0_f0.dat&lt;/tt&gt;: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are</h1>
+<p>**<code>power_reconstruction_t0_f0.dat</code>**: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95</p>
+<p>Where <code>hY^2</code> is the signal power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[hA^2_25--hA^2_75]</code> encompasses the 50% credible interval for <code>hY</code>. For 4-link data there are 6 columns and X replaces A.</p>
 <p>If multiple time/frequency segments are being analyzed there will be <code>power_reconstruction_t[i]_f[j].dat</code> files for each time-frequency segment.</p>
-<p><code>power_residual_t0_f0.dat</code>: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are </p><pre class="fragment">f | rA^2_50 | rA^2_25 | rA^2_75 | rA^2_05 | rA^2_95 | rE^2_50 | rE^2_25 | rE^2_75 | rE^2_05 | rE^2_95
-</pre><p> Where <code>rY^2</code> is the residual power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[rA^2_25--rA^2_75]</code> encompasses the 50% credible interval for <code>rA^2</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md38"></a>
+&lt;tt&gt;power_residual_t0_f0.dat&lt;/tt&gt;: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are</h1>
+<p>**<code>power_residual_t0_f0.dat</code>**: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f | rA^2_50 | rA^2_25 | rA^2_75 | rA^2_05 | rA^2_95 | rE^2_50 | rE^2_25 | rE^2_75 | rE^2_05 | rE^2_95</p>
+<p>Where <code>rY^2</code> is the residual power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[rA^2_25--rA^2_75]</code> encompasses the 50% credible interval for <code>rA^2</code>. For 4-link data there are 6 columns and X replaces A.</p>
 <p>If multiple time/frequency segments are being analyzed there will be <code>power_residual_t[i]_f[j].dat</code> files for each time-frequency segment.</p>
-<p><code>variance_residual_t0_f0.dat</code>: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are </p><pre class="fragment">f | Var(hA) | Var(hE)
-</pre><p> For 4-link data there are only two columns and X replaces A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md39"></a>
+&lt;tt&gt;variance_residual_t0_f0.dat&lt;/tt&gt;: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are</h1>
+<p>**<code>variance_residual_t0_f0.dat</code>**: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f | Var(hA) | Var(hE)</p>
+<p>For 4-link data there are only two columns and X replaces A.</p>
 <p>The intent here is that this variance can be added to the noise PSD for a follow-on analysis of the residuals to take into account the uncertainty in the signal model used in the subtraction. <b>This needs to be tested</b></p>
-<p><code>waveform_draw_0.dat</code>: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are </p><pre class="fragment">f | dA^2 | dE^2 | hA^2 | hE^2 | rA^2 | rE^2
-</pre><p> where <code>dY</code>,<code>hY</code>, and <code>rY</code> is the data, waveform, and residual of channel <code>Y</code>. For 4-link data there are four columns and X replaces A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md40"></a>
+&lt;tt&gt;waveform_draw_0.dat&lt;/tt&gt;: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are</h1>
+<p>**<code>waveform_draw_0.dat</code>**: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f | dA^2 | dE^2 | hA^2 | hE^2 | rA^2 | rE^2</p>
+<p>where <code>dY</code>,<code>hY</code>, and <code>rY</code> is the data, waveform, and residual of channel <code>Y</code>. For 4-link data there are four columns and X replaces A.</p>
 <p><a class="anchor" id="run"></a> </p>
-<h2><a class="anchor" id="autotoc_md22"></a>
+<h2><a class="anchor" id="autotoc_md41"></a>
 main run directory</h2>
-<p><code>evidence.dat</code>: Posterior for number of templates used to fit the data. Columns are </p><pre class="fragment">M | NN
-</pre><p> Where <code>M</code> is the model "dimension", i.e. the number of templates in the model, and <code>NN</code> signifies that the sampler spent NN% of iterations in that model.</p>
-<p><code>gb_mcmc.log</code>: Run information including git version number, command line, summary of data settings and run flags, and total run time.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md42"></a>
+&lt;tt&gt;evidence.dat&lt;/tt&gt;: Posterior for number of templates used to fit the data. Columns are</h1>
+<p>**<code>evidence.dat</code>**: Posterior for number of templates used to fit the data. Columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>M | NN</p>
+<p>Where <code>M</code> is the model "dimension", i.e. the number of templates in the model, and <code>NN</code> signifies that the sampler spent NN% of iterations in that model.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD <code>gb_mcmc.log</code>: Run information including git version number, command line, summary of data settings and run flags, and total run time.</p>
 <p><code>run.sh</code>: Bash script which echos command line used for analysis.</p>
-<p><code>avg_log_likelihood.dat</code>: Average log likelihoood for each parallel tempered chain. These data would serve as the integrand for a thermodynamic integration step to compute the overall evidence for the model (marginalized over the number of galactic binary signals in the data). Columns are </p><pre class="fragment">1/T | &lt;logL+logL_norm&gt;
-</pre><p> The first row is the target distribution with <code>T=1</code></p>
-<p><code>example_gb_catalog.sh</code>: Example <code>bash</code> script for post-processing with <code>gb_catalog</code>. Takes as argument the size of the model you want to post-process (e.g., maximum from <code>evidence.dat</code>). <a class="anchor" id="post"></a> </p>
-<h1><a class="anchor" id="autotoc_md23"></a>
+<h1><a class="anchor" id="autotoc_md43"></a>
+&lt;tt&gt;avg_log_likelihood.dat&lt;/tt&gt;:  Average log likelihoood for each parallel tempered chain. These data would serve as the integrand for a thermodynamic integration step to compute the overall evidence for the model (marginalized over the number of galactic binary signals in the data). Columns are</h1>
+<p>**<code>gb_mcmc.log</code>**: Run information including git version number, command line, summary of data settings and run flags, and total run time.</p>
+<p>**<code>run.sh</code>**: Bash script which echos command line used for analysis.</p>
+<p>**<code>avg_log_likelihood.dat</code>**: Average log likelihoood for each parallel tempered chain. These data would serve as the integrand for a thermodynamic integration step to compute the overall evidence for the model (marginalized over the number of galactic binary signals in the data). Columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>1/T | &lt;logL+logL_norm&gt;</p>
+<p>The first row is the target distribution with <code>T=1</code></p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md44"></a>
+&lt;tt&gt;example_gb_catalog.sh&lt;/tt&gt;: Example &lt;tt&gt;bash&lt;/tt&gt; script for post-processing with &lt;tt&gt;gb_catalog&lt;/tt&gt;. Takes as argument the size of the model you want to post-process (e.g., maximum from &lt;tt&gt;evidence.dat&lt;/tt&gt;).</h1>
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p><a class="anchor" id="post"></a> </p>
+<h1><a class="anchor" id="autotoc_md45"></a>
 Post processing GBMCMC</h1>
 <p>Post production of Markov chain output from <code>gb_mcmc</code> is done with <code>gb_catalog</code>. <br  />
  The post processing is done on a single model from the RJMCMC analysis, identified by the number of sources <code>N</code> used in the fit, which the user specifies. Results from <code>gb_catalog</code> are found in the a subdirectory of the main run directory called <code>catalog_N/</code>. The catalog step can be run several times for different choices of <code>N</code>, creating different directories for each run.</p>
 <p>For run options with <code>gb_catalog --help</code>. Detailed description of command line options (will eventually be) found here.</p>
 <p>An example <code>gb_catalog</code> run script is created by <code>gb_mcmc</code> in the run directory. See <code>example_gb_catalog.sh</code>.</p>
 <p><a class="anchor" id="catalog_output"></a> </p>
-<h2><a class="anchor" id="autotoc_md24"></a>
+<h2><a class="anchor" id="autotoc_md46"></a>
 GB Catalog output format</h2>
 <p>Within <code>catalog_N/</code> are post production files for each candidate source found by the analysis as well as aggregate files describing the whole catalog. The source files are uniquely named by the gravitational wave frequency of the binary as <code>LDCFFFFFFFFFF</code>. <code>LDC</code> is the prefix for the name to make clear that production-level analysis have been using LISA <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> Challenge simulations. The <code>FFFFFFFFFF</code> is a 10-digit representation of the <b>median</b> gravitational wave frequency, in Hz. <br  />
  For example, a binary at <code>f_0 = 3 mHz</code> would be named <code>LDC0030000000</code>.</p>
 <p><b>NOTE:</b> There are not necessarily <code>N</code> sources found in the <code>catalog_N</code> directory. Additional filtering is done on the chain samples which may remove sources in the "padding" regions of the analysis window, or marginal detection candidates that did not have sufficient evidence to be included in the catalog.</p>
 <p>Contents of each indidvidual file are as follows:</p>
-<p><code>catalog_N/LDCFFFFFFFFFF_chain.dat</code>: The Markov chain samples for parameters consistent with <code>LDCFFFFFFFFFF</code>. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from <code>gb_mcmc</code> with <b>three</b> additional columns appended </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance
-</pre><p> Where <code>SNR</code> is computed relative to the noise level input using <code>--noise-file</code> or the analytic noise functions if not specified, <code>Waveform Match</code> is the match between the current sample and the reference waveform for the catalog <em><a class="el" href="structEntry.html" title="Prototype structure for individual source entries in the catalog.">Entry</a></em>, used for filtering the raw chains, and <code>Waveform Distance</code> is the waveform distance between the current and reference waveforms&ndash;perhaps a future filtering criteria.</p>
-<p><code>catalog_N/LDCFFFFFFFFFF_params.dat</code>: Point estimate of the candidate source. Parameters correspond to the chain sample containing the <b>median</b> of the 1D marginalized distriubtion for the GW frequency </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
-</pre><p> <code>catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat</code>: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are </p><pre class="fragment">f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
-</pre><p> Where <code>hY^2</code> is the signal power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[hA^2_25--hA^2_75]</code> encompasses the 50% credible interval for <code>hY</code>. For 4-link data there are 6 columns and X replaces A.</p>
-<p><code>catalog_N/LDCFFFFFFFFFF_waveform.dat</code>: Point estimate of the reconstructed waveform corresponding to the chain sample containing the <b>median</b> of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are </p><pre class="fragment">f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
-</pre><p> For 4-link data there are two columns with the X channel replacing A.</p>
-<p><code>catalog_N/entries.dat</code>: Summary of sources found in catalog. Columns are </p><pre class="fragment">LDCFFFFFFFFFF | SNR | Evidence
-</pre><p> Where <code>SNR</code> is computed relative to the noise level input using <code>--noise-file</code> or the analytic noise functions if not specified. The evidence, with values from [0,1], is the probability that the candidate source is a member of the catalog, computed by the fraction of chain samples that include a set of parameters consistent with <code>LDCFFFFFFFFFF</code>.</p>
-<p><code>catalog_N/history.dat</code>: File associating current candidate sources to previous catalog input using <code>--catalog</code> and <code>--Tcatalog</code> arguments for <code>gb_catalog</code>. The columns are </p><pre class="fragment">LDCMMMMMMMMMM from input catalog | LDCNNNNNNNNNN from current catalog
-</pre><p> Only sources in the current catalog with clearly identified <em>parent</em> sources from the previous analysis are included in the file. </p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md47"></a>
+&lt;tt&gt;catalog_N/LDCFFFFFFFFFF_chain.dat&lt;/tt&gt;: The Markov chain samples for parameters consistent with &lt;tt&gt;LDCFFFFFFFFFF&lt;/tt&gt;. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from &lt;tt&gt;gb_mcmc&lt;/tt&gt; with &lt;strong&gt;three&lt;/strong&gt; additional columns appended</h1>
+<p>**<code>catalog_N/LDCFFFFFFFFFF_chain.dat</code>**: The Markov chain samples for parameters consistent with <code>LDCFFFFFFFFFF</code>. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from <code>gb_mcmc</code> with <b>three</b> additional columns appended </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f | fdot | A | cos_colat | long | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance</p>
+<p>Where <code>SNR</code> is computed relative to the noise level input using <code>--noise-file</code> or the analytic noise functions if not specified, <code>Waveform Match</code> is the match between the current sample and the reference waveform for the catalog <em><a class="el" href="structEntry.html" title="Prototype structure for individual source entries in the catalog.">Entry</a></em>, used for filtering the raw chains, and <code>Waveform Distance</code> is the waveform distance between the current and reference waveforms&ndash;perhaps a future filtering criteria.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD <code>catalog_N/LDCFFFFFFFFFF_params.dat</code>: Point estimate of the candidate source. Parameters correspond to the chain sample containing the <b>median</b> of the 1D marginalized distriubtion for the GW frequency </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
+</pre> <h1><a class="anchor" id="autotoc_md48"></a>
+&lt;tt&gt;catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat&lt;/tt&gt;: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are</h1>
+<p>**<code>catalog_N/LDCFFFFFFFFFF_params.dat</code>**: Point estimate of the candidate source. Parameters correspond to the chain sample containing the <b>median</b> of the 1D marginalized distriubtion for the GW frequency </p><pre class="fragment">f | fdot | A | cos_colat | long | cos_inc | psi | phi
+</pre><p> **<code>catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat</code>**: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95</p>
+<p>Where <code>hY^2</code> is the signal power spectral density for channel <code>Y</code>, <code>X_NN</code> is the NN% quantile of <code>X</code>, e.g. <code>[hA^2_25--hA^2_75]</code> encompasses the 50% credible interval for <code>hY</code>. For 4-link data there are 6 columns and X replaces A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md49"></a>
+&lt;tt&gt;catalog_N/LDCFFFFFFFFFF_waveform.dat&lt;/tt&gt;: Point estimate of the reconstructed waveform corresponding  to the chain sample containing the &lt;strong&gt;median&lt;/strong&gt; of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are</h1>
+<p>**<code>catalog_N/LDCFFFFFFFFFF_waveform.dat</code>**: Point estimate of the reconstructed waveform corresponding to the chain sample containing the <b>median</b> of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)}</p>
+<p>For 4-link data there are two columns with the X channel replacing A.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md50"></a>
+&lt;tt&gt;catalog_N/entries.dat&lt;/tt&gt;: Summary of sources found in catalog.  Columns are</h1>
+<p>**<code>catalog_N/entries.dat</code>**: Summary of sources found in catalog. Columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>LDCFFFFFFFFFF | SNR | Evidence</p>
+<p>Where <code>SNR</code> is computed relative to the noise level input using <code>--noise-file</code> or the analytic noise functions if not specified. The evidence, with values from [0,1], is the probability that the candidate source is a member of the catalog, computed by the fraction of chain samples that include a set of parameters consistent with <code>LDCFFFFFFFFFF</code>.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD </p>
+<h1><a class="anchor" id="autotoc_md51"></a>
+&lt;tt&gt;catalog_N/history.dat&lt;/tt&gt;: File associating current candidate sources to previous catalog input using &lt;tt&gt;--catalog&lt;/tt&gt; and &lt;tt&gt;--Tcatalog&lt;/tt&gt; arguments for &lt;tt&gt;gb_catalog&lt;/tt&gt;.  The columns are</h1>
+<p>**<code>catalog_N/history.dat</code>**: File associating current candidate sources to previous catalog input using <code>--catalog</code> and <code>--Tcatalog</code> arguments for <code>gb_catalog</code>. The columns are </p><blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<blockquote class="doxtable">
+<p>3848e2f8e40eaadda41c5966f615a685041c9b4e </p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>LDCMMMMMMMMMM from input catalog | LDCNNNNNNNNNN from current catalog</p>
+<p>Only sources in the current catalog with clearly identified <em>parent</em> sources from the previous analysis are included in the file. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
