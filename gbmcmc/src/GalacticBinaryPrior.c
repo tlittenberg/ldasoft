@@ -351,8 +351,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
         double Mcmin = 0.15;
         double Mcmax = 1.00;
         
-        fdotmin = galactic_binary_fdot(Mcmin, fmin, data->T);
-        fdotmax = galactic_binary_fdot(Mcmax, fmax, data->T);
+        fdotmin = galactic_binary_fdot(Mcmin, fmin);
+        fdotmax = galactic_binary_fdot(Mcmax, fmax);
     }
     
     double fddotmin = 11.0/3.0*fdotmin*fdotmin/fmax;

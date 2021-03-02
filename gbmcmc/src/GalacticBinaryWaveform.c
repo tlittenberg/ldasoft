@@ -33,7 +33,7 @@
 #include "GalacticBinaryWaveform.h"
 
 
-double galactic_binary_Amp(double Mc, double f0, double D, double T)
+double galactic_binary_Amp(double Mc, double f0, double D)
 {
     double f = f0;//T;
     double M = Mc*TSUN;

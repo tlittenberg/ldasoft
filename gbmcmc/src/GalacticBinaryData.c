@@ -430,7 +430,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
         
         //compute derived parameters
         Mc  = chirpmass(m1,m2);
-        amp = galactic_binary_Amp(Mc, f0, D, data->T);
+        amp = galactic_binary_Amp(Mc, f0, D);
         
         for(int jj=0; jj<flags->NT; jj++)
         {
@@ -918,7 +918,7 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
         
         //Get injected SNR
         double SNR = snr(inj, data->noise[0]);
-        double Mc  = galactic_binary_Mc(f0, dfdt, data->T);
+        double Mc  = galactic_binary_Mc(f0, dfdt);
         double dL  = galactic_binary_dL(f0, dfdt, amp);
         
         fprintf(outfile,"%g %g %g %g %g %g %g %g %g\n",f0,dfdt,amp,cos(iota),Mc,dL,cos(M_PI/2 - theta),phi,SNR);
