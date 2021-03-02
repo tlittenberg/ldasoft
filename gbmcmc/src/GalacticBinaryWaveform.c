@@ -41,18 +41,18 @@ double galactic_binary_Amp(double Mc, double f0, double D, double T)
     
     return 2.*pow(pow(M,5)*pow(M_PI*f,2),1./3.)/dL;
 }
-double galactic_binary_fdot(double Mc, double f0, double T)
+double galactic_binary_fdot(double Mc, double f0)
 {
-    double f = f0;//T;
+    double f = f0;
     double M = Mc*TSUN;
     double Q = 19.2;//96./5.
     
     return Q*pow(pow(M_PI,8)*pow(M,5)*pow(f,11),1./3.);  
 }
-double galactic_binary_Mc(double f0, double dfdt, double T)
+double galactic_binary_Mc(double f0, double dfdt)
 {
-    double f = f0;///T;
-    double fd = dfdt;//(T*T);
+    double f = f0;
+    double fd = dfdt;
     double pi83 = 21.170591578193; //pow(pi,8./3.)
 
     return pow(fd/(96./5.)/pi83/pow(f,11./3.), 3./5.)/TSUN;

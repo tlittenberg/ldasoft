@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['noise_343',['Noise',['../structNoise.html',1,'']]]
+  ['noise_425',['Noise',['../structNoise.html',1,'']]],
+  ['noisedata_426',['NoiseData',['../structNoiseData.html',1,'']]]
 ];

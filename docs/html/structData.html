@@ -190,12 +190,12 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="separator:a3d638edc3bb44936e2ffd2ba195aabae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">TDI Data and Noise</div></td></tr>
 <tr class="memitem:a98432cd2a586429f74d696da622446d1"><td class="memItemLeft" align="right" valign="top"><a id="a98432cd2a586429f74d696da622446d1"></a>
-struct TDI **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a98432cd2a586429f74d696da622446d1">tdi</a></td></tr>
-<tr class="memdesc:a98432cd2a586429f74d696da622446d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">TDI data channels as seen by sampler. <br /></td></tr>
+struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a98432cd2a586429f74d696da622446d1">tdi</a></td></tr>
+<tr class="memdesc:a98432cd2a586429f74d696da622446d1"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data channels as seen by sampler. <br /></td></tr>
 <tr class="separator:a98432cd2a586429f74d696da622446d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95a114acc26b62ac61915fc086bfb9d9"><td class="memItemLeft" align="right" valign="top"><a id="a95a114acc26b62ac61915fc086bfb9d9"></a>
-struct TDI **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a95a114acc26b62ac61915fc086bfb9d9">raw</a></td></tr>
-<tr class="memdesc:a95a114acc26b62ac61915fc086bfb9d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">TDI data channels unaltered from input. <br /></td></tr>
+struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a95a114acc26b62ac61915fc086bfb9d9">raw</a></td></tr>
+<tr class="memdesc:a95a114acc26b62ac61915fc086bfb9d9"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data channels unaltered from input. <br /></td></tr>
 <tr class="separator:a95a114acc26b62ac61915fc086bfb9d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5646530b83cfb236488c75567a94317d"><td class="memItemLeft" align="right" valign="top"><a id="a5646530b83cfb236488c75567a94317d"></a>
 struct <a class="el" href="structNoise.html">Noise</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a5646530b83cfb236488c75567a94317d">noise</a></td></tr>
@@ -275,7 +275,7 @@ struct <a class="el" href="structCatalog.html">Catalog</a> *&#160;</td><td class
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters. </p>
 <p>The <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> structure stores information about the data being analyzed, including size of data, where it is located in the full LISA band, information about gaps, etc.</p>
-<p>The structure stores the Fourier-domain TDI data channels, and a fiducial model for the instrument noise. It also has memory allocated for storing the reconstructed waveforms, residuals, and noise models. </p>
+<p>The structure stores the Fourier-domain <a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data channels, and a fiducial model for the instrument noise. It also has memory allocated for storing the reconstructed waveforms, residuals, and noise models. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="ad89c9b316266fa46dfd5b5b3897fcf6e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad89c9b316266fa46dfd5b5b3897fcf6e">&#9670;&nbsp;</a></span>format</h2>

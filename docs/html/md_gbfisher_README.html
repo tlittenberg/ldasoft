@@ -138,11 +138,11 @@ Create orbit file with spacecraft ephimeredes</h1>
 <p><code>EccentricInclined.txt</code>: Cartesian coordinates x(t),y(t),z(t) in solar system barycentric coordinates of each spacecraft. Columns are </p><pre class="fragment">t (s) | SC1_x (m) | SC1_y (m) | SC1_z (m) | SC2_x (m) | SC2_y (m) | SC2_z (m) | SC3_x (m) | SC3_y (m) | SC3_z (m)
 </pre> <h1><a class="anchor" id="autotoc_md38"></a>
 Simulate data with detector response to full galaxy and Gaussian instrument noise</h1>
-<p>Take a list of simulated sources and a set of spacecraft coordinates to simulate TDI data streams in the frequency domain for the given observing time. The process also filters the input galaxy for sources that are possibly detectable using a (generous) cut on signal to noise ratio SNR.</p>
+<p>Take a list of simulated sources and a set of spacecraft coordinates to simulate <a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data streams in the frequency domain for the given observing time. The process also filters the input galaxy for sources that are possibly detectable using a (generous) cut on signal to noise ratio SNR.</p>
 <p><code>&gt;Galaxy &lt;source file&gt; &lt;orbit file&gt; &lt;observation time (s)&gt;</code></p>
 <p>Output files:</p>
-<p><code>&gt;Galaxy_XAE.dat</code>: Simulated Fourier domain TDI data with instrument noise and LISA response. Columns are </p><pre class="fragment">f (Hz) | Re{X(f)} | Im{X(f)} | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)} 
-</pre><p> where the X channel is for a 4-link (single interferometer) data stream while A and E are the (approximately) orthogonal TDI channels constructed from the 6-link data</p>
+<p><code>&gt;Galaxy_XAE.dat</code>: Simulated Fourier domain <a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data with instrument noise and LISA response. Columns are </p><pre class="fragment">f (Hz) | Re{X(f)} | Im{X(f)} | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)} 
+</pre><p> where the X channel is for a 4-link (single interferometer) data stream while A and E are the (approximately) orthogonal <a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> channels constructed from the 6-link data</p>
 <p><code>Bright.dat</code>: List of plausibly detectable sources from input population, using an approximate analytic expression for the signal to noise ratio, compared only to instrument noise, and thresholding on <code>SNR&gt;~2</code>. Columns are the same as the <a href="#params">input galaxy</a>.</p>
 <h1><a class="anchor" id="autotoc_md39"></a>
 Take data file and produce fit to confusion noise</h1>
@@ -162,7 +162,7 @@ Compute residual data and detectable catalog</h1>
 <p><code>&gt;Bright_Remove &lt;data file&gt; &lt;noise file&gt; &lt;source file&gt; &lt;orbit file&gt;</code></p>
 <p>Output files:</p>
 <p><code>Galaxy_XAE_R1.dat</code>: Residual frequency-domain data after detectable binaries have been removed. Columns are </p><pre class="fragment">f (Hz) | Re{X_res(f)} | Im{X_res(f)} | Re{A_res(f)} | Im{A_res(f)} | Re{E_res(f)} | Im{E_res(f)} 
-</pre><p> where the X_res channel is for a 4-link (single interferometer) residual data stream while A_res and E_res are the (approximately) orthogonal TDI channels constructed from the 6-link data residuals.</p>
+</pre><p> where the X_res channel is for a 4-link (single interferometer) residual data stream while A_res and E_res are the (approximately) orthogonal <a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> channels constructed from the 6-link data residuals.</p>
 <p><code>Confusion_XAE_1.dat</code>: Final estimate of confusion noise after <code>SNR&gt;7</code> binaries have been removed from the data. Columns are the same as <a href="#conf">the inital estimate</a>.</p>
 <p><code>Confusion_XAE_DS.dat</code>: Same as <code>Confusion_XAE_1.dat</code> but downsampled in frequency by a factor of <code>100</code> to make the file a more manageable size.</p>
 <p><code>BrightX.dat</code>: List of detectable binares by a 4-link (single interferometer) detector. Columns are the same as <a href="#params">input galaxy</a>.</p>

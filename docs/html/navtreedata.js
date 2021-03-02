@@ -87,8 +87,8 @@ var NAVTREE =
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
       [ "Class Members", "functions.html", [
-        [ "All", "functions.html", null ],
-        [ "Variables", "functions_vars.html", null ]
+        [ "All", "functions.html", "functions_dup" ],
+        [ "Variables", "functions_vars.html", "functions_vars" ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -104,9 +104,9 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"Detector_8h_source.html",
-"md_gbmcmc_README_LDC.html",
-"structPrior.html#ae6fc05ca6b787c70012ba397b9d19111"
+"Constants_8h.html",
+"LISA_8h_source.html",
+"structFilter.html#ae15e122e2a439ec6d6abdb28622dece4"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -74,9 +74,12 @@ struct Proposal
     double **matrix; //!<utility 2D array for proposal metadata
     double ***tensor;//!<utility 3D array for proposal metadata
     
-    /// Gaussian mixture model
-    size_t Ngmm;
-    struct GMM **gmm;
+    /** @name Gaussian mixture model
+     */
+    ///@{
+    size_t Ngmm; //!< number of mixture models (1/source)
+    struct GMM **gmm; //!<array of individual mixture models
+    ///@}
 };
 
 /**
