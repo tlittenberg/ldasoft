@@ -289,7 +289,7 @@ void print_usage()
     
     //Misc.
     fprintf(stdout,"       =========== Misc =========== \n");
-    fprintf(stdout,"       --runDir      : top level run directory ['./']\n");
+    fprintf(stdout,"       --rundir      : top level run directory ['./']\n");
     fprintf(stdout,"       --match-in1   : input paramaters for overlap [filename] \n");
     fprintf(stdout,"       --match-in2   : output match values [filename] \n");
     

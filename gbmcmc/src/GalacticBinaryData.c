@@ -472,7 +472,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             map_params_to_array(inj, inj->params, data->T);
             
             //save parameters to file
-            sprintf(filename,"injection_parameters_%i_%i.dat",ii,jj);
+            sprintf(filename,"%s/injection_parameters_%i_%i.dat",flags->runDir,ii,jj);
             paramFile=fopen(filename,"w");
             fprintf(paramFile,"%lg ",data->t0[jj]);
             print_source_params(data, inj, paramFile);
@@ -500,7 +500,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
                 tdi->E[2*i+1] = inj->tdi->E[2*n+1];
             }
             
-            sprintf(filename,"data/waveform_injection_%i_%i.dat",ii,jj);
+            sprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             for(int i=0; i<data->N; i++)
             {
@@ -513,7 +513,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             }
             fclose(fptr);
             
-            sprintf(filename,"data/power_injection_%i_%i.dat",ii,jj);
+            sprintf(filename,"%s/data/power_injection_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             for(int i=0; i<data->N; i++)
             {
@@ -544,7 +544,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             
             galactic_binary_fisher(orbit, data, inj, data->noise[jj]);
             
-            sprintf(filename,"data/power_data_%i_%i.dat",ii,jj);
+            sprintf(filename,"%s/data/power_data_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             
             for(int i=0; i<data->N; i++)
@@ -559,7 +559,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             fclose(fptr);
             fclose(injectionFile);
             
-            sprintf(filename,"data/data_%i_%i.dat",ii,jj);
+            sprintf(filename,"%s/data/data_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             
             for(int i=0; i<data->N; i++)
