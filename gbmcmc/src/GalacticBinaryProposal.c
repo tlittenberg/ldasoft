@@ -52,9 +52,11 @@
 #define SNRCAP 10000.0 /* SNR cap on logL */
 
 
-static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal)
+static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal, char runDir[])
 {
-    FILE *fptr = fopen("fstat/Fstat.gpi","w");
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/fstat/Fstat.gpi",runDir);
+    FILE *fptr = fopen(filename,"w");
     
     fprintf(fptr,"!rm Fstat.mp4\n");
     fprintf(fptr,"set terminal pngcairo size 1024,512 enhanced font 'Verdana,12'\n");
@@ -1036,12 +1038,12 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         //loop over colatitude bins
         for (int j=0; j<n_theta; j++)
         {
-            double theta = acos(-1*(-1. + (double)j*d_theta));
+            double theta = acos((-1. + (double)j*d_theta));
             
             //loop over longitude bins
             for(int k=0; k<n_phi; k++)
             {
-                double phi = PI2 - (double)k*d_phi;
+                double phi = (double)k*d_phi;
                 
                 if(i>0 && i<n_f-1)
                 {
@@ -1090,7 +1092,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             }
             fclose(fptr);
         }
-        write_Fstat_animation(data->qmin/data->T, data->T,proposal);
+        write_Fstat_animation(data->qmin/data->T, data->T,proposal,flags->runDir);
     }
     
     free(Fparams);
