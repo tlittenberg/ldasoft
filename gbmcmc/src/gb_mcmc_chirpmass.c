@@ -115,8 +115,7 @@ int main(int argc, char* argv[])
    12) fddot
    */
   
-  int i,n;
-  double logL=0,t0=0,A=0,phi=0.0,theta=0,cosi=0,psi=0,phase=0;
+  double A=0,phi=0.0,theta=0,cosi=0,psi=0,phase=0;
     double f = 0.0;
     double fdot = 0.0;
     double fddot = 0.0;

@@ -152,7 +152,6 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     gsl_vector **params = malloc(NP*sizeof(gsl_vector *));
     for(size_t n=0; n<NP; n++) params[n] = gsl_vector_alloc(NMCMC);
     double value[NP];
-    char *column;
     for(size_t i=0; i<NMCMC; i++)
     {
         value[0] = entry->source[i*NTHIN]->f0;

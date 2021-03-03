@@ -786,8 +786,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     
     hid_t  file, dataset, dspace; /* identifiers */
     herr_t status; /* error handling */
-    int ndims, Nrow, Ncol; /* dimension of dataset */
-    double *data; /* array for dataset */
+    int ndims; /* dimension of dataset */
     
     /* Open an existing file. */
     file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);

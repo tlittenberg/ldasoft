@@ -969,12 +969,6 @@ void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         //        }
         //    }
         
-        /* get input parameters */
-        double f0 = source->f0;
-        double fdot = source->dfdt;
-        double theta = acos(source->costheta);
-        double phi = source->phi0;
-        
         /* maximize parameters w/ F-statistic */
         get_Fstat_xmax(orbit, data, source->params, Fparams);
         

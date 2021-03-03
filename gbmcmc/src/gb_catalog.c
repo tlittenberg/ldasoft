@@ -868,10 +868,8 @@ int main(int argc, char *argv[])
         /* Gaussian mixture model fit to posterior */
         fprintf(stdout,"\nGaussian Mixture Model fit:\n");
         const gsl_rng_type *T = gsl_rng_default;
-        const gsl_rng_type *Tsave = gsl_rng_default;
         const gsl_rng_type *Ttemp = gsl_rng_default;
         gsl_rng *r = gsl_rng_alloc(T);
-        gsl_rng *rsave = gsl_rng_alloc(Tsave);
         gsl_rng *rtemp = gsl_rng_alloc(Ttemp);
         gsl_rng_env_setup();
         gsl_rng_set (r, 190521);
@@ -880,8 +878,6 @@ int main(int argc, char *argv[])
         int counter;
         int CMAX = 10;
         double BIC;
-        double minBIC = 0.0;
-        size_t minMODE = 0;
         
         sprintf(filename, "%s/%s_gmm_bic.dat", outdir,entry->name);
         out = fopen( filename, "w");

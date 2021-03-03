@@ -754,7 +754,7 @@ void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **
 
 void print_chain_files(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
 {
-    int i,j,n,ic;
+    int i,n,ic;
     
     //Print logL & temperature chains
     if(!flags->quiet)
