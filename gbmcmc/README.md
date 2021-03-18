@@ -164,6 +164,7 @@ print(SkyCoord.from_name("AM CVn"))
 <a name="chains"></a>
 ## chains directory
 
+### Model 
 `model_chain.dat.0`: Model state information for the chain sampling the target distribution (*temperature* T=0). Each row of the file is a chain sample. The columns are
 
     step | N_live | logL | logL_norm | t_0
@@ -183,6 +184,7 @@ If the run includes the `--verbose` flag, the file also contains `NP x N_live` a
 
 Thus, when parsing the file, the `N_live` column should tell the parser how many additional parameter columns are appended to the end of the row. 
 
+### Signal parameters
 `parameter_chain.dat.0`: Full set of chain samples including burn-in. 
 To properly parse the file into individual chain samples, use in concert with the
 `model_chain.dat.M` files to extract the number of templates used at each step `N_live` .  For each chain iteration in the `parameter_chain.dat.0` file there are `N_live` lines with each containing the parameters for a single source.  
@@ -194,6 +196,7 @@ NOTE: These files contain *all* samples including
 burnin.  Unless you care deeply about checkpointing or run diagnostics, you do
 not need these files. Use `dimension_chain.dat.N` files, as described below.
 
+### Posterior samples for specfic models
 `dimension_chain.dat.N`:  The post-burnin posterior samples of
 the binary parameters for the subset of models that have exactly `N` binaries.
 The columns are
@@ -204,6 +207,7 @@ If there are more than one source, the sources cycle in the output (so line 1 is
 the first source, first posterior sample; line 2 is the second source, first
 posterior sample, etc).
 
+### Noise parameters
 `noise_chain.dat.0`: Full set of chain samples for noise model parameters. The columns are
 
     step | logL | logL_norm | etaA | eta E
@@ -214,6 +218,7 @@ For 4-channel data there are only 4 columns and `X` replaces `A`.
 
 When the `--quiet` flag is in use only the post-burnin samples are recorded.
 
+### Parallel tempering likelihoods
 `log_likelihood_chain.dat`: The full log likelihood (`logL + logLnorm`) for each of the `NC` parallel tempered chains, at each chain step. Columns are
 
     step | logL_0 | logL_1 | ... | logL_NC-1
@@ -223,6 +228,7 @@ Useful for monitoring the effectiveness of the parallel tempering by checking th
 The `logL_0` column is the likelihood for the target distribution. 
 **File is not filled when `--quiet` flag is in use.**
 
+### Chain temperatures
 `temperature_chain.dat`: Inverse temperature for each of the `NC` parallel tempered chains, at each chain step. Columns are
 
     step | 1/T_0 | 1/T_1 | ... | 1/T_NC-1
