@@ -291,8 +291,12 @@ void GalacticBinaryReadData(struct Data *data, struct Orbit *orbit, struct Flags
     for(int n=0; n<2*data->N; n++)
     {
         int m = data->qmin*2+n;
+        tdi->X[n] = tdi_full->X[m];
+        tdi->Y[n] = tdi_full->Y[m];
+        tdi->Z[n] = tdi_full->Z[m];
         tdi->A[n] = tdi_full->A[m];
         tdi->E[n] = tdi_full->E[m];
+        tdi->T[n] = tdi_full->T[m];
     }
     
     //Get noise spectrum for data segment

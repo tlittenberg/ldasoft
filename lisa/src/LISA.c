@@ -396,7 +396,7 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     double invfstar = 1./fstar;
     double invSQ3 = 1./SQ3;
     
-    phiSL = PIon2 - PI2*f0*(L/CLIGHT);//15 s sampling rate
+    phiSL = PIon2 - PI2*f0*(L/CLIGHT);
     cSL = cos(phiSL);
     sSL = sin(phiSL);
     
@@ -424,8 +424,6 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
         (d[3][1][k]-d[2][1][k]);
         
         M[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
-        //TODO: changed GB phase to match LDC, but why?
-        //M[k] =-sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
         M[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
         
         //save some CPU time when only X-channel is needed
@@ -451,24 +449,7 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
             (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
             (d[2][3][k]-d[1][3][k]);
             
-            /*
-             XSL[j] =  fonfs2*(X[j]*cSL-X[k]*sSL);
-             XSL[k] = -fonfs2*(X[j]*sSL+X[k]*cSL);
-             YSL[j] =  fonfs2*(Y[j]*cSL-Y[k]*sSL);
-             YSL[k] = -fonfs2*(Y[j]*sSL+Y[k]*cSL);
-             ZSL[j] =  fonfs2*(Z[j]*cSL-Z[k]*sSL);
-             ZSL[k] = -fonfs2*(Z[j]*sSL+Z[k]*cSL);
-             */
-            
-            
-            //TODO: changed GB phase to match LDC, but why?
-            /*
-             A[j] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
-             A[k] = -sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
              
-             E[j] =  sqT*fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
-             E[k] = -sqT*fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
-             */
             A[j] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
             A[k] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
             
@@ -478,15 +459,6 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
 
             //T[j] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*cSL-((1./3.)*(X[k]+Y[k]+Z[k]))*sSL)*0.33333333;
             //T[k] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*sSL+((1./3.)*(X[k]+Y[k]+Z[k]))*cSL)*0.33333333;
-
-            
-            /* TODO: HORRIBLE HACK!  PUT X,Y,Z into A,E,M arrays for checking against LDC
-             A[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
-             A[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
-             E[j] = sqT*fonfs2*(Y[j]*cSL - Y[k]*sSL);
-             E[k] = sqT*fonfs2*(Y[j]*sSL + Y[k]*cSL);
-             M[j] = sqT*fonfs2*(Z[j]*cSL - Z[k]*sSL);
-             M[k] = sqT*fonfs2*(Z[j]*sSL + Z[k]*cSL);*/
             
         }
     }

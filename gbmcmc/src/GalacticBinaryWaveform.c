@@ -340,8 +340,6 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     Aplus  =  amp*(1.+cosi*cosi);
     Across = -amp*(2.0*cosi);
     
-    //TODO: changed GB phase to match LDC, but why?
-    //df = PI2*(f0 - ((double)q)/T);
     df = PI2*(((double)q)/T);
     
     //Calculate constant pieces of transfer functions
@@ -357,11 +355,15 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     k[1] = -sinth*cosph;  k[2] = -sinth*sinph;  k[3] = -costh;
     
     //GW polarization basis tensors
+    /*
+     * LDC convention:
+     * https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc#L530
+     */
     for(i=1;i<=3;i++)
     {
         for(j=1;j<=3;j++)
         {
-            eplus[i][j]  = u[i]*u[j] - v[i]*v[j];
+            eplus[i][j]  = v[i]*v[j] - u[i]*u[j];
             ecross[i][j] = u[i]*v[j] + v[i]*u[j];
         }
     }
@@ -439,9 +441,11 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         for(i=1; i<=3; i++)
         {
             //Argument of complex exponentials
-            //TODO: changed GB phase to match LDC, but why?
-            //double arg2 = df*t + phi0 - PI2*kdotx[i]*f0 + PI2*f0*t0;
-            double arg2 = PI2*f0*xi[i] + phi0 - df*t;
+            /*
+             * LDC phase parameter in key files is
+             * -phi0, hence the -phi0 in arg2
+             */
+            double arg2 = PI2*f0*xi[i] - phi0 - df*t;
             
             
             //First order frequency evolution
