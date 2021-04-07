@@ -6,6 +6,7 @@ include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 
 add_executable(global_fit GlobalFit.c GalacticBinaryWrapper.c NoiseWrapper.c)
 target_link_libraries(global_fit ${GSL_LIBRARIES})
+target_link_libraries(global_fit m)
 target_link_libraries(global_fit tools)
 target_link_libraries(global_fit lisa)
 target_link_libraries(global_fit gbmcmc)
