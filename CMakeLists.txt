@@ -26,8 +26,11 @@ set(CMAKE_C_COMPILER mpicc)
 
 # set cflags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xpreprocessor -fopenmp")
+if(APPLE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xpreprocessor -fopenmp -lomp")
+else()
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+endif()
 
 # Set git version header file
 message(STATUS "Resolving GIT Version")
