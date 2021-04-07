@@ -535,6 +535,7 @@ void alloc_noise(struct Noise *noise, int NFFT)
     noise->etaE = 1.0;
     noise->etaX = 1.0;
     
+    noise->f   = calloc(NFFT,sizeof(double));
     noise->SnA = calloc(NFFT,sizeof(double));
     noise->SnE = calloc(NFFT,sizeof(double));
     noise->SnX = calloc(NFFT,sizeof(double));
@@ -554,6 +555,7 @@ void copy_noise(struct Noise *origin, struct Noise *copy)
     copy->etaE = origin->etaE;
     copy->etaX = origin->etaX;
     
+    memcpy(copy->f,   origin->f,   origin->N*sizeof(double));
     memcpy(copy->SnX, origin->SnX, origin->N*sizeof(double));
     memcpy(copy->SnA, origin->SnA, origin->N*sizeof(double));
     memcpy(copy->SnE, origin->SnE, origin->N*sizeof(double));
@@ -561,6 +563,7 @@ void copy_noise(struct Noise *origin, struct Noise *copy)
 
 void free_noise(struct Noise *noise)
 {
+    free(noise->f);
     free(noise->SnA);
     free(noise->SnE);
     free(noise->SnX);

@@ -19,6 +19,7 @@
 #include <GalacticBinaryModel.h>
 #include <GalacticBinaryProposal.h>
 #include <GalacticBinaryMCMC.h>
+#include <Noise.h>
 
 #include "GalacticBinaryWrapper.h"
 #include "NoiseWrapper.h"

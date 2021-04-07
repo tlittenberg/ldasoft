@@ -553,22 +553,23 @@ void exchange_gbmcmc_source_params(struct GBMCMCData *gbmcmc_data)
                 data->tdi[i]->E[n] = data->raw[i]->E[n] - new_model->tdi[i]->E[n];
             }
         }
-        
-        /* update likelihoods */
-        for(int ic=0; ic<chain->NC; ic++)
-        {
-            model = gbmcmc_data->model[chain->index[ic]];
-            if(!flags->prior)
-            {
-                model->logL     = gaussian_log_likelihood(data, model);
-                model->logLnorm = gaussian_log_likelihood_constant_norm(data, model);
-            }
-            else model->logL = model->logLnorm = 0.0;
-        }
-        
+                
         /* clean up */
         free_model(new_model);
     }
+    
+    /* update likelihoods */
+    for(int ic=0; ic<chain->NC; ic++)
+    {
+        model = gbmcmc_data->model[chain->index[ic]];
+        if(!flags->prior)
+        {
+            model->logL     = gaussian_log_likelihood(data, model);
+            model->logLnorm = gaussian_log_likelihood_constant_norm(data, model);
+        }
+        else model->logL = model->logLnorm = 0.0;
+    }
+
 }
 
 int get_gbmcmc_status(struct GBMCMCData *gbmcmc_data, int Nproc, int root, int procID)
