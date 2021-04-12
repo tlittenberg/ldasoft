@@ -60,6 +60,29 @@ static void tukey(double *data, double alpha, int N)
     
 }
 
+static double tukey_scale(double alpha, int N)
+{
+    int i, imin, imax;
+    double scale = 0.0;
+    double filter;
+    
+    imin = (int)(alpha*(double)(N-1)/2.0);
+    imax = (int)((double)(N-1)*(1.0-alpha/2.0));
+    
+    int Nwin = N-imax;
+    
+    for(i=0; i< N; i++)
+    {
+        filter = 1.0;
+        if(i<imin) filter = 0.5*(1.0+cos(M_PI*( (double)(i)/(double)(imin)-1.0 )));
+        if(i>imax) filter = 0.5*(1.0+cos(M_PI*( (double)(i-imax)/(double)(Nwin))));
+        scale += filter;
+    }
+    scale /= (double)(N);
+    
+    return scale;
+}
+
 void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
 {
     /* LDASOFT-formatted structure for TDI data */
@@ -144,6 +167,9 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     
     /* Normalize FD data */
     double fft_norm = 2./sqrt((double)(NFFT));   // Fourier scaling
+    double tukey_norm = tukey_scale(alpha, NFFT);
+
+    fft_norm /= tukey_norm;  // Tukey scaling
     for(int n=0; n<NFFT; n++)
     {
         X[n] *= fft_norm;
