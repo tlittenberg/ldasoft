@@ -60,16 +60,17 @@ static void share_noise_model(struct GBMCMCData *gbmcmc_data, struct NoiseData *
 {
     if(Noise_Flag)
     {
+        int index = 0;
         int procID_min = gbmcmc_data->procID_min;
         int procID_max = gbmcmc_data->procID_max;
-
+        
         struct Chain *chain = noise_data->chain;
-        struct Model *model = noise_data->model[chain->index[0]];
+        struct SplineModel *model = noise_data->model[chain->index[0]];
         for(int n=procID_min; n<=procID_max; n++)
         {
-            
-            MPI_Send(&model->noise[0]->etaA, 1, MPI_DOUBLE, n, 0, MPI_COMM_WORLD);
-            MPI_Send(&model->noise[0]->etaE, 1, MPI_DOUBLE, n, 1, MPI_COMM_WORLD);
+            index = (n - procID_min)*(gbmcmc_data->data->N - gbmcmc_data->data->qpad);
+            MPI_Send(model->psd->SnA+index, gbmcmc_data->data->N, MPI_DOUBLE, n, 0, MPI_COMM_WORLD);
+            MPI_Send(model->psd->SnE+index, gbmcmc_data->data->N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD);
         }
     }
     if(GBMCMC_Flag)
@@ -79,15 +80,14 @@ static void share_noise_model(struct GBMCMCData *gbmcmc_data, struct NoiseData *
         struct Chain *chain = gbmcmc_data->chain;
         struct Model *model = gbmcmc_data->model[chain->index[0]];
         
-        MPI_Recv(&model->noise[0]->etaA, 1, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(&model->noise[0]->etaE, 1, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(model->noise[0]->SnA, data->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(model->noise[0]->SnE, data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
         
         //copy new noise parameters to each chain & update PSD
-        for(int i=0; i<chain->NC; i++)
+        for(int i=1; i<chain->NC; i++)
         {
-            gbmcmc_data->model[chain->index[i]]->noise[0]->etaA = model->noise[0]->etaA;
-            gbmcmc_data->model[chain->index[i]]->noise[0]->etaE = model->noise[0]->etaE;
-            generate_noise_model(data, gbmcmc_data->model[chain->index[i]]);
+            memcpy(gbmcmc_data->model[chain->index[i]]->noise[0]->SnA,model->noise[0]->SnA, data->N*sizeof(double));
+            memcpy(gbmcmc_data->model[chain->index[i]]->noise[0]->SnE,model->noise[0]->SnE, data->N*sizeof(double));
         }
     }
 }
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
     alloc_gbmcmc_data(gbmcmc_data, procID, 1, Nproc-1);
     
     struct NoiseData *noise_data = malloc(sizeof(struct NoiseData));
-    alloc_noise_data(noise_data, procID);
+    alloc_noise_data(noise_data, procID, Nproc-1);
     
     /* Aliases to gbmcmc structures */
     struct Flags *flags = gbmcmc_data->flags;

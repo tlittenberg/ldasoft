@@ -55,6 +55,11 @@ void copy_spline_model(struct SplineModel *origin, struct SplineModel *copy)
     copy->logL = origin->logL;
 }
 
+void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
+{
+    fprintf(fptr,"%i %.12g\n",step,model->logL);
+}
+
 void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint)
 {
     int n;
@@ -104,6 +109,52 @@ double noise_log_likelihood(struct Data *data, struct SplineModel *model)
     return logL;
 }
 
+void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags *flags)
+{
+    int a, b;
+    int olda, oldb;
+    
+    double heat1, heat2;
+    double logL1, logL2;
+    double dlogL;
+    double H;
+    double alpha;
+    double beta;
+    
+    int NC = chain->NC;
+    
+    for(b=NC-1; b>0; b--)
+    {
+        a = b - 1;
+        chain->acceptance[a]=0;
+        
+        olda = chain->index[a];
+        oldb = chain->index[b];
+        
+        heat1 = chain->temperature[a];
+        heat2 = chain->temperature[b];
+        
+        logL1 = model[olda]->logL;
+        logL2 = model[oldb]->logL;
+        
+        //Hot chains jump more rarely
+        if(gsl_rng_uniform(chain->r[a])<1.0)
+        {
+            dlogL = logL2 - logL1;
+            H  = (heat2 - heat1)/(heat2*heat1);
+            
+            alpha = exp(dlogL*H);
+            beta  = gsl_rng_uniform(chain->r[a]);
+            
+            if(alpha >= beta)
+            {
+                chain->index[a] = oldb;
+                chain->index[b] = olda;
+                chain->acceptance[a]=1;
+            }
+        }
+    }
+}
 void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct SplineModel *trial, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio

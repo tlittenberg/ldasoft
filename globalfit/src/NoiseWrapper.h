@@ -14,22 +14,21 @@ struct NoiseData
     int status;
     
     int procID; //!<MPI process identifier
+    int nProc;  //!<Number of processing segments
     
     struct Flags *flags;
     struct Orbit *orbit;
     struct Chain *chain;
     struct Data  *data;
-    struct Prior *prior;
-    struct Proposal **proposal;
-    struct Model **trial;
-    struct Model **model;
+    struct SplineModel **trial;
+    struct SplineModel **model;
 };
 
-void alloc_noise_data(struct NoiseData *noise_data, int procID);
+void alloc_noise_data(struct NoiseData *noise_data, int procID, int nProc);
 void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full);
 
 void initialize_noise_sampler(struct NoiseData *noise_data);
-void initialize_noise_state(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, struct Model **model, struct Model **trial);
+void initialize_noise_state(struct NoiseData *noise_data);
 
 int update_noise_sampler(struct NoiseData *noise_data);
 
