@@ -57,22 +57,28 @@ void copy_spline_model(struct SplineModel *origin, struct SplineModel *copy)
 
 void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
 {
-    fprintf(fptr,"%i %.12g\n",step,model->logL);
+    fprintf(fptr,"%i %.12g %i\n",step,model->logL,model->spline->N);
 }
 
 void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint)
 {
     int n;
     
+    /* do our own error catching from interpolator */
+    gsl_set_error_handler_off();
+    
     /* set up GSL cubic spline */
     gsl_spline       *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
     gsl_interp_accel *acc    = gsl_interp_accel_alloc();
     
     /* get derivatives */
-    gsl_spline_init(cspline,x,y,N);
+    int status = gsl_spline_init(cspline,x,y,N);
     
-    for(n=0; n<Nint; n++) yint[n]=gsl_spline_eval(cspline,xint[n],acc);
+    //if error, return values that will be rjected by sampler
+    if(status) for(n=0; n<Nint; n++) yint[n]=1.0;
     
+    //otherwise proceed w/ interpolation
+    else for(n=0; n<Nint; n++) yint[n]=gsl_spline_eval(cspline,xint[n],acc);
     
     gsl_spline_free (cspline);
     gsl_interp_accel_free (acc);
@@ -155,7 +161,7 @@ void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags
         }
     }
 }
-void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct SplineModel *trial, struct Chain *chain, struct Flags *flags, int ic)
+void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -165,17 +171,27 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     
     //shorthand pointers
     struct SplineModel *model_x = model;
-    struct SplineModel *model_y = trial;
+    struct SplineModel *model_y = malloc(sizeof(struct SplineModel));
+    alloc_spline_model(model_y, model_x->psd->N, model_x->spline->N);
+    
     
     //copy current state into trial
     copy_spline_model(model_x, model_y);
     
     //pick a point any point
     int k = (int)floor(gsl_rng_uniform(chain->r[0])*(double)model_y->spline->N);
+
     
+    //update frequency
+    if(k>0 && k<model_y->spline->N-1)
+        model_y->spline->f[k] = model_x->spline->f[k-1] + (model_x->spline->f[k+1] - model_x->spline->f[k-1])*gsl_rng_uniform(chain->r[ic]);
+
+    //update amplitude
     double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k]);
     model_y->spline->SnA[k] += 0.2*Sn*gsl_ran_gaussian(chain->r[0],1);
     model_y->spline->SnE[k] += 0.2*Sn*gsl_ran_gaussian(chain->r[0],1);
+    
+
     
     //compute spline
     if(!flags->prior)
@@ -198,13 +214,162 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     {
         copy_spline_model(model_y, model_x);
     }
+    
+    free_spline_model(model_y);
+}
+
+void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct Chain *chain, struct Flags *flags, int ic)
+{
+    double logH  = 0.0; //(log) Hastings ratio
+    double loga  = 1.0; //(log) transition probability
+    
+    double logPx  = 0.0; //(log) prior density for model x (current state)
+    double logPy  = 0.0; //(log) prior density for model y (proposed state)
+    
+    //shorthand pointers
+    struct SplineModel *model_x = model;
+    struct SplineModel *model_y = malloc(sizeof(struct SplineModel));
+    
+    //decide if doing a birth or death move
+    int Nspline;
+    char move;
+    if(gsl_rng_uniform(chain->r[ic])>0.5)
+    {
+        Nspline = model_x->spline->N + 1; //birth move
+        move = 'B';
+    }
+    else
+    {
+        Nspline = model_x->spline->N - 1; //death move
+        move = 'D';
+    }
+    alloc_spline_model(model_y, model_x->psd->N, Nspline);
+    copy_noise(model_x->psd,model_y->psd);
+
+    //check range
+    if(Nspline < model_x->Nmin || Nspline >= model_x->Nmax)
+        move = 'R'; //reject move
+    
+    int kmin,kmax;
+    switch(move)
+    {
+        case 'B':
+            /*
+             the move is to slot a new spline point between two existing
+             points [kmin,kmax]
+             */
+            
+            // first pick the left most point (it can't be the last point)
+            kmin = (int)floor(gsl_rng_uniform(chain->r[0])*(double)(model_x->spline->N-1));
+            kmax = kmin+1;
+            
+            //copy current state into trial
+            for(int k=0; k<=kmin; k++)
+            {
+                model_y->spline->f[k] = model_x->spline->f[k];
+                model_y->spline->SnA[k] = model_x->spline->SnA[k];
+                model_y->spline->SnE[k] = model_x->spline->SnE[k];
+            }
+            
+            //get grid place for new point
+            int birth = kmin+1;
+            model_y->spline->f[birth] = model_x->spline->f[kmin] + (model_x->spline->f[kmax] - model_x->spline->f[kmin])*gsl_rng_uniform(chain->r[ic]);
+
+            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth]);
+            double Snmin = log(Sn/10);
+            double Snmax = log(Sn*100);
+            model_y->spline->SnA[birth] = exp(Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]));
+            model_y->spline->SnE[birth] = exp(Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]));
+            
+            // now fill in all higher points over k index
+            for(int k=kmax; k<model_x->spline->N; k++)
+            {
+                model_y->spline->f[k+1] = model_x->spline->f[k];
+                model_y->spline->SnA[k+1] = model_x->spline->SnA[k];
+                model_y->spline->SnE[k+1] = model_x->spline->SnE[k];
+            }
+            break;
+
+        case 'D':
+            /*
+             the move is to remove any existing point between the end points (0,Nspline)
+             */
+            
+            // first pick the left most point (it can't be the last point)
+            kmin = 1;
+            kmax = model_x->spline->N - 1;
+            int kill = kmin + (int)floor( (double)(kmax-kmin)*gsl_rng_uniform(chain->r[ic]) );
+
+            //copy current state into trial
+            for(int k=0; k<kill; k++)
+            {
+                model_y->spline->f[k] = model_x->spline->f[k];
+                model_y->spline->SnA[k] = model_x->spline->SnA[k];
+                model_y->spline->SnE[k] = model_x->spline->SnE[k];
+            }
+            
+            // now fill in all higher points over k index
+            for(int k=kill; k<model_y->spline->N; k++)
+            {
+                model_y->spline->f[k] = model_x->spline->f[k+1];
+                model_y->spline->SnA[k] = model_x->spline->SnA[k+1];
+                model_y->spline->SnE[k] = model_x->spline->SnE[k+1];
+            }
+            
+            break;
+            
+        case 'R':
+            logPy = -INFINITY;
+            break;
+            
+        default:
+            printf("Invalid case %c\n",move);
+    }
+    
+    fflush(stdout);
+    
+    //compute Hasting's ratio
+    if(logPy > -INFINITY && !flags->prior)
+    {
+
+        generate_spline_noise_model(model_y);
+        
+        //compute likelihood
+        model_y->logL = noise_log_likelihood(data, model_y);
+        
+        /*
+         H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
+         */
+        logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+    }
+    logH += logPy - logPx; //priors
+    
+    loga = log(gsl_rng_uniform(chain->r[ic]));
+    if(logH > loga)
+    {
+        //reallocate noise structure to size of new spline model
+        //realloc_noise(model_x->spline, model_y->spline->N);
+        
+        free_noise(model_x->spline);
+        model_x->spline = malloc(sizeof(struct Noise));
+        alloc_noise(model_x->spline,model_y->spline->N);
+         
+        
+        copy_spline_model(model_y, model_x);
+    }
+    
+    free_spline_model(model_y);
 }
 
 void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct SplineModel *model, int Nspline)
 {
     
-    /* Initialize data models */
+    // Initialize data models
     alloc_spline_model(model, data->N, Nspline);
+    
+    //set max and min spline points
+    model->Nmin = 3;
+    model->Nmax = Nspline;
     
     //set up psd frequency grid
     for(int n=0; n<model->psd->N; n++)

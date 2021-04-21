@@ -82,7 +82,6 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     alloc_data(noise_data->data, noise_data->flags);
     
     noise_data->model = malloc(sizeof(struct SplineModel*)*gbmcmc_data->chain->NC);
-    noise_data->trial = malloc(sizeof(struct SplineModel*)*gbmcmc_data->chain->NC);
     
     select_frequency_segment(noise_data->data, tdi_full, procID);
 }
@@ -120,20 +119,15 @@ void initialize_noise_state(struct NoiseData *noise_data)
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
     struct SplineModel **model = noise_data->model;
-    struct SplineModel **trial = noise_data->trial;
 
     int NC = chain->NC;
     int Nspline = noise_data->nProc+1;
+    
     for(int ic=0; ic<NC; ic++)
     {
-        
-        trial[ic] = malloc(sizeof(struct SplineModel));
         model[ic] = malloc(sizeof(struct SplineModel));
-        
         initialize_spline_model(orbit, data, model[ic], Nspline);
-        initialize_spline_model(orbit, data, trial[ic], Nspline);
-
-    }//end loop over chains
+    }
 
     char filename[128];
     sprintf(filename,"%s/data/initial_spline_points.dat",flags->runDir);
@@ -152,7 +146,6 @@ int update_noise_sampler(struct NoiseData *noise_data)
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
     struct SplineModel **model = noise_data->model;
-    struct SplineModel **trial = noise_data->trial;
 
     int NC = chain->NC;
     
@@ -178,13 +171,16 @@ int update_noise_sampler(struct NoiseData *noise_data)
             
             //loop over frequency segments
             struct SplineModel *model_ptr = model[chain->index[ic]];
-            struct SplineModel *trial_ptr = trial[chain->index[ic]];
             
-            //evolve sampler
-            for(int steps=0; steps < 100; steps++)
+            //evolve fixed dimension sampler
+            for(int steps=0; steps<100; steps++)
             {
-                noise_spline_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
+                noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
             }
+            
+            //evolve trans dimension sampler
+            noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
+
         }// end (parallel) loop over chains
          
         

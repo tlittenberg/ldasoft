@@ -549,6 +549,23 @@ void alloc_noise(struct Noise *noise, int NFFT)
     }
 }
 
+void realloc_noise(struct Noise *noise, int NFFT)
+{
+    noise->N = NFFT;
+    noise->f = realloc(noise->f,NFFT*sizeof(double));
+    noise->SnA = realloc(noise->SnA,NFFT*sizeof(double));
+    noise->SnE = realloc(noise->SnE,NFFT*sizeof(double));
+    noise->SnX = realloc(noise->SnX,NFFT*sizeof(double));
+
+    for(int n=0; n<NFFT; n++)
+    {
+        noise->SnA[n]=1.0;
+        noise->SnE[n]=1.0;
+        noise->SnX[n]=1.0;
+    }
+
+}
+
 void copy_noise(struct Noise *origin, struct Noise *copy)
 {
     copy->etaA = origin->etaA;

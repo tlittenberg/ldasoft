@@ -19,9 +19,11 @@
 
 struct SplineModel
 {
-    double logL;
-    struct Noise *psd;
-    struct Noise *spline;
+    int Nmin; ///<! Minimum number of spline control points
+    int Nmax; ///<! Maximum number of spline control points
+    double logL; ///<! Log likelhood of spline model
+    struct Noise *spline; ///<! Spline control points
+    struct Noise *psd; ///<! Reconstructed noise model
 };
 
 void alloc_spline_model(struct SplineModel *model, int Ndata, int Nspline);
@@ -35,7 +37,9 @@ void generate_spline_noise_model(struct SplineModel *model);
 double noise_log_likelihood(struct Data *data, struct SplineModel *model);
 
 void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags *flags);
-void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct SplineModel *trial, struct Chain *chain, struct Flags *flags, int ic);
+void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct Chain *chain, struct Flags *flags, int ic);
+void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct Chain *chain, struct Flags *flags, int ic);
+
 void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct SplineModel *model, int Nspline);
 void print_noise_model(struct Noise *noise, char filename[]);
 #endif /* NoiseMCMC_h */

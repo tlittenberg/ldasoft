@@ -20,7 +20,6 @@ struct NoiseData
     struct Orbit *orbit;
     struct Chain *chain;
     struct Data  *data;
-    struct SplineModel **trial;
     struct SplineModel **model;
 };
 

@@ -129,6 +129,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
 void alloc_data(struct Data *data, struct Flags *flags);
 void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, int NT);
 void alloc_noise(struct Noise *noise, int NFFT);
+void realloc_noise(struct Noise *noise, int NFFT);
 void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP);
 void alloc_calibration(struct Calibration *calibration);
 ///@}

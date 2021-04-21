@@ -1,4 +1,4 @@
-# CMakeTutorial
+# ldasoft
 
 # This minimum version is mostly set in order to get a newer version
 # of the FindMPI check.  Note that you can easily install a newer cmake version
@@ -15,7 +15,7 @@ foreach(policy
   endif()
 endforeach()
 
-project(CMakeTutorial VERSION 1.0.0 LANGUAGES C)
+project(ldasoft VERSION 1.0.0 LANGUAGES C)
 
 # External packages
 find_package(GSL REQUIRED)
