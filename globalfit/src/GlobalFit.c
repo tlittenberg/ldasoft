@@ -44,14 +44,16 @@ static void share_gbmcmc_residual(struct GBMCMCData *gbmcmc_data, struct NoiseDa
     if(Noise_Flag)
     {
         MPI_Status status;
+        int index = 0;
         int N = gbmcmc_data->data->N*2;
         int procID_min = gbmcmc_data->procID_min;
         int procID_max = gbmcmc_data->procID_max;
         struct Data *data = noise_data->data;
         for(int n=procID_min; n<=procID_max; n++)
         {
-            MPI_Recv(data->tdi[0]->A + (n-procID_min)*N, N, MPI_DOUBLE, n, 0, MPI_COMM_WORLD, &status);
-            MPI_Recv(data->tdi[0]->E + (n-procID_min)*N, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
+            index = 2*(n - procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
+            MPI_Recv(data->tdi[0]->A+index, N, MPI_DOUBLE, n, 0, MPI_COMM_WORLD, &status);
+            MPI_Recv(data->tdi[0]->E+index, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
         }
     }
 }
@@ -68,7 +70,7 @@ static void share_noise_model(struct GBMCMCData *gbmcmc_data, struct NoiseData *
         struct SplineModel *model = noise_data->model[chain->index[0]];
         for(int n=procID_min; n<=procID_max; n++)
         {
-            index = (n - procID_min)*(gbmcmc_data->data->N - gbmcmc_data->data->qpad);
+            index = (n - procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
             MPI_Send(model->psd->SnA+index, gbmcmc_data->data->N, MPI_DOUBLE, n, 0, MPI_COMM_WORLD);
             MPI_Send(model->psd->SnE+index, gbmcmc_data->data->N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD);
         }

@@ -260,27 +260,56 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
 void free_chain(struct Chain *chain, struct Flags *flags)
 {
     free(chain->index);
-    free(chain->temperature);
     free(chain->acceptance);
-    free(chain->avgLogL);
-    
-    for(int ic=0; ic<chain->NC; ic++) gsl_rng_free(chain->r[ic]);
+    free(chain->temperature);
+    free(chain->avgLogL);    
+    for(int ic=0; ic<chain->NC; ic++)
+    {
+        gsl_rng_free(chain->r[ic]);
+        free(chain->dimension[ic]);
+    }
+    free(chain->dimension);
     free(chain->r);
     free(chain->T);
     
-    fclose(chain->likelihoodFile);
-    fclose(chain->parameterFile[0]);
+    if(!flags->quiet)
+    {
+        fclose(chain->likelihoodFile);
+        fclose(chain->temperatureFile);
+    }
+
     fclose(chain->chainFile[0]);
+
+    fclose(chain->parameterFile[0]);
+    
+    for(int i=0; i<flags->DMAX; i++)
+    {
+        /* only create these files when needed */
+        if(chain->dimensionFile[i]!=NULL) fclose(chain->dimensionFile[i]);
+    }
+    free(chain->dimensionFile);
+
+    fclose(chain->noiseFile[0]);
+    
+    if(flags->calibration)
+    {
+        fclose(chain->calibrationFile[0]);
+        free(chain->calibrationFile);
+    }
+
+    
     if(flags->verbose)
     {
         for(int ic=1; ic<chain->NC; ic++)
         {
             fclose(chain->chainFile[ic]);
             fclose(chain->parameterFile[ic]);
+            fclose(chain->noiseFile[ic]);
         }
     }
     free(chain->chainFile);
     free(chain->parameterFile);
+    free(chain->noiseFile);
     
     free(chain);
 }
