@@ -245,15 +245,20 @@ int main(int argc, char *argv[])
                 
         /* evidence results */
         print_evidence(chain,flags);
-
-        /* flush & close chain files */
-        free_chain(chain,flags);
     }
-    if(Noise_Flag)  print_noise_reconstruction(noise_data->data, noise_data->flags);
-    
-    /* clean up */
-    free_tdi(tdi_full);
+    if(Noise_Flag)
+    {
+        char filename[128];
+        sprintf(filename,"%s/data/final_spline_points.dat",noise_data->flags->runDir);
+        print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
 
+        sprintf(filename,"%s/data/final_interpolated_spline_points.dat",noise_data->flags->runDir);
+        print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
+
+        print_noise_reconstruction(noise_data->data, noise_data->flags);
+    }
+
+    
     //print total run time
     stop = time(NULL);
 
