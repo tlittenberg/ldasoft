@@ -260,27 +260,56 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
 void free_chain(struct Chain *chain, struct Flags *flags)
 {
     free(chain->index);
-    free(chain->temperature);
     free(chain->acceptance);
-    free(chain->avgLogL);
-    
-    for(int ic=0; ic<chain->NC; ic++) gsl_rng_free(chain->r[ic]);
+    free(chain->temperature);
+    free(chain->avgLogL);    
+    for(int ic=0; ic<chain->NC; ic++)
+    {
+        gsl_rng_free(chain->r[ic]);
+        free(chain->dimension[ic]);
+    }
+    free(chain->dimension);
     free(chain->r);
     free(chain->T);
     
-    fclose(chain->likelihoodFile);
-    fclose(chain->parameterFile[0]);
+    if(!flags->quiet)
+    {
+        fclose(chain->likelihoodFile);
+        fclose(chain->temperatureFile);
+    }
+
     fclose(chain->chainFile[0]);
+
+    fclose(chain->parameterFile[0]);
+    
+    for(int i=0; i<flags->DMAX; i++)
+    {
+        /* only create these files when needed */
+        if(chain->dimensionFile[i]!=NULL) fclose(chain->dimensionFile[i]);
+    }
+    free(chain->dimensionFile);
+
+    fclose(chain->noiseFile[0]);
+    
+    if(flags->calibration)
+    {
+        fclose(chain->calibrationFile[0]);
+        free(chain->calibrationFile);
+    }
+
+    
     if(flags->verbose)
     {
         for(int ic=1; ic<chain->NC; ic++)
         {
             fclose(chain->chainFile[ic]);
             fclose(chain->parameterFile[ic]);
+            fclose(chain->noiseFile[ic]);
         }
     }
     free(chain->chainFile);
     free(chain->parameterFile);
+    free(chain->noiseFile);
     
     free(chain);
 }
@@ -535,6 +564,7 @@ void alloc_noise(struct Noise *noise, int NFFT)
     noise->etaE = 1.0;
     noise->etaX = 1.0;
     
+    noise->f   = calloc(NFFT,sizeof(double));
     noise->SnA = calloc(NFFT,sizeof(double));
     noise->SnE = calloc(NFFT,sizeof(double));
     noise->SnX = calloc(NFFT,sizeof(double));
@@ -548,12 +578,30 @@ void alloc_noise(struct Noise *noise, int NFFT)
     }
 }
 
+void realloc_noise(struct Noise *noise, int NFFT)
+{
+    noise->N = NFFT;
+    noise->f = realloc(noise->f,NFFT*sizeof(double));
+    noise->SnA = realloc(noise->SnA,NFFT*sizeof(double));
+    noise->SnE = realloc(noise->SnE,NFFT*sizeof(double));
+    noise->SnX = realloc(noise->SnX,NFFT*sizeof(double));
+
+    for(int n=0; n<NFFT; n++)
+    {
+        noise->SnA[n]=1.0;
+        noise->SnE[n]=1.0;
+        noise->SnX[n]=1.0;
+    }
+
+}
+
 void copy_noise(struct Noise *origin, struct Noise *copy)
 {
     copy->etaA = origin->etaA;
     copy->etaE = origin->etaE;
     copy->etaX = origin->etaX;
     
+    memcpy(copy->f,   origin->f,   origin->N*sizeof(double));
     memcpy(copy->SnX, origin->SnX, origin->N*sizeof(double));
     memcpy(copy->SnA, origin->SnA, origin->N*sizeof(double));
     memcpy(copy->SnE, origin->SnE, origin->N*sizeof(double));
@@ -561,6 +609,7 @@ void copy_noise(struct Noise *origin, struct Noise *copy)
 
 void free_noise(struct Noise *noise)
 {
+    free(noise->f);
     free(noise->SnA);
     free(noise->SnE);
     free(noise->SnX);

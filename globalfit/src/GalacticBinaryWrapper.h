@@ -37,7 +37,6 @@ void broadcast_cache(struct Data *data, int root, int procID);
 
 void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data);
 
-void run_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data);
 int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data);
 
 void exchange_gbmcmc_source_params(struct GBMCMCData *gbmcmc_data);

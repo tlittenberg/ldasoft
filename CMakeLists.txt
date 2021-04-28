@@ -1,4 +1,4 @@
-# CMakeTutorial
+# ldasoft
 
 # This minimum version is mostly set in order to get a newer version
 # of the FindMPI check.  Note that you can easily install a newer cmake version
@@ -15,11 +15,19 @@ foreach(policy
   endif()
 endforeach()
 
-project(CMakeTutorial VERSION 1.0.0 LANGUAGES C)
+project(ldasoft VERSION 1.0.0 LANGUAGES C)
+
+
+# Paths
+include_directories(/opt/local/include)
+include_directories(/opt/local/include/openmpi-mp)
+link_directories(/opt/local/lib)
+link_directories(/opt/local/lib/openmpi-mp)
 
 # External packages
 find_package(GSL REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(MPI REQUIRED)
 
 # Set compiler
 set(CMAKE_C_COMPILER mpicc)
@@ -72,4 +80,5 @@ add_subdirectory(tools)
 add_subdirectory(lisa)
 add_subdirectory(gbmcmc)
 add_subdirectory(gbfisher)
+add_subdirectory(noise)
 add_subdirectory(globalfit)

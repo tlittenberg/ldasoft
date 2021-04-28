@@ -1,5 +1,5 @@
 # add library
-add_library(lisa STATIC LISA.c)
+add_library(lisa STATIC LISA.c LISA.h Constants.h)
 
 include_directories ("${PROJECT_SOURCE_DIR}/lisa/src/")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})

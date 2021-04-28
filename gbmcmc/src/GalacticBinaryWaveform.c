@@ -468,8 +468,11 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                 if(i!=j)
                 {
                     //Argument of transfer function
-                    //TODO: changed GB phase to match LDC, but why?
-                    //double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
+                    /*
+                     * Set to match LDC convention
+                     *
+                     https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc#L601
+                     */
                     double arg1 = 0.5*fonfs[i]*(1.0 + kdotr[i][j]);
                     
                     //Transfer function

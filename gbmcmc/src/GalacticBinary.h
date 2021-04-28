@@ -79,6 +79,7 @@ struct Data
     //some manipulations of f,fmin for likelihood calculation
     double sum_log_f; //!<\f$\sum \log(f)\f$ appears in some normalizations
     double logfmin; //!<\f$\log(f_{\rm min})\f$ appears in some normalizations
+    double logfmax; //!<\f$\log(f_{\rm max})\f$ appears spline setup for bayesline
     ///@}
 
     /** @name TDI Data and Noise */
@@ -362,7 +363,7 @@ struct Noise
     /// Number of data samples fit by noise model
     int N;
     
-    ///@name Noise Parameters
+    ///@name Constant Noise Parameters
     ///Each \f$\eta\f$ is a multiplier to the assumed noise level \f$S_n\f$ stored in Data structure. One per channel (`X` for 4-link, `A`,`E` for 6-link)
     ///@{
     double etaA;
@@ -373,6 +374,7 @@ struct Noise
     ///@name Noise Model
     ///Composite noise model to use over the analysis window \f$\eta_I \times Sn_I\f$
     ///@{
+    double *f;
     double *SnA;
     double *SnE;
     double *SnX;

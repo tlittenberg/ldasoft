@@ -166,133 +166,6 @@ static void print_sampler_state(struct GBMCMCData *gbmcmc_data)
             model->logL+model->logLnorm);
 }
 
-void run_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
-{
-    /* Aliases to gbmcmc structures */
-    struct Flags *flags = gbmcmc_data->flags;
-    struct Orbit *orbit = gbmcmc_data->orbit;
-    struct Chain *chain = gbmcmc_data->chain;
-    struct Data *data   = gbmcmc_data->data;
-    struct Prior *prior = gbmcmc_data->prior;
-    struct Proposal **proposal = gbmcmc_data->proposal;
-    struct Model **model = gbmcmc_data->model;
-    struct Model **trial = gbmcmc_data->trial;
-    
-    int NC = chain->NC;
-    int mcmc_start = -flags->NBURN;
-    
-    //For saving the number of threads actually given
-    int numThreads;
-    
-    print_sampler_state(gbmcmc_data);
-#pragma omp parallel num_threads(flags->threads)
-    {
-        int threadID;
-        //Save individual thread number
-        threadID = omp_get_thread_num();
-        
-        //Only one thread runs this section
-        if(threadID==0)  numThreads = omp_get_num_threads();
-        
-#pragma omp barrier
-        /* The MCMC loop */
-        do
-        {
-            if(threadID==0)
-            {
-                if(gbmcmc_data->mcmc_step<0) flags->burnin=1;
-                else       flags->burnin=0;
-            }
-            
-#pragma omp barrier
-            // (parallel) loop over chains
-            for(int ic=threadID; ic<NC; ic+=numThreads)
-            {
-                
-                //loop over frequency segments
-                struct Model *model_ptr = model[chain->index[ic]];
-                struct Model *trial_ptr = trial[chain->index[ic]];
-                
-                //update likelihood
-                model_ptr->logL     = gaussian_log_likelihood(data, model_ptr);
-                model_ptr->logLnorm = gaussian_log_likelihood_constant_norm(data, model_ptr);
-
-                for(int steps=0; steps < 100; steps++)
-                {
-                    galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                }
-                
-                //reverse jump birth/death move
-                if(flags->rj) galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                
-                //update fisher matrix for each chain
-                if(gbmcmc_data->mcmc_step%100==0)
-                {
-                    for(int n=0; n<model_ptr->Nlive; n++)
-                    {
-                        galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise[FIXME]);
-                    }
-                }
-                
-            }// end (parallel) loop over chains
-             //Next section is single threaded. Every thread must get here before continuing
-#pragma omp barrier
-            
-            if(threadID==0){
-                ptmcmc(model,chain,flags);
-                adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
-                
-                print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
-                
-                //track maximum log Likelihood
-                if(gbmcmc_data->mcmc_step%100==0)
-                {
-                    if(update_max_log_likelihood(model, chain, flags))
-                    {
-                        gbmcmc_data->mcmc_step = -flags->NBURN;
-                        //MPI_Bcast(&mcmc, 1, MPI_INT, gbmcmc_data->procID, MPI_COMM_WORLD);
-                    }
-                }
-                
-                //update run status
-                if(gbmcmc_data->mcmc_step%data->downsample==0 && gbmcmc_data->mcmc_step>mcmc_start)
-                {
-                    
-                    //minimal screen output
-                    print_sampler_state(gbmcmc_data);
-                    
-                    //save chain state to resume sampler
-                    save_chain_state(data, model, chain, flags, gbmcmc_data->mcmc_step);
-                    
-                }
-                
-                //dump waveforms to file, update avgLogL for thermodynamic integration
-                if(gbmcmc_data->mcmc_step>0 && gbmcmc_data->mcmc_step%data->downsample==0)
-                {
-                    save_waveforms(data, model[chain->index[0]], gbmcmc_data->mcmc_step/data->downsample);
-                    
-                    for(int ic=0; ic<NC; ic++)
-                    {
-                        chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
-                        for(int i=0; i<flags->NDATA; i++)
-                        chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
-                    }
-                }
-                
-                if(gbmcmc_data->mcmc_step%100==0)
-                {
-                    exchange_gbmcmc_source_params(gbmcmc_data);
-                }
-                gbmcmc_data->mcmc_step++;
-            }
-            //Can't continue MCMC until single thread is finished
-#pragma omp barrier
-            
-        }while(gbmcmc_data->mcmc_step < flags->NMCMC); // end MCMC loop
-        
-    }// End of parallelization
-}
-
 int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 {
     /* Aliases to gbmcmc structures */
@@ -553,22 +426,23 @@ void exchange_gbmcmc_source_params(struct GBMCMCData *gbmcmc_data)
                 data->tdi[i]->E[n] = data->raw[i]->E[n] - new_model->tdi[i]->E[n];
             }
         }
-        
-        /* update likelihoods */
-        for(int ic=0; ic<chain->NC; ic++)
-        {
-            model = gbmcmc_data->model[chain->index[ic]];
-            if(!flags->prior)
-            {
-                model->logL     = gaussian_log_likelihood(data, model);
-                model->logLnorm = gaussian_log_likelihood_constant_norm(data, model);
-            }
-            else model->logL = model->logLnorm = 0.0;
-        }
-        
+                
         /* clean up */
         free_model(new_model);
     }
+    
+    /* update likelihoods */
+    for(int ic=0; ic<chain->NC; ic++)
+    {
+        model = gbmcmc_data->model[chain->index[ic]];
+        if(!flags->prior)
+        {
+            model->logL     = gaussian_log_likelihood(data, model);
+            model->logLnorm = gaussian_log_likelihood_constant_norm(data, model);
+        }
+        else model->logL = model->logLnorm = 0.0;
+    }
+
 }
 
 int get_gbmcmc_status(struct GBMCMCData *gbmcmc_data, int Nproc, int root, int procID)
