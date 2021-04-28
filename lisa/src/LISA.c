@@ -336,13 +336,28 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
     double invSQ3 = 1./SQ3;
-    
+    double dPhi = invfstar/T;
+    double cosdPhi = cos(dPhi);
+    double sindPhi = sin(dPhi);
+
     //phiLS = PI2*f0*(0.5-LonC);//1 s sampling rate
     //TODO: sampling rate is hard-coded into tdi function
     phiLS = PI2*f0*(7.5-L/CLIGHT);//15 s sampling rate
                                   //phiLS = PI2*f0*(dt/2.0-LonC);//arbitrary sampling rate
     cLS = cos(phiLS);
     sLS = sin(phiLS);
+    
+    /* Initialize recursion */
+    i = 0;
+    f = ((double)(q + i-1 - BWon2))/T;
+    fonfs = f*invfstar;
+    
+    c1 = cos(fonfs);
+    s1 = sin(fonfs);
+
+    double_angle(c1,s1,&c2,&s2);
+    triple_angle(c1,s1,c2,&c3,&s3);
+
     
     for(i=1; i<=BW; i++)
     {
@@ -351,9 +366,16 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
         
         f = ((double)(q + i-1 - BWon2))/T;
         fonfs = f*invfstar;
-        c3 = cos(3.*fonfs);  c2 = cos(2.*fonfs);  c1 = cos(fonfs);
-        s3 = sin(3.*fonfs);  s2 = sin(2.*fonfs);  s1 = sin(fonfs);
-        
+
+        /* make use of recursion relationships & identities to get rid of trig calls
+        c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
+        s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
+         */
+
+        recursive_phase_evolution(cosdPhi, sindPhi, &c1, &s1);
+        double_angle(c1,s1,&c2,&s2);
+        triple_angle(c1,s1,c2,&c3,&s3);
+
         X[j] =	(d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
         (d[2][1][j]-d[3][1][j])*c2 + (d[2][1][k]-d[3][1][k])*s2 +
         (d[1][3][j]-d[1][2][j])*c1 + (d[1][3][k]-d[1][2][k])*s1 +
@@ -433,8 +455,6 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     i = 0;
     f = ((double)(q + i-1 - BWon2))/T;
     fonfs = f*invfstar;
-
-//    double xc1,xs1,xc2,xs2,xc3,xs3;
     
     c1 = cos(fonfs);
     s1 = sin(fonfs);
@@ -455,7 +475,6 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
         c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
         s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
          */
-        
 
         recursive_phase_evolution(cosdPhi, sindPhi, &c1, &s1);
         double_angle(c1,s1,&c2,&s2);

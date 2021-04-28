@@ -476,7 +476,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                     double arg1 = 0.5*fonfs[i]*(1.0 + kdotr[i][j]);
                     
                     //Transfer function
-                    double sinc = 0.25*sinf(arg1)/arg1;
+                    double sinc = 0.25*sin(arg1)/arg1;
                     
                     //Real and imaginary pieces of time series (no complex exponential)
                     double tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);
