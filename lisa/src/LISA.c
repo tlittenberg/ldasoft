@@ -297,6 +297,32 @@ void free_orbit(struct Orbit *orbit)
     free(orbit);
 }
 
+static void recursive_phase_evolution(double dre, double dim, double *cosPhase, double *sinPhase)
+{
+   /* Update re and im for the next iteration. */
+   double cosphi = *cosPhase;
+   double sinphi = *sinPhase;
+
+   double newRe = cosphi*dre - sinphi*dim;
+   double newIm = sinphi*dre + cosphi*dim;
+
+   *cosPhase = newRe;
+   *sinPhase = newIm;
+   
+}
+
+static void double_angle(double cosA, double sinA, double *cos2A, double *sin2A)
+{
+    *cos2A = 2.*cosA*cosA - 1.0;
+    *sin2A = 2.*sinA*cosA;
+}
+
+static void triple_angle(double cosA, double sinA, double cos2A, double *cos3A, double *sin3A)
+{
+    *cos3A = 2.*cosA*cos2A - cosA;
+    *sin3A = 2.*sinA*cos2A + sinA;
+}
+
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
 {
     int i,j,k;
@@ -395,11 +421,27 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
     double invSQ3 = 1./SQ3;
+    double dPhi = invfstar/T;
+    double cosdPhi = cos(dPhi);
+    double sindPhi = sin(dPhi);
     
     phiSL = PIon2 - PI2*f0*(L/CLIGHT);
     cSL = cos(phiSL);
     sSL = sin(phiSL);
     
+    /* Initialize recursion */
+    i = 0;
+    f = ((double)(q + i-1 - BWon2))/T;
+    fonfs = f*invfstar;
+
+//    double xc1,xs1,xc2,xs2,xc3,xs3;
+    
+    c1 = cos(fonfs);
+    s1 = sin(fonfs);
+
+    double_angle(c1,s1,&c2,&s2);
+    triple_angle(c1,s1,c2,&c3,&s3);
+
     for(i=1; i<=BW; i++)
     {
         k = 2*i;
@@ -409,9 +451,16 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
         fonfs = f*invfstar;
         fonfs2= 2.*fonfs;
         
-        //TODO: make use of recursion relationships to get rid of trig calls
+        /* make use of recursion relationships & identities to get rid of trig calls
         c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
         s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
+         */
+        
+
+        recursive_phase_evolution(cosdPhi, sindPhi, &c1, &s1);
+        double_angle(c1,s1,&c2,&s2);
+        triple_angle(c1,s1,c2,&c3,&s3);
+        
         
         X[j] =	(d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
         (d[2][1][j]-d[3][1][j])*c2 + (d[2][1][k]-d[3][1][k])*s2 +
