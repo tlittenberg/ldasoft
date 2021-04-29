@@ -740,17 +740,16 @@ void copy_source(struct Source *origin, struct Source *copy)
     //Response
     copy_tdi(origin->tdi,copy->tdi);
     
-    //FIsher
+    //Fisher
+    memcpy(copy->fisher_evalue, origin->fisher_evalue, origin->NP*sizeof(double));
+    memcpy(copy->params, origin->params, origin->NP*sizeof(double));
+
     for(int i=0; i<origin->NP; i++)
     {
-        for(int j=0; j<origin->NP; j++)
-        {
-            copy->fisher_matrix[i][j] = origin->fisher_matrix[i][j];
-            copy->fisher_evectr[i][j] = origin->fisher_evectr[i][j];
-        }
-        copy->fisher_evalue[i] = origin->fisher_evalue[i];
-        copy->params[i]        = origin->params[i];
+        memcpy(copy->fisher_matrix[i], origin->fisher_matrix[i], origin->NP*sizeof(double));
+        memcpy(copy->fisher_evectr[i], origin->fisher_evectr[i], origin->NP*sizeof(double));
     }
+    
 }
 
 void free_source(struct Source *source)

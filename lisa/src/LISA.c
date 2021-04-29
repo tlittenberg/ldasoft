@@ -768,18 +768,7 @@ void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
     tdi->A = calloc(2*tdi->N,sizeof(double));
     tdi->E = calloc(2*tdi->N,sizeof(double));
     tdi->T = calloc(2*tdi->N,sizeof(double));
-    
-    int n;
-    for(n=0; n<2*tdi->N; n++)
-    {
-        tdi->X[n] = 0.0;
-        tdi->Y[n] = 0.0;
-        tdi->Z[n] = 0.0;
-        tdi->A[n] = 0.0;
-        tdi->E[n] = 0.0;
-        tdi->T[n] = 0.0;
-    }
-    
+        
     //Number of TDI channels (X or A&E or maybe one day A,E,&T)
     tdi->Nchannel = Nchannel;
 }
@@ -794,7 +783,7 @@ void copy_tdi(struct TDI *origin, struct TDI *copy)
     memcpy(copy->Z, origin->Z, 2*origin->N*sizeof(double));
     memcpy(copy->A, origin->A, 2*origin->N*sizeof(double));
     memcpy(copy->E, origin->E, 2*origin->N*sizeof(double));
-    memcpy(copy->T, origin->Y, 2*origin->N*sizeof(double));
+    memcpy(copy->T, origin->T, 2*origin->N*sizeof(double));
 }
 
 void free_tdi(struct TDI *tdi)
