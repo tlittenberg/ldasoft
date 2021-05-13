@@ -55,10 +55,9 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
 void GalacticBinaryAddNoise(struct Data *data, struct TDI *tdi);
 
 /**
- \brief WIP:
- \todo GalacticBinarySimulateData() is empty, need to strip out simulation steps in injection codes.
+ \brief Generate noise-only simulated data
  */
-void GalacticBinarySimulateData(struct Data *data);
+void GalacticBinarySimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
 /**
  \brief Injection routine for EM-known binaries

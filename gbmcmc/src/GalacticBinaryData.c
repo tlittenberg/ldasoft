@@ -394,8 +394,24 @@ void GalacticBinaryAddNoise(struct Data *data, struct TDI *tdi)
     gsl_rng_free(r);
 }
 
-void GalacticBinarySimulateData(struct Data *data)
+void GalacticBinarySimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
+    struct TDI *tdi = data->tdi[0];
+
+    //get max and min samples
+    data->fmax = data->fmin + data->N/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+
+    //Get noise spectrum for data segment
+    GalacticBinaryGetNoiseModel(data,orbit,flags);
+    
+    //Add Gaussian noise to injection
+    if(flags->simNoise) GalacticBinaryAddNoise(data,tdi);
+    
+    //print various data products for plotting
+    print_data(data, tdi, flags, 0);
+
 }
 
 void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags)
