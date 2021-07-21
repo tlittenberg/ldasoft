@@ -231,6 +231,7 @@ void print_usage()
     fprintf(stdout,"       --orbit       : orbit ephemerides file (2.5 GM MLDC)\n");
     fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
     fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
+    fprintf(stdout,"       --sangria     : use LDC Sangria TDI conventions     \n");
     fprintf(stdout,"\n");
     
     //Data
@@ -424,6 +425,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {"sim-noise",   no_argument, 0, 0 },
         {"conf-noise",  no_argument, 0, 0 },
         {"frac-freq",   no_argument, 0, 0 },
+        {"sangria",     no_argument, 0, 0 },
         {"update",      no_argument, 0, 0 },
         {"fix-sky",     no_argument, 0, 0 },
         {"fix-freq",    no_argument, 0, 0 },
@@ -537,6 +539,10 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 if(strcmp("frac-freq",   long_options[long_index].name) == 0)
                 {
                     for(int i=0; i<Nmax; i++) sprintf(data->format,"frequency");
+                }
+                if(strcmp("sangria",   long_options[long_index].name) == 0)
+                {
+                    for(int i=0; i<Nmax; i++) sprintf(data->format,"sangria");
                 }
                 if(strcmp("orbit", long_options[long_index].name) == 0)
                 {

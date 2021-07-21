@@ -353,7 +353,10 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
                 data->noise[0]->SnE[n] += GBnoise(data->T,f);
             }
         }
-        else if(strcmp(data->format,"frequency")==0)
+        else if(
+                strcmp(data->format,"frequency")==0 ||
+                strcmp(data->format,"sangria")==0
+                )
         {
             data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
             data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
@@ -365,7 +368,7 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
         }
         else
         {
-            fprintf(stderr,"Unsupported data format %s",data->format);
+            fprintf(stderr,"Unsupported data format %s\n",data->format);
             exit(1);
         }
     }

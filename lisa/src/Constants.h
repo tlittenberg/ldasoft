@@ -58,23 +58,22 @@
 #define CLIGHT 299792458.
 
 //! Mass of the Sun \f$M_\odot\f$ [kg]
-#define MSUN 1.9889e30
+#define MSUN 1.98848e30
 
 //! Mass of the Sun \f$M_\odot G c^{-3}\f$ [s]
-#define TSUN  4.9169e-6
+#define TSUN  4.9255e-6
 
 //! Radius of the Sun \f$_\odot c^{-1}\f$ [s]
 #define RSUN 2.32060541029
 
 //! Parsec [m]
-#define PC 3.0856775807e16
+#define PC 3.0856775815e16
 
 //! Year [s]
 #define YEAR 31457280.0
 
 //! Astronomical unit [m]
-#define AU 1.49597870660e11
-
+#define AU 1.49597870700e11
 
 /**
  \brief Orbital radius of the LISA guiding center [m]

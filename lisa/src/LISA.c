@@ -323,6 +323,38 @@ static void triple_angle(double cosA, double sinA, double cos2A, double *cos3A, 
     *sin3A = 2.*sinA*cos2A + sinA;
 }
 
+static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *T)
+{
+    /*
+     * Conventions in ldc/common/series/tdi.py
+     * A = (Z-X)/sqrt(2)
+     * E = (X-2Y+Z)/sqrt(6)
+     * T = (X+Y+Z)/sqrt(3)
+     */
+    double invSQ2 = 0.707106781186547;
+    double invSQ6 = 0.408248290463863;
+    double invSQ3 = 0.577350269189626;
+    
+    *A = (Z-X)*invSQ2;
+    *E = (X-2*Y+Z)*invSQ6;
+    *T = (X+Y+Z)*invSQ3;
+
+}
+static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
+{
+    /*
+     * Conventions in ldc/common/series/tdi.py
+     * A = (Z-X)/sqrt(2)
+     * E = (X-2Y+Z)/sqrt(6)
+     */
+    double invSQ2 = 0.707106781186547;
+    double invSQ6 = 0.408248290463863;
+    
+    *A = (Z-X)*invSQ2;
+    *E = (X-2*Y+Z)*invSQ6;
+
+}
+
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
 {
     int i,j,k;
@@ -335,7 +367,6 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     double phiLS, cLS, sLS;
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
-    double invSQ3 = 1./SQ3;
     double dPhi = invfstar/T;
     double cosdPhi = cos(dPhi);
     double sindPhi = sin(dPhi);
@@ -451,7 +482,6 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     double phiSL, cSL, sSL;
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
-    double invSQ3 = 1./SQ3;
     double dPhi = invfstar/T;
     double cosdPhi = cos(dPhi);
     double sindPhi = sin(dPhi);
@@ -545,6 +575,75 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
             //T[k] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*sSL+((1./3.)*(X[k]+Y[k]+Z[k]))*cSL)*0.33333333;
             
         }
+    }
+}
+
+void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *A, double *E, int BW, int NI)
+{
+    int i,j,k;
+    int BW2   = BW*2;
+    int BWon2 = BW/2;
+    double prefactor,fonfs;
+    double c2, s2, c1, s1;
+    double f;
+    double Y[BW2+1],Z[BW2+1];
+    double sqT=sqrt(T);
+    double invfstar = 1./fstar;
+    double norm = 4.0*invfstar*sqT;
+    double dPhi = invfstar/T;
+    double cosdPhi = cos(dPhi);
+    double sindPhi = sin(dPhi);
+        
+    /* Initialize recursion */
+    i = 0;
+    f = ((double)(q + i-1 - BWon2))/T;
+    fonfs = f*invfstar;
+    
+    c1 = cos(fonfs);
+    s1 = sin(fonfs);
+
+    double_angle(c1,s1,&c2,&s2);
+
+    for(i=1; i<=BW; i++)
+    {
+        k = 2*i;
+        j = k-1;
+
+        f = ((double)(q + i-1 - BWon2))/T;
+
+        /* make use of recursion relationships & identities to get rid of trig calls
+        c3 = cos(3.*fonfs);  c2 = cos(2.*fonfs);  c1 = cos(fonfs);
+        s3 = sin(3.*fonfs);  s2 = sin(2.*fonfs);  s1 = sin(fonfs);*/
+        recursive_phase_evolution(cosdPhi, sindPhi, &c1, &s1);
+        double_angle(c1,s1,&c2,&s2);
+                
+        /* prefactor = sqrt(T) * 4 * (f/fstar) * sin(f/fstar) */
+        prefactor = f * norm * s1;
+        
+        
+        /* LDC Conventions for X,Y,Z channels (circa Sangria) */
+        X[j] = prefactor*((d[1][2][j]-d[1][3][j])*c2 + (d[1][2][k]-d[1][3][k])*s2 +
+                   (d[2][1][j]-d[3][1][j])*c1 + (d[2][1][k]-d[3][1][k])*s1);
+        
+        X[k] = prefactor*((d[1][2][k]-d[1][3][k])*c2 - (d[1][2][j]-d[1][3][j])*s2 +
+                   (d[2][1][k]-d[3][1][k])*c1 - (d[2][1][j]-d[3][1][j])*s1);
+        
+        Y[j] = prefactor*((d[2][3][j]-d[2][1][j])*c2 + (d[2][3][k]-d[2][1][k])*s2 +
+                   (d[3][2][j]-d[1][2][j])*c1 + (d[3][2][k]-d[1][2][k])*s1);
+        
+        Y[k] = prefactor*((d[2][3][k]-d[2][1][k])*c2 - (d[2][3][j]-d[2][1][j])*s2+
+                   (d[3][2][k]-d[1][2][k])*c1 - (d[3][2][j]-d[1][2][j])*s1);
+        
+        Z[j] = prefactor*((d[3][1][j]-d[3][2][j])*c2 + (d[3][1][k]-d[3][2][k])*s2+
+                   (d[1][3][j]-d[2][3][j])*c1 + (d[1][3][k]-d[2][3][k])*s1);
+        
+        Z[k] = prefactor*((d[3][1][k]-d[3][2][k])*c2 - (d[3][1][j]-d[3][2][j])*s2+
+                   (d[1][3][k]-d[2][3][k])*c1 - (d[1][3][j]-d[2][3][j])*s1);
+        
+
+        /* LDC conventions for A & E channels */
+        XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
+        XYZ2AE(X[k],Y[k],Z[k],&A[k],&E[k]);
     }
 }
 
@@ -878,9 +977,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
          */
         
         /* what john / ldc use now */
-        tdi->A[i] = (Z-X)/sqrt(2.0);
-        tdi->E[i] = (X-2*Y+Z)/sqrt(6.0);
-        tdi->T[i] = (X+Y+Z)/sqrt(3.0);
+        XYZ2AET(X,Y,Z,&tdi->A[i],&tdi->E[i],&tdi->T[i]);
 
         
     }

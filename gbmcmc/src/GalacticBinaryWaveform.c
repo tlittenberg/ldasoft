@@ -469,7 +469,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                 {
                     //Argument of transfer function
                     /*
-                     * Set to match LDC convention
+                     * Set to match Radler LDC convention
                      *
                      https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc#L601
                      */
@@ -482,13 +482,21 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                     double tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);
                     double tran1i = aevol*(dplus[i][j]*DPi + dcross[i][j]*DCi);
                     
+                    /*
+                     * Set to match Sangria LDC convention
+                     * which defines the GW as e(-i Phi)
+                    */
                     //Real and imaginry components of complex exponential
-                    double tran2r = cos(arg1 + arg2);
-                    double tran2i = sin(arg1 + arg2);
-                    
+                    //double tran2r = cos(arg1 + arg2);
+                    //double tran2i = sin(arg1 + arg2);
+                    double tran2r = cos(arg1 - arg2);
+                    double tran2i = sin(arg1 - arg2);
+
                     //Real & Imaginary part of the slowly evolving signal
-                    TR[i][j] = sinc*(tran1r*tran2r - tran1i*tran2i);
-                    TI[i][j] = sinc*(tran1r*tran2i + tran1i*tran2r);
+                    //TR[i][j] = sinc*(tran1r*tran2r - tran1i*tran2i);
+                    //TI[i][j] = sinc*(tran1r*tran2i + tran1i*tran2r);
+                    TR[i][j] = sinc*(tran1r*tran2r + tran1i*tran2i);
+                    TI[i][j] = sinc*(-tran1r*tran2i + tran1i*tran2r);
                 }
             }
         }
@@ -533,6 +541,8 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
     else if(strcmp("frequency",format) == 0)
         LISA_tdi_FF(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+    else if(strcmp("sangria",format) == 0)
+        LISA_tdi_Sangria(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
     else
     {
         fprintf(stderr,"Unsupported data format %s",format);

@@ -407,7 +407,10 @@ int main(int argc, char *argv[])
                 noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
                 noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
             }
-            else if(strcmp(data->format,"frequency")==0)
+            else if(
+                    strcmp(data->format,"frequency")==0 ||
+                    strcmp(data->format,"sangria")==0
+                    )
             {
                 noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
                 noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
