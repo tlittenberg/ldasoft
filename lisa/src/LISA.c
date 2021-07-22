@@ -323,23 +323,6 @@ static void triple_angle(double cosA, double sinA, double cos2A, double *cos3A, 
     *sin3A = 2.*sinA*cos2A + sinA;
 }
 
-static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *T)
-{
-    /*
-     * Conventions in ldc/common/series/tdi.py
-     * A = (Z-X)/sqrt(2)
-     * E = (X-2Y+Z)/sqrt(6)
-     * T = (X+Y+Z)/sqrt(3)
-     */
-    double invSQ2 = 0.707106781186547;
-    double invSQ6 = 0.408248290463863;
-    double invSQ3 = 0.577350269189626;
-    
-    *A = (Z-X)*invSQ2;
-    *E = (X-2*Y+Z)*invSQ6;
-    *T = (X+Y+Z)*invSQ3;
-
-}
 static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
 {
     /*
@@ -353,6 +336,21 @@ static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
     *A = (Z-X)*invSQ2;
     *E = (X-2*Y+Z)*invSQ6;
 
+}
+
+static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *T)
+{
+    /*
+     * Conventions in ldc/common/series/tdi.py
+     * T = (X+Y+Z)/sqrt(3)
+     */
+    double invSQ3 = 0.577350269189626;
+
+    XYZ2AE(X,Y,Z,A,E);
+
+    *T = (X+Y+Z)*invSQ3;
+
+    
 }
 
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
