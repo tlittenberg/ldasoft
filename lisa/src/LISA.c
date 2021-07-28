@@ -333,8 +333,8 @@ static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
     double invSQ2 = 0.707106781186547;
     double invSQ6 = 0.408248290463863;
     
-    *A = (Z-X)*invSQ2;
-    *E = (X-2*Y+Z)*invSQ6;
+    *A = X;//(Z-X)*invSQ2;
+    *E = Y;//(X-2*Y+Z)*invSQ6;
 
 }
 
@@ -348,7 +348,7 @@ static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *
 
     XYZ2AE(X,Y,Z,A,E);
 
-    *T = (X+Y+Z)*invSQ3;
+    *T = Z;//(X+Y+Z)*invSQ3;
 
     
 }

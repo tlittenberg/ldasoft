@@ -39,8 +39,22 @@
 #include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryWaveform.h"
 
-#define TUKEY_FILTER_LENGTH 1e5 //seconds
+#define FILTER_LENGTH 1e3 //seconds
 #define N_TDI_CHANNELS 3
+
+
+static void window(double *data, int N)
+{
+    int i;
+    double filter;
+    double tau = LISA_CADENCE/FILTER_LENGTH;
+    for(i=0; i<N; i++)
+    {
+        double x = i*LISA_CADENCE;
+        filter = (0.5*(1+tanh(tau*(x-FILTER_LENGTH))))*(0.5*(1-tanh(tau*(x-N*LISA_CADENCE))));
+        data[i]*=filter;
+    }
+}
 
 static void tukey(double *data, double alpha, int N)
 {
@@ -133,7 +147,7 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     }
     
     /* Tukey window time-domain TDI channels tdi_td */
-    double alpha = (2.0*TUKEY_FILTER_LENGTH/Tobs);
+    double alpha = (2.0*FILTER_LENGTH/Tobs);
     
     tukey(X, alpha, NFFT);
     tukey(Y, alpha, NFFT);
@@ -166,10 +180,12 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
 
     
     /* Normalize FD data */
-    double fft_norm = 2./sqrt((double)(NFFT));   // Fourier scaling
+    double fft_norm = sqrt(Tobs)/(double)NFFT;
+    
+    /* Account for losses from windowing */
     double tukey_norm = tukey_scale(alpha, NFFT);
-
-    fft_norm /= tukey_norm;  // Tukey scaling
+    fft_norm /= tukey_norm;
+    
     for(int n=0; n<NFFT; n++)
     {
         X[n] *= fft_norm;
@@ -184,31 +200,31 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     alloc_tdi(tdi, NFFT/2, N_TDI_CHANNELS);
     tdi->delta = 1./Tobs;
     
-    /* unpack GSL-formatted arrays to the way GBMCMC expects them */
-//    for(int n=0; n<NFFT/2; n++)
-//    {
-//        int re = 2*n;
-//        int im = re+1;
-//
-//        /* real part */
-//        tdi->X[re] = X[n];
-//        tdi->Y[re] = Y[n];
-//        tdi->Z[re] = Z[n];
-//        tdi->A[re] = A[n];
-//        tdi->E[re] = E[n];
-//        tdi->T[re] = T[n];
-//
-//        /* imaginary part*/
-//        if(n>0) //DC part is zero (initialized in alloc_tdi())
-//        {
-//            tdi->X[im] = X[NFFT-n];
-//            tdi->Y[im] = Y[NFFT-n];
-//            tdi->Z[im] = Z[NFFT-n];
-//            tdi->A[im] = A[NFFT-n];
-//            tdi->E[im] = E[NFFT-n];
-//            tdi->T[im] = T[NFFT-n];
-//        }
-//    }*/
+    /* unpack GSL-formatted arrays to the way GBMCMC expects them
+    for(int n=0; n<NFFT/2; n++)
+    {
+        int re = 2*n;
+        int im = re+1;
+
+        // real part
+        tdi->X[re] = X[n];
+        tdi->Y[re] = Y[n];
+        tdi->Z[re] = Z[n];
+        tdi->A[re] = A[n];
+        tdi->E[re] = E[n];
+        tdi->T[re] = T[n];
+
+        // imaginary part
+        if(n>0) //DC part is zero (initialized in alloc_tdi())
+        {
+            tdi->X[im] = X[NFFT-n];
+            tdi->Y[im] = Y[NFFT-n];
+            tdi->Z[im] = Z[NFFT-n];
+            tdi->A[im] = A[NFFT-n];
+            tdi->E[im] = E[NFFT-n];
+            tdi->T[im] = T[NFFT-n];
+        }
+    }*/
     tdi->X[0] = X[0];
     tdi->X[1] = 0;
     tdi->Y[0] = Y[0];
