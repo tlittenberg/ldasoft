@@ -357,7 +357,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     //GW polarization basis tensors
     /*
      * LDC convention:
-     * https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc#L530
+     * https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc
      */
     for(i=1;i<=3;i++)
     {
@@ -471,7 +471,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                     /*
                      * Set to match Radler LDC convention
                      *
-                     https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc#L601
+                     https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc
                      */
                     double arg1 = 0.5*fonfs[i]*(1.0 + kdotr[i][j]);
                     
@@ -487,15 +487,11 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                      * which defines the GW as e(-i Phi)
                     */
                     //Real and imaginry components of complex exponential
-                    //double tran2r = cos(arg1 + arg2);
-                    //double tran2i = sin(arg1 + arg2);
                     double tran2r = cos(arg1 - arg2);
                     double tran2i = sin(arg1 - arg2);
 
                     //Real & Imaginary part of the slowly evolving signal
-                    //TR[i][j] = sinc*(tran1r*tran2r - tran1i*tran2i);
-                    //TI[i][j] = sinc*(tran1r*tran2i + tran1i*tran2r);
-                    TR[i][j] = sinc*(tran1r*tran2r + tran1i*tran2i);
+                    TR[i][j] = sinc*( tran1r*tran2r + tran1i*tran2i);
                     TI[i][j] = sinc*(-tran1r*tran2i + tran1i*tran2r);
                 }
             }

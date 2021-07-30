@@ -333,8 +333,8 @@ static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
     double invSQ2 = 0.707106781186547;
     double invSQ6 = 0.408248290463863;
     
-    *A = X;//(Z-X)*invSQ2;
-    *E = Y;//(X-2*Y+Z)*invSQ6;
+    *A = (Z-X)*invSQ2;
+    *E = (X-2*Y+Z)*invSQ6;
 
 }
 
@@ -348,7 +348,7 @@ static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *
 
     XYZ2AE(X,Y,Z,A,E);
 
-    *T = Z;//(X+Y+Z)*invSQ3;
+    *T = (X+Y+Z)*invSQ3;
 
     
 }
@@ -441,29 +441,9 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
             (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
             (d[2][3][k]-d[1][3][k]);
             
-            /*
-             XLS[j] =  (X[j]*cLS-X[k]*sLS);
-             XLS[k] = -(X[j]*sLS+X[k]*cLS);
-             YLS[j] =  (Y[j]*cLS-Y[k]*sLS);
-             YLS[k] = -(Y[j]*sLS+Y[k]*cLS);
-             ZLS[j] =  (Z[j]*cLS-Z[k]*sLS);
-             ZLS[k] = -(Z[j]*sLS+Z[k]*cLS);
-             */
-            
-            /* what I've used forever
-            A[j] =  sqT*((2.0*X[j]-Y[j]-Z[j])*cLS-(2.0*X[k]-Y[k]-Z[k])*sLS)*0.33333333;
-            A[k] = -sqT*((2.0*X[j]-Y[j]-Z[j])*sLS+(2.0*X[k]-Y[k]-Z[k])*cLS)*0.33333333;
-            
-            E[j] =  sqT*((Z[j]-Y[j])*cLS-(Z[k]-Y[k])*sLS)*invSQ3;
-            E[k] = -sqT*((Z[j]-Y[j])*sLS+(Z[k]-Y[k])*cLS)*invSQ3;
-             */
-            
-            /* what john /ldc uess */
-            A[j] =  sqT*((Z[j]-X[j])*cLS-(Z[k]-X[k])*sLS)*0.707106781186547;
-            A[k] = -sqT*((Z[j]-X[j])*sLS+(Z[k]-X[k])*cLS)*0.707106781186547;
-
-            E[j] =  sqT*((X[j]-2.*Y[j]+Z[j])*cLS-(X[k]-2.*Y[k]+Z[k])*sLS)*0.408248290463863;
-            E[k] = -sqT*((X[j]-2.*Y[j]+Z[j])*sLS+(X[k]-2.*Y[k]+Z[k])*cLS)*0.408248290463863;
+            /* LDC conventions for A & E channels */
+            XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
+            XYZ2AE(X[k],Y[k],Z[k],&A[k],&E[k]);
         }
     }
 }
@@ -554,24 +534,10 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
             (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
             (d[2][3][k]-d[1][3][k]);
             
-            /* Historical conventions for A & E channels from original waveform paper
-            A[j] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
-            A[k] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
-            
-            E[j] =  sqT*fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
-            E[k] =  sqT*fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
-             */
-            
             /* LDC conventions for A & E channels */
-            A[j] = sqT*fonfs2*((Z[j]-X[j])*cSL-(Z[k]-X[k])*sSL)*0.707106781186547;
-            A[k] = sqT*fonfs2*((Z[j]-X[j])*sSL+(Z[k]-X[k])*cSL)*0.707106781186547;
+            XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
+            XYZ2AE(X[k],Y[k],Z[k],&A[k],&E[k]);
 
-            E[j] =  sqT*fonfs2*((X[j]-2.*Y[j]+Z[j])*cSL-(X[k]-2.*Y[k]+Z[k])*sSL)*0.408248290463863;
-            E[k] =  sqT*fonfs2*((X[j]-2.*Y[j]+Z[j])*sSL+(X[k]-2.*Y[k]+Z[k])*cSL)*0.408248290463863;
-
-            //T[j] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*cSL-((1./3.)*(X[k]+Y[k]+Z[k]))*sSL)*0.33333333;
-            //T[k] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*sSL+((1./3.)*(X[k]+Y[k]+Z[k]))*cSL)*0.33333333;
-            
         }
     }
 }
@@ -800,7 +766,7 @@ double XYZnoise(double L, double fstar, double f)
     double fonfstar = f/fstar;
     double trans = ipow(sin(fonfstar),2.0);
     
-    return (4.0)*trans*( (4.0)*(SPS + SLOC) + 8.0*( 1.0 +                ipow(cos(fonfstar),2) ) * ( SLOC/2.0 + SACC*(1./(ipow(PI2*f,4)))*rednoise(f) ) ) / ipow(2.0*L,2);
+    return (4.0)*trans*( (4.0)*(SPS + SLOC) + 8.0*( 1.0 + ipow(cos(fonfstar),2) ) * ( SLOC/2.0 + SACC*(1./(ipow(PI2*f,4)))*rednoise(f) ) ) / ipow(2.0*L,2);
 }
 
 double GBnoise(double T, double f)
@@ -968,15 +934,8 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
         tdi->Y[i] = Y;
         tdi->Z[i] = Z;
         
-        /* what i've used forever
-        tdi->A[i] = (2.0*X-Y-Z)/3.0;
-        tdi->E[i] = (Z-Y)/sqrt(3.0);
-        tdi->T[i] = (X+Y+Z)/3.0;
-         */
-        
-        /* what john / ldc use now */
+        /* LDC conventions for AET channels */
         XYZ2AET(X,Y,Z,&tdi->A[i],&tdi->E[i],&tdi->T[i]);
-
         
     }
     tdi->delta = s1[1].time - s1[0].time;
