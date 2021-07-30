@@ -39,6 +39,9 @@
 /// Mean arm length of constellation (m) for baseline LISA configuration
 #define Larm 2.5e9
 
+/// Sample cadence for LISA (s)
+#define LISA_CADENCE 5.0
+
 /** @name Component Noise Levels For Phase Data */
 ///@{
 
@@ -226,6 +229,8 @@ void free_orbit(struct Orbit *orbit);
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
 /// LISA TDI (frequency)
 void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
+/// LISA TDI (LDC Sangria data)
+void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *A, double *E, int BW, int NI);
 ///@}
 
 /** @name  LISA Noise Model for equal arm, TDI1.5 configuration */

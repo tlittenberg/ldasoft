@@ -39,8 +39,22 @@
 #include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryWaveform.h"
 
-#define TUKEY_FILTER_LENGTH 1e5 //seconds
+#define FILTER_LENGTH 1e3 //seconds
 #define N_TDI_CHANNELS 3
+
+
+static void window(double *data, int N)
+{
+    int i;
+    double filter;
+    double tau = LISA_CADENCE/FILTER_LENGTH;
+    for(i=0; i<N; i++)
+    {
+        double x = i*LISA_CADENCE;
+        filter = (0.5*(1+tanh(tau*(x-FILTER_LENGTH))))*(0.5*(1-tanh(tau*(x-N*LISA_CADENCE))));
+        data[i]*=filter;
+    }
+}
 
 static void tukey(double *data, double alpha, int N)
 {
@@ -83,6 +97,18 @@ static double tukey_scale(double alpha, int N)
     return scale;
 }
 
+static void unpack_gsl_rft_output(double *x, double *x_gsl, int N)
+{
+    x[0] = x_gsl[0];
+    x[1] = 0.0;
+
+    for(int n=1; n<N/2; n++)
+    {
+        x[2*n]   = x_gsl[2*n-1];
+        x[2*n+1] = x_gsl[2*n];
+    }
+}
+
 void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
 {
     /* LDASOFT-formatted structure for TDI data */
@@ -95,33 +121,24 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     double stop_time = start_time + data->T;
     double dt = tdi_td->delta;
     double Tobs = stop_time - start_time;
-    
-    /* Truncate time series request to be NFFT samples
     int N = (int)floor(Tobs/dt);
-    int NFFT = pow(2, floor( log2(N) ));
-    Tobs = NFFT*tdi_td->delta;
-    data->T = Tobs;
-    data->sqT = sqrt(Tobs);
 
-    fprintf(stdout,"\nFrom GalacticBinaryReadHDF5:\n");
-    fprintf(stdout,"  Requested data duration of %.0f s\n",stop_time - start_time);
-    fprintf(stdout,"  Requested data segment has %i samples\n",N);
-    fprintf(stdout,"  Nearest 2^N is %i samples\n",NFFT);
-    fprintf(stdout,"  Duration of analyzed data is %.0f s\n\n",Tobs);
-    */
-    int NFFT = (int)floor(Tobs/dt);
-    double *X = malloc(NFFT*sizeof(double));
-    double *Y = malloc(NFFT*sizeof(double));
-    double *Z = malloc(NFFT*sizeof(double));
-    double *A = malloc(NFFT*sizeof(double));
-    double *E = malloc(NFFT*sizeof(double));
-    double *T = malloc(NFFT*sizeof(double));
+    /* work space for selecting and FT'ing time series */
+    double *X = malloc(N*sizeof(double));
+    double *Y = malloc(N*sizeof(double));
+    double *Z = malloc(N*sizeof(double));
+    double *A = malloc(N*sizeof(double));
+    double *E = malloc(N*sizeof(double));
+    double *T = malloc(N*sizeof(double));
 
+    /* Allocate data->tdi structure for Fourier transform output */
+    alloc_tdi(tdi, N/2, N_TDI_CHANNELS);
+    tdi->delta = 1./Tobs;
 
     /* Select requested time segment */
     int n_start = (int)floor(start_time/dt); // first sample of time segment
     
-    for(int n=0; n<NFFT; n++)
+    for(int n=0; n<N; n++)
     {
         int m = n_start+n;
         X[n] = tdi_td->X[m];
@@ -133,116 +150,55 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     }
     
     /* Tukey window time-domain TDI channels tdi_td */
-    double alpha = (2.0*TUKEY_FILTER_LENGTH/Tobs);
+    double alpha = (2.0*FILTER_LENGTH/Tobs);
     
-    tukey(X, alpha, NFFT);
-    tukey(Y, alpha, NFFT);
-    tukey(Z, alpha, NFFT);
-    tukey(A, alpha, NFFT);
-    tukey(E, alpha, NFFT);
-    tukey(T, alpha, NFFT);
+    tukey(X, alpha, N);
+    tukey(Y, alpha, N);
+    tukey(Z, alpha, N);
+    tukey(A, alpha, N);
+    tukey(E, alpha, N);
+    tukey(T, alpha, N);
     
-    /* Fast Fourier transform time-domain TDI channels
-    gsl_fft_real_radix2_transform(X, 1, NFFT);
-    gsl_fft_real_radix2_transform(Y, 1, NFFT);
-    gsl_fft_real_radix2_transform(Z, 1, NFFT);
-    gsl_fft_real_radix2_transform(A, 1, NFFT);
-    gsl_fft_real_radix2_transform(E, 1, NFFT);
-    gsl_fft_real_radix2_transform(T, 1, NFFT);*/
     
     /* Fourier transform time-domain TDI channels */
-    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (NFFT);;
-    gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (NFFT);;
+    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (N);
+    gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (N);
 
-    gsl_fft_real_transform (X, 1, NFFT, real, work);
-    gsl_fft_real_transform (Y, 1, NFFT, real, work);
-    gsl_fft_real_transform (Z, 1, NFFT, real, work);
-    gsl_fft_real_transform (A, 1, NFFT, real, work);
-    gsl_fft_real_transform (E, 1, NFFT, real, work);
-    gsl_fft_real_transform (T, 1, NFFT, real, work);
+    gsl_fft_real_transform (X, 1, N, real, work);
+    gsl_fft_real_transform (Y, 1, N, real, work);
+    gsl_fft_real_transform (Z, 1, N, real, work);
+    gsl_fft_real_transform (A, 1, N, real, work);
+    gsl_fft_real_transform (E, 1, N, real, work);
+    gsl_fft_real_transform (T, 1, N, real, work);
 
-    gsl_fft_real_wavetable_free (real);
-    gsl_fft_real_workspace_free (work);
-
-    
     /* Normalize FD data */
-    double fft_norm = 2./sqrt((double)(NFFT));   // Fourier scaling
-    double tukey_norm = tukey_scale(alpha, NFFT);
-
-    fft_norm /= tukey_norm;  // Tukey scaling
-    for(int n=0; n<NFFT; n++)
+    double rft_norm = sqrt(Tobs)/(double)N;
+    
+    /* Account for losses from windowing */
+    double tukey_norm = tukey_scale(alpha, N);
+    rft_norm /= tukey_norm;
+    
+    for(int n=0; n<N; n++)
     {
-        X[n] *= fft_norm;
-        Y[n] *= fft_norm;
-        Z[n] *= fft_norm;
-        A[n] *= fft_norm;
-        E[n] *= fft_norm;
-        T[n] *= fft_norm;
+        X[n] *= rft_norm;
+        Y[n] *= rft_norm;
+        Z[n] *= rft_norm;
+        A[n] *= rft_norm;
+        E[n] *= rft_norm;
+        T[n] *= rft_norm;
     }
-    
-    /* Allocate and fill data->tdi structure */
-    alloc_tdi(tdi, NFFT/2, N_TDI_CHANNELS);
-    tdi->delta = 1./Tobs;
-    
+        
     /* unpack GSL-formatted arrays to the way GBMCMC expects them */
-//    for(int n=0; n<NFFT/2; n++)
-//    {
-//        int re = 2*n;
-//        int im = re+1;
-//
-//        /* real part */
-//        tdi->X[re] = X[n];
-//        tdi->Y[re] = Y[n];
-//        tdi->Z[re] = Z[n];
-//        tdi->A[re] = A[n];
-//        tdi->E[re] = E[n];
-//        tdi->T[re] = T[n];
-//
-//        /* imaginary part*/
-//        if(n>0) //DC part is zero (initialized in alloc_tdi())
-//        {
-//            tdi->X[im] = X[NFFT-n];
-//            tdi->Y[im] = Y[NFFT-n];
-//            tdi->Z[im] = Z[NFFT-n];
-//            tdi->A[im] = A[NFFT-n];
-//            tdi->E[im] = E[NFFT-n];
-//            tdi->T[im] = T[NFFT-n];
-//        }
-//    }*/
-    tdi->X[0] = X[0];
-    tdi->X[1] = 0;
-    tdi->Y[0] = Y[0];
-    tdi->Y[1] = 0;
-    tdi->Z[0] = Z[0];
-    tdi->Z[1] = 0;
-    tdi->A[0] = A[0];
-    tdi->A[1] = 0;
-    tdi->E[0] = E[0];
-    tdi->E[1] = 0;
-    tdi->T[0] = T[0];
-    tdi->T[1] = 0;
-    for(int n=1; n<NFFT/2; n++)
-    {
-        tdi->X[2*n]   = X[2*n-1];
-        tdi->X[2*n+1] = X[2*n];
-
-        tdi->Y[2*n]   = Y[2*n-1];
-        tdi->Y[2*n+1] = Y[2*n];
-
-        tdi->Z[2*n]   = Z[2*n-1];
-        tdi->Z[2*n+1] = Z[2*n];
-
-        tdi->A[2*n]   = A[2*n-1];
-        tdi->A[2*n+1] = A[2*n];
-
-        tdi->E[2*n]   = E[2*n-1];
-        tdi->E[2*n+1] = E[2*n];
-
-        tdi->T[2*n]   = T[2*n-1];
-        tdi->T[2*n+1] = T[2*n];
-    }
+    unpack_gsl_rft_output(tdi->X, X, N);
+    unpack_gsl_rft_output(tdi->Y, Y, N);
+    unpack_gsl_rft_output(tdi->Z, Z, N);
+    unpack_gsl_rft_output(tdi->A, A, N);
+    unpack_gsl_rft_output(tdi->E, E, N);
+    unpack_gsl_rft_output(tdi->T, T, N);
     
     /* Free memory */
+    gsl_fft_real_wavetable_free (real);
+    gsl_fft_real_workspace_free (work);
     free_tdi(tdi_td);
     free(X);
     free(Y);
@@ -363,9 +319,21 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
                 data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
             }
         }
+        else if(strcmp(data->format,"sangria")==0)
+        {
+            //TODO: Need a sqrt(2) to match Sangria data/noise
+            data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+            data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+            if(flags->confNoise)
+            {
+                data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+            }
+        }
+
         else
         {
-            fprintf(stderr,"Unsupported data format %s",data->format);
+            fprintf(stderr,"Unsupported data format %s\n",data->format);
             exit(1);
         }
     }
@@ -394,8 +362,24 @@ void GalacticBinaryAddNoise(struct Data *data, struct TDI *tdi)
     gsl_rng_free(r);
 }
 
-void GalacticBinarySimulateData(struct Data *data)
+void GalacticBinarySimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
+    struct TDI *tdi = data->tdi[0];
+
+    //get max and min samples
+    data->fmax = data->fmin + data->N/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+
+    //Get noise spectrum for data segment
+    GalacticBinaryGetNoiseModel(data,orbit,flags);
+    
+    //Add Gaussian noise to injection
+    if(flags->simNoise) GalacticBinaryAddNoise(data,tdi);
+    
+    //print various data products for plotting
+    print_data(data, tdi, flags, 0);
+
 }
 
 void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags)
