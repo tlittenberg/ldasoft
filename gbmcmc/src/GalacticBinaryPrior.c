@@ -589,7 +589,15 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
         logP += evalaute_sky_location_prior(params, uniform_prior, model->logPriorVolume, flags->galaxyPrior, prior->skyhist, prior->dcostheta, prior->dphi, prior->nphi);
         
         //amplitude prior
-        logP += evaluate_snr_prior(data, model, params);
+        if(flags->snrPrior)
+        {
+            logP += evaluate_snr_prior(data, model, params);
+        }
+        else
+        {
+            if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
+            logP -= model->logPriorVolume[3];
+        }
         
         //everything else uses simple uniform priors
         logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume, model->NP);

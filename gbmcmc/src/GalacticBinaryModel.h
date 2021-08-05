@@ -134,6 +134,11 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP);
 void alloc_calibration(struct Calibration *calibration);
 ///@}
 
+/**
+ \brief Shallow copy of Data structure
+ */
+void copy_data(struct Data *origin, struct Data *copy);
+
 /** @name Deep copy structure contents */
 ///@{
 void copy_source(struct Source *origin, struct Source *copy);
