@@ -26,22 +26,42 @@
 #include "GalacticBinaryWrapper.h"
 #include "NoiseWrapper.h"
 
-void alloc_noise_data(struct NoiseData *noise_data, int procID, int nProc)
+void alloc_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, int procID, int nProc)
 {
     noise_data->status = 0;
     noise_data->procID = procID;
     noise_data->nProc = nProc;
-    noise_data->flags = NULL;//malloc(sizeof(struct Flags));
-    noise_data->orbit = NULL;//malloc(sizeof(struct Orbit));
+    noise_data->flags = malloc(sizeof(struct Flags));
     noise_data->chain = malloc(sizeof(struct Chain));
     noise_data->data  = malloc(sizeof(struct Data));
+    
+    noise_data->orbit = gbmcmc_data->orbit;
+    memcpy(noise_data->flags, gbmcmc_data->flags, sizeof(struct Flags));
+
 }
 
-void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
+void select_noise_segment(struct Noise *psd_full, struct Noise *psd_segment)
 {
-    int procID = noise_data->procID;
-    char dirname[MAXSTRINGSIZE];
+    double Tobs = 1./(psd_full->f[1] - psd_full->f[0]);
+    int qstart = (int)(psd_full->f[0]*Tobs);
+    int q0 = (int)(psd_segment->f[0]*Tobs);
+    int dq = q0 - qstart;
+    
+//    for(int n=0; n<psd_segment->N; n++)
+//    {
+//        psd_segment->SnX[n] = psd_full->SnX[n+dq];
+//        psd_segment->SnA[n] = psd_full->SnA[n+dq];
+//        psd_segment->SnE[n] = psd_full->SnE[n+dq];
+//
+//    }
+    memcpy(psd_segment->SnX, psd_full->SnX+dq, psd_segment->N*sizeof(double));
+    memcpy(psd_segment->SnA, psd_full->SnA+dq, psd_segment->N*sizeof(double));
+    memcpy(psd_segment->SnE, psd_full->SnE+dq, psd_segment->N*sizeof(double));
 
+}
+
+void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID)
+{
     noise_data->data->downsample = gbmcmc_data->data->downsample;
     noise_data->data->Nwave      = gbmcmc_data->data->Nwave;
     
@@ -53,7 +73,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
 
     int qpad = gbmcmc_data->data->qpad;
     int N = gbmcmc_data->data->N - 2*qpad;
-    int Nseg = gbmcmc_data->procID_max - gbmcmc_data->procID_min + 1;
+    int Nseg = gbmcmc_data->procID_max - gbmcmc_data->procID_min+1;
     double T = gbmcmc_data->data->T;
     
     noise_data->data->T = T;
@@ -62,28 +82,29 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
 
     //TODO: Fix this hacky noise model frequency alignment
     noise_data->data->fmin = gbmcmc_data->data->fmin;
-    noise_data->data->fmin += (double)N/T; //shift start by one segment (root doesn't have gbmcmc)
-
-
-    noise_data->flags = malloc(sizeof(struct Flags));
-    memcpy(noise_data->flags, gbmcmc_data->flags, sizeof(struct Flags));
-
-    sprintf(noise_data->flags->runDir,"noise");
+    noise_data->data->fmin += 2*(double)N/T; //shift start by two segment (proc 0,1 don't have gbmcmc)
+    
+    sprintf(noise_data->flags->runDir,"%s_noise",gbmcmc_data->flags->runDir);
     mkdir(noise_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-    sprintf(dirname,"%s/chains",noise_data->flags->runDir);
-    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-    sprintf(dirname,"%s/data",noise_data->flags->runDir);
-    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-    noise_data->orbit = gbmcmc_data->orbit;
+    
+    sprintf(noise_data->chain->chainDir,"%s/chains",noise_data->flags->runDir);
+    sprintf(noise_data->chain->chkptDir,"%s/checkpoint",noise_data->flags->runDir);
+    sprintf(noise_data->data->dataDir,"%s/data",noise_data->flags->runDir);
+    
     
     alloc_data(noise_data->data, noise_data->flags);
     
     noise_data->model = malloc(sizeof(struct SplineModel*)*gbmcmc_data->chain->NC);
     
-    select_frequency_segment(noise_data->data, tdi_full, procID);
+    //get max and min samples
+    noise_data->data->qmin = (int)(noise_data->data->fmin*noise_data->data->T);
+    noise_data->data->qmax = noise_data->data->qmin+noise_data->data->N;
+    noise_data->data->fmax = (double)noise_data->data->qmax/T;
+    
+    
+    select_frequency_segment(noise_data->data, tdi_full);
+    
+    
 }
 
 
@@ -114,7 +135,6 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
 void initialize_noise_state(struct NoiseData *noise_data)
 {
     /* Aliases to gbmcmc structures */
-    struct Flags *flags = noise_data->flags;
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
@@ -130,10 +150,10 @@ void initialize_noise_state(struct NoiseData *noise_data)
     }
 
     char filename[128];
-    sprintf(filename,"%s/data/initial_spline_points.dat",flags->runDir);
+    sprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->spline, filename);
     
-    sprintf(filename,"%s/data/interpolated_spline_points.dat",flags->runDir);
+    sprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->psd, filename);
 
 }
@@ -172,6 +192,9 @@ int update_noise_sampler(struct NoiseData *noise_data)
             //loop over frequency segments
             struct SplineModel *model_ptr = model[chain->index[ic]];
             
+            //update log likelihood (data may have changed)
+            model_ptr->logL = noise_log_likelihood(data, model_ptr);
+
             //evolve fixed dimension sampler
             for(int steps=0; steps<100; steps++)
             {

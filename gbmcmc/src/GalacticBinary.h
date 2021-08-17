@@ -299,6 +299,7 @@ struct Chain
     ///@}
     
     char chainDir[MAXSTRINGSIZE]; //!<store chain directory.
+    char chkptDir[MAXSTRINGSIZE]; //!<store checkpoint directory.
 
 };
 

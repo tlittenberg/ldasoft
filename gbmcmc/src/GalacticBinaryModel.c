@@ -153,6 +153,7 @@ void alloc_data(struct Data *data, struct Flags *flags)
 
 }
 
+//TODO: Expand copy_data() to include everything, and then replace where needed (NoiseWrapper.c, ...)
 void copy_data(struct Data *origin, struct Data *copy)
 {
     memcpy(copy->format, origin->format, sizeof(origin->format));
@@ -175,6 +176,7 @@ void copy_data(struct Data *origin, struct Data *copy)
     memcpy(copy->tgap, origin->tgap, origin->NT*sizeof(double));
 }
 
+//TODO: Move initialize_orbit() out of GBMCMC and into LISA
 void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
     /* Load spacecraft ephemerides */
@@ -202,6 +204,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     int NC = chain->NC;
     char filename[MAXSTRINGSIZE];
     mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(chain->chkptDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));
@@ -912,6 +915,7 @@ void generate_noise_model(struct Data *data, struct Model *model)
             case 2:
                 for(int n=0; n<data->N; n++)
             {
+                model->noise[m]->f[n] = data->fmin + (double)n/data->T;
                 model->noise[m]->SnA[n] = data->noise[m]->SnA[n]*model->noise[m]->etaA;
                 model->noise[m]->SnE[n] = data->noise[m]->SnE[n]*model->noise[m]->etaE;
             }

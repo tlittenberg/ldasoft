@@ -444,13 +444,13 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     int long_index=0;
     
     //Print command line
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"run.sh");
-    FILE *out = fopen(filename,"w");
-    fprintf(out,"#!/bin/sh\n\n");
-    for(opt=0; opt<argc; opt++) fprintf(out,"%s ",argv[opt]);
-    fprintf(out,"\n\n");
-    fclose(out);
+//    char filename[MAXSTRINGSIZE];
+//    sprintf(filename,"run.sh");
+//    FILE *out = fopen(filename,"w");
+//    fprintf(out,"#!/bin/sh\n\n");
+//    for(opt=0; opt<argc; opt++) fprintf(out,"%s ",argv[opt]);
+//    fprintf(out,"\n\n");
+//    fclose(out);
 
     //Loop through argv string and pluck out arguments
     while ((opt = getopt_long_only(argc, argv,"apl:b:", long_options, &long_index )) != -1)
@@ -615,7 +615,6 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
             case 'q' : flags->quiet = 1;
                 break;
             default:
-                fprintf(stderr,"Unrecognized option %s\n",long_options[long_index].name);
                 break;
         }
     }
@@ -655,25 +654,84 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         data->sum_log_f += log(data->fmin + (double)n/data->T);
     }
     
-    
-    // run looks good to go, make checkpoint directories and save command line
-    mode_t process_mask = umask(0);
-    char dirname[MAXSTRINGSIZE];
-    sprintf(dirname,"%s/checkpoint",flags->runDir);
-    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    umask(process_mask);
-        
     //Print version control
-    sprintf(filename,"gb_mcmc.log");
-    FILE *runlog = fopen(filename,"w");
-    print_version(runlog);
+//    sprintf(filename,"gb_mcmc.log");
+//    FILE *runlog = fopen(filename,"w");
+//    print_version(runlog);
     
     //Report on set parameters
-    if(!flags->quiet) print_run_settings(argc, argv, data, orbit, flags, stdout);
-    print_run_settings(argc, argv, data, orbit, flags, runlog);
+//    if(!flags->quiet) print_run_settings(argc, argv, data, orbit, flags, stdout);
+//    print_run_settings(argc, argv, data, orbit, flags, runlog);
     
-    fclose(runlog);
+//    fclose(runlog);
+}
+
+void copy_argv(int argc, char **argv, char **new_argv)
+{
+    for(int i = 0; i < argc; ++i)
+    {
+        size_t length = strlen(argv[i])+1;
+        new_argv[i] = malloc(length);
+        memcpy(new_argv[i], argv[i], length);
+    }
+    new_argv[argc] = NULL;
+}
+
+void parse_vb_list(int argc, char **argv, struct Flags *flags)
+{
+    flags->NVB=0;
+    int vb_list_flag = 0;
     
+    static struct option long_options[] =
+    {
+        /* These options set a flag. */
+        {"known-sources", required_argument, 0, 0},
+        {0, 0, 0, 0}
+    };
+    
+    opterr = 0;
+    int opt=0;
+    int long_index=0;
+    
+    //copy argv since getopt permutes order
+    char **argv_copy=malloc((argc+1) * sizeof *argv_copy);
+    copy_argv(argc,argv,argv_copy);
+
+    
+    //Loop through argv string and find argument for verification binaries
+    while ((opt = getopt_long_only(argc, argv_copy,"apl:b:", long_options, &long_index )) != -1)
+    {
+        
+        switch (opt)
+        {
+            case 0:
+                if(strcmp("known-sources", long_options[long_index].name) == 0)
+                {
+                    strcpy(flags->vbFile,optarg);
+                    vb_list_flag=1;
+                }
+
+                break;
+            default:
+                break;
+                //print_usage();
+                //exit(EXIT_FAILURE);
+        }
+    }
+    
+    if(vb_list_flag)
+    {
+        //count lines in the file (one source per line)
+        char *line;
+        char buffer[MAXSTRINGSIZE];
+        
+        FILE *sourceFile = fopen(flags->vbFile,"r");
+        while( (line=fgets(buffer, MAXSTRINGSIZE, sourceFile)) != NULL) flags->NVB++;
+        fclose(sourceFile);
+    }
+
+    //reset opt counter
+    optind = 0;
 }
 
 void save_chain_state(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
@@ -682,7 +740,7 @@ void save_chain_state(struct Data *data, struct Model **model, struct Chain *cha
     FILE *stateFile;
     for(int ic=0; ic<chain->NC; ic++)
     {
-        sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
+        sprintf(filename,"%s/chain_state_%i.dat",chain->chkptDir,ic);
         stateFile = fopen(filename,"w");
         
         int n = chain->index[ic];

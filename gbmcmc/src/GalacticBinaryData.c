@@ -852,6 +852,56 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
 
+void GetVerificationBinary(struct Data *data, struct Flags *flags, FILE *vbFile)
+{
+    /* Get injection parameters */
+    double f0,dfdt,costheta,phi,m1,m2,D; //read from injection file
+    double cosi,phi0,psi;                //drawn from prior
+    double Mc,amp;                       //calculated
+    
+    int check = fscanf(vbFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&costheta,&phi,&m1,&m2,&cosi,&D);
+    if(!check)
+    {
+        fprintf(stderr,"Error reading %s\n",flags->vbFile);
+        exit(1);
+    }
+    
+    //incoming distance in kpc, function expects pc
+    D *= 1000.0;
+    
+    //compute derived parameters
+    Mc  = chirpmass(m1,m2);
+    amp = galactic_binary_Amp(Mc, f0, D);
+    
+    //initialize extrinsic parameters
+    phi0 = 0.0;
+    psi  = 0.0;
+    
+    struct Source *inj = data->inj;
+    
+    //set bandwidth of data segment centered on injection
+    data->fmin = f0 - (data->N/2)/data->T;
+    data->fmax = f0 + (data->N/2)/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+    
+    //recompute fmin and fmax so they align with a bin
+    data->fmin = data->qmin/data->T;
+    data->fmax = data->qmax/data->T;
+    
+    //map parameters to vector
+    inj->f0       = f0;
+    inj->dfdt     = dfdt;
+    inj->costheta = costheta;
+    inj->phi      = phi;
+    inj->amp      = amp;
+    inj->cosi     = cosi;
+    inj->phi0     = phi0;
+    inj->psi      = psi;
+    map_params_to_array(inj, inj->params, data->T);
+}
+
+
 void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
     fprintf(stdout,"\n==== GalacticBinaryInjectSimulatedSource ====\n");

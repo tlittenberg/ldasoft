@@ -23,8 +23,9 @@ struct NoiseData
     struct SplineModel **model;
 };
 
-void alloc_noise_data(struct NoiseData *noise_data, int procID, int nProc);
-void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full);
+void alloc_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, int procID, int nProc);
+void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID);
+void select_noise_segment(struct Noise *psd_full, struct Noise *psd_segment);
 
 void initialize_noise_sampler(struct NoiseData *noise_data);
 void initialize_noise_state(struct NoiseData *noise_data);

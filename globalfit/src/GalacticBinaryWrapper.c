@@ -39,14 +39,13 @@ void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID, int procID_mi
     gbmcmc_data->prior = malloc(sizeof(struct Prior));
 }
 
-void select_frequency_segment(struct Data *data, struct TDI *tdi_full, int procID)
+void update_frequency_segment(struct Data *data, struct TDI *tdi_full)
 {
-    //get max and min samples
-    data->fmin = data->fmin + (double)(procID*(data->N - 2*data->qpad))/data->T;
-    data->fmax = data->fmin + data->N/data->T;
-    data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
     
+}
+
+void select_frequency_segment(struct Data *data, struct TDI *tdi_full)
+{
     //store frequency segment in TDI structure
     struct TDI *tdi = data->tdi[0];
     struct TDI *raw = data->raw[0];
@@ -72,7 +71,7 @@ void select_frequency_segment(struct Data *data, struct TDI *tdi_full, int procI
     }
 }
 
-void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples, int root, int procID)
+void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples, int root, int procID, int procID_min)
 {
     //first tell all processes how large the dataset is
     MPI_Bcast(&Nsamples, 1, MPI_INT, root, MPI_COMM_WORLD);
@@ -92,7 +91,13 @@ void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples
     MPI_Bcast(tdi_full->T, 2*Nsamples, MPI_DOUBLE, root, MPI_COMM_WORLD);
     
     /* select frequency segment for each process */
-    select_frequency_segment(data, tdi_full, procID-1);
+    //get max and min samples
+    data->fmin = data->fmin + (double)((procID-procID_min)*(data->N - 2*data->qpad))/data->T;
+    data->fmax = data->fmin + data->N/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+
+    select_frequency_segment(data, tdi_full);
 }
 
 void broadcast_cache(struct Data *data, int root, int procID)
@@ -148,12 +153,13 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     
     /* Initialize GBMCMC sampler state */
     initialize_gbmcmc_state(data, orbit, flags, chain, proposal, model, trial);
+        
+    /* Store data segment in working directory */
+    print_data(data, data->tdi[0], flags, 0);
     
     /* Set sampler counter */
     gbmcmc_data->mcmc_step = -flags->NBURN;
-    
-    /* Store data segment in working directory */
-    print_data(data, data->tdi[0], flags, 0);
+
 }
 
 static void print_sampler_state(struct GBMCMCData *gbmcmc_data)

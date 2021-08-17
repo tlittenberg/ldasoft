@@ -316,7 +316,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     
     //log amplitude
     model->prior[3][0] = -60.0;
-    model->prior[3][1] = -48.0;
+    model->prior[3][1] = -45.0;
     
     //cos inclination
     model->prior[4][0] = -1.0;

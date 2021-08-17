@@ -298,6 +298,7 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
  \brief Sets up different proposals and assigns frequencies with which they are used.
  */
 void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
+void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 
 /**
  \brief Create 3D histogram for F-statistics proposal

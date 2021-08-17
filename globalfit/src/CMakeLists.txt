@@ -5,7 +5,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/gbmcmc/src/")
 include_directories ("${PROJECT_SOURCE_DIR}/noise/src/")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 
-add_executable(global_fit GlobalFit.c GalacticBinaryWrapper.h NoiseWrapper.h GalacticBinaryWrapper.c NoiseWrapper.c)
+add_executable(global_fit GlobalFit.c GalacticBinaryWrapper.h NoiseWrapper.h GalacticBinaryWrapper.c NoiseWrapper.c VerificationBinaryWrapper.c VerificationBinaryWrapper.h)
 target_link_libraries(global_fit ${GSL_LIBRARIES})
 target_link_libraries(global_fit m)
 target_link_libraries(global_fit tools)

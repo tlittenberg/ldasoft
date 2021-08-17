@@ -52,6 +52,16 @@ void print_usage();
 void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int numProc, int procID);
 
 /**
+ \brief select only part of command line defining verification binary lists
+*/
+void parse_vb_list(int argc, char **argv, struct Flags *flags);
+
+/**
+ \brief copy `argv` string because `parse()` does not preserve order
+ */
+void copy_argv(int argc, char **argv, char **new_argv);
+
+/**
  \brief Check if file exists and handle missing files cleanly
  */
 int checkfile(char filename[]);
