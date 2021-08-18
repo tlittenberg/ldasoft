@@ -2,7 +2,7 @@ var searchData=
 [
   ['galactic_5fbinary_120',['galactic_binary',['../GalacticBinaryWaveform_8h.html#a760ef0a604a22ece220ed7f5b5d6205b',1,'GalacticBinaryWaveform.h']]],
   ['galactic_5fbinary_5falignment_121',['galactic_binary_alignment',['../GalacticBinaryWaveform_8h.html#a83dd310bc696e85059ce0a838d61e045',1,'GalacticBinaryWaveform.c']]],
-  ['galactic_5fbinary_5famp_122',['galactic_binary_Amp',['../GalacticBinaryWaveform_8h.html#a5c0690180520fdee2364df46988d7485',1,'GalacticBinaryWaveform.h']]],
+  ['galactic_5fbinary_5famp_122',['galactic_binary_Amp',['../GalacticBinaryWaveform_8h.html#a5c0690180520fdee2364df46988d7485',1,'GalacticBinaryWaveform.c']]],
   ['galactic_5fbinary_5fbandwidth_123',['galactic_binary_bandwidth',['../GalacticBinaryWaveform_8h.html#a71eeb38f8dbebe3286e55de7ade6f4b6',1,'GalacticBinaryWaveform.c']]],
   ['galactic_5fbinary_5fdl_124',['galactic_binary_dL',['../GalacticBinaryWaveform_8h.html#a606c6145ac36a717a77b3bcaae536531',1,'GalacticBinaryWaveform.c']]],
   ['galactic_5fbinary_5ffdot_125',['galactic_binary_fdot',['../GalacticBinaryWaveform_8h.html#a49e07d18b0a38ab1d1b3472056c6df60',1,'GalacticBinaryWaveform.c']]],
@@ -31,7 +31,7 @@ var searchData=
   ['galacticbinaryreadascii_148',['GalacticBinaryReadASCII',['../GalacticBinaryData_8h.html#a88a45e9bded667fa00be4ac121961b49',1,'GalacticBinaryData.c']]],
   ['galacticbinaryreaddata_149',['GalacticBinaryReadData',['../GalacticBinaryData_8h.html#a6634a2f7d3b25caacf39eb41cecacd02',1,'GalacticBinaryData.c']]],
   ['galacticbinaryreadhdf5_150',['GalacticBinaryReadHDF5',['../GalacticBinaryData_8h.html#a03cc9c86cb2171c61da9d2a4c586c7d3',1,'GalacticBinaryData.c']]],
-  ['galacticbinarysimulatedata_151',['GalacticBinarySimulateData',['../GalacticBinaryData_8h.html#a94a5a09a9f745bf545919fe8d4326a06',1,'GalacticBinaryData.c']]],
+  ['galacticbinarysimulatedata_151',['GalacticBinarySimulateData',['../GalacticBinaryData_8h.html#a18c218898ffa2ad0f4c572fb390b9ca0',1,'GalacticBinaryData.c']]],
   ['galacticbinarywaveform_2eh_152',['GalacticBinaryWaveform.h',['../GalacticBinaryWaveform_8h.html',1,'']]],
   ['galaxy_5fa_153',['GALAXY_A',['../GalacticBinaryPrior_8h.html#af1732e437f339711f74f2f7df44ea3dd',1,'GalacticBinaryPrior.h']]],
   ['galaxy_5frb_154',['GALAXY_Rb',['../GalacticBinaryPrior_8h.html#afac874947e84825ef130ea854024b05e',1,'GalacticBinaryPrior.h']]],

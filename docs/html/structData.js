@@ -14,6 +14,7 @@ var structData =
     [ "h_res", "structData.html#ad801eb68f47932db30ec701694b72cee", null ],
     [ "inj", "structData.html#ac136349d39219fa435ca7cbd43c46444", null ],
     [ "iseed", "structData.html#a377bda85cbfd007855748f4c53d8305c", null ],
+    [ "logfmax", "structData.html#a7f8568f5d6137c250793cc1fa456a5ee", null ],
     [ "logfmin", "structData.html#a3d638edc3bb44936e2ffd2ba195aabae", null ],
     [ "logN", "structData.html#ab634a9fe8447ceeb5175886e5bc8d6fa", null ],
     [ "N", "structData.html#a3be03de44986fc55905076acc5cdae2e", null ],
