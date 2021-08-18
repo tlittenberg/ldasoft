@@ -30,6 +30,7 @@
 #include "VerificationBinaryWrapper.h"
 #include "NoiseWrapper.h"
 
+#define N_TDI_CHANNELS 2
 #define NMAX 10
 
 struct GlobalFitData
@@ -40,6 +41,15 @@ struct GlobalFitData
     struct TDI *tdi_vgb;
     struct Noise *psd;
 };
+
+static void alloc_gf_data(struct GlobalFitData *global_fit)
+{
+    global_fit->tdi_full = malloc(sizeof(struct TDI));
+    global_fit->tdi_store = malloc(sizeof(struct TDI));
+    global_fit->tdi_vgb = malloc(sizeof(struct TDI));
+    global_fit->tdi_ucb = malloc(sizeof(struct TDI));
+    global_fit->psd = malloc(sizeof(struct Noise));
+}
 
 static void setup_gf_data(struct GlobalFitData *global_fit)
 {
@@ -52,6 +62,26 @@ static void setup_gf_data(struct GlobalFitData *global_fit)
     
     copy_tdi(global_fit->tdi_full, global_fit->tdi_store);
 }
+
+static void share_data(struct TDI *tdi_full, int root, int procID)
+{
+    //first tell all processes how large the dataset is
+    MPI_Bcast(&tdi_full->N, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+    //all but root process need to allocate memory for TDI structure
+    if(procID!=root) alloc_tdi(tdi_full, tdi_full->N, N_TDI_CHANNELS);
+    
+    //now broadcast contents of TDI structure
+    MPI_Bcast(&tdi_full->delta, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->X, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->Y, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->Z, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->A, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->E, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->T, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    
+}
+
 
 static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GlobalFitData *gf, int root, int procID)
 {
@@ -206,6 +236,10 @@ int main(int argc, char *argv[])
         
     } MPI_Barrier(MPI_COMM_WORLD);
 
+    /* Allocate structures to hold global model */
+    struct GlobalFitData *global_fit = malloc(sizeof(struct GlobalFitData));
+    alloc_gf_data(global_fit);
+
     /* Allocate GBMCMC data structures */
     struct GBMCMCData *gbmcmc_data = malloc(sizeof(struct GBMCMCData));
     alloc_gbmcmc_data(gbmcmc_data, procID, 2, Nproc-1);
@@ -228,50 +262,35 @@ int main(int argc, char *argv[])
     alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1);
 
     /* Setup output directories for chain and data structures */
+    mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     if(procID==0)
     {
-        sprintf(noise_data->flags->runDir,"%s_noise",noise_data->flags->runDir);
-        sprintf(noise_data->data->dataDir,"%s/data",noise_data->flags->runDir);
-        sprintf(noise_data->chain->chainDir,"%s/chains",noise_data->flags->runDir);
-        sprintf(noise_data->chain->chkptDir,"%s/checkpoint",noise_data->flags->runDir);
-
+        sprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
         setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
     }
     else if(procID==1)
     {
-        sprintf(vbmcmc_data->flags->runDir,"%s_vgb",vbmcmc_data->flags->runDir);
+        sprintf(vbmcmc_data->flags->runDir,"%s/vgb",vbmcmc_data->flags->runDir);
+        mkdir(vbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
         for(int n=0; n<vbmcmc_data->flags->NVB; n++)
         {
-            sprintf(vbmcmc_data->data_vec[n]->dataDir,"%s/data_%i",vbmcmc_data->flags->runDir,n);
-            sprintf(vbmcmc_data->chain_vec[n]->chainDir,"%s/chains_%i",vbmcmc_data->flags->runDir,n);
-            sprintf(vbmcmc_data->chain_vec[n]->chkptDir,"%s/checkpoint_%i",vbmcmc_data->flags->runDir,n);
+            sprintf(vbmcmc_data->flags->runDir,"%s/seg_%i",vbmcmc_data->flags->runDir,n);
             setup_run_directories(vbmcmc_data->flags, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n]);
         }
     }
-    else
+    else if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
     {
-        sprintf(gbmcmc_data->flags->runDir,"%s_ucb_%i",gbmcmc_data->flags->runDir, procID-1);
-        sprintf(gbmcmc_data->data->dataDir,"%s/data",gbmcmc_data->flags->runDir);
-        sprintf(gbmcmc_data->chain->chainDir,"%s/chains",gbmcmc_data->flags->runDir);
-        sprintf(gbmcmc_data->chain->chkptDir,"%s/checkpoint",gbmcmc_data->flags->runDir);
+        sprintf(gbmcmc_data->flags->runDir,"%s/ucb",gbmcmc_data->flags->runDir);
+        mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        sprintf(gbmcmc_data->flags->runDir,"%s/seg_%i",gbmcmc_data->flags->runDir, procID-gbmcmc_data->procID_min);
         setup_run_directories(gbmcmc_data->flags, gbmcmc_data->data, gbmcmc_data->chain);
     }
-    /* Finish allocating GBMCMC structures now that we know the number of PT chains */
-    gbmcmc_data->proposal = malloc(chain->NP*sizeof(struct Proposal*));
-    gbmcmc_data->model = malloc(sizeof(struct Model*)*chain->NC);
-    gbmcmc_data->trial = malloc(sizeof(struct Model*)*chain->NC);
 
     /* Initialize data structures */
     alloc_data(data, flags);
-        
-    /* TDI structure to hold full dataset & composite models */
-    struct GlobalFitData *global_fit = malloc(sizeof(struct GlobalFitData));
-    global_fit->tdi_full = malloc(sizeof(struct TDI));
-    global_fit->tdi_store = malloc(sizeof(struct TDI));
-    global_fit->tdi_vgb = malloc(sizeof(struct TDI));
-    global_fit->tdi_ucb = malloc(sizeof(struct TDI));
-    global_fit->psd = malloc(sizeof(struct Noise));
-    
+            
     /* root process reads data */
     if(procID==root) GalacticBinaryReadHDF5(data,global_fit->tdi_full);
     MPI_Barrier(MPI_COMM_WORLD);
@@ -280,33 +299,22 @@ int main(int argc, char *argv[])
     struct TDI *tdi_full = global_fit->tdi_full;
 
     /* broadcast data to all gbmcmc processes and select frequency segment */
-    get_frequency_segment(gbmcmc_data->data, tdi_full, tdi_full->N, root, procID, gbmcmc_data->procID_min);
+    share_data(tdi_full, root, procID);
 
     /* composite models are allocated to be the same size as tdi_full */
     setup_gf_data(global_fit);
+
+    /* set up data for ucb model processes */
+    setup_gbmcmc_data(gbmcmc_data, tdi_full);
 
     /* set up data for noise model processes */
     setup_noise_data(noise_data, gbmcmc_data, tdi_full, procID);
     
     /* allocate global fit noise model for all processes */
     alloc_noise(global_fit->psd, noise_data->data->N);
-
+    
     /* set up data for verification binary model processes */
     setup_vbmcmc_data(vbmcmc_data, gbmcmc_data, tdi_full);
-
-    /* Initialize LISA orbit model */
-    initialize_orbit(data,orbit,flags);
-    
-    /* Load gb catalog cache file for proposals/priors */
-    if(flags->catalog)
-    {
-        if(procID==root) GalacticBinaryLoadCatalogCache(data, flags);
-        
-        broadcast_cache(data, root, procID);
-        
-        GalacticBinaryParseCatalogCache(data);
-        GalacticBinaryLoadCatalog(data);
-    }
 
 
     /*
@@ -338,8 +346,6 @@ int main(int argc, char *argv[])
     {
         GBMCMC_Flag = 1;
         initialize_gbmcmc_sampler(gbmcmc_data);
-
-        print_gb_catalog_script(flags, data, orbit);
     }
 
 
@@ -362,15 +368,7 @@ int main(int argc, char *argv[])
             
             select_frequency_segment(gbmcmc_data->data, tdi_full);
             
-            select_noise_segment(global_fit->psd, gbmcmc_data->model[0]->noise[0]);
-            
-            
-            for(int i=1; i<gbmcmc_data->chain->NC; i++)
-            {
-                memcpy(gbmcmc_data->model[gbmcmc_data->chain->index[i]]->noise[0]->SnA,gbmcmc_data->model[0]->noise[0]->SnA, gbmcmc_data->data->N*sizeof(double));
-                memcpy(gbmcmc_data->model[gbmcmc_data->chain->index[i]]->noise[0]->SnE,gbmcmc_data->model[0]->noise[0]->SnE, gbmcmc_data->data->N*sizeof(double));
-            }
-            
+            select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
             gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
         }
@@ -390,17 +388,11 @@ int main(int argc, char *argv[])
         {
             create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
 
-            for(int n=0; n<vbmcmc_data->flags->NVB; n++)
-            {
-                select_noise_segment(global_fit->psd, vbmcmc_data->model_vec[n][0]->noise[0]);
-                for(int i=1; i<vbmcmc_data->chain_vec[n]->NC; i++)
-                {
-                    memcpy(vbmcmc_data->model_vec[n][vbmcmc_data->chain_vec[n]->index[i]]->noise[0]->SnA,vbmcmc_data->model_vec[n][0]->noise[0]->SnA, vbmcmc_data->data_vec[n]->N*sizeof(double));
-                    memcpy(vbmcmc_data->model_vec[n][vbmcmc_data->chain_vec[n]->index[i]]->noise[0]->SnE,vbmcmc_data->model_vec[n][0]->noise[0]->SnE, vbmcmc_data->data_vec[n]->N*sizeof(double));
-                }
-            }
-
             select_vbmcmc_segments(vbmcmc_data, tdi_full);
+
+            for(int n=0; n<vbmcmc_data->flags->NVB; n++)
+                select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
+
             vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
         }
         
@@ -417,8 +409,10 @@ int main(int argc, char *argv[])
             create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
 
             select_frequency_segment(noise_data->data, tdi_full);
+            
             noise_data->status = update_noise_sampler(noise_data);
         }
+        
         /* share noise model with other worker nodes */
         share_noise_model(noise_data, global_fit, root, procID);
 

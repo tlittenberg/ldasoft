@@ -29,6 +29,8 @@ struct GBMCMCData
 
 void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID, int procID_min, int procID_max);
 
+void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full);
+
 void select_frequency_segment(struct Data *data, struct TDI *tdi_full);
 
 void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples, int root, int procID, int procID_min);

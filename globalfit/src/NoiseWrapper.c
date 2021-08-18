@@ -39,23 +39,21 @@ void alloc_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
 
 }
 
-void select_noise_segment(struct Noise *psd_full, struct Noise *psd_segment)
+
+
+void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chain *chain, struct Model **model)
 {
-    double Tobs = 1./(psd_full->f[1] - psd_full->f[0]);
+    double Tobs = data->T;
     int qstart = (int)(psd_full->f[0]*Tobs);
-    int q0 = (int)(psd_segment->f[0]*Tobs);
+    int q0 = (int)(model[0]->noise[0]->f[0]*Tobs);
     int dq = q0 - qstart;
     
-//    for(int n=0; n<psd_segment->N; n++)
-//    {
-//        psd_segment->SnX[n] = psd_full->SnX[n+dq];
-//        psd_segment->SnA[n] = psd_full->SnA[n+dq];
-//        psd_segment->SnE[n] = psd_full->SnE[n+dq];
-//
-//    }
-    memcpy(psd_segment->SnX, psd_full->SnX+dq, psd_segment->N*sizeof(double));
-    memcpy(psd_segment->SnA, psd_full->SnA+dq, psd_segment->N*sizeof(double));
-    memcpy(psd_segment->SnE, psd_full->SnE+dq, psd_segment->N*sizeof(double));
+    for(int i=0; i<chain->NC; i++)
+    {
+        memcpy(model[i]->noise[0]->SnX, psd_full->SnX+dq, data->N*sizeof(double));
+        memcpy(model[i]->noise[0]->SnA, psd_full->SnA+dq, data->N*sizeof(double));
+        memcpy(model[i]->noise[0]->SnE, psd_full->SnE+dq, data->N*sizeof(double));
+    }
 
 }
 

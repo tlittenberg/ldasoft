@@ -82,10 +82,6 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
     /* initialize all data structures */
     for(int n=0; n<flags->NVB; n++)
     {
-        /* Setup output directories for data and chain files */
-        sprintf(data_vec[n]->dataDir,"%s/data_%i",flags->runDir,n);
-        sprintf(chain_vec[n]->chainDir,"%s/chains_%i",flags->runDir,n);
-        sprintf(chain_vec[n]->chkptDir,"%s/checkpoint_%i",flags->runDir,n);
 
         struct Chain *chain=chain_vec[n];
         struct Data *data=data_vec[n];
@@ -163,6 +159,10 @@ void initialize_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
 
         /* Store data segment in working directory */
         if(vbmcmc_data->procID==1) print_data(data, data->tdi[0], flags, 0);
+        
+        /* Store post-processing script */
+        print_gb_catalog_script(flags, data, orbit);
+
     }
 
     /* Set sampler counter */

@@ -68,7 +68,12 @@ void print_version(FILE *fptr)
 }
 
 void setup_run_directories(struct Flags *flags, struct Data *data, struct Chain *chain)
-{    
+{
+    
+    sprintf(data->dataDir,"%s/data",flags->runDir);
+    sprintf(chain->chainDir,"%s/chains",flags->runDir);
+    sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+
     mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
