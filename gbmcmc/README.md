@@ -49,14 +49,9 @@ lisacattools
 <a name="installation"></a>
 ## Installation
 Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`.
-```
-<a name="installation"></a>
-## Installation
-Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`
 ```bash
 ./install.sh ${HOME}/ldasoft/master
 ```
-
 <a name="examples"></a>
 # Example use cases for GBMCMC
 See run options with `gb_mcmc --help`.  Detailed description of command line options found [here](doc/running.md)
@@ -65,7 +60,7 @@ See run options with `gb_mcmc --help`.  Detailed description of command line opt
 ## Analyze single high SNR injection
 ```bash
 gb_mcmc \
-  --inj <path to>/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt
+  --inj /path/to/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt
 ```
 <a name="ldc"></a>
 ## Analyze LDC data
@@ -80,7 +75,7 @@ Current best estimates of known binaries and their parameters, with references t
 Run with sky-location fixed
 ```bash
 gb_mcmc \
-  --inj <path to>/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \
+  --inj /path/to/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \
   --known-source \
   --no-rj \
   --cheat \
@@ -89,7 +84,7 @@ gb_mcmc \
 
 To run with sky-location and EM-constrained priors (currently just U[cosi]) add
 ```bash
-  --em-prior <path to>/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat 
+  --em-prior /path/to/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat 
 ```
 
 To run with orbital period P and dP/dt fixed add
@@ -103,7 +98,7 @@ To run with orbital period P and dP/dt fixed add
 ### Use UCBs as calibration sources
 ```bash
 gb_mcmc \
-  --inj <path to>/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \
+  --inj /path/to/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \
   --duration 604948 \
   --segments 2 \
   --fit-gap \
