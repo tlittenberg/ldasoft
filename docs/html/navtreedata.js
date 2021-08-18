@@ -89,6 +89,13 @@ var NAVTREE =
       [ "Estimate errors", "md_gbfisher_README.html#autotoc_md49", null ],
       [ "Example for input file <tt>FisherGalaxy_LDC_Radler_galaxy_key.dat</tt>:", "md_gbfisher_README.html#autotoc_md50", null ]
     ] ],
+    [ "GlobalFit Manual", "md_globalfit_README.html", [
+      [ "Introduction", "md_globalfit_README.html#autotoc_md52", [
+        [ "C Dependencies", "md_globalfit_README.html#autotoc_md53", null ],
+        [ "Installation", "md_globalfit_README.html#autotoc_md54", null ]
+      ] ],
+      [ "Example use cases for GlobalFit", "md_globalfit_README.html#autotoc_md55", null ]
+    ] ],
     [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -113,7 +120,8 @@ var NAVTREEINDEX =
 [
 "Constants_8h.html",
 "LISA_8h.html#ac1edd2c2913eb00c98fe9f12e7369ecb",
-"structFilter.html#ab1ed51ef090efe336e49535f9409e6c5"
+"structFilter.html#a2e7e9ef431a273d897e09d37eacd8302",
+"structlisa__orbit.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

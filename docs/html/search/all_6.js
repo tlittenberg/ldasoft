@@ -53,11 +53,12 @@ var searchData=
   ['generate_5fcalibration_5fmodel_170',['generate_calibration_model',['../GalacticBinaryModel_8h.html#aae9f1345cdb131ac555e8b7a47ecdadf',1,'GalacticBinaryModel.c']]],
   ['generate_5fnoise_5fmodel_171',['generate_noise_model',['../GalacticBinaryModel_8h.html#a9d05914da5fd4f3afe8b7fa7b12aedae',1,'GalacticBinaryModel.c']]],
   ['generate_5fsignal_5fmodel_172',['generate_signal_model',['../GalacticBinaryModel_8h.html#addaa8f8b33ce94b3e333e762355a122b',1,'GalacticBinaryModel.c']]],
-  ['gmm_173',['gmm',['../structProposal.html#a423c3e8d55806f2853ac5444d362cb96',1,'Proposal::gmm()'],['../structPrior.html#ae899e8e0cd2275660223b207b44c80fd',1,'Prior::gmm()'],['../structEntry.html#a961313f4c91d44afb321efeecb63dcf3',1,'Entry::gmm()']]],
-  ['gmm_174',['GMM',['../structGMM.html',1,'']]],
-  ['gmm_5fprior_5fdensity_175',['gmm_prior_density',['../GalacticBinaryProposal_8h.html#a22c52a307d7e75c874d19a12e56da44d',1,'GalacticBinaryProposal.c']]],
-  ['gmm_5fwith_5fem_176',['GMM_with_EM',['../GMM__with__EM_8h.html#a0587ef2cee23c02b78b3ee2cbebfad67',1,'GMM_with_EM.c']]],
-  ['gmm_5fwith_5fem_2eh_177',['GMM_with_EM.h',['../GMM__with__EM_8h.html',1,'']]],
-  ['gmmfile_178',['gmmFile',['../structFlags.html#a25dfd15e488fe42b88521de66ca3c5f0',1,'Flags']]],
-  ['gnewton_179',['GNEWTON',['../Constants_8h.html#a9a79b2355cfb2e80430b63d5bb645330',1,'Constants.h']]]
+  ['globalfit_20manual_173',['GlobalFit Manual',['../md_globalfit_README.html',1,'']]],
+  ['gmm_174',['gmm',['../structProposal.html#a423c3e8d55806f2853ac5444d362cb96',1,'Proposal::gmm()'],['../structPrior.html#ae899e8e0cd2275660223b207b44c80fd',1,'Prior::gmm()'],['../structEntry.html#a961313f4c91d44afb321efeecb63dcf3',1,'Entry::gmm()']]],
+  ['gmm_175',['GMM',['../structGMM.html',1,'']]],
+  ['gmm_5fprior_5fdensity_176',['gmm_prior_density',['../GalacticBinaryProposal_8h.html#a22c52a307d7e75c874d19a12e56da44d',1,'GalacticBinaryProposal.c']]],
+  ['gmm_5fwith_5fem_177',['GMM_with_EM',['../GMM__with__EM_8h.html#a0587ef2cee23c02b78b3ee2cbebfad67',1,'GMM_with_EM.c']]],
+  ['gmm_5fwith_5fem_2eh_178',['GMM_with_EM.h',['../GMM__with__EM_8h.html',1,'']]],
+  ['gmmfile_179',['gmmFile',['../structFlags.html#a25dfd15e488fe42b88521de66ca3c5f0',1,'Flags']]],
+  ['gnewton_180',['GNEWTON',['../Constants_8h.html#a9a79b2355cfb2e80430b63d5bb645330',1,'Constants.h']]]
 ];
