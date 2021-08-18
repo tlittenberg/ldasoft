@@ -146,18 +146,12 @@ Python packages for post-production</h2>
 <div class="line">h5py</div>
 <div class="line">tables</div>
 <div class="line">pydot</div>
-<div class="line">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</div>
 <div class="line">lisacattools</div>
 </div><!-- fragment --><p> <a class="anchor" id="installation"></a> </p>
 <h2><a class="anchor" id="autotoc_md10"></a>
 Installation</h2>
-<p>Build and install binaries in <code>${HOME}/ldasoft/master/bin/</code> with <code>cmake</code>. </p><div class="fragment"><div class="line">&lt;a name=&quot;installation&quot;&gt;&lt;/a&gt;</div>
-<div class="line">## Installation</div>
-<div class="line">Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`</div>
-<div class="line">&gt;&gt;&gt;&gt;&gt;&gt;&gt; 3848e2f8e40eaadda41c5966f615a685041c9b4e</div>
-<div class="line">```bash</div>
-<div class="line">./install.sh ${HOME}/ldasoft/master</div>
-</div><!-- fragment --><p><a class="anchor" id="examples"></a> </p>
+<p>Build and install binaries in <code>${HOME}/ldasoft/master/bin/</code> with <code>cmake</code>. </p><div class="fragment"><div class="line">./install.sh ${HOME}/ldasoft/master</div>
+</div><!-- fragment --><p> <a class="anchor" id="examples"></a> </p>
 <h1><a class="anchor" id="autotoc_md11"></a>
 Example use cases for GBMCMC</h1>
 <p>See run options with <code>gb_mcmc --help</code>. Detailed description of command line options found here</p>
@@ -165,7 +159,7 @@ Example use cases for GBMCMC</h1>
 <h2><a class="anchor" id="autotoc_md12"></a>
 Analyze single high SNR injection</h2>
 <div class="fragment"><div class="line">gb_mcmc \</div>
-<div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt</div>
+<div class="line">  --inj /path/to/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt</div>
 </div><!-- fragment --><p> <a class="anchor" id="ldc"></a> </p>
 <h2><a class="anchor" id="autotoc_md13"></a>
 Analyze LDC data</h2>
@@ -177,12 +171,12 @@ Analyze verification binary with EM priors</h2>
 <h3><a class="anchor" id="autotoc_md15"></a>
 Examples for AM CVn</h3>
 <p>Run with sky-location fixed </p><div class="fragment"><div class="line">gb_mcmc \</div>
-<div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \</div>
+<div class="line">  --inj /path/to/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \</div>
 <div class="line">  --known-source \</div>
 <div class="line">  --no-rj \</div>
 <div class="line">  --cheat \</div>
 <div class="line">  --samples 128</div>
-</div><!-- fragment --><p>To run with sky-location and EM-constrained priors (currently just U[cosi]) add </p><div class="fragment"><div class="line">--em-prior &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat </div>
+</div><!-- fragment --><p>To run with sky-location and EM-constrained priors (currently just U[cosi]) add </p><div class="fragment"><div class="line">--em-prior /path/to/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat </div>
 </div><!-- fragment --><p>To run with orbital period P and dP/dt fixed add </p><div class="fragment"><div class="line">--fix-freq</div>
 </div><!-- fragment --><p><a class="anchor" id="other"></a> </p>
 <h2><a class="anchor" id="autotoc_md16"></a>
@@ -190,7 +184,7 @@ Other use cases</h2>
 <h3><a class="anchor" id="autotoc_md17"></a>
 Use UCBs as calibration sources</h3>
 <div class="fragment"><div class="line">gb_mcmc \</div>
-<div class="line">  --inj &lt;path to&gt;/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \</div>
+<div class="line">  --inj /path/to/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \</div>
 <div class="line">  --duration 604948 \</div>
 <div class="line">  --segments 2 \</div>
 <div class="line">  --fit-gap \</div>
