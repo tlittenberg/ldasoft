@@ -21,8 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <sys/stat.h>
-
 #include <gsl/gsl_fft_complex.h>
 
 #include <LISA.h>

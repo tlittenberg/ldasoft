@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
 
     /* all processes parse command line and set defaults/flags */
     parse_vb_list(argc, argv, flags);
-    parse(argc,argv,data,orbit,flags,chain,NMAX,Nproc,procID);
+    parse(argc,argv,data,orbit,flags,chain,NMAX,procID);
     
     /* Allocate remaining data structures */
     struct VBMCMCData *vbmcmc_data = malloc(sizeof(struct VBMCMCData));
@@ -228,10 +228,34 @@ int main(int argc, char *argv[])
     alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1);
 
     /* Setup output directories for chain and data structures */
-    sprintf(data->dataDir,"%s/data",flags->runDir);
-    sprintf(chain->chainDir,"%s/chains",flags->runDir);
-    sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+    if(procID==0)
+    {
+        sprintf(noise_data->flags->runDir,"%s_noise",noise_data->flags->runDir);
+        sprintf(noise_data->data->dataDir,"%s/data",noise_data->flags->runDir);
+        sprintf(noise_data->chain->chainDir,"%s/chains",noise_data->flags->runDir);
+        sprintf(noise_data->chain->chkptDir,"%s/checkpoint",noise_data->flags->runDir);
 
+        setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
+    }
+    else if(procID==1)
+    {
+        sprintf(vbmcmc_data->flags->runDir,"%s_vgb",vbmcmc_data->flags->runDir);
+        for(int n=0; n<vbmcmc_data->flags->NVB; n++)
+        {
+            sprintf(vbmcmc_data->data_vec[n]->dataDir,"%s/data_%i",vbmcmc_data->flags->runDir,n);
+            sprintf(vbmcmc_data->chain_vec[n]->chainDir,"%s/chains_%i",vbmcmc_data->flags->runDir,n);
+            sprintf(vbmcmc_data->chain_vec[n]->chkptDir,"%s/checkpoint_%i",vbmcmc_data->flags->runDir,n);
+            setup_run_directories(vbmcmc_data->flags, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n]);
+        }
+    }
+    else
+    {
+        sprintf(gbmcmc_data->flags->runDir,"%s_ucb_%i",gbmcmc_data->flags->runDir, procID-1);
+        sprintf(gbmcmc_data->data->dataDir,"%s/data",gbmcmc_data->flags->runDir);
+        sprintf(gbmcmc_data->chain->chainDir,"%s/chains",gbmcmc_data->flags->runDir);
+        sprintf(gbmcmc_data->chain->chkptDir,"%s/checkpoint",gbmcmc_data->flags->runDir);
+        setup_run_directories(gbmcmc_data->flags, gbmcmc_data->data, gbmcmc_data->chain);
+    }
     /* Finish allocating GBMCMC structures now that we know the number of PT chains */
     gbmcmc_data->proposal = malloc(chain->NP*sizeof(struct Proposal*));
     gbmcmc_data->model = malloc(sizeof(struct Model*)*chain->NC);

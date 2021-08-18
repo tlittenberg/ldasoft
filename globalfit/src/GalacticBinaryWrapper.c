@@ -155,7 +155,8 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     initialize_gbmcmc_state(data, orbit, flags, chain, proposal, model, trial);
         
     /* Store data segment in working directory */
-    print_data(data, data->tdi[0], flags, 0);
+    if(gbmcmc_data->procID>=gbmcmc_data->procID_min && gbmcmc_data->procID<gbmcmc_data->procID_max)
+        print_data(data, data->tdi[0], flags, 0);
     
     /* Set sampler counter */
     gbmcmc_data->mcmc_step = -flags->NBURN;

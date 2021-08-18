@@ -5,7 +5,6 @@
 //  Created by Tyson Littenberg on 2/5/21.
 //
 
-#include <sys/stat.h>
 #include <string.h>
 
 #include <mpi.h>
@@ -84,14 +83,6 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->fmin = gbmcmc_data->data->fmin;
     noise_data->data->fmin += 2*(double)N/T; //shift start by two segment (proc 0,1 don't have gbmcmc)
     
-    sprintf(noise_data->flags->runDir,"%s_noise",gbmcmc_data->flags->runDir);
-    mkdir(noise_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    
-    sprintf(noise_data->chain->chainDir,"%s/chains",noise_data->flags->runDir);
-    sprintf(noise_data->chain->chkptDir,"%s/checkpoint",noise_data->flags->runDir);
-    sprintf(noise_data->data->dataDir,"%s/data",noise_data->flags->runDir);
-    
-    
     alloc_data(noise_data->data, noise_data->flags);
     
     noise_data->model = malloc(sizeof(struct SplineModel*)*gbmcmc_data->chain->NC);
@@ -128,7 +119,7 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
     noise_data->mcmc_step = -flags->NBURN;
     
     /* Store data segment in working directory */
-    print_data(data, data->tdi[0], flags, 0);
+    if(noise_data->procID==0) print_data(data, data->tdi[0], flags, 0);
 
 }
 

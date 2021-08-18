@@ -32,6 +32,8 @@
 #include <time.h>
 #include <getopt.h>
 
+#include <sys/stat.h>
+
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -95,7 +97,7 @@ int main(int argc, char *argv[])
         
     data=data_vec[0];
     chain=chain_vec[0];
-    parse(argc,argv,data,orbit,flags,chain,NMAX,0,0);
+    parse(argc,argv,data,orbit,flags,chain,NMAX,0);
     int NC = chain->NC;
     int DMAX = flags->DMAX;
     int mcmc_start = -flags->NBURN;
@@ -123,13 +125,19 @@ int main(int argc, char *argv[])
     /* initialize all data structures */
     for(int n=0; n<flags->NVB; n++)
     {
-        /* Setup output directories for data and chain files */
-        sprintf(data_vec[n]->dataDir,"%s/data_%i",flags->runDir,n);
-        sprintf(chain_vec[n]->chainDir,"%s/chains_%i",flags->runDir,n);
-        sprintf(chain_vec[n]->chkptDir,"%s/checkpoint_%i",flags->runDir,n);
-
         chain=chain_vec[n];
         data=data_vec[n];
+
+        /* Setup output directories for data and chain files */
+        sprintf(data->dataDir,"%s/data",flags->runDir);
+        sprintf(chain->chainDir,"%s/chains",flags->runDir);
+        sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+        
+        mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        mkdir(chain->chkptDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
         if(n>0)
         {
             copy_data(data_vec[0],data);

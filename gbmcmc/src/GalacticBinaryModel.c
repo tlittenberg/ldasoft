@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 
 #include <LISA.h>
 
@@ -148,9 +147,6 @@ void alloc_data(struct Data *data, struct Flags *flags)
     //catalog of previously detected sources
     data->catalog = malloc(sizeof(struct Catalog));
 
-    //create output directories
-    mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
 }
 
 //TODO: Expand copy_data() to include everything, and then replace where needed (NoiseWrapper.c, ...)
@@ -203,8 +199,6 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     int ic;
     int NC = chain->NC;
     char filename[MAXSTRINGSIZE];
-    mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    mkdir(chain->chkptDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));

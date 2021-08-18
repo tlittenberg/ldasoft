@@ -37,6 +37,11 @@ void printProgress (double percentage);
 void print_version(FILE *fptr);
 
 /**
+  \brief Name and create output directories 
+ */
+void setup_run_directories(struct Flags *flags, struct Data *data, struct Chain *chain);
+
+/**
  \brief Print functional example `gb_catalog` bash script based on input args
  */
 void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbit *orbit);
@@ -49,7 +54,7 @@ void print_usage();
 /**
  \brief Parse command line
  */
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int numProc, int procID);
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int procID);
 
 /**
  \brief select only part of command line defining verification binary lists

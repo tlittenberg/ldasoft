@@ -24,8 +24,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <omp.h>
+
+#include <sys/stat.h>
 
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
@@ -64,6 +65,15 @@ void print_version(FILE *fptr)
     fprintf(fptr, "  Git commit: %s\n", GITVERSION);
     //fprintf(fptr, "  Git commit author: %s\n",GIT_AUTHOR);
     //fprintf(fptr, "  Git commit date: %s\n", GIT_DATE);
+}
+
+void setup_run_directories(struct Flags *flags, struct Data *data, struct Chain *chain)
+{    
+    mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(chain->chkptDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
 }
 
 void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbit *orbit)
@@ -306,7 +316,7 @@ void print_usage()
     exit(0);
 }
 
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int numProc, int procID)
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int procID)
 {
     
     int DMAX_default = 10;
@@ -486,12 +496,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
                 if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
                 if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
-                if(strcmp("rundir",      long_options[long_index].name) == 0)
-                {
-                    strcpy(flags->runDir,optarg);
-                    if(numProc>0) sprintf(flags->runDir,"%s_%i",flags->runDir,procID);
-                    mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                }
+                if(strcmp("rundir",      long_options[long_index].name) == 0) strcpy(flags->runDir,optarg);
                 if(strcmp("duration",    long_options[long_index].name) == 0)
                 {   data->T   = (double)atof(optarg);
                     data->sqT = sqrt(data->T);
@@ -1357,7 +1362,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
 {
     char filename[128];
     FILE *fptr;
-    
+
     sprintf(filename,"%s/waveform_injection_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)

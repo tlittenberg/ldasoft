@@ -54,8 +54,6 @@ void alloc_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
 
 void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
 {
-    int procID = vbmcmc_data->procID;
-
     /* Aliases to gbmcmc structures */
     struct Flags *flags = vbmcmc_data->flags;
     struct Orbit *orbit = vbmcmc_data->orbit;
@@ -110,14 +108,7 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
 
         //print various data products for plotting
-        print_data(data, data->tdi[0], flags, 0);
-        
-        
-//        /* Initialize parallel chain */
-//        if(flags->resume)
-//            initialize_chain(chain, flags, &data->cseed, "a");
-//        else
-//            initialize_chain(chain, flags, &data->cseed, "w");
+        if(vbmcmc_data->procID==1) print_data(data, data->tdi[0], flags, 0);
     }
     
     /* Setup the rest of the model */
@@ -171,7 +162,7 @@ void initialize_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
         initialize_gbmcmc_state(data, orbit, flags, chain, proposal, model, trial);
 
         /* Store data segment in working directory */
-        print_data(data, data->tdi[0], flags, 0);
+        if(vbmcmc_data->procID==1) print_data(data, data->tdi[0], flags, 0);
     }
 
     /* Set sampler counter */
@@ -329,6 +320,6 @@ void select_vbmcmc_segments(struct VBMCMCData *vbmcmc_data, struct TDI *tdi)
         struct Data *data = vbmcmc_data->data_vec[n];
         struct Flags *flags = vbmcmc_data->flags;
         select_frequency_segment(data,tdi);
-        print_data(data, data->tdi[0], flags, 0);
+        if(vbmcmc_data->procID==1) print_data(data, data->tdi[0], flags, 0);
     }
 }
