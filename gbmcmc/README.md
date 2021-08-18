@@ -44,7 +44,6 @@ chainConsumer
 h5py
 tables
 pydot
-<<<<<<< HEAD
 lisacattools
 ```
 <a name="installation"></a>
@@ -54,7 +53,6 @@ Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`.
 <a name="installation"></a>
 ## Installation
 Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`
->>>>>>> 3848e2f8e40eaadda41c5966f615a685041c9b4e
 ```bash
 ./install.sh ${HOME}/ldasoft/master
 ```
