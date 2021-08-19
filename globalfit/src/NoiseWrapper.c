@@ -117,7 +117,7 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
     noise_data->mcmc_step = -flags->NBURN;
     
     /* Store data segment in working directory */
-    if(noise_data->procID==0) print_data(data, data->tdi[0], flags, 0);
+    print_data(data, data->tdi[0], flags, 0);
 
 }
 

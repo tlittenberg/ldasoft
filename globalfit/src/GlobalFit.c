@@ -91,7 +91,7 @@ static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GlobalFitD
     {
         struct Flags *flags = vbmcmc_data->flags;
 
-        for(int i=0; i<gf->tdi_vgb->N; i++)
+        for(int i=0; i<gf->tdi_vgb->N*2; i++)
         {
             gf->tdi_vgb->A[i] = 0.0;
             gf->tdi_vgb->E[i] = 0.0;
@@ -104,7 +104,7 @@ static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GlobalFitD
             
             int index = 2*data->qmin;
             
-            for(int i=0; i<data->N; i++)
+            for(int i=0; i<data->N*2; i++)
             {
                 gf->tdi_vgb->A[i+index] += model->tdi[0]->A[i];
                 gf->tdi_vgb->E[i+index] += model->tdi[0]->E[i];
@@ -113,8 +113,8 @@ static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GlobalFitD
     }
     
     /* broadcast vbmcmc model to all worker nodes */
-    MPI_Bcast(gf->tdi_vgb->A, gf->tdi_vgb->N, MPI_DOUBLE, 1, MPI_COMM_WORLD);
-    MPI_Bcast(gf->tdi_vgb->E, gf->tdi_vgb->N, MPI_DOUBLE, 1, MPI_COMM_WORLD);
+    MPI_Bcast(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, 1, MPI_COMM_WORLD);
+    MPI_Bcast(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, 1, MPI_COMM_WORLD);
 
 }
 
@@ -146,7 +146,7 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
         double *E = malloc(N*sizeof(double));
         
         //zero out ucb model
-        for(int i=0; i<gf->tdi_ucb->N; i++)
+        for(int i=0; i<gf->tdi_ucb->N*2; i++)
         {
             gf->tdi_ucb->A[i] = 0.0;
             gf->tdi_ucb->E[i] = 0.0;
@@ -171,8 +171,8 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
     }
     
     /* broadcast gbmcmc model to all worker nodes */
-    MPI_Bcast(gf->tdi_ucb->A, gf->tdi_ucb->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(gf->tdi_ucb->E, gf->tdi_ucb->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
 
 }
 
@@ -196,10 +196,10 @@ static void share_noise_model(struct NoiseData *noise_data, struct GlobalFitData
 static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, int VBMCMC_Flag)
 {
     
-    memcpy(global_fit->tdi_full->A, global_fit->tdi_store->A, global_fit->tdi_full->N*sizeof(double));
-    memcpy(global_fit->tdi_full->E, global_fit->tdi_store->E, global_fit->tdi_full->N*sizeof(double));
+    memcpy(global_fit->tdi_full->A, global_fit->tdi_store->A, 2*global_fit->tdi_full->N*sizeof(double));
+    memcpy(global_fit->tdi_full->E, global_fit->tdi_store->E, 2*global_fit->tdi_full->N*sizeof(double));
  
-    for(int i=0; i<global_fit->tdi_full->N; i++)
+    for(int i=0; i<2*global_fit->tdi_full->N; i++)
     {
         if(!GBMCMC_Flag)
         {
@@ -416,6 +416,13 @@ int main(int argc, char *argv[])
             //print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
 
             noise_data->status = update_noise_sampler(noise_data);
+            
+            /*
+            char filename[128];
+            sprintf(filename,"%s/current_spline_points.dat",noise_data->data->dataDir);
+            print_noise_model(noise_data->model[0]->spline, filename);
+             */
+
         }
         
         /* share noise model with other worker nodes */

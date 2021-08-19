@@ -96,7 +96,7 @@ void select_frequency_segment(struct Data *data, struct TDI *tdi_full)
         tdi->E[n] = tdi_full->E[m];
         tdi->T[n] = tdi_full->T[m];
         
-        /* raw data to be used as reference */
+        /* raw data to be used for inter-segment gbmcmc swaps */
         raw->X[n] = tdi_full->X[m];
         raw->Y[n] = tdi_full->Y[m];
         raw->Z[n] = tdi_full->Z[m];
