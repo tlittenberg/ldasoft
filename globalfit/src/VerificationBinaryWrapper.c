@@ -102,9 +102,6 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
 
         /* set approximate f/fstar for segment */
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
-
-        //print various data products for plotting
-        if(vbmcmc_data->procID==1) print_data(data, data->tdi[0], flags, 0);
     }
     
     /* Setup the rest of the model */
@@ -115,17 +112,10 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
 
     for(int n=0; n<flags->NVB; n++)
     {
-        /* Initialize priors */
         vbmcmc_data->prior_vec[n] = malloc(sizeof(struct Prior));
-        
-        /* Initialize MCMC proposals */
         vbmcmc_data->proposal_vec[n] = malloc(vbmcmc_data->chain_vec[n]->NP*sizeof(struct Proposal*));
-//        initialize_vb_proposal(orbit, vbmcmc_data->data_vec[n], vbmcmc_data->prior_vec[n], vbmcmc_data->chain_vec[n], flags, vbmcmc_data->proposal_vec[n], 10);
-        
-        /* Initialize data models */
         vbmcmc_data->trial_vec[n] = malloc(sizeof(struct Model*)*vbmcmc_data->chain_vec[n]->NC);
         vbmcmc_data->model_vec[n] = malloc(sizeof(struct Model*)*vbmcmc_data->chain_vec[n]->NC);
-//        initialize_gbmcmc_state(vbmcmc_data->data_vec[n], orbit, flags, vbmcmc_data->chain_vec[n], vbmcmc_data->proposal_vec[n], vbmcmc_data->model_vec[n], vbmcmc_data->trial_vec[n]);
     }
 }
 
@@ -320,6 +310,6 @@ void select_vbmcmc_segments(struct VBMCMCData *vbmcmc_data, struct TDI *tdi)
         struct Data *data = vbmcmc_data->data_vec[n];
         struct Flags *flags = vbmcmc_data->flags;
         select_frequency_segment(data,tdi);
-        if(vbmcmc_data->procID==1) print_data(data, data->tdi[0], flags, 0);
+        //print_data(data, data->tdi[0], flags, 0);
     }
 }

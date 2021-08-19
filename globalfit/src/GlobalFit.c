@@ -125,8 +125,9 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
         struct Data *data = gbmcmc_data->data;
         struct Chain *chain = gbmcmc_data->chain;
         struct Model *model = gbmcmc_data->model[chain->index[0]];
-        MPI_Send(model->tdi[0]->A, 2*data->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD);
-        MPI_Send(model->tdi[0]->E, 2*data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
+        MPI_Send(&data->qmin, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->A, 2*data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->E, 2*data->N, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
     }
     
     if(procID==root)
@@ -139,7 +140,7 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
         int procID_min = gbmcmc_data->procID_min;
         int procID_max = gbmcmc_data->procID_max;
         
-        int qmin = gbmcmc_data->data->qmin + gbmcmc_data->data->N;
+        int qmin;
         
         double *A = malloc(N*sizeof(double));
         double *E = malloc(N*sizeof(double));
@@ -153,14 +154,15 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
         
         for(int n=procID_min; n<=procID_max; n++)
         {
-            index = 2*(qmin + (n - procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad));
-            MPI_Recv(A, N, MPI_DOUBLE, n, 0, MPI_COMM_WORLD, &status);
-            MPI_Recv(E, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
+            
+            MPI_Recv(&qmin, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
+            MPI_Recv(A, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(E, N, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
             
             for(int i=0; i<N; i++)
             {
-                gf->tdi_ucb->A[index+i] += A[i];
-                gf->tdi_ucb->E[index+i] += E[i];
+                gf->tdi_ucb->A[2*qmin+i] += A[i];
+                gf->tdi_ucb->E[2*qmin+i] += E[i];
             }
         }
         
@@ -169,8 +171,8 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
     }
     
     /* broadcast gbmcmc model to all worker nodes */
-    MPI_Bcast(gf->tdi_ucb->A, gf->tdi_vgb->N, MPI_DOUBLE, 1, MPI_COMM_WORLD);
-    MPI_Bcast(gf->tdi_ucb->E, gf->tdi_vgb->N, MPI_DOUBLE, 1, MPI_COMM_WORLD);
+    MPI_Bcast(gf->tdi_ucb->A, gf->tdi_ucb->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(gf->tdi_ucb->E, gf->tdi_ucb->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
 
 }
 
@@ -193,11 +195,12 @@ static void share_noise_model(struct NoiseData *noise_data, struct GlobalFitData
 
 static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, int VBMCMC_Flag)
 {
-    for(int i=0; i<global_fit->tdi_vgb->N; i++)
+    
+    memcpy(global_fit->tdi_full->A, global_fit->tdi_store->A, global_fit->tdi_full->N*sizeof(double));
+    memcpy(global_fit->tdi_full->E, global_fit->tdi_store->E, global_fit->tdi_full->N*sizeof(double));
+ 
+    for(int i=0; i<global_fit->tdi_full->N; i++)
     {
-        global_fit->tdi_full->A[i] = global_fit->tdi_store->A[i];
-        global_fit->tdi_full->E[i] = global_fit->tdi_store->E[i];
-        
         if(!GBMCMC_Flag)
         {
             global_fit->tdi_full->A[i] -= global_fit->tdi_ucb->A[i];
@@ -367,7 +370,8 @@ int main(int argc, char *argv[])
             create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
             
             select_frequency_segment(gbmcmc_data->data, tdi_full);
-            
+            //print_data(gbmcmc_data->data, gbmcmc_data->data->tdi[0], gbmcmc_data->flags, 0);
+
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
             gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
@@ -409,7 +413,8 @@ int main(int argc, char *argv[])
             create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
 
             select_frequency_segment(noise_data->data, tdi_full);
-            
+            //print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
+
             noise_data->status = update_noise_sampler(noise_data);
         }
         
