@@ -61,6 +61,7 @@ void print_usage_catalog()
     fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
     fprintf(stdout,"       --match       : match threshold for waveforms (0.8) \n");
     fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
+    fprintf(stdout,"       --sangria     : phase/tdi conventions for LDC2      \n");
     fprintf(stdout,"       --f-double-dot: include f double dot in model       \n");
     fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
     fprintf(stdout,"       --noise-file  : reconstructed noise model           \n");
@@ -149,6 +150,7 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
         {"help",        no_argument, 0,'h'},
         {"verbose",     no_argument, 0,'v'},
         {"frac-freq",   no_argument, 0, 0 },
+        {"sangria",     no_argument, 0, 0 },
         {"f-double-dot",no_argument, 0, 0 },
         {0, 0, 0, 0}
     };
@@ -179,6 +181,10 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
                 if(strcmp("frac-freq",   long_options[long_index].name) == 0)
                 {
                     sprintf(data->format,"frequency");
+                }
+                if(strcmp("sangria",   long_options[long_index].name) == 0)
+                {
+                    sprintf(data->format,"sangria");
                 }
                 if(strcmp("orbit", long_options[long_index].name) == 0)
                 {
