@@ -131,17 +131,23 @@ int main(int argc, char *argv[])
 
     
     /* initialize all data structures */
+
+    /* Setup output directories for data and chain files */
+    mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
     for(int n=0; n<flags->NVB; n++)
     {
         chain=chain_vec[n];
         data=data_vec[n];
 
-        /* Setup output directories for data and chain files */
-        sprintf(data->dataDir,"%s/data",flags->runDir);
-        sprintf(chain->chainDir,"%s/chains",flags->runDir);
-        sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+        char subDir[MAXSTRINGSIZE];
+        sprintf(subDir,"%s/seg%i",flags->runDir,n);
+        mkdir(subDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        sprintf(data->dataDir,"%s/data",subDir);
+        sprintf(chain->chainDir,"%s/chains",subDir);
+        sprintf(chain->chkptDir,"%s/checkpoint",subDir);
         
-        mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         mkdir(chain->chkptDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
