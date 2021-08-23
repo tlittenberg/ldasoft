@@ -76,6 +76,14 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
     /* parse verification binary files */
     FILE *vbFile = fopen(flags->vbFile,"r");
 
+    //strip off header
+    char header[MAXSTRINGSIZE];
+    if(fgets(header, MAXSTRINGSIZE, vbFile)==NULL)
+    {
+        fprintf(stderr,"Error reading %s\n",flags->vbFile);
+        exit(1);
+    }
+    
     /* Initialize LISA orbit model */
     initialize_orbit(gbmcmc_data->data, orbit, flags);
 

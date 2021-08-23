@@ -736,6 +736,15 @@ void parse_vb_list(int argc, char **argv, struct Flags *flags)
         char buffer[MAXSTRINGSIZE];
         
         FILE *sourceFile = fopen(flags->vbFile,"r");
+        
+        //strip off header
+        line = fgets(buffer, MAXSTRINGSIZE, sourceFile);
+        if(line==NULL)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->vbFile);
+            exit(1);
+        }
+        
         while( (line=fgets(buffer, MAXSTRINGSIZE, sourceFile)) != NULL) flags->NVB++;
         fclose(sourceFile);
     }

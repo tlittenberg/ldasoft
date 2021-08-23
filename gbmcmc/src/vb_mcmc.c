@@ -117,6 +117,14 @@ int main(int argc, char *argv[])
     
     /* parse verification binary files */
     FILE *vbFile = fopen(flags->vbFile,"r");
+    
+    //strip off header
+    char header[MAXSTRINGSIZE];
+    if(fgets(header, MAXSTRINGSIZE, vbFile)==NULL)
+    {
+        fprintf(stderr,"Error reading %s\n",flags->vbFile);
+        exit(1);
+    }
 
     /* Initialize LISA orbit model */
     initialize_orbit(data, orbit, flags);
