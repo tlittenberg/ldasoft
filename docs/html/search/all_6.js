@@ -2,7 +2,7 @@ var searchData=
 [
   ['galactic_5fbinary_120',['galactic_binary',['../GalacticBinaryWaveform_8h.html#a760ef0a604a22ece220ed7f5b5d6205b',1,'GalacticBinaryWaveform.h']]],
   ['galactic_5fbinary_5falignment_121',['galactic_binary_alignment',['../GalacticBinaryWaveform_8h.html#a83dd310bc696e85059ce0a838d61e045',1,'GalacticBinaryWaveform.c']]],
-  ['galactic_5fbinary_5famp_122',['galactic_binary_Amp',['../GalacticBinaryWaveform_8h.html#a5c0690180520fdee2364df46988d7485',1,'GalacticBinaryWaveform.h']]],
+  ['galactic_5fbinary_5famp_122',['galactic_binary_Amp',['../GalacticBinaryWaveform_8h.html#a5c0690180520fdee2364df46988d7485',1,'GalacticBinaryWaveform.c']]],
   ['galactic_5fbinary_5fbandwidth_123',['galactic_binary_bandwidth',['../GalacticBinaryWaveform_8h.html#a71eeb38f8dbebe3286e55de7ade6f4b6',1,'GalacticBinaryWaveform.c']]],
   ['galactic_5fbinary_5fdl_124',['galactic_binary_dL',['../GalacticBinaryWaveform_8h.html#a606c6145ac36a717a77b3bcaae536531',1,'GalacticBinaryWaveform.c']]],
   ['galactic_5fbinary_5ffdot_125',['galactic_binary_fdot',['../GalacticBinaryWaveform_8h.html#a49e07d18b0a38ab1d1b3472056c6df60',1,'GalacticBinaryWaveform.c']]],
@@ -31,7 +31,7 @@ var searchData=
   ['galacticbinaryreadascii_148',['GalacticBinaryReadASCII',['../GalacticBinaryData_8h.html#a88a45e9bded667fa00be4ac121961b49',1,'GalacticBinaryData.c']]],
   ['galacticbinaryreaddata_149',['GalacticBinaryReadData',['../GalacticBinaryData_8h.html#a6634a2f7d3b25caacf39eb41cecacd02',1,'GalacticBinaryData.c']]],
   ['galacticbinaryreadhdf5_150',['GalacticBinaryReadHDF5',['../GalacticBinaryData_8h.html#a03cc9c86cb2171c61da9d2a4c586c7d3',1,'GalacticBinaryData.c']]],
-  ['galacticbinarysimulatedata_151',['GalacticBinarySimulateData',['../GalacticBinaryData_8h.html#a94a5a09a9f745bf545919fe8d4326a06',1,'GalacticBinaryData.c']]],
+  ['galacticbinarysimulatedata_151',['GalacticBinarySimulateData',['../GalacticBinaryData_8h.html#a18c218898ffa2ad0f4c572fb390b9ca0',1,'GalacticBinaryData.c']]],
   ['galacticbinarywaveform_2eh_152',['GalacticBinaryWaveform.h',['../GalacticBinaryWaveform_8h.html',1,'']]],
   ['galaxy_5fa_153',['GALAXY_A',['../GalacticBinaryPrior_8h.html#af1732e437f339711f74f2f7df44ea3dd',1,'GalacticBinaryPrior.h']]],
   ['galaxy_5frb_154',['GALAXY_Rb',['../GalacticBinaryPrior_8h.html#afac874947e84825ef130ea854024b05e',1,'GalacticBinaryPrior.h']]],
@@ -53,11 +53,12 @@ var searchData=
   ['generate_5fcalibration_5fmodel_170',['generate_calibration_model',['../GalacticBinaryModel_8h.html#aae9f1345cdb131ac555e8b7a47ecdadf',1,'GalacticBinaryModel.c']]],
   ['generate_5fnoise_5fmodel_171',['generate_noise_model',['../GalacticBinaryModel_8h.html#a9d05914da5fd4f3afe8b7fa7b12aedae',1,'GalacticBinaryModel.c']]],
   ['generate_5fsignal_5fmodel_172',['generate_signal_model',['../GalacticBinaryModel_8h.html#addaa8f8b33ce94b3e333e762355a122b',1,'GalacticBinaryModel.c']]],
-  ['gmm_173',['gmm',['../structProposal.html#a423c3e8d55806f2853ac5444d362cb96',1,'Proposal::gmm()'],['../structPrior.html#ae899e8e0cd2275660223b207b44c80fd',1,'Prior::gmm()'],['../structEntry.html#a961313f4c91d44afb321efeecb63dcf3',1,'Entry::gmm()']]],
-  ['gmm_174',['GMM',['../structGMM.html',1,'']]],
-  ['gmm_5fprior_5fdensity_175',['gmm_prior_density',['../GalacticBinaryProposal_8h.html#a22c52a307d7e75c874d19a12e56da44d',1,'GalacticBinaryProposal.c']]],
-  ['gmm_5fwith_5fem_176',['GMM_with_EM',['../GMM__with__EM_8h.html#a0587ef2cee23c02b78b3ee2cbebfad67',1,'GMM_with_EM.c']]],
-  ['gmm_5fwith_5fem_2eh_177',['GMM_with_EM.h',['../GMM__with__EM_8h.html',1,'']]],
-  ['gmmfile_178',['gmmFile',['../structFlags.html#a25dfd15e488fe42b88521de66ca3c5f0',1,'Flags']]],
-  ['gnewton_179',['GNEWTON',['../Constants_8h.html#a9a79b2355cfb2e80430b63d5bb645330',1,'Constants.h']]]
+  ['globalfit_20manual_173',['GlobalFit Manual',['../md_globalfit_README.html',1,'']]],
+  ['gmm_174',['gmm',['../structProposal.html#a423c3e8d55806f2853ac5444d362cb96',1,'Proposal::gmm()'],['../structPrior.html#ae899e8e0cd2275660223b207b44c80fd',1,'Prior::gmm()'],['../structEntry.html#a961313f4c91d44afb321efeecb63dcf3',1,'Entry::gmm()']]],
+  ['gmm_175',['GMM',['../structGMM.html',1,'']]],
+  ['gmm_5fprior_5fdensity_176',['gmm_prior_density',['../GalacticBinaryProposal_8h.html#a22c52a307d7e75c874d19a12e56da44d',1,'GalacticBinaryProposal.c']]],
+  ['gmm_5fwith_5fem_177',['GMM_with_EM',['../GMM__with__EM_8h.html#a0587ef2cee23c02b78b3ee2cbebfad67',1,'GMM_with_EM.c']]],
+  ['gmm_5fwith_5fem_2eh_178',['GMM_with_EM.h',['../GMM__with__EM_8h.html',1,'']]],
+  ['gmmfile_179',['gmmFile',['../structFlags.html#a25dfd15e488fe42b88521de66ca3c5f0',1,'Flags']]],
+  ['gnewton_180',['GNEWTON',['../Constants_8h.html#a9a79b2355cfb2e80430b63d5bb645330',1,'Constants.h']]]
 ];

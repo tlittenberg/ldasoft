@@ -27,5 +27,6 @@ var GalacticBinaryModel_8h =
     [ "map_array_to_params", "GalacticBinaryModel_8h.html#a8e2448b6a3c5eda5d8f7554aa5c8a22c", null ],
     [ "map_params_to_array", "GalacticBinaryModel_8h.html#ac5233ef8561550f70d0c30b73ba456fd", null ],
     [ "maximize_signal_model", "GalacticBinaryModel_8h.html#a1616fa8f0399df0a39768c4ea3e2f776", null ],
+    [ "realloc_noise", "GalacticBinaryModel_8h.html#a67cbd1cfd4fe8c9f655d206a264860e4", null ],
     [ "update_max_log_likelihood", "GalacticBinaryModel_8h.html#afe48796e00cb3479987c1635f33c0e05", null ]
 ];

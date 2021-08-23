@@ -109,7 +109,7 @@ Public Attributes</h2></td></tr>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNoise.html#a5c9458b7311d279fff2261cc1aa37787">N</a></td></tr>
 <tr class="memdesc:a5c9458b7311d279fff2261cc1aa37787"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of data samples fit by noise model. <br /></td></tr>
 <tr class="separator:a5c9458b7311d279fff2261cc1aa37787"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Noise Parameters</div></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Constant Noise Parameters</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p>Each \(\eta\) is a multiplier to the assumed noise level \(S_n\) stored in <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> structure. One per channel (<code>X</code> for 4-link, <code>A</code>,<code>E</code> for 6-link) </p>
 </div></td></tr>
 <tr class="memitem:a9b4d710843a644c03bccd12074f89428"><td class="memItemLeft" align="right" valign="top"><a id="a9b4d710843a644c03bccd12074f89428"></a>
@@ -124,6 +124,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>etaX</b></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Noise Model</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p>Composite noise model to use over the analysis window \(\eta_I \times Sn_I\) </p>
 </div></td></tr>
+<tr class="memitem:a5936097fffcea829e07667c3c8b43d04"><td class="memItemLeft" align="right" valign="top"><a id="a5936097fffcea829e07667c3c8b43d04"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><b>f</b></td></tr>
+<tr class="separator:a5936097fffcea829e07667c3c8b43d04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91c091da51f1b20e4f39e9f1fa2faaa4"><td class="memItemLeft" align="right" valign="top"><a id="a91c091da51f1b20e4f39e9f1fa2faaa4"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>SnA</b></td></tr>
 <tr class="separator:a91c091da51f1b20e4f39e9f1fa2faaa4"><td class="memSeparator" colspan="2">&#160;</td></tr>

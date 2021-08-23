@@ -12,5 +12,5 @@ var GalacticBinaryData_8h =
     [ "GalacticBinaryReadASCII", "GalacticBinaryData_8h.html#a88a45e9bded667fa00be4ac121961b49", null ],
     [ "GalacticBinaryReadData", "GalacticBinaryData_8h.html#a6634a2f7d3b25caacf39eb41cecacd02", null ],
     [ "GalacticBinaryReadHDF5", "GalacticBinaryData_8h.html#a03cc9c86cb2171c61da9d2a4c586c7d3", null ],
-    [ "GalacticBinarySimulateData", "GalacticBinaryData_8h.html#a94a5a09a9f745bf545919fe8d4326a06", null ]
+    [ "GalacticBinarySimulateData", "GalacticBinaryData_8h.html#a18c218898ffa2ad0f4c572fb390b9ca0", null ]
 ];

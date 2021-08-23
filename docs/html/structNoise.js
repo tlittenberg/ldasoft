@@ -6,6 +6,7 @@ var structNoise =
     [ "etaA", "structNoise.html#a9b4d710843a644c03bccd12074f89428", null ],
     [ "etaE", "structNoise.html#af58d874183199ac1cbb0a1fa85ad4f22", null ],
     [ "etaX", "structNoise.html#aae2096fb8a971e731f29a0c041310f44", null ],
+    [ "f", "structNoise.html#a5936097fffcea829e07667c3c8b43d04", null ],
     [ "N", "structNoise.html#a5c9458b7311d279fff2261cc1aa37787", null ],
     [ "SnA", "structNoise.html#a91c091da51f1b20e4f39e9f1fa2faaa4", null ],
     [ "SnA_0", "structNoise.html#a08c6188380f7e2c3168380ba60a68836", null ],

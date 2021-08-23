@@ -19,5 +19,6 @@ var annotated_dup =
     [ "Proposal", "structProposal.html", "structProposal" ],
     [ "Sample", "structSample.html", "structSample" ],
     [ "Source", "structSource.html", "structSource" ],
+    [ "SplineModel", "structSplineModel.html", "structSplineModel" ],
     [ "TDI", "structTDI.html", "structTDI" ]
 ];
