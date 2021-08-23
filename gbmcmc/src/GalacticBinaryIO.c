@@ -150,7 +150,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     fprintf(fptr,"  Data epochs ......... %i   \n",flags->NT);
     fprintf(fptr,"  Data gap duration.....%.0f \n",data->tgap[0]);
     fprintf(fptr,"  Data format is........%s   \n",data->format);
-    fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX);
+    fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX-1);
     fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
     fprintf(fptr,"  MCMC chain seed ..... %li  \n",data->cseed);
@@ -493,8 +493,8 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 }
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
-                    data->DMAX    = atoi(optarg);
-                    flags->DMAX       = atoi(optarg);
+                    data->DMAX  = atoi(optarg)+1;
+                    flags->DMAX = atoi(optarg)+1;
                 }
                 if(strcmp("em-prior",    long_options[long_index].name) == 0)
                 {
