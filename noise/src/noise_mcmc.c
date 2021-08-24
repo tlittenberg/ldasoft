@@ -129,12 +129,22 @@ int main(int argc, char *argv[])
             if(threadID==0)
             {
                 spline_ptmcmc(model, chain, flags);
-
+                
                 if(step%10000==0)printf("noise_mcmc at step %i\n",step);
-
+                
                 if(step%100==0) print_spline_state(model[chain->index[0]], chainFile, step);
                 
+                if(step%data->downsample==0 && step/data->downsample < data->Nwave)
+                {
+                    for(int n=0; n<data->N; n++)
+                    {
+                        data->S_pow[n][0][0][step/data->downsample] = model[chain->index[0]]->psd->SnA[n];
+                        data->S_pow[n][1][0][step/data->downsample] = model[chain->index[0]]->psd->SnE[n];
+                    }
+                }
+                
                 step++;
+                
                 
             }
             //Can't continue MCMC until single thread is finished
@@ -152,6 +162,8 @@ int main(int argc, char *argv[])
     sprintf(filename,"%s/final_interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[chain->index[0]]->psd, filename);
     
+    print_noise_reconstruction(data, flags);
+
     for(int ic=0; ic<chain->NC; ic++) free_spline_model(model[ic]);
     free(model);
     
