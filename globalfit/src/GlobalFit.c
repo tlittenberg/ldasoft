@@ -265,7 +265,9 @@ int main(int argc, char *argv[])
     alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1);
 
     /* Setup output directories for chain and data structures */
-    mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if(procID==0) mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    MPI_Barrier(MPI_COMM_WORLD);
+    
     if(procID==0)
     {
         sprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
@@ -276,11 +278,20 @@ int main(int argc, char *argv[])
         sprintf(vbmcmc_data->flags->runDir,"%s/vgb",vbmcmc_data->flags->runDir);
         mkdir(vbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
+        //save original runDir
+        char runDir[MAXSTRINGSIZE];
+        sprintf(runDir,"%s",vbmcmc_data->flags->runDir);
+
         for(int n=0; n<vbmcmc_data->flags->NVB; n++)
         {
-            sprintf(vbmcmc_data->flags->runDir,"%s/seg_%i",vbmcmc_data->flags->runDir,n);
+            //temporarily assign runDir to seg subdir
+            sprintf(vbmcmc_data->flags->runDir,"%s/seg_%i",runDir,n);
             setup_run_directories(vbmcmc_data->flags, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n]);
         }
+        
+        //restore original runDir
+        sprintf(vbmcmc_data->flags->runDir,"%s",runDir);
+
     }
     else if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
     {
