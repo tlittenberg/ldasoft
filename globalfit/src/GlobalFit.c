@@ -225,6 +225,7 @@ int main(int argc, char *argv[])
     int root = 0; //root process
 
     MPI_Init(&argc, &argv); //start parallelization
+    MPI_Barrier(MPI_COMM_WORLD);
     
     /* get process ID, and total number of processes */
     MPI_Comm_size(MPI_COMM_WORLD, &Nproc);
@@ -236,8 +237,7 @@ int main(int argc, char *argv[])
         //check command line format
         print_LISA_ASCII_art(stdout);
         if(argc==1) print_usage();
-        
-    } MPI_Barrier(MPI_COMM_WORLD);
+    }
 
     /* Allocate structures to hold global model */
     struct GlobalFitData *global_fit = malloc(sizeof(struct GlobalFitData));
