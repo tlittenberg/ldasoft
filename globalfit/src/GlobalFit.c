@@ -463,14 +463,9 @@ int main(int argc, char *argv[])
 
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
-            gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+            //extra calls to update_gbmcmc_sampler() to make up for MPI costs
+            for(int i=0; i<100; i++) gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
         }
-
-        /* get global status of gbmcmc samplers */
-        gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
-
-        /* share gbmcmc residual with root node */
-        share_gbmcmc_model(gbmcmc_data, GBMCMC_Flag, global_fit, root, procID);
            
         /* ============================= */
         /*   VERIFICATION BINARY MODEL   */
@@ -486,11 +481,9 @@ int main(int argc, char *argv[])
             for(int n=0; n<vbmcmc_data->flags->NVB; n++)
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
-            vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
+            //extra calls to update_vbmcmc_sampler() to make up for MPI costs
+            for(int i=0; i<10; i++) vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
         }
-        
-        /* share vbmcmc residual with other worker nodes */
-        //share_vbmcmc_model(vbmcmc_data, gbmcmc_data, global_fit, root, procID);
 
         /* ============================= */
         /*    INSTRUMENT NOISE MODEL     */
@@ -503,12 +496,10 @@ int main(int argc, char *argv[])
 
             select_frequency_segment(noise_data->data, tdi_full);
 
-            noise_data->status = update_noise_sampler(noise_data);
+            //extra calls to update_noise_sampler() to make up for MPI costs
+            for(int i=0; i<10; i++) noise_data->status = update_noise_sampler(noise_data);
             
         }
-        
-        /* share noise model with other worker nodes */
-        //share_noise_model(noise_data, gbmcmc_data, global_fit, root, procID);
 
         /* ============================= */
         /*  MASSIVE BLACK HOLE BINARIES  */
@@ -516,12 +507,15 @@ int main(int argc, char *argv[])
 
         /* mbh model update */
 
-        /* share mbh residual with other worker nodes */
-
         
         /* ============================= */
-        /*  BLOCKING CALLS TO EXCHANGE r */
+        /* MPI EXCHANGES OF MODEL STATES */
         /* ============================= */
+        
+        /* get global status of gbmcmc samplers */
+        gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
+
+        /* distribute current state of models to worker nodes */
         share_noise_model(noise_data, gbmcmc_data, global_fit, root, procID);
         share_vbmcmc_model(vbmcmc_data, gbmcmc_data, global_fit, root, procID);
         share_gbmcmc_model(gbmcmc_data, GBMCMC_Flag, global_fit, root, procID);

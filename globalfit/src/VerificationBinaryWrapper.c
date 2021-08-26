@@ -95,6 +95,7 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
         struct Data *data=data_vec[n];
 
         copy_data(gbmcmc_data->data,data);
+        if(data->N>128) data->N=128;  //cap bandwidth of vbmcmc analysis
         chain->NP = chain_vec[0]->NP; //number of proposals
         chain->NC = chain_vec[0]->NC; //number of chains
 
