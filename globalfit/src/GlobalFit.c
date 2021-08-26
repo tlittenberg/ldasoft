@@ -464,7 +464,7 @@ int main(int argc, char *argv[])
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
             //extra calls to update_gbmcmc_sampler() to make up for MPI costs
-            for(int i=0; i<100; i++) gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+            gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
         }
            
         /* ============================= */
@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
             //extra calls to update_vbmcmc_sampler() to make up for MPI costs
-            for(int i=0; i<10; i++) vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
+            vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
         }
 
         /* ============================= */
@@ -497,7 +497,7 @@ int main(int argc, char *argv[])
             select_frequency_segment(noise_data->data, tdi_full);
 
             //extra calls to update_noise_sampler() to make up for MPI costs
-            for(int i=0; i<10; i++) noise_data->status = update_noise_sampler(noise_data);
+            noise_data->status = update_noise_sampler(noise_data);
             
         }
 

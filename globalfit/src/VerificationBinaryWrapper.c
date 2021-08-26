@@ -72,6 +72,7 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
     flags->fixFreq     = 1;
     flags->cheat       = 1; //initializes chain at injection values
     flags->NINJ        = flags->NVB;
+    flags->NBURN       = 0; //no burn in for vbmcmc
 
     /* parse verification binary files */
     FILE *vbFile = fopen(flags->vbFile,"r");
