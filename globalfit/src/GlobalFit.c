@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
         for(int n=0; n<vbmcmc_data->flags->NVB; n++)
         {
             //temporarily assign runDir to seg subdir
-            sprintf(vbmcmc_data->flags->runDir,"%s/seg_%i",runDir,n);
+            sprintf(vbmcmc_data->flags->runDir,"%s/seg_%04d",runDir,n);
             setup_run_directories(vbmcmc_data->flags, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n]);
         }
         
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
         sprintf(gbmcmc_data->flags->runDir,"%s/ucb",gbmcmc_data->flags->runDir);
         mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-        sprintf(gbmcmc_data->flags->runDir,"%s/seg_%i",gbmcmc_data->flags->runDir, procID-gbmcmc_data->procID_min);
+        sprintf(gbmcmc_data->flags->runDir,"%s/seg_%04d",gbmcmc_data->flags->runDir, procID-gbmcmc_data->procID_min);
         setup_run_directories(gbmcmc_data->flags, gbmcmc_data->data, gbmcmc_data->chain);
     }
 
