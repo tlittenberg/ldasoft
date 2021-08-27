@@ -966,7 +966,7 @@ void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior
                 sprintf(proposal[i]->name,"prior");
                 proposal[i]->function = &draw_from_uniform_prior;
                 proposal[i]->density  = &prior_density;
-                proposal[i]->weight   = 0.0;
+                proposal[i]->weight   = 0.2;
                 proposal[i]->rjweight = 0.0;
                 setup_prior_proposal(flags, prior, proposal[i]);
                 check   += proposal[i]->weight;
