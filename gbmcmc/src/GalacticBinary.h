@@ -91,9 +91,11 @@ struct Data
      \brief Convention for data format
      
      format = "phase" for phase difference (distance)
-     format = "frequency" for fractional frequency (velocity) **Use for matching LDC**
+     format = "frequency" for fractional frequency (velocity) **Use for matching LDC Radler**
+     format = "sangria" for fractional frequency w/ LDC Sangria-era TDI & phase conventions
      */
     char format[16];
+    char dataDir[MAXSTRINGSIZE]; //!<Directory for storing data files
 
     //Spectrum proposal
     double *p; //!<power spectral density of data
@@ -111,7 +113,7 @@ struct Data
     double ****r_pow; //!<Store residual power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
     double ****h_pow; //!<Store waveform power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
     double ****S_pow; //!<Store noise power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
-    char fileName[128]; //!<place holder for filnames
+    char fileName[MAXSTRINGSIZE]; //!<place holder for filnames
     ///@}
 
     /** @name Signal Injections */
@@ -148,6 +150,7 @@ struct Flags
     int NINJ;       //!<`[--inj=FILENAME]`: number of injections = number of `--inj` instances in command line
     int NDATA;      //!<`[default=1]`: number of frequency segments, equal to Flags::NINJ.
     int NT;         //!<`[--segments=INT; default=1]`: number of time segments
+    int NVB;        //!<number of known binaries for `vb_mcmc`
     int DMAX;       //!<`[--sources=INT; default=10]`: max number of sources
     int simNoise;   //!<`[--sim-noise; default=FALSE]`: simulate random noise realization and add to data
     int fixSky;     //!<`[--fix-sky; default=FALSE]`: hold sky location fixed to injection parameters.  Set to `TRUE` if Flags::knownSource=`TRUE`.
@@ -183,6 +186,7 @@ struct Flags
      */
      ///@{
     char runDir[MAXSTRINGSIZE];       //!<store `DIRECTORY` to serve as top level directory for output files.
+    char vbFile[MAXSTRINGSIZE];       //!<store `FILENAME` of list of known binaries `vb_mcmc`
     char **injFile;                   //!<`[--inj=FILENAME]`: list of injection files. Can support up to `NINJ=10` separate injections.
     char noiseFile[MAXSTRINGSIZE];    //!<file containing reconstructed noise model for `gb_catalog` to compute SNRs against.
     char cdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input chain file from Flags::update.
@@ -293,6 +297,10 @@ struct Chain
      */
     FILE *temperatureFile;
     ///@}
+    
+    char chainDir[MAXSTRINGSIZE]; //!<store chain directory.
+    char chkptDir[MAXSTRINGSIZE]; //!<store checkpoint directory.
+
 };
 
 /**

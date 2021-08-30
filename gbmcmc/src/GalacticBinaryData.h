@@ -75,6 +75,11 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
 void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
 /**
+ \brief parse VB parameter files and convert got GBMCMC parameters
+ */
+void GetVerificationBinary(struct Data *data, struct Flags *flags, FILE *vbFile);
+
+/**
  \brief UNUSED: Computes SNR of all injected sources and saves to file.
  */
 void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Flags *flags);

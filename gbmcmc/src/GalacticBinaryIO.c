@@ -24,8 +24,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <omp.h>
+
+#include <sys/stat.h>
 
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
@@ -58,12 +59,26 @@ void printProgress (double percentage)
 void print_version(FILE *fptr)
 {
     fprintf(fptr, "\n");
-    fprintf(fptr, "============== GBMCMC Version: =============\n\n");
+    fprintf(fptr, "============== LDASOFT Version: =============\n\n");
     //fprintf(fptr, "  Git remote origin: %s\n", GIT_URL);
     //fprintf(fptr, "  Git version: %s\n", GIT_VER);
     fprintf(fptr, "  Git commit: %s\n", GITVERSION);
     //fprintf(fptr, "  Git commit author: %s\n",GIT_AUTHOR);
     //fprintf(fptr, "  Git commit date: %s\n", GIT_DATE);
+}
+
+void setup_run_directories(struct Flags *flags, struct Data *data, struct Chain *chain)
+{
+    
+    sprintf(data->dataDir,"%s/data",flags->runDir);
+    sprintf(chain->chainDir,"%s/chains",flags->runDir);
+    sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+
+    mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(chain->chkptDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
 }
 
 void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbit *orbit)
@@ -119,10 +134,6 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     fprintf(fptr,"\n");
     fprintf(fptr,"=============== RUN SETTINGS ===============\n");
     fprintf(fptr,"\n");
-    fprintf(fptr,"  Command Line: ");
-    for(int opt=0; opt<argc; opt++) fprintf(fptr,"%s ",argv[opt]);
-    fprintf(fptr,"\n");
-    fprintf(fptr,"\n");
     switch(flags->orbit)
     {
         case 0:
@@ -150,7 +161,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     fprintf(fptr,"  Data epochs ......... %i   \n",flags->NT);
     fprintf(fptr,"  Data gap duration.....%.0f \n",data->tgap[0]);
     fprintf(fptr,"  Data format is........%s   \n",data->format);
-    fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX);
+    fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX-1);
     fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
     fprintf(fptr,"  MCMC chain seed ..... %li  \n",data->cseed);
@@ -280,7 +291,7 @@ void print_usage()
     fprintf(stdout,"       --fix-freq    : pin frequency to injection          \n");
     fprintf(stdout,"       --fix-fdot    : pin f && fdot to injection          \n");
     fprintf(stdout,"       --galaxy-prior: use galaxy model for sky prior      \n");
-    fprintf(stdout,"       --snr-prior   : use SNR-based amplitude prior       \n");
+    fprintf(stdout,"       --no-snr-prior: don't use SNR-based amplitude prior \n");
     fprintf(stdout,"       --em-prior    : update prior ranges from other obs  \n");
     fprintf(stdout,"       --known-source: injection is VB (draw orientation)  \n");
     fprintf(stdout,"       --detached    : detached binary(i.e., use Mc prior) \n");
@@ -310,7 +321,7 @@ void print_usage()
     exit(0);
 }
 
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int numProc, int procID)
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int procID)
 {
     
     int DMAX_default = 10;
@@ -328,7 +339,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     flags->fixFreq     = 0;
     flags->fixFdot     = 0;
     flags->galaxyPrior = 0;
-    flags->snrPrior    = 0;
+    flags->snrPrior    = 1;
     flags->emPrior     = 0;
     flags->cheat       = 0;
     flags->burnin      = 1;
@@ -447,6 +458,15 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     int opt=0;
     int long_index=0;
     
+    //Print command line
+//    char filename[MAXSTRINGSIZE];
+//    sprintf(filename,"run.sh");
+//    FILE *out = fopen(filename,"w");
+//    fprintf(out,"#!/bin/sh\n\n");
+//    for(opt=0; opt<argc; opt++) fprintf(out,"%s ",argv[opt]);
+//    fprintf(out,"\n\n");
+//    fclose(out);
+
     //Loop through argv string and pluck out arguments
     while ((opt = getopt_long_only(argc, argv,"apl:b:", long_options, &long_index )) != -1)
     {
@@ -470,7 +490,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 if(strcmp("fix-freq",    long_options[long_index].name) == 0) flags->fixFreq    = 1;
                 if(strcmp("update",      long_options[long_index].name) == 0) flags->update     = 1;
                 if(strcmp("galaxy-prior",long_options[long_index].name) == 0) flags->galaxyPrior= 1;
-                if(strcmp("snr-prior",   long_options[long_index].name) == 0) flags->snrPrior   = 1;
+                if(strcmp("no-snr-prior",long_options[long_index].name) == 0) flags->snrPrior   = 0;
                 if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
                 if(strcmp("f-double-dot",long_options[long_index].name) == 0) data->NP          = 9;
                 if(strcmp("detached",    long_options[long_index].name) == 0) flags->detached   = 1;
@@ -481,20 +501,15 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
                 if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
                 if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
-                if(strcmp("rundir",      long_options[long_index].name) == 0)
-                {
-                    strcpy(flags->runDir,optarg);
-                    if(numProc>0) sprintf(flags->runDir,"%s_%i/",flags->runDir,procID);
-                    mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                }
+                if(strcmp("rundir",      long_options[long_index].name) == 0) strcpy(flags->runDir,optarg);
                 if(strcmp("duration",    long_options[long_index].name) == 0)
                 {   data->T   = (double)atof(optarg);
                     data->sqT = sqrt(data->T);
                 }
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
-                    data->DMAX    = atoi(optarg);
-                    flags->DMAX       = atoi(optarg);
+                    data->DMAX  = atoi(optarg)+1;
+                    flags->DMAX = atoi(optarg)+1;
                 }
                 if(strcmp("em-prior",    long_options[long_index].name) == 0)
                 {
@@ -609,8 +624,8 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 break;
             case 'q' : flags->quiet = 1;
                 break;
-            default: print_usage();
-                exit(EXIT_FAILURE);
+            default:
+                break;
         }
     }
     if(flags->cheat || !flags->burnin) flags->NBURN = 0;
@@ -649,38 +664,93 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         data->sum_log_f += log(data->fmin + (double)n/data->T);
     }
     
-    
-    // run looks good to go, make directories and save command line
-    mode_t process_mask = umask(0);
-    char dirname[MAXSTRINGSIZE];
-    sprintf(dirname,"%s/checkpoint",flags->runDir);
-    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    sprintf(dirname,"%s/chains",flags->runDir);
-    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    sprintf(dirname,"%s/data",flags->runDir);
-    mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    umask(process_mask);
-    
-    //Print command line
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"run.sh");
-    FILE *out = fopen(filename,"w");
-    fprintf(out,"#!/bin/sh\n\n");
-    for(opt=0; opt<argc; opt++) fprintf(out,"%s ",argv[opt]);
-    fprintf(out,"\n\n");
-    fclose(out);
-    
     //Print version control
-    sprintf(filename,"gb_mcmc.log");
-    FILE *runlog = fopen(filename,"w");
-    print_version(runlog);
+//    sprintf(filename,"gb_mcmc.log");
+//    FILE *runlog = fopen(filename,"w");
+//    print_version(runlog);
     
     //Report on set parameters
-    if(!flags->quiet) print_run_settings(argc, argv, data, orbit, flags, stdout);
-    print_run_settings(argc, argv, data, orbit, flags, runlog);
+//    if(!flags->quiet) print_run_settings(argc, argv, data, orbit, flags, stdout);
+//    print_run_settings(argc, argv, data, orbit, flags, runlog);
     
-    fclose(runlog);
+//    fclose(runlog);
+}
+
+void copy_argv(int argc, char **argv, char **new_argv)
+{
+    for(int i = 0; i < argc; ++i)
+    {
+        size_t length = strlen(argv[i])+1;
+        new_argv[i] = malloc(length);
+        memcpy(new_argv[i], argv[i], length);
+    }
+    new_argv[argc] = NULL;
+}
+
+void parse_vb_list(int argc, char **argv, struct Flags *flags)
+{
+    flags->NVB=0;
+    int vb_list_flag = 0;
     
+    static struct option long_options[] =
+    {
+        /* These options set a flag. */
+        {"known-sources", required_argument, 0, 0},
+        {0, 0, 0, 0}
+    };
+    
+    opterr = 0;
+    int opt=0;
+    int long_index=0;
+    
+    //copy argv since getopt permutes order
+    char **argv_copy=malloc((argc+1) * sizeof *argv_copy);
+    copy_argv(argc,argv,argv_copy);
+
+    
+    //Loop through argv string and find argument for verification binaries
+    while ((opt = getopt_long_only(argc, argv_copy,"apl:b:", long_options, &long_index )) != -1)
+    {
+        
+        switch (opt)
+        {
+            case 0:
+                if(strcmp("known-sources", long_options[long_index].name) == 0)
+                {
+                    strcpy(flags->vbFile,optarg);
+                    vb_list_flag=1;
+                }
+
+                break;
+            default:
+                break;
+                //print_usage();
+                //exit(EXIT_FAILURE);
+        }
+    }
+    
+    if(vb_list_flag)
+    {
+        //count lines in the file (one source per line)
+        char *line;
+        char buffer[MAXSTRINGSIZE];
+        
+        FILE *sourceFile = fopen(flags->vbFile,"r");
+        
+        //strip off header
+        line = fgets(buffer, MAXSTRINGSIZE, sourceFile);
+        if(line==NULL)
+        {
+            fprintf(stderr,"Error reading %s\n",flags->vbFile);
+            exit(1);
+        }
+        
+        while( (line=fgets(buffer, MAXSTRINGSIZE, sourceFile)) != NULL) flags->NVB++;
+        fclose(sourceFile);
+    }
+
+    //reset opt counter
+    optind = 0;
 }
 
 void save_chain_state(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
@@ -689,7 +759,7 @@ void save_chain_state(struct Data *data, struct Model **model, struct Chain *cha
     FILE *stateFile;
     for(int ic=0; ic<chain->NC; ic++)
     {
-        sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
+        sprintf(filename,"%s/chain_state_%i.dat",chain->chkptDir,ic);
         stateFile = fopen(filename,"w");
         
         int n = chain->index[ic];
@@ -818,7 +888,7 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
             if(chain->dimensionFile[D]==NULL)
             {
                 char filename[MAXSTRINGSIZE];
-                sprintf(filename,"%s/chains/dimension_chain.dat.%i",flags->runDir,D);
+                sprintf(filename,"%s/dimension_chain.dat.%i",chain->chainDir,D);
                 if(flags->resume)chain->dimensionFile[D] = fopen(filename,"a");
                 else             chain->dimensionFile[D] = fopen(filename,"w");
             }
@@ -1124,7 +1194,7 @@ void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *f
     FILE *fptr;
     char filename[128];
     
-    sprintf(filename,"%s/data/waveform_draw.dat",flags->runDir);
+    sprintf(filename,"%s/waveform_draw.dat",data->dataDir);
     fptr=fopen(filename,"w");
     print_waveform(data, model, fptr);
     fclose(fptr);
@@ -1137,7 +1207,7 @@ void print_noise_reconstruction(struct Data *data, struct Flags *flags)
     
     for(int k=0; k<data->NT; k++)
     {
-        sprintf(filename,"%s/data/power_noise_t%i.dat",flags->runDir,k);
+        sprintf(filename,"%s/power_noise_t%i.dat",data->dataDir,k);
         fptr_Snf=fopen(filename,"w");
 
         for(int i=0; i<data->N; i++)
@@ -1218,11 +1288,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
             }
         }
         
-        sprintf(filename,"%s/data/power_reconstruction_t%i.dat",flags->runDir,k);
+        sprintf(filename,"%s/power_reconstruction_t%i.dat",data->dataDir,k);
         fptr_rec=fopen(filename,"w");
-        sprintf(filename,"%s/data/power_residual_t%i.dat",flags->runDir,k);
+        sprintf(filename,"%s/power_residual_t%i.dat",data->dataDir,k);
         fptr_res=fopen(filename,"w");
-        sprintf(filename,"%s/data/variance_residual_t%i.dat",flags->runDir,k);
+        sprintf(filename,"%s/variance_residual_t%i.dat",data->dataDir,k);
         fptr_var=fopen(filename,"w");
         
         double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
@@ -1306,8 +1376,8 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
 {
     char filename[128];
     FILE *fptr;
-    
-    sprintf(filename,"%s/data/waveform_injection_%i.dat",flags->runDir,t_index);
+
+    sprintf(filename,"%s/waveform_injection_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1320,7 +1390,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,t_index);
+    sprintf(filename,"%s/power_injection_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1333,7 +1403,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/data/power_data_%i.dat",flags->runDir,t_index);
+    sprintf(filename,"%s/power_data_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1347,7 +1417,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/data/data_%i.dat",flags->runDir,t_index);
+    sprintf(filename,"%s/data_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1361,7 +1431,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/data/power_noise_%i.dat",flags->runDir,t_index);
+    sprintf(filename,"%s/power_noise_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)

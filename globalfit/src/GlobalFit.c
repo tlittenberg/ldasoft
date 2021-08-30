@@ -27,73 +27,264 @@
 #include <Noise.h>
 
 #include "GalacticBinaryWrapper.h"
+#include "VerificationBinaryWrapper.h"
 #include "NoiseWrapper.h"
 
+#define N_TDI_CHANNELS 2
 #define NMAX 10
 
-static void share_gbmcmc_residual(struct GBMCMCData *gbmcmc_data, struct NoiseData *noise_data, int GBMCMC_Flag, int Noise_Flag, int root)
+struct GlobalFitData
+{
+    struct TDI *tdi_full;
+    struct TDI *tdi_store;
+    struct TDI *tdi_ucb;
+    struct TDI *tdi_vgb;
+    struct Noise *psd;
+};
+
+static void alloc_gf_data(struct GlobalFitData *global_fit)
+{
+    global_fit->tdi_full = malloc(sizeof(struct TDI));
+    global_fit->tdi_store = malloc(sizeof(struct TDI));
+    global_fit->tdi_vgb = malloc(sizeof(struct TDI));
+    global_fit->tdi_ucb = malloc(sizeof(struct TDI));
+    global_fit->psd = malloc(sizeof(struct Noise));
+}
+
+static void setup_gf_data(struct GlobalFitData *global_fit)
+{
+    alloc_tdi(global_fit->tdi_store, global_fit->tdi_full->N, global_fit->tdi_full->Nchannel);
+    alloc_tdi(global_fit->tdi_ucb, global_fit->tdi_full->N, global_fit->tdi_full->Nchannel);
+    alloc_tdi(global_fit->tdi_vgb, global_fit->tdi_full->N, global_fit->tdi_full->Nchannel);
+    global_fit->tdi_store->delta = global_fit->tdi_full->delta;
+    global_fit->tdi_vgb->delta = global_fit->tdi_full->delta;
+    global_fit->tdi_ucb->delta = global_fit->tdi_full->delta;
+    
+    copy_tdi(global_fit->tdi_full, global_fit->tdi_store);
+}
+
+static void share_data(struct TDI *tdi_full, int root, int procID)
+{
+    //first tell all processes how large the dataset is
+    MPI_Bcast(&tdi_full->N, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+    //all but root process need to allocate memory for TDI structure
+    if(procID!=root) alloc_tdi(tdi_full, tdi_full->N, N_TDI_CHANNELS);
+    
+    //now broadcast contents of TDI structure
+    MPI_Bcast(&tdi_full->delta, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->X, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->Y, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->Z, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->A, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->E, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(tdi_full->T, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    
+}
+
+
+static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc_data, struct GlobalFitData *gf, int root, int procID)
+{
+
+    /* get waveforms from vbmcmc sampler and send to root */
+    if(procID==1)
+    {
+        struct Flags *flags = vbmcmc_data->flags;
+
+        for(int i=0; i<gf->tdi_vgb->N*2; i++)
+        {
+            gf->tdi_vgb->A[i] = 0.0;
+            gf->tdi_vgb->E[i] = 0.0;
+        }
+        for(int n=0; n<flags->NVB; n++)
+        {
+            struct Data *data = vbmcmc_data->data_vec[n];
+            struct Chain *chain = vbmcmc_data->chain_vec[n];
+            struct Model *model = vbmcmc_data->model_vec[n][chain->index[0]];
+            
+            int index = 2*data->qmin;
+            
+            for(int i=0; i<data->N*2; i++)
+            {
+                gf->tdi_vgb->A[i+index] += model->tdi[0]->A[i];
+                gf->tdi_vgb->E[i+index] += model->tdi[0]->E[i];
+            }
+        }
+        
+        // Send full model back to root
+        MPI_Send(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD);
+        MPI_Send(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
+    }
+    
+    
+    /* Root sends vb model to worker nodes */
+    if(procID==root)
+    {
+        MPI_Status status;
+
+        //receive full model from VBMCMC node
+        MPI_Recv(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD, &status);
+        
+        //send segments to GBMCMC nodes
+        for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
+        {
+            int index = 2*(id-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
+            MPI_Send(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
+
+    }
+    
+    /* Receive vgb segment at gbmcmc models */
+    if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
+    {
+        MPI_Status status;
+
+        int index = 2*(procID-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
+        MPI_Recv(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+    }
+}
+
+static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, struct GlobalFitData *gf, int root, int procID)
 {
     if(GBMCMC_Flag)
     {
         struct Data *data = gbmcmc_data->data;
         struct Chain *chain = gbmcmc_data->chain;
         struct Model *model = gbmcmc_data->model[chain->index[0]];
-        MPI_Send(model->residual[0]->A, 2*data->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD);
-        MPI_Send(model->residual[0]->E, 2*data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
+        MPI_Send(&data->qmin, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->A, 2*data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->E, 2*data->N, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
     }
-    if(Noise_Flag)
+    
+    if(procID==root)
     {
         MPI_Status status;
-        int index = 0;
+        
         int N = gbmcmc_data->data->N*2;
-        int procID_min = gbmcmc_data->procID_min;
-        int procID_max = gbmcmc_data->procID_max;
-        struct Data *data = noise_data->data;
-        for(int n=procID_min; n<=procID_max; n++)
-        {
-            index = 2*(n - procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
-            MPI_Recv(data->tdi[0]->A+index, N, MPI_DOUBLE, n, 0, MPI_COMM_WORLD, &status);
-            MPI_Recv(data->tdi[0]->E+index, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
-        }
-    }
-}
-
-static void share_noise_model(struct GBMCMCData *gbmcmc_data, struct NoiseData *noise_data, int GBMCMC_Flag, int Noise_Flag, int root)
-{
-    if(Noise_Flag)
-    {
-        int index = 0;
+        
         int procID_min = gbmcmc_data->procID_min;
         int procID_max = gbmcmc_data->procID_max;
         
-        struct Chain *chain = noise_data->chain;
-        struct SplineModel *model = noise_data->model[chain->index[0]];
+        int qmin;
+        
+        double *A = malloc(N*sizeof(double));
+        double *E = malloc(N*sizeof(double));
+        
+        //zero out ucb model
+        for(int i=0; i<gf->tdi_ucb->N*2; i++)
+        {
+            gf->tdi_ucb->A[i] = 0.0;
+            gf->tdi_ucb->E[i] = 0.0;
+        }
+        
         for(int n=procID_min; n<=procID_max; n++)
         {
-            index = (n - procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
-            MPI_Send(model->psd->SnA+index, gbmcmc_data->data->N, MPI_DOUBLE, n, 0, MPI_COMM_WORLD);
-            MPI_Send(model->psd->SnE+index, gbmcmc_data->data->N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD);
+            
+            MPI_Recv(&qmin, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
+            MPI_Recv(A, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(E, N, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
+            
+            for(int i=0; i<N; i++)
+            {
+                gf->tdi_ucb->A[2*qmin+i] += A[i];
+                gf->tdi_ucb->E[2*qmin+i] += E[i];
+            }
         }
+        
+        free(A);
+        free(E);
     }
-    if(GBMCMC_Flag)
+    
+    /* broadcast gbmcmc model to all non-UCB worker nodes */
+    if(procID==root)
+    {
+        //send to VBMCMC node
+        int procVB=1;
+        MPI_Send(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, procVB, 0, MPI_COMM_WORLD);
+        MPI_Send(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, procVB, 1, MPI_COMM_WORLD);
+    }
+    if(procID==1)
     {
         MPI_Status status;
-        struct Data *data = gbmcmc_data->data;
-        struct Chain *chain = gbmcmc_data->chain;
-        struct Model *model = gbmcmc_data->model[chain->index[0]];
-        
-        MPI_Recv(model->noise[0]->SnA, data->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(model->noise[0]->SnE, data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
-        
-        //copy new noise parameters to each chain & update PSD
-        for(int i=1; i<chain->NC; i++)
+
+        //receive UCB model from root node
+        MPI_Recv(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+    }
+
+}
+
+static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct GlobalFitData *global_fit, int root, int procID)
+{
+
+    int ic = 0;
+    if(procID==root)
+    {
+        ic = noise_data->chain->index[0];
+        struct Noise *model_psd = noise_data->model[ic]->psd;
+        copy_noise(model_psd,global_fit->psd);
+
+        //send to VBMCMC node
+        MPI_Send(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+        MPI_Send(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
+
+        //send to GBMCMC nodes
+        for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
         {
-            memcpy(gbmcmc_data->model[chain->index[i]]->noise[0]->SnA,model->noise[0]->SnA, data->N*sizeof(double));
-            memcpy(gbmcmc_data->model[chain->index[i]]->noise[0]->SnE,model->noise[0]->SnE, data->N*sizeof(double));
+            int index = (id-gbmcmc_data->procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
+            MPI_Send(global_fit->psd->SnA+index, gbmcmc_data->data->N, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(global_fit->psd->SnE+index, gbmcmc_data->data->N, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
         }
+
+    }
+    
+    
+    //Receive full noise fit to broadband models
+    if(procID==1)
+    {
+        MPI_Status status;
+
+        //receive PSD model from root node
+        MPI_Recv(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+    }
+    
+    //Receive psd segment to gbmcmc models
+    if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
+    {
+        MPI_Status status;
+
+        int index = (procID-gbmcmc_data->procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
+        MPI_Recv(global_fit->psd->SnA+index, gbmcmc_data->data->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(global_fit->psd->SnE+index, gbmcmc_data->data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
 }
 
+static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, int VBMCMC_Flag)
+{
+    
+    memcpy(global_fit->tdi_full->A, global_fit->tdi_store->A, 2*global_fit->tdi_full->N*sizeof(double));
+    memcpy(global_fit->tdi_full->E, global_fit->tdi_store->E, 2*global_fit->tdi_full->N*sizeof(double));
+ 
+    for(int i=0; i<2*global_fit->tdi_full->N; i++)
+    {
+        if(!GBMCMC_Flag)
+        {
+            global_fit->tdi_full->A[i] -= global_fit->tdi_ucb->A[i];
+            global_fit->tdi_full->E[i] -= global_fit->tdi_ucb->E[i];
+        }
+
+        if(!VBMCMC_Flag)
+        {
+            global_fit->tdi_full->A[i] -= global_fit->tdi_vgb->A[i];
+            global_fit->tdi_full->E[i] -= global_fit->tdi_vgb->E[i];
+        }
+    }
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -104,6 +295,7 @@ int main(int argc, char *argv[])
     int root = 0; //root process
 
     MPI_Init(&argc, &argv); //start parallelization
+    MPI_Barrier(MPI_COMM_WORLD);
     
     /* get process ID, and total number of processes */
     MPI_Comm_size(MPI_COMM_WORLD, &Nproc);
@@ -115,16 +307,16 @@ int main(int argc, char *argv[])
         //check command line format
         print_LISA_ASCII_art(stdout);
         if(argc==1) print_usage();
-        
-    } MPI_Barrier(MPI_COMM_WORLD);
+    }
 
-    /* Allocate data structures */
+    /* Allocate structures to hold global model */
+    struct GlobalFitData *global_fit = malloc(sizeof(struct GlobalFitData));
+    alloc_gf_data(global_fit);
+
+    /* Allocate GBMCMC data structures */
     struct GBMCMCData *gbmcmc_data = malloc(sizeof(struct GBMCMCData));
-    alloc_gbmcmc_data(gbmcmc_data, procID, 1, Nproc-1);
-    
-    struct NoiseData *noise_data = malloc(sizeof(struct NoiseData));
-    alloc_noise_data(noise_data, procID, Nproc-1);
-    
+    alloc_gbmcmc_data(gbmcmc_data, procID, 2, Nproc-1);
+        
     /* Aliases to gbmcmc structures */
     struct Flags *flags = gbmcmc_data->flags;
     struct Orbit *orbit = gbmcmc_data->orbit;
@@ -132,68 +324,125 @@ int main(int argc, char *argv[])
     struct Data *data   = gbmcmc_data->data;
 
     /* all processes parse command line and set defaults/flags */
-    parse(argc,argv,data,orbit,flags,chain,NMAX,Nproc,procID);
+    parse_vb_list(argc, argv, flags);
+    parse(argc,argv,data,orbit,flags,chain,NMAX,procID);
     
-    /* Finish allocating GBMCMC structures now that we know the number of PT chains */
-    gbmcmc_data->proposal = malloc(chain->NP*sizeof(struct Proposal*));
-    gbmcmc_data->model = malloc(sizeof(struct Model*)*chain->NC);
-    gbmcmc_data->trial = malloc(sizeof(struct Model*)*chain->NC);
+    /* Allocate remaining data structures */
+    struct VBMCMCData *vbmcmc_data = malloc(sizeof(struct VBMCMCData));
+    alloc_vbmcmc_data(vbmcmc_data, gbmcmc_data, procID);
+
+    struct NoiseData *noise_data = malloc(sizeof(struct NoiseData));
+    alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1);
+
+    /* Setup output directories for chain and data structures */
+    if(procID==0) mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    if(procID==0)
+    {
+        sprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
+        setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
+    }
+    else if(procID==1)
+    {
+        sprintf(vbmcmc_data->flags->runDir,"%s/vgb",vbmcmc_data->flags->runDir);
+        mkdir(vbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        //save original runDir
+        char runDir[MAXSTRINGSIZE];
+        sprintf(runDir,"%s",vbmcmc_data->flags->runDir);
+
+        for(int n=0; n<vbmcmc_data->flags->NVB; n++)
+        {
+            //temporarily assign runDir to seg subdir
+            sprintf(vbmcmc_data->flags->runDir,"%s/seg_%04d",runDir,n);
+            setup_run_directories(vbmcmc_data->flags, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n]);
+        }
+        
+        //restore original runDir
+        sprintf(vbmcmc_data->flags->runDir,"%s",runDir);
+
+    }
+    else if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
+    {
+        sprintf(gbmcmc_data->flags->runDir,"%s/ucb",gbmcmc_data->flags->runDir);
+        mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        sprintf(gbmcmc_data->flags->runDir,"%s/seg_%04d",gbmcmc_data->flags->runDir, procID-gbmcmc_data->procID_min);
+        setup_run_directories(gbmcmc_data->flags, gbmcmc_data->data, gbmcmc_data->chain);
+    }
 
     /* Initialize data structures */
     alloc_data(data, flags);
-        
-    /* TDI structure to hold full dataset */
-    struct TDI *tdi_full = malloc(sizeof(struct TDI));
-
+            
     /* root process reads data */
-    if(procID==root) GalacticBinaryReadHDF5(data,tdi_full);
+    if(procID==root) GalacticBinaryReadHDF5(data,global_fit->tdi_full);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* alias of full TDI data */
+    struct TDI *tdi_full = global_fit->tdi_full;
 
     /* broadcast data to all gbmcmc processes and select frequency segment */
-    get_frequency_segment(gbmcmc_data->data, tdi_full, tdi_full->N, root, procID);
+    share_data(tdi_full, root, procID);
+
+    /* composite models are allocated to be the same size as tdi_full */
+    setup_gf_data(global_fit);
+
+    /* set up data for ucb model processes */
+    setup_gbmcmc_data(gbmcmc_data, tdi_full);
 
     /* set up data for noise model processes */
-    if(procID==root) setup_noise_data(noise_data, gbmcmc_data, tdi_full);
-
-    /* Initialize LISA orbit model */
-    initialize_orbit(data,orbit,flags);
+    setup_noise_data(noise_data, gbmcmc_data, tdi_full, procID);
     
-    /* Load gb catalog cache file for proposals/priors */
-    if(flags->catalog)
-    {
-        if(procID==root) GalacticBinaryLoadCatalogCache(data, flags);
-        
-        broadcast_cache(data, root, procID);
-        
-        GalacticBinaryParseCatalogCache(data);
-        GalacticBinaryLoadCatalog(data);
-    }
+    /* allocate global fit noise model for all processes */
+    alloc_noise(global_fit->psd, noise_data->data->N);
+    
+    /* set up data for verification binary model processes */
+    setup_vbmcmc_data(vbmcmc_data, gbmcmc_data, tdi_full);
 
 
     /*
      * Initialize all of the samplers
      *
      */
-
     //choose which sampler to run based on procID
     int GBMCMC_Flag = 0;
+    int VBMCMC_Flag = 0;
     int Noise_Flag = 0;
+    
+    /* Assign processes to Noise model */
+    if(procID == 0) //TODO: generalize so that noise model doesn't have to be root
+    {
+        Noise_Flag = 1;
+        initialize_noise_sampler(noise_data);
 
-    /* Assign processes to GBMCMC model */
+        int ic = noise_data->chain->index[0];
+        struct Noise *model_psd = noise_data->model[ic]->psd;
+        copy_noise(model_psd,global_fit->psd);
+
+    }
+    MPI_Bcast(global_fit->psd->f, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(global_fit->psd->SnX, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    share_noise_model(noise_data,gbmcmc_data,global_fit,root,procID);
+
+    /* Assign processes to VB model */
+    if(procID == 1 && vbmcmc_data->flags->NVB>0)
+    {
+        VBMCMC_Flag = 1;
+        initialize_vbmcmc_sampler(vbmcmc_data);
+    }
+    
+    /* Assign processes to UCB model */
     if(procID >= gbmcmc_data->procID_min && procID <= gbmcmc_data->procID_max)
     {
         GBMCMC_Flag = 1;
         initialize_gbmcmc_sampler(gbmcmc_data);
-        print_gb_catalog_script(flags, data, orbit);
     }
-    
-    /* ssign processes to Noise model */
-    if(procID == root) //TODO: generalize so that noise model doesn't have to be root
-    {
-        Noise_Flag = 1;
-        initialize_noise_sampler(noise_data);
-    }
-    
-    
+
+
+
     /*
      * Master Blocked Gibbs sampler
      *
@@ -205,33 +454,85 @@ int main(int argc, char *argv[])
         /* ============================= */
 
         /* gbmcmc sampler gibbs update */
-        if(GBMCMC_Flag) gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+        if(GBMCMC_Flag)
+        {
+            
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
+            
+            select_frequency_segment(gbmcmc_data->data, tdi_full);
 
-        /* get global status of gbmcmc samplers */
-        gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
+            select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
+            
+            //extra calls to update_gbmcmc_sampler() to make up for MPI costs
+            gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+        }
+           
+        /* ============================= */
+        /*   VERIFICATION BINARY MODEL   */
+        /* ============================= */
 
-        /* share gbmcmc residual with other worker nodes */
-        share_gbmcmc_residual(gbmcmc_data, noise_data, GBMCMC_Flag, Noise_Flag, root);
-        
+        /* vbmcmc sampler gibbs update */
+        if(VBMCMC_Flag)
+        {
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
+
+            select_vbmcmc_segments(vbmcmc_data, tdi_full);
+
+            for(int n=0; n<vbmcmc_data->flags->NVB; n++)
+                select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
+
+            //extra calls to update_vbmcmc_sampler() to make up for MPI costs
+            vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
+        }
+
         /* ============================= */
         /*    INSTRUMENT NOISE MODEL     */
         /* ============================= */
 
         /* noise model update */
         if(Noise_Flag)
+        {
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
+
+            select_frequency_segment(noise_data->data, tdi_full);
+
+            //extra calls to update_noise_sampler() to make up for MPI costs
             noise_data->status = update_noise_sampler(noise_data);
-        
-        /* share noise model with other worker nodes */
-        share_noise_model(gbmcmc_data, noise_data, GBMCMC_Flag, Noise_Flag, root);
-        
+            
+        }
+
         /* ============================= */
         /*  MASSIVE BLACK HOLE BINARIES  */
         /* ============================= */
 
         /* mbh model update */
 
-        /* share mbh residual with other worker nodes */
+        
+        /* ============================= */
+        /* MPI EXCHANGES OF MODEL STATES */
+        /* ============================= */
+        
+        /* get global status of gbmcmc samplers */
+        gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
 
+        /* distribute current state of models to worker nodes */
+        share_noise_model(noise_data, gbmcmc_data, global_fit, root, procID);
+        share_vbmcmc_model(vbmcmc_data, gbmcmc_data, global_fit, root, procID);
+        share_gbmcmc_model(gbmcmc_data, GBMCMC_Flag, global_fit, root, procID);
+
+        
+        /* Debugging 
+        if(Noise_Flag) print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
+        if(VBMCMC_Flag)
+        {
+            for(int n=0; n<vbmcmc_data->flags->NVB; n++)print_data(vbmcmc_data->data_vec[n], vbmcmc_data->data_vec[n]->tdi[0], vbmcmc_data->flags, 0);
+        }
+        if(GBMCMC_Flag)
+        {
+            copy_noise(gbmcmc_data->model[gbmcmc_data->chain->index[0]]->noise[0], gbmcmc_data->data->noise[0]);
+            print_data(gbmcmc_data->data, gbmcmc_data->data->tdi[0], gbmcmc_data->flags, 0);
+        }*/
+        
     }while(gbmcmc_data->status!=0);
     
     /*
@@ -245,6 +546,14 @@ int main(int argc, char *argv[])
                 
         /* evidence results */
         print_evidence(chain,flags);
+    }
+    if(VBMCMC_Flag)
+    {
+        for(int n=0; n<vbmcmc_data->flags->NVB; n++)
+        {
+            /* waveform reconstructions */
+            print_waveforms_reconstruction(vbmcmc_data->data_vec[n], vbmcmc_data->flags);
+        }
     }
     if(Noise_Flag)
     {

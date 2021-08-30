@@ -25,6 +25,7 @@ target_link_libraries(gb_mcmc m)
 target_link_libraries(gb_mcmc tools)
 target_link_libraries(gb_mcmc lisa)
 target_link_libraries(gb_mcmc hdf5)
+target_link_libraries(gb_mcmc omp)
 install(TARGETS gb_mcmc DESTINATION bin)
 
 add_executable(gb_catalog gb_catalog.c
@@ -37,3 +38,14 @@ target_link_libraries(gb_catalog lisa)
 target_link_libraries(gb_catalog hdf5)
 install(TARGETS gb_catalog DESTINATION bin)
 
+add_executable(vb_mcmc vb_mcmc.c GalacticBinary.h
+                GalacticBinaryMCMC.h GalacticBinaryIO.h GalacticBinaryModel.h GalacticBinaryWaveform.h GalacticBinaryMath.h GalacticBinaryData.h GalacticBinaryPrior.h GalacticBinaryProposal.h GalacticBinaryFStatistic.h GalacticBinaryCatalog.h
+                GalacticBinaryMCMC.c GalacticBinaryIO.c GalacticBinaryModel.c GalacticBinaryWaveform.c GalacticBinaryMath.c GalacticBinaryData.c GalacticBinaryPrior.c GalacticBinaryProposal.c GalacticBinaryFStatistic.c GalacticBinaryCatalog.c)
+                
+target_link_libraries(vb_mcmc ${GSL_LIBRARIES})
+target_link_libraries(vb_mcmc m)
+target_link_libraries(vb_mcmc tools)
+target_link_libraries(vb_mcmc lisa)
+target_link_libraries(vb_mcmc hdf5)
+target_link_libraries(vb_mcmc omp)
+install(TARGETS vb_mcmc DESTINATION bin)

@@ -24,8 +24,6 @@
 
 #include "GalacticBinaryWrapper.h"
 
-#define N_TDI_CHANNELS 2
-
 void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID, int procID_min, int procID_max)
 {
     gbmcmc_data->status = 0;
@@ -39,14 +37,50 @@ void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID, int procID_mi
     gbmcmc_data->prior = malloc(sizeof(struct Prior));
 }
 
-void select_frequency_segment(struct Data *data, struct TDI *tdi_full, int procID)
+void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
 {
+    int procID = gbmcmc_data->procID;
+    int procID_min = gbmcmc_data->procID_min;
+    
+    /* Aliases to gbmcmc structures */
+    struct Flags *flags = gbmcmc_data->flags;
+    struct Orbit *orbit = gbmcmc_data->orbit;
+    struct Chain *chain = gbmcmc_data->chain;
+    struct Data *data   = gbmcmc_data->data;
+
+    /* Finish allocating GBMCMC structures now that we know the number of PT chains */
+    gbmcmc_data->proposal = malloc(chain->NP*sizeof(struct Proposal*));
+    gbmcmc_data->model = malloc(sizeof(struct Model*)*chain->NC);
+    gbmcmc_data->trial = malloc(sizeof(struct Model*)*chain->NC);
+
+    /* Initialize LISA orbit model */
+    initialize_orbit(data,orbit,flags);
+
+    /* select frequency segment for each process */
     //get max and min samples
-    data->fmin = data->fmin + (double)(procID*(data->N - 2*data->qpad))/data->T;
+    data->fmin = data->fmin + (double)((procID-procID_min)*(data->N - 2*data->qpad))/data->T;
     data->fmax = data->fmin + data->N/data->T;
     data->qmin = (int)(data->fmin*data->T);
     data->qmax = data->qmin+data->N;
+
+    select_frequency_segment(data, tdi_full);
     
+    /* Load gb catalog cache file for proposals/priors */
+    if(flags->catalog)
+    {
+        if(procID==0) GalacticBinaryLoadCatalogCache(data, flags);
+        
+        broadcast_cache(data, 0, procID);
+        
+        GalacticBinaryParseCatalogCache(data);
+        GalacticBinaryLoadCatalog(data);
+    }
+
+
+}
+
+void select_frequency_segment(struct Data *data, struct TDI *tdi_full)
+{
     //store frequency segment in TDI structure
     struct TDI *tdi = data->tdi[0];
     struct TDI *raw = data->raw[0];
@@ -62,7 +96,7 @@ void select_frequency_segment(struct Data *data, struct TDI *tdi_full, int procI
         tdi->E[n] = tdi_full->E[m];
         tdi->T[n] = tdi_full->T[m];
         
-        /* raw data to be used as reference */
+        /* raw data to be used for inter-segment gbmcmc swaps */
         raw->X[n] = tdi_full->X[m];
         raw->Y[n] = tdi_full->Y[m];
         raw->Z[n] = tdi_full->Z[m];
@@ -70,29 +104,6 @@ void select_frequency_segment(struct Data *data, struct TDI *tdi_full, int procI
         raw->E[n] = tdi_full->E[m];
         raw->T[n] = tdi_full->T[m];
     }
-}
-
-void get_frequency_segment(struct Data *data, struct TDI *tdi_full, int Nsamples, int root, int procID)
-{
-    //first tell all processes how large the dataset is
-    MPI_Bcast(&Nsamples, 1, MPI_INT, root, MPI_COMM_WORLD);
-    //MPI_Bcast(&data->T, 1, MPI_DOUBLE, root, MPI_COMM_WORLD); //only needed if read data maps to 2^N
-    //MPI_Bcast(&data->sqT, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
-
-    //all but root process need to allocate memory for TDI structure
-    if(procID!=root) alloc_tdi(tdi_full, Nsamples, N_TDI_CHANNELS);
-    
-    //now broadcast contents of TDI structure
-    MPI_Bcast(&tdi_full->delta, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->X, 2*Nsamples, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->Y, 2*Nsamples, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->Z, 2*Nsamples, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->A, 2*Nsamples, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->E, 2*Nsamples, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->T, 2*Nsamples, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    
-    /* select frequency segment for each process */
-    select_frequency_segment(data, tdi_full, procID-1);
 }
 
 void broadcast_cache(struct Data *data, int root, int procID)
@@ -148,12 +159,16 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     
     /* Initialize GBMCMC sampler state */
     initialize_gbmcmc_state(data, orbit, flags, chain, proposal, model, trial);
-    
+        
+    /* Store data segment in working directory */
+    if(gbmcmc_data->procID>=gbmcmc_data->procID_min && gbmcmc_data->procID<=gbmcmc_data->procID_max)
+        print_data(data, data->tdi[0], flags, 0);
+
+    /* Store post-processing script */
+    print_gb_catalog_script(flags, data, orbit);
+
     /* Set sampler counter */
     gbmcmc_data->mcmc_step = -flags->NBURN;
-    
-    /* Store data segment in working directory */
-    print_data(data, data->tdi[0], flags, 0);
 }
 
 static void print_sampler_state(struct GBMCMCData *gbmcmc_data)

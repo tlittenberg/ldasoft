@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     //   Parse command line and set defaults/flags
     data->t0 = malloc( NMAX * sizeof(double) );
     
-    parse(argc,argv,data,orbit,flags,chain,NMAX,0,0);
+    parse(argc,argv,data,orbit,flags,chain,NMAX,0);
     alloc_data(data, flags);
     data->qmin = (int)(data->fmin*data->T);
     

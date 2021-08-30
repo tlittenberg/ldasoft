@@ -941,7 +941,162 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
     }
 }
 
+void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
+{
+    int NC = chain->NC;
+    double check  =0.0;
+    double rjcheck=0.0;
+    
+    for(int i=0; i<chain->NP; i++)
+    {
+        proposal[i] = malloc(sizeof(struct Proposal));
 
+        proposal[i]->trial  = malloc(NC*sizeof(int));
+        proposal[i]->accept = malloc(NC*sizeof(int));
+        
+        for(int ic=0; ic<NC; ic++)
+        {
+            proposal[i]->trial[ic]  = 1;
+            proposal[i]->accept[ic] = 0;
+        }
+        
+        switch(i)
+        {
+            case 0:
+                sprintf(proposal[i]->name,"prior");
+                proposal[i]->function = &draw_from_uniform_prior;
+                proposal[i]->density  = &prior_density;
+                proposal[i]->weight   = 0.2;
+                proposal[i]->rjweight = 0.0;
+                setup_prior_proposal(flags, prior, proposal[i]);
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 1:
+                sprintf(proposal[i]->name,"fstat draw");
+                //setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
+                proposal[i]->function = &draw_from_fstatistic;
+                proposal[i]->density  = &evaluate_fstatistic_proposal;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0; //that's a 1 all right.  don't panic
+                check += proposal[i]->weight;
+                break;
+            case 2:
+                sprintf(proposal[i]->name,"fstat jump");
+                
+                //re-use setup of fstat proposal from case 0
+                proposal[i]->size   = proposal[1]->size;
+                proposal[i]->norm   = proposal[1]->norm;
+                proposal[i]->maxp   = proposal[1]->maxp;
+                proposal[i]->vector = proposal[1]->vector;
+                proposal[i]->matrix = proposal[1]->matrix;
+                proposal[i]->tensor = proposal[1]->tensor;
+                
+                proposal[i]->function = &jump_from_fstatistic;
+                proposal[i]->density  = &evaluate_fstatistic_proposal;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 3:
+                sprintf(proposal[i]->name,"extrinsic prior");
+                proposal[i]->function = &draw_from_extrinsic_prior;
+                proposal[i]->density  = &prior_density;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 4:
+                sprintf(proposal[i]->name,"fisher");
+                proposal[i]->function = &draw_from_fisher;
+                proposal[i]->density  = &symmetric_density;
+                proposal[i]->weight = 1.0; //that's a 1 all right.  don't panic
+                proposal[i]->rjweight = 0.0;
+                //check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 5:
+                sprintf(proposal[i]->name,"fm shift");
+                proposal[i]->function = &fm_shift;
+                proposal[i]->density  = &symmetric_density;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 6:
+                sprintf(proposal[i]->name,"psi-phi jump");
+                proposal[i]->function = &psi_phi_jump;
+                proposal[i]->density  = &symmetric_density;
+                proposal[i]->weight   = 0.2;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 7:
+                sprintf(proposal[i]->name,"gmm draw");
+                proposal[i]->function = &draw_from_gmm_prior;
+                proposal[i]->density = &gmm_prior_density;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                if(flags->catalog)
+                {
+                    setup_gmm_proposal(data, proposal[i]);
+                    proposal[i]->weight   = 0.0;
+                    proposal[i]->rjweight = 0.0;
+                }
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 8:
+                sprintf(proposal[i]->name,"cov draw");
+                proposal[i]->function = &draw_from_cov;
+                proposal[i]->density  = &cov_density;
+                proposal[i]->weight  = 0.0;
+                proposal[i]->rjweight = 0.0;
+                if(flags->updateCov)
+                {
+                    setup_covariance_proposal(data, flags, proposal[i]);
+                    proposal[i]->weight   = 0.0;
+                    proposal[i]->rjweight = 0.0;
+                }
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            default:
+                break;
+        }
+    }
+    //Fisher proposal fills in the cracks for fixed D moves
+    proposal[4]->weight -= check;
+    
+    //Fstat proposal fills in the cracks for trans D moves
+    proposal[1]->rjweight -= rjcheck;
+    
+    if(proposal[4]->weight<0.0 || proposal[1]->rjweight < 0.0)
+    {
+        fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
+        exit(1);
+    }
+    
+    if(!flags->quiet)
+    {
+        fprintf(stdout,"\n============== Proposal Cocktail ==============\n");
+        fprintf(stdout,"   MCMC proposals:\n");
+        for(int i=0; i<chain->NP; i++)
+        {
+            if(proposal[i]->weight>0.0)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->weight);
+        }
+        fprintf(stdout,"   RJMCMC proposals:\n");
+        for(int i=0; i<chain->NP; i++)
+        {
+            if(proposal[i]->rjweight)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->rjweight);
+        }
+        fprintf(stdout,"===============================================\n");
+    }
+}
 
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal)
 {

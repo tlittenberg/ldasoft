@@ -149,6 +149,30 @@ void alloc_data(struct Data *data, struct Flags *flags)
 
 }
 
+//TODO: Expand copy_data() to include everything, and then replace where needed (NoiseWrapper.c, ...)
+void copy_data(struct Data *origin, struct Data *copy)
+{
+    memcpy(copy->format, origin->format, sizeof(origin->format));
+    memcpy(copy->fileName, origin->fileName, sizeof(origin->fileName));
+    copy->T=origin->T;
+    copy->sqT=origin->sqT;
+    copy->N=origin->N;
+    copy->NP=origin->NP;
+    copy->Nchannel=origin->Nchannel;
+    copy->DMAX=origin->DMAX;
+    copy->qpad=origin->qpad;
+    copy->cseed=origin->cseed;
+    copy->nseed=origin->nseed;
+    copy->iseed=origin->iseed;
+    copy->NT=origin->NT;
+    
+    copy->t0   = calloc(origin->NT,sizeof(double));
+    copy->tgap = calloc(origin->NT,sizeof(double));
+    memcpy(copy->t0, origin->t0, origin->NT*sizeof(double));
+    memcpy(copy->tgap, origin->tgap, origin->NT*sizeof(double));
+}
+
+//TODO: Move initialize_orbit() out of GBMCMC and into LISA
 void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
     /* Load spacecraft ephemerides */
@@ -175,7 +199,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     int ic;
     int NC = chain->NC;
     char filename[MAXSTRINGSIZE];
-    
+
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));
     chain->temperature = calloc(NC,sizeof(double));
@@ -208,19 +232,19 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     
     if(!flags->quiet)
     {
-        sprintf(filename,"%s/chains/log_likelihood_chain.dat",flags->runDir);
+        sprintf(filename,"%s/log_likelihood_chain.dat",chain->chainDir);
         chain->likelihoodFile = fopen(filename,mode);
         
-        sprintf(filename,"%s/chains/temperature_chain.dat",flags->runDir);
+        sprintf(filename,"%s/temperature_chain.dat",chain->chainDir);
         chain->temperatureFile = fopen(filename,mode);
     }
     
     chain->chainFile = malloc(NC*sizeof(FILE *));
-    sprintf(filename,"%s/chains/model_chain.dat.0",flags->runDir);
+    sprintf(filename,"%s/model_chain.dat.0",chain->chainDir);
     chain->chainFile[0] = fopen(filename,mode);
     
     chain->parameterFile = malloc(NC*sizeof(FILE *));
-    sprintf(filename,"%s/chains/parameter_chain.dat.0",flags->runDir);
+    sprintf(filename,"%s/parameter_chain.dat.0",chain->chainDir);
     chain->parameterFile[0] = fopen(filename,mode);
     
     chain->dimensionFile = malloc(flags->DMAX*sizeof(FILE *));
@@ -231,13 +255,13 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     }
     
     chain->noiseFile = malloc(NC*sizeof(FILE *));
-    sprintf(filename,"%s/chains/noise_chain.dat.0",flags->runDir);
+    sprintf(filename,"%s/noise_chain.dat.0",chain->chainDir);
     chain->noiseFile[0] = fopen(filename,mode);
     
     if(flags->calibration)
     {
         chain->calibrationFile = malloc(NC*sizeof(FILE *));
-        sprintf(filename,"%s/chains/calibration_chain.dat.0",flags->runDir);
+        sprintf(filename,"%s/calibration_chain.dat.0",chain->chainDir);
         chain->calibrationFile[0] = fopen(filename,mode);
     }
     
@@ -245,13 +269,13 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     {
         for(ic=1; ic<NC; ic++)
         {
-            sprintf(filename,"%s/chains/parameter_chain.dat.%i",flags->runDir,ic);
+            sprintf(filename,"%s/parameter_chain.dat.%i",chain->chainDir,ic);
             chain->parameterFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"%s/chains/model_chain.dat.%i",flags->runDir,ic);
+            sprintf(filename,"%s/model_chain.dat.%i",chain->chainDir,ic);
             chain->chainFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"%s/chains/noise_chain.dat.%i",flags->runDir,ic);
+            sprintf(filename,"%s/noise_chain.dat.%i",chain->chainDir,ic);
             chain->noiseFile[ic] = fopen(filename,mode);
         }
     }
@@ -885,6 +909,7 @@ void generate_noise_model(struct Data *data, struct Model *model)
             case 2:
                 for(int n=0; n<data->N; n++)
             {
+                model->noise[m]->f[n] = data->fmin + (double)n/data->T;
                 model->noise[m]->SnA[n] = data->noise[m]->SnA[n]*model->noise[m]->etaA;
                 model->noise[m]->SnE[n] = data->noise[m]->SnE[n]*model->noise[m]->etaE;
             }

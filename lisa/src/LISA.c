@@ -368,7 +368,8 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     double dPhi = invfstar/T;
     double cosdPhi = cos(dPhi);
     double sindPhi = sin(dPhi);
-
+    double prefactor;
+    
     //phiLS = PI2*f0*(0.5-LonC);//1 s sampling rate
     //TODO: sampling rate is hard-coded into tdi function
     phiLS = PI2*f0*(7.5-L/CLIGHT);//15 s sampling rate
@@ -395,6 +396,8 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
         
         f = ((double)(q + i-1 - BWon2))/T;
         fonfs = f*invfstar;
+        
+        prefactor = sqT;
 
         /* make use of recursion relationships & identities to get rid of trig calls
         c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
@@ -405,45 +408,48 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
         double_angle(c1,s1,&c2,&s2);
         triple_angle(c1,s1,c2,&c3,&s3);
 
-        X[j] =	(d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
+        X[j] =	prefactor*((d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
         (d[2][1][j]-d[3][1][j])*c2 + (d[2][1][k]-d[3][1][k])*s2 +
         (d[1][3][j]-d[1][2][j])*c1 + (d[1][3][k]-d[1][2][k])*s1 +
-        (d[3][1][j]-d[2][1][j]);
+        (d[3][1][j]-d[2][1][j]));
         
-        X[k] =	(d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
+        X[k] =	prefactor*((d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
         (d[2][1][k]-d[3][1][k])*c2 - (d[2][1][j]-d[3][1][j])*s2 +
         (d[1][3][k]-d[1][2][k])*c1 - (d[1][3][j]-d[1][2][j])*s1 +
-        (d[3][1][k]-d[2][1][k]);
+        (d[3][1][k]-d[2][1][k]));
         
-        M[j] = sqT*(X[j]*cLS - X[k]*sLS);
-        M[k] =-sqT*(X[j]*sLS + X[k]*cLS);
+        M[j] = prefactor*(X[j]*cLS - X[k]*sLS);
+        M[k] =-prefactor*(X[j]*sLS + X[k]*cLS);
         
         //save some CPU time when only X-channel is needed
         if(NI>1)
         {
-            Y[j] =	(d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
+            Y[j] =	prefactor*((d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
             (d[3][2][j]-d[1][2][j])*c2 + (d[3][2][k]-d[1][2][k])*s2+
             (d[2][1][j]-d[2][3][j])*c1 + (d[2][1][k]-d[2][3][k])*s1+
-            (d[1][2][j]-d[3][2][j]);
+            (d[1][2][j]-d[3][2][j]));
             
-            Y[k] =	(d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
+            Y[k] =	prefactor*((d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
             (d[3][2][k]-d[1][2][k])*c2 - (d[3][2][j]-d[1][2][j])*s2+
             (d[2][1][k]-d[2][3][k])*c1 - (d[2][1][j]-d[2][3][j])*s1+
-            (d[1][2][k]-d[3][2][k]);
+            (d[1][2][k]-d[3][2][k]));
             
-            Z[j] =	(d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
+            Z[j] =	prefactor*((d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
             (d[1][3][j]-d[2][3][j])*c2 + (d[1][3][k]-d[2][3][k])*s2+
             (d[3][2][j]-d[3][1][j])*c1 + (d[3][2][k]-d[3][1][k])*s1+
-            (d[2][3][j]-d[1][3][j]);
+            (d[2][3][j]-d[1][3][j]));
             
-            Z[k] =	(d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
+            Z[k] =	prefactor*((d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
             (d[1][3][k]-d[2][3][k])*c2 - (d[1][3][j]-d[2][3][j])*s2+
             (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
-            (d[2][3][k]-d[1][3][k]);
+            (d[2][3][k]-d[1][3][k]));
             
             /* LDC conventions for A & E channels */
             XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
             XYZ2AE(X[k],Y[k],Z[k],&A[k],&E[k]);
+            
+            A[k] = -A[k];
+            E[k] = -E[k];
         }
     }
 }
@@ -463,6 +469,7 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     double dPhi = invfstar/T;
     double cosdPhi = cos(dPhi);
     double sindPhi = sin(dPhi);
+    double prefactor;
     
     phiSL = PIon2 - PI2*f0*(L/CLIGHT);
     cSL = cos(phiSL);
@@ -488,6 +495,9 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
         fonfs = f*invfstar;
         fonfs2= 2.*fonfs;
         
+        /* prefactor = sqrt(T) * 4 * (f/fstar) * sin(f/fstar) */
+        prefactor = sqT*fonfs2;
+
         /* make use of recursion relationships & identities to get rid of trig calls
         c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
         s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
@@ -498,41 +508,41 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
         triple_angle(c1,s1,c2,&c3,&s3);
         
         
-        X[j] =	(d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
+        X[j] =	prefactor*((d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
         (d[2][1][j]-d[3][1][j])*c2 + (d[2][1][k]-d[3][1][k])*s2 +
         (d[1][3][j]-d[1][2][j])*c1 + (d[1][3][k]-d[1][2][k])*s1 +
-        (d[3][1][j]-d[2][1][j]);
+        (d[3][1][j]-d[2][1][j]));
         
-        X[k] =	(d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
+        X[k] =	prefactor*((d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
         (d[2][1][k]-d[3][1][k])*c2 - (d[2][1][j]-d[3][1][j])*s2 +
         (d[1][3][k]-d[1][2][k])*c1 - (d[1][3][j]-d[1][2][j])*s1 +
-        (d[3][1][k]-d[2][1][k]);
+        (d[3][1][k]-d[2][1][k]));
         
-        M[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
-        M[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
+        M[j] = prefactor*(X[j]*cSL - X[k]*sSL);
+        M[k] = prefactor*(X[j]*sSL + X[k]*cSL);
         
         //save some CPU time when only X-channel is needed
         if(NI>1)
         {
-            Y[j] =	(d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
+            Y[j] =	prefactor*((d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
             (d[3][2][j]-d[1][2][j])*c2 + (d[3][2][k]-d[1][2][k])*s2+
             (d[2][1][j]-d[2][3][j])*c1 + (d[2][1][k]-d[2][3][k])*s1+
-            (d[1][2][j]-d[3][2][j]);
+            (d[1][2][j]-d[3][2][j]));
             
-            Y[k] =	(d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
+            Y[k] =	prefactor*((d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
             (d[3][2][k]-d[1][2][k])*c2 - (d[3][2][j]-d[1][2][j])*s2+
             (d[2][1][k]-d[2][3][k])*c1 - (d[2][1][j]-d[2][3][j])*s1+
-            (d[1][2][k]-d[3][2][k]);
+            (d[1][2][k]-d[3][2][k]));
             
-            Z[j] =	(d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
+            Z[j] =	prefactor*((d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
             (d[1][3][j]-d[2][3][j])*c2 + (d[1][3][k]-d[2][3][k])*s2+
             (d[3][2][j]-d[3][1][j])*c1 + (d[3][2][k]-d[3][1][k])*s1+
-            (d[2][3][j]-d[1][3][j]);
+            (d[2][3][j]-d[1][3][j]));
             
-            Z[k] =	(d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
+            Z[k] =	prefactor*((d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
             (d[1][3][k]-d[2][3][k])*c2 - (d[1][3][j]-d[2][3][j])*s2+
             (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
-            (d[2][3][k]-d[1][3][k]);
+            (d[2][3][k]-d[1][3][k]));
             
             /* LDC conventions for A & E channels */
             XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
