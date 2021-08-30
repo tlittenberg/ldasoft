@@ -130,8 +130,8 @@ static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GBMCMCData
         for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
         {
             int index = 2*(id-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
-            MPI_Send(gf->tdi_vgb->A+index, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(gf->tdi_vgb->E+index, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
         }
 
     }
@@ -142,8 +142,8 @@ static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GBMCMCData
         MPI_Status status;
 
         int index = 2*(procID-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
-        MPI_Recv(gf->tdi_vgb->A+index, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(gf->tdi_vgb->E+index, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
 }
 
