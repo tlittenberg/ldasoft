@@ -165,6 +165,21 @@ void read_MVG(struct MVG *mode, FILE *fptr)
     gsl_vector_free(temp);
 }
 
+void copy_MVG(struct MVG *origin, struct MVG *copy)
+{
+    copy->size = origin->size;
+    gsl_vector_memcpy(copy->mu, origin->mu);
+    gsl_matrix_memcpy(copy->C, origin->C);
+    gsl_matrix_memcpy(copy->L, origin->L);
+    gsl_matrix_memcpy(copy->Cinv, origin->Cinv);
+    gsl_matrix_memcpy(copy->evectors, origin->evectors);
+    gsl_matrix_memcpy(copy->minmax, origin->minmax);
+    gsl_vector_memcpy(copy->evalues, origin->evalues);
+    copy->detC = origin->detC;
+    copy->p = origin->p;
+    copy->Neff = origin->Neff;
+}
+
 double multivariate_gaussian(gsl_vector *x, struct MVG *mvg)
 {
     

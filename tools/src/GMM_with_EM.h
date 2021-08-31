@@ -117,6 +117,11 @@ void write_MVG(struct MVG *mode, FILE *fptr);
 void read_MVG(struct MVG *mode, FILE *fptr);
 
 /**
+ * \brief Deep copy of MVG structure
+ */
+void copy_MVG(struct MVG *origin, struct MVG *copy);
+
+/**
  * \brief Evaluates the probability density of a multviariate Gaussian with input mean \f$\mu\f$
  * and covariance matrix \f$ C \f$.
  * \param[in] x vector of location to evaluate multivariate gaussian

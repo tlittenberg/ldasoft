@@ -508,7 +508,39 @@ int check_range(double *params, double **uniform_prior, int NP)
 
 void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior)
 {
-    prior->gmm = data->catalog->entry[0]->gmm;
+    //get size of full catalog
+    int N = data->catalog->N;
+    
+    //allocate gmm to include the full catalog
+    prior->gmm = malloc(sizeof(struct GMM));
+    prior->gmm->NP = data->catalog->entry[0]->gmm->NP;
+    prior->gmm->NMODE = 0;
+    for(size_t n=0; n<N; n++) prior->gmm->NMODE += data->catalog->entry[n]->gmm->NMODE;
+    prior->gmm->modes = malloc(prior->gmm->NMODE*sizeof(struct MVG *));
+    
+    for(size_t n=0; n<prior->gmm->NMODE; n++)
+    {
+        prior->gmm->modes[n] = malloc(sizeof(struct MVG));
+        
+        alloc_MVG(prior->gmm->modes[n], (size_t)prior->gmm->NP);
+    }
+
+    //combine modes into one GMM
+    size_t m=0;
+    for(size_t n=0; n<N; n++)
+    {
+        for(size_t i=0; i<data->catalog->entry[n]->gmm->NMODE; i++)
+        {
+            copy_MVG(data->catalog->entry[n]->gmm->modes[i],prior->gmm->modes[m]);
+
+            //(clumsily) renormalize modes
+            prior->gmm->modes[m]->p /= (double)N;
+            
+            m++;
+        }
+    }
+    
+    //prior->gmm = data->catalog->entry[0]->gmm;
 }
 
 double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
