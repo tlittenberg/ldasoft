@@ -14,21 +14,14 @@
 #include <omp.h>
 
 #include <LISA.h>
-
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryData.h>
-#include <GalacticBinaryPrior.h>
-#include <GalacticBinaryModel.h>
-#include <GalacticBinaryProposal.h>
-#include <GalacticBinaryWaveform.h>
-#include <GalacticBinaryMCMC.h>
-
+#include <gbmcmc.h>
 #include <Noise.h>
+#include <mbh.h>
 
 #include "GalacticBinaryWrapper.h"
 #include "VerificationBinaryWrapper.h"
 #include "NoiseWrapper.h"
+#include "MBHWrapper.h"
 
 #define N_TDI_CHANNELS 2
 #define NMAX 10
@@ -311,10 +304,14 @@ int main(int argc, char *argv[])
 
     /* Allocate structures to hold global model */
     struct GlobalFitData *global_fit = malloc(sizeof(struct GlobalFitData));
+    struct GBMCMCData *gbmcmc_data = malloc(sizeof(struct GBMCMCData));
+    struct VBMCMCData *vbmcmc_data = malloc(sizeof(struct VBMCMCData));
+    struct MBHData *mbh_data = malloc(sizeof(struct MBHData));
+    struct NoiseData *noise_data = malloc(sizeof(struct NoiseData));
+
     alloc_gf_data(global_fit);
 
     /* Allocate GBMCMC data structures */
-    struct GBMCMCData *gbmcmc_data = malloc(sizeof(struct GBMCMCData));
     alloc_gbmcmc_data(gbmcmc_data, procID, 2, Nproc-1);
         
     /* Aliases to gbmcmc structures */
@@ -325,13 +322,12 @@ int main(int argc, char *argv[])
 
     /* all processes parse command line and set defaults/flags */
     parse_vb_list(argc, argv, flags);
+    parse_mbh_args(argc, argv, mbh_data);
     parse(argc,argv,data,orbit,flags,chain,NMAX,procID);
     
     /* Allocate remaining data structures */
-    struct VBMCMCData *vbmcmc_data = malloc(sizeof(struct VBMCMCData));
+    alloc_mbh_data(mbh_data, gbmcmc_data, procID, 0, 1);
     alloc_vbmcmc_data(vbmcmc_data, gbmcmc_data, procID);
-
-    struct NoiseData *noise_data = malloc(sizeof(struct NoiseData));
     alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1);
 
     /* Setup output directories for chain and data structures */
@@ -342,6 +338,12 @@ int main(int argc, char *argv[])
     {
         sprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
         setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
+        
+        
+        //TODO: Assign MBH processes
+        sprintf(mbh_data->flags->runDir,"%s/mbh",mbh_data->flags->runDir);
+        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
     }
     else if(procID==1)
     {
@@ -393,6 +395,9 @@ int main(int argc, char *argv[])
 
     /* set up data for noise model processes */
     setup_noise_data(noise_data, gbmcmc_data, tdi_full, procID);
+    
+    /* set up data for mbh model processes */
+    setup_mbh_data(mbh_data, gbmcmc_data, tdi_full, procID);
     
     /* allocate global fit noise model for all processes */
     alloc_noise(global_fit->psd, noise_data->data->N);

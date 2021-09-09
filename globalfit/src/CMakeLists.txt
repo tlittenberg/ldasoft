@@ -1,11 +1,16 @@
 
+#MBH library
+include_directories(/Users/tyson/temp/include)
+link_directories(/Users/tyson/temp/lib)
+
+#GBMCMC library
 include_directories ("${PROJECT_SOURCE_DIR}/tools/src/")              
 include_directories ("${PROJECT_SOURCE_DIR}/lisa/src/")
 include_directories ("${PROJECT_SOURCE_DIR}/gbmcmc/src/")
 include_directories ("${PROJECT_SOURCE_DIR}/noise/src/")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 
-add_executable(global_fit GlobalFit.c GalacticBinaryWrapper.h NoiseWrapper.h GalacticBinaryWrapper.c NoiseWrapper.c VerificationBinaryWrapper.c VerificationBinaryWrapper.h)
+add_executable(global_fit GlobalFit.c GalacticBinaryWrapper.h NoiseWrapper.h GalacticBinaryWrapper.c NoiseWrapper.c VerificationBinaryWrapper.c VerificationBinaryWrapper.h MBHWrapper.c MBHWrapper.h)
 target_link_libraries(global_fit ${GSL_LIBRARIES})
 target_link_libraries(global_fit m)
 target_link_libraries(global_fit tools)
@@ -15,5 +20,6 @@ target_link_libraries(global_fit noise)
 target_link_libraries(global_fit omp)
 target_link_libraries(global_fit mpi)
 target_link_libraries(global_fit hdf5)
+target_link_libraries(global_fit mbh)
 install(TARGETS global_fit DESTINATION bin)
 

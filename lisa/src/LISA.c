@@ -104,9 +104,9 @@ void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double
 void initialize_analytic_orbit(struct Orbit *orbit)
 {
     //store armlenght & transfer frequency in orbit structure.
-    orbit->L     = Larm;
-    orbit->fstar = CLIGHT/(2.0*M_PI*Larm);
-    orbit->ecc   = Larm/(2.0*SQ3*AU);
+    orbit->L     = LARM;
+    orbit->fstar = CLIGHT/(2.0*M_PI*LARM);
+    orbit->ecc   = LARM/(2.0*SQ3*AU);
     orbit->R     = AU*orbit->ecc;
     orbit->orbit_function = &analytic_orbits;
     

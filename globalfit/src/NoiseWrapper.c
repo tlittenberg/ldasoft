@@ -12,13 +12,7 @@
 
 #include <LISA.h>
 
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryData.h>
-#include <GalacticBinaryPrior.h>
-#include <GalacticBinaryModel.h>
-#include <GalacticBinaryProposal.h>
-#include <GalacticBinaryMCMC.h>
+#include <gbmcmc.h>
 
 #include <Noise.h>
 
@@ -80,6 +74,10 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     //TODO: Fix this hacky noise model frequency alignment
     noise_data->data->fmin = gbmcmc_data->data->fmin;
     noise_data->data->fmin += 2*(double)N/T; //shift start by two segment (proc 0,1 don't have gbmcmc)
+    
+    noise_data->data->fmin = 1e-4;
+    noise_data->data->fmax = 3e-2;
+    noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
     
     alloc_data(noise_data->data, noise_data->flags);
     

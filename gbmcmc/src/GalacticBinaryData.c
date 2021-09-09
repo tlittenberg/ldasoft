@@ -68,10 +68,9 @@ static void tukey(double *data, double alpha, int N)
     {
         filter = 1.0;
         if(i < imin) filter = 0.5*(1.0+cos(M_PI*( (double)(i)/(double)(imin)-1.0 )));
-        if(i>imax) filter = 0.5*(1.0+cos(M_PI*( (double)(i)/(double)(imin)-2.0/alpha+1.0 )));
+        if(i>imax)   filter = 0.5*(1.0+cos(M_PI*( (double)(N-1-i)/(double)(imin)-1.0)));
         data[i] *= filter;
     }
-    
 }
 
 static double tukey_scale(double alpha, int N)

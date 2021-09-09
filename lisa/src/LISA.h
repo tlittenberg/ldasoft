@@ -37,7 +37,7 @@
 #include "Constants.h"
 
 /// Mean arm length of constellation (m) for baseline LISA configuration
-#define Larm 2.5e9
+#define LARM 2.5e9
 
 /// Sample cadence for LISA (s)
 #define LISA_CADENCE 5.0
