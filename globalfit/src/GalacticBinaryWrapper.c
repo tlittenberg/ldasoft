@@ -24,12 +24,10 @@
 
 #include "GalacticBinaryWrapper.h"
 
-void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID, int procID_min, int procID_max)
+void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID)
 {
     gbmcmc_data->status = 0;
     gbmcmc_data->procID = procID;
-    gbmcmc_data->procID_min = procID_min;
-    gbmcmc_data->procID_max = procID_max;
     gbmcmc_data->flags = malloc(sizeof(struct Flags));
     gbmcmc_data->orbit = malloc(sizeof(struct Orbit));
     gbmcmc_data->chain = malloc(sizeof(struct Chain));

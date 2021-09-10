@@ -44,16 +44,16 @@ struct MBHData
     gsl_rng **rvec; //!< Vector of RNG seeds for multithreading PTMCMC
 
     int NH; //!< Some global variable?
+    int NMBH; //!< Number of MBHs found from search in data segment
     double logLmax; //!< Max log likelihood
     
     char searchDir[MAXSTRINGSIZE]; //!<store `DIRNAME` containing output from mbh search
-    int searchSegment;
-    int searchSource;
+    double **segParams;
 };
 
 void parse_mbh_args(int argc, char **argv, struct MBHData *data);
 
-void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, int procID, int procID_min, int procID_max);
+void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, int procID);
 
 void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID);
 

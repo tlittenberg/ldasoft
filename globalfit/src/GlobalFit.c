@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
     alloc_gf_data(global_fit);
 
     /* Allocate GBMCMC data structures */
-    alloc_gbmcmc_data(gbmcmc_data, procID, 2, Nproc-1);
+    alloc_gbmcmc_data(gbmcmc_data, procID);
         
     /* Aliases to gbmcmc structures */
     struct Flags *flags = gbmcmc_data->flags;
@@ -326,9 +326,31 @@ int main(int argc, char *argv[])
     parse(argc,argv,data,orbit,flags,chain,NMAX,procID);
     
     /* Allocate remaining data structures */
-    alloc_mbh_data(mbh_data, gbmcmc_data, procID, 0, 1);
-    alloc_vbmcmc_data(vbmcmc_data, gbmcmc_data, procID);
-    alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1);
+    alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1); //noise runs on root process
+    alloc_vbmcmc_data(vbmcmc_data, gbmcmc_data, procID); //vbs run on process 1
+    alloc_mbh_data(mbh_data, gbmcmc_data, procID); //next are the MBH processes
+    
+    /* Assign processes to models */
+    noise_data->procID_min = 0;
+    noise_data->procID_max = 0;
+    vbmcmc_data->procID_min = 1;
+    vbmcmc_data->procID_max = 1;
+    gbmcmc_data->procID_min = 2;
+    gbmcmc_data->procID_max = Nproc-1 - mbh_data->NMBH;
+    mbh_data->procID_min = gbmcmc_data->procID_max+1;
+    mbh_data->procID_max = Nproc-1;
+
+    /* Tell the user how the resources are allocated */
+    if(procID==root)
+    {
+        
+        fprintf(stdout,"\n =============== Global Fit Analysis ============== \n");
+        fprintf(stdout,"  %i noise model processes (pid %i)\n",1+noise_data->procID_max-noise_data->procID_min,noise_data->procID_min);
+        fprintf(stdout,"  %i vbmcmc processes (pid %i)\n",1+vbmcmc_data->procID_max-vbmcmc_data->procID_min,vbmcmc_data->procID_min);
+        fprintf(stdout,"  %i gbmcmc processes (pid %i-%i)\n",1+gbmcmc_data->procID_max-gbmcmc_data->procID_min,gbmcmc_data->procID_min,gbmcmc_data->procID_max);
+        fprintf(stdout,"  %i mbh processes (pid %i-%i)\n",mbh_data->NMBH,mbh_data->procID_min,mbh_data->procID_max);
+        fprintf(stdout," ================================================== \n");
+   }
 
     /* Setup output directories for chain and data structures */
     if(procID==0) mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -339,11 +361,6 @@ int main(int argc, char *argv[])
         sprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
         setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
         
-        
-        //TODO: Assign MBH processes
-        sprintf(mbh_data->flags->runDir,"%s/mbh",mbh_data->flags->runDir);
-        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
     }
     else if(procID==1)
     {
@@ -373,7 +390,16 @@ int main(int argc, char *argv[])
         sprintf(gbmcmc_data->flags->runDir,"%s/seg_%04d",gbmcmc_data->flags->runDir, procID-gbmcmc_data->procID_min);
         setup_run_directories(gbmcmc_data->flags, gbmcmc_data->data, gbmcmc_data->chain);
     }
+    else if(procID>=mbh_data->procID_min && procID <=mbh_data->procID_max)
+    {
+        sprintf(mbh_data->flags->runDir,"%s/mbh",mbh_data->flags->runDir);
+        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
+        sprintf(mbh_data->flags->runDir,"%s/src%04d",mbh_data->flags->runDir, procID-mbh_data->procID_min);
+        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    }
+        
     /* Initialize data structures */
     alloc_data(data, flags);
             
@@ -386,25 +412,25 @@ int main(int argc, char *argv[])
 
     /* broadcast data to all gbmcmc processes and select frequency segment */
     share_data(tdi_full, root, procID);
-
+    
     /* composite models are allocated to be the same size as tdi_full */
     setup_gf_data(global_fit);
 
     /* set up data for ucb model processes */
     setup_gbmcmc_data(gbmcmc_data, tdi_full);
-
-    /* set up data for noise model processes */
-    setup_noise_data(noise_data, gbmcmc_data, tdi_full, procID);
-    
-    /* set up data for mbh model processes */
-    setup_mbh_data(mbh_data, gbmcmc_data, tdi_full, procID);
-    
-    /* allocate global fit noise model for all processes */
-    alloc_noise(global_fit->psd, noise_data->data->N);
     
     /* set up data for verification binary model processes */
     setup_vbmcmc_data(vbmcmc_data, gbmcmc_data, tdi_full);
 
+    /* set up data for mbh model processes */
+    setup_mbh_data(mbh_data, gbmcmc_data, tdi_full, procID);
+
+    /* set up data for noise model processes */
+    setup_noise_data(noise_data, gbmcmc_data, mbh_data, tdi_full, procID);
+
+    /* allocate global fit noise model for all processes */
+    alloc_noise(global_fit->psd, noise_data->data->N);
+    
 
     /*
      * Initialize all of the samplers

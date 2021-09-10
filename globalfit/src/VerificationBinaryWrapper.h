@@ -15,6 +15,8 @@ struct VBMCMCData
     
     int procID; //!<MPI process identifier
     int nProc;  //!<Number of processing segments
+    int procID_min; //!<lowest rank MPI process for VBMCMC block
+    int procID_max; //!<highest rank MPI process for VBMCMC block
 
     struct Flags *flags;
     struct Orbit *orbit;

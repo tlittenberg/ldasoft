@@ -27,7 +27,7 @@ struct GBMCMCData
     struct Model **model;
 };
 
-void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID, int procID_min, int procID_max);
+void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID);
 
 void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full);
 

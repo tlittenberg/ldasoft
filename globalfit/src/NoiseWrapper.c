@@ -13,10 +13,11 @@
 #include <LISA.h>
 
 #include <gbmcmc.h>
-
+#include <mbh.h>
 #include <Noise.h>
 
 #include "GalacticBinaryWrapper.h"
+#include "MBHWrapper.h"
 #include "NoiseWrapper.h"
 
 void alloc_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, int procID, int nProc)
@@ -51,7 +52,7 @@ void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chai
 
 }
 
-void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID)
+void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID)
 {
     noise_data->data->downsample = gbmcmc_data->data->downsample;
     noise_data->data->Nwave      = gbmcmc_data->data->Nwave;
@@ -77,6 +78,10 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     
     noise_data->data->fmin = 1e-4;
     noise_data->data->fmax = 3e-2;
+    
+    noise_data->data->fmin = (gbmcmc_data->data->fmin > mbh_data->data->fmin ) ? mbh_data->data->fmin : gbmcmc_data->data->fmin;
+    noise_data->data->fmax = (gbmcmc_data->data->fmax > mbh_data->data->fmax ) ? gbmcmc_data->data->fmax : mbh_data->data->fmax;
+    
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
     
     alloc_data(noise_data->data, noise_data->flags);

@@ -26,8 +26,8 @@ void parse_mbh_args(int argc, char **argv, struct MBHData *data)
     {
         /* These options set a flag. */
         {"mbh-search-path", required_argument, 0, 0},
-        {"mbh-segment", required_argument},
-        {"mbh-source", required_argument},
+        {"duration", required_argument, 0, 0},
+        {"start-time", required_argument, 0, 0},
         {0,0,0,0}
     };
     
@@ -40,9 +40,10 @@ void parse_mbh_args(int argc, char **argv, struct MBHData *data)
     copy_argv(argc,argv,argv_copy); //defined in GalacticBinaryIO.c
 
     //flags to check that all flags are set
-    int pathFlag = 1;
-    int segFlag = 1;
-    int srcFlag = 1;
+    double Tobs=0.0;
+    double Tstart=0.0;
+    int pathFlag = 0;
+    data->NMBH = 0;
 
     //Loop through argv string and find argument for mbh binaries
     while ((opt = getopt_long_only(argc, argv_copy,"apl:b:", long_options, &long_index )) != -1)
@@ -51,49 +52,85 @@ void parse_mbh_args(int argc, char **argv, struct MBHData *data)
         switch (opt)
         {
             case 0:
+                if(strcmp("duration", long_options[long_index].name) == 0) Tobs = atof(optarg);
+                if(strcmp("start-time", long_options[long_index].name) == 0) Tstart = atof(optarg);
                 if(strcmp("mbh-search-path", long_options[long_index].name) == 0)
                 {
                     strcpy(data->searchDir,optarg);
-                    pathFlag = 0;
-                }
-                if(strcmp("mbh-segment", long_options[long_index].name) == 0)
-                {
-                    data->searchSegment = atoi(optarg);
-                    segFlag = 0;
-                }
-                if(strcmp("mbh-source", long_options[long_index].name) == 0)
-                {
-                    data->searchSource = atoi(optarg);
-                    srcFlag = 0;
+                    pathFlag = 1;
                 }
                 
                 break;
             default:
                 break;
-                //print_usage();
-                //exit(EXIT_FAILURE);
         }
     }
-
-    //check that all needed arguments were present
-    if(pathFlag) printf("Warning: Missing argument --mbh-search-path \n");
-    if(srcFlag)  printf("Warning: Missing argument --mbh-segment \n");
-    if(segFlag)  printf("Warning: Missing argument --mbh-source \n");
-    
-    //checksum
-    data->flag = pathFlag + segFlag + srcFlag;
-    
+        
     //reset opt counter
     optind = 0;
+    
+    /* Parse the search parameter file */
+    if(pathFlag)
+    {
+        int NMBH_search = 0;
+        
+        char filename[MAXSTRINGSIZE];
+        sprintf(filename,"%s/search_sources.dat",data->searchDir);
+        FILE *searchFile = fopen(filename,"r");
+        
+        
+        //determine the number of sources found in the search
+        char *line;
+        char buffer[MAXSTRINGSIZE];
+        while( (line=fgets(buffer, MAXSTRINGSIZE, searchFile)) != NULL) NMBH_search++;
+
+        rewind(searchFile);
+        
+        //store search parameters
+        double **searchParams = malloc(NMBH_search*sizeof(double *));
+        for(int i=0; i<NMBH_search; i++)
+        {
+            searchParams[i] = malloc(NParams*sizeof(double));
+            
+            //burn off first two columns (what are they?)
+            double x;
+            fscanf(searchFile,"%lg %lg",&x,&x);
+            for(int j=0; j<NParams; j++) fscanf(searchFile,"%lg",&searchParams[i][j]);
+            
+            //merger time is parameter 5
+            double t_merge = searchParams[i][5];
+            if(t_merge > Tstart && t_merge < Tstart + Tobs) data->NMBH++;
+        }
+        rewind(searchFile);
+        
+        //store search parameters in segment
+        data->segParams = malloc(data->NMBH*sizeof(double *));
+        for(int i=0; i<data->NMBH; i++) data->segParams[i] = malloc(NParams*sizeof(double));
+        
+        int counter = 0;
+        for(int i=0; i<NMBH_search; i++)
+        {
+            //merger time is parameter 5
+            double t_merge = searchParams[i][5];
+            if(t_merge > Tstart && t_merge < Tstart + Tobs)
+            {
+                memcpy(data->segParams[counter], searchParams[i], NParams*sizeof(double));
+            }
+        }
+        
+        for(int i=0; i<NMBH_search; i++) free(searchParams[i]);
+        free(searchParams);
+
+        fclose(searchFile);
+
+    }
 
 }
 
-void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, int procID, int procID_min, int procID_max)
+void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, int procID)
 {
     mbh_data->status = 0;
     mbh_data->procID = procID;
-    mbh_data->procID_min = procID_min;
-    mbh_data->procID_max = procID_max;
     mbh_data->data = malloc(sizeof(struct MBH_Data));
     mbh_data->het = malloc(sizeof(struct Het));
     mbh_data->flags = malloc(sizeof(struct Flags));
@@ -133,6 +170,7 @@ static void set_mbh_priors(struct MBH_Data *dat, double *min, double *max)
 
 void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID)
 {
+    int NC = 24; //TODO: Find somewhere to put NC
 
     mbh_data->data->N = 2*tdi_full->N; //tdi->N is # of bins, mbh->N is # of time samples
     mbh_data->data->Nch = 2;
@@ -179,15 +217,15 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     mbh_data->NH = 1000;
     mbh_data->heat = double_vector(NC);
     mbh_data->logLx = double_vector(NC);
-    mbh_data->paramx = double_matrix(NC,NP);
-    mbh_data->paramy = double_matrix(NC,NP);
-    mbh_data->history = double_tensor(NC,mbh_data->NH,NP);
-    mbh_data->ejump = double_matrix(NC,NP);
-    mbh_data->evec = double_tensor(NC,NP,NP);
+    mbh_data->paramx = double_matrix(NC,NParams);
+    mbh_data->paramy = double_matrix(NC,NParams);
+    mbh_data->history = double_tensor(NC,mbh_data->NH,NParams);
+    mbh_data->ejump = double_matrix(NC,NParams);
+    mbh_data->evec = double_tensor(NC,NParams,NParams);
     mbh_data->sx = double_matrix(NC,mbh_data->data->Nch);
     mbh_data->sy = double_matrix(NC,mbh_data->data->Nch);
-    mbh_data->max = (double*)malloc(sizeof(double)* (NP));
-    mbh_data->min = (double*)malloc(sizeof(double)* (NP));
+    mbh_data->max = (double*)malloc(sizeof(double)* (NParams));
+    mbh_data->min = (double*)malloc(sizeof(double)* (NParams));
     mbh_data->who = int_vector(NC);
     mbh_data->av = int_matrix(5,NC);
     mbh_data->cv = int_matrix(5,NC);
@@ -236,7 +274,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     mbh_data->paramx[0][10]=2.401959040445284e-02;
     map_params(2, mbh_data->paramx[0]);
 
-    for(int i=1; i<NC; i++) for(int j=0; j<NP; j++) mbh_data->paramx[i][j] = mbh_data->paramx[0][j];
+    for(int i=1; i<NC; i++) for(int j=0; j<NParams; j++) mbh_data->paramx[i][j] = mbh_data->paramx[0][j];
 
     //set up heterodyne likelihood
     het_space(mbh_data->data, mbh_data->het, 2, mbh_data->paramx[0], mbh_data->min, mbh_data->max);
@@ -253,7 +291,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     {
         for (int k=0; k< mbh_data->NH; k++)
         {
-            for (int j=0; j< NP; j++) mbh_data->history[i][k][j] = mbh_data->paramx[i][j];
+            for (int j=0; j< NParams; j++) mbh_data->history[i][k][j] = mbh_data->paramx[i][j];
         }
     }
     
@@ -277,7 +315,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     
     
     /* check that data got filled correctly */
-    if(procID==0)
+    if(procID>=mbh_data->procID_min && procID<=mbh_data->procID_max)
     {
         char filename[1024];
         FILE *tempFile;
