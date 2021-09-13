@@ -455,7 +455,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
         else if(alpha > b) typ = 1;
         else if(alpha > c) typ = 2;
         else               typ = 3;
-        printf("mbh proposal typ %i (alpha=%g)\n",typ,alpha);
+
         #pragma omp parallel for
         for(int i=0; i < NC; i++) update(dat, het, typ, i, 2, logLx, paramx, paramy, sx, sy, min, max, who, heat, history, NH, ejump, evec, cv, av, rvec[i]);
     }
