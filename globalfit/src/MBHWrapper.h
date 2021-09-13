@@ -37,24 +37,35 @@ struct MBHData
     int *who; //!< Keep track of which chain is at which temperature
     double *heat; //!< Temperature ladder for PTMCMC
     double ***history; //!< Buffer of chain samples for Differential Evolution
+    double ***Fisher; //!< Fisher Information Matrix
     double **ejump; //!< Scale for Fisher matrix proposals
     double ***evec; //!< Directions for Fisher matrix proposals
     int **cv; //!< Unknown
     int **av; //!< Unknown
     gsl_rng **rvec; //!< Vector of RNG seeds for multithreading PTMCMC
 
+    int NC; //!< Number of chains
     int NH; //!< Some global variable?
     int NMBH; //!< Number of MBHs found from search in data segment
     double logLmax; //!< Max log likelihood
     
     char searchDir[MAXSTRINGSIZE]; //!<store `DIRNAME` containing output from mbh search
-    double **segParams;
+    double **segParams; //!<store parameters from search phase
+    
+    char chainDir[MAXSTRINGSIZE]; //!<location to print chain files
+    FILE *chainFile;
 };
 
 void parse_mbh_args(int argc, char **argv, struct MBHData *data);
 
 void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, int procID);
 
+void select_mbh_segment(struct MBH_Data *data, struct TDI *tdi_full);
+
 void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID);
+
+void initialize_mbh_sampler(struct MBHData *mbh_data);
+
+int update_mbh_sampler(struct MBHData *mbh_data);
 
 #endif /* MBHWrapper_h */

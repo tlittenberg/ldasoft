@@ -71,13 +71,6 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->T = T;
     noise_data->data->N = N*Nseg + 2*qpad;
     noise_data->data->qpad = qpad;
-
-    //TODO: Fix this hacky noise model frequency alignment
-    noise_data->data->fmin = gbmcmc_data->data->fmin;
-    noise_data->data->fmin += 2*(double)N/T; //shift start by two segment (proc 0,1 don't have gbmcmc)
-    
-    noise_data->data->fmin = 1e-4;
-    noise_data->data->fmax = 3e-2;
     
     noise_data->data->fmin = (gbmcmc_data->data->fmin > mbh_data->data->fmin ) ? mbh_data->data->fmin : gbmcmc_data->data->fmin;
     noise_data->data->fmax = (gbmcmc_data->data->fmax > mbh_data->data->fmax ) ? gbmcmc_data->data->fmax : mbh_data->data->fmax;
