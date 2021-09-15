@@ -75,6 +75,12 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->fmin = (gbmcmc_data->data->fmin > mbh_data->data->fmin ) ? mbh_data->data->fmin : gbmcmc_data->data->fmin;
     noise_data->data->fmax = (gbmcmc_data->data->fmax > mbh_data->data->fmax ) ? gbmcmc_data->data->fmax : mbh_data->data->fmax;
     
+    //pad noise model
+    noise_data->data->fmin /= 1.25;
+    noise_data->data->fmax *= 1.25;
+    
+    /*DEBUG*/printf("pid=%i: fmin=%g,fmax=%g, mbh->[%g,%g], gb=[%g,%g]\n",procID,noise_data->data->fmin,noise_data->data->fmax,mbh_data->data->fmin,mbh_data->data->fmax,gbmcmc_data->data->fmin,gbmcmc_data->data->fmax);
+    
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
     
     alloc_data(noise_data->data, noise_data->flags);
@@ -86,6 +92,9 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->qmax = noise_data->data->qmin+noise_data->data->N;
     noise_data->data->fmax = (double)noise_data->data->qmax/T;
     
+    //store max and min frequency in MBH structure
+    mbh_data->data->fmin = noise_data->data->fmin;
+    mbh_data->data->fmax = noise_data->data->fmax;
     
     select_frequency_segment(noise_data->data, tdi_full);
     

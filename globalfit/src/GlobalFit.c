@@ -214,6 +214,101 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
 
 }
 
+static void share_mbh_model(struct MBHData *mbh_data, int MBH_Flag, struct GBMCMCData *gbmcmc_data, struct GlobalFitData *global_fit, int root, int procID)
+{
+    int NF;
+    int index;
+    
+    /* send MBH models to root */
+    if(MBH_Flag)
+    {
+        NF = mbh_data->het->MM - mbh_data->het->MN;
+        index = 2*(int)(mbh_data->data->fmin*mbh_data->data->Tobs);
+        
+        get_mbh_waveform(mbh_data);
+
+        MPI_Send(&NF, 1, MPI_INT, root, 0, MPI_COMM_WORLD); //number of frequency bins for MBH model
+        MPI_Send(&index, 1, MPI_INT, root, 1, MPI_COMM_WORLD); //first bin for MBH model
+        MPI_Send(mbh_data->tdi->A+index, 2*NF, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
+        MPI_Send(mbh_data->tdi->E+index, 2*NF, MPI_DOUBLE, root, 3, MPI_COMM_WORLD);
+    }
+    
+    /* combine all incoming MBH waveforms */
+    if(procID==root)
+    {
+        MPI_Status status;
+        int procID_min = mbh_data->procID_min;
+        int procID_max = mbh_data->procID_max;
+        int N = global_fit->tdi_full->N;
+                
+        double *A = malloc(N*sizeof(double));
+        double *E = malloc(N*sizeof(double));
+        
+        //zero out mbh model
+        for(int i=0; i<global_fit->tdi_mbh->N*2; i++)
+        {
+            global_fit->tdi_mbh->A[i] = 0.0;
+            global_fit->tdi_mbh->E[i] = 0.0;
+        }
+
+        for(int n=procID_min; n<=procID_max; n++)
+        {
+            MPI_Recv(&NF, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
+            MPI_Recv(&index, 1, MPI_INT, n, 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(A+index, 2*NF, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
+            MPI_Recv(E+index, 2*NF, MPI_DOUBLE, n, 3, MPI_COMM_WORLD, &status);
+            
+            for(int i=0; i<2*NF; i++)
+            {
+                global_fit->tdi_mbh->A[index+i] += A[i+index];
+                global_fit->tdi_mbh->E[index+i] += E[i+index];
+            }            
+        }
+        
+        free(A);
+        free(E);
+    }
+    
+    /* Root sends joint mbh model to all other worker nodes */
+    if(procID==root)
+    {
+        
+        //send to VBMCMC node
+        MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+        MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
+
+        //send segments to GBMCMC nodes
+        for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
+        {
+            int index = 2*(id-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
+            MPI_Send(global_fit->tdi_mbh->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(global_fit->tdi_mbh->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
+    }
+    
+    /* Recieve mbh segment for VB model */
+    if(procID==1)
+    {
+        MPI_Status status;
+
+        //receive mbh model from root node
+        MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+    }
+
+    /* Receive mbh segment at gbmcmc models */
+    if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
+    {
+        MPI_Status status;
+
+        int index = 2*(procID-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
+        MPI_Recv(global_fit->tdi_mbh->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(global_fit->tdi_mbh->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+    }
+
+
+}
+
 static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct MBHData *mbh_data, struct GlobalFitData *global_fit, int root, int procID)
 {
 
@@ -278,7 +373,7 @@ static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *g
 
 }
 
-static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, int VBMCMC_Flag)
+static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, int VBMCMC_Flag, int MBH_Flag)
 {
     
     memcpy(global_fit->tdi_full->A, global_fit->tdi_store->A, 2*global_fit->tdi_full->N*sizeof(double));
@@ -296,6 +391,12 @@ static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, i
         {
             global_fit->tdi_full->A[i] -= global_fit->tdi_vgb->A[i];
             global_fit->tdi_full->E[i] -= global_fit->tdi_vgb->E[i];
+        }
+        
+        if(!MBH_Flag)
+        {
+            global_fit->tdi_full->A[i] -= global_fit->tdi_mbh->A[i];
+            global_fit->tdi_full->E[i] -= global_fit->tdi_mbh->E[i];
         }
     }
 
@@ -515,7 +616,7 @@ int main(int argc, char *argv[])
         if(GBMCMC_Flag)
         {
             
-            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
             
             select_frequency_segment(gbmcmc_data->data, tdi_full);
 
@@ -532,7 +633,7 @@ int main(int argc, char *argv[])
         /* vbmcmc sampler gibbs update */
         if(VBMCMC_Flag)
         {
-            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
 
             select_vbmcmc_segments(vbmcmc_data, tdi_full);
 
@@ -549,7 +650,7 @@ int main(int argc, char *argv[])
         /* noise model update */
         if(Noise_Flag)
         {
-            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag);
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
 
             select_frequency_segment(noise_data->data, tdi_full);
 
@@ -564,9 +665,11 @@ int main(int argc, char *argv[])
         /* mbh model update */
         if(MBH_Flag)
         {
-            //create_residual(global_Fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
             
-            select_mbh_segment(mbh_data->data, tdi_full);
+            select_mbh_segment(mbh_data, tdi_full);
+            
+            select_mbh_noise(mbh_data, global_fit->psd);
 
             mbh_data->status = update_mbh_sampler(mbh_data);
         }
@@ -582,9 +685,9 @@ int main(int argc, char *argv[])
         share_noise_model(noise_data, gbmcmc_data, mbh_data, global_fit, root, procID);
         share_vbmcmc_model(vbmcmc_data, gbmcmc_data, global_fit, root, procID);
         share_gbmcmc_model(gbmcmc_data, GBMCMC_Flag, global_fit, root, procID);
-        //share_mbh_model(noise_data, gbmcmc_data, mbh_data, global_fit, root, procID);
+        share_mbh_model(mbh_data, MBH_Flag, gbmcmc_data, global_fit, root, procID);
         
-        /* Debugging 
+        /* DEBUG
         if(Noise_Flag) print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
         if(VBMCMC_Flag)
         {
@@ -594,6 +697,23 @@ int main(int argc, char *argv[])
         {
             copy_noise(gbmcmc_data->model[gbmcmc_data->chain->index[0]]->noise[0], gbmcmc_data->data->noise[0]);
             print_data(gbmcmc_data->data, gbmcmc_data->data->tdi[0], gbmcmc_data->flags, 0);
+        }
+        if(MBH_Flag)
+        {
+            char tempFileName[MAXSTRINGSIZE];
+            sprintf(tempFileName,"%s/power_data_0.dat.temp",mbh_data->flags->runDir);
+            FILE *tempFile = fopen(tempFileName,"w");
+            for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
+            {
+                int re = i;
+                int im = mbh_data->data->N-i;
+                double f = (double)i/mbh_data->data->Tobs;
+                fprintf(tempFile,"%lg %lg %lg\n",f,
+                        mbh_data->data->data[0][re]*mbh_data->data->data[0][re]+mbh_data->data->data[0][im]*mbh_data->data->data[0][im],
+                        mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
+            }
+            fclose(tempFile);
+
         }*/
         
     }while(gbmcmc_data->status!=0);

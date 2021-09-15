@@ -21,7 +21,8 @@ struct MBHData
     int procID_max; //!<highest rank MPI process for MBH block
     
     struct Flags *flags; //!<Command line flags
-
+    struct TDI *tdi; //!<TDI representation of waveform models
+    
     /*!
      LMBH-specific types
      */
@@ -60,12 +61,16 @@ void parse_mbh_args(int argc, char **argv, struct MBHData *data);
 
 void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, int procID);
 
-void select_mbh_segment(struct MBH_Data *data, struct TDI *tdi_full);
+void select_mbh_segment(struct MBHData *mbh_data, struct TDI *tdi_full);
+
+void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd);
 
 void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID);
 
 void initialize_mbh_sampler(struct MBHData *mbh_data);
 
 int update_mbh_sampler(struct MBHData *mbh_data);
+
+void get_mbh_waveform(struct MBHData *mbh_data);
 
 #endif /* MBHWrapper_h */

@@ -40,6 +40,9 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
     int procID = gbmcmc_data->procID;
     int procID_min = gbmcmc_data->procID_min;
     
+    /* don't let procID go below procID_min (for frequency spacing) */
+    if(procID<procID_min) procID = procID_min;
+    
     /* Aliases to gbmcmc structures */
     struct Flags *flags = gbmcmc_data->flags;
     struct Orbit *orbit = gbmcmc_data->orbit;

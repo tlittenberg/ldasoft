@@ -134,6 +134,7 @@ void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, in
     mbh_data->data = malloc(sizeof(struct MBH_Data));
     mbh_data->het = malloc(sizeof(struct Het));
     mbh_data->flags = malloc(sizeof(struct Flags));
+    mbh_data->tdi = malloc(sizeof(struct TDI));
     
     memcpy(mbh_data->flags, gbmcmc_data->flags, sizeof(struct Flags));
 }
@@ -168,8 +169,9 @@ static void set_mbh_priors(struct MBH_Data *dat, double *min, double *max)
     min[10] = -1.0;
 }
 
-void select_mbh_segment(struct MBH_Data *data, struct TDI *tdi_full)
+void select_mbh_segment(struct MBHData *mbh_data, struct TDI *tdi_full)
 {
+    struct MBH_Data *data = mbh_data->data;
     /*
      fill data matrix with FD TDI data
       MBH sampler uses GSL FFT conventions for complex arrays
@@ -188,8 +190,26 @@ void select_mbh_segment(struct MBH_Data *data, struct TDI *tdi_full)
         data->data[0][k] = tdi_full->A[2*i+1]; //im
         data->data[1][j] = tdi_full->E[2*i];   //re
         data->data[1][k] = tdi_full->E[2*i+1]; //im
-    
     }
+}
+
+void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd)
+{
+    double Tobs = mbh_data->data->Tobs;
+    int nstart = (int)(psd->f[0]*Tobs);
+    int mstart = mbh_data->het->MN;
+    int mstop  = mbh_data->het->MM;
+    
+    /*DEBUG FILE *temp = fopen("/Users/tyson/Research/GalacticBinaries/Sangria/03mo/seg/noise_test.dat","w"); */
+    for(int i=mstart; i<mstop; i++)
+    {
+        mbh_data->data->SN[0][i] = psd->SnA[i-nstart];
+        mbh_data->data->SN[1][i] = psd->SnE[i-nstart];
+        mbh_data->data->SM[0][i] = psd->SnA[i-nstart];
+        mbh_data->data->SM[1][i] = psd->SnE[i-nstart];
+        //fprintf(temp,"%lg %lg %lg\n",(double)i/Tobs, mbh_data->data->SN[0][i], mbh_data->data->SN[1][i]);
+    }
+    //fclose(temp);
 }
 
 void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID)
@@ -219,7 +239,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
      fill data matrix with FD TDI data
       MBH sampler uses GSL FFT conventions for complex arrays
      */
-    select_mbh_segment(mbh_data->data, tdi_full);
+    select_mbh_segment(mbh_data, tdi_full);
 
     /* allocate the memory needed for the MBH update() function */
     mbh_data->NC = 24;
@@ -289,6 +309,14 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     mbh_data->data->fmin = fmin;
     mbh_data->data->fmax = fmax;
         
+    
+    /*
+     create storage for full TDI of waveform model
+     */
+    alloc_tdi(mbh_data->tdi, tdi_full->N, tdi_full->Nchannel);
+    mbh_data->tdi->delta = tdi_full->delta;
+
+    
     free(params);
 }
 
@@ -338,7 +366,8 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
     double x = pow((SNR/5.0),1.0/(double)(mbh_data->NC-NCC));
     if(x > 1.3) x = 1.3;
     for (int i=NCC; i< mbh_data->NC; i++) mbh_data->heat[i] = mbh_data->heat[i-1]*x;
-    
+    /*DEBUG printf("SNR %f increment %f max heat %f SNReff = %f\n", SNR, x, mbh_data->heat[mbh_data->NC-1], SNR/mbh_data->heat[mbh_data->NC-1]);*/
+
     
     /* store data segment in ASCII format */
     char filename[MAXSTRINGSIZE];
@@ -376,7 +405,41 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
             memcpy(mbh_data->evec[i][j],mbh_data->evec[0][j],NParams*sizeof(double));
         }
     }
- 
+    
+    /* DEBUG
+    
+    int NF = mbh_data->het->MM - mbh_data->het->MN;
+    
+    double *f = malloc(NF*sizeof(double));
+    double *A_amp = malloc(NF*sizeof(double));
+    double *E_amp = malloc(NF*sizeof(double));
+    double *A_phi = malloc(NF*sizeof(double));
+    double *E_phi = malloc(NF*sizeof(double));
+    
+    for(int n=0; n<NF; n++) f[n] = mbh_data->data->fmin + (double)n/mbh_data->data->Tobs;
+    
+    fullphaseamp(mbh_data->data, 2, NF, mbh_data->paramx[0], f, A_amp, E_amp, A_phi, E_phi);
+    sprintf(filename,"%s/start_waveform.dat",mbh_data->flags->runDir);
+    FILE *temp = fopen(filename,"w");
+    for(int n=0; n<NF; n++)
+    {
+        fprintf(temp,"%lg %lg %lg %lg %lg\n",
+                f[n],
+                A_amp[n]*cos(A_phi[n]),
+                A_amp[n]*sin(A_phi[n]),
+                E_amp[n]*cos(E_phi[n]),
+                E_amp[n]*sin(E_phi[n]) );
+    }
+    fclose(temp);
+    
+    free(f);
+    free(A_amp);
+    free(E_amp);
+    free(A_phi);
+    free(E_phi);
+    
+    */
+    freehet(mbh_data->het);
 }
 
 int update_mbh_sampler(struct MBHData *mbh_data)
@@ -414,6 +477,12 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     double c = 0.0;
 
     
+    // use one of the cold chains to produce the reference waveform
+    het_space(dat, het, 2, paramx[who[0]], min, max);
+    heterodyne(dat, het, 2, paramx[who[0]]);
+    //printf("SNR %f\n", het->SNR);
+
+    
     //initialize likelihood for each chain
     for(int i=0; i< NC; i++)  logLx[i] = log_likelihood_het(dat, het, 2, paramx[i], sx[i]);
 
@@ -429,35 +498,38 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     double alpha = gsl_rng_uniform(rvec[0]);
     double beta;
     
-    // decide if we are doing a MCMC update of all the chains or a PT swap
-    if((NC > 1) && (alpha < 0.2)) // chain swap
+    for(int steps = 0; steps<100; steps++)
     {
-        int hold; //hold on to current chain index
-        alpha = (double)(NC-1)*gsl_rng_uniform(rvec[0]);
-        int j = (int)(alpha);
-        beta = exp((logLx[who[j]]-logLx[who[j+1]])/heat[j+1] - (logLx[who[j]]-logLx[who[j+1]])/heat[j]);
-        alpha = gsl_rng_uniform(rvec[0]);
-        if(beta > alpha)
+        // decide if we are doing a MCMC update of all the chains or a PT swap
+        if((NC > 1) && (alpha < 0.2)) // chain swap
         {
-            hold = who[j];
-            who[j] = who[j+1];
-            who[j+1] = hold;
+            int hold; //hold on to current chain index
+            alpha = (double)(NC-1)*gsl_rng_uniform(rvec[0]);
+            int j = (int)(alpha);
+            beta = exp((logLx[who[j]]-logLx[who[j+1]])/heat[j+1] - (logLx[who[j]]-logLx[who[j+1]])/heat[j]);
+            alpha = gsl_rng_uniform(rvec[0]);
+            if(beta > alpha)
+            {
+                hold = who[j];
+                who[j] = who[j+1];
+                who[j+1] = hold;
+            }
         }
-    }
-    else // MCMC update
-    {
-        for(int j = 0; j < NC; j++)  for(int i = 0; i < NParams; i++) paramy[j][i] = paramx[j][i];
-        
-        // all chains do the same type of update since some (especially type 2) are much slower than the others. Saves them waiting on others to finish
-        alpha = gsl_rng_uniform(rvec[0]);
-        
-        if(alpha > a)      typ = 0;
-        else if(alpha > b) typ = 1;
-        else if(alpha > c) typ = 2;
-        else               typ = 3;
-
-        #pragma omp parallel for
-        for(int i=0; i < NC; i++) update(dat, het, typ, i, 2, logLx, paramx, paramy, sx, sy, min, max, who, heat, history, NH, ejump, evec, cv, av, rvec[i]);
+        else // MCMC update
+        {
+            for(int j = 0; j < NC; j++)  for(int i = 0; i < NParams; i++) paramy[j][i] = paramx[j][i];
+            
+            // all chains do the same type of update since some (especially type 2) are much slower than the others. Saves them waiting on others to finish
+            alpha = gsl_rng_uniform(rvec[0]);
+            
+            if(alpha > a)      typ = 0;
+            else if(alpha > b) typ = 1;
+            else if(alpha > c) typ = 2;
+            else               typ = 3;
+            
+            #pragma omp parallel for
+            for(int i=0; i < NC; i++) update(dat, het, typ, i, 2, logLx, paramx, paramy, sx, sy, min, max, who, heat, history, NH, ejump, evec, cv, av, rvec[i]);
+        }
     }
         
     
@@ -474,6 +546,60 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     }
     
     free(m);
-    
+    freehet(mbh_data->het);
     return 1;
+}
+
+void get_mbh_waveform(struct MBHData *mbh_data)
+{
+    int NF = mbh_data->het->MM - mbh_data->het->MN;
+    int index = (int)(mbh_data->data->fmin*mbh_data->data->Tobs);
+
+    /* temporary storage for phase and amplitude */
+    double *f = malloc(NF*sizeof(double));
+    double *A_amp = malloc(NF*sizeof(double));
+    double *E_amp = malloc(NF*sizeof(double));
+    double *A_phi = malloc(NF*sizeof(double));
+    double *E_phi = malloc(NF*sizeof(double));
+
+    for(int n=0; n<NF; n++) f[n] = mbh_data->data->fmin + (double)n/mbh_data->data->Tobs;
+
+    /* returns phase and amplitude for A and E channels on input frequency grid */
+    int *who = mbh_data->who;
+    fullphaseamp(mbh_data->data, 2, NF, mbh_data->paramx[who[0]], f, A_amp, E_amp, A_phi, E_phi);
+
+    /* insert TDI(f) into correct section of TDI structure */
+    for(int n=0; n<NF; n++)
+    {
+        int re = 2*(n+index);
+        int im = re+1;
+        
+        mbh_data->tdi->A[re] = A_amp[n]*cos(A_phi[n]);
+        mbh_data->tdi->A[im] = A_amp[n]*sin(A_phi[n]);
+        mbh_data->tdi->E[re] = E_amp[n]*cos(E_phi[n]);
+        mbh_data->tdi->E[im] = E_amp[n]*sin(E_phi[n]);
+
+    }
+    /* DEBUG
+    char filename[1024];
+    sprintf(filename,"%s/current_waveform.dat",mbh_data->flags->runDir);
+    FILE *temp = fopen(filename,"w");
+    for(int n=0; n<mbh_data->tdi->N; n++)
+    {
+        fprintf(temp,"%lg %lg %lg %lg %lg\n",
+                (double)n/mbh_data->data->Tobs,
+                mbh_data->tdi->A[2*n],
+                mbh_data->tdi->A[2*n+1],
+                mbh_data->tdi->E[2*n],
+                mbh_data->tdi->E[2*n+1]);
+    }
+    fclose(temp);*/
+    
+
+    free(f);
+    free(A_amp);
+    free(E_amp);
+    free(A_phi);
+    free(E_phi);
+
 }
