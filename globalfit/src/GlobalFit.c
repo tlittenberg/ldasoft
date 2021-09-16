@@ -80,7 +80,11 @@ static void share_data(struct TDI *tdi_full, int root, int procID)
 }
 
 
-static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc_data, struct GlobalFitData *gf, int root, int procID)
+static void share_vbmcmc_model(struct GBMCMCData *gbmcmc_data,
+                               struct VBMCMCData *vbmcmc_data,
+                               struct MBHData *mbh_data,
+                               struct GlobalFitData *gf,
+                               int root, int procID)
 {
 
     /* get waveforms from vbmcmc sampler and send to root */
@@ -130,6 +134,13 @@ static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GBMCMCData
             MPI_Send(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
             MPI_Send(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
         }
+        
+        //send full model to MBH nodes
+        for(int id=mbh_data->procID_min; id<=mbh_data->procID_max; id++)
+        {
+            MPI_Send(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
 
     }
     
@@ -142,11 +153,25 @@ static void share_vbmcmc_model(struct VBMCMCData *vbmcmc_data, struct GBMCMCData
         MPI_Recv(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
+    
+    /* Recieve vgb segment at MBH models */
+    if(procID>=mbh_data->procID_min && procID<=mbh_data->procID_max)
+    {
+        MPI_Status status;
+
+        MPI_Recv(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+    }
+
 }
 
-static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, struct GlobalFitData *gf, int root, int procID)
+static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
+                               struct VBMCMCData *vbmcmc_data,
+                               struct MBHData *mbh_data,
+                               struct GlobalFitData *gf,
+                               int root, int procID)
 {
-    if(GBMCMC_Flag)
+    if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
     {
         struct Data *data = gbmcmc_data->data;
         struct Chain *chain = gbmcmc_data->chain;
@@ -199,11 +224,31 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
     if(procID==root)
     {
         //send to VBMCMC node
-        int procVB=1;
-        MPI_Send(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, procVB, 0, MPI_COMM_WORLD);
-        MPI_Send(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, procVB, 1, MPI_COMM_WORLD);
+        for(int id=vbmcmc_data->procID_min; id<=vbmcmc_data->procID_max; id++)
+        {
+            MPI_Send(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
+        
+        //send to MBH node
+        for(int id=mbh_data->procID_min; id<=mbh_data->procID_max; id++)
+        {
+            MPI_Send(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
     }
-    if(procID==1)
+    
+    //recieve
+    if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
+    {
+        MPI_Status status;
+
+        //receive UCB model from root node
+        MPI_Recv(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+    }
+    
+    if(procID>=mbh_data->procID_min && procID<=mbh_data->procID_max)
     {
         MPI_Status status;
 
@@ -214,13 +259,17 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data, int GBMCMC_Flag, 
 
 }
 
-static void share_mbh_model(struct MBHData *mbh_data, int MBH_Flag, struct GBMCMCData *gbmcmc_data, struct GlobalFitData *global_fit, int root, int procID)
+static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
+                            struct VBMCMCData *vbmcmc_data,
+                            struct MBHData *mbh_data,
+                            struct GlobalFitData *global_fit,
+                            int root, int procID)
 {
     int NF;
     int index;
     
     /* send MBH models to root */
-    if(MBH_Flag)
+    if(procID >= mbh_data->procID_min && procID <= mbh_data->procID_max)
     {
         NF = mbh_data->het->MM - mbh_data->het->MN;
         index = 2*(int)(mbh_data->data->fmin*mbh_data->data->Tobs);
@@ -274,33 +323,34 @@ static void share_mbh_model(struct MBHData *mbh_data, int MBH_Flag, struct GBMCM
     {
         
         //send to VBMCMC node
-        MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
-        MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
+        MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
+        MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
 
         //send segments to GBMCMC nodes
         for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
         {
-            MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+            MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
         }
     }
     
     /* Recieve mbh segment for VB model */
-    if(procID==1)
+    if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
     {
         MPI_Status status;
 
         //receive mbh model from root node
-        MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
 
     /* Receive mbh segment at gbmcmc models */
     if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
     {
         MPI_Status status;
-        MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+
+        MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
 
 
@@ -680,9 +730,9 @@ int main(int argc, char *argv[])
 
         /* distribute current state of models to worker nodes */
         share_noise_model(noise_data, gbmcmc_data, mbh_data, global_fit, root, procID);
-        share_vbmcmc_model(vbmcmc_data, gbmcmc_data, global_fit, root, procID);
-        share_gbmcmc_model(gbmcmc_data, GBMCMC_Flag, global_fit, root, procID);
-        share_mbh_model(mbh_data, MBH_Flag, gbmcmc_data, global_fit, root, procID);
+        share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        share_mbh_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         
         /* DEBUG
         if(Noise_Flag) print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
@@ -710,7 +760,6 @@ int main(int argc, char *argv[])
                         mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
             }
             fclose(tempFile);
-
         }*/
         
     }while(gbmcmc_data->status!=0);
