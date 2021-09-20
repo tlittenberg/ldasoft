@@ -26,6 +26,8 @@ struct VBMCMCData
     struct Proposal ***proposal_vec;
     struct Model ***trial_vec;
     struct Model ***model_vec;
+    
+    double cpu_time; //!<CPU time for single update
 };
 
 void alloc_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc_data, int procID);

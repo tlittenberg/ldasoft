@@ -257,6 +257,9 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
         MPI_Recv(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
 
+    /* Broadcast run time of first UCB setgment (used to scale other UCB updates) */
+    MPI_Bcast(&gbmcmc_data->cpu_time, 1, MPI_DOUBLE, gbmcmc_data->procID_min, MPI_COMM_WORLD);
+
 }
 
 static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
@@ -352,6 +355,9 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
         MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
+
+    /* Broadcast run time of first MBH source (used to scale other updates) */
+    MPI_Bcast(&mbh_data->cpu_time, 1, MPI_DOUBLE, mbh_data->procID_min, MPI_COMM_WORLD);
 
 
 }
@@ -648,13 +654,17 @@ int main(int argc, char *argv[])
         MBH_Flag = 1;
         initialize_mbh_sampler(mbh_data);
     }
-    
+
+    /* number of update steps for each module (scaled to MBH model update) */
+    int cycle=1;
+
     /*
      * Master Blocked Gibbs sampler
      *
      */
     do
     {
+        
         /* ============================= */
         /*     ULTRACOMPACT BINARIES     */
         /* ============================= */
@@ -662,15 +672,15 @@ int main(int argc, char *argv[])
         /* gbmcmc sampler gibbs update */
         if(GBMCMC_Flag)
         {
-            
             create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
             
             select_frequency_segment(gbmcmc_data->data, tdi_full);
 
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
-            //extra calls to update_gbmcmc_sampler() to make up for MPI costs
-            gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+            cycle = (int)(mbh_data->cpu_time/gbmcmc_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+                gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
         }
            
         /* ============================= */
@@ -687,7 +697,9 @@ int main(int argc, char *argv[])
             for(int n=0; n<vbmcmc_data->flags->NVB; n++)
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
-            vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
+            cycle = (int)(mbh_data->cpu_time/vbmcmc_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+                vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
         }
 
         /* ============================= */
@@ -701,7 +713,9 @@ int main(int argc, char *argv[])
 
             select_frequency_segment(noise_data->data, tdi_full);
 
-            noise_data->status = update_noise_sampler(noise_data);
+            cycle = (int)(mbh_data->cpu_time/noise_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+                noise_data->status = update_noise_sampler(noise_data);
             
         }
 
@@ -733,8 +747,8 @@ int main(int argc, char *argv[])
         share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         share_mbh_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        
-        /* DEBUG
+                
+        /* DEBUG */
         if(Noise_Flag) print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
         if(VBMCMC_Flag)
         {
@@ -760,7 +774,7 @@ int main(int argc, char *argv[])
                         mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
             }
             fclose(tempFile);
-        }*/
+        }
         
     }while(gbmcmc_data->status!=0);
     

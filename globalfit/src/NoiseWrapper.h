@@ -23,6 +23,8 @@ struct NoiseData
     struct Chain *chain;
     struct Data  *data;
     struct SplineModel **model;
+    
+    double cpu_time; //!<CPU time for single update
 };
 
 void alloc_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, int procID, int nProc);

@@ -25,6 +25,8 @@ struct GBMCMCData
     struct Proposal **proposal;
     struct Model **trial;
     struct Model **model;
+    
+    double cpu_time; //!<CPU time for single update
 };
 
 void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID);

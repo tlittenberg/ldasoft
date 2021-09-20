@@ -7,6 +7,7 @@
 
 #include <mpi.h>
 #include <omp.h>
+#include <time.h>
 #include <string.h>
 
 #include <stdio.h>
@@ -76,8 +77,12 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
         GalacticBinaryParseCatalogCache(data);
         GalacticBinaryLoadCatalog(data);
     }
-
-
+    
+    /*
+     Initialize measured time of model update.
+     Used to determin number of steps relative to mbh model
+     */
+    gbmcmc_data->cpu_time = 1.0;
 }
 
 void select_frequency_segment(struct Data *data, struct TDI *tdi_full)
@@ -183,6 +188,8 @@ static void print_sampler_state(struct GBMCMCData *gbmcmc_data)
 
 int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 {
+    clock_t start = clock();
+
     /* Aliases to gbmcmc structures */
     struct Flags *flags = gbmcmc_data->flags;
     struct Orbit *orbit = gbmcmc_data->orbit;
@@ -299,6 +306,9 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 #pragma omp barrier
         
     }// End of parallelization
+    
+    clock_t stop = clock();
+    gbmcmc_data->cpu_time = (double)(stop-start);
     
     return 1;
 }

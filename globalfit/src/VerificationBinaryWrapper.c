@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <math.h>
 #include <omp.h>
 
@@ -127,6 +128,12 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
         vbmcmc_data->trial_vec[n] = malloc(sizeof(struct Model*)*vbmcmc_data->chain_vec[n]->NC);
         vbmcmc_data->model_vec[n] = malloc(sizeof(struct Model*)*vbmcmc_data->chain_vec[n]->NC);
     }
+    
+    /*
+     Initialize measured time of model update.
+     Used to determine number of steps relative to mbh model
+     */
+    vbmcmc_data->cpu_time = 1.0;
 }
 
 
@@ -173,6 +180,8 @@ void initialize_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
 
 int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
 {
+    clock_t start = clock();
+
     /* Aliases to gbmcmc structures */
     struct Flags *flags = vbmcmc_data->flags;
     struct Orbit *orbit = vbmcmc_data->orbit;
@@ -309,7 +318,9 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
         
     }// End of parallelization
     
-    
+    clock_t stop = clock();
+    vbmcmc_data->cpu_time = (double)(stop-start);
+
     return 1;
 }
 
@@ -318,8 +329,8 @@ void select_vbmcmc_segments(struct VBMCMCData *vbmcmc_data, struct TDI *tdi)
     for(int n=0; n<vbmcmc_data->flags->NVB; n++)
     {
         struct Data *data = vbmcmc_data->data_vec[n];
-        struct Flags *flags = vbmcmc_data->flags;
         select_frequency_segment(data,tdi);
+        //struct Flags *flags = vbmcmc_data->flags;
         //print_data(data, data->tdi[0], flags, 0);
     }
 }

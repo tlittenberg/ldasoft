@@ -7,8 +7,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <getopt.h>
+#include <time.h>
+#include <math.h>
+#include <omp.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -139,35 +141,7 @@ void alloc_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, in
     memcpy(mbh_data->flags, gbmcmc_data->flags, sizeof(struct Flags));
 }
 
-static void set_mbh_priors(struct MBH_Data *dat, double *min, double *max)
-{
-    max[0] = log(0.44*5.0e8);
-    max[1] = log(5.0e8);
-    min[0] = log(1.0e2);
-    min[1] = log(1.0e3);
-    
-    
-    max[2] = 0.999;
-    max[3] = 0.999;
-    max[4] = PI;
-    max[5] = 2.0*dat->Tend;
-    max[6] = log(1.0e3);
-    max[7] = 1.0;
-    max[8] = 2.0*PI;
-    max[9] = PI;
-    max[10] = 1.0;
-    
-    
-    min[2] = -0.999;
-    min[3] = -0.999;
-    min[4] = 0.0;
-    min[5] = 1.01*dat->Tstart;
-    min[6] = log(0.1);
-    min[7] = -1.0;
-    min[8] = 0.0;
-    min[9] = 0.0;
-    min[10] = -1.0;
-}
+
 
 void select_mbh_segment(struct MBHData *mbh_data, struct TDI *tdi_full)
 {
@@ -241,8 +215,16 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
      */
     select_mbh_segment(mbh_data, tdi_full);
 
+    
+    /* set number of chains to fill available number of threads */
+    mbh_data->NC = 24; //minimum chain count
+    
+    //Chains should be a multiple of threads for best usage of cores
+    if(mbh_data->NC % mbh_data->flags->threads !=0){
+        mbh_data->NC += mbh_data->flags->threads - (mbh_data->NC % mbh_data->flags->threads);
+    }
+    
     /* allocate the memory needed for the MBH update() function */
-    mbh_data->NC = 24;
     mbh_data->NH = 1000;
     mbh_data->heat = double_vector(mbh_data->NC);
     mbh_data->logLx = double_vector(mbh_data->NC);
@@ -275,7 +257,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
         gsl_rng_set(mbh_data->rvec[i] , i);
     }
 
-    set_mbh_priors(mbh_data->data,mbh_data->min,mbh_data->max);
+    set_mbh_priors(mbh_data->data,2,mbh_data->min,mbh_data->max);
 
     //initialize PSD model
     for(int i=0; i<mbh_data->data->N/2; i++)
@@ -305,6 +287,11 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
         
         if(fstart < fmin) fmin = fstart;
         if(fstop  > fmax) fmax = fstop;
+        
+        //het_space allocates memory!
+        free(mbh_data->het->fgrid);
+        free(mbh_data->het->freq);
+
     }
     mbh_data->data->fmin = fmin;
     mbh_data->data->fmax = fmax;
@@ -316,7 +303,12 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     alloc_tdi(mbh_data->tdi, tdi_full->N, tdi_full->Nchannel);
     mbh_data->tdi->delta = tdi_full->delta;
 
-    
+    /*
+     Initialize measured time of model update.
+     Used to scale number of steps for other models
+     */
+    mbh_data->cpu_time = 1.0;
+
     free(params);
 }
 
@@ -406,47 +398,17 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
         }
     }
     
-    /* DEBUG
-    
-    int NF = mbh_data->het->MM - mbh_data->het->MN;
-    
-    double *f = malloc(NF*sizeof(double));
-    double *A_amp = malloc(NF*sizeof(double));
-    double *E_amp = malloc(NF*sizeof(double));
-    double *A_phi = malloc(NF*sizeof(double));
-    double *E_phi = malloc(NF*sizeof(double));
-    
-    for(int n=0; n<NF; n++) f[n] = mbh_data->data->fmin + (double)n/mbh_data->data->Tobs;
-    
-    fullphaseamp(mbh_data->data, 2, NF, mbh_data->paramx[0], f, A_amp, E_amp, A_phi, E_phi);
-    sprintf(filename,"%s/start_waveform.dat",mbh_data->flags->runDir);
-    FILE *temp = fopen(filename,"w");
-    for(int n=0; n<NF; n++)
-    {
-        fprintf(temp,"%lg %lg %lg %lg %lg\n",
-                f[n],
-                A_amp[n]*cos(A_phi[n]),
-                A_amp[n]*sin(A_phi[n]),
-                E_amp[n]*cos(E_phi[n]),
-                E_amp[n]*sin(E_phi[n]) );
-    }
-    fclose(temp);
-    
-    free(f);
-    free(A_amp);
-    free(E_amp);
-    free(A_phi);
-    free(E_phi);
-    
-    */
     freehet(mbh_data->het);
 }
 
 int update_mbh_sampler(struct MBHData *mbh_data)
 {
+    clock_t start = clock();
+
     //aliases to MBH_Data structure members
     struct MBH_Data *dat = mbh_data->data;
     struct Het *het = mbh_data->het;
+    struct Flags *flags = mbh_data->flags;
     double *logLx = mbh_data->logLx;
     double **paramx = mbh_data->paramx;
     double **paramy = mbh_data->paramy;
@@ -480,14 +442,13 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     // use one of the cold chains to produce the reference waveform
     het_space(dat, het, 2, paramx[who[0]], min, max);
     heterodyne(dat, het, 2, paramx[who[0]]);
-    //printf("SNR %f\n", het->SNR);
 
     
     //initialize likelihood for each chain
     for(int i=0; i< NC; i++)  logLx[i] = log_likelihood_het(dat, het, 2, paramx[i], sx[i]);
 
     //compute Fisher matrices for current parameters
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int i=0; i<NC; i++)
     {
         FisherHet(dat, het, 2, paramx[i], Fisher[i]);
@@ -498,7 +459,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     double alpha = gsl_rng_uniform(rvec[0]);
     double beta;
     
-    for(int steps = 0; steps<100; steps++)
+    for(int steps = 0; steps<500; steps++)
     {
         // decide if we are doing a MCMC update of all the chains or a PT swap
         if((NC > 1) && (alpha < 0.2)) // chain swap
@@ -527,8 +488,22 @@ int update_mbh_sampler(struct MBHData *mbh_data)
             else if(alpha > c) typ = 2;
             else               typ = 3;
             
-            #pragma omp parallel for
-            for(int i=0; i < NC; i++) update(dat, het, typ, i, 2, logLx, paramx, paramy, sx, sy, min, max, who, heat, history, NH, ejump, evec, cv, av, rvec[i]);
+            //For saving the number of threads actually given
+            int numThreads;
+
+            #pragma omp parallel num_threads(flags->threads)
+            {
+                int threadID;
+                //Save individual thread number
+                threadID = omp_get_thread_num();
+                
+                //Only one thread runs this section
+                if(threadID==0)  numThreads = omp_get_num_threads();
+
+                #pragma omp barrier
+                for(int ic=threadID; ic<NC; ic+=numThreads) update(dat, het, typ, ic, 2, logLx, paramx, paramy, sx, sy, min, max, who, heat, history, NH, ejump, evec, cv, av, rvec[ic]);
+                #pragma omp barrier
+            }// End of parallelization
         }
     }
         
@@ -547,6 +522,10 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     
     free(m);
     freehet(mbh_data->het);
+    
+    clock_t stop = clock();
+    mbh_data->cpu_time = (double)(stop-start);
+
     return 1;
 }
 

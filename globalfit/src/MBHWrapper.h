@@ -55,6 +55,8 @@ struct MBHData
     
     char chainDir[MAXSTRINGSIZE]; //!<location to print chain files
     FILE *chainFile;
+    
+    double cpu_time; //!<CPU time for single update
 };
 
 void parse_mbh_args(int argc, char **argv, struct MBHData *data);

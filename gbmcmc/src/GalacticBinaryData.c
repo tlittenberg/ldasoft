@@ -39,10 +39,10 @@
 #include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryWaveform.h"
 
-#define FILTER_LENGTH 1e3 //seconds
+#define FILTER_LENGTH 5e4 //seconds
 #define N_TDI_CHANNELS 3
 
-
+/*
 static void window(double *data, int N)
 {
     int i;
@@ -55,7 +55,7 @@ static void window(double *data, int N)
         data[i]*=filter;
     }
 }
-
+*/
 static void tukey(double *data, double alpha, int N)
 {
     int i, imin, imax;

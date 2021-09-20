@@ -6,8 +6,7 @@
 //
 
 #include <string.h>
-
-#include <mpi.h>
+#include <time.h>
 #include <omp.h>
 
 #include <LISA.h>
@@ -57,7 +56,6 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->downsample = gbmcmc_data->data->downsample;
     noise_data->data->Nwave      = gbmcmc_data->data->Nwave;
     
-    
     noise_data->chain->NC      = gbmcmc_data->chain->NC;
     noise_data->data->Nchannel = gbmcmc_data->data->Nchannel;
     noise_data->data->NP       = gbmcmc_data->data->NP;
@@ -76,8 +74,8 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->fmax = (gbmcmc_data->data->fmax > mbh_data->data->fmax ) ? gbmcmc_data->data->fmax : mbh_data->data->fmax;
     
     //pad noise model
-    noise_data->data->fmin /= 1.25;
-    noise_data->data->fmax *= 1.25;
+    noise_data->data->fmin /= 1.1;
+    noise_data->data->fmax *= 1.1;
     
     /*DEBUG*/printf("pid=%i: fmin=%g,fmax=%g, mbh->[%g,%g], gb=[%g,%g]\n",procID,noise_data->data->fmin,noise_data->data->fmax,mbh_data->data->fmin,mbh_data->data->fmax,gbmcmc_data->data->fmin,gbmcmc_data->data->fmax);
     
@@ -98,7 +96,12 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     
     select_frequency_segment(noise_data->data, tdi_full);
     
-    
+    /*
+     Initialize measured time of model update.
+     Used to determine number of steps relative to mbh model
+     */
+    noise_data->cpu_time = 1.0;
+
 }
 
 
@@ -154,6 +157,8 @@ void initialize_noise_state(struct NoiseData *noise_data)
 
 int update_noise_sampler(struct NoiseData *noise_data)
 {
+    clock_t start = clock();
+    
     /* Aliases to gbmcmc structures */
     struct Flags *flags = noise_data->flags;
     struct Orbit *orbit = noise_data->orbit;
@@ -225,5 +230,9 @@ int update_noise_sampler(struct NoiseData *noise_data)
             data->S_pow[n][1][0][noise_data->mcmc_step/data->downsample] = model_ptr->psd->SnE[n];
         }
     }
+    
+    clock_t stop = clock();
+    noise_data->cpu_time = (double)(stop-start);
+
     return 1;
 }
