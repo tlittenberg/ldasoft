@@ -174,16 +174,14 @@ void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd)
     int mstart = mbh_data->het->MN;
     int mstop  = mbh_data->het->MM;
     
-    /*DEBUG FILE *temp = fopen("/Users/tyson/Research/GalacticBinaries/Sangria/03mo/seg/noise_test.dat","w"); */
     for(int i=mstart; i<mstop; i++)
     {
-        mbh_data->data->SN[0][i] = psd->SnA[i-nstart];
-        mbh_data->data->SN[1][i] = psd->SnE[i-nstart];
-        mbh_data->data->SM[0][i] = psd->SnA[i-nstart];
-        mbh_data->data->SM[1][i] = psd->SnE[i-nstart];
-        //fprintf(temp,"%lg %lg %lg\n",(double)i/Tobs, mbh_data->data->SN[0][i], mbh_data->data->SN[1][i]);
+        //TODO: Check this factor of 2!
+        mbh_data->data->SN[0][i] = 2*psd->SnA[i-nstart];
+        mbh_data->data->SN[1][i] = 2*psd->SnE[i-nstart];
+        mbh_data->data->SM[0][i] = 2*psd->SnA[i-nstart];
+        mbh_data->data->SM[1][i] = 2*psd->SnE[i-nstart];
     }
-    //fclose(temp);
 }
 
 void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full, int procID)

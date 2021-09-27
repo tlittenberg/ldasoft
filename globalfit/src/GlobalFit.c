@@ -362,7 +362,7 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
 
 }
 
-static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct MBHData *mbh_data, struct GlobalFitData *global_fit, int root, int procID)
+static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, struct GlobalFitData *global_fit, int root, int procID)
 {
 
     int ic = 0;
@@ -372,10 +372,13 @@ static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *g
         struct Noise *model_psd = noise_data->model[ic]->psd;
         copy_noise(model_psd,global_fit->psd);
 
-        //send to VBMCMC node
-        MPI_Send(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
-        MPI_Send(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
-
+        //send to VBMCMC nodes
+        for(int id=vbmcmc_data->procID_min; id<=vbmcmc_data->procID_max; id++)
+        {
+            MPI_Send(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
+        
         //send to GBMCMC nodes
         for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
         {
@@ -394,8 +397,8 @@ static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *g
     }
     
     
-    //Receive full noise fit to broadband models
-    if(procID==1)
+    //Receive full noise fit from root node
+    if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
     {
         MPI_Status status;
 
@@ -632,7 +635,7 @@ int main(int argc, char *argv[])
     MPI_Bcast(global_fit->psd->SnX, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
     MPI_Bcast(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
     MPI_Bcast(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    share_noise_model(noise_data,gbmcmc_data,mbh_data,global_fit,root,procID);
+    share_noise_model(noise_data,gbmcmc_data,vbmcmc_data,mbh_data,global_fit,root,procID);
 
     /* Assign processes to VB model */
     if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
@@ -743,13 +746,25 @@ int main(int argc, char *argv[])
         gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
 
         /* distribute current state of models to worker nodes */
-        share_noise_model(noise_data, gbmcmc_data, mbh_data, global_fit, root, procID);
+        share_noise_model (noise_data, gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        share_mbh_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
                 
         /* DEBUG */
-        if(Noise_Flag) print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
+        if(Noise_Flag)
+        {
+            print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
+            char filename[128];
+            sprintf(filename,"%s/data/current_spline_points.dat",noise_data->flags->runDir);
+            print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
+
+            sprintf(filename,"%s/data/current_interpolated_spline_points.dat",noise_data->flags->runDir);
+            print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
+
+            print_noise_reconstruction(noise_data->data, noise_data->flags);
+
+        }
         if(VBMCMC_Flag)
         {
             for(int n=0; n<vbmcmc_data->flags->NVB; n++)print_data(vbmcmc_data->data_vec[n], vbmcmc_data->data_vec[n]->tdi[0], vbmcmc_data->flags, 0);

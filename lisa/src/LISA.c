@@ -925,7 +925,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     hid_t s1_tid; /* Memory datatype handle */
     
     s1_tid = H5Tcreate(H5T_COMPOUND, sizeof(struct tdi_dataset));
-    H5Tinsert(s1_tid, "time", HOFFSET(struct tdi_dataset, time), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "t", HOFFSET(struct tdi_dataset, time), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "X", HOFFSET(struct tdi_dataset, X), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "Y", HOFFSET(struct tdi_dataset, Y), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
