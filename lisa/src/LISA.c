@@ -895,10 +895,10 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
 {    
     /* LDC-formatted structure for compound HDF5 dataset */
     typedef struct tdi_dataset {
-        double time;
-        double    X;
-        double    Y;
-        double    Z;
+        double t;
+        double X;
+        double Y;
+        double Z;
     } tdi_dataset;
     static tdi_dataset *s1;
     
@@ -925,7 +925,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     hid_t s1_tid; /* Memory datatype handle */
     
     s1_tid = H5Tcreate(H5T_COMPOUND, sizeof(struct tdi_dataset));
-    H5Tinsert(s1_tid, "t", HOFFSET(struct tdi_dataset, time), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "t", HOFFSET(struct tdi_dataset, t), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "X", HOFFSET(struct tdi_dataset, X), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "Y", HOFFSET(struct tdi_dataset, Y), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
@@ -948,7 +948,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
         XYZ2AET(X,Y,Z,&tdi->A[i],&tdi->E[i],&tdi->T[i]);
         
     }
-    tdi->delta = s1[1].time - s1[0].time;
+    tdi->delta = s1[1].t - s1[0].t;
     
     /* Close the dataset. */
     status = H5Dclose(dataset);
