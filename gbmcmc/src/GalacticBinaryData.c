@@ -73,6 +73,7 @@ static void tukey(double *data, double alpha, int N)
     }
 }
 
+/*
 static double tukey_scale(double alpha, int N)
 {
     int i, imin, imax;
@@ -95,6 +96,7 @@ static double tukey_scale(double alpha, int N)
     
     return scale;
 }
+*/
 
 static void unpack_gsl_rft_output(double *x, double *x_gsl, int N)
 {
@@ -173,9 +175,10 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     /* Normalize FD data */
     double rft_norm = sqrt(Tobs)/(double)N;
     
-    /* Account for losses from windowing */
+    /* Account for losses from windowing 
     double tukey_norm = tukey_scale(alpha, N);
     rft_norm /= tukey_norm;
+    */
     
     for(int n=0; n<N; n++)
     {
