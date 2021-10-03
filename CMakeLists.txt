@@ -23,11 +23,13 @@ include_directories(/opt/local/include)
 include_directories(/opt/local/include/openmpi-mp)
 link_directories(/opt/local/lib)
 link_directories(/opt/local/lib/openmpi-mp)
+#set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/Users/tyson/temp/lib/cmake")
 
 # External packages
 find_package(GSL REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
+find_package(MBH)
 
 # Set compiler
 set(CMAKE_C_COMPILER mpicc)
@@ -76,8 +78,14 @@ set (GITVERSION "\"${_build_version}\"")
 
 # Internal products
 
+
 add_subdirectory(tools)
 add_subdirectory(lisa)
 add_subdirectory(gbmcmc)
 add_subdirectory(noise)
-add_subdirectory(globalfit)
+
+if(MBH_FOUND)
+   add_subdirectory(globalfit)
+else()
+   message(STATUS "MBH module not found, skipping GlobalFit install")
+endif()
