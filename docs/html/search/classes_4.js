@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['gbmcmcdata_430',['GBMCMCData',['../structGBMCMCData.html',1,'']]],
-  ['gmm_431',['GMM',['../structGMM.html',1,'']]]
+  ['gbmcmcdata_456',['GBMCMCData',['../structGBMCMCData.html',1,'']]],
+  ['globalfitdata_457',['GlobalFitData',['../structGlobalFitData.html',1,'']]],
+  ['gmm_458',['GMM',['../structGMM.html',1,'']]]
 ];

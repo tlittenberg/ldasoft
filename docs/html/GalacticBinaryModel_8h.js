@@ -8,6 +8,7 @@ var GalacticBinaryModel_8h =
     [ "apply_calibration_model", "GalacticBinaryModel_8h.html#a0ea5f768d5e2549c7d915fb39d4983ac", null ],
     [ "compare_model", "GalacticBinaryModel_8h.html#aa9152d7274cafed11f3aef58c5aec474", null ],
     [ "copy_calibration", "GalacticBinaryModel_8h.html#a53b8c9e7e22f51ffd98ada535d064afb", null ],
+    [ "copy_data", "GalacticBinaryModel_8h.html#a7c7991d4d4c116f39a280f4ffb305bd5", null ],
     [ "copy_model", "GalacticBinaryModel_8h.html#a0e3b9c63403d57e6c1a8446543760089", null ],
     [ "copy_noise", "GalacticBinaryModel_8h.html#aac0726c8e74b4cfe06a47c9f41c1bd86", null ],
     [ "copy_source", "GalacticBinaryModel_8h.html#a9356d699ff50aa1361fcef848cd2095b", null ],
