@@ -88,6 +88,7 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
     int DMAX_default = 10;
     
     //Set defaults
+    flags->emPrior     = 0;
     flags->orbit       = 0;
     flags->match       = 0;
     flags->NT          = 1;
@@ -477,7 +478,7 @@ int main(int argc, char *argv[])
         if(q_sample > data->qmin+data->qpad && q_sample < data->qmax-data->qpad)
         {
             //add new source to catalog
-            create_new_source(catalog, sample, noise, IMAX, data->N, sample->tdi->Nchannel, data->NP);
+            create_new_source(catalog, sample, noise, 0, IMAX, data->N, sample->tdi->Nchannel, data->NP);
         }
     }
     
@@ -539,6 +540,7 @@ int main(int argc, char *argv[])
                     //append sample to entry
                     entry->match[entry->I] = Match;
                     entry->distance[entry->I] = Distance;
+                    entry->stepFlag[i] = 1;
                     append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel, data->NP);
                     
                     //stop looping over entries in catalog
@@ -552,7 +554,7 @@ int main(int argc, char *argv[])
             if(!matchFlag)
             {
                 entryFlag[catalog->N]=1;
-                create_new_source(catalog, sample, noise, IMAX, data->N, data->Nchannel, data->NP);
+                create_new_source(catalog, sample, noise, i, IMAX, data->N, data->Nchannel, data->NP);
             }
             
         }//end loop over sources in chain sample
@@ -587,6 +589,7 @@ int main(int argc, char *argv[])
         }
     }
     fprintf(stdout,"\nNumber of discrete sources is %d.\n",detections);
+    
     
     /* *************************************************************** */
     /*           Format selected entries as L3 data products           */
@@ -691,6 +694,25 @@ int main(int argc, char *argv[])
     fflush(catalogFile);
     fprintf(stdout,"\n");
     
+    printf("getting correlation matrix\n");
+    double **corr=NULL;
+    corr = malloc(detections*data->NP*sizeof(double *));
+    for(int n=0; n<detections*data->NP; n++)corr[n] = calloc(detections*data->NP,sizeof(double));
+
+    get_correlation_matrix(data, catalog, detection_index, detections, IMAX, corr);
+
+    sprintf(filename,"%s/correlation_matrix.dat",outdir);
+    FILE *corrFile = fopen(filename,"w");
+    for(int n=0; n<detections*data->NP; n++)
+    {
+        for(int m=0; m<detections*data->NP; m++)
+        {
+            fprintf(corrFile,"%+.3f ",corr[n][m]);
+        }
+        fprintf(corrFile,"\n");
+    }
+    fclose(corrFile);
+
     
     /* *************************************************************** */
     /*           Check sources against previous catalog                */

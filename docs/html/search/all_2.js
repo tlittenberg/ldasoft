@@ -36,7 +36,7 @@ var searchData=
   ['cov_5fdensity_55',['cov_density',['../GalacticBinaryProposal_8h.html#a48c97df4de6815daf57b7f054092a035',1,'GalacticBinaryProposal.c']]],
   ['covfile_56',['covFile',['../structFlags.html#ae8e752704a7b5a349a4728af988a184e',1,'Flags']]],
   ['create_5fempty_5fsource_57',['create_empty_source',['../GalacticBinaryCatalog_8h.html#a775f53f381c70833a1eef9419f718584',1,'GalacticBinaryCatalog.c']]],
-  ['create_5fnew_5fsource_58',['create_new_source',['../GalacticBinaryCatalog_8h.html#abe3d4c505521bd03f2fe34abc16f1f3d',1,'GalacticBinaryCatalog.c']]],
+  ['create_5fnew_5fsource_58',['create_new_source',['../GalacticBinaryCatalog_8h.html#a6d8e4922e592a42c7f1431fdfda14e0f',1,'GalacticBinaryCatalog.c']]],
   ['cseed_59',['cseed',['../structData.html#a758dee275c2a979a3141ee70d7c9ba90',1,'Data']]],
   ['cubicsplinegsl_60',['CubicSplineGSL',['../Noise_8h.html#a805d240e93c0309da5a4c6985defab31',1,'Noise.c']]]
 ];

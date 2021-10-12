@@ -1,5 +1,6 @@
 var NAVTREEINDEX2 =
 {
+"structData.html#abed85a6931aef1878aa9a5e1492a4677":[10,0,3,1],
 "structData.html#ac136349d39219fa435ca7cbd43c46444":[10,0,3,13],
 "structData.html#ac4db839b05312ebbaf3a611c0fab1482":[10,0,3,34],
 "structData.html#ac91c45dac949a9be16be5751f1eb3695":[10,0,3,8],
@@ -16,6 +17,7 @@ var NAVTREEINDEX2 =
 "structEntry.html":[10,0,4],
 "structEntry.html#a333404f3075a5ac09d3550e7d274a33c":[10,0,4,4],
 "structEntry.html#a56c8db068758904fdb7b0531a89e522e":[10,0,4,5],
+"structEntry.html#a86f87243a6fb48a9169af3ffff0c9d70":[10,0,4,11],
 "structEntry.html#a95a7427e9d3e547a3732169be96c1864":[10,0,4,9],
 "structEntry.html#a961313f4c91d44afb321efeecb63dcf3":[10,0,4,2],
 "structEntry.html#a98ddfafa8983322c71c64772eab92030":[10,0,4,7],
@@ -247,7 +249,5 @@ var NAVTREEINDEX2 =
 "structProposal.html#afb3afbfca750d99d1736f848c5c89187":[10,0,17,10],
 "structSample.html":[10,0,18],
 "structSample.html#a62a755bf90b077e85a19bec372b919e8":[10,0,18,1],
-"structSample.html#ad64cbf668b30d0cfb7dd90d400b560db":[10,0,18,2],
-"structSample.html#aed2fe20859fd1142bf5225a05947bc2d":[10,0,18,0],
-"structSource.html":[10,0,19]
+"structSample.html#ad64cbf668b30d0cfb7dd90d400b560db":[10,0,18,2]
 };

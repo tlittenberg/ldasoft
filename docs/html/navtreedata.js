@@ -119,9 +119,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Constants_8h.html",
-"LISA_8h.html#aa924cff641b421b8b8f2dc60c4ed4f31",
-"structData.html#ac136349d39219fa435ca7cbd43c46444",
-"structSource.html#a0c042cda651c7d4fef2820f2ae9901cf"
+"LISA_8h.html#aa529ff8364ddadc0736d2f117db86702",
+"structData.html#abed85a6931aef1878aa9a5e1492a4677",
+"structSample.html#aed2fe20859fd1142bf5225a05947bc2d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

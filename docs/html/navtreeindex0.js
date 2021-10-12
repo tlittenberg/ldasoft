@@ -58,9 +58,10 @@ var NAVTREEINDEX0 =
 "GMM__with__EM_8h_source.html":[11,0,5,0,1],
 "GalacticBinaryCatalog_8h.html":[11,0,1,0,1],
 "GalacticBinaryCatalog_8h.html#a2a143534fd0acd7c73cdf5195900e809":[11,0,1,0,1,2],
+"GalacticBinaryCatalog_8h.html#a6d8e4922e592a42c7f1431fdfda14e0f":[11,0,1,0,1,5],
+"GalacticBinaryCatalog_8h.html#a71026204870d7c75124c31aa10b31622":[11,0,1,0,1,7],
 "GalacticBinaryCatalog_8h.html#a775f53f381c70833a1eef9419f718584":[11,0,1,0,1,4],
 "GalacticBinaryCatalog_8h.html#a9129da63533fe9370bc62baacebdda41":[11,0,1,0,1,6],
-"GalacticBinaryCatalog_8h.html#abe3d4c505521bd03f2fe34abc16f1f3d":[11,0,1,0,1,5],
 "GalacticBinaryCatalog_8h.html#ac7422e19c60eede1c7a95a3025fc7251":[11,0,1,0,1,3],
 "GalacticBinaryCatalog_8h_source.html":[11,0,1,0,1],
 "GalacticBinaryData_8h.html":[11,0,1,0,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX0 =
 "LISA_8h.html#a73be4e5869fd170066a863d0f3a9e6ae":[11,0,3,0,1,3],
 "LISA_8h.html#a869664c9076e2115f3d6973b1ae371b6":[11,0,3,0,1,4],
 "LISA_8h.html#a9edba02a0cd8d9888dad6447ae2903cf":[11,0,3,0,1,23],
-"LISA_8h.html#aa4e5f3c8ba29dc1ab3589f9839c3fa5d":[11,0,3,0,1,13],
-"LISA_8h.html#aa529ff8364ddadc0736d2f117db86702":[11,0,3,0,1,22]
+"LISA_8h.html#aa4e5f3c8ba29dc1ab3589f9839c3fa5d":[11,0,3,0,1,13]
 };
