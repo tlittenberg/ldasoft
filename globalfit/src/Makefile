@@ -271,6 +271,33 @@ NoiseWrapper.c.s:
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f globalfit/src/CMakeFiles/global_fit.dir/build.make globalfit/src/CMakeFiles/global_fit.dir/NoiseWrapper.c.s
 .PHONY : NoiseWrapper.c.s
 
+VerificationBinaryWrapper.o: VerificationBinaryWrapper.c.o
+
+.PHONY : VerificationBinaryWrapper.o
+
+# target to build an object file
+VerificationBinaryWrapper.c.o:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f globalfit/src/CMakeFiles/global_fit.dir/build.make globalfit/src/CMakeFiles/global_fit.dir/VerificationBinaryWrapper.c.o
+.PHONY : VerificationBinaryWrapper.c.o
+
+VerificationBinaryWrapper.i: VerificationBinaryWrapper.c.i
+
+.PHONY : VerificationBinaryWrapper.i
+
+# target to preprocess a source file
+VerificationBinaryWrapper.c.i:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f globalfit/src/CMakeFiles/global_fit.dir/build.make globalfit/src/CMakeFiles/global_fit.dir/VerificationBinaryWrapper.c.i
+.PHONY : VerificationBinaryWrapper.c.i
+
+VerificationBinaryWrapper.s: VerificationBinaryWrapper.c.s
+
+.PHONY : VerificationBinaryWrapper.s
+
+# target to generate assembly for a file
+VerificationBinaryWrapper.c.s:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f globalfit/src/CMakeFiles/global_fit.dir/build.make globalfit/src/CMakeFiles/global_fit.dir/VerificationBinaryWrapper.c.s
+.PHONY : VerificationBinaryWrapper.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -293,6 +320,9 @@ help:
 	@echo "... NoiseWrapper.o"
 	@echo "... NoiseWrapper.i"
 	@echo "... NoiseWrapper.s"
+	@echo "... VerificationBinaryWrapper.o"
+	@echo "... VerificationBinaryWrapper.i"
+	@echo "... VerificationBinaryWrapper.s"
 .PHONY : help
 
 

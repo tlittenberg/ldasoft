@@ -10,5 +10,6 @@ var structEntry =
     [ "parent", "structEntry.html#a98ddfafa8983322c71c64772eab92030", null ],
     [ "path", "structEntry.html#ae08d5df6b25851ee76c81a4f8702bb2e", null ],
     [ "SNR", "structEntry.html#a95a7427e9d3e547a3732169be96c1864", null ],
-    [ "source", "structEntry.html#aab7d716fb0a64243b50d4fa047459ed8", null ]
+    [ "source", "structEntry.html#aab7d716fb0a64243b50d4fa047459ed8", null ],
+    [ "stepFlag", "structEntry.html#a86f87243a6fb48a9169af3ffff0c9d70", null ]
 ];

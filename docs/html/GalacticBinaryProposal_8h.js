@@ -20,6 +20,7 @@ var GalacticBinaryProposal_8h =
     [ "fm_shift", "GalacticBinaryProposal_8h.html#aff3c7d1f3059dfdb7723e1d08f40deff", null ],
     [ "gmm_prior_density", "GalacticBinaryProposal_8h.html#a22c52a307d7e75c874d19a12e56da44d", null ],
     [ "initialize_proposal", "GalacticBinaryProposal_8h.html#a56be2a79ceec1bd3e5ca7813ddd10007", null ],
+    [ "initialize_vb_proposal", "GalacticBinaryProposal_8h.html#a54b00690393e59412f5945251abc6687", null ],
     [ "jump_from_fstatistic", "GalacticBinaryProposal_8h.html#afd202d0b69e6c8d622ec85a1b18fdd6e", null ],
     [ "print_acceptance_rates", "GalacticBinaryProposal_8h.html#ae8c2b734b1d1527285455a36236470c8", null ],
     [ "prior_density", "GalacticBinaryProposal_8h.html#ad42abc9fc4e637728c2206bc88601c3b", null ],

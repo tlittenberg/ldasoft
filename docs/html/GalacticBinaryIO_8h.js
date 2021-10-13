@@ -1,7 +1,9 @@
 var GalacticBinaryIO_8h =
 [
     [ "checkfile", "GalacticBinaryIO_8h.html#aec443135900035a8332391fc58a866c4", null ],
-    [ "parse", "GalacticBinaryIO_8h.html#ab5bb85c1537451547378c054ffbbf4ac", null ],
+    [ "copy_argv", "GalacticBinaryIO_8h.html#a07ac76a2abf11b4804b28e788d310a60", null ],
+    [ "parse", "GalacticBinaryIO_8h.html#ae4dbabb4cf58eee375972b4e60721dc1", null ],
+    [ "parse_vb_list", "GalacticBinaryIO_8h.html#ad689896e4fddc78dc5fa058917f8c115", null ],
     [ "print_calibration_state", "GalacticBinaryIO_8h.html#aeb51580be3c2e146aed1efca2b50427f", null ],
     [ "print_chain_files", "GalacticBinaryIO_8h.html#a1fa3cafce4cd16418256592a982fcf1b", null ],
     [ "print_chain_state", "GalacticBinaryIO_8h.html#a3b6737d914c9ad0d7d0ed2b66e3eb541", null ],
@@ -23,5 +25,6 @@ var GalacticBinaryIO_8h =
     [ "scan_calibration_state", "GalacticBinaryIO_8h.html#aa94f98d94554a3793cada8039fb34fe8", null ],
     [ "scan_chain_state", "GalacticBinaryIO_8h.html#af3161395d6b23cb4a69b73e38e8afd20", null ],
     [ "scan_noise_state", "GalacticBinaryIO_8h.html#ab745d43ebf5fa7d446c69a68f87f5b58", null ],
-    [ "scan_source_params", "GalacticBinaryIO_8h.html#aa2d9de358ce615a30c1eae75b535c11a", null ]
+    [ "scan_source_params", "GalacticBinaryIO_8h.html#aa2d9de358ce615a30c1eae75b535c11a", null ],
+    [ "setup_run_directories", "GalacticBinaryIO_8h.html#a8e6d239b84336dd82444fe4a8dd69330", null ]
 ];

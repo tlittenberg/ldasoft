@@ -133,6 +133,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a6ba0c4595612c0203d05074338e2dfce">NT</a></td></tr>
 <tr class="memdesc:a6ba0c4595612c0203d05074338e2dfce"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--segments=INT; default=1]</code>: number of time segments <br /></td></tr>
 <tr class="separator:a6ba0c4595612c0203d05074338e2dfce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a737850ee891bda62d77b006096122eb1"><td class="memItemLeft" align="right" valign="top"><a id="a737850ee891bda62d77b006096122eb1"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a737850ee891bda62d77b006096122eb1">NVB</a></td></tr>
+<tr class="memdesc:a737850ee891bda62d77b006096122eb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of known binaries for <code>vb_mcmc</code> <br /></td></tr>
+<tr class="separator:a737850ee891bda62d77b006096122eb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a1af09cef9b51699937ca508c04fe80"><td class="memItemLeft" align="right" valign="top"><a id="a2a1af09cef9b51699937ca508c04fe80"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a2a1af09cef9b51699937ca508c04fe80">DMAX</a></td></tr>
 <tr class="memdesc:a2a1af09cef9b51699937ca508c04fe80"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--sources=INT; default=10]</code>: max number of sources <br /></td></tr>
@@ -248,6 +252,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>threads</b></td></tr>
 char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#a0e180de144de26732c748a0d5aa04375">runDir</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
 <tr class="memdesc:a0e180de144de26732c748a0d5aa04375"><td class="mdescLeft">&#160;</td><td class="mdescRight">store <code>DIRECTORY</code> to serve as top level directory for output files. <br /></td></tr>
 <tr class="separator:a0e180de144de26732c748a0d5aa04375"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1bd96096bfe486fc35e26faa702a465"><td class="memItemLeft" align="right" valign="top"><a id="ae1bd96096bfe486fc35e26faa702a465"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ae1bd96096bfe486fc35e26faa702a465">vbFile</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:ae1bd96096bfe486fc35e26faa702a465"><td class="mdescLeft">&#160;</td><td class="mdescRight">store <code>FILENAME</code> of list of known binaries <code>vb_mcmc</code> <br /></td></tr>
+<tr class="separator:ae1bd96096bfe486fc35e26faa702a465"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab824e717f38a66fb3f58621b46119baa"><td class="memItemLeft" align="right" valign="top"><a id="ab824e717f38a66fb3f58621b46119baa"></a>
 char **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFlags.html#ab824e717f38a66fb3f58621b46119baa">injFile</a></td></tr>
 <tr class="memdesc:ab824e717f38a66fb3f58621b46119baa"><td class="mdescLeft">&#160;</td><td class="mdescRight"><code>[--inj=FILENAME]</code>: list of injection files. Can support up to <code>NINJ=10</code> separate injections. <br /></td></tr>
@@ -288,7 +296,7 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Run flags set or changed from default values when parsing command line for <code>gb_mcmc</code> <b>and</b> <code>gb_catalog</code>. </p>
 <p>Descriptions of each flag includes default settings and command line arguments to change/set flags. Boolean flags are defined as integers with <code>0==FALSE</code> and <code>1==TRUE</code>.</p>
-<p>To see how the defaults are set and then adjusted according to the command line, see <a class="el" href="GalacticBinaryIO_8h.html#ab5bb85c1537451547378c054ffbbf4ac" title="Parse command line.">parse()</a>. </p>
+<p>To see how the defaults are set and then adjusted according to the command line, see <a class="el" href="GalacticBinaryIO_8h.html#ae4dbabb4cf58eee375972b4e60721dc1" title="Parse command line.">parse()</a>. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
 </ul>

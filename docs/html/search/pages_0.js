@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['fishergalaxy_20manual_841',['FisherGalaxy Manual',['../md_gbfisher_README.html',1,'']]]
+  ['fishergalaxy_20manual_897',['FisherGalaxy Manual',['../md_gbfisher_README.html',1,'']]]
 ];
