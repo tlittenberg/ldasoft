@@ -177,10 +177,10 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
             int md = m/NP;
 
             //which parameter row?
-            int nx = n - nd;
+            int nx = n - nd*NP;
             
             //which parameter column?
-            int mx = m - md;
+            int mx = m - md*NP;
                         
             //which entries?
             n_entry = catalog->entry[detection_index[nd]];
