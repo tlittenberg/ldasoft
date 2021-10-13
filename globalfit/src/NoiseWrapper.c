@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <omp.h>
+#include <mpi.h>
 
 #include <LISA.h>
 
@@ -61,22 +62,31 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->NP       = gbmcmc_data->data->NP;
     strcpy(noise_data->data->format,gbmcmc_data->data->format);
 
-    int qpad = gbmcmc_data->data->qpad;
-    int N = gbmcmc_data->data->N - 2*qpad;
-    int Nseg = gbmcmc_data->procID_max - gbmcmc_data->procID_min+1;
     double T = gbmcmc_data->data->T;
     
     noise_data->data->T = T;
-    noise_data->data->N = N*Nseg + 2*qpad;
-    noise_data->data->qpad = qpad;
     
-    noise_data->data->fmin = (gbmcmc_data->data->fmin > mbh_data->data->fmin ) ? mbh_data->data->fmin : gbmcmc_data->data->fmin;
-    noise_data->data->fmax = (gbmcmc_data->data->fmax > mbh_data->data->fmax ) ? gbmcmc_data->data->fmax : mbh_data->data->fmax;
+    if(procID==gbmcmc_data->procID_min) noise_data->data->fmin = gbmcmc_data->data->fmin;
+    MPI_Bcast(&noise_data->data->fmin, 1, MPI_DOUBLE, gbmcmc_data->procID_min, MPI_COMM_WORLD);
+
+    if(procID==gbmcmc_data->procID_max) noise_data->data->fmax = gbmcmc_data->data->fmax;
+    MPI_Bcast(&noise_data->data->fmax, 1, MPI_DOUBLE, gbmcmc_data->procID_max, MPI_COMM_WORLD);
+
     
-    //pad noise model
-    noise_data->data->fmin /= 1.1;
-    noise_data->data->fmax *= 1.1;
+    if(mbh_data->NMBH>0)
+    {
+        
+        //set limits of noise model to cover both models
+        noise_data->data->fmin = (gbmcmc_data->data->fmin > mbh_data->data->fmin ) ? mbh_data->data->fmin : gbmcmc_data->data->fmin;
+        noise_data->data->fmax = (gbmcmc_data->data->fmax > mbh_data->data->fmax ) ? gbmcmc_data->data->fmax : mbh_data->data->fmax;
+
+        //pad noise model
+        noise_data->data->fmin /= 1.1;
+        noise_data->data->fmax *= 1.1;
+    }
+        
     
+
     /*DEBUG*/printf("pid=%i: fmin=%g,fmax=%g, mbh->[%g,%g], gb=[%g,%g]\n",procID,noise_data->data->fmin,noise_data->data->fmax,mbh_data->data->fmin,mbh_data->data->fmax,gbmcmc_data->data->fmin,gbmcmc_data->data->fmax);
     
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);

@@ -23,7 +23,7 @@ include_directories(/opt/local/include)
 include_directories(/opt/local/include/openmpi-mp)
 link_directories(/opt/local/lib)
 link_directories(/opt/local/lib/openmpi-mp)
-#set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/Users/tyson/temp/lib/cmake")
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/Users/tyson/temp/lib/cmake")
 
 # External packages
 find_package(GSL REQUIRED)
