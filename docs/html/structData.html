@@ -208,6 +208,10 @@ struct <a class="el" href="structNoise.html">Noise</a> **&#160;</td><td class="m
 <tr class="memitem:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a> [16]</td></tr>
 <tr class="memdesc:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convention for data format.  <a href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">More...</a><br /></td></tr>
 <tr class="separator:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a8c0ca83849d99330b5ea7958cee815"><td class="memItemLeft" align="right" valign="top"><a id="a0a8c0ca83849d99330b5ea7958cee815"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a0a8c0ca83849d99330b5ea7958cee815">dataDir</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:a0a8c0ca83849d99330b5ea7958cee815"><td class="mdescLeft">&#160;</td><td class="mdescRight">Directory for storing data files. <br /></td></tr>
+<tr class="separator:a0a8c0ca83849d99330b5ea7958cee815"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30f6e2b62b5480035d01a19b13b23269"><td class="memItemLeft" align="right" valign="top"><a id="a30f6e2b62b5480035d01a19b13b23269"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a30f6e2b62b5480035d01a19b13b23269">p</a></td></tr>
 <tr class="memdesc:a30f6e2b62b5480035d01a19b13b23269"><td class="mdescLeft">&#160;</td><td class="mdescRight">power spectral density of data <br /></td></tr>
@@ -249,10 +253,10 @@ double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 double ****&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a4a466b0d0d1d0e685ca3ba3230f331d6">S_pow</a></td></tr>
 <tr class="memdesc:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store noise power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
 <tr class="separator:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac66b9dc61783962135088350f5ec2ec"><td class="memItemLeft" align="right" valign="top"><a id="aac66b9dc61783962135088350f5ec2ec"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#aac66b9dc61783962135088350f5ec2ec">fileName</a> [128]</td></tr>
-<tr class="memdesc:aac66b9dc61783962135088350f5ec2ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">place holder for filnames <br /></td></tr>
-<tr class="separator:aac66b9dc61783962135088350f5ec2ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cac617e5908a1e07237defd69eebdc4"><td class="memItemLeft" align="right" valign="top"><a id="a7cac617e5908a1e07237defd69eebdc4"></a>
+char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#a7cac617e5908a1e07237defd69eebdc4">fileName</a> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+<tr class="memdesc:a7cac617e5908a1e07237defd69eebdc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">place holder for filnames <br /></td></tr>
+<tr class="separator:a7cac617e5908a1e07237defd69eebdc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Signal Injections</div></td></tr>
 <tr class="memitem:ab456e86e4cf30a20af41383cff94e535"><td class="memItemLeft" align="right" valign="top"><a id="ab456e86e4cf30a20af41383cff94e535"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ab456e86e4cf30a20af41383cff94e535">NP</a></td></tr>
@@ -294,7 +298,7 @@ struct <a class="el" href="structCatalog.html">Catalog</a> *&#160;</td><td class
 </div><div class="memdoc">
 
 <p>Convention for data format. </p>
-<p>format = "phase" for phase difference (distance) format = "frequency" for fractional frequency (velocity) <b>Use for matching LDC</b> </p>
+<p>format = "phase" for phase difference (distance) format = "frequency" for fractional frequency (velocity) <b>Use for matching LDC Radler</b> format = "sangria" for fractional frequency w/ LDC Sangria-era <a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> &amp; phase conventions </p>
 
 </div>
 </div>

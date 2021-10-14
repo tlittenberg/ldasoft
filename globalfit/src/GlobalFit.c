@@ -327,9 +327,12 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
     {
         
         //send to VBMCMC node
-        MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
-        MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
-
+        for(int id=vbmcmc_data->procID_min; id<=vbmcmc_data->procID_max; id++)
+        {
+            MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
+        
         //send segments to GBMCMC nodes
         for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
         {
@@ -511,24 +514,46 @@ int main(int argc, char *argv[])
     alloc_mbh_data(mbh_data, gbmcmc_data, procID); //next are the MBH processes
     
     /* Assign processes to models */
-    noise_data->procID_min  = 0;
-    noise_data->procID_max  = 0;
-    vbmcmc_data->procID_min = 1;
-    vbmcmc_data->procID_max = 1;
-    gbmcmc_data->procID_min = 2;
-    gbmcmc_data->procID_max = Nproc-1 - mbh_data->NMBH;
-    mbh_data->procID_min    = gbmcmc_data->procID_max+1;
-    mbh_data->procID_max    = Nproc-1;
+    int pid_counter = 0;
+    
+    //noise model takes one node
+    noise_data->procID_min = pid_counter;
+    noise_data->procID_max = pid_counter;
+    pid_counter++;
+    
+    //vb model takes one node
+    vbmcmc_data->procID_min =  0;
+    vbmcmc_data->procID_max = -1;
+    if(vbmcmc_data->flags->NVB>0)
+    {
+        vbmcmc_data->procID_min = pid_counter;
+        vbmcmc_data->procID_max = pid_counter;
+        pid_counter++;
+    }
+    
+    //mbh model takes one node/source
+    mbh_data->procID_min =  0;
+    mbh_data->procID_max = -1;
+    if(mbh_data->NMBH>0)
+    {
+        mbh_data->procID_min = pid_counter;
+        mbh_data->procID_max = pid_counter+mbh_data->NMBH-1;
+        pid_counter++;
+    }
+    
+    //ucb model takes remaining nodes
+    gbmcmc_data->procID_min = pid_counter;
+    gbmcmc_data->procID_max = Nproc-1;
 
     /* Tell the user how the resources are allocated */
     if(procID==root)
     {
         
         fprintf(stdout,"\n =============== Global Fit Analysis ============== \n");
-        fprintf(stdout,"  %i noise model processes (pid %i)\n",1+noise_data->procID_max-noise_data->procID_min,noise_data->procID_min);
-        fprintf(stdout,"  %i vbmcmc processes (pid %i)\n",1+vbmcmc_data->procID_max-vbmcmc_data->procID_min,vbmcmc_data->procID_min);
+        fprintf(stdout,"  %i noise  processes (pid %i)\n",1+noise_data->procID_max-noise_data->procID_min,noise_data->procID_min);
+        if(vbmcmc_data->flags->NVB>0) fprintf(stdout,"  %i vbmcmc processes (pid %i)\n",1+vbmcmc_data->procID_max-vbmcmc_data->procID_min,vbmcmc_data->procID_min);
+        if(mbh_data->NMBH>0)          fprintf(stdout,"  %i mbh    processes (pid %i-%i)\n",mbh_data->NMBH,mbh_data->procID_min,mbh_data->procID_max);
         fprintf(stdout,"  %i gbmcmc processes (pid %i-%i)\n",1+gbmcmc_data->procID_max-gbmcmc_data->procID_min,gbmcmc_data->procID_min,gbmcmc_data->procID_max);
-        fprintf(stdout,"  %i mbh processes (pid %i-%i)\n",mbh_data->NMBH,mbh_data->procID_min,mbh_data->procID_max);
         fprintf(stdout," ================================================== \n");
    }
 
@@ -542,7 +567,7 @@ int main(int argc, char *argv[])
         setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
         
     }
-    else if(procID==1)
+    else if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
     {
         sprintf(vbmcmc_data->flags->runDir,"%s/vgb",vbmcmc_data->flags->runDir);
         mkdir(vbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -600,10 +625,10 @@ int main(int argc, char *argv[])
     setup_gbmcmc_data(gbmcmc_data, tdi_full);
     
     /* set up data for verification binary model processes */
-    setup_vbmcmc_data(vbmcmc_data, gbmcmc_data, tdi_full);
+    if(vbmcmc_data->flags->NVB>0)setup_vbmcmc_data(vbmcmc_data, gbmcmc_data, tdi_full);
 
     /* set up data for mbh model processes */
-    setup_mbh_data(mbh_data, gbmcmc_data, tdi_full, procID);
+    if(mbh_data->NMBH>0)setup_mbh_data(mbh_data, gbmcmc_data, tdi_full, procID);
 
     /* set up data for noise model processes */
     setup_noise_data(noise_data, gbmcmc_data, mbh_data, tdi_full, procID);
@@ -748,9 +773,9 @@ int main(int argc, char *argv[])
 
         /* distribute current state of models to worker nodes */
         share_noise_model (noise_data, gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        if(vbmcmc_data->flags->NVB>0)share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        if(mbh_data->NMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
                 
         /* DEBUG */
         if(Noise_Flag)

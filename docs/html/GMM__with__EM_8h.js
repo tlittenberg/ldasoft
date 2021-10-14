@@ -11,6 +11,7 @@ var GMM__with__EM_8h =
     [ "PMIN", "GMM__with__EM_8h.html#a6e6d24d6a6c334b46e054361c518d075", null ],
     [ "req_arg", "GMM__with__EM_8h.html#afa477ed4165e0f16cbae7155634dc86f", null ],
     [ "alloc_MVG", "GMM__with__EM_8h.html#abc408fcc55b52163234667c52b479cdd", null ],
+    [ "copy_MVG", "GMM__with__EM_8h.html#ae285d175e2bf323c150a74a521a7e225", null ],
     [ "decompose_matrix", "GMM__with__EM_8h.html#a99f4ee5256eac16b496960fb662ef817", null ],
     [ "dsigmoid", "GMM__with__EM_8h.html#ae3613252d094d082e9aef3c9177387b8", null ],
     [ "expectation_maximization", "GMM__with__EM_8h.html#a896e64226eed9de51a93500a1996f5b6", null ],

@@ -8,6 +8,7 @@ var annotated_dup =
     [ "Filter", "structFilter.html", "structFilter" ],
     [ "Flags", "structFlags.html", "structFlags" ],
     [ "GBMCMCData", "structGBMCMCData.html", "structGBMCMCData" ],
+    [ "GlobalFitData", "structGlobalFitData.html", "structGlobalFitData" ],
     [ "GMM", "structGMM.html", "structGMM" ],
     [ "lisa_orbit", "structlisa__orbit.html", "structlisa__orbit" ],
     [ "Model", "structModel.html", "structModel" ],
@@ -20,5 +21,6 @@ var annotated_dup =
     [ "Sample", "structSample.html", "structSample" ],
     [ "Source", "structSource.html", "structSource" ],
     [ "SplineModel", "structSplineModel.html", "structSplineModel" ],
-    [ "TDI", "structTDI.html", "structTDI" ]
+    [ "TDI", "structTDI.html", "structTDI" ],
+    [ "VBMCMCData", "structVBMCMCData.html", "structVBMCMCData" ]
 ];

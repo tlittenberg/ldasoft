@@ -75,18 +75,6 @@ CMAKE_BINARY_DIR = /Users/tlittenb/ldasoft
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/opt/local/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
-
-# Special rule for the target install/strip
-install/strip/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/opt/local/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip/fast
-
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
@@ -98,6 +86,18 @@ install/local/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
 	/opt/local/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/opt/local/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/opt/local/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
 
 # Special rule for the target install
 install: preinstall
@@ -111,15 +111,16 @@ install/fast: preinstall/fast
 	/opt/local/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
 
-# Special rule for the target list_install_components
-list_install_components:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
-.PHONY : list_install_components
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/opt/local/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : edit_cache
 
-# Special rule for the target list_install_components
-list_install_components/fast: list_install_components
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
 
-.PHONY : list_install_components/fast
+.PHONY : edit_cache/fast
 
 # Special rule for the target rebuild_cache
 rebuild_cache:
@@ -132,16 +133,15 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/opt/local/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : edit_cache
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
 
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
 
-.PHONY : edit_cache/fast
+.PHONY : list_install_components/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -174,66 +174,6 @@ preinstall/fast:
 depend:
 	cd /Users/tlittenb/ldasoft && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
-
-# Convenience name for target.
-gbmcmc/src/CMakeFiles/gb_residual.dir/rule:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gbmcmc/src/CMakeFiles/gb_residual.dir/rule
-.PHONY : gbmcmc/src/CMakeFiles/gb_residual.dir/rule
-
-# Convenience name for target.
-gb_residual: gbmcmc/src/CMakeFiles/gb_residual.dir/rule
-
-.PHONY : gb_residual
-
-# fast build rule for target.
-gb_residual/fast:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/build
-.PHONY : gb_residual/fast
-
-# Convenience name for target.
-gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/rule:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/rule
-.PHONY : gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/rule
-
-# Convenience name for target.
-gb_mcmc_brans_dicke: gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/rule
-
-.PHONY : gb_mcmc_brans_dicke
-
-# fast build rule for target.
-gb_mcmc_brans_dicke/fast:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/build
-.PHONY : gb_mcmc_brans_dicke/fast
-
-# Convenience name for target.
-gbmcmc/src/CMakeFiles/gb_match.dir/rule:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gbmcmc/src/CMakeFiles/gb_match.dir/rule
-.PHONY : gbmcmc/src/CMakeFiles/gb_match.dir/rule
-
-# Convenience name for target.
-gb_match: gbmcmc/src/CMakeFiles/gb_match.dir/rule
-
-.PHONY : gb_match
-
-# fast build rule for target.
-gb_match/fast:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/build
-.PHONY : gb_match/fast
-
-# Convenience name for target.
-gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/rule:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/rule
-.PHONY : gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/rule
-
-# Convenience name for target.
-gb_mcmc_chirpmass: gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/rule
-
-.PHONY : gb_mcmc_chirpmass
-
-# fast build rule for target.
-gb_mcmc_chirpmass/fast:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/build
-.PHONY : gb_mcmc_chirpmass/fast
 
 # Convenience name for target.
 gbmcmc/src/CMakeFiles/gbmcmc.dir/rule:
@@ -280,17 +220,31 @@ gb_mcmc/fast:
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/build
 .PHONY : gb_mcmc/fast
 
+# Convenience name for target.
+gbmcmc/src/CMakeFiles/vb_mcmc.dir/rule:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gbmcmc/src/CMakeFiles/vb_mcmc.dir/rule
+.PHONY : gbmcmc/src/CMakeFiles/vb_mcmc.dir/rule
+
+# Convenience name for target.
+vb_mcmc: gbmcmc/src/CMakeFiles/vb_mcmc.dir/rule
+
+.PHONY : vb_mcmc
+
+# fast build rule for target.
+vb_mcmc/fast:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/build
+.PHONY : vb_mcmc/fast
+
 GalacticBinaryCatalog.o: GalacticBinaryCatalog.c.o
 
 .PHONY : GalacticBinaryCatalog.o
 
 # target to build an object file
 GalacticBinaryCatalog.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryCatalog.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryCatalog.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryCatalog.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryCatalog.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryCatalog.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryCatalog.c.o
 .PHONY : GalacticBinaryCatalog.c.o
 
 GalacticBinaryCatalog.i: GalacticBinaryCatalog.c.i
@@ -299,11 +253,10 @@ GalacticBinaryCatalog.i: GalacticBinaryCatalog.c.i
 
 # target to preprocess a source file
 GalacticBinaryCatalog.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryCatalog.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryCatalog.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryCatalog.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryCatalog.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryCatalog.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryCatalog.c.i
 .PHONY : GalacticBinaryCatalog.c.i
 
 GalacticBinaryCatalog.s: GalacticBinaryCatalog.c.s
@@ -312,11 +265,10 @@ GalacticBinaryCatalog.s: GalacticBinaryCatalog.c.s
 
 # target to generate assembly for a file
 GalacticBinaryCatalog.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryCatalog.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryCatalog.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryCatalog.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryCatalog.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryCatalog.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryCatalog.c.s
 .PHONY : GalacticBinaryCatalog.c.s
 
 GalacticBinaryData.o: GalacticBinaryData.c.o
@@ -325,11 +277,10 @@ GalacticBinaryData.o: GalacticBinaryData.c.o
 
 # target to build an object file
 GalacticBinaryData.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryData.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryData.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryData.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryData.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryData.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryData.c.o
 .PHONY : GalacticBinaryData.c.o
 
 GalacticBinaryData.i: GalacticBinaryData.c.i
@@ -338,11 +289,10 @@ GalacticBinaryData.i: GalacticBinaryData.c.i
 
 # target to preprocess a source file
 GalacticBinaryData.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryData.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryData.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryData.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryData.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryData.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryData.c.i
 .PHONY : GalacticBinaryData.c.i
 
 GalacticBinaryData.s: GalacticBinaryData.c.s
@@ -351,11 +301,10 @@ GalacticBinaryData.s: GalacticBinaryData.c.s
 
 # target to generate assembly for a file
 GalacticBinaryData.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryData.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryData.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryData.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryData.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryData.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryData.c.s
 .PHONY : GalacticBinaryData.c.s
 
 GalacticBinaryFStatistic.o: GalacticBinaryFStatistic.c.o
@@ -364,11 +313,10 @@ GalacticBinaryFStatistic.o: GalacticBinaryFStatistic.c.o
 
 # target to build an object file
 GalacticBinaryFStatistic.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryFStatistic.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryFStatistic.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryFStatistic.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryFStatistic.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryFStatistic.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryFStatistic.c.o
 .PHONY : GalacticBinaryFStatistic.c.o
 
 GalacticBinaryFStatistic.i: GalacticBinaryFStatistic.c.i
@@ -377,11 +325,10 @@ GalacticBinaryFStatistic.i: GalacticBinaryFStatistic.c.i
 
 # target to preprocess a source file
 GalacticBinaryFStatistic.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryFStatistic.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryFStatistic.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryFStatistic.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryFStatistic.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryFStatistic.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryFStatistic.c.i
 .PHONY : GalacticBinaryFStatistic.c.i
 
 GalacticBinaryFStatistic.s: GalacticBinaryFStatistic.c.s
@@ -390,11 +337,10 @@ GalacticBinaryFStatistic.s: GalacticBinaryFStatistic.c.s
 
 # target to generate assembly for a file
 GalacticBinaryFStatistic.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryFStatistic.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryFStatistic.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryFStatistic.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryFStatistic.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryFStatistic.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryFStatistic.c.s
 .PHONY : GalacticBinaryFStatistic.c.s
 
 GalacticBinaryIO.o: GalacticBinaryIO.c.o
@@ -403,11 +349,10 @@ GalacticBinaryIO.o: GalacticBinaryIO.c.o
 
 # target to build an object file
 GalacticBinaryIO.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryIO.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryIO.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryIO.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryIO.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryIO.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryIO.c.o
 .PHONY : GalacticBinaryIO.c.o
 
 GalacticBinaryIO.i: GalacticBinaryIO.c.i
@@ -416,11 +361,10 @@ GalacticBinaryIO.i: GalacticBinaryIO.c.i
 
 # target to preprocess a source file
 GalacticBinaryIO.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryIO.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryIO.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryIO.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryIO.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryIO.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryIO.c.i
 .PHONY : GalacticBinaryIO.c.i
 
 GalacticBinaryIO.s: GalacticBinaryIO.c.s
@@ -429,11 +373,10 @@ GalacticBinaryIO.s: GalacticBinaryIO.c.s
 
 # target to generate assembly for a file
 GalacticBinaryIO.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryIO.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryIO.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryIO.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryIO.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryIO.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryIO.c.s
 .PHONY : GalacticBinaryIO.c.s
 
 GalacticBinaryMCMC.o: GalacticBinaryMCMC.c.o
@@ -444,6 +387,7 @@ GalacticBinaryMCMC.o: GalacticBinaryMCMC.c.o
 GalacticBinaryMCMC.c.o:
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMCMC.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryMCMC.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryMCMC.c.o
 .PHONY : GalacticBinaryMCMC.c.o
 
 GalacticBinaryMCMC.i: GalacticBinaryMCMC.c.i
@@ -454,6 +398,7 @@ GalacticBinaryMCMC.i: GalacticBinaryMCMC.c.i
 GalacticBinaryMCMC.c.i:
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMCMC.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryMCMC.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryMCMC.c.i
 .PHONY : GalacticBinaryMCMC.c.i
 
 GalacticBinaryMCMC.s: GalacticBinaryMCMC.c.s
@@ -464,6 +409,7 @@ GalacticBinaryMCMC.s: GalacticBinaryMCMC.c.s
 GalacticBinaryMCMC.c.s:
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMCMC.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryMCMC.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryMCMC.c.s
 .PHONY : GalacticBinaryMCMC.c.s
 
 GalacticBinaryMatch.o: GalacticBinaryMatch.c.o
@@ -472,7 +418,6 @@ GalacticBinaryMatch.o: GalacticBinaryMatch.c.o
 
 # target to build an object file
 GalacticBinaryMatch.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryMatch.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMatch.c.o
 .PHONY : GalacticBinaryMatch.c.o
 
@@ -482,7 +427,6 @@ GalacticBinaryMatch.i: GalacticBinaryMatch.c.i
 
 # target to preprocess a source file
 GalacticBinaryMatch.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryMatch.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMatch.c.i
 .PHONY : GalacticBinaryMatch.c.i
 
@@ -492,7 +436,6 @@ GalacticBinaryMatch.s: GalacticBinaryMatch.c.s
 
 # target to generate assembly for a file
 GalacticBinaryMatch.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryMatch.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMatch.c.s
 .PHONY : GalacticBinaryMatch.c.s
 
@@ -502,11 +445,10 @@ GalacticBinaryMath.o: GalacticBinaryMath.c.o
 
 # target to build an object file
 GalacticBinaryMath.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryMath.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryMath.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMath.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryMath.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryMath.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryMath.c.o
 .PHONY : GalacticBinaryMath.c.o
 
 GalacticBinaryMath.i: GalacticBinaryMath.c.i
@@ -515,11 +457,10 @@ GalacticBinaryMath.i: GalacticBinaryMath.c.i
 
 # target to preprocess a source file
 GalacticBinaryMath.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryMath.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryMath.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMath.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryMath.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryMath.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryMath.c.i
 .PHONY : GalacticBinaryMath.c.i
 
 GalacticBinaryMath.s: GalacticBinaryMath.c.s
@@ -528,11 +469,10 @@ GalacticBinaryMath.s: GalacticBinaryMath.c.s
 
 # target to generate assembly for a file
 GalacticBinaryMath.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryMath.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryMath.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryMath.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryMath.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryMath.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryMath.c.s
 .PHONY : GalacticBinaryMath.c.s
 
 GalacticBinaryModel.o: GalacticBinaryModel.c.o
@@ -541,11 +481,10 @@ GalacticBinaryModel.o: GalacticBinaryModel.c.o
 
 # target to build an object file
 GalacticBinaryModel.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryModel.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryModel.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryModel.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryModel.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryModel.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryModel.c.o
 .PHONY : GalacticBinaryModel.c.o
 
 GalacticBinaryModel.i: GalacticBinaryModel.c.i
@@ -554,11 +493,10 @@ GalacticBinaryModel.i: GalacticBinaryModel.c.i
 
 # target to preprocess a source file
 GalacticBinaryModel.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryModel.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryModel.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryModel.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryModel.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryModel.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryModel.c.i
 .PHONY : GalacticBinaryModel.c.i
 
 GalacticBinaryModel.s: GalacticBinaryModel.c.s
@@ -567,11 +505,10 @@ GalacticBinaryModel.s: GalacticBinaryModel.c.s
 
 # target to generate assembly for a file
 GalacticBinaryModel.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryModel.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryModel.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryModel.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryModel.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryModel.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryModel.c.s
 .PHONY : GalacticBinaryModel.c.s
 
 GalacticBinaryPrior.o: GalacticBinaryPrior.c.o
@@ -580,11 +517,10 @@ GalacticBinaryPrior.o: GalacticBinaryPrior.c.o
 
 # target to build an object file
 GalacticBinaryPrior.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryPrior.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryPrior.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryPrior.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryPrior.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryPrior.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryPrior.c.o
 .PHONY : GalacticBinaryPrior.c.o
 
 GalacticBinaryPrior.i: GalacticBinaryPrior.c.i
@@ -593,11 +529,10 @@ GalacticBinaryPrior.i: GalacticBinaryPrior.c.i
 
 # target to preprocess a source file
 GalacticBinaryPrior.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryPrior.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryPrior.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryPrior.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryPrior.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryPrior.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryPrior.c.i
 .PHONY : GalacticBinaryPrior.c.i
 
 GalacticBinaryPrior.s: GalacticBinaryPrior.c.s
@@ -606,11 +541,10 @@ GalacticBinaryPrior.s: GalacticBinaryPrior.c.s
 
 # target to generate assembly for a file
 GalacticBinaryPrior.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryPrior.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryPrior.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryPrior.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryPrior.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryPrior.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryPrior.c.s
 .PHONY : GalacticBinaryPrior.c.s
 
 GalacticBinaryProposal.o: GalacticBinaryProposal.c.o
@@ -619,11 +553,10 @@ GalacticBinaryProposal.o: GalacticBinaryProposal.c.o
 
 # target to build an object file
 GalacticBinaryProposal.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryProposal.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryProposal.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryProposal.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryProposal.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryProposal.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryProposal.c.o
 .PHONY : GalacticBinaryProposal.c.o
 
 GalacticBinaryProposal.i: GalacticBinaryProposal.c.i
@@ -632,11 +565,10 @@ GalacticBinaryProposal.i: GalacticBinaryProposal.c.i
 
 # target to preprocess a source file
 GalacticBinaryProposal.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryProposal.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryProposal.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryProposal.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryProposal.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryProposal.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryProposal.c.i
 .PHONY : GalacticBinaryProposal.c.i
 
 GalacticBinaryProposal.s: GalacticBinaryProposal.c.s
@@ -645,11 +577,10 @@ GalacticBinaryProposal.s: GalacticBinaryProposal.c.s
 
 # target to generate assembly for a file
 GalacticBinaryProposal.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryProposal.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryProposal.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryProposal.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryProposal.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryProposal.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryProposal.c.s
 .PHONY : GalacticBinaryProposal.c.s
 
 GalacticBinaryResidual.o: GalacticBinaryResidual.c.o
@@ -658,7 +589,6 @@ GalacticBinaryResidual.o: GalacticBinaryResidual.c.o
 
 # target to build an object file
 GalacticBinaryResidual.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryResidual.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryResidual.c.o
 .PHONY : GalacticBinaryResidual.c.o
 
@@ -668,7 +598,6 @@ GalacticBinaryResidual.i: GalacticBinaryResidual.c.i
 
 # target to preprocess a source file
 GalacticBinaryResidual.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryResidual.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryResidual.c.i
 .PHONY : GalacticBinaryResidual.c.i
 
@@ -678,7 +607,6 @@ GalacticBinaryResidual.s: GalacticBinaryResidual.c.s
 
 # target to generate assembly for a file
 GalacticBinaryResidual.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryResidual.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryResidual.c.s
 .PHONY : GalacticBinaryResidual.c.s
 
@@ -688,11 +616,10 @@ GalacticBinaryWaveform.o: GalacticBinaryWaveform.c.o
 
 # target to build an object file
 GalacticBinaryWaveform.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryWaveform.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryWaveform.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryWaveform.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryWaveform.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryWaveform.c.o
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryWaveform.c.o
 .PHONY : GalacticBinaryWaveform.c.o
 
 GalacticBinaryWaveform.i: GalacticBinaryWaveform.c.i
@@ -701,11 +628,10 @@ GalacticBinaryWaveform.i: GalacticBinaryWaveform.c.i
 
 # target to preprocess a source file
 GalacticBinaryWaveform.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryWaveform.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryWaveform.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryWaveform.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryWaveform.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryWaveform.c.i
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryWaveform.c.i
 .PHONY : GalacticBinaryWaveform.c.i
 
 GalacticBinaryWaveform.s: GalacticBinaryWaveform.c.s
@@ -714,11 +640,10 @@ GalacticBinaryWaveform.s: GalacticBinaryWaveform.c.s
 
 # target to generate assembly for a file
 GalacticBinaryWaveform.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_residual.dir/build.make gbmcmc/src/CMakeFiles/gb_residual.dir/GalacticBinaryWaveform.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_match.dir/build.make gbmcmc/src/CMakeFiles/gb_match.dir/GalacticBinaryWaveform.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/GalacticBinaryWaveform.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_catalog.dir/build.make gbmcmc/src/CMakeFiles/gb_catalog.dir/GalacticBinaryWaveform.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/GalacticBinaryWaveform.c.s
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/GalacticBinaryWaveform.c.s
 .PHONY : GalacticBinaryWaveform.c.s
 
 gb_catalog.o: gb_catalog.c.o
@@ -754,7 +679,6 @@ gb_mcmc.o: gb_mcmc.c.o
 
 # target to build an object file
 gb_mcmc.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc.c.o
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/gb_mcmc.c.o
 .PHONY : gb_mcmc.c.o
 
@@ -764,7 +688,6 @@ gb_mcmc.i: gb_mcmc.c.i
 
 # target to preprocess a source file
 gb_mcmc.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc.c.i
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/gb_mcmc.c.i
 .PHONY : gb_mcmc.c.i
 
@@ -774,69 +697,35 @@ gb_mcmc.s: gb_mcmc.c.s
 
 # target to generate assembly for a file
 gb_mcmc.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc.c.s
 	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc.dir/gb_mcmc.c.s
 .PHONY : gb_mcmc.c.s
 
-gb_mcmc_brans_dicke.o: gb_mcmc_brans_dicke.c.o
+vb_mcmc.o: vb_mcmc.c.o
 
-.PHONY : gb_mcmc_brans_dicke.o
-
-# target to build an object file
-gb_mcmc_brans_dicke.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/gb_mcmc_brans_dicke.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc_brans_dicke.c.o
-.PHONY : gb_mcmc_brans_dicke.c.o
-
-gb_mcmc_brans_dicke.i: gb_mcmc_brans_dicke.c.i
-
-.PHONY : gb_mcmc_brans_dicke.i
-
-# target to preprocess a source file
-gb_mcmc_brans_dicke.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/gb_mcmc_brans_dicke.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc_brans_dicke.c.i
-.PHONY : gb_mcmc_brans_dicke.c.i
-
-gb_mcmc_brans_dicke.s: gb_mcmc_brans_dicke.c.s
-
-.PHONY : gb_mcmc_brans_dicke.s
-
-# target to generate assembly for a file
-gb_mcmc_brans_dicke.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_brans_dicke.dir/gb_mcmc_brans_dicke.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc_brans_dicke.c.s
-.PHONY : gb_mcmc_brans_dicke.c.s
-
-gb_mcmc_chirpmass.o: gb_mcmc_chirpmass.c.o
-
-.PHONY : gb_mcmc_chirpmass.o
+.PHONY : vb_mcmc.o
 
 # target to build an object file
-gb_mcmc_chirpmass.c.o:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/gb_mcmc_chirpmass.c.o
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc_chirpmass.c.o
-.PHONY : gb_mcmc_chirpmass.c.o
+vb_mcmc.c.o:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/vb_mcmc.c.o
+.PHONY : vb_mcmc.c.o
 
-gb_mcmc_chirpmass.i: gb_mcmc_chirpmass.c.i
+vb_mcmc.i: vb_mcmc.c.i
 
-.PHONY : gb_mcmc_chirpmass.i
+.PHONY : vb_mcmc.i
 
 # target to preprocess a source file
-gb_mcmc_chirpmass.c.i:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/gb_mcmc_chirpmass.c.i
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc_chirpmass.c.i
-.PHONY : gb_mcmc_chirpmass.c.i
+vb_mcmc.c.i:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/vb_mcmc.c.i
+.PHONY : vb_mcmc.c.i
 
-gb_mcmc_chirpmass.s: gb_mcmc_chirpmass.c.s
+vb_mcmc.s: vb_mcmc.c.s
 
-.PHONY : gb_mcmc_chirpmass.s
+.PHONY : vb_mcmc.s
 
 # target to generate assembly for a file
-gb_mcmc_chirpmass.c.s:
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/build.make gbmcmc/src/CMakeFiles/gb_mcmc_chirpmass.dir/gb_mcmc_chirpmass.c.s
-	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/gbmcmc.dir/build.make gbmcmc/src/CMakeFiles/gbmcmc.dir/gb_mcmc_chirpmass.c.s
-.PHONY : gb_mcmc_chirpmass.c.s
+vb_mcmc.c.s:
+	cd /Users/tlittenb/ldasoft && $(MAKE) $(MAKESILENT) -f gbmcmc/src/CMakeFiles/vb_mcmc.dir/build.make gbmcmc/src/CMakeFiles/vb_mcmc.dir/vb_mcmc.c.s
+.PHONY : vb_mcmc.c.s
 
 # Help Target
 help:
@@ -851,12 +740,9 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... gb_catalog"
-	@echo "... gb_match"
 	@echo "... gb_mcmc"
-	@echo "... gb_mcmc_brans_dicke"
-	@echo "... gb_mcmc_chirpmass"
-	@echo "... gb_residual"
 	@echo "... gbmcmc"
+	@echo "... vb_mcmc"
 	@echo "... GalacticBinaryCatalog.o"
 	@echo "... GalacticBinaryCatalog.i"
 	@echo "... GalacticBinaryCatalog.s"
@@ -899,12 +785,9 @@ help:
 	@echo "... gb_mcmc.o"
 	@echo "... gb_mcmc.i"
 	@echo "... gb_mcmc.s"
-	@echo "... gb_mcmc_brans_dicke.o"
-	@echo "... gb_mcmc_brans_dicke.i"
-	@echo "... gb_mcmc_brans_dicke.s"
-	@echo "... gb_mcmc_chirpmass.o"
-	@echo "... gb_mcmc_chirpmass.i"
-	@echo "... gb_mcmc_chirpmass.s"
+	@echo "... vb_mcmc.o"
+	@echo "... vb_mcmc.i"
+	@echo "... vb_mcmc.s"
 .PHONY : help
 
 

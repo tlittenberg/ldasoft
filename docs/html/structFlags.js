@@ -31,6 +31,7 @@ var structFlags =
     [ "NMCMC", "structFlags.html#a5cce7083d09d31c11f5f4e7d3e37f2a9", null ],
     [ "noiseFile", "structFlags.html#ae81433935b52cd5d64b07724c05f0cef", null ],
     [ "NT", "structFlags.html#a6ba0c4595612c0203d05074338e2dfce", null ],
+    [ "NVB", "structFlags.html#a737850ee891bda62d77b006096122eb1", null ],
     [ "orbit", "structFlags.html#ace7f194b2e226c7d5f51e059df05993d", null ],
     [ "pdfFile", "structFlags.html#abdafec64ceb3ff7e66f69a469bb340f2", null ],
     [ "prior", "structFlags.html#a2e307dd2b0bf32fd2847ba0af04a7372", null ],
@@ -44,5 +45,6 @@ var structFlags =
     [ "threads", "structFlags.html#ac5948da1f28e92b5e60603f6d75c969b", null ],
     [ "update", "structFlags.html#a0392b488d222aadf788c59376ca1e205", null ],
     [ "updateCov", "structFlags.html#af99ceda5db6df93079aa61bae8c860cf", null ],
+    [ "vbFile", "structFlags.html#ae1bd96096bfe486fc35e26faa702a465", null ],
     [ "verbose", "structFlags.html#a76aaab8bd934944f5f02d1e8b4596e73", null ]
 ];
