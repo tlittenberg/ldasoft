@@ -327,9 +327,12 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
     {
         
         //send to VBMCMC node
-        MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
-        MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD);
-
+        for(int id=vbmcmc_data->procID_min; id<=vbmcmc_data->procID_max; id++)
+        {
+            MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+        }
+        
         //send segments to GBMCMC nodes
         for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
         {

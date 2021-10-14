@@ -230,7 +230,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
     
     print_spline_state(model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
     
-    if(noise_data->mcmc_step>=0 && noise_data->mcmc_step%data->downsample==0 && noise_data->mcmc_step/data->downsample < data->Nwave)
+    if(noise_data->mcmc_step%data->downsample==0 && noise_data->mcmc_step/data->downsample < data->Nwave)
     {
         struct SplineModel *model_ptr = model[chain->index[0]];
 
