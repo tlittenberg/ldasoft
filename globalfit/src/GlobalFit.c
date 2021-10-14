@@ -787,9 +787,6 @@ int main(int argc, char *argv[])
 
             sprintf(filename,"%s/data/current_interpolated_spline_points.dat",noise_data->flags->runDir);
             print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
-
-            print_noise_reconstruction(noise_data->data, noise_data->flags);
-
         }
         if(VBMCMC_Flag)
         {
