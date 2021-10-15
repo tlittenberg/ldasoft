@@ -290,8 +290,6 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
     if(procID==root)
     {
         MPI_Status status;
-        int procID_min = mbh_data->procID_min;
-        int procID_max = mbh_data->procID_max;
         int N = global_fit->tdi_full->N;
                 
         double *A = malloc(N*sizeof(double));
@@ -304,13 +302,18 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
             global_fit->tdi_mbh->E[i] = 0.0;
         }
 
-        for(int n=procID_min; n<=procID_max; n++)
+        for(int n=mbh_data->procID_min; n<=mbh_data->procID_max; n++)
         {
+            //zero out the workspace for collecting the worker nodes' waveforms
+            for(int i=0; i<N; i++) A[i] = E[i] = 0.0;
+            
+            //get model from worker node
             MPI_Recv(&NF, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
             MPI_Recv(&index, 1, MPI_INT, n, 1, MPI_COMM_WORLD, &status);
             MPI_Recv(A+index, 2*NF, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
             MPI_Recv(E+index, 2*NF, MPI_DOUBLE, n, 3, MPI_COMM_WORLD, &status);
             
+            //remove from joint residual
             for(int i=0; i<2*NF; i++)
             {
                 global_fit->tdi_mbh->A[index+i] += A[i+index];
@@ -321,43 +324,21 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
         free(A);
         free(E);
     }
+
+
     
-    /* Root sends joint mbh model to all other worker nodes */
-    if(procID==root)
-    {
-        
-        //send to VBMCMC node
-        for(int id=vbmcmc_data->procID_min; id<=vbmcmc_data->procID_max; id++)
-        {
-            MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
-        }
-        
-        //send segments to GBMCMC nodes
-        for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
-        {
-            MPI_Send(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
-        }
-    }
+    /* Broadcast joint MBH model to all worker nodes */
+    MPI_Bcast(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Bcast(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
     
-    /* Recieve mbh segment for VB model */
-    if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
+    /* Remove current state of MBH model from joint fit */
+    if(procID >= mbh_data->procID_min && procID <= mbh_data->procID_max)
     {
-        MPI_Status status;
-
-        //receive mbh model from root node
-        MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
-    }
-
-    /* Receive mbh segment at gbmcmc models */
-    if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
-    {
-        MPI_Status status;
-
-        MPI_Recv(global_fit->tdi_mbh->A, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(global_fit->tdi_mbh->E, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+        for(int i=0; i<2*NF; i++)
+        {
+            global_fit->tdi_mbh->A[index+i] -= mbh_data->tdi->A[index+i];
+            global_fit->tdi_mbh->E[index+i] -= mbh_data->tdi->E[index+i];
+        }
     }
 
     /* Broadcast run time of first MBH source (used to scale other updates) */
@@ -452,12 +433,12 @@ static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, i
             global_fit->tdi_full->A[i] -= global_fit->tdi_vgb->A[i];
             global_fit->tdi_full->E[i] -= global_fit->tdi_vgb->E[i];
         }
-        
-        if(!MBH_Flag)
-        {
-            global_fit->tdi_full->A[i] -= global_fit->tdi_mbh->A[i];
-            global_fit->tdi_full->E[i] -= global_fit->tdi_mbh->E[i];
-        }
+
+        /*
+         MBH nodes hold all other MBH states in their global_fit structure
+         */
+        global_fit->tdi_full->A[i] -= global_fit->tdi_mbh->A[i];
+        global_fit->tdi_full->E[i] -= global_fit->tdi_mbh->E[i];
     }
 
 }
@@ -538,7 +519,7 @@ int main(int argc, char *argv[])
     {
         mbh_data->procID_min = pid_counter;
         mbh_data->procID_max = pid_counter+mbh_data->NMBH-1;
-        pid_counter++;
+        pid_counter+=mbh_data->NMBH;
     }
     
     //ucb model takes remaining nodes

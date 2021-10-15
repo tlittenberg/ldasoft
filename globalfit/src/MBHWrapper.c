@@ -117,6 +117,7 @@ void parse_mbh_args(int argc, char **argv, struct MBHData *data)
             if(t_merge > Tstart && t_merge < Tstart + Tobs)
             {
                 memcpy(data->segParams[counter], searchParams[i], NParams*sizeof(double));
+                counter++;
             }
         }
         
@@ -559,7 +560,7 @@ void get_mbh_waveform(struct MBHData *mbh_data)
     }
     /* DEBUG
     char filename[1024];
-    sprintf(filename,"%s/current_waveform.dat",mbh_data->flags->runDir);
+    sprintf(filename,"%s/current_waveform.dat.%i",mbh_data->flags->runDir,mbh_data->procID);
     FILE *temp = fopen(filename,"w");
     for(int n=0; n<mbh_data->tdi->N; n++)
     {
