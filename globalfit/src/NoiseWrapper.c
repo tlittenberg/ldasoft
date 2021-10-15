@@ -80,12 +80,12 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
         noise_data->data->fmin = (gbmcmc_data->data->fmin > mbh_data->data->fmin ) ? mbh_data->data->fmin : gbmcmc_data->data->fmin;
         noise_data->data->fmax = (gbmcmc_data->data->fmax > mbh_data->data->fmax ) ? gbmcmc_data->data->fmax : mbh_data->data->fmax;
 
-        //pad noise model
-        noise_data->data->fmin /= 1.1;
-        noise_data->data->fmax *= 1.1;
     }
         
-    
+    //pad noise model
+    noise_data->data->fmin /= 1.01;
+    noise_data->data->fmax *= 1.01;
+
 
     /*DEBUG*/printf("pid=%i: fmin=%g,fmax=%g, mbh->[%g,%g], gb=[%g,%g]\n",procID,noise_data->data->fmin,noise_data->data->fmax,mbh_data->data->fmin,mbh_data->data->fmax,gbmcmc_data->data->fmin,gbmcmc_data->data->fmax);
     
