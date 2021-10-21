@@ -397,7 +397,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
         }
     }
     
-    freehet(mbh_data->het);
+    //freehet(mbh_data->het);//TODO: Temporarily disable updates to het_space
 }
 
 int update_mbh_sampler(struct MBHData *mbh_data)
@@ -439,7 +439,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
 
     
     // use one of the cold chains to produce the reference waveform
-    het_space(dat, het, 2, paramx[who[0]], min, max);
+    //het_space(dat, het, 2, paramx[who[0]], min, max);//TODO: Temporarily disable updates to het_space
     heterodyne(dat, het, 2, paramx[who[0]]);
 
     
@@ -448,12 +448,14 @@ int update_mbh_sampler(struct MBHData *mbh_data)
 
     //compute Fisher matrices for current parameters
     //#pragma omp parallel for
+    //TODO: Temporarily disable updates to het_space
+    /*
     for(int i=0; i<NC; i++)
     {
         FisherHet(dat, het, 2, paramx[i], Fisher[i]);
         FisherEvec(Fisher[i], ejump[i], evec[i], NParams);
         efix(dat, het, 1, 2, paramx[i], min, max, ejump[i], evec[i], 1.0);
-    }
+    }*/
 
     double alpha = gsl_rng_uniform(rvec[0]);
     double beta;
@@ -520,7 +522,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     }
     
     free(m);
-    freehet(mbh_data->het);
+    //freehet(mbh_data->het);//TODO: Temporarily disable updates to het_space
     
     clock_t stop = clock();
     mbh_data->cpu_time = (double)(stop-start);

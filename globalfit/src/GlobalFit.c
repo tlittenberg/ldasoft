@@ -544,7 +544,7 @@ int main(int argc, char *argv[])
         fprintf(stdout,"\n =============== Global Fit Analysis ============== \n");
         fprintf(stdout,"  %i noise  processes (pid %i)\n",1+noise_data->procID_max-noise_data->procID_min,noise_data->procID_min);
         if(global_fit->nVGB>0) fprintf(stdout,"  %i vbmcmc processes (pid %i)\n",1+vbmcmc_data->procID_max-vbmcmc_data->procID_min,vbmcmc_data->procID_min);
-        if(global_fit->nMBH>0) fprintf(stdout,"  %i mbh    processes (pid %i-%i)\n",1+mbh_data->procID_max-mbh->procID_min,mbh_data->procID_min,mbh_data->procID_max);
+        if(global_fit->nMBH>0) fprintf(stdout,"  %i mbh    processes (pid %i-%i)\n",1+mbh_data->procID_max-mbh_data->procID_min,mbh_data->procID_min,mbh_data->procID_max);
         fprintf(stdout,"  %i gbmcmc processes (pid %i-%i)\n",1+gbmcmc_data->procID_max-gbmcmc_data->procID_min,gbmcmc_data->procID_min,gbmcmc_data->procID_max);
         fprintf(stdout," ================================================== \n");
    }
