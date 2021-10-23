@@ -1,4 +1,4 @@
-<mxfile modified="2021-10-22T16:33:33.260Z" host="app.diagrams.net" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15" etag="WmSaMA8ve9VD8gmCFKDr" version="15.5.8" type="github" pages="4">
+<mxfile modified="2021-10-23T14:46:45.464Z" host="app.diagrams.net" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15" etag="h3FJJsIqv2my5Kx2vIIa" version="15.5.8" type="github" pages="4">
   <diagram id="nEb7vlC1iJB3Md7GIFur" name="Overview">
     <mxGraphModel dx="2162" dy="1519" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
@@ -33,7 +33,7 @@
         <mxCell id="S27DlL94fh68zRVT2w3a-6" value="Research Support" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="1">
           <mxGeometry x="790" y="70" width="270" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="FSTufDoc9FlRJQP0JMla-43" value="SOC" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;" parent="1" vertex="1">
+        <mxCell id="FSTufDoc9FlRJQP0JMla-43" value="Correction, Quality Assurance, TDI production" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;" parent="1" vertex="1">
           <mxGeometry x="139.73913043478262" y="342.51798561151077" width="123.73913043478261" height="123.73913043478261" as="geometry" />
         </mxCell>
         <mxCell id="FSTufDoc9FlRJQP0JMla-44" value="Global Fit" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;" parent="1" vertex="1">
