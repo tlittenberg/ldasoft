@@ -418,7 +418,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     int *who = mbh_data->who;
     double *heat = mbh_data->heat;
     double ***history = mbh_data->history;
-    double ***Fisher = mbh_data->Fisher;
+    //double ***Fisher = mbh_data->Fisher; //TODO: Temporarily disable updates to het_space
     double **ejump = mbh_data->ejump;
     double ***evec = mbh_data->evec;
     int **cv = mbh_data->cv;
