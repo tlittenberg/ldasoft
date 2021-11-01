@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     data->t0   = calloc( NMAX , sizeof(double) );
     data->tgap = calloc( NMAX , sizeof(double) );
     
-    parse(argc,argv,data,orbit,flags,chain,NMAX,0);
+    parse(argc,argv,data,orbit,flags,chain,NMAX);
     int NC = chain->NC;
     int DMAX = flags->DMAX;
     int mcmc_start = -flags->NBURN;

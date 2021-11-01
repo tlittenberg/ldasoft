@@ -1184,7 +1184,14 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     //loop over sub-bins
     for(int i=0; i<n_f; i++)
     {
-        if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
+        if(n_f<100)
+        {
+            if(!flags->quiet) printProgress((double)i/(double)n_f);
+        }
+        else
+        {
+            if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
+        }
         
         double q = (double)(data->qmin) + (double)(i)*d_f;
         double f = q/data->T;

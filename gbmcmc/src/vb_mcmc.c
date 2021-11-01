@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
         
     data=data_vec[0];
     chain=chain_vec[0];
-    parse(argc,argv,data,orbit,flags,chain,NMAX,0);
+    parse(argc,argv,data,orbit,flags,chain,NMAX);
     int NC = chain->NC;
     int DMAX = flags->DMAX;
     int mcmc_start = -flags->NBURN;

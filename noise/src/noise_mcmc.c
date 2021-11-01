@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     struct Orbit *orbit = malloc(sizeof(struct Orbit));
     struct Chain *chain = malloc(sizeof(struct Chain));
     
-    parse(argc,argv,data,orbit,flags,chain,1,0);
+    parse(argc,argv,data,orbit,flags,chain,1);
     
     /*
      * Get Data

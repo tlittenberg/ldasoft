@@ -8,6 +8,7 @@
 #include <mpi.h>
 #include <omp.h>
 #include <time.h>
+#include <math.h>
 #include <string.h>
 
 #include <stdio.h>
@@ -40,6 +41,7 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
 {
     int procID = gbmcmc_data->procID;
     int procID_min = gbmcmc_data->procID_min;
+    int procID_max = gbmcmc_data->procID_max;
     
     /* don't let procID go below procID_min (for frequency spacing) */
     if(procID<procID_min) procID = procID_min;
@@ -50,6 +52,10 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
     struct Chain *chain = gbmcmc_data->chain;
     struct Data *data   = gbmcmc_data->data;
 
+    /* silence output except for in highest-ranking process */
+    flags->quiet = 1;
+    if(procID==procID_max) flags->quiet = 0;
+    
     /* Finish allocating GBMCMC structures now that we know the number of PT chains */
     gbmcmc_data->proposal = malloc(chain->NP*sizeof(struct Proposal*));
     gbmcmc_data->model = malloc(sizeof(struct Model*)*chain->NC);
@@ -57,13 +63,6 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
 
     /* Initialize LISA orbit model */
     initialize_orbit(data,orbit,flags);
-
-    /* select frequency segment for each process */
-    //get max and min samples
-    data->fmin = data->fmin + (double)((procID-procID_min)*(data->N - 2*data->qpad))/data->T;
-    data->fmax = data->fmin + data->N/data->T;
-    data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
 
     select_frequency_segment(data, tdi_full);
     
@@ -83,6 +82,65 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
      Used to determin number of steps relative to mbh model
      */
     gbmcmc_data->cpu_time = 1.0;
+}
+
+void setup_frequency_segment(struct GBMCMCData *gbmcmc_data)
+{
+    int procID = gbmcmc_data->procID;
+    int procID_min = gbmcmc_data->procID_min;
+    int procID_max = gbmcmc_data->procID_max;
+    struct Data *data = gbmcmc_data->data;
+    
+    /* select frequency segment for each process */
+    //get max and min samples
+    /*
+    data->fmin = data->fmin + (double)((procID-procID_min)*(data->N - 2*data->qpad))/data->T;
+    data->fmax = data->fmin + data->N/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+     */
+    
+    //how many ucb nodes
+    int N_node = procID_max - procID_min + 1;
+    
+    //how many section sizes?
+    int Smin =  (int)round(log(data->N-2*data->qpad)/log(2.));
+    int Smax =  (int)round(log(data->Nmax-2*data->qpad)/log(2.));
+    int N_seg = Smax - Smin + 1;//(int)round(log((double)Smax - (double)Smin + 1.)/log(2.));
+    
+    //integer part of nodes per section
+    int n = (int)floor((double)N_node/(double)N_seg);
+        
+    //remainder
+    int n_extra = N_node - (int)(n*N_seg);
+    
+    //which section am I in?
+    int k = (procID - procID_min)/n;
+    if(k>N_seg-1) k = N_seg-1;
+    
+    //size of nodes in my section
+    data->N = (int)round(pow(2,Smin+k));
+    
+    //start bin of my node?
+    int Nsum=0;
+    for(int node=procID_min; node<procID; node++)
+    {
+        k = (node - procID_min)/n;
+        if(k>N_seg-1) k = N_seg-1;
+        Nsum += (int)round(pow(2,Smin+k));
+    }
+    data->fmin = data->fmin + Nsum/data->T;
+    data->fmax = data->fmin + data->N/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+
+    //add padding
+    data->N += 2*data->qpad;
+    data->qmin -= data->qpad;
+    data->qmax += data->qpad;
+    data->fmin = (double)data->qmin/data->T;
+    data->fmax = (double)data->qmax/data->T;
+
 }
 
 void select_frequency_segment(struct Data *data, struct TDI *tdi_full)
@@ -145,7 +203,7 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     struct Model **trial = gbmcmc_data->trial;
     
     /* Lowest rank process has extra IO */
-    if(gbmcmc_data->procID==gbmcmc_data->procID_min) flags->quiet=0;
+    if(gbmcmc_data->procID==gbmcmc_data->procID_min) flags->quiet=1;
     
     /* Get noise spectrum for data segment */
     GalacticBinaryGetNoiseModel(data,orbit,flags);

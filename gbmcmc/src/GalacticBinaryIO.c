@@ -250,6 +250,7 @@ void print_usage()
     fprintf(stdout,"       --data        : strain data file (ASCII)            \n");
     fprintf(stdout,"       --h5-data     : strain data file (HDF5)             \n");
     fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
+    fprintf(stdout,"       --samples_max : max size of segment (2048)          \n");
     fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
     fprintf(stdout,"       --epochs      : number of time segments (1)         \n");
     fprintf(stdout,"       --start-time  : initial time of epoch  (0)          \n");
@@ -321,10 +322,11 @@ void print_usage()
     exit(0);
 }
 
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int procID)
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax)
 {
     
     int DMAX_default = 10;
+    int NmaxFlag = 0; //flag if Nmax is set at command line
     
     //Set defaults
     flags->calibration = 0;
@@ -364,13 +366,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     sprintf(flags->runDir,"./");
     chain->NP          = 9; //number of proposals
     chain->NC          = 12;//number of chains
-    
-    /*
-     * Set quiet flag for non-root parallel processes
-     * Note: assumes process 0 is always root.
-     */
-    if(procID>0) flags->quiet=1;
-    
+        
     /*
      default data format is 'phase'
      optional support for 'frequency' a la LDCs
@@ -400,31 +396,32 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     static struct option long_options[] =
     {
         /* These options set a flag. */
-        {"samples",   required_argument, 0, 0},
-        {"padding",   required_argument, 0, 0},
-        {"duration",  required_argument, 0, 0},
-        {"epochs",    required_argument, 0, 0},
-        {"sources",   required_argument, 0, 0},
-        {"start-time",required_argument, 0, 0},
-        {"gap-time",  required_argument, 0, 0},
-        {"orbit",     required_argument, 0, 0},
-        {"chains",    required_argument, 0, 0},
-        {"chainseed", required_argument, 0, 0},
-        {"noiseseed", required_argument, 0, 0},
-        {"injseed",   required_argument, 0, 0},
-        {"inj",       required_argument, 0, 0},
-        {"data",      required_argument, 0, 0},
-        {"h5-data",   required_argument, 0, 0},
-        {"fmin",      required_argument, 0, 0},
-        {"links",     required_argument, 0, 0},
-        {"update-cov",required_argument, 0, 0},
-        {"match-in1", required_argument, 0, 0},
-        {"match-in2", required_argument, 0, 0},
-        {"steps",     required_argument, 0, 0},
-        {"em-prior",  required_argument, 0, 0},
-        {"catalog",   required_argument, 0, 0},
-        {"threads",   required_argument, 0, 0},
-        {"rundir",    required_argument, 0, 0},
+        {"samples",    required_argument, 0, 0},
+        {"samples_max",required_argument, 0, 0},
+        {"padding",    required_argument, 0, 0},
+        {"duration",   required_argument, 0, 0},
+        {"epochs",     required_argument, 0, 0},
+        {"sources",    required_argument, 0, 0},
+        {"start-time", required_argument, 0, 0},
+        {"gap-time",   required_argument, 0, 0},
+        {"orbit",      required_argument, 0, 0},
+        {"chains",     required_argument, 0, 0},
+        {"chainseed",  required_argument, 0, 0},
+        {"noiseseed",  required_argument, 0, 0},
+        {"injseed",    required_argument, 0, 0},
+        {"inj",        required_argument, 0, 0},
+        {"data",       required_argument, 0, 0},
+        {"h5-data",    required_argument, 0, 0},
+        {"fmin",       required_argument, 0, 0},
+        {"links",      required_argument, 0, 0},
+        {"update-cov", required_argument, 0, 0},
+        {"match-in1",  required_argument, 0, 0},
+        {"match-in2",  required_argument, 0, 0},
+        {"steps",      required_argument, 0, 0},
+        {"em-prior",   required_argument, 0, 0},
+        {"catalog",    required_argument, 0, 0},
+        {"threads",    required_argument, 0, 0},
+        {"rundir",     required_argument, 0, 0},
         
         /* These options don’t set a flag.
          We distinguish them by their indices. */
@@ -515,6 +512,11 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                 {
                     flags->emPrior = 1;
                     sprintf(flags->pdfFile,"%s",optarg);
+                }
+                if(strcmp("samples_max", long_options[long_index].name) == 0)
+                {
+                    NmaxFlag = 1;
+                    data->Nmax = atoi(optarg);
                 }
                 if(strcmp("steps",       long_options[long_index].name) == 0)
                 {
@@ -642,8 +644,11 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     }
     
     //pad data
+    if(!NmaxFlag) data->Nmax = data->N;
     data->N += 2*data->qpad;
-    data->fmin -= data->qpad/data->T;    
+    data->Nmax += 2*data->qpad;
+    data->fmin -= data->qpad/data->T;
+    
     
     // copy command line args to other data structures
     data->NT = flags->NT;
@@ -655,7 +660,8 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     
     //map fmin to nearest bin
     data->fmin = floor(data->fmin*data->T)/data->T;
-    
+    data->fmax = data->fmin + (double)data->N/data->T;
+
     //calculate helper quantities for likelihood normalizations
     data->logfmin   = log(data->fmin);
     data->sum_log_f = 0.0;
