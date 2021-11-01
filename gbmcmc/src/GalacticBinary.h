@@ -44,6 +44,7 @@ struct Data
     /** @name Size of Data and Model */
      ///@{
     int N;        //!<number of frequency bins
+    int Nmax;     //!<max size of frequency segment (for global fit)
     int NT;       //!<number of time segments
     int Nchannel; //!<number of data channels
     int DMAX;     //!<max dimension of signal model

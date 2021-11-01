@@ -54,7 +54,7 @@ void print_usage();
 /**
  \brief Parse command line
  */
-void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax, int procID);
+void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, int Nmax);
 
 /**
  \brief select only part of command line defining verification binary lists

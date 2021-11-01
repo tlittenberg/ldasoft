@@ -180,37 +180,40 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
         struct Data *data = gbmcmc_data->data;
         struct Chain *chain = gbmcmc_data->chain;
         struct Model *model = gbmcmc_data->model[chain->index[0]];
+        
+        int N = 2*(data->N-2*data->qpad);
         MPI_Send(&data->qmin, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
-        MPI_Send(model->tdi[0]->A+2*data->qpad, 2*(data->N-2*data->qpad), MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
-        MPI_Send(model->tdi[0]->E+2*data->qpad, 2*(data->N-2*data->qpad), MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
+        MPI_Send(&N, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->A+2*data->qpad, N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->E+2*data->qpad, N, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
     }
     
     if(procID==root)
     {
         MPI_Status status;
-        
-        int N = 2*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
-        
-        int procID_min = gbmcmc_data->procID_min;
-        int procID_max = gbmcmc_data->procID_max;
-        
-        int qmin;
-        int qpad = gbmcmc_data->data->qpad;
-        
-        double *A = malloc(N*sizeof(double));
-        double *E = malloc(N*sizeof(double));
-        
+                
         //zero out ucb model
         for(int i=0; i<gf->tdi_ucb->N*2; i++)
         {
             gf->tdi_ucb->A[i] = 0.0;
             gf->tdi_ucb->E[i] = 0.0;
         }
-        
+
+        int procID_min = gbmcmc_data->procID_min;
+        int procID_max = gbmcmc_data->procID_max;
+
         for(int n=procID_min; n<=procID_max; n++)
         {
-            
+            int N,qmin;
             MPI_Recv(&qmin, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
+            MPI_Recv(&N, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
+            
+            int qpad = gbmcmc_data->data->qpad;
+            
+            double *A = malloc(N*sizeof(double));
+            double *E = malloc(N*sizeof(double));
+
+            
             MPI_Recv(A, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
             MPI_Recv(E, N, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
             
@@ -219,10 +222,10 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
                 gf->tdi_ucb->A[2*(qmin+qpad)+i] += A[i];
                 gf->tdi_ucb->E[2*(qmin+qpad)+i] += E[i];
             }
+
+            free(A);
+            free(E);
         }
-        
-        free(A);
-        free(E);
     }
     
     /* broadcast gbmcmc model to all non-UCB worker nodes */
@@ -353,69 +356,8 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
 
 static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, struct GlobalFitData *global_fit, int root, int procID)
 {
-
-    int ic = 0;
-    if(procID==root)
-    {
-        ic = noise_data->chain->index[0];
-        struct Noise *model_psd = noise_data->model[ic]->psd;
-        copy_noise(model_psd,global_fit->psd);
-
-        //send to VBMCMC nodes
-        for(int id=vbmcmc_data->procID_min; id<=vbmcmc_data->procID_max; id++)
-        {
-            MPI_Send(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
-        }
-        
-        //send to GBMCMC nodes
-        for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
-        {
-            int index = (id-gbmcmc_data->procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
-            MPI_Send(global_fit->psd->SnA+index, gbmcmc_data->data->N, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(global_fit->psd->SnE+index, gbmcmc_data->data->N, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
-        }
-        
-        //send to MBH nodes
-        for(int id=mbh_data->procID_min; id<=mbh_data->procID_max; id++)
-        {
-            MPI_Send(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
-        }
-
-    }
-    
-    
-    //Receive full noise fit from root node
-    if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
-    {
-        MPI_Status status;
-
-        //receive PSD model from root node
-        MPI_Recv(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
-    }
-    
-    //Receive psd segment to gbmcmc models
-    if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
-    {
-        MPI_Status status;
-
-        int index = (procID-gbmcmc_data->procID_min)*(gbmcmc_data->data->N - 2*gbmcmc_data->data->qpad);
-        MPI_Recv(global_fit->psd->SnA+index, gbmcmc_data->data->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(global_fit->psd->SnE+index, gbmcmc_data->data->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
-    }
-    
-    //Receive psd model from root node
-    if(procID>=mbh_data->procID_min && procID<=mbh_data->procID_max)
-    {
-        MPI_Status status;
-        
-        //receive PSD model from root node
-        MPI_Recv(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
-    }
-
+    MPI_Bcast(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
 static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, int VBMCMC_Flag, int MBH_Flag)
@@ -491,7 +433,7 @@ int main(int argc, char *argv[])
     /* all processes parse command line and set defaults/flags */
     parse_vb_list(argc, argv, flags);
     parse_mbh_args(argc, argv, mbh_data);
-    parse(argc,argv,data,orbit,flags,chain,NMAX,procID);
+    parse(argc,argv,data,orbit,flags,chain,NMAX);
     
     /* Allocate remaining data structures */
     alloc_noise_data(noise_data, gbmcmc_data, procID, Nproc-1); //noise runs on root process
@@ -596,8 +538,13 @@ int main(int argc, char *argv[])
         mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     }
-        
-    /* Initialize data structures */
+       
+    if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
+    {
+        setup_frequency_segment(gbmcmc_data);
+    }
+    
+    /* Initialize gbmcmc data structures */
     alloc_data(data, flags);
             
     /* root process reads data */
