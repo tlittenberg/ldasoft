@@ -267,6 +267,8 @@ void test_noise_model(struct Orbit *orbit);
 void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel);
 /// deep copy contents from origin into copy
 void copy_tdi(struct TDI *origin, struct TDI *copy);
+/// deep copy of segment of size `N` starting at `index`
+void copy_tdi_segment(struct TDI *origin, struct TDI *copy, int index, int N);
 /// free contents and overall TDI structure
 void free_tdi(struct TDI *tdi);
 ///@}

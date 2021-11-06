@@ -762,7 +762,9 @@ void copy_source(struct Source *origin, struct Source *copy)
     copy->imax = origin->imax;
     
     //Response
-    copy_tdi(origin->tdi,copy->tdi);
+    copy_tdi_segment(origin->tdi,copy->tdi,origin->imin, origin->imax-origin->imin);
+    //copy_tdi(origin->tdi,copy->tdi);
+
     
     //Fisher
     memcpy(copy->fisher_evalue, origin->fisher_evalue, origin->NP*sizeof(double));

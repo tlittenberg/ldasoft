@@ -875,6 +875,19 @@ void copy_tdi(struct TDI *origin, struct TDI *copy)
     memcpy(copy->T, origin->T, 2*origin->N*sizeof(double));
 }
 
+void copy_tdi_segment(struct TDI *origin, struct TDI *copy, int index, int N)
+{
+    copy->N        = origin->N;
+    copy->Nchannel = origin->Nchannel;
+    index*=2;
+    memcpy(copy->X+index, origin->X+index, 2*N*sizeof(double));
+    memcpy(copy->Y+index, origin->Y+index, 2*N*sizeof(double));
+    memcpy(copy->Z+index, origin->Z+index, 2*N*sizeof(double));
+    memcpy(copy->A+index, origin->A+index, 2*N*sizeof(double));
+    memcpy(copy->E+index, origin->E+index, 2*N*sizeof(double));
+    memcpy(copy->T+index, origin->T+index, 2*N*sizeof(double));
+}
+
 void free_tdi(struct TDI *tdi)
 {
     free(tdi->X);
