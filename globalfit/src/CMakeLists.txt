@@ -19,5 +19,8 @@ target_link_libraries(global_fit gbmcmc)
 target_link_libraries(global_fit noise)
 target_link_libraries(global_fit mpi)
 target_link_libraries(global_fit mbh)
+if(APPLE)
+   target_link_libraries(global_fit omp)
+endif()
 install(TARGETS global_fit DESTINATION bin)
 
