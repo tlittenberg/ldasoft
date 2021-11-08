@@ -14,7 +14,7 @@ mkdir -p build
 pushd build/
 cmake .. \
 	-DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
-	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_BUILD_TYPE=Debug \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=true
 
 cmake --build . -- VERBOSE=1

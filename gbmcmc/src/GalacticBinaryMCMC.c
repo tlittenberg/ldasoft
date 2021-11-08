@@ -27,8 +27,6 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include <omp.h>
-
 #include <LISA.h>
 
 #include "GalacticBinary.h"

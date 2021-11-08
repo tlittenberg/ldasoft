@@ -33,6 +33,8 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_eigen.h>
 
+#include <omp.h>
+
 #include <GMM_with_EM.h>
 
 #include <LISA.h>
@@ -1198,13 +1200,13 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         
         
         //loop over colatitude bins
+        #pragma omp parallel for num_threads(flags->threads) collapse(2)
         for (int j=0; j<n_theta; j++)
         {
-            double theta = acos((-1. + (double)j*d_theta));
-            
             //loop over longitude bins
             for(int k=0; k<n_phi; k++)
             {
+                double theta = acos((-1. + (double)j*d_theta));
                 double phi = (double)k*d_phi;
                 
                 if(i>0 && i<n_f-1)
@@ -1216,12 +1218,15 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                     
                     proposal->tensor[i][j][k] = logL_AE;//sqrt(2*logL_AE);
                 }
-                
-                norm += proposal->tensor[i][j][k];
-                
             }//end loop over longitude bins
         }//end loop over colatitude bins
     }//end loop over sub-bins
+    
+    for(int i=0; i<n_f; i++)
+        for(int j=0; j<n_theta; j++)
+            for(int k=0; k<n_phi; k++)
+                norm += proposal->tensor[i][j][k];
+
     
     //normalize
     proposal->norm = (n_f*n_theta*n_phi)/norm;

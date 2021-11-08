@@ -28,12 +28,11 @@ find_package(MBH)
 set(CMAKE_C_COMPILER mpicc)
 
 # set cflags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99")
 if(APPLE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xpreprocessor -fopenmp -lomp")
-else()
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xpreprocessor")
 endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -ffast-math -Wall -ftree-vectorize -std=gnu99")
 
 # Set git version header file
 message(STATUS "Resolving GIT Version")
