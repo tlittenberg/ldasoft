@@ -974,3 +974,60 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
 
 }
 
+void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
+{
+    hid_t  file, filetype, dataset, dataspace, memtype; /* identifiers */
+    herr_t status; /* error handling */
+    int ndims, Nrow, Ncol; /* dimension of dataset */
+    double *data; /* array for dataset */
+
+    /* Open an existing file. */
+    file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+    /* Open an existing dataset. */
+    dataset = H5Dopen(file, "/H5LISA/PreProcess/TDIdata", H5P_DEFAULT);
+    memtype = H5Dget_type(dataset);
+
+    /* Get dimension of dataset */
+    dataspace = H5Dget_space(dataset);
+    ndims = H5Sget_simple_extent_ndims(dataspace);
+    hsize_t adims[ndims];
+    H5Sget_simple_extent_dims(dataspace, adims, NULL);
+
+    /* Allocate memory for reading dataset */
+    Nrow = (int)adims[0];
+    Ncol = (int)adims[1];
+    data = malloc(Nrow*Ncol*sizeof(double));
+    
+    alloc_tdi(tdi, Nrow/2, 3);
+
+    
+    /* Read the data */
+    status = H5Dread (dataset, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+
+    
+    for(int i=0; i<Nrow; i++)
+    {
+        
+        double X = data[Ncol*i+1];
+        double Y = data[Ncol*i+2];
+        double Z = data[Ncol*i+3];
+        
+        tdi->X[i] = X;
+        tdi->Y[i] = Y;
+        tdi->Z[i] = Z;
+        
+        /* LDC conventions for AET channels */
+        XYZ2AET(X,Y,Z,&tdi->A[i],&tdi->E[i],&tdi->T[i]);
+    }
+    tdi->delta = data[Ncol] - data[0];
+
+    free(data);
+
+    /* Close the dataset. */
+    status = H5Dclose(dataset);
+
+    /* Close the file. */
+    status = H5Fclose(file);
+
+}
