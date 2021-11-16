@@ -113,8 +113,9 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
 {
     /* LDASOFT-formatted structure for TDI data */
     struct TDI *tdi_td = malloc(sizeof(struct TDI));
-    
-    LISA_Read_HDF5_LDC_TDI(tdi_td, data->fileName);
+        
+    if(!strcmp(data->format,"frequency"))  LISA_Read_HDF5_LDC_RADLER_TDI(tdi_td, data->fileName);
+    if(!strcmp(data->format,"sangria")) LISA_Read_HDF5_LDC_TDI(tdi_td, data->fileName);
     
     /* Select time segment of full data set */
     double start_time = data->t0[0];

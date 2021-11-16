@@ -279,4 +279,13 @@ void free_tdi(struct TDI *tdi);
  */
 void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName);
 
+/**
+ \brief HDF5 parser for LISA Data
+ 
+ Hard-coded for <a href="https://lisa-ldc.lal.in2p3.fr/challenge1">LDC Radler</a> data format.
+ Performs a deep copy of TDI time series data in HDF5 to input TDI structure.
+ */
+
+void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName);
+
 #endif /* LISA_h */
