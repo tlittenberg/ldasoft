@@ -387,7 +387,7 @@ void copy_model(struct Model *origin, struct Model *copy)
     copy->NP             = origin->NP;
     copy->Nmax           = origin->Nmax;
     copy->Nlive          = origin->Nlive;
-    for(int n=0; n<origin->Nmax; n++)
+    for(int n=0; n<origin->Nlive; n++)
         copy_source(origin->source[n],copy->source[n]);
     
     for(int n=0; n<origin->NT; n++)
@@ -762,8 +762,7 @@ void copy_source(struct Source *origin, struct Source *copy)
     copy->imax = origin->imax;
     
     //Response
-    copy_tdi_segment(origin->tdi,copy->tdi,origin->imin, origin->imax-origin->imin);
-    //copy_tdi(origin->tdi,copy->tdi);
+    copy_tdi(origin->tdi,copy->tdi);
 
     
     //Fisher

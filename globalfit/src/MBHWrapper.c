@@ -175,13 +175,14 @@ void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd)
     int mstart = mbh_data->het->MN;
     int mstop  = mbh_data->het->MM;
     
-    for(int i=mstart; i<mstop; i++)
+    //for(int i=mstart; i<mstop; i++)
+    for(int i=0; i<psd->N; i++)
     {
         //TODO: Check this factor of 2!
-        mbh_data->data->SN[0][i] = 2*psd->SnA[i-nstart];
-        mbh_data->data->SN[1][i] = 2*psd->SnE[i-nstart];
-        mbh_data->data->SM[0][i] = 2*psd->SnA[i-nstart];
-        mbh_data->data->SM[1][i] = 2*psd->SnE[i-nstart];
+        mbh_data->data->SN[0][i+nstart] = 2*psd->SnA[i];
+        mbh_data->data->SN[1][i+nstart] = 2*psd->SnE[i];
+        mbh_data->data->SM[0][i+nstart] = 2*psd->SnA[i];
+        mbh_data->data->SM[1][i+nstart] = 2*psd->SnE[i];
     }
 }
 
@@ -418,7 +419,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     int *who = mbh_data->who;
     double *heat = mbh_data->heat;
     double ***history = mbh_data->history;
-    //double ***Fisher = mbh_data->Fisher; //TODO: Temporarily disable updates to het_space
+    double ***Fisher = mbh_data->Fisher; 
     double **ejump = mbh_data->ejump;
     double ***evec = mbh_data->evec;
     int **cv = mbh_data->cv;
@@ -439,7 +440,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
 
     
     // use one of the cold chains to produce the reference waveform
-    //het_space(dat, het, 2, paramx[who[0]], min, max);//TODO: Temporarily disable updates to het_space
+    het_space(dat, het, 2, paramx[who[0]], min, max);
     heterodyne(dat, het, 2, paramx[who[0]]);
 
     
@@ -448,14 +449,12 @@ int update_mbh_sampler(struct MBHData *mbh_data)
 
     //compute Fisher matrices for current parameters
     //#pragma omp parallel for
-    //TODO: Temporarily disable updates to het_space
-    /*
     for(int i=0; i<NC; i++)
     {
         FisherHet(dat, het, 2, paramx[i], Fisher[i]);
         FisherEvec(Fisher[i], ejump[i], evec[i], NParams);
         efix(dat, het, 1, 2, paramx[i], min, max, ejump[i], evec[i], 1.0);
-    }*/
+    }
 
     double alpha = gsl_rng_uniform(rvec[0]);
     double beta;
@@ -522,7 +521,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     }
     
     free(m);
-    //freehet(mbh_data->het);//TODO: Temporarily disable updates to het_space
+    freehet(mbh_data->het);
     
     clock_t stop = clock();
     mbh_data->cpu_time = (double)(stop-start);
