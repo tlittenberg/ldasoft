@@ -10,7 +10,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-
+#include <unistd.h>
 #include <stdio.h>
 
 #include <LISA.h>
@@ -84,55 +84,81 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
     gbmcmc_data->cpu_time = 1.0;
 }
 
+#define GRIDFILE "ucb_frequency_spacing.dat"
+
 void setup_frequency_segment(struct GBMCMCData *gbmcmc_data)
 {
     int procID = gbmcmc_data->procID;
     int procID_min = gbmcmc_data->procID_min;
     int procID_max = gbmcmc_data->procID_max;
     struct Data *data = gbmcmc_data->data;
-    
-    /* select frequency segment for each process */
-    //get max and min samples
-    /*
-    data->fmin = data->fmin + (double)((procID-procID_min)*(data->N - 2*data->qpad))/data->T;
-    data->fmax = data->fmin + data->N/data->T;
-    data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
-     */
-    
-    //how many ucb nodes
-    int N_node = procID_max - procID_min + 1;
-    
-    //how many section sizes?
-    int Smin =  (int)round(log(data->N-2*data->qpad)/log(2.));
-    int Smax =  (int)round(log(data->Nmax-2*data->qpad)/log(2.));
-    int N_seg = Smax - Smin + 1;//(int)round(log((double)Smax - (double)Smin + 1.)/log(2.));
-    
-    //integer part of nodes per section
-    int n = (int)floor((double)N_node/(double)N_seg);
-        
-    //remainder
-    int n_extra = N_node - (int)(n*N_seg);
-    
-    //which section am I in?
-    int k = (procID - procID_min)/n;
-    if(k>N_seg-1) k = N_seg-1;
-    
-    //size of nodes in my section
-    data->N = (int)round(pow(2,Smin+k));
-    
-    //start bin of my node?
-    int Nsum=0;
-    for(int node=procID_min; node<procID; node++)
+
+    if(access(GRIDFILE,F_OK)==0)
     {
-        k = (node - procID_min)/n;
-        if(k>N_seg-1) k = N_seg-1;
-        Nsum += (int)round(pow(2,Smin+k));
+        FILE *fgrid=fopen(GRIDFILE,"r");
+        int n,id;
+        double fstart,fstop;
+        int fgridsize=0;
+        while(!feof(fgrid))
+        {
+            fscanf(fgrid,"%i%i%lg%lg",&id,&n,&fstart,&fstop);
+            fgridsize++;
+        }
+        rewind(fgrid);
+        fgridsize--;
+        
+        double fmin[fgridsize];
+        double fmax[fgridsize];
+        
+        for(int i=0; i<fgridsize; i++)
+        {
+            fscanf(fgrid,"%i%i%lg%lg",&id,&n,&fstart,&fstop);
+            fmin[i] = fstart;
+            fmax[i] = fstop;;
+        }
+        fclose(fgrid);
+        
+        data->fmin = fmin[procID-procID_min];
+        data->fmax = fmax[procID-procID_min];
+        data->N = (int)round((data->fmax-data->fmin)*data->T);
+        data->qmin = (int)(data->fmin*data->T);
+        data->qmax = data->qmin+data->N;
     }
-    data->fmin = data->fmin + Nsum/data->T;
-    data->fmax = data->fmin + data->N/data->T;
-    data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
+    else
+    {
+        if(procID==procID_min) fprintf(stdout,"Did not find %s, manually setting up frequency grid\n",GRIDFILE);
+        
+        //how many ucb nodes
+        int N_node = procID_max - procID_min + 1;
+        
+        //how many section sizes?
+        int Smin =  (int)round(log(data->N-2*data->qpad)/log(2.));
+        int Smax =  (int)round(log(data->Nmax-2*data->qpad)/log(2.));
+        int N_seg = Smax - Smin + 1;//(int)round(log((double)Smax - (double)Smin + 1.)/log(2.));
+        
+        //integer part of nodes per section
+        int n = (int)floor((double)N_node/(double)N_seg);
+        
+        //which section am I in?
+        int k = (procID - procID_min)/n;
+        if(k>N_seg-1) k = N_seg-1;
+        
+        //size of nodes in my section
+        data->N = (int)round(pow(2,Smin+k));
+        
+        //start bin of my node?
+        int Nsum=0;
+        for(int node=procID_min; node<procID; node++)
+        {
+            k = (node - procID_min)/n;
+            if(k>N_seg-1) k = N_seg-1;
+            Nsum += (int)round(pow(2,Smin+k));
+        }
+        data->fmin = data->fmin + Nsum/data->T;
+        data->fmax = data->fmin + data->N/data->T;
+        data->qmin = (int)(data->fmin*data->T);
+        data->qmax = data->qmin+data->N;
+    }
 
     //add padding
     data->N += 2*data->qpad;

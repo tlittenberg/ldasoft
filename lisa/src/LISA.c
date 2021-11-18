@@ -976,7 +976,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
 
 void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
 {
-    hid_t  file, filetype, dataset, dataspace, memtype; /* identifiers */
+    hid_t  file, dataset, dataspace, memtype; /* identifiers */
     herr_t status; /* error handling */
     int ndims, Nrow, Ncol; /* dimension of dataset */
     double *data; /* array for dataset */

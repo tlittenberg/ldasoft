@@ -172,8 +172,6 @@ void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd)
 {
     double Tobs = mbh_data->data->Tobs;
     int nstart = (int)(psd->f[0]*Tobs);
-    int mstart = mbh_data->het->MN;
-    int mstop  = mbh_data->het->MM;
     
     //for(int i=mstart; i<mstop; i++)
     for(int i=0; i<psd->N; i++)
