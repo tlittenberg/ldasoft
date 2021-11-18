@@ -356,6 +356,15 @@ static void share_mbh_model(struct GBMCMCData *gbmcmc_data,
 
 static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, struct GlobalFitData *global_fit, int root, int procID)
 {
+    
+    int ic = 0;
+    if(procID==root)
+    {
+        ic = noise_data->chain->index[0];
+        struct Noise *model_psd = noise_data->model[ic]->psd;
+        copy_noise(model_psd,global_fit->psd);
+    }
+    
     MPI_Bcast(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }

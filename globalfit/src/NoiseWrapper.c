@@ -74,22 +74,22 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     MPI_Bcast(&noise_data->data->fmin, 1, MPI_DOUBLE, gbmcmc_data->procID_min, MPI_COMM_WORLD);
     MPI_Bcast(&noise_data->data->fmax, 1, MPI_DOUBLE, gbmcmc_data->procID_max, MPI_COMM_WORLD);
 
+    //pad noise model
+    noise_data->data->fmin /= 1.01;
+    noise_data->data->fmax *= 1.01;
+
     //adjust noise model bandwidth to account for MBHs
     if(mbh_data->NMBH>0)
     {
         //set limits of noise model to cover both models
         noise_data->data->fmin = (mbh_data->data->fmin < noise_data->data->fmin ) ? mbh_data->data->fmin : noise_data->data->fmin;
         noise_data->data->fmax = (mbh_data->data->fmax > noise_data->data->fmax ) ? mbh_data->data->fmax : noise_data->data->fmax;
+
+        //pad noise model even more (MBH bandwidth fluctuates)
+        noise_data->data->fmin /= 1.1;
+        noise_data->data->fmax *= 1.1;
     }
-
     //TODO: adjust noise model bandwidth to account for VBs
-
-    //pad noise model
-    noise_data->data->fmin /= 1.1;
-    noise_data->data->fmax *= 1.1;
-
-
-    /*DEBUG*/printf("pid=%i: fmin=%g,fmax=%g, mbh->[%g,%g], gb=[%g,%g]\n",procID,noise_data->data->fmin,noise_data->data->fmax,mbh_data->data->fmin,mbh_data->data->fmax,gbmcmc_data->data->fmin,gbmcmc_data->data->fmax);
     
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
     
