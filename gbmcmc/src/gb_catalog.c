@@ -59,6 +59,7 @@ void print_usage_catalog()
     fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
     fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
     fprintf(stdout,"       --duration    : duration of time segment (62914560) \n");
+    fprintf(stdout,"       --start-time  : initial time of epoch  (0)          \n");
     fprintf(stdout,"       --match       : match threshold for waveforms (0.8) \n");
     fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
     fprintf(stdout,"       --sangria     : phase/tdi conventions for LDC2      \n");
@@ -132,6 +133,7 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
         /* These options set a flag. */
         {"samples",   required_argument, 0, 0},
         {"padding",   required_argument, 0, 0},
+        {"start-time",required_argument, 0, 0},
         {"duration",  required_argument, 0, 0},
         {"segments",  required_argument, 0, 0},
         {"sources",   required_argument, 0, 0},
@@ -168,11 +170,12 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
             case 0:
                 if(strcmp("samples",     long_options[long_index].name) == 0) data->N    = atoi(optarg);
                 if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad = atoi(optarg);
+                if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0[0]= (double)atof(optarg);
                 if(strcmp("duration",    long_options[long_index].name) == 0) data->T    = (double)atof(optarg);
                 if(strcmp("fmin",        long_options[long_index].name) == 0) data->fmin = (double)atof(optarg);
-                if(strcmp("Tcatalog",    long_options[long_index].name) == 0) *Tcatalog      = (double)atof(optarg);
-                if(strcmp("Nmode",       long_options[long_index].name) == 0) *NMODE         = (size_t)atoi(optarg);
-                if(strcmp("thin",        long_options[long_index].name) == 0) *NTHIN         = (size_t)atoi(optarg);
+                if(strcmp("Tcatalog",    long_options[long_index].name) == 0) *Tcatalog  = (double)atof(optarg);
+                if(strcmp("Nmode",       long_options[long_index].name) == 0) *NMODE     = (size_t)atoi(optarg);
+                if(strcmp("thin",        long_options[long_index].name) == 0) *NTHIN     = (size_t)atoi(optarg);
                 if(strcmp("f-double-dot",long_options[long_index].name) == 0) data->NP   = 9;
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
@@ -440,15 +443,7 @@ int main(int argc, char *argv[])
             int check = 0;
             check += fscanf(noiseFile,"%lg",&junk); //);f
             check += fscanf(noiseFile,"%lg",&noise->SnA[n]);//A_med);
-            check += fscanf(noiseFile,"%lg",&junk); //A_lo_50
-            check += fscanf(noiseFile,"%lg",&junk);//A_hi_50);
-            check += fscanf(noiseFile,"%lg",&junk);//A_lo_90);
-            check += fscanf(noiseFile,"%lg",&junk);//A_hi_90);
             check += fscanf(noiseFile,"%lg",&noise->SnE[n]);//E_med);
-            check += fscanf(noiseFile,"%lg",&junk);//E_lo_50);
-            check += fscanf(noiseFile,"%lg",&junk);//E_hi_50);
-            check += fscanf(noiseFile,"%lg",&junk);//E_lo_90);
-            check += fscanf(noiseFile,"%lg",&junk);//E_hi_90);
             if(!check)
             {
                 fprintf(stderr,"Error reading %s\n",flags->noiseFile);

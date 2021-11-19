@@ -104,6 +104,7 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"--samples %i ", samples);
     fprintf(fptr,"--padding %i ",data->qpad);
     fprintf(fptr,"--duration %f ",data->T);
+    fprintf(fptr,"--start-time %f ",data->t0[0]);
     fprintf(fptr,"--source $1 --chain-file chains/dimension_chain.dat.$1 ");
     
     //Optional
@@ -122,7 +123,7 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"# Consider including the following options:\n");
     fprintf(fptr,"#\t--match       : match threshold for waveforms (0.8)\n");
     fprintf(fptr,"#\t--noise-file  : reconstructed noise model\n");
-    fprintf(fptr,"#\t\t e.g., data/power_noise_t0_f0.dat\n");
+    fprintf(fptr,"#\t\t e.g., data/power_noise_0.dat\n");
     fprintf(fptr,"#\t--catalog     : list of known sources\n");
     fprintf(fptr,"#\t--Tcatalog    : observing time of previous catalog\n");
     
