@@ -17,6 +17,7 @@
 #include <Noise.h>
 
 #include "GalacticBinaryWrapper.h"
+#include "VerificationBinaryWrapper.h"
 #include "MBHWrapper.h"
 #include "NoiseWrapper.h"
 
@@ -52,7 +53,7 @@ void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chai
 
 }
 
-void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID)
+void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID)
 {
     noise_data->data->downsample = gbmcmc_data->data->downsample;
     noise_data->data->Nwave      = gbmcmc_data->data->Nwave;
@@ -74,6 +75,13 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     MPI_Bcast(&noise_data->data->fmin, 1, MPI_DOUBLE, gbmcmc_data->procID_min, MPI_COMM_WORLD);
     MPI_Bcast(&noise_data->data->fmax, 1, MPI_DOUBLE, gbmcmc_data->procID_max, MPI_COMM_WORLD);
 
+    //adjust noise model bandwidth to account for VBs
+    for(int n=0; n<vbmcmc_data->flags->NVB; n++)
+    {
+        noise_data->data->fmin = (vbmcmc_data->data_vec[n]->fmin < noise_data->data->fmin ) ? vbmcmc_data->data_vec[n]->fmin : noise_data->data->fmin;
+        noise_data->data->fmax = (vbmcmc_data->data_vec[n]->fmax > noise_data->data->fmax ) ? vbmcmc_data->data_vec[n]->fmax : noise_data->data->fmax;
+    }
+
     //pad noise model
     noise_data->data->fmin /= 1.01;
     noise_data->data->fmax *= 1.01;
@@ -89,8 +97,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
         noise_data->data->fmin /= 1.1;
         noise_data->data->fmax *= 1.1;
     }
-    //TODO: adjust noise model bandwidth to account for VBs
-    
+        
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
     
     alloc_data(noise_data->data, noise_data->flags);

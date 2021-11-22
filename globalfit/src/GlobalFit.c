@@ -131,12 +131,11 @@ static void share_vbmcmc_model(struct GBMCMCData *gbmcmc_data,
         MPI_Recv(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD, &status);
         
-        //send segments to GBMCMC nodes
+        //send full model to GBMCMC nodes
         for(int id=gbmcmc_data->procID_min; id<=gbmcmc_data->procID_max; id++)
         {
-            int index = 2*(id-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
-            MPI_Send(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
-            MPI_Send(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
+            MPI_Send(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
         }
         
         //send full model to MBH nodes
@@ -153,9 +152,8 @@ static void share_vbmcmc_model(struct GBMCMCData *gbmcmc_data,
     {
         MPI_Status status;
 
-        int index = 2*(procID-gbmcmc_data->procID_min)*(gbmcmc_data->data->N-2*gbmcmc_data->data->qpad);
-        MPI_Recv(gf->tdi_vgb->A+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(gf->tdi_vgb->E+index, gbmcmc_data->data->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_vgb->A, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(gf->tdi_vgb->E, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
     
     /* Recieve vgb segment at MBH models */
@@ -579,7 +577,7 @@ int main(int argc, char *argv[])
     if(mbh_data->NMBH>0)setup_mbh_data(mbh_data, gbmcmc_data, tdi_full, procID);
 
     /* set up data for noise model processes */
-    setup_noise_data(noise_data, gbmcmc_data, mbh_data, tdi_full, procID);
+    setup_noise_data(noise_data, gbmcmc_data, vbmcmc_data, mbh_data, tdi_full, procID);
 
     /* allocate global fit noise model for all processes */
     alloc_noise(global_fit->psd, noise_data->data->N);

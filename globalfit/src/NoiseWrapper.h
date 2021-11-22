@@ -28,7 +28,7 @@ struct NoiseData
 };
 
 void alloc_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, int procID, int nProc);
-void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID);
+void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID);
 void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chain *chain, struct Model **model);
 
 void initialize_noise_sampler(struct NoiseData *noise_data);
