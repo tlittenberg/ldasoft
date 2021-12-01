@@ -15,6 +15,9 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include <gsl/gsl_sort.h>
+#include <gsl/gsl_statistics.h>
+
 #include <LISA.h>
 #include <gbmcmc.h>
 #include <mbh.h>
@@ -229,6 +232,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     mbh_data->paramx = double_matrix(mbh_data->NC,NParams);
     mbh_data->paramy = double_matrix(mbh_data->NC,NParams);
     mbh_data->history = double_tensor(mbh_data->NC,mbh_data->NH,NParams);
+    mbh_data->hrec = double_tensor(mbh_data->data->N/2, mbh_data->data->Nch, mbh_data->NH);
     mbh_data->ejump = double_matrix(mbh_data->NC,NParams);
     mbh_data->Fisher = double_tensor(mbh_data->NC,NParams,NParams);
     mbh_data->evec = double_tensor(mbh_data->NC,NParams,NParams);
@@ -242,6 +246,11 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     
     for (int i=0; i< mbh_data->NC; i++) mbh_data->who[i] = i;
 
+    /* zero out hrec */
+    for(int i=0; i<mbh_data->data->N/2; i++)
+        for(int j=0; j<mbh_data->data->Nch; j++)
+            for(int k=0; k<mbh_data->NH; k++)
+                mbh_data->hrec[i][j][k] = 0.0;
     
     /* Set up RNG for MBH sampler */
     const gsl_rng_type * P;
@@ -397,6 +406,8 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
     }
     
     //freehet(mbh_data->het);//TODO: Temporarily disable updates to het_space
+
+    mbh_data->mcmc_step=0;
 }
 
 int update_mbh_sampler(struct MBHData *mbh_data)
@@ -417,6 +428,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     int *who = mbh_data->who;
     double *heat = mbh_data->heat;
     double ***history = mbh_data->history;
+    double ***hrec = mbh_data->hrec;
     double ***Fisher = mbh_data->Fisher; 
     double **ejump = mbh_data->ejump;
     double ***evec = mbh_data->evec;
@@ -457,7 +469,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     double alpha = gsl_rng_uniform(rvec[0]);
     double beta;
     
-    for(int steps = 0; steps<500; steps++)
+    for(int cycle = 0; cycle<1000; cycle++)
     {
         // decide if we are doing a MCMC update of all the chains or a PT swap
         if((NC > 1) && (alpha < 0.2)) // chain swap
@@ -503,27 +515,39 @@ int update_mbh_sampler(struct MBHData *mbh_data)
                 #pragma omp barrier
             }// End of parallelization
         }
-    }
         
-    
+        // add to the history file
+        for(int k=0; k < NC; k++)
+        {
+            int q = who[k];
+            int i = m[k]%NH;
+            // the history file is kept for each temperature
+            for(int j=0; j<NParams; j++) history[k][i][j] = paramx[q][j];
+            m[k]++;
+        }
+
+    }//end cycle
+        
     print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
 
-    // add to the history file
-    for(int k=0; k < NC; k++)
+    
+    // save point estimate of reconstructed waveform power spectrum
+    int i = mbh_data->mcmc_step%mbh_data->NH;
+    for(int k=mbh_data->het->MN; k<mbh_data->het->MM; k++)
     {
-        int q = who[k];
-        int i = m[k]%NH;
-        // the history file is kept for each temperature
-        for(int j=0; j<NParams; j++) history[k][i][j] = paramx[q][j];
-        m[k]++;
+        int re = 2*(k-mbh_data->het->MN);
+        int im = re+1;
+        hrec[k][0][i] = mbh_data->tdi->A[re]*mbh_data->tdi->A[re]+mbh_data->tdi->A[im]*mbh_data->tdi->A[im];
+        hrec[k][1][i] = mbh_data->tdi->E[re]*mbh_data->tdi->E[re]+mbh_data->tdi->E[im]*mbh_data->tdi->E[im];
     }
+
     
     free(m);
     freehet(mbh_data->het);
     
     clock_t stop = clock();
     mbh_data->cpu_time = (double)(stop-start);
-
+    mbh_data->mcmc_step++;
     return 1;
 }
 
@@ -579,4 +603,58 @@ void get_mbh_waveform(struct MBHData *mbh_data)
     free(A_phi);
     free(E_phi);
 
+}
+
+void print_mbh_waveform_reconstruction(struct MBHData *mbh_data)
+{
+    char filename[1024];
+    FILE *fptr_rec;
+
+    sprintf(filename,"%s/power_reconstruction.dat",mbh_data->flags->runDir);
+    fptr_rec=fopen(filename,"w");
+
+    double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
+    double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
+
+    for(int n=0; n<mbh_data->data->N/2; n++)
+    {
+        for(int m=0; m<mbh_data->data->Nch; m++)
+        {
+            gsl_sort(mbh_data->hrec[n][m],1,mbh_data->NH);
+        }
+    }
+    
+    for(int i=0; i<mbh_data->data->N/2; i++)
+    {
+        double f = (double)(i)/mbh_data->data->Tobs;
+
+        A_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][0], 1, mbh_data->NH);
+        A_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.25);
+        A_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.75);
+        A_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.05);
+        A_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.95);
+        
+        E_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][1], 1, mbh_data->NH);
+        E_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.25);
+        E_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.75);
+        E_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.05);
+        E_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.95);
+        
+        
+        fprintf(fptr_rec,"%.12g ",f);
+        fprintf(fptr_rec,"%lg ",A_med);
+        fprintf(fptr_rec,"%lg ",A_lo_50);
+        fprintf(fptr_rec,"%lg ",A_hi_50);
+        fprintf(fptr_rec,"%lg ",A_lo_90);
+        fprintf(fptr_rec,"%lg ",A_hi_90);
+        fprintf(fptr_rec,"%lg ",E_med);
+        fprintf(fptr_rec,"%lg ",E_lo_50);
+        fprintf(fptr_rec,"%lg ",E_hi_50);
+        fprintf(fptr_rec,"%lg ",E_lo_90);
+        fprintf(fptr_rec,"%lg ",E_hi_90);
+        fprintf(fptr_rec,"\n");
+
+    }
+    
+    fclose(fptr_rec);
 }

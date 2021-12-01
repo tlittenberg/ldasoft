@@ -758,6 +758,34 @@ int main(int argc, char *argv[])
                         mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
             }
             fclose(tempFile);
+
+
+            sprintf(tempFileName,"%s/data_0.dat.temp",mbh_data->flags->runDir);
+            tempFile = fopen(tempFileName,"w");
+            for(int i=0; i<mbh_data->het->MN; i++)
+            {
+                double f = (double)i/mbh_data->data->Tobs;
+                fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f, 0.0,0.0,0.0,0.0);
+
+            }
+            for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
+            {
+                int re = 2*(i-mbh_data->het->MN);
+                int im = re+1;
+                double f = (double)i/mbh_data->data->Tobs;
+                fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f,
+                        mbh_data->tdi->A[re],mbh_data->tdi->A[im],
+                        mbh_data->tdi->E[re],mbh_data->tdi->E[im]);
+            }
+            for(int i=mbh_data->het->MM; i<mbh_data->data->N; i++)
+            {
+                double f = (double)i/mbh_data->data->Tobs;
+                fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f, 0.0,0.0,0.0,0.0);
+
+            }
+
+            fclose(tempFile);
+
         }
         
     }while(gbmcmc_data->status!=0);
@@ -792,6 +820,11 @@ int main(int argc, char *argv[])
         print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
 
         print_noise_reconstruction(noise_data->data, noise_data->flags);
+    }
+    if(MBH_Flag)
+    {
+        /* waveform reconstructions */
+        print_mbh_waveform_reconstruction(mbh_data);
     }
 
     

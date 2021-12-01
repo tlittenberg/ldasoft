@@ -1,7 +1,7 @@
 
 #MBH library
-include_directories(/Users/tyson/temp/include)
-link_directories(/Users/tyson/temp/lib)
+#include_directories(/Users/tyson/temp/include)
+#link_directories(/Users/tyson/temp/lib)
 
 #GBMCMC library
 include_directories ("${PROJECT_SOURCE_DIR}/tools/src/")              

@@ -94,8 +94,6 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
         noise_data->data->fmax = (mbh_data->data->fmax > noise_data->data->fmax ) ? mbh_data->data->fmax : noise_data->data->fmax;
 
         //pad noise model even more (MBH bandwidth fluctuates)
-        noise_data->data->fmin /= 1.1;
-        noise_data->data->fmax *= 1.1;
     }
         
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
@@ -159,12 +157,34 @@ void initialize_noise_state(struct NoiseData *noise_data)
     int NC = chain->NC;
     int Nspline = noise_data->nProc+1;
     
-    for(int ic=0; ic<NC; ic++)
+    int psd_check=0;
+    while(!psd_check) //guard against pathological model
     {
-        model[ic] = malloc(sizeof(struct SplineModel));
-        initialize_spline_model(orbit, data, model[ic], Nspline);
+        psd_check=1;
+        
+        //populate spline model
+        for(int ic=0; ic<NC; ic++)
+        {
+            model[ic] = malloc(sizeof(struct SplineModel));
+            initialize_spline_model(orbit, data, model[ic], Nspline);
+        }
+        
+        //scan through interpolated model and check sign
+        for(int ic=0; ic<NC; ic++)
+        {
+            for(int n=0; n<data->N; n++)
+            {
+                if(model[ic]->psd->SnA[n] < 0.0 || model[ic]->psd->SnE[n] < 0.0) psd_check=0;
+            }
+        }
+        
+        //if check fails free memory, increase control points, and try again
+        if(!psd_check)
+        {
+            for(int ic=0; ic<NC; ic++) free_spline_model(model[ic]);
+            Nspline++; //more control points keep interpolation closer to theoretical Sn(f)
+        }
     }
-
     char filename[128];
     sprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->spline, filename);
@@ -189,7 +209,8 @@ int update_noise_sampler(struct NoiseData *noise_data)
     
     //For saving the number of threads actually given
     int numThreads;
-    
+    for(int cycle=0; cycle<1; cycle++)
+    {
 #pragma omp parallel num_threads(flags->threads)
     {
         int threadID;
@@ -235,18 +256,15 @@ int update_noise_sampler(struct NoiseData *noise_data)
 #pragma omp barrier
         
     }// End of parallelization
-    
+    }//end cycle
     print_spline_state(model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
-    
-    if(noise_data->mcmc_step>=0 && noise_data->mcmc_step%data->downsample==0 && noise_data->mcmc_step/data->downsample < data->Nwave)
-    {
-        struct SplineModel *model_ptr = model[chain->index[0]];
 
-        for(int n=0; n<data->N; n++)
-        {
-            data->S_pow[n][0][0][noise_data->mcmc_step/data->downsample] = model_ptr->psd->SnA[n];
-            data->S_pow[n][1][0][noise_data->mcmc_step/data->downsample] = model_ptr->psd->SnE[n];
-        }
+    //save point estimate of noise model
+    int i = (noise_data->mcmc_step+flags->NBURN)%data->Nwave;
+    for(int n=0; n<data->N; n++)
+    {
+        data->S_pow[n][0][0][i] = model[chain->index[0]]->psd->SnA[n];
+        data->S_pow[n][1][0][i] = model[chain->index[0]]->psd->SnE[n];
     }
     
     noise_data->mcmc_step++;
