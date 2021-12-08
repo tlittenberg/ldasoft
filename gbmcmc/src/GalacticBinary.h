@@ -179,7 +179,8 @@ struct Flags
     int confNoise;  //!<`[--conf-noise; default=FALSE]`: include model of confusion noise in \f$S_n(f)\f$, either for simulating noise or as starting value for parameterized noise model.
     int resume;     //!<`[--resume; default=FALSE]`: restart sampler from run state saved during checkpointing. Starts from scratch if no checkpointing files are found.
     int catalog;    //!<`[--catalog=FILENAME; default=FALSE]`: use list of previously detected sources supplied in `FILENAME` to clean bandwidth padding (`gb_mcmc`) or for building family tree (`gb_catalog`).
-    int threads;
+    int threads;    //!<number of openMP threads for parallel tempering
+    int psd;        //!<`[--psd=FILENAME; default=FALSE]`: use PSD input as ASCII file from command line
     ///@}
 
     
@@ -196,6 +197,7 @@ struct Flags
     char matchInfile1[MAXSTRINGSIZE]; //!<input waveform \f$A\f$ for computing match \f$(h_A|h_B)\f$
     char matchInfile2[MAXSTRINGSIZE]; //!<input waveform \f$B\f$ for computing match \f$(h_A|h_B)\f$
     char pdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input priors for Flags:knownSource.
+    char psdFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input psd file from Flags::psd.
     char catalogFile[MAXSTRINGSIZE];  //!<store `FILENAME` containing previously identified detections from Flags::catalog for cleaning padding regions
      ///@}
 };

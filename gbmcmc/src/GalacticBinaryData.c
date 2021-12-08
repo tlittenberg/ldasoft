@@ -299,46 +299,85 @@ void GalacticBinaryReadData(struct Data *data, struct Orbit *orbit, struct Flags
 
 void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
-    for(int n=0; n<data->N; n++)
+    //if you are simulating/fitting the noise
+    if(!flags->psd)
     {
-        double f = data->fmin + (double)(n)/data->T;
-        if(strcmp(data->format,"phase")==0)
+        for(int n=0; n<data->N; n++)
         {
-            data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-            data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
-            if(flags->confNoise)
+            double f = data->fmin + (double)(n)/data->T;
+            if(strcmp(data->format,"phase")==0)
             {
-                data->noise[0]->SnA[n] += GBnoise(data->T,f);
-                data->noise[0]->SnE[n] += GBnoise(data->T,f);
+                data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
+                data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+                if(flags->confNoise)
+                {
+                    data->noise[0]->SnA[n] += GBnoise(data->T,f);
+                    data->noise[0]->SnE[n] += GBnoise(data->T,f);
+                }
+            }
+            else if(strcmp(data->format,"frequency")==0)
+            {
+                data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                if(flags->confNoise)
+                {
+                    data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
+                    data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+                }
+            }
+            else if(strcmp(data->format,"sangria")==0)
+            {
+                //TODO: Need a sqrt(2) to match Sangria data/noise
+                data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                if(flags->confNoise)
+                {
+                    data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+                    data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+                }
+            }
+            
+            else
+            {
+                fprintf(stderr,"Unsupported data format %s\n",data->format);
+                exit(1);
             }
         }
-        else if(strcmp(data->format,"frequency")==0)
+    }
+    //use PSD from file
+    else
+    {
+        
+        //parse input PSD file
+        FILE *psdFile = fopen(flags->psdFile,"r");
+        int lines=0;
+        double f_temp, SnA_temp, SnE_temp;
+        while(!feof(psdFile))
         {
-            data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-            data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-            if(flags->confNoise)
-            {
-                data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
-                data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
-            }
+            fscanf(psdFile,"%lg %lg %lg",&f_temp,&SnA_temp,&SnE_temp);
+            lines++;
         }
-        else if(strcmp(data->format,"sangria")==0)
-        {
-            //TODO: Need a sqrt(2) to match Sangria data/noise
-            data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-            data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-            if(flags->confNoise)
-            {
-                data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
-                data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
-            }
-        }
+        rewind(psdFile);
+        lines--;
+        
+        double *f   = malloc(lines*sizeof(double));
+        double *SnA = malloc(lines*sizeof(double));
+        double *SnE = malloc(lines*sizeof(double));
+        
+        for(int l=0; l<lines; l++) fscanf(psdFile,"%lg %lg %lg",&f[l],&SnA[l],&SnE[l]);
+        fclose(psdFile);
+        
+        //interpolate input psd onto segment grid
+        double *fint = malloc(data->N*sizeof(double));
+        for(int n=0; n<data->N; n++) fint[n] = data->fmin + (double)(n)/data->T;
 
-        else
-        {
-            fprintf(stderr,"Unsupported data format %s\n",data->format);
-            exit(1);
-        }
+        CubicSplineGSL(lines, f, SnA, data->N, fint, data->noise[0]->SnA);
+        CubicSplineGSL(lines, f, SnE, data->N, fint, data->noise[0]->SnE);
+        
+        free(f);
+        free(SnA);
+        free(SnE);
+        fclose(psdFile);
     }
 }
 

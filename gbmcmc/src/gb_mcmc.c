@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
                     //for(int j=0; j<model_ptr->Nlive; j++)
                     galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     
-                    if(flags->strainData || flags->simNoise)
+                    if( (flags->strainData || flags->simNoise) && !flags->psd)
                         noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
                     
                 }//loop over MCMC steps
@@ -311,6 +311,9 @@ int main(int argc, char *argv[])
         
     }// End of parallelization
     
+    //store final state of sampler
+    save_chain_state(data, model, chain, flags, mcmc);
+
     //print aggregate run files/results
     print_waveforms_reconstruction(data,flags);
     print_noise_reconstruction(data,flags);

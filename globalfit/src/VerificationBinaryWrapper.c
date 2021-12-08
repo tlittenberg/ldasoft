@@ -207,8 +207,6 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
 
     //For saving the number of threads actually given
     int numThreads;
-    for(int cycle=0; cycle<1; cycle++)
-    {
 #pragma omp parallel num_threads(flags->threads)
     {
         int threadID;
@@ -318,7 +316,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
 #pragma omp barrier
         
     }// End of parallelization
-    }//end cycle
+
     clock_t stop = clock();
     vbmcmc_data->cpu_time = (double)(stop-start);
 

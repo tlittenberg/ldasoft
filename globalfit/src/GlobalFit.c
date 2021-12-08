@@ -25,6 +25,7 @@
 
 #define N_TDI_CHANNELS 2
 #define NMAX 10
+#define CYCLE 10
 
 struct GlobalFitData
 {
@@ -654,7 +655,7 @@ int main(int argc, char *argv[])
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
             cycle = (int)(mbh_data->cpu_time/gbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
         }
            
@@ -673,7 +674,7 @@ int main(int argc, char *argv[])
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
             cycle = (int)(mbh_data->cpu_time/vbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
         }
 
@@ -689,7 +690,7 @@ int main(int argc, char *argv[])
             select_frequency_segment(noise_data->data, tdi_full);
 
             cycle = (int)(mbh_data->cpu_time/noise_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 noise_data->status = update_noise_sampler(noise_data);
             
         }
@@ -706,8 +707,8 @@ int main(int argc, char *argv[])
             select_mbh_segment(mbh_data, tdi_full);
             
             select_mbh_noise(mbh_data, global_fit->psd);
-
-            mbh_data->status = update_mbh_sampler(mbh_data);
+            for(int i=0; i<CYCLE; i++)
+                mbh_data->status = update_mbh_sampler(mbh_data);
         }
         
         /* ============================= */

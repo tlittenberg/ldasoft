@@ -250,6 +250,7 @@ void print_usage()
     fprintf(stdout,"       =========== Data =========== \n");
     fprintf(stdout,"       --data        : strain data file (ASCII)            \n");
     fprintf(stdout,"       --h5-data     : strain data file (HDF5)             \n");
+    fprintf(stdout,"       --psd         : psd data file (ASCII)               \n");
     fprintf(stdout,"       --samples     : number of frequency bins (2048)     \n");
     fprintf(stdout,"       --samples_max : max size of segment (2048)          \n");
     fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
@@ -350,6 +351,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     flags->detached    = 0;
     flags->strainData  = 0;
     flags->hdf5Data    = 0;
+    flags->psd         = 0;
     flags->knownSource = 0;
     flags->catalog     = 0;
     flags->NT          = 1;
@@ -413,6 +415,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {"inj",        required_argument, 0, 0},
         {"data",       required_argument, 0, 0},
         {"h5-data",    required_argument, 0, 0},
+        {"psd",        required_argument, 0, 0},
         {"fmin",       required_argument, 0, 0},
         {"links",      required_argument, 0, 0},
         {"update-cov", required_argument, 0, 0},
@@ -553,6 +556,12 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                     flags->hdf5Data = 1;
                     flags->strainData = 1;
                     sprintf(data->fileName,"%s",optarg);
+                }
+                if(strcmp("psd", long_options[long_index].name) == 0)
+                {
+                    checkfile(optarg);
+                    flags->psd = 1;
+                    sprintf(flags->psdFile,"%s",optarg);
                 }
                 if(strcmp("frac-freq",   long_options[long_index].name) == 0)
                 {

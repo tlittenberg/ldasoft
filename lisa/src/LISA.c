@@ -842,6 +842,30 @@ void test_noise_model(struct Orbit *orbit)
     fclose(psdfile);
 }
 
+void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint)
+{
+    int n;
+    
+    /* do our own error catching from interpolator */
+    gsl_set_error_handler_off();
+    
+    /* set up GSL cubic spline */
+    gsl_spline       *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
+    gsl_interp_accel *acc    = gsl_interp_accel_alloc();
+    
+    /* get derivatives */
+    int status = gsl_spline_init(cspline,x,y,N);
+    
+    //if error, return values that will be rjected by sampler
+    if(status) for(n=0; n<Nint; n++) yint[n]=1.0;
+    
+    //otherwise proceed w/ interpolation
+    else for(n=0; n<Nint; n++) yint[n]=gsl_spline_eval(cspline,xint[n],acc);
+    
+    gsl_spline_free (cspline);
+    gsl_interp_accel_free (acc);
+    
+}
 
 void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
 {

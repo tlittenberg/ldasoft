@@ -209,8 +209,6 @@ int update_noise_sampler(struct NoiseData *noise_data)
     
     //For saving the number of threads actually given
     int numThreads;
-    for(int cycle=0; cycle<1; cycle++)
-    {
 #pragma omp parallel num_threads(flags->threads)
     {
         int threadID;
@@ -256,7 +254,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
 #pragma omp barrier
         
     }// End of parallelization
-    }//end cycle
+
     print_spline_state(model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
 
     //save point estimate of noise model

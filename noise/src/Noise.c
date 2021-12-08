@@ -71,31 +71,6 @@ void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
     fprintf(fptr,"%i %.12g %i\n",step,model->logL,model->spline->N);
 }
 
-void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint)
-{
-    int n;
-    
-    /* do our own error catching from interpolator */
-    gsl_set_error_handler_off();
-    
-    /* set up GSL cubic spline */
-    gsl_spline       *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
-    gsl_interp_accel *acc    = gsl_interp_accel_alloc();
-    
-    /* get derivatives */
-    int status = gsl_spline_init(cspline,x,y,N);
-    
-    //if error, return values that will be rjected by sampler
-    if(status) for(n=0; n<Nint; n++) yint[n]=1.0;
-    
-    //otherwise proceed w/ interpolation
-    else for(n=0; n<Nint; n++) yint[n]=gsl_spline_eval(cspline,xint[n],acc);
-    
-    gsl_spline_free (cspline);
-    gsl_interp_accel_free (acc);
-    
-}
-
 void generate_spline_noise_model(struct SplineModel *model)
 {
     struct Noise *psd = model->psd;
@@ -103,6 +78,13 @@ void generate_spline_noise_model(struct SplineModel *model)
     
     CubicSplineGSL(spline->N, spline->f, spline->SnA, psd->N, psd->f, psd->SnA);
     CubicSplineGSL(spline->N, spline->f, spline->SnE, psd->N, psd->f, psd->SnE);
+
+    //set a floor on Sn so likelihood doesn't go crazy
+    for(int n=0; n<psd->N; n++)
+    {
+        if(psd->SnA[n]<1.e-44) psd->SnA[n]=1.e-44;
+        if(psd->SnE[n]<1.e-44) psd->SnE[n]=1.e-44;
+    }
 }
 
 double noise_log_likelihood(struct Data *data, struct SplineModel *model)
@@ -199,7 +181,7 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
 
     //update amplitude
     double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k]);
-    double scale = pow(10., -1.0 + 2.0*gsl_rng_uniform(chain->r[0]));
+    double scale = pow(10., -3.0 + 3.0*gsl_rng_uniform(chain->r[0]));
     model_y->spline->SnA[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
     model_y->spline->SnE[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
     

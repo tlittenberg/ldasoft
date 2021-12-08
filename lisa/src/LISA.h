@@ -253,6 +253,18 @@ double GBnoise_FF(double T, double fstar, double f);
 ///@}
 
 /**
+ \brief Wrapper to `GSL` cubic spline interpolation routines.
+
+ @param[in] N number of spline points
+ @param[in] x vector of independent-variable spline points
+ @param[in] y vector of dependent-variable spline points
+ @param[in] Nint number of interpolated points
+ @param[out] xint vector of interpolated independent-variable points
+ @param[out] yint vector of interpolated dependent-variable points
+ */
+void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint);
+
+/**
  \brief Print full-spectrum noise model to compare against other models/documents.
  
  @params[in] Orbit containing necessary LISA metadata

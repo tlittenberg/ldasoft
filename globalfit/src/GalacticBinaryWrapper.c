@@ -295,8 +295,6 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     
     //For saving the number of threads actually given
     int numThreads;
-    for(int cycle=0; cycle<1; cycle++)
-    {
 #pragma omp parallel num_threads(flags->threads)
     {
         int threadID;
@@ -391,7 +389,6 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 #pragma omp barrier
         
     }// End of parallelization
-    }// End cycle
     clock_t stop = clock();
     gbmcmc_data->cpu_time = (double)(stop-start);
     
