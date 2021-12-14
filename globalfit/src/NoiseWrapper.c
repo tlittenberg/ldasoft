@@ -83,8 +83,8 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     }
 
     //pad noise model
-    noise_data->data->fmin /= 1.01;
-    noise_data->data->fmax *= 1.01;
+    noise_data->data->fmin /= 1.1;
+    noise_data->data->fmax *= 1.1;
 
     //adjust noise model bandwidth to account for MBHs
     if(mbh_data->NMBH>0)

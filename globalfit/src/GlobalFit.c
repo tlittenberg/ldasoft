@@ -25,7 +25,7 @@
 
 #define N_TDI_CHANNELS 2
 #define NMAX 10
-#define CYCLE 10
+#define CYCLE 1
 
 struct GlobalFitData
 {

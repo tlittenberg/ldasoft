@@ -176,7 +176,13 @@ void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd)
     double Tobs = mbh_data->data->Tobs;
     int nstart = (int)(psd->f[0]*Tobs);
     
-    //for(int i=mstart; i<mstop; i++)
+    for(int i=0; i<nstart; i++)
+    {
+        mbh_data->data->SN[0][i] = 1.0;
+        mbh_data->data->SN[1][i] = 1.0;
+        mbh_data->data->SM[0][i] = 1.0;
+        mbh_data->data->SM[1][i] = 1.0;
+    }
     for(int i=0; i<psd->N; i++)
     {
         //TODO: Check this factor of 2!
@@ -405,7 +411,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
         }
     }
     
-    //freehet(mbh_data->het);//TODO: Temporarily disable updates to het_space
+    freehet(mbh_data->het);//TODO: Temporarily disable updates to het_space
 
     mbh_data->mcmc_step=0;
 }
@@ -570,6 +576,11 @@ void get_mbh_waveform(struct MBHData *mbh_data)
     fullphaseamp(mbh_data->data, 2, NF, mbh_data->paramx[who[0]], f, A_amp, E_amp, A_phi, E_phi);
 
     /* insert TDI(f) into correct section of TDI structure */
+    for(int n=0; n<2*mbh_data->tdi->N; n++)
+    {
+        mbh_data->tdi->A[n] = 0.0;
+        mbh_data->tdi->E[n] = 0.0;
+    }
     for(int n=0; n<NF; n++)
     {
         int re = 2*(n+index);
