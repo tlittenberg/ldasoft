@@ -389,6 +389,7 @@ struct Noise
     double *SnA;
     double *SnE;
     double *SnX;
+    double *transfer;
     ///@}
     
     ///@name UNDER CONSTRUCTION! noise parameters for power-law fit

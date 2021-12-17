@@ -82,8 +82,13 @@ void generate_spline_noise_model(struct SplineModel *model)
     //set a floor on Sn so likelihood doesn't go crazy
     for(int n=0; n<psd->N; n++)
     {
-        if(psd->SnA[n]<1.e-44) psd->SnA[n]=1.e-44;
-        if(psd->SnE[n]<1.e-44) psd->SnE[n]=1.e-44;
+        /*
+         apply transfer function
+         -this catches the sharp features in the spectrum from f/fstar
+         -without needing to interpolate
+         */
+        psd->SnA[n]*=psd->transfer[n];
+        psd->SnE[n]*=psd->transfer[n];
     }
 }
 
@@ -370,18 +375,20 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
     {
         double f = data->fmin + (double)n/data->T;
         model->psd->f[n] = f;
+        model->psd->transfer[n] = noise_transfer_function(f/orbit->fstar);
     }
     
     //divide into Nspline control points
-    double df = (data->fmax - data->fmin)/(Nspline-1);
-    
+    double logdf = (log(data->fmax) - log(data->fmin))/(Nspline-1);
     for(int i=0; i<Nspline; i++)
     {
-        double f = data->fmin + (double)i*df;
+        double f = exp(log(data->fmin) + (double)i*logdf);
         model->spline->f[i] = f;
         
-        model->spline->SnA[i] = AEnoise_FF(orbit->L, orbit->fstar, f);
-        model->spline->SnE[i] = AEnoise_FF(orbit->L, orbit->fstar, f);
+        /* initialize model to theoretical level without transfer function applied */
+        model->spline->transfer[i] = noise_transfer_function(f/orbit->fstar);
+        model->spline->SnA[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/model->spline->transfer[i];
+        model->spline->SnE[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/model->spline->transfer[i];
     }
     //shift first spline control point by half a bin to avoid rounding problems
     model->spline->f[0] -= 0.5/data->T;

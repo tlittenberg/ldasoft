@@ -250,6 +250,8 @@ double XYZnoise_FF(double L, double fstar, double f);
 double GBnoise(double T, double f);
 /// Confusion noise estimate for A,E channel (frequency)
 double GBnoise_FF(double T, double fstar, double f);
+/// Noise transfer function \f$ sin^2(f/f_*)\f$
+double noise_transfer_function(double x);
 ///@}
 
 /**

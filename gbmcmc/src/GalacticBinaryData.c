@@ -305,6 +305,8 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
         for(int n=0; n<data->N; n++)
         {
             double f = data->fmin + (double)(n)/data->T;
+            data->noise[0]->transfer[n] = noise_transfer_function(f/orbit->fstar);
+
             if(strcmp(data->format,"phase")==0)
             {
                 data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);

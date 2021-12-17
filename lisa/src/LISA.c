@@ -687,10 +687,9 @@ double XYZnoise_FF(double L, double fstar, double f)
     get_noise_levels("scirdv1",f,&Spm,&Sop);
     
     double x = f/fstar;
-    double sinx  = sin(x);
     double cosx  = cos(x);
 
-    return 16. * sinx*sinx * ( 2.*(1.0 + cosx*cosx)*Spm + Sop );
+    return 16. * noise_transfer_function(x) * ( 2.*(1.0 + cosx*cosx)*Spm + Sop );
 }
 
 double AEnoise_FF(double L, double fstar, double f)
@@ -702,11 +701,10 @@ double AEnoise_FF(double L, double fstar, double f)
 
     double x = f/fstar;
     
-    double sinx  = sin(x);
     double cosx  = cos(x);
     double cos2x = cos(2.*x);
     
-    return  8. * sinx*sinx * ( 2.*Spm*(3. + 2.*cosx + cos2x) + Sop*(2. + cosx) );
+    return  8. * noise_transfer_function(x) * ( 2.*Spm*(3. + 2.*cosx + cos2x) + Sop*(2. + cosx) );
     
 }
 
@@ -718,10 +716,9 @@ double Tnoise_FF(double L, double fstar, double f)
 
     double x = f/fstar;
     
-    double sinx  = sin(x);
     double cosx  = cos(x);
 
-    return 16.0 * Sop * (1.0 - cosx) * sinx*sinx + 128.0 * Spm * sinx*sinx * sin(0.5*x)*sin(0.5*x)*sin(0.5*x)*sin(0.5*x);
+    return 16.0 * Sop * (1.0 - cosx) * noise_transfer_function(x) + 128.0 * Spm * noise_transfer_function(x) * sin(0.5*x)*sin(0.5*x)*sin(0.5*x)*sin(0.5*x);
 
 }
 
@@ -825,6 +822,12 @@ double GBnoise(double T, double f)
         fk    = 0.00258;
     }
     return A*pow(f,-7./3.)*exp(-pow(f,alpha) + beta*f*sin(kappa*f))*(1. + tanh(gamma*(fk-f)));
+}
+
+double noise_transfer_function(double x)
+{
+    double sinx = sin(x);
+    return sinx*sinx;
 }
 
 void test_noise_model(struct Orbit *orbit)
