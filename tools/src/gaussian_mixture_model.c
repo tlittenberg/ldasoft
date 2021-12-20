@@ -200,11 +200,10 @@ int main(int argc, char* argv[])
     }
 
     // Logistic mapping of samples onto R
-    double x,y,p;
+    double y;
     double pmin,pmax;
     gsl_vector **pminmax = malloc(NP*sizeof(gsl_vector *));
     for(size_t i=0; i<NP; i++) pminmax[i] = gsl_vector_alloc(2);
-    gsl_vector *x_vec = gsl_vector_alloc(NMCMC);
     gsl_vector *y_vec = gsl_vector_alloc(NMCMC);
 
     /* parse chain file */
@@ -220,13 +219,10 @@ int main(int argc, char* argv[])
         {
             sscanf(column, "%lg", &value);
             if(LFLAG[n]) value = log(value);
-            //gsl_vector_set(samples[i]->x,n,value);
             gsl_vector_set(params[n],i,value);
             column=strtok(NULL," ");
         }
     }
-    
-    
     
     
     /* Get max and min for each parameter */

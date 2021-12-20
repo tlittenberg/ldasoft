@@ -72,6 +72,32 @@ void printUsage(const char *program)
     fprintf( stdout,"\n");
 }
 
+void read_gmm_binary(struct GMM *gmm, char filename[])
+{
+    FILE *fptr = NULL;
+    /* Read GMM results to binary for pick up by other processes */
+    if( (fptr = fopen(filename,"rb"))!=NULL)
+    {
+        fread(&gmm->NMODE, sizeof gmm->NMODE, 1, fptr);
+        
+        gmm->modes = malloc(gmm->NMODE*sizeof(struct MVG*));
+        for(size_t n=0; n<gmm->NMODE; n++)
+        {
+            gmm->modes[n] = malloc(sizeof(struct MVG));
+            alloc_MVG(gmm->modes[n],gmm->NP);
+        }
+        
+        for(size_t n=0; n<gmm->NMODE; n++) read_MVG(gmm->modes[n],fptr);
+        fclose(fptr);
+    }
+    else
+    {
+        fprintf(stderr,"Error reading %s\n",filename);
+        fprintf(stderr,"Exiting to system\n");
+        exit(1);
+    }
+}
+
 void alloc_MVG(struct MVG *mode, size_t N)
 {
     mode->size = N;
@@ -139,6 +165,21 @@ void read_MVG(struct MVG *mode, FILE *fptr)
     gsl_vector_free(temp);
 }
 
+void copy_MVG(struct MVG *origin, struct MVG *copy)
+{
+    copy->size = origin->size;
+    gsl_vector_memcpy(copy->mu, origin->mu);
+    gsl_matrix_memcpy(copy->C, origin->C);
+    gsl_matrix_memcpy(copy->L, origin->L);
+    gsl_matrix_memcpy(copy->Cinv, origin->Cinv);
+    gsl_matrix_memcpy(copy->evectors, origin->evectors);
+    gsl_matrix_memcpy(copy->minmax, origin->minmax);
+    gsl_vector_memcpy(copy->evalues, origin->evalues);
+    copy->detC = origin->detC;
+    copy->p = origin->p;
+    copy->Neff = origin->Neff;
+}
+
 double multivariate_gaussian(gsl_vector *x, struct MVG *mvg)
 {
     
@@ -175,9 +216,7 @@ double multivariate_gaussian(gsl_vector *x, struct MVG *mvg)
     }
     gsl_vector_free(dx);
     
-    double p = exp(-0.5*chi2)/sqrt(pow(2.0*M_PI,N)*detC);
-    
-    return p > PMIN ? p : PMIN;
+    return exp(-0.5*chi2)/sqrt(pow(2.0*M_PI,N)*detC);
 }
 
 void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *detA, double *R)
@@ -353,13 +392,10 @@ void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     
     double p;
     double x,y;
-    //double dx = (xf-x0)/100.;
-    //double dy = (yf-y0)/100.;
     double dx = (pmax_x-pmin_x)/100.;
     double dy = (pmax_y-pmin_y)/100.;
     for(int n=1; n<100; n++)
     {
-        //x = x0 + (double)n*dx;
         x = pmin_x + (double)n*dx;
         x = logit(x,pmin_x,pmax_x);
         
@@ -367,7 +403,6 @@ void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
         {
             p = 0.0;
 
-            //y = y0 + (double)m*dy;
             y = pmin_y + (double)m*dy;
             y = logit(y,pmin_y,pmax_y);
             
@@ -559,7 +594,8 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
             
             //compute p(x|mode)
             p = multivariate_gaussian(s->x, M);
-            
+            p = p > PMIN ? p : PMIN;
+
             gsl_vector_set(s->p,k,p);
             gsl_vector_set(s->w,k,M->p*p);
             norm += M->p*p;

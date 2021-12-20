@@ -12,7 +12,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include "Constants.h"
+#include <LISA.h>
 
 #define RAD2ARCMIN 3437.75
 #define RAD2DEGREE 57.295833313961

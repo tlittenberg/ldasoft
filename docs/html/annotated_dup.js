@@ -1,25 +1,26 @@
 var annotated_dup =
 [
-    [ "BayesLineParams", "structBayesLineParams.html", "structBayesLineParams" ],
-    [ "BayesLinePriors", "structBayesLinePriors.html", "structBayesLinePriors" ],
     [ "Calibration", "structCalibration.html", "structCalibration" ],
     [ "Catalog", "structCatalog.html", "structCatalog" ],
     [ "Chain", "structChain.html", "structChain" ],
     [ "Data", "structData.html", "structData" ],
-    [ "dataParams", "structdataParams.html", "structdataParams" ],
     [ "Entry", "structEntry.html", "structEntry" ],
     [ "Filter", "structFilter.html", "structFilter" ],
     [ "Flags", "structFlags.html", "structFlags" ],
+    [ "GBMCMCData", "structGBMCMCData.html", "structGBMCMCData" ],
+    [ "GlobalFitData", "structGlobalFitData.html", "structGlobalFitData" ],
+    [ "GMM", "structGMM.html", "structGMM" ],
     [ "lisa_orbit", "structlisa__orbit.html", "structlisa__orbit" ],
-    [ "lorentzianParams", "structlorentzianParams.html", "structlorentzianParams" ],
-    [ "Mode", "structMode.html", "structMode" ],
     [ "Model", "structModel.html", "structModel" ],
+    [ "MVG", "structMVG.html", "structMVG" ],
     [ "Noise", "structNoise.html", "structNoise" ],
+    [ "NoiseData", "structNoiseData.html", "structNoiseData" ],
     [ "Orbit", "structOrbit.html", "structOrbit" ],
     [ "Prior", "structPrior.html", "structPrior" ],
     [ "Proposal", "structProposal.html", "structProposal" ],
     [ "Sample", "structSample.html", "structSample" ],
     [ "Source", "structSource.html", "structSource" ],
-    [ "splineParams", "structsplineParams.html", "structsplineParams" ],
-    [ "TDI", "structTDI.html", "structTDI" ]
+    [ "SplineModel", "structSplineModel.html", "structSplineModel" ],
+    [ "TDI", "structTDI.html", "structTDI" ],
+    [ "VBMCMCData", "structVBMCMCData.html", "structVBMCMCData" ]
 ];

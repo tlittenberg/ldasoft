@@ -74,13 +74,22 @@ struct Proposal
     double **matrix; //!<utility 2D array for proposal metadata
     double ***tensor;//!<utility 3D array for proposal metadata
     
-    struct MVG **modes; //!<data structure for multivariate Gaussian
+    /** @name Gaussian mixture model
+     */
+    ///@{
+    size_t Ngmm; //!< number of mixture models (1/source)
+    struct GMM **gmm; //!<array of individual mixture models
+    ///@}
 };
 
-/** Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power */
-void setup_frequency_proposal(struct Data *data);
+/**
+ \brief Compute whitened power spectrum of data and normalize to preferentially draw frequencies with excess power
+ */
+void setup_frequency_proposal(struct Data *data, struct Flags *flags);
 
-/** Compute and print acceptance ratios for each proposal */
+/**
+ \brief Compute and print acceptance ratios for each proposal
+ */
 void print_acceptance_rates(struct Proposal **proposal, int NP, int ic, FILE *fptr);
 
 /**
@@ -289,6 +298,7 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
  \brief Sets up different proposals and assigns frequencies with which they are used.
  */
 void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
+void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 
 /**
  \brief Create 3D histogram for F-statistics proposal
@@ -331,7 +341,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
  \brief Copies gaussian mixture model prior into proposal when given --update flag
  
  */
-void setup_gmm_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal);
+void setup_gmm_proposal(struct Data *data, struct Proposal *proposal);
 
 /**
  \brief Stores covariance matrices input with --update-cov flag

@@ -23,7 +23,6 @@
 #include <math.h>
 
 #include "LISA.h"
-#include "Constants.h"
 
 void print_LISA_ASCII_art(FILE *fptr)
 {
@@ -57,9 +56,9 @@ void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, dou
     }
 }
 
-/*************************************************************************/
+/* ********************************************************************* */
 /*        Rigid approximation position of each LISA spacecraft           */
-/*************************************************************************/
+/* ********************************************************************* */
 void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
 {
     
@@ -105,9 +104,9 @@ void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double
 void initialize_analytic_orbit(struct Orbit *orbit)
 {
     //store armlenght & transfer frequency in orbit structure.
-    orbit->L     = Larm;
-    orbit->fstar = CLIGHT/(2.0*M_PI*Larm);
-    orbit->ecc   = Larm/(2.0*SQ3*AU);
+    orbit->L     = LARM;
+    orbit->fstar = CLIGHT/(2.0*M_PI*LARM);
+    orbit->ecc   = LARM/(2.0*SQ3*AU);
     orbit->R     = AU*orbit->ecc;
     orbit->orbit_function = &analytic_orbits;
     
@@ -275,7 +274,6 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     fprintf(stdout,"=========================================\n\n");
     
 }
-/*************************************************************************/
 
 void free_orbit(struct Orbit *orbit)
 {
@@ -299,6 +297,62 @@ void free_orbit(struct Orbit *orbit)
     free(orbit);
 }
 
+static void recursive_phase_evolution(double dre, double dim, double *cosPhase, double *sinPhase)
+{
+   /* Update re and im for the next iteration. */
+   double cosphi = *cosPhase;
+   double sinphi = *sinPhase;
+
+   double newRe = cosphi*dre - sinphi*dim;
+   double newIm = sinphi*dre + cosphi*dim;
+
+   *cosPhase = newRe;
+   *sinPhase = newIm;
+   
+}
+
+static void double_angle(double cosA, double sinA, double *cos2A, double *sin2A)
+{
+    *cos2A = 2.*cosA*cosA - 1.0;
+    *sin2A = 2.*sinA*cosA;
+}
+
+static void triple_angle(double cosA, double sinA, double cos2A, double *cos3A, double *sin3A)
+{
+    *cos3A = 2.*cosA*cos2A - cosA;
+    *sin3A = 2.*sinA*cos2A + sinA;
+}
+
+static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
+{
+    /*
+     * Conventions in ldc/common/series/tdi.py
+     * A = (Z-X)/sqrt(2)
+     * E = (X-2Y+Z)/sqrt(6)
+     */
+    double invSQ2 = 0.707106781186547;
+    double invSQ6 = 0.408248290463863;
+    
+    *A = (Z-X)*invSQ2;
+    *E = (X-2*Y+Z)*invSQ6;
+
+}
+
+static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *T)
+{
+    /*
+     * Conventions in ldc/common/series/tdi.py
+     * T = (X+Y+Z)/sqrt(3)
+     */
+    double invSQ3 = 0.577350269189626;
+
+    XYZ2AE(X,Y,Z,A,E);
+
+    *T = (X+Y+Z)*invSQ3;
+
+    
+}
+
 void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
 {
     int i,j,k;
@@ -311,7 +365,10 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     double phiLS, cLS, sLS;
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
-    double invSQ3 = 1./SQ3;
+    double dPhi = invfstar/T;
+    double cosdPhi = cos(dPhi);
+    double sindPhi = sin(dPhi);
+    double prefactor;
     
     //phiLS = PI2*f0*(0.5-LonC);//1 s sampling rate
     //TODO: sampling rate is hard-coded into tdi function
@@ -320,6 +377,18 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     cLS = cos(phiLS);
     sLS = sin(phiLS);
     
+    /* Initialize recursion */
+    i = 0;
+    f = ((double)(q + i-1 - BWon2))/T;
+    fonfs = f*invfstar;
+    
+    c1 = cos(fonfs);
+    s1 = sin(fonfs);
+
+    double_angle(c1,s1,&c2,&s2);
+    triple_angle(c1,s1,c2,&c3,&s3);
+
+    
     for(i=1; i<=BW; i++)
     {
         k = 2*i;
@@ -327,59 +396,60 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
         
         f = ((double)(q + i-1 - BWon2))/T;
         fonfs = f*invfstar;
-        c3 = cos(3.*fonfs);  c2 = cos(2.*fonfs);  c1 = cos(fonfs);
-        s3 = sin(3.*fonfs);  s2 = sin(2.*fonfs);  s1 = sin(fonfs);
         
-        X[j] =	(d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
+        prefactor = sqT;
+
+        /* make use of recursion relationships & identities to get rid of trig calls
+        c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
+        s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
+         */
+
+        recursive_phase_evolution(cosdPhi, sindPhi, &c1, &s1);
+        double_angle(c1,s1,&c2,&s2);
+        triple_angle(c1,s1,c2,&c3,&s3);
+
+        X[j] =	prefactor*((d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
         (d[2][1][j]-d[3][1][j])*c2 + (d[2][1][k]-d[3][1][k])*s2 +
         (d[1][3][j]-d[1][2][j])*c1 + (d[1][3][k]-d[1][2][k])*s1 +
-        (d[3][1][j]-d[2][1][j]);
+        (d[3][1][j]-d[2][1][j]));
         
-        X[k] =	(d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
+        X[k] =	prefactor*((d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
         (d[2][1][k]-d[3][1][k])*c2 - (d[2][1][j]-d[3][1][j])*s2 +
         (d[1][3][k]-d[1][2][k])*c1 - (d[1][3][j]-d[1][2][j])*s1 +
-        (d[3][1][k]-d[2][1][k]);
+        (d[3][1][k]-d[2][1][k]));
         
-        M[j] = sqT*(X[j]*cLS - X[k]*sLS);
-        M[k] =-sqT*(X[j]*sLS + X[k]*cLS);
+        M[j] = prefactor*(X[j]*cLS - X[k]*sLS);
+        M[k] =-prefactor*(X[j]*sLS + X[k]*cLS);
         
         //save some CPU time when only X-channel is needed
         if(NI>1)
         {
-            Y[j] =	(d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
+            Y[j] =	prefactor*((d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
             (d[3][2][j]-d[1][2][j])*c2 + (d[3][2][k]-d[1][2][k])*s2+
             (d[2][1][j]-d[2][3][j])*c1 + (d[2][1][k]-d[2][3][k])*s1+
-            (d[1][2][j]-d[3][2][j]);
+            (d[1][2][j]-d[3][2][j]));
             
-            Y[k] =	(d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
+            Y[k] =	prefactor*((d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
             (d[3][2][k]-d[1][2][k])*c2 - (d[3][2][j]-d[1][2][j])*s2+
             (d[2][1][k]-d[2][3][k])*c1 - (d[2][1][j]-d[2][3][j])*s1+
-            (d[1][2][k]-d[3][2][k]);
+            (d[1][2][k]-d[3][2][k]));
             
-            Z[j] =	(d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
+            Z[j] =	prefactor*((d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
             (d[1][3][j]-d[2][3][j])*c2 + (d[1][3][k]-d[2][3][k])*s2+
             (d[3][2][j]-d[3][1][j])*c1 + (d[3][2][k]-d[3][1][k])*s1+
-            (d[2][3][j]-d[1][3][j]);
+            (d[2][3][j]-d[1][3][j]));
             
-            Z[k] =	(d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
+            Z[k] =	prefactor*((d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
             (d[1][3][k]-d[2][3][k])*c2 - (d[1][3][j]-d[2][3][j])*s2+
             (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
-            (d[2][3][k]-d[1][3][k]);
+            (d[2][3][k]-d[1][3][k]));
             
-            /*
-             XLS[j] =  (X[j]*cLS-X[k]*sLS);
-             XLS[k] = -(X[j]*sLS+X[k]*cLS);
-             YLS[j] =  (Y[j]*cLS-Y[k]*sLS);
-             YLS[k] = -(Y[j]*sLS+Y[k]*cLS);
-             ZLS[j] =  (Z[j]*cLS-Z[k]*sLS);
-             ZLS[k] = -(Z[j]*sLS+Z[k]*cLS);
-             */
+            /* LDC conventions for A & E channels */
+            XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
+            XYZ2AE(X[k],Y[k],Z[k],&A[k],&E[k]);
             
-            A[j] =  sqT*((2.0*X[j]-Y[j]-Z[j])*cLS-(2.0*X[k]-Y[k]-Z[k])*sLS)*0.33333333;
-            A[k] = -sqT*((2.0*X[j]-Y[j]-Z[j])*sLS+(2.0*X[k]-Y[k]-Z[k])*cLS)*0.33333333;
-            
-            E[j] =  sqT*((Z[j]-Y[j])*cLS-(Z[k]-Y[k])*sLS)*invSQ3;
-            E[k] = -sqT*((Z[j]-Y[j])*sLS+(Z[k]-Y[k])*cLS)*invSQ3;
+            A[k] = -A[k];
+            E[k] = -E[k];
         }
     }
 }
@@ -396,12 +466,26 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     double phiSL, cSL, sSL;
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
-    double invSQ3 = 1./SQ3;
+    double dPhi = invfstar/T;
+    double cosdPhi = cos(dPhi);
+    double sindPhi = sin(dPhi);
+    double prefactor;
     
-    phiSL = PIon2 - PI2*f0*(L/CLIGHT);//15 s sampling rate
+    phiSL = PIon2 - PI2*f0*(L/CLIGHT);
     cSL = cos(phiSL);
     sSL = sin(phiSL);
     
+    /* Initialize recursion */
+    i = 0;
+    f = ((double)(q + i-1 - BWon2))/T;
+    fonfs = f*invfstar;
+    
+    c1 = cos(fonfs);
+    s1 = sin(fonfs);
+
+    double_angle(c1,s1,&c2,&s2);
+    triple_angle(c1,s1,c2,&c3,&s3);
+
     for(i=1; i<=BW; i++)
     {
         k = 2*i;
@@ -411,86 +495,129 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
         fonfs = f*invfstar;
         fonfs2= 2.*fonfs;
         
-        //TODO: make use of recursion relationships to get rid of trig calls
+        /* prefactor = sqrt(T) * 4 * (f/fstar) * sin(f/fstar) */
+        prefactor = sqT*fonfs2;
+
+        /* make use of recursion relationships & identities to get rid of trig calls
         c3 = cos(3.*fonfs);  c2 = cos(fonfs2);  c1 = cos(fonfs);
         s3 = sin(3.*fonfs);  s2 = sin(fonfs2);  s1 = sin(fonfs);
+         */
+
+        recursive_phase_evolution(cosdPhi, sindPhi, &c1, &s1);
+        double_angle(c1,s1,&c2,&s2);
+        triple_angle(c1,s1,c2,&c3,&s3);
         
-        X[j] =	(d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
+        
+        X[j] =	prefactor*((d[1][2][j]-d[1][3][j])*c3 + (d[1][2][k]-d[1][3][k])*s3 +
         (d[2][1][j]-d[3][1][j])*c2 + (d[2][1][k]-d[3][1][k])*s2 +
         (d[1][3][j]-d[1][2][j])*c1 + (d[1][3][k]-d[1][2][k])*s1 +
-        (d[3][1][j]-d[2][1][j]);
+        (d[3][1][j]-d[2][1][j]));
         
-        X[k] =	(d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
+        X[k] =	prefactor*((d[1][2][k]-d[1][3][k])*c3 - (d[1][2][j]-d[1][3][j])*s3 +
         (d[2][1][k]-d[3][1][k])*c2 - (d[2][1][j]-d[3][1][j])*s2 +
         (d[1][3][k]-d[1][2][k])*c1 - (d[1][3][j]-d[1][2][j])*s1 +
-        (d[3][1][k]-d[2][1][k]);
+        (d[3][1][k]-d[2][1][k]));
         
-        M[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
-        //TODO: changed GB phase to match LDC, but why?
-        //M[k] =-sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
-        M[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
+        M[j] = prefactor*(X[j]*cSL - X[k]*sSL);
+        M[k] = prefactor*(X[j]*sSL + X[k]*cSL);
         
         //save some CPU time when only X-channel is needed
         if(NI>1)
         {
-            Y[j] =	(d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
+            Y[j] =	prefactor*((d[2][3][j]-d[2][1][j])*c3 + (d[2][3][k]-d[2][1][k])*s3 +
             (d[3][2][j]-d[1][2][j])*c2 + (d[3][2][k]-d[1][2][k])*s2+
             (d[2][1][j]-d[2][3][j])*c1 + (d[2][1][k]-d[2][3][k])*s1+
-            (d[1][2][j]-d[3][2][j]);
+            (d[1][2][j]-d[3][2][j]));
             
-            Y[k] =	(d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
+            Y[k] =	prefactor*((d[2][3][k]-d[2][1][k])*c3 - (d[2][3][j]-d[2][1][j])*s3+
             (d[3][2][k]-d[1][2][k])*c2 - (d[3][2][j]-d[1][2][j])*s2+
             (d[2][1][k]-d[2][3][k])*c1 - (d[2][1][j]-d[2][3][j])*s1+
-            (d[1][2][k]-d[3][2][k]);
+            (d[1][2][k]-d[3][2][k]));
             
-            Z[j] =	(d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
+            Z[j] =	prefactor*((d[3][1][j]-d[3][2][j])*c3 + (d[3][1][k]-d[3][2][k])*s3+
             (d[1][3][j]-d[2][3][j])*c2 + (d[1][3][k]-d[2][3][k])*s2+
             (d[3][2][j]-d[3][1][j])*c1 + (d[3][2][k]-d[3][1][k])*s1+
-            (d[2][3][j]-d[1][3][j]);
+            (d[2][3][j]-d[1][3][j]));
             
-            Z[k] =	(d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
+            Z[k] =	prefactor*((d[3][1][k]-d[3][2][k])*c3 - (d[3][1][j]-d[3][2][j])*s3+
             (d[1][3][k]-d[2][3][k])*c2 - (d[1][3][j]-d[2][3][j])*s2+
             (d[3][2][k]-d[3][1][k])*c1 - (d[3][2][j]-d[3][1][j])*s1+
-            (d[2][3][k]-d[1][3][k]);
+            (d[2][3][k]-d[1][3][k]));
             
-            /*
-             XSL[j] =  fonfs2*(X[j]*cSL-X[k]*sSL);
-             XSL[k] = -fonfs2*(X[j]*sSL+X[k]*cSL);
-             YSL[j] =  fonfs2*(Y[j]*cSL-Y[k]*sSL);
-             YSL[k] = -fonfs2*(Y[j]*sSL+Y[k]*cSL);
-             ZSL[j] =  fonfs2*(Z[j]*cSL-Z[k]*sSL);
-             ZSL[k] = -fonfs2*(Z[j]*sSL+Z[k]*cSL);
-             */
-            
-            
-            //TODO: changed GB phase to match LDC, but why?
-            /*
-             A[j] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
-             A[k] = -sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
-             
-             E[j] =  sqT*fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
-             E[k] = -sqT*fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
-             */
-            A[j] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*cSL-(2.0*X[k]-Y[k]-Z[k])*sSL)*0.33333333;
-            A[k] =  sqT*fonfs2*((2.0*X[j]-Y[j]-Z[j])*sSL+(2.0*X[k]-Y[k]-Z[k])*cSL)*0.33333333;
-            
-            E[j] =  sqT*fonfs2*((Z[j]-Y[j])*cSL-(Z[k]-Y[k])*sSL)*invSQ3;
-            E[k] =  sqT*fonfs2*((Z[j]-Y[j])*sSL+(Z[k]-Y[k])*cSL)*invSQ3;
-            
+            /* LDC conventions for A & E channels */
+            XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
+            XYZ2AE(X[k],Y[k],Z[k],&A[k],&E[k]);
 
-            //T[j] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*cSL-((1./3.)*(X[k]+Y[k]+Z[k]))*sSL)*0.33333333;
-            //T[k] =  sqT*fonfs2*(((1./3.)*(X[j]+Y[j]+Z[j]))*sSL+((1./3.)*(X[k]+Y[k]+Z[k]))*cSL)*0.33333333;
-
-            
-            /* TODO: HORRIBLE HACK!  PUT X,Y,Z into A,E,M arrays for checking against LDC
-             A[j] = sqT*fonfs2*(X[j]*cSL - X[k]*sSL);
-             A[k] = sqT*fonfs2*(X[j]*sSL + X[k]*cSL);
-             E[j] = sqT*fonfs2*(Y[j]*cSL - Y[k]*sSL);
-             E[k] = sqT*fonfs2*(Y[j]*sSL + Y[k]*cSL);
-             M[j] = sqT*fonfs2*(Z[j]*cSL - Z[k]*sSL);
-             M[k] = sqT*fonfs2*(Z[j]*sSL + Z[k]*cSL);*/
-            
         }
+    }
+}
+
+void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *A, double *E, int BW, int NI)
+{
+    int i,j,k;
+    int BW2   = BW*2;
+    int BWon2 = BW/2;
+    double prefactor,fonfs;
+    double c2, s2, c1, s1;
+    double f;
+    double Y[BW2+1],Z[BW2+1];
+    double sqT=sqrt(T);
+    double invfstar = 1./fstar;
+    double norm = 4.0*invfstar*sqT;
+    double dPhi = invfstar/T;
+    double cosdPhi = cos(dPhi);
+    double sindPhi = sin(dPhi);
+        
+    /* Initialize recursion */
+    i = 0;
+    f = ((double)(q + i-1 - BWon2))/T;
+    fonfs = f*invfstar;
+    
+    c1 = cos(fonfs);
+    s1 = sin(fonfs);
+
+    double_angle(c1,s1,&c2,&s2);
+
+    for(i=1; i<=BW; i++)
+    {
+        k = 2*i;
+        j = k-1;
+
+        f = ((double)(q + i-1 - BWon2))/T;
+
+        /* make use of recursion relationships & identities to get rid of trig calls
+        c3 = cos(3.*fonfs);  c2 = cos(2.*fonfs);  c1 = cos(fonfs);
+        s3 = sin(3.*fonfs);  s2 = sin(2.*fonfs);  s1 = sin(fonfs);*/
+        recursive_phase_evolution(cosdPhi, sindPhi, &c1, &s1);
+        double_angle(c1,s1,&c2,&s2);
+                
+        /* prefactor = sqrt(T) * 4 * (f/fstar) * sin(f/fstar) */
+        prefactor = f * norm * s1;
+        
+        
+        /* LDC Conventions for X,Y,Z channels (circa Sangria) */
+        X[j] = prefactor*((d[1][2][j]-d[1][3][j])*c2 + (d[1][2][k]-d[1][3][k])*s2 +
+                   (d[2][1][j]-d[3][1][j])*c1 + (d[2][1][k]-d[3][1][k])*s1);
+        
+        X[k] = prefactor*((d[1][2][k]-d[1][3][k])*c2 - (d[1][2][j]-d[1][3][j])*s2 +
+                   (d[2][1][k]-d[3][1][k])*c1 - (d[2][1][j]-d[3][1][j])*s1);
+        
+        Y[j] = prefactor*((d[2][3][j]-d[2][1][j])*c2 + (d[2][3][k]-d[2][1][k])*s2 +
+                   (d[3][2][j]-d[1][2][j])*c1 + (d[3][2][k]-d[1][2][k])*s1);
+        
+        Y[k] = prefactor*((d[2][3][k]-d[2][1][k])*c2 - (d[2][3][j]-d[2][1][j])*s2+
+                   (d[3][2][k]-d[1][2][k])*c1 - (d[3][2][j]-d[1][2][j])*s1);
+        
+        Z[j] = prefactor*((d[3][1][j]-d[3][2][j])*c2 + (d[3][1][k]-d[3][2][k])*s2+
+                   (d[1][3][j]-d[2][3][j])*c1 + (d[1][3][k]-d[2][3][k])*s1);
+        
+        Z[k] = prefactor*((d[3][1][k]-d[3][2][k])*c2 - (d[3][1][j]-d[3][2][j])*s2+
+                   (d[1][3][k]-d[2][3][k])*c1 - (d[1][3][j]-d[2][3][j])*s1);
+        
+
+        /* LDC conventions for A & E channels */
+        XYZ2AE(X[j],Y[j],Z[j],&A[j],&E[j]);
+        XYZ2AE(X[k],Y[k],Z[k],&A[k],&E[k]);
     }
 }
 
@@ -560,10 +687,9 @@ double XYZnoise_FF(double L, double fstar, double f)
     get_noise_levels("scirdv1",f,&Spm,&Sop);
     
     double x = f/fstar;
-    double sinx  = sin(x);
     double cosx  = cos(x);
 
-    return 16. * sinx*sinx * ( 2.*(1.0 + cosx*cosx)*Spm + Sop );
+    return 16. * noise_transfer_function(x) * ( 2.*(1.0 + cosx*cosx)*Spm + Sop );
 }
 
 double AEnoise_FF(double L, double fstar, double f)
@@ -575,11 +701,10 @@ double AEnoise_FF(double L, double fstar, double f)
 
     double x = f/fstar;
     
-    double sinx  = sin(x);
     double cosx  = cos(x);
     double cos2x = cos(2.*x);
     
-    return  8. * sinx*sinx * ( 2.*Spm*(3. + 2.*cosx + cos2x) + Sop*(2. + cosx) );
+    return  8. * noise_transfer_function(x) * ( 2.*Spm*(3. + 2.*cosx + cos2x) + Sop*(2. + cosx) );
     
 }
 
@@ -591,10 +716,9 @@ double Tnoise_FF(double L, double fstar, double f)
 
     double x = f/fstar;
     
-    double sinx  = sin(x);
     double cosx  = cos(x);
 
-    return 16.0 * Sop * (1.0 - cosx) * sinx*sinx + 128.0 * Spm * sinx*sinx * sin(0.5*x)*sin(0.5*x)*sin(0.5*x)*sin(0.5*x);
+    return 16.0 * Sop * (1.0 - cosx) * noise_transfer_function(x) + 128.0 * Spm * noise_transfer_function(x) * sin(0.5*x)*sin(0.5*x)*sin(0.5*x)*sin(0.5*x);
 
 }
 
@@ -649,7 +773,7 @@ double XYZnoise(double L, double fstar, double f)
     double fonfstar = f/fstar;
     double trans = ipow(sin(fonfstar),2.0);
     
-    return (4.0)*trans*( (4.0)*(SPS + SLOC) + 8.0*( 1.0 +                ipow(cos(fonfstar),2) ) * ( SLOC/2.0 + SACC*(1./(ipow(PI2*f,4)))*rednoise(f) ) ) / ipow(2.0*L,2);
+    return (4.0)*trans*( (4.0)*(SPS + SLOC) + 8.0*( 1.0 + ipow(cos(fonfstar),2) ) * ( SLOC/2.0 + SACC*(1./(ipow(PI2*f,4)))*rednoise(f) ) ) / ipow(2.0*L,2);
 }
 
 double GBnoise(double T, double f)
@@ -700,39 +824,11 @@ double GBnoise(double T, double f)
     return A*pow(f,-7./3.)*exp(-pow(f,alpha) + beta*f*sin(kappa*f))*(1. + tanh(gamma*(fk-f)));
 }
 
-//double AEnoise(double L, double fstar, double f)
-//{
-//  //Power spectral density of the detector noise and transfer frequency
-//  double Sn;
-//
-//
-//  // Calculate the power spectral density of the detector noise at the given frequency
-//  Sn = 16.0/3.0*ipow(sin(f/fstar),2.0)*( ( (2.0+cos(f/fstar))*Sps + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*Sacc*(1.0/ipow(2.0*M_PI*f,4))) / ipow(2.0*L,2.0));
-//
-//  return Sn;
-//}
-//
-//void instrument_noise(double f, double *SAE, double *SXYZ)
-//{
-//  //Power spectral density of the detector noise and transfer frequency
-//  double Sn, red, confusion_noise;
-//  double Sloc;
-//  double f1, f2;
-//  double A1, A2, slope;
-//  FILE *outfile;
-//
-//
-//  red = 16.0*(pow((2.0e-5/f), 10.0)+ (1.0e-4/f)*(1.0e-4/f));
-//
-//  Sloc = 2.89e-24;
-//
-//  // Calculate the power spectral density of the detector noise at the given frequency
-//
-//  *SAE = 16.0/3.0*pow(sin(f/fstar),2.0)*( (2.0+cos(f/fstar))*(Sps+Sloc) + 2.0*(3.0+2.0*cos(f/fstar)+cos(2.0*f/fstar))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
-//
-//  *SXYZ = 4.0*pow(sin(f/fstar),2.0)*( 4.0*(Sps+Sloc) + 8.0*(1.0+pow(cos(f/fstar),2.0))*(Sloc + Sacc/pow(2.0*pi*f,4.0)*(1.0+red)) ) / pow(2.0*L,2.0);
-//  
-//}
+double noise_transfer_function(double x)
+{
+    double sinx = sin(x);
+    return sinx*sinx;
+}
 
 void test_noise_model(struct Orbit *orbit)
 {
@@ -747,4 +843,218 @@ void test_noise_model(struct Orbit *orbit)
         fprintf(psdfile,"%lg %lg %lg\n",ftemp,AEnoise_FF(orbit->L,orbit->fstar,ftemp),Tnoise_FF(orbit->L,orbit->fstar,ftemp));
     }
     fclose(psdfile);
+}
+
+void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint)
+{
+    int n;
+    
+    /* do our own error catching from interpolator */
+    gsl_set_error_handler_off();
+    
+    /* set up GSL cubic spline */
+    gsl_spline       *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
+    gsl_interp_accel *acc    = gsl_interp_accel_alloc();
+    
+    /* get derivatives */
+    int status = gsl_spline_init(cspline,x,y,N);
+    
+    //if error, return values that will be rjected by sampler
+    if(status) for(n=0; n<Nint; n++) yint[n]=1.0;
+    
+    //otherwise proceed w/ interpolation
+    else for(n=0; n<Nint; n++) yint[n]=gsl_spline_eval(cspline,xint[n],acc);
+    
+    gsl_spline_free (cspline);
+    gsl_interp_accel_free (acc);
+    
+}
+
+void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
+{
+    //Number of frequency bins (2*N samples)
+    tdi->N = NFFT;
+    
+    //Michelson
+    tdi->X = calloc(2*tdi->N,sizeof(double));
+    tdi->Y = calloc(2*tdi->N,sizeof(double));
+    tdi->Z = calloc(2*tdi->N,sizeof(double));
+    
+    //Noise-orthogonal
+    tdi->A = calloc(2*tdi->N,sizeof(double));
+    tdi->E = calloc(2*tdi->N,sizeof(double));
+    tdi->T = calloc(2*tdi->N,sizeof(double));
+        
+    //Number of TDI channels (X or A&E or maybe one day A,E,&T)
+    tdi->Nchannel = Nchannel;
+}
+
+void copy_tdi(struct TDI *origin, struct TDI *copy)
+{
+    copy->N        = origin->N;
+    copy->Nchannel = origin->Nchannel;
+    
+    memcpy(copy->X, origin->X, 2*origin->N*sizeof(double));
+    memcpy(copy->Y, origin->Y, 2*origin->N*sizeof(double));
+    memcpy(copy->Z, origin->Z, 2*origin->N*sizeof(double));
+    memcpy(copy->A, origin->A, 2*origin->N*sizeof(double));
+    memcpy(copy->E, origin->E, 2*origin->N*sizeof(double));
+    memcpy(copy->T, origin->T, 2*origin->N*sizeof(double));
+}
+
+void copy_tdi_segment(struct TDI *origin, struct TDI *copy, int index, int N)
+{
+    copy->N        = origin->N;
+    copy->Nchannel = origin->Nchannel;
+    index*=2;
+    memcpy(copy->X+index, origin->X+index, 2*N*sizeof(double));
+    memcpy(copy->Y+index, origin->Y+index, 2*N*sizeof(double));
+    memcpy(copy->Z+index, origin->Z+index, 2*N*sizeof(double));
+    memcpy(copy->A+index, origin->A+index, 2*N*sizeof(double));
+    memcpy(copy->E+index, origin->E+index, 2*N*sizeof(double));
+    memcpy(copy->T+index, origin->T+index, 2*N*sizeof(double));
+}
+
+void free_tdi(struct TDI *tdi)
+{
+    free(tdi->X);
+    free(tdi->Y);
+    free(tdi->Z);
+    free(tdi->A);
+    free(tdi->E);
+    free(tdi->T);
+    
+    free(tdi);
+}
+
+/* LDC HDF5 */
+
+#define DATASET "/obs/tdi"
+
+void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
+{    
+    /* LDC-formatted structure for compound HDF5 dataset */
+    typedef struct tdi_dataset {
+        double t;
+        double X;
+        double Y;
+        double Z;
+    } tdi_dataset;
+    static tdi_dataset *s1;
+    
+    hid_t  file, dataset, dspace; /* identifiers */
+    herr_t status; /* error handling */
+    int ndims; /* dimension of dataset */
+    
+    /* Open an existing file. */
+    file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+    
+    /* Open an existing dataset. */
+    dataset = H5Dopen(file, DATASET, H5P_DEFAULT);
+    
+    /* Get size of dataset */
+    dspace = H5Dget_space(dataset);
+    ndims = H5Sget_simple_extent_ndims(dspace);
+    hsize_t dims[ndims];
+    H5Sget_simple_extent_dims(dspace, dims, NULL);
+    int Nsamples = dims[0];
+    
+    s1 = malloc(Nsamples*sizeof(struct tdi_dataset));
+    alloc_tdi(tdi, Nsamples/2, 3);
+    
+    hid_t s1_tid; /* Memory datatype handle */
+    
+    s1_tid = H5Tcreate(H5T_COMPOUND, sizeof(struct tdi_dataset));
+    H5Tinsert(s1_tid, "t", HOFFSET(struct tdi_dataset, t), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "X", HOFFSET(struct tdi_dataset, X), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "Y", HOFFSET(struct tdi_dataset, Y), H5T_IEEE_F64LE);
+    H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
+    
+    status = H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
+        
+    
+    /* Copy LDC-formatted structure into ldasoft format */
+    for(int i=0; i<Nsamples; i++)
+    {
+        double X = s1[i].X;
+        double Y = s1[i].Y;
+        double Z = s1[i].Z;
+        
+        tdi->X[i] = X;
+        tdi->Y[i] = Y;
+        tdi->Z[i] = Z;
+        
+        /* LDC conventions for AET channels */
+        XYZ2AET(X,Y,Z,&tdi->A[i],&tdi->E[i],&tdi->T[i]);
+        
+    }
+    tdi->delta = s1[1].t - s1[0].t;
+    
+    /* Close the dataset. */
+    status = H5Dclose(dataset);
+    
+    /* Close the file. */
+    status = H5Fclose(file);
+    
+    /* Free up memory */
+    free(s1);
+
+}
+
+void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
+{
+    hid_t  file, dataset, dataspace, memtype; /* identifiers */
+    herr_t status; /* error handling */
+    int ndims, Nrow, Ncol; /* dimension of dataset */
+    double *data; /* array for dataset */
+
+    /* Open an existing file. */
+    file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+    /* Open an existing dataset. */
+    dataset = H5Dopen(file, "/H5LISA/PreProcess/TDIdata", H5P_DEFAULT);
+    memtype = H5Dget_type(dataset);
+
+    /* Get dimension of dataset */
+    dataspace = H5Dget_space(dataset);
+    ndims = H5Sget_simple_extent_ndims(dataspace);
+    hsize_t adims[ndims];
+    H5Sget_simple_extent_dims(dataspace, adims, NULL);
+
+    /* Allocate memory for reading dataset */
+    Nrow = (int)adims[0];
+    Ncol = (int)adims[1];
+    data = malloc(Nrow*Ncol*sizeof(double));
+    
+    alloc_tdi(tdi, Nrow/2, 3);
+
+    
+    /* Read the data */
+    status = H5Dread (dataset, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+
+    
+    for(int i=0; i<Nrow; i++)
+    {
+        
+        double X = data[Ncol*i+1];
+        double Y = data[Ncol*i+2];
+        double Z = data[Ncol*i+3];
+        
+        tdi->X[i] = X;
+        tdi->Y[i] = Y;
+        tdi->Z[i] = Z;
+        
+        /* LDC conventions for AET channels */
+        XYZ2AET(X,Y,Z,&tdi->A[i],&tdi->E[i],&tdi->T[i]);
+    }
+    tdi->delta = data[Ncol] - data[0];
+
+    free(data);
+
+    /* Close the dataset. */
+    status = H5Dclose(dataset);
+
+    /* Close the file. */
+    status = H5Fclose(file);
+
 }

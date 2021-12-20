@@ -1,40 +1,55 @@
 # add library
-add_library(gbmcmc STATIC BayesLine.c GalacticBinaryFStatistic.c GalacticBinaryMatch.c GalacticBinaryPrior.c GalacticBinaryWaveform.c gb_mcmc_chirpmass.c
-            GalacticBinaryCatalog.c GalacticBinaryIO.c GalacticBinaryMath.c GalacticBinaryProposal.c LISA.c
-            GalacticBinaryData.c GalacticBinaryMCMC.c GalacticBinaryModel.c GalacticBinaryResidual.c gb_mcmc_brans_dicke.c)
+add_library(gbmcmc STATIC GalacticBinaryFStatistic.c GalacticBinaryMatch.c GalacticBinaryPrior.c GalacticBinaryWaveform.c
+            GalacticBinaryCatalog.c GalacticBinaryIO.c GalacticBinaryMath.c GalacticBinaryProposal.c 
+            GalacticBinaryData.c GalacticBinaryMCMC.c GalacticBinaryModel.c GalacticBinaryResidual.c
+            GalacticBinary.h
+            GalacticBinaryMCMC.h GalacticBinaryIO.h GalacticBinaryModel.h GalacticBinaryWaveform.h 
+            GalacticBinaryMath.h GalacticBinaryData.h GalacticBinaryPrior.h GalacticBinaryProposal.h
+            GalacticBinaryFStatistic.h GalacticBinaryCatalog.h)
 
 include_directories ("${PROJECT_SOURCE_DIR}/tools/src/")              
+include_directories ("${PROJECT_SOURCE_DIR}/lisa/src/")
 include_directories ("${PROJECT_SOURCE_DIR}/gbmcmc/src/")
-include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
-target_link_libraries(gbmcmc tools ${GSL_LIBRARIES})
+include_directories(SYSTEM ${GSL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
+target_link_libraries(gbmcmc tools m ${GSL_LIBRARIES} ${HDF5_LIBRARIES})
 
 install(TARGETS gbmcmc DESTINATION lib)
+install(DIRECTORY "./" DESTINATION include FILES_MATCHING PATTERN "*.h")
 
-
-add_executable(gb_mcmc GalacticBinaryMCMC.c LISA.c GalacticBinaryIO.c GalacticBinaryModel.c GalacticBinaryWaveform.c GalacticBinaryMath.c GalacticBinaryData.c GalacticBinaryPrior.c GalacticBinaryProposal.c GalacticBinaryFStatistic.c)
+add_executable(gb_mcmc gb_mcmc.c)
+                
 target_link_libraries(gb_mcmc ${GSL_LIBRARIES})
+target_link_libraries(gb_mcmc ${HDF5_LIBRARIES})
+target_link_libraries(gb_mcmc m)
 target_link_libraries(gb_mcmc tools)
+target_link_libraries(gb_mcmc lisa)
+target_link_libraries(gb_mcmc gbmcmc)
+if(APPLE) 
+   target_link_libraries(gb_mcmc omp)
+endif()
 install(TARGETS gb_mcmc DESTINATION bin)
 
-add_executable(gb_catalog GalacticBinaryCatalog.c LISA.c GalacticBinaryIO.c GalacticBinaryModel.c GalacticBinaryWaveform.c GalacticBinaryMath.c GalacticBinaryData.c GalacticBinaryPrior.c GalacticBinaryProposal.c GalacticBinaryFStatistic.c)
+add_executable(gb_catalog gb_catalog.c)
 target_link_libraries(gb_catalog ${GSL_LIBRARIES})
+target_link_libraries(gb_catalog ${HDF5_LIBRARIES})
+target_link_libraries(gb_catalog m)
 target_link_libraries(gb_catalog tools)
+target_link_libraries(gb_catalog lisa)
+target_link_libraries(gb_catalog gbmcmc)
+if(APPLE)
+   target_link_libraries(gb_catalog omp)
+endif()
 install(TARGETS gb_catalog DESTINATION bin)
 
-add_executable(gb_residual GalacticBinaryResidual.c LISA.c GalacticBinaryIO.c GalacticBinaryModel.c GalacticBinaryWaveform.c GalacticBinaryMath.c GalacticBinaryData.c GalacticBinaryPrior.c GalacticBinaryProposal.c GalacticBinaryFStatistic.c)
-target_link_libraries(gb_residual ${GSL_LIBRARIES})
-target_link_libraries(gb_residual tools)
-install(TARGETS gb_residual DESTINATION bin)
-
-add_executable(gb_mcmc_chirpmass gb_mcmc_chirpmass.c)
-target_link_libraries(gb_mcmc_chirpmass ${GSL_LIBRARIES})
-install(TARGETS gb_mcmc_chirpmass DESTINATION bin)
-
-add_executable(gb_match GalacticBinaryMatch.c LISA.c GalacticBinaryIO.c GalacticBinaryModel.c GalacticBinaryWaveform.c GalacticBinaryMath.c GalacticBinaryData.c GalacticBinaryPrior.c GalacticBinaryProposal.c GalacticBinaryFStatistic.c)
-target_link_libraries(gb_match ${GSL_LIBRARIES})
-target_link_libraries(gb_match tools)
-install(TARGETS gb_match DESTINATION bin)
-
-add_executable(gb_mcmc_brans_dicke gb_mcmc_brans_dicke.c)
-target_link_libraries(gb_mcmc_brans_dicke ${GSL_LIBRARIES})
-install(TARGETS gb_mcmc_brans_dicke DESTINATION bin)
+add_executable(vb_mcmc vb_mcmc.c)
+                
+target_link_libraries(vb_mcmc ${GSL_LIBRARIES})
+target_link_libraries(vb_mcmc ${HDF5_LIBRARIES})
+target_link_libraries(vb_mcmc m)
+target_link_libraries(vb_mcmc tools)
+target_link_libraries(vb_mcmc lisa)
+if(APPLE)
+   target_link_libraries(vb_mcmc omp)
+endif()
+target_link_libraries(vb_mcmc gbmcmc)
+install(TARGETS vb_mcmc DESTINATION bin)

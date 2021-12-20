@@ -1,24 +1,26 @@
 /*
-@licstart  The following is the entire license notice for the
-JavaScript code in this file.
+ @licstart  The following is the entire license notice for the JavaScript code in this file.
 
-Copyright (C) 1997-2019 by Dimitri van Heesch
+ The MIT License (MIT)
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of version 2 of the GNU General Public License as published by
-the Free Software Foundation
+ Copyright (C) 1997-2020 by Dimitri van Heesch
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ and associated documentation files (the "Software"), to deal in the Software without restriction,
+ including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ The above copyright notice and this permission notice shall be included in all copies or
+ substantial portions of the Software.
 
-@licend  The above is the entire license notice
-for the JavaScript code in this file
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+ @licend  The above is the entire license notice for the JavaScript code in this file
 */
 var NAVTREE =
 [
@@ -31,8 +33,8 @@ var NAVTREE =
     [ "GBMCMC Manual", "md_gbmcmc_README.html", [
       [ "Table of contents", "md_gbmcmc_README.html#autotoc_md6", null ],
       [ "Introduction", "md_gbmcmc_README.html#autotoc_md7", [
-        [ "Dependencies", "md_gbmcmc_README.html#autotoc_md8", null ],
-        [ "Good things to have for post-production", "md_gbmcmc_README.html#autotoc_md9", null ],
+        [ "C Dependencies", "md_gbmcmc_README.html#autotoc_md8", null ],
+        [ "Python packages for post-production", "md_gbmcmc_README.html#autotoc_md9", null ],
         [ "Installation", "md_gbmcmc_README.html#autotoc_md10", null ]
       ] ],
       [ "Example use cases for GBMCMC", "md_gbmcmc_README.html#autotoc_md11", [
@@ -47,53 +49,67 @@ var NAVTREE =
       ] ],
       [ "GBMCMC output format", "md_gbmcmc_README.html#autotoc_md18", [
         [ "Parameterization", "md_gbmcmc_README.html#autotoc_md19", null ],
-        [ "<tt>chains</tt> directory", "md_gbmcmc_README.html#autotoc_md20", null ],
-        [ "<tt>data</tt> directory", "md_gbmcmc_README.html#autotoc_md21", null ],
-        [ "main run directory", "md_gbmcmc_README.html#autotoc_md22", null ]
+        [ "chains directory", "md_gbmcmc_README.html#autotoc_md20", [
+          [ "Model", "md_gbmcmc_README.html#autotoc_md21", null ],
+          [ "Signal parameters", "md_gbmcmc_README.html#autotoc_md22", null ],
+          [ "Posterior samples for specfic models", "md_gbmcmc_README.html#autotoc_md23", null ],
+          [ "Noise parameters", "md_gbmcmc_README.html#autotoc_md24", null ],
+          [ "Parallel tempering likelihoods", "md_gbmcmc_README.html#autotoc_md25", null ],
+          [ "Chain temperatures", "md_gbmcmc_README.html#autotoc_md26", null ]
+        ] ],
+        [ "data directory", "md_gbmcmc_README.html#autotoc_md27", null ],
+        [ "main run directory", "md_gbmcmc_README.html#autotoc_md28", null ]
       ] ],
-      [ "Post processing GBMCMC", "md_gbmcmc_README.html#autotoc_md23", [
-        [ "GB Catalog output format", "md_gbmcmc_README.html#autotoc_md24", null ]
+      [ "Post processing GBMCMC", "md_gbmcmc_README.html#autotoc_md29", [
+        [ "GB Catalog output format", "md_gbmcmc_README.html#autotoc_md30", null ]
       ] ]
     ] ],
-    [ "Workflow for processing LDC Data", "md_gbmcmc_README_LDC.html", [
-      [ "Download LDC GB data", "md_gbmcmc_README_LDC.html#autotoc_md26", null ],
-      [ "FFT LDC data with fft_ldc_data.py", "md_gbmcmc_README_LDC.html#autotoc_md27", null ],
-      [ "Access LDC VGB key parameters with python", "md_gbmcmc_README_LDC.html#autotoc_md28", null ],
-      [ "Access LDC Galaxy key parameters, with python", "md_gbmcmc_README_LDC.html#autotoc_md29", null ],
-      [ "Run gb_mcmc on Fourier transformed LDC data.", "md_gbmcmc_README_LDC.html#autotoc_md30", null ],
-      [ "Use GalacticBinaryCatalog.c (gb_catalog) to produce catalog data with the gb_mcmc output", "md_gbmcmc_README_LDC.html#autotoc_md31", null ],
-      [ "Build covariance matrix proposal from catalog output", "md_gbmcmc_README_LDC.html#autotoc_md32", null ],
-      [ "Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices", "md_gbmcmc_README_LDC.html#autotoc_md33", null ]
+    [ "Workflow for processing LDC Radler Data", "md_gbmcmc_README_LDC.html", [
+      [ "Download LDC GB data", "md_gbmcmc_README_LDC.html#autotoc_md32", null ],
+      [ "FFT LDC data with fft_ldc_data.py", "md_gbmcmc_README_LDC.html#autotoc_md33", null ],
+      [ "Access LDC VGB key parameters with python", "md_gbmcmc_README_LDC.html#autotoc_md34", null ],
+      [ "Access LDC Galaxy key parameters, with python", "md_gbmcmc_README_LDC.html#autotoc_md35", null ],
+      [ "Run gb_mcmc on Fourier transformed LDC data.", "md_gbmcmc_README_LDC.html#autotoc_md36", null ],
+      [ "Use GalacticBinaryCatalog.c (gb_catalog) to produce catalog data with the gb_mcmc output", "md_gbmcmc_README_LDC.html#autotoc_md37", null ],
+      [ "Build covariance matrix proposal from catalog output", "md_gbmcmc_README_LDC.html#autotoc_md38", null ],
+      [ "Run gb_mcmc with draws from a proposal distribution, for example, from cummulative distribution function (CDF proposal updates) and/or from covariance matrices", "md_gbmcmc_README_LDC.html#autotoc_md39", null ]
     ] ],
     [ "FisherGalaxy Manual", "md_gbfisher_README.html", [
-      [ "Input file format", "md_gbfisher_README.html#autotoc_md35", [
-        [ "Note about sky location conventions", "md_gbfisher_README.html#autotoc_md36", null ]
+      [ "Input file format", "md_gbfisher_README.html#autotoc_md41", [
+        [ "Note about sky location conventions", "md_gbfisher_README.html#autotoc_md42", null ]
       ] ],
-      [ "Create orbit file with spacecraft ephimeredes", "md_gbfisher_README.html#autotoc_md37", null ],
-      [ "Simulate data with detector response to full galaxy and Gaussian instrument noise", "md_gbfisher_README.html#autotoc_md38", null ],
-      [ "Take data file and produce fit to confusion noise", "md_gbfisher_README.html#autotoc_md39", [
-        [ "Intermediate data products for checking performance", "md_gbfisher_README.html#autotoc_md40", null ]
+      [ "Create orbit file with spacecraft ephimeredes", "md_gbfisher_README.html#autotoc_md43", null ],
+      [ "Simulate data with detector response to full galaxy and Gaussian instrument noise", "md_gbfisher_README.html#autotoc_md44", null ],
+      [ "Take data file and produce fit to confusion noise", "md_gbfisher_README.html#autotoc_md45", [
+        [ "Intermediate data products for checking performance", "md_gbfisher_README.html#autotoc_md46", null ]
       ] ],
-      [ "Compute residual data and detectable catalog", "md_gbfisher_README.html#autotoc_md41", [
-        [ "Intermediate data products for checking performance (overwriting output from <tt>ConfusionFit</tt>)", "md_gbfisher_README.html#autotoc_md42", null ]
+      [ "Compute residual data and detectable catalog", "md_gbfisher_README.html#autotoc_md47", [
+        [ "Intermediate data products for checking performance (overwriting output from <tt>ConfusionFit</tt>)", "md_gbfisher_README.html#autotoc_md48", null ]
       ] ],
-      [ "Estimate errors", "md_gbfisher_README.html#autotoc_md43", null ]
+      [ "Estimate errors", "md_gbfisher_README.html#autotoc_md49", null ],
+      [ "Example for input file <tt>FisherGalaxy_LDC_Radler_galaxy_key.dat</tt>:", "md_gbfisher_README.html#autotoc_md50", null ]
+    ] ],
+    [ "GlobalFit Manual", "md_globalfit_README.html", [
+      [ "Introduction", "md_globalfit_README.html#autotoc_md52", [
+        [ "C Dependencies", "md_globalfit_README.html#autotoc_md53", null ],
+        [ "Installation", "md_globalfit_README.html#autotoc_md54", null ]
+      ] ],
+      [ "Example use cases for GlobalFit", "md_globalfit_README.html#autotoc_md55", null ]
     ] ],
     [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
       [ "Class Members", "functions.html", [
-        [ "All", "functions.html", null ],
-        [ "Variables", "functions_vars.html", null ]
+        [ "All", "functions.html", "functions_dup" ],
+        [ "Variables", "functions_vars.html", "functions_vars" ]
       ] ]
     ] ],
     [ "Files", "files.html", [
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
-        [ "All", "globals.html", null ],
+        [ "All", "globals.html", "globals_dup" ],
         [ "Functions", "globals_func.html", null ],
-        [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -102,9 +118,10 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"BayesLine_8h_source.html",
-"structBayesLinePriors.html#a67266b78521d2837ca45549b26e2bc01",
-"structProposal.html#a91c51efbd6006aa8484de086ebca34ef"
+"Constants_8h.html",
+"LISA_8h.html#aa529ff8364ddadc0736d2f117db86702",
+"structData.html#abed85a6931aef1878aa9a5e1492a4677",
+"structSample.html#aed2fe20859fd1142bf5225a05947bc2d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

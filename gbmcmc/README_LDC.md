@@ -1,4 +1,4 @@
-## Workflow for processing LDC Data
+## Workflow for processing LDC Radler Data
 
 Fourier domain analysis of the LISA Data Challenge (LDC) data (Radler Galaxy and 10 Galactic Binary (GB) sources) with `gb_mcmc`.
 

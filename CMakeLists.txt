@@ -1,4 +1,4 @@
-# CMakeTutorial
+# ldasoft
 
 # This minimum version is mostly set in order to get a newer version
 # of the FindMPI check.  Note that you can easily install a newer cmake version
@@ -15,16 +15,24 @@ foreach(policy
   endif()
 endforeach()
 
-project(CMakeTutorial VERSION 1.0.0 LANGUAGES C)
-
-# set cflags
-
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -ffast-math -Wall -O3 -ftree-vectorize -std=gnu99")
+project(ldasoft VERSION 1.0.0 LANGUAGES C)
 
 # External packages
-
 find_package(GSL REQUIRED)
+find_package(OpenMP REQUIRED)
+find_package(HDF5 REQUIRED)
+find_package(MPI REQUIRED)
+find_package(MBH)
 
+# Set compiler
+set(CMAKE_C_COMPILER mpicc)
+
+# set cflags
+if(APPLE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xpreprocessor")
+endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -ffast-math -Wall -ftree-vectorize -std=gnu99")
 
 # Set git version header file
 message(STATUS "Resolving GIT Version")
@@ -62,6 +70,13 @@ set (GITVERSION "\"${_build_version}\"")
 
 # Internal products
 
+
 add_subdirectory(tools)
+add_subdirectory(lisa)
 add_subdirectory(gbmcmc)
-add_subdirectory(gbfisher)
+add_subdirectory(noise)
+if(MBH_FOUND)
+  add_subdirectory(globalfit)
+else()
+   message(STATUS "MBH module not found, skipping GlobalFit install")
+endif()

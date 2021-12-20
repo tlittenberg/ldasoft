@@ -23,15 +23,15 @@
 
 #include <gsl/gsl_fft_complex.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryWaveform.h"
 
 
-double galactic_binary_Amp(double Mc, double f0, double D, double T)
+double galactic_binary_Amp(double Mc, double f0, double D)
 {
     double f = f0;//T;
     double M = Mc*TSUN;
@@ -39,20 +39,20 @@ double galactic_binary_Amp(double Mc, double f0, double D, double T)
     
     return 2.*pow(pow(M,5)*pow(M_PI*f,2),1./3.)/dL;
 }
-double galactic_binary_fdot(double Mc, double f0, double T)
+double galactic_binary_fdot(double Mc, double f0)
 {
-    double f = f0;//T;
+    double f = f0;
     double M = Mc*TSUN;
     double Q = 19.2;//96./5.
     
     return Q*pow(pow(M_PI,8)*pow(M,5)*pow(f,11),1./3.);  
 }
-double galactic_binary_Mc(double f0, double dfdt, double T)
+double galactic_binary_Mc(double f0, double dfdt)
 {
-    double f = f0;///T;
-    double fd = dfdt;//(T*T);
+    double f = f0;
+    double fd = dfdt;
     double pi83 = 21.170591578193; //pow(pi,8./3.)
-                                   //printf("!!!%g,%g,%g\n",f,fd,TSUN);
+
     return pow(fd/(96./5.)/pi83/pow(f,11./3.), 3./5.)/TSUN;
 }
 
@@ -92,19 +92,13 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         dhdx[n] = malloc(sizeof(struct TDI));
         alloc_tdi(dhdx[n], data->N, data->Nchannel);
     }
-    //  printf("Parameters = {\n");
-    //  for(j=0; j<NP; j++)
-    //  {
-    //    printf("   %g\n", source->params[j]);
-    //  }
-    //  printf("}\n");
     
     /* assumes all the parameters are log or angle */
     int N2 = data->N*2;
     for(i=0; i<NP; i++)
     {
         //step size for derivatives
-        invstep = invepsilon2;///source->params[i];
+        invstep = invepsilon2;
         
         // copy parameters
         for(j=0; j<NP; j++)
@@ -114,8 +108,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         }
         
         // perturb parameters
-        wave_p->params[i] += epsilon;//*source->params[i];
-        wave_m->params[i] -= epsilon;//*source->params[i];
+        wave_p->params[i] += epsilon;
+        wave_m->params[i] -= epsilon;
         
         // complete info in source structure
         map_array_to_params(wave_p, wave_p->params, data->T);
@@ -177,21 +171,17 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             }
             if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
             {
-                fprintf(stderr,"GalacticBinaryWaveform.c:141: WARNING: nan matrix element, setting contribution to matrix element to 0?\n");
+                fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,__FILE__);
                 fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->SnA[data->N/2],noise->SnE[data->N/2]);
                 for(int k=0; k<NP; k++)
                 {
                     fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
                 }
-                //exit(1);
                 source->fisher_matrix[i][j] = 10.0;
             }
-            //fprintf(stderr, "F%i%i = %g ",i,j,source->fisher_matrix[i][j]);
             source->fisher_matrix[j][i] = source->fisher_matrix[i][j];
         }
-        //fprintf(stderr, "\n");
     }
-    //fprintf(stderr, "\n");
     
     // Calculate eigenvalues and eigenvectors of fisher matrix
     matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, NP);
@@ -348,8 +338,6 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     Aplus  =  amp*(1.+cosi*cosi);
     Across = -amp*(2.0*cosi);
     
-    //TODO: changed GB phase to match LDC, but why?
-    //df = PI2*(f0 - ((double)q)/T);
     df = PI2*(((double)q)/T);
     
     //Calculate constant pieces of transfer functions
@@ -365,17 +353,21 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     k[1] = -sinth*cosph;  k[2] = -sinth*sinph;  k[3] = -costh;
     
     //GW polarization basis tensors
+    /*
+     * LDC convention:
+     * https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc
+     */
     for(i=1;i<=3;i++)
     {
         for(j=1;j<=3;j++)
         {
-            eplus[i][j]  = u[i]*u[j] - v[i]*v[j];
+            eplus[i][j]  = v[i]*v[j] - u[i]*u[j];
             ecross[i][j] = u[i]*v[j] + v[i]*u[j];
         }
     }
     
     
-    /*****************************   Main Loop   **********************************/
+    /* Main loop over signal bandwidth */
     for(n=1; n<=BW; n++)
     {
         //First time sample must be at t=0 for phasing
@@ -447,9 +439,11 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         for(i=1; i<=3; i++)
         {
             //Argument of complex exponentials
-            //TODO: changed GB phase to match LDC, but why?
-            //double arg2 = df*t + phi0 - PI2*kdotx[i]*f0 + PI2*f0*t0;
-            double arg2 = PI2*f0*xi[i] + phi0 - df*t;
+            /*
+             * LDC phase parameter in key files is
+             * -phi0, hence the -phi0 in arg2
+             */
+            double arg2 = PI2*f0*xi[i] - phi0 - df*t;
             
             
             //First order frequency evolution
@@ -472,24 +466,31 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                 if(i!=j)
                 {
                     //Argument of transfer function
-                    //TODO: changed GB phase to match LDC, but why?
-                    //double arg1 = 0.5*fonfs[i]*(1.0 - kdotr[i][j]);
+                    /*
+                     * Set to match Radler LDC convention
+                     *
+                     https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc
+                     */
                     double arg1 = 0.5*fonfs[i]*(1.0 + kdotr[i][j]);
                     
                     //Transfer function
-                    double sinc = 0.25*sinf(arg1)/arg1;
+                    double sinc = 0.25*sin(arg1)/arg1;
                     
                     //Real and imaginary pieces of time series (no complex exponential)
                     double tran1r = aevol*(dplus[i][j]*DPr + dcross[i][j]*DCr);
                     double tran1i = aevol*(dplus[i][j]*DPi + dcross[i][j]*DCi);
                     
+                    /*
+                     * Set to match Sangria LDC convention
+                     * which defines the GW as e(-i Phi)
+                    */
                     //Real and imaginry components of complex exponential
-                    double tran2r = cos(arg1 + arg2);
-                    double tran2i = sin(arg1 + arg2);
-                    
+                    double tran2r = cos(arg1 - arg2);
+                    double tran2i = sin(arg1 - arg2);
+
                     //Real & Imaginary part of the slowly evolving signal
-                    TR[i][j] = sinc*(tran1r*tran2r - tran1i*tran2i);
-                    TI[i][j] = sinc*(tran1r*tran2i + tran1i*tran2r);
+                    TR[i][j] = sinc*( tran1r*tran2r + tran1i*tran2i);
+                    TI[i][j] = sinc*(-tran1r*tran2i + tran1i*tran2r);
                 }
             }
         }
@@ -534,6 +535,8 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
     else if(strcmp("frequency",format) == 0)
         LISA_tdi_FF(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+    else if(strcmp("sangria",format) == 0)
+        LISA_tdi_Sangria(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
     else
     {
         fprintf(stderr,"Unsupported data format %s",format);

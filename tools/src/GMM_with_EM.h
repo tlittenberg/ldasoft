@@ -50,6 +50,21 @@
 ///@}
 
 
+/**
+ * \brief Gaussian Mixture Model structure with metadata and pointer to mulitvariate Gaussian
+ */
+struct GMM
+{
+    size_t NP;
+    size_t NMODE;
+    struct MVG **modes;
+};
+
+/**
+ * \brief Parse GMM binary file and populate structre
+ */
+void read_gmm_binary(struct GMM *gmm, char filename[]);
+
 
 /**
  * \brief Show usage
@@ -102,6 +117,11 @@ void write_MVG(struct MVG *mode, FILE *fptr);
 void read_MVG(struct MVG *mode, FILE *fptr);
 
 /**
+ * \brief Deep copy of MVG structure
+ */
+void copy_MVG(struct MVG *origin, struct MVG *copy);
+
+/**
  * \brief Evaluates the probability density of a multviariate Gaussian with input mean \f$\mu\f$
  * and covariance matrix \f$ C \f$.
  * \param[in] x vector of location to evaluate multivariate gaussian
@@ -109,6 +129,7 @@ void read_MVG(struct MVG *mode, FILE *fptr);
  * \param[out] probability \f$ \frac{\exp -\frac{1}{2}\left(x - \mu\right)^T C^{-1} \left(x - \mu\right)}{\sqrt{(2\pi)^N \det C}} \f$
  */
 double multivariate_gaussian(gsl_vector *x, struct MVG *mvg);
+double multivariate_gaussian_no_min(gsl_vector *x, struct MVG *mvg);
 
 /**
  * \brief Wrapper for computing matrix inversion using

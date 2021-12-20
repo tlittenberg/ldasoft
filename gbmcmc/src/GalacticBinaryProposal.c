@@ -33,10 +33,12 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_eigen.h>
 
+#include <omp.h>
+
 #include <GMM_with_EM.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryPrior.h"
@@ -44,6 +46,7 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryFStatistic.h"
 #include "GalacticBinaryProposal.h"
+#include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryMath.h"
 
 
@@ -51,9 +54,11 @@
 #define SNRCAP 10000.0 /* SNR cap on logL */
 
 
-static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal)
+static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal, char runDir[])
 {
-    FILE *fptr = fopen("fstat/Fstat.gpi","w");
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/fstat/Fstat.gpi",runDir);
+    FILE *fptr = fopen(filename,"w");
     
     fprintf(fptr,"!rm Fstat.mp4\n");
     fprintf(fptr,"set terminal pngcairo size 1024,512 enhanced font 'Verdana,12'\n");
@@ -125,12 +130,14 @@ static void write_Fstat_animation(double fmin, double T, struct Proposal *propos
     fclose(fptr);
 }
 
-void setup_frequency_proposal(struct Data *data)
+void setup_frequency_proposal(struct Data *data, struct Flags *flags)
 {
     int BW = 20;
     double *power = data->p;
     double total  = 0.0;
-    FILE *temp = fopen("data/frequency_proposal.dat","w");
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/data/frequency_proposal.dat",flags->runDir);
+    FILE *temp = fopen(filename,"w");
     for(int i=0; i<data->N-BW; i++)
     {
         power[i]=0.0;
@@ -213,9 +220,8 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
         q = (int)(params[0]-data->qmin);
         if(alpha<data->p[q]) check = 0;
         count++;
-        //    printf("params[0]=%.12g, q=%i, alpha=%g, p=%g, pmax=%g\n",params[0],q,alpha,data->p[q],data->pmax);
     }
-    //  printf("============>params[0]=%.12g, q=%i, alpha=%g, p=%g, pmax=%g\n",params[0],q,alpha,data->p[q],data->pmax);
+
     //random draws for other parameters
     for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
     
@@ -230,9 +236,13 @@ double draw_from_prior(struct Data *data, struct Model *model, struct Source *so
 double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
     int NP = source->NP;
-    int NMODES = proposal->size;
     double ran_no[NP];
     
+    //choose which entry
+    int ngmm = (int)floor(gsl_rng_uniform(seed)*proposal->Ngmm);
+    int NMODES = proposal->gmm[ngmm]->NMODE;
+    
+    struct MVG **modes = proposal->gmm[ngmm]->modes;
     struct MVG *mode = NULL;
     
     //pick which mode
@@ -240,7 +250,7 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     double p = 1.;
     do {
         k = (int)floor(gsl_rng_uniform(seed)*NMODES);
-        mode = proposal->modes[k];
+        mode = modes[k];
         p = gsl_rng_uniform(seed);
     } while (p>mode->p);
     
@@ -279,13 +289,21 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     if(NP>7) source->dfdt = x[7];
     if(NP>8) source->d2fdt2 = x[8];
     map_params_to_array(source, params, data->T);
-            
-    return evaluate_gmm_prior(data, proposal->modes, NMODES, params);
+    
+    return gmm_prior_density(data, model, source, proposal, params);
 }
 
 double gmm_prior_density(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params)
 {
-    return evaluate_gmm_prior(data, proposal->modes, proposal->size, params);
+    double p = 0;
+    
+    /* sum over modes */
+    for(int n=0; n<proposal->Ngmm; n++)
+    {
+        p += exp(evaluate_gmm_prior(data, proposal->gmm[n], params));
+    }
+        
+    return log(p/(double)proposal->Ngmm);
 }
 
 double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -498,13 +516,6 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
         jump[i] = 0.0;
     }
     
-    //decompose eigenjumps into paramter directions
-    /*for(i=0; i<NP; i++) for (j=0; j<NP; j++)
-     {
-     jump[j] += Amps[i]*source->fisher_evectr[j][i];
-     if(jump[j]!=jump[j])jump[j]=0.0;
-     }*/
-    
     //choose one eigenvector to jump along
     i = (int)(gsl_rng_uniform(seed)*(double)NP);
     for (j=0; j<NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
@@ -564,26 +575,15 @@ double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source 
     
     for(int n=0; n<NP; n++)
     {
-        if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1])
-        {
-            //          printf(" \ncdf: n=%d and params[n]=%g\n",n,params[n]);
-            return -INFINITY;
-            
-        }
+        if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
         
         //find samples either end of p-value
-        if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1])
-        {
-            return -INFINITY;
-            
-        }
-        else
-        {
-            i=binary_search(cdf[n],0,N,params[n]);
-            j=i+1;
-            while(cdf[n][j]==cdf[n][i]) j++;
-            logP += log(  ((double)(j-i)/N) /  (cdf[n][j]-cdf[n][i])  );
-        }
+        if(params[n]<cdf[n][0] || params[n]>= cdf[n][N-1]) return -INFINITY;
+        
+        i=binary_search(cdf[n],0,N,params[n]);
+        j=i+1;
+        while(cdf[n][j]==cdf[n][i]) j++;
+        logP += log(  ((double)(j-i)/N) /  (cdf[n][j]-cdf[n][i])  );
     }
     return logP;
 }
@@ -592,10 +592,9 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
 {
     int NP = source->NP;
     double ran_no[NP];
-    int ns=0;
-    //  proposal->size = 1;
-    ns=(int)floor(gsl_rng_uniform(seed)*proposal->size);
-    //  printf("\nproposing from from ns=%d\n",ns);
+
+    int ns=(int)floor(gsl_rng_uniform(seed)*proposal->size);
+
     //pick which mode to propose to
     int mode;
     if (gsl_rng_uniform(seed) > (1.0-proposal->vector[4*ns])) mode = 2*ns;
@@ -624,17 +623,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
         for(int k=0; k<NP; k++) params[n] += ran_no[k]*Lij[n][k];
         
     }
-    
-    //  printf("mode %i:{",mode);
-    //  for(int k=0; k<NP; k++)printf("%.12g ",params[k]);
-    //  printf("}\n");
-    /*
-     FILE *fptr = fopen("proposal.dat","a");
-     for(int k=0; k<NP; k++)fprintf(fptr,"%.12g ",params[k]);
-     fprintf(fptr,"\n");
-     fclose(fptr);
-     */
-    
+        
     return cov_density(data, model, source, proposal, params);
 }
 
@@ -805,7 +794,8 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
     
     for(int i=0; i<chain->NP; i++)
     {
-        
+        proposal[i] = malloc(sizeof(struct Proposal));
+
         proposal[i]->trial  = malloc(NC*sizeof(int));
         proposal[i]->accept = malloc(NC*sizeof(int));
         
@@ -891,32 +881,16 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 rjcheck += proposal[i]->rjweight;
                 break;
             case 7:
-                /*
-                sprintf(proposal[i]->name,"cdf draw");
-                proposal[i]->function = &draw_from_cdf;
-                proposal[i]->density  = &cdf_density;
-                proposal[i]->weight   = 0.0;
-                proposal[i]->rjweight = 0.0;
-                if(flags->update)
-                {
-                    //setup_cdf_proposal(data, flags, proposal[i], NMAX);
-                    proposal[i]->weight   = 0.0;
-                    proposal[i]->rjweight = 0.0;
-                }
-                check   += proposal[i]->weight;
-                rjcheck += proposal[i]->rjweight;
-                break;
-                 */
                 sprintf(proposal[i]->name,"gmm draw");
                 proposal[i]->function = &draw_from_gmm_prior;
                 proposal[i]->density = &gmm_prior_density;
                 proposal[i]->weight   = 0.0;
                 proposal[i]->rjweight = 0.0;
-                if(flags->update)
+                if(flags->catalog)
                 {
-                    setup_gmm_proposal(flags, prior, proposal[i]);
+                    setup_gmm_proposal(data, proposal[i]);
                     proposal[i]->weight   = 0.2;
-                    proposal[i]->rjweight = 0.0;
+                    proposal[i]->rjweight = 0.2;
                 }
                 check   += proposal[i]->weight;
                 rjcheck += proposal[i]->rjweight;
@@ -952,22 +926,179 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
         exit(1);
     }
     
-    fprintf(stdout,"\n============== Proposal Cocktail ==============\n");
-    fprintf(stdout,"   MCMC proposals:\n");
-    for(int i=0; i<chain->NP; i++)
+    if(!flags->quiet)
     {
-        if(proposal[i]->weight>0.0)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->weight);
+        fprintf(stdout,"\n============== Proposal Cocktail ==============\n");
+        fprintf(stdout,"   MCMC proposals:\n");
+        for(int i=0; i<chain->NP; i++)
+        {
+            if(proposal[i]->weight>0.0)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->weight);
+        }
+        fprintf(stdout,"   RJMCMC proposals:\n");
+        for(int i=0; i<chain->NP; i++)
+        {
+            if(proposal[i]->rjweight)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->rjweight);
+        }
+        fprintf(stdout,"===============================================\n");
     }
-    fprintf(stdout,"   RJMCMC proposals:\n");
-    for(int i=0; i<chain->NP; i++)
-    {
-        if(proposal[i]->rjweight)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->rjweight);
-    }
-    fprintf(stdout,"===============================================\n");
-    
 }
 
+void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX)
+{
+    int NC = chain->NC;
+    double check  =0.0;
+    double rjcheck=0.0;
+    
+    for(int i=0; i<chain->NP; i++)
+    {
+        proposal[i] = malloc(sizeof(struct Proposal));
 
+        proposal[i]->trial  = malloc(NC*sizeof(int));
+        proposal[i]->accept = malloc(NC*sizeof(int));
+        
+        for(int ic=0; ic<NC; ic++)
+        {
+            proposal[i]->trial[ic]  = 1;
+            proposal[i]->accept[ic] = 0;
+        }
+        
+        switch(i)
+        {
+            case 0:
+                sprintf(proposal[i]->name,"prior");
+                proposal[i]->function = &draw_from_uniform_prior;
+                proposal[i]->density  = &prior_density;
+                proposal[i]->weight   = 0.2;
+                proposal[i]->rjweight = 0.0;
+                setup_prior_proposal(flags, prior, proposal[i]);
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 1:
+                sprintf(proposal[i]->name,"fstat draw");
+                //setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
+                proposal[i]->function = &draw_from_fstatistic;
+                proposal[i]->density  = &evaluate_fstatistic_proposal;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0; //that's a 1 all right.  don't panic
+                check += proposal[i]->weight;
+                break;
+            case 2:
+                sprintf(proposal[i]->name,"fstat jump");
+                
+                //re-use setup of fstat proposal from case 0
+                proposal[i]->size   = proposal[1]->size;
+                proposal[i]->norm   = proposal[1]->norm;
+                proposal[i]->maxp   = proposal[1]->maxp;
+                proposal[i]->vector = proposal[1]->vector;
+                proposal[i]->matrix = proposal[1]->matrix;
+                proposal[i]->tensor = proposal[1]->tensor;
+                
+                proposal[i]->function = &jump_from_fstatistic;
+                proposal[i]->density  = &evaluate_fstatistic_proposal;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 3:
+                sprintf(proposal[i]->name,"extrinsic prior");
+                proposal[i]->function = &draw_from_extrinsic_prior;
+                proposal[i]->density  = &prior_density;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 4:
+                sprintf(proposal[i]->name,"fisher");
+                proposal[i]->function = &draw_from_fisher;
+                proposal[i]->density  = &symmetric_density;
+                proposal[i]->weight = 1.0; //that's a 1 all right.  don't panic
+                proposal[i]->rjweight = 0.0;
+                //check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 5:
+                sprintf(proposal[i]->name,"fm shift");
+                proposal[i]->function = &fm_shift;
+                proposal[i]->density  = &symmetric_density;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 6:
+                sprintf(proposal[i]->name,"psi-phi jump");
+                proposal[i]->function = &psi_phi_jump;
+                proposal[i]->density  = &symmetric_density;
+                proposal[i]->weight   = 0.2;
+                proposal[i]->rjweight = 0.0;
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 7:
+                sprintf(proposal[i]->name,"gmm draw");
+                proposal[i]->function = &draw_from_gmm_prior;
+                proposal[i]->density = &gmm_prior_density;
+                proposal[i]->weight   = 0.0;
+                proposal[i]->rjweight = 0.0;
+                if(flags->catalog)
+                {
+                    setup_gmm_proposal(data, proposal[i]);
+                    proposal[i]->weight   = 0.0;
+                    proposal[i]->rjweight = 0.0;
+                }
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            case 8:
+                sprintf(proposal[i]->name,"cov draw");
+                proposal[i]->function = &draw_from_cov;
+                proposal[i]->density  = &cov_density;
+                proposal[i]->weight  = 0.0;
+                proposal[i]->rjweight = 0.0;
+                if(flags->updateCov)
+                {
+                    setup_covariance_proposal(data, flags, proposal[i]);
+                    proposal[i]->weight   = 0.0;
+                    proposal[i]->rjweight = 0.0;
+                }
+                check   += proposal[i]->weight;
+                rjcheck += proposal[i]->rjweight;
+                break;
+            default:
+                break;
+        }
+    }
+    //Fisher proposal fills in the cracks for fixed D moves
+    proposal[4]->weight -= check;
+    
+    //Fstat proposal fills in the cracks for trans D moves
+    proposal[1]->rjweight -= rjcheck;
+    
+    if(proposal[4]->weight<0.0 || proposal[1]->rjweight < 0.0)
+    {
+        fprintf(stderr,"Proposal weights not normalized (line %d of file %s)\n",__LINE__,__FILE__);
+        exit(1);
+    }
+    
+    if(!flags->quiet)
+    {
+        fprintf(stdout,"\n============== Proposal Cocktail ==============\n");
+        fprintf(stdout,"   MCMC proposals:\n");
+        for(int i=0; i<chain->NP; i++)
+        {
+            if(proposal[i]->weight>0.0)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->weight);
+        }
+        fprintf(stdout,"   RJMCMC proposals:\n");
+        for(int i=0; i<chain->NP; i++)
+        {
+            if(proposal[i]->rjweight)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->rjweight);
+        }
+        fprintf(stdout,"===============================================\n");
+    }
+}
 
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal)
 {
@@ -998,11 +1129,14 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     double d_theta = 2./(double)n_theta;
     double d_phi   = PI2/(double)n_phi;
     
-    fprintf(stdout,"\n============ F-statistic proposal ============\n");
-    fprintf(stdout,"   n_f     = %i\n",n_f);
-    fprintf(stdout,"   n_theta = %i\n",n_theta);
-    fprintf(stdout,"   n_phi   = %i\n",n_phi);
-    fprintf(stdout,"   cap     = %g\n",SNRCAP);
+    if(!flags->quiet)
+    {
+        fprintf(stdout,"\n============ F-statistic proposal ============\n");
+        fprintf(stdout,"   n_f     = %i\n",n_f);
+        fprintf(stdout,"   n_theta = %i\n",n_theta);
+        fprintf(stdout,"   n_phi   = %i\n",n_phi);
+        fprintf(stdout,"   cap     = %g\n",SNRCAP);
+    }
     
     double fdot = 0.0; //TODO: what to do about fdot...
     
@@ -1052,37 +1186,47 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     //loop over sub-bins
     for(int i=0; i<n_f; i++)
     {
-        if(i%(n_f/100)==0)printProgress((double)i/(double)n_f);
+        if(n_f<100)
+        {
+            if(!flags->quiet) printProgress((double)i/(double)n_f);
+        }
+        else
+        {
+            if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
+        }
         
         double q = (double)(data->qmin) + (double)(i)*d_f;
         double f = q/data->T;
         
         
         //loop over colatitude bins
+        #pragma omp parallel for num_threads(flags->threads) collapse(2)
         for (int j=0; j<n_theta; j++)
         {
-            double theta = acos(-1*(-1. + (double)j*d_theta));
-            
             //loop over longitude bins
             for(int k=0; k<n_phi; k++)
             {
-                double phi = PI2 - (double)k*d_phi;
+                double theta = acos((-1. + (double)j*d_theta));
+                double phi = (double)k*d_phi;
                 
                 if(i>0 && i<n_f-1)
                 {
                     get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
                     
                     if(logL_AE > maxLogL) maxLogL = logL_AE;
-                    //if(logL_AE > SNRCAP)  logL_AE = SNRCAP;
+                    //if(logL_AE > SNRCAP)  logL_AE = SNRCAP;//TODO: Test SNRCAP in fstatistic
                     
                     proposal->tensor[i][j][k] = logL_AE;//sqrt(2*logL_AE);
                 }
-                
-                norm += proposal->tensor[i][j][k];
-                
             }//end loop over longitude bins
         }//end loop over colatitude bins
     }//end loop over sub-bins
+    
+    for(int i=0; i<n_f; i++)
+        for(int j=0; j<n_theta; j++)
+            for(int k=0; k<n_phi; k++)
+                norm += proposal->tensor[i][j][k];
+
     
     //normalize
     proposal->norm = (n_f*n_theta*n_phi)/norm;
@@ -1092,12 +1236,14 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     
     if(flags->verbose)
     {
-        mkdir("fstat",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        char filename[128];
+        char dirname[MAXSTRINGSIZE];
+        sprintf(dirname,"%s/fstat",flags->runDir);
+        mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        char filename[MAXSTRINGSIZE];
         
         for(int i=0; i<n_f; i++)
         {
-            sprintf(filename,"fstat/skymap_%05d.dat",i);
+            sprintf(filename,"%s/fstat/skymap_%05d.dat",flags->runDir,i);
             FILE *fptr=fopen(filename,"w");
             for (int j=0; j<n_theta; j++)
             {
@@ -1113,42 +1259,24 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             }
             fclose(fptr);
         }
-        write_Fstat_animation(data->qmin/data->T, data->T,proposal);
+        write_Fstat_animation(data->qmin/data->T, data->T,proposal,flags->runDir);
     }
     
     free(Fparams);
-    fprintf(stdout,"\n==============================================\n\n");
+    if(!flags->quiet)fprintf(stdout,"\n==============================================\n\n");
     fflush(stdout);
 }
 
-void setup_gmm_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)
+void setup_gmm_proposal(struct Data *data, struct Proposal *proposal)
 {
-    int err=0;
-    int NP = prior->NP;
-    int NMODE = prior->NMODE;
-    proposal->size = NMODE;
-    proposal->modes = malloc(proposal->size*sizeof(struct MVG*));
-
-    for(size_t n=0; n<NMODE; n++)
-    {
-        proposal->modes[n] = malloc(sizeof(struct MVG));
-        alloc_MVG(proposal->modes[n],NP);
-        
-        err += gsl_vector_memcpy(proposal->modes[n]->mu, prior->modes[n]->mu);
-        err += gsl_vector_memcpy(proposal->modes[n]->evalues, prior->modes[n]->evalues);
-        
-        err += gsl_matrix_memcpy(proposal->modes[n]->C, prior->modes[n]->C);
-        err += gsl_matrix_memcpy(proposal->modes[n]->Cinv, prior->modes[n]->Cinv);
-        err += gsl_matrix_memcpy(proposal->modes[n]->L, prior->modes[n]->L);
-        err += gsl_matrix_memcpy(proposal->modes[n]->evectors, prior->modes[n]->evectors);
-        err += gsl_matrix_memcpy(proposal->modes[n]->minmax, prior->modes[n]->minmax);
-
-        proposal->modes[n]->detC = prior->modes[n]->detC;
-        proposal->modes[n]->p = prior->modes[n]->p;
-        proposal->modes[n]->Neff = prior->modes[n]->Neff;
-
-    }
-
+    /* size of joint gmm */
+    proposal->Ngmm = data->catalog->N;
+    
+    /* allocate space for gmm */
+    proposal->gmm = malloc(proposal->Ngmm*sizeof(struct GMM*));
+    
+    /* point to different entries in catalog */
+    for(int n=0; n<proposal->Ngmm; n++) proposal->gmm[n] = data->catalog->entry[n]->gmm;
 }
 
 void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Proposal *proposal)
@@ -1170,7 +1298,7 @@ void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Propo
 
 void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal, int NMAX)
 {
-    fprintf(stdout,"\n============== Chain CDF proposal ==============\n\n");
+    if(!flags->quiet)fprintf(stdout,"\n============== Chain CDF proposal ==============\n\n");
     
     /*
      Use posterior samples from previous run to setup
@@ -1181,7 +1309,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     FILE *fptr=NULL;
     
     //parse chain file
-    fprintf(stdout,"  reading chain file %s...\n",flags->cdfFile);
+    if(!flags->quiet)fprintf(stdout,"  reading chain file %s...\n",flags->cdfFile);
     fptr = fopen(flags->cdfFile,"r");
     proposal->size=0;
     while(!feof(fptr))
@@ -1200,7 +1328,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     rewind(fptr);
     proposal->size--;
     
-    fprintf(stdout, "  samples in chain: %i\n",proposal->size);
+    if(!flags->quiet)fprintf(stdout, "  samples in chain: %i\n",proposal->size);
     
     proposal->vector = calloc(proposal->size , sizeof(double));
     proposal->matrix = malloc(data->NP * sizeof(double*));
@@ -1235,7 +1363,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     
     fclose(fptr);
     
-    fprintf(stdout,"\n================================================\n");
+    if(!flags->quiet)fprintf(stdout,"\n================================================\n");
 }
 
 void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed)
@@ -1322,10 +1450,10 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
 
 void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Proposal *proposal)
 {
-    fprintf(stdout,"\n========== Covariance matrix proposal ==========\n\n");
+    if(!flags->quiet)fprintf(stdout,"\n========== Covariance matrix proposal ==========\n\n");
     
     
-    fprintf(stdout,"   reading covariance matrix %s...\n",flags->covFile);
+    if(!flags->quiet)fprintf(stdout,"   reading covariance matrix %s...\n",flags->covFile);
     FILE *fptr;
     int check;
     fptr = fopen(flags->covFile,"r");
@@ -1339,7 +1467,7 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     }
     
     proposal->size = no_sources;
-    printf("\nproposal->size=%d\n",proposal->size);
+    if(!flags->quiet)fprintf(stdout,"\nproposal->size=%d\n",proposal->size);
     int Ncov=proposal->size*2;
     int NP = data->NP;
     double alpha, detCij;
@@ -1433,7 +1561,7 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     
     fclose(fptr);
     
-    fprintf(stdout,"\n================================================\n");
+    if(!flags->quiet)fprintf(stdout,"\n================================================\n");
 }
 
 double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
@@ -1466,9 +1594,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
         q        = (double)(data->qmin) + i*d_f;
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
-        
-        //printf("q=%g, costheta=%g, phi=%g --> i=%i, j=%i, k=%i\n",q,costheta,phi,(int)i,(int)j,(int)k);
-        
+                
         p = proposal->tensor[(int)i][(int)j][(int)k];
         alpha = gsl_rng_uniform(seed)*proposal->maxp;
         
@@ -1527,7 +1653,6 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
         
-        //printf("q=%g, costheta=%g, phi=%g --> i=%i, j=%i, k=%i\n",q,costheta,phi,(int)i,(int)j,(int)k);
         if(
            ((int)i < 0 || (int)i > n_f-1)     ||
            ((int)j < 0 || (int)j > n_theta-1) ||

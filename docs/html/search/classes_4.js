@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['filter_279',['Filter',['../structFilter.html',1,'']]],
-  ['flags_280',['Flags',['../structFlags.html',1,'']]]
+  ['gbmcmcdata_458',['GBMCMCData',['../structGBMCMCData.html',1,'']]],
+  ['globalfitdata_459',['GlobalFitData',['../structGlobalFitData.html',1,'']]],
+  ['gmm_460',['GMM',['../structGMM.html',1,'']]]
 ];

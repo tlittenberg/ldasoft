@@ -32,14 +32,15 @@
 
 #include <GMM_with_EM.h>
 
-#include "LISA.h"
-#include "Constants.h"
+#include <LISA.h>
+
 #include "GalacticBinary.h"
 #include "GalacticBinaryMath.h"
 #include "GalacticBinaryModel.h"
 #include "GalacticBinaryIO.h"
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryPrior.h"
+#include "GalacticBinaryCatalog.h"
 
 static double loglike(double *x, int D)
 {
@@ -71,14 +72,16 @@ static void rotate_galtoeclip(double *xg, double *xe)
 
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
 {
-    fprintf(stdout,"\n============ Galaxy model sky prior ============\n");
-    fprintf(stdout,"Monte carlo over galaxy model\n");
-    fprintf(stdout,"   Distance to GC = %g kpc\n",GALAXY_RGC);
-    fprintf(stdout,"   Disk Radius    = %g kpc\n",GALAXY_Rd);
-    fprintf(stdout,"   Disk Height    = %g kpc\n",GALAXY_Zd);
-    fprintf(stdout,"   Bulge Radius   = %g kpc\n",GALAXY_Rb);
-    fprintf(stdout,"   Bulge Fraction = %g\n",    GALAXY_A);
-    
+    if(!flags->quiet)
+    {
+        fprintf(stdout,"\n============ Galaxy model sky prior ============\n");
+        fprintf(stdout,"Monte carlo over galaxy model\n");
+        fprintf(stdout,"   Distance to GC = %g kpc\n",GALAXY_RGC);
+        fprintf(stdout,"   Disk Radius    = %g kpc\n",GALAXY_Rd);
+        fprintf(stdout,"   Disk Height    = %g kpc\n",GALAXY_Zd);
+        fprintf(stdout,"   Bulge Radius   = %g kpc\n",GALAXY_Rb);
+        fprintf(stdout,"   Bulge Fraction = %g\n",    GALAXY_A);
+    }
     double *x, *y;  // current and proposed parameters
     int D = 3;  // number of parameters
     int Nth = 200;  // bins in cos theta
@@ -140,9 +143,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
     
     cnt = 0;
     
-    //  if(flags->verbose)chain = fopen("chain.dat", "w");
-    
-    //int MCMC=1000000000;
     for(mc=0; mc<MCMC; mc++)
     {
         if(mc%(MCMC/100)==0)printProgress((double)mc/(double)MCMC);
@@ -232,8 +232,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         
     }
     
-    //  if(flags->verbose)fclose(chain);
-    
     dOmega = 4.0*M_PI/(double)(Nth*Nph);
     
     double uni = 0.1;
@@ -249,7 +247,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         for(iph=0; iph< Nph; iph++)
         {
             xx = yy*prior->skyhist[ith*Nph+iph];
-            //if(fabs(xx)  > 0.0) printf("%e %e %e\n", xx, zz, yy);
             prior->skyhist[ith*Nph+iph] = log(xx + zz);
             if(prior->skyhist[ith*Nph+iph]>prior->skymaxp) prior->skymaxp = prior->skyhist[ith*Nph+iph];
         }
@@ -261,11 +258,9 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         for(ith=0; ith< Nth; ith++)
         {
             xx = -1.0+2.0*((double)(ith)+0.5)/(double)(Nth);
-            //xx *= -1.0;    // plotting flip?
             for(iph=0; iph< Nph; iph++)
             {
                 yy = 2.0*M_PI*((double)(iph)+0.5)/(double)(Nph);
-                //yy = 2.0*M_PI - yy;  // plotting flip?
                 fprintf(fptr,"%e %e %e\n", yy, xx, prior->skyhist[ith*Nph+iph]);
             }
             fprintf(fptr,"\n");
@@ -278,7 +273,7 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
     free(xe);
     free(xg);
     gsl_rng_free (r);
-    fprintf(stdout,"\n================================================\n\n");
+    if(!flags->quiet)fprintf(stdout,"\n================================================\n\n");
     fflush(stdout);
     
 }
@@ -308,9 +303,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
     
     //frequency bin
-    //double qpad = 10;
-    model->prior[0][0] = data->qmin;// + data->qpad;
-    model->prior[0][1] = data->qmax;// - data->qpad;
+    model->prior[0][0] = data->qmin;
+    model->prior[0][1] = data->qmax;
     
     //colatitude
     model->prior[1][0] = -1.0;
@@ -321,8 +315,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     model->prior[2][1] = PI2;
     
     //log amplitude
-    model->prior[3][0] = -60.0;//-54
-    model->prior[3][1] = -48.0;
+    model->prior[3][0] = -60.0;
+    model->prior[3][1] = -45.0;
     
     //cos inclination
     model->prior[4][0] = -1.0;
@@ -357,8 +351,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
         double Mcmin = 0.15;
         double Mcmax = 1.00;
         
-        fdotmin = galactic_binary_fdot(Mcmin, fmin, data->T);
-        fdotmax = galactic_binary_fdot(Mcmax, fmax, data->T);
+        fdotmin = galactic_binary_fdot(Mcmin, fmin);
+        fdotmax = galactic_binary_fdot(Mcmax, fmax);
     }
     
     double fddotmin = 11.0/3.0*fdotmin*fdotmin/fmax;
@@ -368,7 +362,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     {
         fddotmin = -fddotmax;
     }
-    if(verbose)
+    if(verbose && !flags->quiet)
     {
         fprintf(stdout,"\n============== PRIORS ==============\n");
         if(flags->detached)fprintf(stdout,"  Assuming detached binary, Mchirp = [0.15,1]\n");
@@ -514,43 +508,51 @@ int check_range(double *params, double **uniform_prior, int NP)
 
 void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior)
 {
-    fprintf(stdout,"\n========= Gaussian Mixture Model prior =========\n\n");
-    /* allocate GMM structure */
-
-    prior->NP = (size_t)data->NP;
+    //get size of full catalog
+    int N = data->catalog->N;
+    
+    //allocate gmm to include the full catalog
+    prior->gmm = malloc(sizeof(struct GMM));
+    prior->gmm->NP = data->catalog->entry[0]->gmm->NP;
+    prior->gmm->NMODE = 0;
+    for(size_t n=0; n<N; n++) prior->gmm->NMODE += data->catalog->entry[n]->gmm->NMODE;
+    prior->gmm->modes = malloc(prior->gmm->NMODE*sizeof(struct MVG *));
+    
+    for(size_t n=0; n<prior->gmm->NMODE; n++)
+    {
+        prior->gmm->modes[n] = malloc(sizeof(struct MVG));
         
-    FILE *fptr = NULL;
-    /* Read GMM results to binary for pick up by other processes */
-    if( (fptr = fopen(flags->gmmFile,"rb"))!=NULL)
-    {
-        fprintf(stdout,"   Found GMM file %s\n",flags->gmmFile);
-        fread(&prior->NMODE, sizeof prior->NMODE, 1, fptr);
-        fprintf(stdout,"   GMM uses %i modes\n",(int)prior->NMODE);
+        alloc_MVG(prior->gmm->modes[n], (size_t)prior->gmm->NP);
+    }
 
-        prior->modes = malloc(prior->NMODE*sizeof(struct MVG*));
-        for(size_t n=0; n<prior->NMODE; n++)
+    //combine modes into one GMM
+    size_t m=0;
+    for(size_t n=0; n<N; n++)
+    {
+        for(size_t i=0; i<data->catalog->entry[n]->gmm->NMODE; i++)
         {
-            prior->modes[n] = malloc(sizeof(struct MVG));
-            alloc_MVG(prior->modes[n],prior->NP);
-        }
+            copy_MVG(data->catalog->entry[n]->gmm->modes[i],prior->gmm->modes[m]);
 
-        for(size_t n=0; n<prior->NMODE; n++) read_MVG(prior->modes[n],fptr);
-        fclose(fptr);
+            //(clumsily) renormalize modes
+            prior->gmm->modes[m]->p /= (double)N;
+            
+            m++;
+        }
     }
-    else
-    {
-        fprintf(stderr,"Error reading %s\n",flags->gmmFile);
-        fprintf(stderr,"Exiting to system\n");
-        exit(1);
-    }
-    fprintf(stdout,"\n================================================\n\n");
+    
+    //prior->gmm = data->catalog->entry[0]->gmm;
 }
 
-double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, double *params)
+double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
 {
     size_t NP = data->NP;
     gsl_vector *x = gsl_vector_alloc(NP);
-        
+    
+    /* pointers to GMM contents */
+    struct MVG **modes = gmm->modes;
+    size_t NMODES = gmm->NMODE;
+    
+
     //pack parameters into gsl_vector with correct units
     struct Source *source = malloc(sizeof(struct Source));
     alloc_source(source, data->N, data->Nchannel, data->NP);
@@ -560,7 +562,6 @@ double evaluate_gmm_prior(struct Data *data, struct MVG **modes, int NMODES, dou
     gsl_vector_set(x,1,source->costheta);
     gsl_vector_set(x,2,source->phi);
     gsl_vector_set(x,3,log(source->amp));
-    //gsl_vector_set(x,4,acos(source->cosi));
     gsl_vector_set(x,4,source->cosi);
     gsl_vector_set(x,5,source->psi);
     gsl_vector_set(x,6,source->phi0);
@@ -611,7 +612,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     if(check_range(params, uniform_prior, model->NP)) return -INFINITY;
 
     //update from existing runs prior
-    if(flags->update) logP = evaluate_gmm_prior(data, prior->modes, prior->NMODE, params);
+    if(flags->update) logP = evaluate_gmm_prior(data, prior->gmm, params);
     
     //blind search prior
     else
@@ -620,7 +621,15 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
         logP += evalaute_sky_location_prior(params, uniform_prior, model->logPriorVolume, flags->galaxyPrior, prior->skyhist, prior->dcostheta, prior->dphi, prior->nphi);
         
         //amplitude prior
-        logP += evaluate_snr_prior(data, model, params);
+        if(flags->snrPrior)
+        {
+            logP += evaluate_snr_prior(data, model, params);
+        }
+        else
+        {
+            if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
+            logP -= model->logPriorVolume[3];
+        }
         
         //everything else uses simple uniform priors
         logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume, model->NP);
@@ -701,8 +710,6 @@ double evalaute_sky_location_prior(double *params, double **uniform_prior, doubl
         }
         else
         {
-            //while(params[2] < uniform_prior[2][0]) params[2] += uniform_prior[2][1]-uniform_prior[2][0];
-            //while(params[2] > uniform_prior[2][1]) params[2] -= uniform_prior[2][1]-uniform_prior[2][0];
             if(params[2]<uniform_prior[2][0] || params[2]>=uniform_prior[2][1])
             {
                 params[2] = atan2(sin(params[2]),cos(params[2]));
@@ -731,7 +738,7 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
     
     double snr = analytic_snr(amp,sn,sf,data->sqT);
     
-    return log(snr_prior(snr));// * snr/amp);
+    return log(snr_prior(snr));
 }
 
 

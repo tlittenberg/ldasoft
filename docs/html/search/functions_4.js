@@ -1,5 +1,9 @@
 var searchData=
 [
-  ['evaluate_5ffstatistic_5fproposal_323',['evaluate_fstatistic_proposal',['../GalacticBinaryProposal_8h.html#aaaea7bf91a5ca99c7c29d1d6b7a8de12',1,'GalacticBinaryProposal.c']]],
-  ['expectation_5fmaximization_324',['expectation_maximization',['../gaussian__mixture__model_8c.html#aa15db2bfc8bbfa6de490962b13cc87af',1,'gaussian_mixture_model.c']]]
+  ['evalaute_5fsky_5flocation_5fprior_531',['evalaute_sky_location_prior',['../GalacticBinaryPrior_8h.html#a8fc1f8587b804b753a5240930e6dfd54',1,'GalacticBinaryPrior.c']]],
+  ['evaluate_5ffstatistic_5fproposal_532',['evaluate_fstatistic_proposal',['../GalacticBinaryProposal_8h.html#aaaea7bf91a5ca99c7c29d1d6b7a8de12',1,'GalacticBinaryProposal.c']]],
+  ['evaluate_5fprior_533',['evaluate_prior',['../GalacticBinaryPrior_8h.html#a4a0d6349cb85dc2815e5d68499caca63',1,'GalacticBinaryPrior.c']]],
+  ['evaluate_5fsnr_5fprior_534',['evaluate_snr_prior',['../GalacticBinaryPrior_8h.html#a6ee03939465c46feba5faba1bd1f3a36',1,'GalacticBinaryPrior.c']]],
+  ['evaluate_5funiform_5fpriors_535',['evaluate_uniform_priors',['../GalacticBinaryPrior_8h.html#adb5c0e2fde9b555330f108c5c4dab69e',1,'GalacticBinaryPrior.c']]],
+  ['expectation_5fmaximization_536',['expectation_maximization',['../GMM__with__EM_8h.html#a896e64226eed9de51a93500a1996f5b6',1,'GMM_with_EM.c']]]
 ];
