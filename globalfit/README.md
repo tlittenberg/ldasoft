@@ -50,21 +50,24 @@ The `padding` argument is the size (in frequency bins) of the overlap between th
 The application sets up the following tree in the run directory for storing the output data
 ```
 .
+├── mbh
+│   ├── src0000
+│   ├── src0001
 ├── noise
 │   ├── chains
 │   ├── checkpoint
 │   └── data
 ├── ucb
-│   ├── seg_0
+│   ├── seg_0000
 │   │   ├── chains
 │   │   ├── checkpoint
 │   │   └── data
-│   └── seg_1
+│   └── seg_0001
 │       ├── chains
 │       ├── checkpoint
 │       └── data
 └── vgb
-    └── seg_0
+    └── seg_0000
         ├── chains
         ├── checkpoint
         └── data
