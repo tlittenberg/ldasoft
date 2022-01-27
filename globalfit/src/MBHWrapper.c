@@ -532,7 +532,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
             m[k]++;
         }
 
-        if(cycle%10==0) print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
+        if(cycle%100==0) print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
 
     }//end cycle
         
