@@ -100,7 +100,8 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"gb_catalog ");
     
     //Required
-    fprintf(fptr,"--fmin %.12g ", fmin);
+    if(flags->NVB>0) fprintf(fptr,"--fmin $2 ");
+    else fprintf(fptr,"--fmin %.12g ", fmin);
     fprintf(fptr,"--samples %i ", samples);
     fprintf(fptr,"--padding %i ",data->qpad);
     fprintf(fptr,"--duration %f ",data->T);

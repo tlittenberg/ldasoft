@@ -532,9 +532,10 @@ int update_mbh_sampler(struct MBHData *mbh_data)
             m[k]++;
         }
 
+        if(cycle%10==0) print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
+
     }//end cycle
         
-    print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
 
     
     // save point estimate of reconstructed waveform power spectrum

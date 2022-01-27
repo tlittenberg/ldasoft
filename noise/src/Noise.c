@@ -274,7 +274,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             int birth = kmin+1;
             model_y->spline->f[birth] = model_x->spline->f[kmin] + (model_x->spline->f[kmax] - model_x->spline->f[kmin])*gsl_rng_uniform(chain->r[ic]);
 
-            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth]);
+            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth])/noise_transfer_function(model_y->spline->f[birth]);
             double Snmin = log(Sn/10);
             double Snmax = log(Sn*1000);
             model_y->spline->SnA[birth] = exp(Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]));

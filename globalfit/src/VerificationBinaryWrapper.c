@@ -270,7 +270,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                 ptmcmc(model,chain,flags);
                 adapt_temperature_ladder(chain, vbmcmc_data->mcmc_step+flags->NBURN);
                 
-                print_chain_files(data, model, chain, flags, vbmcmc_data->mcmc_step);
+                if(vbmcmc_data->mcmc_step%10==0) print_chain_files(data, model, chain, flags, vbmcmc_data->mcmc_step);
                 
                 //track maximum log Likelihood
                 if(vbmcmc_data->mcmc_step%100)
