@@ -632,7 +632,7 @@ int main(int argc, char *argv[])
     }
 
     /* number of update steps for each module (scaled to MBH model update) */
-    int cycle=1;
+    int cycle;
 
     /*
      * Master Blocked Gibbs sampler
@@ -640,7 +640,7 @@ int main(int argc, char *argv[])
      */
     do
     {
-        
+        cycle=1;
         /* ============================= */
         /*     ULTRACOMPACT BINARIES     */
         /* ============================= */
@@ -654,7 +654,7 @@ int main(int argc, char *argv[])
 
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
-            cycle = (int)(mbh_data->cpu_time/gbmcmc_data->cpu_time);
+            if(global_fit->nMBH>0) cycle = (int)(mbh_data->cpu_time/gbmcmc_data->cpu_time);
             for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
         }
@@ -673,7 +673,7 @@ int main(int argc, char *argv[])
             for(int n=0; n<vbmcmc_data->flags->NVB; n++)
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
-            cycle = (int)(mbh_data->cpu_time/vbmcmc_data->cpu_time);
+            if(global_fit->nMBH>0) cycle = (int)(mbh_data->cpu_time/vbmcmc_data->cpu_time);
             for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
         }
@@ -689,7 +689,7 @@ int main(int argc, char *argv[])
 
             select_frequency_segment(noise_data->data, tdi_full);
 
-            cycle = (int)(mbh_data->cpu_time/noise_data->cpu_time);
+            if(global_fit->nMBH>0) cycle = (int)(mbh_data->cpu_time/noise_data->cpu_time);
             for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 noise_data->status = update_noise_sampler(noise_data);
             
