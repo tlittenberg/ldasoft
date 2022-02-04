@@ -26,6 +26,8 @@
 
 #include "GalacticBinaryWrapper.h"
 
+
+
 void alloc_gbmcmc_data(struct GBMCMCData *gbmcmc_data, int procID)
 {
     gbmcmc_data->status = 0;
@@ -69,9 +71,9 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
     /* Load gb catalog cache file for proposals/priors */
     if(flags->catalog)
     {
-        if(procID==0) GalacticBinaryLoadCatalogCache(data, flags);
+        if(procID==procID_min) GalacticBinaryLoadCatalogCache(data, flags);
         
-        broadcast_cache(data, 0, procID);
+        broadcast_cache(data, procID_min, procID);
         
         GalacticBinaryParseCatalogCache(data);
         GalacticBinaryLoadCatalog(data);
