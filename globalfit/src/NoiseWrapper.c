@@ -90,7 +90,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     if(mbh_data->NMBH>0)
     {
         //set limits of noise model to cover both models
-        noise_data->data->fmin = 1./T;//(mbh_data->data->fmin < noise_data->data->fmin ) ? mbh_data->data->fmin : noise_data->data->fmin;
+        noise_data->data->fmin = 2./T;//(mbh_data->data->fmin < noise_data->data->fmin ) ? mbh_data->data->fmin : noise_data->data->fmin;
         noise_data->data->fmax = (mbh_data->data->fmax > noise_data->data->fmax ) ? mbh_data->data->fmax : noise_data->data->fmax;
 
         //pad noise model even more (MBH bandwidth fluctuates)

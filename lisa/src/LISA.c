@@ -852,9 +852,15 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
     /* do our own error catching from interpolator */
     gsl_set_error_handler_off();
     
-    /* set up GSL cubic spline */
-    gsl_spline       *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
-    gsl_interp_accel *acc    = gsl_interp_accel_alloc();
+    /* set up GSL spline */
+    /*
+     Steffen's splines are guaranteed to be monotonic between
+     control points.  Local maxima and minima only occur at
+     at control points. See
+     https://www.gnu.org/software/gsl/doc/html/interp.html#c.gsl_interp_type.gsl_interp_steffen
+     */
+    gsl_spline       *cspline = gsl_spline_alloc(gsl_interp_steffen, N);
+    gsl_interp_accel *acc     = gsl_interp_accel_alloc();
     
     /* get derivatives */
     int status = gsl_spline_init(cspline,x,y,N);

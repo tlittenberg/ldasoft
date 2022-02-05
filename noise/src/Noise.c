@@ -181,12 +181,13 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
 
     
     //update frequency
+    model_y->spline->f[k] = model_x->spline->f[k];
     if(k>0 && k<model_y->spline->N-1)
         model_y->spline->f[k] = model_x->spline->f[k-1] + (model_x->spline->f[k+1] - model_x->spline->f[k-1])*gsl_rng_uniform(chain->r[ic]);
 
     //update amplitude
     double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k])/noise_transfer_function(model_y->spline->f[k]/orbit->fstar);
-    double scale = pow(10., -3.0 + 3.0*gsl_rng_uniform(chain->r[0]));
+    double scale = pow(10., -2.0 + 2.0*gsl_rng_uniform(chain->r[0]));
     model_y->spline->SnA[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
     model_y->spline->SnE[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
     
