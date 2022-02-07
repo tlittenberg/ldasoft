@@ -179,20 +179,20 @@ void select_frequency_segment(struct Data *data, struct TDI *tdi_full)
         int m = data->qmin*2+n;
         
         /* data to be used by sampler */
-        tdi->X[n] = tdi_full->X[m];
-        tdi->Y[n] = tdi_full->Y[m];
-        tdi->Z[n] = tdi_full->Z[m];
+        //tdi->X[n] = tdi_full->X[m];
+        //tdi->Y[n] = tdi_full->Y[m];
+        //tdi->Z[n] = tdi_full->Z[m];
         tdi->A[n] = tdi_full->A[m];
         tdi->E[n] = tdi_full->E[m];
-        tdi->T[n] = tdi_full->T[m];
+        //tdi->T[n] = tdi_full->T[m];
         
         /* raw data to be used for inter-segment gbmcmc swaps */
-        raw->X[n] = tdi_full->X[m];
-        raw->Y[n] = tdi_full->Y[m];
-        raw->Z[n] = tdi_full->Z[m];
+        //raw->X[n] = tdi_full->X[m];
+        //raw->Y[n] = tdi_full->Y[m];
+        //raw->Z[n] = tdi_full->Z[m];
         raw->A[n] = tdi_full->A[m];
         raw->E[n] = tdi_full->E[m];
-        raw->T[n] = tdi_full->T[m];
+        //raw->T[n] = tdi_full->T[m];
     }
 }
 

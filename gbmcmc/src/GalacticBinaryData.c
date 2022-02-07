@@ -126,12 +126,12 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     int N = (int)floor(Tobs/dt);
 
     /* work space for selecting and FT'ing time series */
-    double *X = malloc(N*sizeof(double));
-    double *Y = malloc(N*sizeof(double));
-    double *Z = malloc(N*sizeof(double));
+    //double *X = malloc(N*sizeof(double));
+    //double *Y = malloc(N*sizeof(double));
+    //double *Z = malloc(N*sizeof(double));
     double *A = malloc(N*sizeof(double));
     double *E = malloc(N*sizeof(double));
-    double *T = malloc(N*sizeof(double));
+    //double *T = malloc(N*sizeof(double));
 
     /* Allocate data->tdi structure for Fourier transform output */
     alloc_tdi(tdi, N/2, N_TDI_CHANNELS);
@@ -143,35 +143,35 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     for(int n=0; n<N; n++)
     {
         int m = n_start+n;
-        X[n] = tdi_td->X[m];
-        Y[n] = tdi_td->Y[m];
-        Z[n] = tdi_td->Z[m];
+        //X[n] = tdi_td->X[m];
+        //Y[n] = tdi_td->Y[m];
+        //Z[n] = tdi_td->Z[m];
         A[n] = tdi_td->A[m];
         E[n] = tdi_td->E[m];
-        T[n] = tdi_td->T[m];
+        //T[n] = tdi_td->T[m];
     }
     
     /* Tukey window time-domain TDI channels tdi_td */
     double alpha = (2.0*FILTER_LENGTH/Tobs);
     
-    tukey(X, alpha, N);
-    tukey(Y, alpha, N);
-    tukey(Z, alpha, N);
+    //tukey(X, alpha, N);
+    //tukey(Y, alpha, N);
+    //tukey(Z, alpha, N);
     tukey(A, alpha, N);
     tukey(E, alpha, N);
-    tukey(T, alpha, N);
+    //tukey(T, alpha, N);
     
     
     /* Fourier transform time-domain TDI channels */
     gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (N);
     gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (N);
 
-    gsl_fft_real_transform (X, 1, N, real, work);
-    gsl_fft_real_transform (Y, 1, N, real, work);
-    gsl_fft_real_transform (Z, 1, N, real, work);
+    //gsl_fft_real_transform (X, 1, N, real, work);
+    //gsl_fft_real_transform (Y, 1, N, real, work);
+    //gsl_fft_real_transform (Z, 1, N, real, work);
     gsl_fft_real_transform (A, 1, N, real, work);
     gsl_fft_real_transform (E, 1, N, real, work);
-    gsl_fft_real_transform (T, 1, N, real, work);
+    //gsl_fft_real_transform (T, 1, N, real, work);
 
     /* Normalize FD data */
     double rft_norm = sqrt(Tobs)/(double)N;
@@ -183,32 +183,32 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     
     for(int n=0; n<N; n++)
     {
-        X[n] *= rft_norm;
-        Y[n] *= rft_norm;
-        Z[n] *= rft_norm;
+        //X[n] *= rft_norm;
+        //Y[n] *= rft_norm;
+        //Z[n] *= rft_norm;
         A[n] *= rft_norm;
         E[n] *= rft_norm;
-        T[n] *= rft_norm;
+        //T[n] *= rft_norm;
     }
         
     /* unpack GSL-formatted arrays to the way GBMCMC expects them */
-    unpack_gsl_rft_output(tdi->X, X, N);
-    unpack_gsl_rft_output(tdi->Y, Y, N);
-    unpack_gsl_rft_output(tdi->Z, Z, N);
+    //unpack_gsl_rft_output(tdi->X, X, N);
+    //unpack_gsl_rft_output(tdi->Y, Y, N);
+    //unpack_gsl_rft_output(tdi->Z, Z, N);
     unpack_gsl_rft_output(tdi->A, A, N);
     unpack_gsl_rft_output(tdi->E, E, N);
-    unpack_gsl_rft_output(tdi->T, T, N);
+    //unpack_gsl_rft_output(tdi->T, T, N);
     
     /* Free memory */
     gsl_fft_real_wavetable_free (real);
     gsl_fft_real_workspace_free (work);
     free_tdi(tdi_td);
-    free(X);
-    free(Y);
-    free(Z);
+    //free(X);
+    //free(Y);
+    //free(Z);
     free(A);
     free(E);
-    free(T);
+    //free(T);
     
 }
 
@@ -276,13 +276,17 @@ void GalacticBinaryReadData(struct Data *data, struct Orbit *orbit, struct Flags
     for(int n=0; n<2*data->N; n++)
     {
         int m = data->qmin*2+n;
-        tdi->X[n] = tdi_full->X[m];
-        tdi->Y[n] = tdi_full->Y[m];
-        tdi->Z[n] = tdi_full->Z[m];
+        //tdi->X[n] = tdi_full->X[m];
+        //tdi->Y[n] = tdi_full->Y[m];
+        //tdi->Z[n] = tdi_full->Z[m];
         tdi->A[n] = tdi_full->A[m];
         tdi->E[n] = tdi_full->E[m];
-        tdi->T[n] = tdi_full->T[m];
+        //tdi->T[n] = tdi_full->T[m];
     }
+    free(tdi->X);
+    free(tdi->Y);
+    free(tdi->Z);
+    free(tdi->T);
     
     //Get noise spectrum for data segment
     GalacticBinaryGetNoiseModel(data,orbit,flags);
@@ -548,8 +552,10 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             {
                 int i = n+inj->imin;
                 
+                /*
                 tdi->X[2*i]   = inj->tdi->X[2*n];
                 tdi->X[2*i+1] = inj->tdi->X[2*n+1];
+                 */
                 
                 tdi->A[2*i]   = inj->tdi->A[2*n];
                 tdi->A[2*i+1] = inj->tdi->A[2*n+1];
@@ -631,12 +637,12 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             }
             fclose(fptr);
             
-            //TODO: fill X vectors with A channel for now
+            /*TODO: fill X vectors with A channel for now
             for(int n=0; n<data->N; n++)
             {
                 tdi->X[2*n]   = tdi->A[2*n];
                 tdi->X[2*n+1] = tdi->A[2*n+1];
-            }
+            }*/
             
         }//end jj loop over time segments
         gsl_rng_free(r);
@@ -778,8 +784,10 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 {
                     int i = n+inj->imin;
                     
+                    /*
                     tdi->X[2*i]   += inj->tdi->X[2*n];
                     tdi->X[2*i+1] += inj->tdi->X[2*n+1];
+                     */
                     
                     tdi->A[2*i]   += inj->tdi->A[2*n];
                     tdi->A[2*i+1] += inj->tdi->A[2*n+1];
@@ -880,12 +888,12 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 }
                 fclose(fptr);
                 
-                //TODO: fill X vectors with A channel for now
+                /*TODO: fill X vectors with A channel for now
                 for(int n=0; n<data->N; n++)
                 {
                     tdi->X[2*n]   = tdi->A[2*n];
                     tdi->X[2*n+1] = tdi->A[2*n+1];
-                }
+                }*/
                 
             }//end jj loop over segments
         }//end nn loop over sources in file
@@ -1203,7 +1211,7 @@ void GalacticBinaryCleanEdges(struct Data *data, struct Orbit *orbit, struct Fla
         
         for(int i=0; i<data->N*2; i++)
         {
-            data->tdi[n]->X[i] -= catalog->tdi[n]->X[i];
+            //data->tdi[n]->X[i] -= catalog->tdi[n]->X[i];
             data->tdi[n]->A[i] -= catalog->tdi[n]->A[i];
             data->tdi[n]->E[i] -= catalog->tdi[n]->E[i];
         }

@@ -63,6 +63,29 @@ static void setup_gf_data(struct GlobalFitData *global_fit)
     global_fit->tdi_mbh->delta = global_fit->tdi_full->delta;
 
     copy_tdi(global_fit->tdi_full, global_fit->tdi_store);
+    
+    /* free all unused TDI channels */
+    free(global_fit->tdi_full->X);
+    free(global_fit->tdi_full->Y);
+    free(global_fit->tdi_full->Z);
+    free(global_fit->tdi_full->T);
+    free(global_fit->tdi_store->X);
+    free(global_fit->tdi_store->Y);
+    free(global_fit->tdi_store->Z);
+    free(global_fit->tdi_store->T);
+    free(global_fit->tdi_ucb->X);
+    free(global_fit->tdi_ucb->Y);
+    free(global_fit->tdi_ucb->Z);
+    free(global_fit->tdi_ucb->T);
+    free(global_fit->tdi_vgb->X);
+    free(global_fit->tdi_vgb->Y);
+    free(global_fit->tdi_vgb->Z);
+    free(global_fit->tdi_vgb->T);
+    free(global_fit->tdi_mbh->X);
+    free(global_fit->tdi_mbh->Y);
+    free(global_fit->tdi_mbh->Z);
+    free(global_fit->tdi_mbh->T);
+
 }
 
 static void share_data(struct TDI *tdi_full, int root, int procID)
@@ -75,12 +98,12 @@ static void share_data(struct TDI *tdi_full, int root, int procID)
     
     //now broadcast contents of TDI structure
     MPI_Bcast(&tdi_full->delta, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->X, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->Y, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->Z, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    //MPI_Bcast(tdi_full->X, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    //MPI_Bcast(tdi_full->Y, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    //MPI_Bcast(tdi_full->Z, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
     MPI_Bcast(tdi_full->A, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
     MPI_Bcast(tdi_full->E, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(tdi_full->T, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    //MPI_Bcast(tdi_full->T, 2*tdi_full->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
     
 }
 
