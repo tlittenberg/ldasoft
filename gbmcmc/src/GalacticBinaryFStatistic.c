@@ -112,16 +112,16 @@ void init_M_matrix(struct Filter *F_filter, struct Data *data)
 {
     long i,j;
     
-    F_filter->M_inv_X  = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
+    //F_filter->M_inv_X  = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
     F_filter->M_inv_AE = malloc(4*sizeof(double *));//dmatrix(0,3,0,3);
     for(i=0; i<4; i++)
     {
-        F_filter->M_inv_X[i]  = calloc(4,sizeof(double));//dmatrix(0,3,0,3);
+        //F_filter->M_inv_X[i]  = calloc(4,sizeof(double));//dmatrix(0,3,0,3);
         F_filter->M_inv_AE[i] = calloc(4,sizeof(double));//dmatrix(0,3,0,3);
         
         for (j=0;j<4;j++)
         {
-            F_filter->M_inv_X[i][j]  = 0.0;
+            //F_filter->M_inv_X[i][j]  = 0.0;
             F_filter->M_inv_AE[i][j] = 0.0;
         }
     }
@@ -132,10 +132,12 @@ void init_M_matrix(struct Filter *F_filter, struct Data *data)
 
 void free_Filter(struct Filter *F_filter)
 {
+    /*
     free(F_filter->A1_fX);
     free(F_filter->A2_fX);
     free(F_filter->A3_fX);
     free(F_filter->A4_fX);
+     */
     
     free(F_filter->A1_fA);
     free(F_filter->A2_fA);
@@ -149,10 +151,10 @@ void free_Filter(struct Filter *F_filter)
     
     for(int i=0; i<4; i++)
     {
-        free(F_filter->M_inv_X[i]);
+        //free(F_filter->M_inv_X[i]);
         free(F_filter->M_inv_AE[i]);
     }
-    free(F_filter->M_inv_X);
+    //free(F_filter->M_inv_X);
     free(F_filter->M_inv_AE);
     free(F_filter);
 }
@@ -281,7 +283,8 @@ void get_N(struct Data *data, struct Filter *F_filter)
     long     i,k;
     long     M_filter;
     long q;
-    double *XfLS, *AALS, *EELS;
+    //double *XfLS,
+    double *AALS, *EELS;
     
     /////////
     //
@@ -289,18 +292,24 @@ void get_N(struct Data *data, struct Filter *F_filter)
     // N^{i} = (s|A^{i})
     //
     /////////
-    XfLS = data->tdi[FIXME]->X;
+    //XfLS = data->tdi[FIXME]->X;
     AALS = data->tdi[FIXME]->A;
     EELS = data->tdi[FIXME]->E;
     
     q  = F_filter->q - data->qmin;
     
     M_filter = F_filter->M_filter;
-    
-    F_filter->N1_X = 0.; F_filter->N1_AE = 0.;
-    F_filter->N2_X = 0.; F_filter->N2_AE = 0.;
-    F_filter->N3_X = 0.; F_filter->N3_AE = 0.;
-    F_filter->N4_X = 0.; F_filter->N4_AE = 0.;
+
+    /*
+    F_filter->N1_X = 0.;
+    F_filter->N2_X = 0.;
+    F_filter->N3_X = 0.;
+    F_filter->N4_X = 0.;
+     */
+    F_filter->N1_AE = 0.;
+    F_filter->N2_AE = 0.;
+    F_filter->N3_AE = 0.;
+    F_filter->N4_AE = 0.;
     
     for (i=0; i<M_filter; i++)
     {
@@ -308,11 +317,12 @@ void get_N(struct Data *data, struct Filter *F_filter)
         
         if(k>0 && k<data->N)
         {
-            
+            /*
             F_filter->N1_X  += (XfLS[2*k]*F_filter->A1_fX[2*i] + XfLS[2*k+1]*F_filter->A1_fX[2*i+1])/data->noise[FIXME]->SnX[k];
             F_filter->N2_X  += (XfLS[2*k]*F_filter->A2_fX[2*i] + XfLS[2*k+1]*F_filter->A2_fX[2*i+1])/data->noise[FIXME]->SnX[k];
             F_filter->N3_X  += (XfLS[2*k]*F_filter->A3_fX[2*i] + XfLS[2*k+1]*F_filter->A3_fX[2*i+1])/data->noise[FIXME]->SnX[k];
             F_filter->N4_X  += (XfLS[2*k]*F_filter->A4_fX[2*i] + XfLS[2*k+1]*F_filter->A4_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+             */
             
             F_filter->N1_AE += (AALS[2*k]*F_filter->A1_fA[2*i] + AALS[2*k+1]*F_filter->A1_fA[2*i+1]
                                 +EELS[2*k]*F_filter->A1_fE[2*i] + EELS[2*k+1]*F_filter->A1_fE[2*i+1])/data->noise[FIXME]->SnA[k];
@@ -325,10 +335,12 @@ void get_N(struct Data *data, struct Filter *F_filter)
         }
     }
     
+    /*
     F_filter->N1_X  *= 4.0;
     F_filter->N2_X  *= 4.0;
     F_filter->N3_X  *= 4.0;
     F_filter->N4_X  *= 4.0;
+     */
     
     F_filter->N1_AE *= 4.0;
     F_filter->N2_AE *= 4.0;
@@ -353,6 +365,7 @@ void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct 
         
         if(k>0 && k<data->N)
         {
+            /*
             M_inv_X[0][0] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A1_fX[2*i]
                                   +F_filter->A1_fX[2*i+1]*F_filter->A1_fX[2*i+1])/data->noise[FIXME]->SnX[k];
             M_inv_X[0][1] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A2_fX[2*i]
@@ -376,6 +389,7 @@ void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct 
             
             M_inv_X[3][3] += 4.0*(F_filter->A4_fX[2*i]  *F_filter->A4_fX[2*i]
                                   +F_filter->A4_fX[2*i+1]*F_filter->A4_fX[2*i+1])/data->noise[FIXME]->SnX[k];
+             */
             
             
             
@@ -434,12 +448,12 @@ void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct 
     {
         for (k=j+1; k<4; k++)
         {
-            M_inv_X[k][j]  = M_inv_X[j][k];
+            //M_inv_X[k][j]  = M_inv_X[j][k];
             M_inv_AE[k][j] = M_inv_AE[j][k];
         }
     }
     
-    invert_matrix(M_inv_X,4);
+    //invert_matrix(M_inv_X,4);
     invert_matrix(M_inv_AE,4);
     
 }
@@ -454,13 +468,14 @@ int sgn(double v) {
 void get_F_params(struct Filter *F_filter)
 {
     
-    double Aplus_X,Across_X;
+    //double Aplus_X,Across_X;
     double Aplus_AE,Across_AE;
     
-    double psi_X_Fstat,  c,   A_X_Fstat,  iota_X_Fstat,  phase_X_Fstat;
+    //double psi_X_Fstat,  c,   A_X_Fstat,  iota_X_Fstat,  phase_X_Fstat;
     double psi_AE_Fstat, cAE, A_AE_Fstat, iota_AE_Fstat, phase_AE_Fstat;
     
     // TODO: redundant terms here, save time break it up
+    /*
     double a1p4X = F_filter->a1_X + F_filter->a4_X;
     double a2m3X = F_filter->a2_X - F_filter->a3_X;
     double a1m4X = F_filter->a1_X - F_filter->a4_X;
@@ -477,6 +492,7 @@ void get_F_params(struct Filter *F_filter)
     iota_X_Fstat  = acos(  -Across_X/(Aplus_X + sqrt(Aplus_X*Aplus_X - Across_X*Across_X))  );
     phase_X_Fstat = atan2(  c*(Aplus_X*F_filter->a4_X - Across_X*F_filter->a1_X),
                           -c*(Across_X*F_filter->a3_X + Aplus_X*F_filter->a2_X)  );
+     */
     
     double a1p4AE = F_filter->a1_AE + F_filter->a4_AE;
     double a2m3AE = F_filter->a2_AE - F_filter->a3_AE;
@@ -492,7 +508,7 @@ void get_F_params(struct Filter *F_filter)
     
     psi_AE_Fstat *= 0.5;
     
-    cAE            = (double)sgn(sin(2.0*psi_X_Fstat));
+    cAE            = (double)sgn(sin(2.0*psi_AE_Fstat));
     A_AE_Fstat     = 0.5*(  Aplus_AE + sqrt(Aplus_AE*Aplus_AE - Across_AE*Across_AE)  );
     iota_AE_Fstat  = acos(  -Across_AE/(Aplus_AE + sqrt(Aplus_AE*Aplus_AE - Across_AE*Across_AE))  );
     phase_AE_Fstat = atan2(  cAE*(Aplus_AE*F_filter->a4_AE - Across_AE*F_filter->a1_AE),
@@ -513,12 +529,12 @@ void get_F_params(struct Filter *F_filter)
     // 	printf("phase X: 	%e              phase AE: 	%e\n", tan(phase_X_Fstat)-tan(src->params[6]), tan(phase_AE_Fstat)-tan(src->params[6]));
     //
     // 	printf("\n================================================================================\n\n");
-    
+    /*
     F_filter->psi_X_Fstat   = psi_X_Fstat;
     F_filter->A_X_Fstat     = A_X_Fstat;
     F_filter->iota_X_Fstat  = iota_X_Fstat;
     F_filter->phase_X_Fstat = phase_X_Fstat;
-    
+    */
     F_filter->psi_AE_Fstat   = psi_AE_Fstat;
     F_filter->A_AE_Fstat     = A_AE_Fstat;
     F_filter->iota_AE_Fstat  = iota_AE_Fstat;
@@ -527,6 +543,7 @@ void get_F_params(struct Filter *F_filter)
 
 void calc_Fstat_logL(struct Filter *F_filter)
 {
+    /* X-channel
     F_filter->Fstat_X  = 0.5*(F_filter->M_inv_X[0][0]*F_filter->N1_X*F_filter->N1_X
                               + 2*F_filter->M_inv_X[0][1]*F_filter->N1_X*F_filter->N2_X
                               + 2*F_filter->M_inv_X[0][2]*F_filter->N1_X*F_filter->N3_X
@@ -537,7 +554,9 @@ void calc_Fstat_logL(struct Filter *F_filter)
                               +   F_filter->M_inv_X[2][2]*F_filter->N3_X*F_filter->N3_X
                               + 2*F_filter->M_inv_X[2][3]*F_filter->N3_X*F_filter->N4_X
                               +   F_filter->M_inv_X[3][3]*F_filter->N4_X*F_filter->N4_X);
+     */
     
+    /* AE-channels */
     F_filter->Fstat_AE = 0.5*(F_filter->M_inv_AE[0][0]*F_filter->N1_AE*F_filter->N1_AE
                               + 2*F_filter->M_inv_AE[0][1]*F_filter->N1_AE*F_filter->N2_AE
                               + 2*F_filter->M_inv_AE[0][2]*F_filter->N1_AE*F_filter->N3_AE
@@ -553,6 +572,7 @@ void calc_Fstat_logL(struct Filter *F_filter)
 void calc_a_i(struct Filter *F_filter)
 {
     
+    /* X-channel
     F_filter->a1_X = F_filter->M_inv_X[0][0]*F_filter->N1_X + F_filter->M_inv_X[0][1]*F_filter->N2_X
     +F_filter->M_inv_X[0][2]*F_filter->N3_X + F_filter->M_inv_X[0][3]*F_filter->N4_X;
     F_filter->a2_X = F_filter->M_inv_X[1][0]*F_filter->N1_X + F_filter->M_inv_X[1][1]*F_filter->N2_X
@@ -561,7 +581,9 @@ void calc_a_i(struct Filter *F_filter)
     +F_filter->M_inv_X[2][2]*F_filter->N3_X + F_filter->M_inv_X[2][3]*F_filter->N4_X;
     F_filter->a4_X = F_filter->M_inv_X[3][0]*F_filter->N1_X + F_filter->M_inv_X[3][1]*F_filter->N2_X
     +F_filter->M_inv_X[3][2]*F_filter->N3_X + F_filter->M_inv_X[3][3]*F_filter->N4_X;
+    */
     
+    /* AE-channels */
     F_filter->a1_AE = F_filter->M_inv_AE[0][0]*F_filter->N1_AE + F_filter->M_inv_AE[0][1]*F_filter->N2_AE
     +F_filter->M_inv_AE[0][2]*F_filter->N3_AE + F_filter->M_inv_AE[0][3]*F_filter->N4_AE;
     F_filter->a2_AE = F_filter->M_inv_AE[1][0]*F_filter->N1_AE + F_filter->M_inv_AE[1][1]*F_filter->N2_AE
@@ -614,7 +636,7 @@ void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fd
     
     calc_Fstat_logL(F_filter);
     
-    *logL_X  = F_filter->Fstat_X;
+    //*logL_X  = F_filter->Fstat_X;
     *logL_AE = F_filter->Fstat_AE;
     
     calc_a_i(F_filter);           // calculate the a_{i}'s associated with filters to get F-stat ML params 

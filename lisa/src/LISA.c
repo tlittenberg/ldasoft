@@ -900,12 +900,14 @@ void copy_tdi(struct TDI *origin, struct TDI *copy)
     copy->N        = origin->N;
     copy->Nchannel = origin->Nchannel;
     
+    memcpy(copy->A, origin->A, 2*origin->N*sizeof(double));
+    memcpy(copy->E, origin->E, 2*origin->N*sizeof(double));
+    /*
+    memcpy(copy->T, origin->T, 2*origin->N*sizeof(double));
     memcpy(copy->X, origin->X, 2*origin->N*sizeof(double));
     memcpy(copy->Y, origin->Y, 2*origin->N*sizeof(double));
     memcpy(copy->Z, origin->Z, 2*origin->N*sizeof(double));
-    memcpy(copy->A, origin->A, 2*origin->N*sizeof(double));
-    memcpy(copy->E, origin->E, 2*origin->N*sizeof(double));
-    memcpy(copy->T, origin->T, 2*origin->N*sizeof(double));
+    */
 }
 
 void copy_tdi_segment(struct TDI *origin, struct TDI *copy, int index, int N)
@@ -913,12 +915,14 @@ void copy_tdi_segment(struct TDI *origin, struct TDI *copy, int index, int N)
     copy->N        = origin->N;
     copy->Nchannel = origin->Nchannel;
     index*=2;
+    memcpy(copy->A+index, origin->A+index, 2*N*sizeof(double));
+    memcpy(copy->E+index, origin->E+index, 2*N*sizeof(double));
+    /*
+    memcpy(copy->T+index, origin->T+index, 2*N*sizeof(double));
     memcpy(copy->X+index, origin->X+index, 2*N*sizeof(double));
     memcpy(copy->Y+index, origin->Y+index, 2*N*sizeof(double));
     memcpy(copy->Z+index, origin->Z+index, 2*N*sizeof(double));
-    memcpy(copy->A+index, origin->A+index, 2*N*sizeof(double));
-    memcpy(copy->E+index, origin->E+index, 2*N*sizeof(double));
-    memcpy(copy->T+index, origin->T+index, 2*N*sizeof(double));
+     */
 }
 
 void free_tdi(struct TDI *tdi)

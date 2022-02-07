@@ -628,7 +628,7 @@ void copy_noise(struct Noise *origin, struct Noise *copy)
     copy->etaX = origin->etaX;
     
     memcpy(copy->f,   origin->f,   origin->N*sizeof(double));
-    memcpy(copy->SnX, origin->SnX, origin->N*sizeof(double));
+    //memcpy(copy->SnX, origin->SnX, origin->N*sizeof(double));
     memcpy(copy->SnA, origin->SnA, origin->N*sizeof(double));
     memcpy(copy->SnE, origin->SnE, origin->N*sizeof(double));
     memcpy(copy->transfer, origin->transfer, origin->N*sizeof(double));
