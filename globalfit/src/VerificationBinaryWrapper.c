@@ -47,7 +47,7 @@ void alloc_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
         copy_data(gbmcmc_data->data,vbmcmc_data->data_vec[n]);
         
         vbmcmc_data->chain_vec[n] = malloc(sizeof(struct Chain));
-        vbmcmc_data->chain_vec[n]->NP = gbmcmc_data->chain->NP;
+        vbmcmc_data->chain_vec[n]->NP = 7;
         vbmcmc_data->chain_vec[n]->NC = gbmcmc_data->chain->NC;
     }
 }
@@ -97,9 +97,6 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
         struct Data *data=data_vec[n];
 
         copy_data(gbmcmc_data->data,data);
-        if(data->N>128) data->N=128;  //cap bandwidth of vbmcmc analysis
-        chain->NP = chain_vec[0]->NP; //number of proposals
-        if(chain->NP>8)chain->NP=8;   //don't use fancy GMM proposals
         chain->NC = chain_vec[0]->NC; //number of chains
 
         
@@ -117,11 +114,6 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
     }
     
     /* Setup the rest of the model */
-    vbmcmc_data->prior_vec = malloc(flags->NVB*sizeof(struct Prior *));
-    vbmcmc_data->proposal_vec = malloc(flags->NVB*sizeof(struct Proposal **));
-    vbmcmc_data->trial_vec = malloc(flags->NVB*sizeof(struct Model**));
-    vbmcmc_data->model_vec = malloc(flags->NVB*sizeof(struct Model**));
-
     for(int n=0; n<flags->NVB; n++)
     {
         vbmcmc_data->prior_vec[n] = malloc(sizeof(struct Prior));
