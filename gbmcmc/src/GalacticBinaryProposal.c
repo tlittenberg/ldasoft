@@ -888,9 +888,12 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 proposal[i]->rjweight = 0.0;
                 if(flags->catalog)
                 {
-                    setup_gmm_proposal(data, proposal[i]);
-                    proposal[i]->weight   = 0.2;
-                    proposal[i]->rjweight = 0.2;
+                    if(proposal[i]->Ngmm>0)
+                    {
+                        setup_gmm_proposal(data, proposal[i]);
+                        proposal[i]->weight   = 0.2;
+                        proposal[i]->rjweight = 0.2;
+                    }
                 }
                 check   += proposal[i]->weight;
                 rjcheck += proposal[i]->rjweight;

@@ -46,7 +46,7 @@ void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chai
     
     for(int i=0; i<chain->NC; i++)
     {
-        //memcpy(model[i]->noise[0]->SnX, psd_full->SnX+dq, data->N*sizeof(double));
+        memcpy(model[i]->noise[0]->SnX, psd_full->SnX+dq, data->N*sizeof(double));
         memcpy(model[i]->noise[0]->SnA, psd_full->SnA+dq, data->N*sizeof(double));
         memcpy(model[i]->noise[0]->SnE, psd_full->SnE+dq, data->N*sizeof(double));
     }
@@ -99,47 +99,6 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
     
     alloc_data(noise_data->data, noise_data->flags);
-    /* free unused TDI channels */
-    for(int n=0; n<noise_data->flags->NT; n++)
-    {
-        free(noise_data->data->tdi[n]->T);
-        free(noise_data->data->tdi[n]->X);
-        free(noise_data->data->tdi[n]->Y);
-        free(noise_data->data->tdi[n]->Z);
-
-        free(noise_data->data->raw[n]->T);
-        free(noise_data->data->raw[n]->X);
-        free(noise_data->data->raw[n]->Y);
-        free(noise_data->data->raw[n]->Z);
-        
-        free(noise_data->data->noise[n]->SnX);
-    }
-    
-    /* free unused storage for reconstruction */
-    
-    for(int l=0; l<noise_data->data->Nchannel; l++)
-    {
-        for(int n=0; n<noise_data->flags->NT; n++)
-        {
-            if(procID!=0)free(noise_data->data->S_pow[l][n]);
-            free(noise_data->data->h_pow[l][n]);
-            free(noise_data->data->r_pow[l][n]);
-            free(noise_data->data->h_rec[l][n]);
-            free(noise_data->data->h_res[l][n]);
-        }
-        
-        if(procID!=0)free(noise_data->data->S_pow[l]);
-        free(noise_data->data->h_pow[l]);
-        free(noise_data->data->r_pow[l]);
-        free(noise_data->data->h_rec[l]);
-        free(noise_data->data->h_res[l]);
-    }
-    if(procID!=0)free(noise_data->data->S_pow);
-    free(noise_data->data->h_pow);
-    free(noise_data->data->r_pow);
-    free(noise_data->data->h_rec);
-    free(noise_data->data->h_res);
-
     
     noise_data->model = malloc(sizeof(struct SplineModel*)*gbmcmc_data->chain->NC);
     
