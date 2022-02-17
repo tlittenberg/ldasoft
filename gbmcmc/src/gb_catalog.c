@@ -96,6 +96,7 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
     flags->NDATA       = 1;
     flags->DMAX        = DMAX_default;
     flags->catalog     = 0;
+    flags->verbose     = 0;
     flags->simNoise = 1; //hijack simNoise flag for noise model
     data->pmax      = 0.5; //default match tolerance for inclusion (hijacked pmax in data structure)
     *Tcatalog          = -1.0;

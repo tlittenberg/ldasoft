@@ -697,7 +697,7 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
         //set priors for each model
         modes[k]->p = (double)1./(double)NMODE;
         
-        //get inverset, determinant, etc.
+        //get inverse, determinant, etc.
         invert_gsl_matrix(modes[k]->C, modes[k]->Cinv, modes[k]->L, &modes[k]->detC, &R);
     }
     
@@ -747,6 +747,18 @@ void logit_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xma
     for(size_t n=0; n<N; n++)
     {
         double x = gsl_vector_get(x_vec,n);
+        if(x<xmin || x>xmax)
+        {
+            /*
+             This is a safety check incase there are small differences
+             between the prior setup by gb_catalog and the one used by
+             the analysis.  This was happening for the fdot parameter
+             which is a strong function of fmin, and inconsistencies
+             in fmin between global_fit and gb_catalog runs.
+             */
+            if(x>xmax) x -= 2.*(x-xmax);
+            if(x<xmin) x += 2.*(xmin-x);
+        }
         double y = logit(x,xmin,xmax);//log( (x - xmin)/(xmax - x) );
         gsl_vector_set(y_vec,n,y);
     }

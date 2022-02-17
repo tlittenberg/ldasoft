@@ -56,7 +56,7 @@ void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chai
 void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID)
 {
     noise_data->data->downsample = gbmcmc_data->data->downsample;
-    noise_data->data->Nwave      = gbmcmc_data->data->Nwave;
+    noise_data->data->Nwave      = 100;
     
     noise_data->chain->NC      = gbmcmc_data->chain->NC;
     noise_data->data->Nchannel = gbmcmc_data->data->Nchannel;
@@ -90,7 +90,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     if(mbh_data->NMBH>0)
     {
         //set limits of noise model to cover both models
-        noise_data->data->fmin = 1./T;//(mbh_data->data->fmin < noise_data->data->fmin ) ? mbh_data->data->fmin : noise_data->data->fmin;
+        noise_data->data->fmin = 2./T;//(mbh_data->data->fmin < noise_data->data->fmin ) ? mbh_data->data->fmin : noise_data->data->fmin;
         noise_data->data->fmax = (mbh_data->data->fmax > noise_data->data->fmax ) ? mbh_data->data->fmax : noise_data->data->fmax;
 
         //pad noise model even more (MBH bandwidth fluctuates)
@@ -156,6 +156,7 @@ void initialize_noise_state(struct NoiseData *noise_data)
 
     int NC = chain->NC;
     int Nspline = noise_data->nProc+1;
+    if(Nspline>50) Nspline=50;
     
     int psd_check=0;
     while(!psd_check) //guard against pathological model

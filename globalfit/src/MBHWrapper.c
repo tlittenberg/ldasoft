@@ -238,7 +238,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     mbh_data->paramx = double_matrix(mbh_data->NC,NParams);
     mbh_data->paramy = double_matrix(mbh_data->NC,NParams);
     mbh_data->history = double_tensor(mbh_data->NC,mbh_data->NH,NParams);
-    mbh_data->hrec = double_tensor(mbh_data->data->N/2, mbh_data->data->Nch, mbh_data->NH);
+    mbh_data->hrec = double_tensor(mbh_data->data->N/2, mbh_data->data->Nch, 100);
     mbh_data->ejump = double_matrix(mbh_data->NC,NParams);
     mbh_data->Fisher = double_tensor(mbh_data->NC,NParams,NParams);
     mbh_data->evec = double_tensor(mbh_data->NC,NParams,NParams);
@@ -252,11 +252,17 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     
     for (int i=0; i< mbh_data->NC; i++) mbh_data->who[i] = i;
 
-    /* zero out hrec */
+    /* zero out hrec
+     Initializing arrays to zero costs more memory than allocating them!
+     Only initialize arrays that will get used -- these are big!
+     */
+    if(procID>=mbh_data->procID_min && procID <=mbh_data->procID_max)
+    {
     for(int i=0; i<mbh_data->data->N/2; i++)
         for(int j=0; j<mbh_data->data->Nch; j++)
-            for(int k=0; k<mbh_data->NH; k++)
+            for(int k=0; k<100; k++)
                 mbh_data->hrec[i][j][k] = 0.0;
+    }
     
     /* Set up RNG for MBH sampler */
     const gsl_rng_type * P;
@@ -532,9 +538,10 @@ int update_mbh_sampler(struct MBHData *mbh_data)
             m[k]++;
         }
 
+        if(cycle%100==0) print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
+
     }//end cycle
         
-    print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
 
     
     // save point estimate of reconstructed waveform power spectrum
@@ -543,8 +550,8 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     {
         int re = 2*(k-mbh_data->het->MN);
         int im = re+1;
-        hrec[k][0][i] = mbh_data->tdi->A[re]*mbh_data->tdi->A[re]+mbh_data->tdi->A[im]*mbh_data->tdi->A[im];
-        hrec[k][1][i] = mbh_data->tdi->E[re]*mbh_data->tdi->E[re]+mbh_data->tdi->E[im]*mbh_data->tdi->E[im];
+        hrec[k][0][i%10] = mbh_data->tdi->A[re]*mbh_data->tdi->A[re]+mbh_data->tdi->A[im]*mbh_data->tdi->A[im];
+        hrec[k][1][i%10] = mbh_data->tdi->E[re]*mbh_data->tdi->E[re]+mbh_data->tdi->E[im]*mbh_data->tdi->E[im];
     }
 
     
@@ -631,7 +638,7 @@ void print_mbh_waveform_reconstruction(struct MBHData *mbh_data)
     {
         for(int m=0; m<mbh_data->data->Nch; m++)
         {
-            gsl_sort(mbh_data->hrec[n][m],1,mbh_data->NH);
+            gsl_sort(mbh_data->hrec[n][m],1,100);
         }
     }
     

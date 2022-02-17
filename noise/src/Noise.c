@@ -87,8 +87,8 @@ void generate_spline_noise_model(struct SplineModel *model)
          -this catches the sharp features in the spectrum from f/fstar
          -without needing to interpolate
          */
-        psd->SnA[n]*=psd->transfer[n];
-        psd->SnE[n]*=psd->transfer[n];
+        psd->SnA[n]+=psd->transfer[n];
+        psd->SnE[n]+=psd->transfer[n];
     }
 }
 
@@ -181,12 +181,13 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
 
     
     //update frequency
+    model_y->spline->f[k] = model_x->spline->f[k];
     if(k>0 && k<model_y->spline->N-1)
         model_y->spline->f[k] = model_x->spline->f[k-1] + (model_x->spline->f[k+1] - model_x->spline->f[k-1])*gsl_rng_uniform(chain->r[ic]);
 
     //update amplitude
-    double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k]);
-    double scale = pow(10., -3.0 + 3.0*gsl_rng_uniform(chain->r[0]));
+    double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k]);//noise_transfer_function(model_y->spline->f[k]/orbit->fstar);
+    double scale = pow(10., -2.0 + 2.0*gsl_rng_uniform(chain->r[0]));
     model_y->spline->SnA[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
     model_y->spline->SnE[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
     
@@ -274,9 +275,9 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             int birth = kmin+1;
             model_y->spline->f[birth] = model_x->spline->f[kmin] + (model_x->spline->f[kmax] - model_x->spline->f[kmin])*gsl_rng_uniform(chain->r[ic]);
 
-            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth]);
+            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth]);//noise_transfer_function(model_y->spline->f[birth]/orbit->fstar);
             double Snmin = log(Sn/10);
-            double Snmax = log(Sn*1000);
+            double Snmax = log(Sn*100);
             model_y->spline->SnA[birth] = exp(Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]));
             model_y->spline->SnE[birth] = exp(Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]));
             
@@ -375,7 +376,7 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
     {
         double f = data->fmin + (double)n/data->T;
         model->psd->f[n] = f;
-        model->psd->transfer[n] = noise_transfer_function(f/orbit->fstar);
+        model->psd->transfer[n] = AEnoise_FF(orbit->L, orbit->fstar, f);//noise_transfer_function(f/orbit->fstar);
     }
     
     //divide into Nspline control points
@@ -386,9 +387,8 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
         model->spline->f[i] = f;
         
         /* initialize model to theoretical level without transfer function applied */
-        model->spline->transfer[i] = noise_transfer_function(f/orbit->fstar);
-        model->spline->SnA[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/model->spline->transfer[i];
-        model->spline->SnE[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/model->spline->transfer[i];
+        model->spline->SnA[i] = 0.0;//AEnoise_FF(orbit->L, orbit->fstar, f)/noise_transfer_function(f/orbit->fstar);
+        model->spline->SnE[i] = 0.0;//AEnoise_FF(orbit->L, orbit->fstar, f)/noise_transfer_function(f/orbit->fstar);
     }
     //shift first spline control point by half a bin to avoid rounding problems
     model->spline->f[0] -= 0.5/data->T;

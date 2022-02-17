@@ -492,7 +492,7 @@ void get_F_params(struct Filter *F_filter)
     
     psi_AE_Fstat *= 0.5;
     
-    cAE            = (double)sgn(sin(2.0*psi_X_Fstat));
+    cAE            = (double)sgn(sin(2.0*psi_AE_Fstat));
     A_AE_Fstat     = 0.5*(  Aplus_AE + sqrt(Aplus_AE*Aplus_AE - Across_AE*Across_AE)  );
     iota_AE_Fstat  = acos(  -Across_AE/(Aplus_AE + sqrt(Aplus_AE*Aplus_AE - Across_AE*Across_AE))  );
     phase_AE_Fstat = atan2(  cAE*(Aplus_AE*F_filter->a4_AE - Across_AE*F_filter->a1_AE),
