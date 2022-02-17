@@ -6,7 +6,10 @@ import fnmatch
 import os
 import shutil
 import glob
-import boto3
+try: 
+    import boto3
+except ImportError: 
+    boto3 = None
 import pandas as pd
 import numpy as np
 import zipfile
@@ -75,6 +78,8 @@ if v:
 
 # AWS S3 version
 if args.aws:
+    if boto3 is None:
+        raise Exception("boto3 module, required for AWS S3 link, was not imported successfully")
     if v:
         print("searching for catalog objects matching pattern %s on AWS S3 within bucket %s." % (args.pattern, args.bucket))
         # Build header on output file
@@ -133,91 +138,97 @@ for key in keys:
         os.chdir(key)
     
     # find the catalog directory and use the number to infer the segment
-    catDir = glob.glob('catalog_*[!.sh]')[0]  # what if there is more than 1?
+    catDir = glob.glob('catalog_*[!.sh]')
+    if len(catDir)>0:
+        catDir = catDir[0]
+
     
-    if args.aws:
-        # for our AWS examples, the catalog directory includes the segment
-        seg = np.int(catDir[8:])
-    else:
-        seg = ss;
-        ss = ss+1;
-    
-    # check if there is anything in the entries file
-    catSize = os.path.getsize(catDir+'/'+'entries.dat')
-    if catSize > 1:
-        # read the entries file
-        cat_df = pd.read_table(catDir+'/'+'entries.dat',delimiter = ' ',index_col=0,names=['SNR','evidence'])
-        cat_df['segment']=seg
-        segFile = "%s_chains_%is.h5" % (os.path.splitext(catFile)[0],100*np.floor(seg/100))
-        segOutFile = os.path.join(outDir,segFile)
-        cat_df['chain file']=segFile
-        
-        # read the history file (if present) and concatenate it with the entries file
-        histFile = catDir+'/'+'history.dat'
-        if os.path.isfile(histFile):
-            if  (os.path.getsize(histFile) > 2 ):
-                hist_df = pd.read_table(histFile,delimiter = ' ', index_col=1,names=['parent'])
-                hist_df = hist_df[~hist_df.index.duplicated(keep='first')]
-                cat_df = cat_df.join(hist_df, how='left')
-                cat_df.replace(np.nan,'',regex=True,inplace=True)
-            else :
-                cat_df['parent']=''
+        if args.aws:
+            # for our AWS examples, the catalog directory includes the segment
+            seg = np.int(catDir[8:])
         else:
-            cat_df['parent']=''
+            if key[0:4]=='seg_':
+                seg = np.int(key[5:])
+            else:
+                seg = ss;
+                ss = ss+1;
 
-        # read each entry to get the median parameters for the point-estimate data frame & store the chains for the other data frames
-        entryNameList = list(cat_df.index)
-        dfCols = ['f','fdot','amp','lon','coslat','cosinc','psi','phi'] # this is hardcoded, if the chain files had headers, we could make this smart
-        dfs = list()
-        for ii,entryName in enumerate(entryNameList):
-            df = pd.read_table(catDir + '/' + entryName +'_params.dat',delimiter = ' ',index_col = False, names=dfCols)
-            df['name']=entryName
-            df=df.set_index('name')
-            dfs.append(df)
+        # check if there is anything in the entries file
+        catSize = os.path.getsize(catDir+'/'+'entries.dat')
+        if catSize > 1:
+            # read the entries file
+            cat_df = pd.read_table(catDir+'/'+'entries.dat',delimiter = ' ',index_col=0,names=['SNR','evidence'])
+            cat_df['segment']=seg
+            segFile = "%s_chains_%is.h5" % (os.path.splitext(catFile)[0],100*np.floor(seg/100))
+            segOutFile = os.path.join(outDir,segFile)
+            cat_df['chain file']=segFile
 
-            # Build data frame for chain for this particular source
-            chain_cols = ['Frequency','Frequency Derivative','Amplitude','Ecliptic Longitude','coslat','cosinc','Initial Phase','Polarization','SNR','entry match', 'waveform measure']
-            chain_df = pd.read_table(catDir+'/'+entryName +'_chain.dat',delimiter = ' ',index_col = False, names=chain_cols)
-            chain_df['Ecliptic Latitude']=np.pi/2.0-np.arccos(pd.to_numeric(chain_df['coslat'],'coerce'))
-            chain_df['Inclination']=np.arccos(pd.to_numeric(chain_df['cosinc'],'coerce'))
-            #chain_df = chain_df.drop(columns=['coslat','cosinc'])
+            # read the history file (if present) and concatenate it with the entries file
+            histFile = catDir+'/'+'history.dat'
+            if os.path.isfile(histFile):
+                if  (os.path.getsize(histFile) > 2 ):
+                    hist_df = pd.read_table(histFile,delimiter = ' ', index_col=1,names=['parent'])
+                    hist_df = hist_df[~hist_df.index.duplicated(keep='first')]
+                    cat_df = cat_df.join(hist_df, how='left')
+                    cat_df.replace(np.nan,'',regex=True,inplace=True)
+                else :
+                    cat_df['parent']=''
+            else:
+                cat_df['parent']=''
 
-            # write chain for this entry to the HDF5 file
-            
-            chain_df.to_hdf(segOutFile, key=entryName + '_chain',mode='a')
-            
-            # Build data frame for waveform for this particular source
-            wave_cols = ['Frequency','Waveform Real A','Waveform Imag A','Waveform Real E','Waveform Imag E']
-            wave_df = pd.read_table(catDir+'/'+entryName +'_waveform.dat',delimiter = ' ',index_col = False, names=wave_cols)
-            # write chain for this entry to the HDF5 file
-            
-            wave_df.to_hdf(segOutFile, key=entryName + '_wave',mode='a')
+            # read each entry to get the median parameters for the point-estimate data frame & store the chains for the other data frames
+            entryNameList = list(cat_df.index)
+            dfCols = ['f','fdot','amp','lon','coslat','cosinc','psi','phi'] # this is hardcoded, if the chain files had headers, we could make this smart
+            dfs = list()
+            for ii,entryName in enumerate(entryNameList):
+                df = pd.read_table(catDir + '/' + entryName +'_params.dat',delimiter = ' ',index_col = False, names=dfCols)
+                df['name']=entryName
+                df=df.set_index('name')
+                dfs.append(df)
 
-        # combine the parameters and entries catalogs
-        entry_df = pd.concat(dfs)
-        entry_df['Ecliptic Latitude']=np.pi/2.0-np.arccos(pd.to_numeric(entry_df['coslat'],'coerce'))
-        entry_df['Inclination']=np.arccos(pd.to_numeric(entry_df['cosinc'],'coerce'))
-        #entry_df = entry_df.drop(columns=['coslat','cosinc'])
-        entry_df = entry_df.rename(columns={
-            "f" : "Frequency", 
-            "fdot" : "Frequency Derivative",
-            "amp" : "Amplitude",
-            "lon" : "Ecliptic Longitude",
-            "psi" : "Initial Phase",
-            "phi" : "Polarization"})
+                # Build data frame for chain for this particular source
+                chain_cols = ['Frequency','Frequency Derivative','Amplitude','Ecliptic Longitude','coslat','cosinc','Initial Phase','Polarization','SNR','entry match', 'waveform measure']
+                chain_df = pd.read_table(catDir+'/'+entryName +'_chain.dat',delimiter = ' ',index_col = False, names=chain_cols)
+                chain_df['Ecliptic Latitude']=np.pi/2.0-np.arccos(pd.to_numeric(chain_df['coslat'],'coerce'))
+                chain_df['Inclination']=np.arccos(pd.to_numeric(chain_df['cosinc'],'coerce'))
+                #chain_df = chain_df.drop(columns=['coslat','cosinc'])
 
-        cat_df = pd.concat([cat_df,entry_df],axis=1)
-        # add the data for this segment into the list of dataframes
-        cat_list.append(cat_df)
-
-    # for AWS S3 clean up the temp directories
-    if args.aws:
-        shutil.rmtree(catDir)
-        os.remove('tempcat.zip')
+                # write chain for this entry to the HDF5 file
     
-    # Print status
-    if v:
-        print('Completed after %0.1f' %  (time.time() - tic))
+                chain_df.to_hdf(segOutFile, key=entryName + '_chain',mode='a')
+    
+                # Build data frame for waveform for this particular source
+                wave_cols = ['Frequency','Waveform Real A','Waveform Imag A','Waveform Real E','Waveform Imag E']
+                wave_df = pd.read_table(catDir+'/'+entryName +'_waveform.dat',delimiter = ' ',index_col = False, names=wave_cols)
+                # write chain for this entry to the HDF5 file
+    
+                wave_df.to_hdf(segOutFile, key=entryName + '_wave',mode='a')
+
+            # combine the parameters and entries catalogs
+            entry_df = pd.concat(dfs)
+            entry_df['Ecliptic Latitude']=np.pi/2.0-np.arccos(pd.to_numeric(entry_df['coslat'],'coerce'))
+            entry_df['Inclination']=np.arccos(pd.to_numeric(entry_df['cosinc'],'coerce'))
+            #entry_df = entry_df.drop(columns=['coslat','cosinc'])
+            entry_df = entry_df.rename(columns={
+                "f" : "Frequency", 
+                "fdot" : "Frequency Derivative",
+                "amp" : "Amplitude",
+                "lon" : "Ecliptic Longitude",
+                "psi" : "Initial Phase",
+                "phi" : "Polarization"})
+
+            cat_df = pd.concat([cat_df,entry_df],axis=1)
+            # add the data for this segment into the list of dataframes
+            cat_list.append(cat_df)
+
+        # for AWS S3 clean up the temp directories
+        if args.aws:
+            shutil.rmtree(catDir)
+            os.remove('tempcat.zip')
+
+        # Print status
+        if v:
+            print('Completed after %0.1f' %  (time.time() - tic))
 
 
         
