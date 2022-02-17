@@ -235,8 +235,32 @@ for key in keys:
     dfv.drop(N-np.arange(Npad,0,-1),inplace=True)
     dfv.drop(np.arange(0,Npad),inplace=True)
     
+    # read the power reconstruction data 
+    dfp = pd.read_csv(dataDir+'/power_reconstruction_t0.dat',
+        sep= ' ',
+        usecols=np.arange(0,11),
+        index_col = False, 
+        names=[
+            'Frequency',
+            'Median A power',
+            '25 A power', 
+            '75 A power',
+            '5 A power',
+            '95 A power',
+            'Median E power',
+            '25 E power', 
+            '75 E power',
+            '5 E power',
+            '95 E power'])
+
+    # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
+    dfp.drop(N-np.arange(Npad,0,-1),inplace=True)
+    dfp.drop(np.arange(0,Npad),inplace=True)
+     
+     
     # concatenate the columns together to make the data frame for this segment
     df = dfr.merge(dfv)
+    df = df.merge(dfp)
     df.set_index('Frequency')
 
 
