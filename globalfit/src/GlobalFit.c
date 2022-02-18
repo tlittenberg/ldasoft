@@ -180,11 +180,11 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
         struct Chain *chain = gbmcmc_data->chain;
         struct Model *model = gbmcmc_data->model[chain->index[0]];
         
-        int N = 2*(data->N-2*data->qpad);
+        int N = 2*data->N;
         MPI_Send(&data->qmin, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
         MPI_Send(&N, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
-        MPI_Send(model->tdi[0]->A+2*data->qpad, N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
-        MPI_Send(model->tdi[0]->E+2*data->qpad, N, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->A, N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->E, N, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
     }
     
     if(procID==root)
@@ -207,19 +207,16 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
             MPI_Recv(&qmin, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
             MPI_Recv(&N, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
             
-            int qpad = gbmcmc_data->data->qpad;
-            
             double *A = malloc(N*sizeof(double));
             double *E = malloc(N*sizeof(double));
-
             
             MPI_Recv(A, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
             MPI_Recv(E, N, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
             
             for(int i=0; i<N; i++)
             {
-                gf->tdi_ucb->A[2*(qmin+qpad)+i] += A[i];
-                gf->tdi_ucb->E[2*(qmin+qpad)+i] += E[i];
+                gf->tdi_ucb->A[2*qmin+i] += A[i];
+                gf->tdi_ucb->E[2*qmin+i] += E[i];
             }
 
             free(A);

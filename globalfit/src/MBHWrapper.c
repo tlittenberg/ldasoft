@@ -377,7 +377,6 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
     double x = pow((SNR/5.0),1.0/(double)(mbh_data->NC-NCC));
     if(x > 1.3) x = 1.3;
     for (int i=NCC; i< mbh_data->NC; i++) mbh_data->heat[i] = mbh_data->heat[i-1]*x;
-    /*DEBUG printf("SNR %f increment %f max heat %f SNReff = %f\n", SNR, x, mbh_data->heat[mbh_data->NC-1], SNR/mbh_data->heat[mbh_data->NC-1]);*/
 
     
     /* store data segment in ASCII format */
@@ -543,15 +542,14 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     }//end cycle
         
 
-    
     // save point estimate of reconstructed waveform power spectrum
-    int i = mbh_data->mcmc_step%mbh_data->NH;
+    int i = mbh_data->mcmc_step%100;
     for(int k=mbh_data->het->MN; k<mbh_data->het->MM; k++)
     {
         int re = 2*(k-mbh_data->het->MN);
         int im = re+1;
-        hrec[k][0][i%10] = mbh_data->tdi->A[re]*mbh_data->tdi->A[re]+mbh_data->tdi->A[im]*mbh_data->tdi->A[im];
-        hrec[k][1][i%10] = mbh_data->tdi->E[re]*mbh_data->tdi->E[re]+mbh_data->tdi->E[im]*mbh_data->tdi->E[im];
+        hrec[k][0][i] = mbh_data->tdi->A[re]*mbh_data->tdi->A[re]+mbh_data->tdi->A[im]*mbh_data->tdi->A[im];
+        hrec[k][1][i] = mbh_data->tdi->E[re]*mbh_data->tdi->E[re]+mbh_data->tdi->E[im]*mbh_data->tdi->E[im];
     }
 
     
@@ -599,20 +597,6 @@ void get_mbh_waveform(struct MBHData *mbh_data)
         mbh_data->tdi->E[im] = E_amp[n]*sin(E_phi[n]);
 
     }
-    /* DEBUG
-    char filename[1024];
-    sprintf(filename,"%s/current_waveform.dat.%i",mbh_data->flags->runDir,mbh_data->procID);
-    FILE *temp = fopen(filename,"w");
-    for(int n=0; n<mbh_data->tdi->N; n++)
-    {
-        fprintf(temp,"%lg %lg %lg %lg %lg\n",
-                (double)n/mbh_data->data->Tobs,
-                mbh_data->tdi->A[2*n],
-                mbh_data->tdi->A[2*n+1],
-                mbh_data->tdi->E[2*n],
-                mbh_data->tdi->E[2*n+1]);
-    }
-    fclose(temp);*/
     
 
     free(f);
@@ -646,17 +630,17 @@ void print_mbh_waveform_reconstruction(struct MBHData *mbh_data)
     {
         double f = (double)(i)/mbh_data->data->Tobs;
 
-        A_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][0], 1, mbh_data->NH);
-        A_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.25);
-        A_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.75);
-        A_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.05);
-        A_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, mbh_data->NH, 0.95);
+        A_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][0], 1, 100);
+        A_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.25);
+        A_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.75);
+        A_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.05);
+        A_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.95);
         
-        E_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][1], 1, mbh_data->NH);
-        E_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.25);
-        E_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.75);
-        E_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.05);
-        E_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, mbh_data->NH, 0.95);
+        E_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][1], 1, 100);
+        E_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.25);
+        E_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.75);
+        E_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.05);
+        E_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.95);
         
         
         fprintf(fptr_rec,"%.12g ",f);
