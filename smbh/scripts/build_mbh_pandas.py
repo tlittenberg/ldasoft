@@ -109,7 +109,28 @@ for key in keys:
     srcs.append(src)
 
     chainDF.to_hdf(outputFile,key=('%s_chain' % src['name']), mode = 'a')
+    
+    # read the power reconstruction data 
+    powerDF = pd.read_csv(key + '/power_reconstruction.dat',
+        sep= ' ',
+        usecols=np.arange(0,11),
+        index_col = False, 
+        names=[
+            'Frequency',
+            'Median A power',
+            '25 A power', 
+            '75 A power',
+            '5 A power',
+            '95 A power',
+            'Median E power',
+            '25 E power', 
+            '75 E power',
+            '5 E power',
+            '95 E power'])
 
+    powerDF.to_hdf(outputFile,key=('%s_power' % src['name']), mode = 'a')
+    
+    
 catDF = pd.DataFrame(srcs)
 catDF.set_index('name', inplace=True)
 catDF.to_hdf(outputFile,key='detections',mode='a')
