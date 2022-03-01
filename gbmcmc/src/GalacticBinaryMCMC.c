@@ -203,16 +203,14 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     
     
     //choose proposal distribution
-    int trial_n;
-    double trial_w;
-    int nprop=-1;
-    
-    while(nprop<0)
+    double draw;
+    int nprop;
+    do
     {
-        trial_n = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
-        trial_w = gsl_rng_uniform(chain->r[ic]);
-        if(trial_w < proposal[trial_n]->weight) nprop = trial_n;
-    }
+        nprop = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
+        draw = gsl_rng_uniform(chain->r[ic]);
+    }while(proposal[nprop]->weight < draw);
+    
     proposal[nprop]->trial[ic]++;
     
     //call proposal function to update source parameters
@@ -522,14 +520,6 @@ void initialize_gbmcmc_state(struct Data *data, struct Orbit *orbit, struct Flag
                 model[ic]->source[n]->d2fdt2   = inj->d2fdt2;
                 map_params_to_array(model[ic]->source[n], model[ic]->source[n]->params, data->T);
                 
-            }
-            else if(flags->updateCov)
-            {
-                while ( !isfinite(draw_from_cov(data, model[ic], model[ic]->source[n], proposal[8], model[ic]->source[n]->params , chain->r[ic])));
-            }
-            else if(flags->update)
-            {
-                draw_from_gmm_prior(data, model[ic], model[ic]->source[n], proposal[7], model[ic]->source[n]->params , chain->r[ic]);
             }
             else
             {

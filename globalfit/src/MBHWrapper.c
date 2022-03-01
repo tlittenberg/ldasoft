@@ -333,9 +333,64 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
 
 void initialize_mbh_sampler(struct MBHData *mbh_data)
 {
+    
+    /* set up chain directory and file */
+    char filename[MAXSTRINGSIZE];
+    sprintf(mbh_data->chainDir,"%s",mbh_data->flags->runDir);
+    sprintf(filename,"%s/chain.dat",mbh_data->chainDir);
+    
+    if(mbh_data->flags->resume)
+    {
+        //first count samples in the chain file
+        char* line;
+        char lineBuffer[MAXSTRINGSIZE];
+        mbh_data->chainFile = fopen(filename,"r");
+        int MBHSTEPS = 0;
+        while((line = fgets(lineBuffer, MAXSTRINGSIZE, mbh_data->chainFile)) != NULL) MBHSTEPS++;
+        MBHSTEPS--;
+        rewind(mbh_data->chainFile);
+        
+        //copy all but last (corrupted) line of chain.dat to new file
+        char newfilename[MAXSTRINGSIZE];
+        sprintf(newfilename,"%s/chain.dat.new",mbh_data->chainDir);
+        FILE *newChainFile = fopen(newfilename,"w");
+        for(int i=0; i<MBHSTEPS-1; i++)
+        {
+            line=fgets(lineBuffer,MAXSTRINGSIZE,mbh_data->chainFile);
+            fprintf(newChainFile,"%s",line);
+        }
+        
+        //parse last (complete) line of chain.dat to initialize sampler state
+        char *column = strtok(line," ");
+        double contents[18];
+        for(int n=0; n<18; n++)
+        {
+            sscanf(column, "%lg", &contents[n]);
+            column=strtok(NULL," ");
+        }
+        for(int i=0; i<NParams; i++) mbh_data->paramx[0][i] = contents[i+2];
+        map_params(2, mbh_data->paramx[0]);
+        
+        
+        fclose(mbh_data->chainFile);
+        fclose(newChainFile);
 
-    for(int i=0; i<NParams; i++) mbh_data->paramx[0][i] = mbh_data->segParams[mbh_data->procID - mbh_data->procID_min][i];
-    map_params(2, mbh_data->paramx[0]);
+        //replace chain.dat with chain.dat.new
+        if(!rename(newfilename, filename)) fprintf(stdout,"%s is renamed %s successfully\n",newfilename,filename);
+        else fprintf(stdout,"%s could not be renamed.\n",newfilename);
+        fflush(stdout);
+
+        //reopen chain.dat to append new samples
+        sprintf(filename,"%s/chain.dat",mbh_data->chainDir);
+        mbh_data->chainFile = fopen(filename,"a");
+
+    }
+    else
+    {
+        mbh_data->chainFile = fopen(filename,"w");
+        for(int i=0; i<NParams; i++) mbh_data->paramx[0][i] = mbh_data->segParams[mbh_data->procID - mbh_data->procID_min][i];
+        map_params(2, mbh_data->paramx[0]);
+    }
     for(int i=1; i<mbh_data->NC; i++) for(int j=0; j<NParams; j++) mbh_data->paramx[i][j] = mbh_data->paramx[0][j];
 
     het_space(mbh_data->data, mbh_data->het, 2, mbh_data->paramx[0], mbh_data->min, mbh_data->max);
@@ -380,7 +435,6 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
 
     
     /* store data segment in ASCII format */
-    char filename[MAXSTRINGSIZE];
     FILE *tempFile;
         
     sprintf(filename,"%s/power_data_0.dat",mbh_data->flags->runDir);
@@ -396,10 +450,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
     }
     fclose(tempFile);
     
-    /* set up chain directory and file */
-    sprintf(mbh_data->chainDir,"%s",mbh_data->flags->runDir);
-    sprintf(filename,"%s/chain.dat",mbh_data->chainDir);
-    mbh_data->chainFile = fopen(filename,"w");
+    
     
     /* set up Fisher matrix proposal for each chain */
     FisherHet(mbh_data->data, mbh_data->het, 2, mbh_data->paramx[0], mbh_data->Fisher[0]);
@@ -440,7 +491,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     double *heat = mbh_data->heat;
     double ***history = mbh_data->history;
     double ***hrec = mbh_data->hrec;
-    double ***Fisher = mbh_data->Fisher; 
+    double ***Fisher = mbh_data->Fisher;
     double **ejump = mbh_data->ejump;
     double ***evec = mbh_data->evec;
     int **cv = mbh_data->cv;

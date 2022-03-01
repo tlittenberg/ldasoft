@@ -252,14 +252,41 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     /* Initialize GBMCMC sampler state */
     initialize_gbmcmc_state(data, orbit, flags, chain, proposal, model, trial);
         
+    /* Set sampler counter */
+    gbmcmc_data->mcmc_step = -flags->NBURN;
+    
+    /* Start analysis from saved chain state */
+    if(flags->resume)
+    {
+        char filename[MAXSTRINGSIZE];
+        
+        //check for files needed to resume
+        FILE *fptr = NULL;
+        int file_error = 0;
+        
+        for(int ic=0; ic<chain->NC; ic++)
+        {
+            sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
+            
+            if( (fptr = fopen(filename,"r")) == NULL )
+            {
+                fprintf(stderr,"Warning: Could not checkpoint run state for segment %i\n",gbmcmc_data->procID);
+                fprintf(stderr,"         Parameter file %s does not exist\n",filename);
+                file_error++;
+                break;
+            }
+        }
+        
+        //if all of the files exist resume run from checkpointed state
+        if(!file_error) restore_chain_state(orbit, data, model, chain, flags, &gbmcmc_data->mcmc_step);
+    }
+    
     /* Store data segment in working directory */
     print_data(data, data->tdi[0], flags, 0);
 
     /* Store post-processing script */
     print_gb_catalog_script(flags, data, orbit);
 
-    /* Set sampler counter */
-    gbmcmc_data->mcmc_step = -flags->NBURN;
 }
 
 static void print_sampler_state(struct GBMCMCData *gbmcmc_data)

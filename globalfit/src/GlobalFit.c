@@ -182,9 +182,9 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
         
         int N = 2*data->N;
         MPI_Send(&data->qmin, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
-        MPI_Send(&N, 1, MPI_INT, root, 0, MPI_COMM_WORLD);
-        MPI_Send(model->tdi[0]->A, N, MPI_DOUBLE, root, 1, MPI_COMM_WORLD);
-        MPI_Send(model->tdi[0]->E, N, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
+        MPI_Send(&N, 1, MPI_INT, root, 1, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->A, N, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
+        MPI_Send(model->tdi[0]->E, N, MPI_DOUBLE, root, 3, MPI_COMM_WORLD);
     }
     
     if(procID==root)
@@ -205,13 +205,13 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
         {
             int N,qmin;
             MPI_Recv(&qmin, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
-            MPI_Recv(&N, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
+            MPI_Recv(&N, 1, MPI_INT, n, 1, MPI_COMM_WORLD, &status);
             
             double *A = malloc(N*sizeof(double));
             double *E = malloc(N*sizeof(double));
             
-            MPI_Recv(A, N, MPI_DOUBLE, n, 1, MPI_COMM_WORLD, &status);
-            MPI_Recv(E, N, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
+            MPI_Recv(A, N, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
+            MPI_Recv(E, N, MPI_DOUBLE, n, 3, MPI_COMM_WORLD, &status);
             
             for(int i=0; i<N; i++)
             {
@@ -373,13 +373,13 @@ static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, i
  
     for(int i=0; i<2*global_fit->tdi_full->N; i++)
     {
-        if(!GBMCMC_Flag)
+        if(global_fit->nUCB>0 && !GBMCMC_Flag)
         {
             global_fit->tdi_full->A[i] -= global_fit->tdi_ucb->A[i];
             global_fit->tdi_full->E[i] -= global_fit->tdi_ucb->E[i];
         }
 
-        if(!VBMCMC_Flag)
+        if(global_fit->nVGB>0 && !VBMCMC_Flag)
         {
             global_fit->tdi_full->A[i] -= global_fit->tdi_vgb->A[i];
             global_fit->tdi_full->E[i] -= global_fit->tdi_vgb->E[i];
@@ -388,8 +388,11 @@ static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, i
         /*
          MBH nodes hold all other MBH states in their global_fit structure
          */
-        global_fit->tdi_full->A[i] -= global_fit->tdi_mbh->A[i];
-        global_fit->tdi_full->E[i] -= global_fit->tdi_mbh->E[i];
+        if(global_fit->nMBH>0)
+        {
+            global_fit->tdi_full->A[i] -= global_fit->tdi_mbh->A[i];
+            global_fit->tdi_full->E[i] -= global_fit->tdi_mbh->E[i];
+        }
     }
 
 }
@@ -627,6 +630,12 @@ int main(int argc, char *argv[])
         MBH_Flag = 1;
         initialize_mbh_sampler(mbh_data);
     }
+
+    /* distribute current state of models to worker nodes */
+    share_noise_model (noise_data, gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+    if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+    if(global_fit->nVGB>0)share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+    if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
 
     /* number of update steps for each module (scaled to MBH model update) */
     int cycle;

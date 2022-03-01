@@ -209,18 +209,14 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
     //TODO: Work in amplitude
     
     //rejections ample for f
-    int check = 1;
     double alpha;
     int q;
-    int count=0;
-    while(check)
+    do
     {
         params[0] = (double)model->prior[0][0] + gsl_rng_uniform(seed)*(double)(model->prior[0][1]-model->prior[0][0]);
         alpha     = gsl_rng_uniform(seed)*data->pmax;
         q = (int)(params[0]-data->qmin);
-        if(alpha<data->p[q]) check = 0;
-        count++;
-    }
+    }while(data->p[q]<alpha);
 
     //random draws for other parameters
     for(int n=1; n<source->NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
@@ -389,7 +385,7 @@ double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *
     double logP=-INFINITY;
     double alpha=prior->skymaxp;
     
-    while(alpha>logP)
+    do
     {
         //sky location
         params[1] = model->prior[1][0] + gsl_rng_uniform(seed)*(model->prior[1][1]-model->prior[1][0]);
@@ -403,7 +399,7 @@ double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *
         
         logP = prior->skyhist[k];
         alpha = log(gsl_rng_uniform(seed)*exp(prior->skymaxp));
-    }
+    }while(alpha>logP);
     return logP;
 }
 
@@ -481,7 +477,7 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
     double alpha = 1;
     double P = 0;
     int counter=0;
-    while(alpha > P)
+    do
     {
         SNR   = SNRmax*gsl_rng_uniform(seed);
         P     = snr_prior(SNR);
@@ -495,7 +491,7 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
             params[3] = log(SNR*iSNR1);
             return -INFINITY;
         }
-    }
+    }while(alpha > P);
     params[3] = log(SNR*iSNR1);
     return evaluate_snr_prior(data, model, params);
 }
@@ -526,9 +522,19 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
     //jump from current position
     for(i=0; i<NP; i++) params[i] = source->params[i] + jump[i];
     
+    //safety check for cos(latitude) parameters
+    //cosine co-latitude
+    if(params[1] >= 1.) params[1] = source->params[1] - jump[1];
+    //cosine inclination
+    if(params[4] >= 1.) params[4] = source->params[4] - jump[4];
+    
     for(int j=0; j<NP; j++)
     {
-        if(params[j]!=params[j]) fprintf(stderr,"draw_from_fisher: params[%i]=%g, N[%g,%g]\n",j,params[j],source->params[j],jump[j]);
+        if(params[j]!=params[j])
+        {
+            fprintf(stderr,"draw_from_fisher: params[%i]=%g, N[%g,%g]\n",j,params[j],source->params[j],jump[j]);
+            return -INFINITY;
+        }
     }
     
     //not updating Fisher between moves, proposal is symmetric
@@ -888,9 +894,9 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 proposal[i]->rjweight = 0.0;
                 if(flags->catalog)
                 {
+                    setup_gmm_proposal(data, proposal[i]);
                     if(proposal[i]->Ngmm>0)
                     {
-                        setup_gmm_proposal(data, proposal[i]);
                         proposal[i]->weight   = 0.2;
                         proposal[i]->rjweight = 0.2;
                     }
@@ -1046,12 +1052,6 @@ void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior
                 proposal[i]->density = &gmm_prior_density;
                 proposal[i]->weight   = 0.0;
                 proposal[i]->rjweight = 0.0;
-                if(flags->catalog)
-                {
-                    setup_gmm_proposal(data, proposal[i]);
-                    proposal[i]->weight   = 0.0;
-                    proposal[i]->rjweight = 0.0;
-                }
                 check   += proposal[i]->weight;
                 rjcheck += proposal[i]->rjweight;
                 break;
@@ -1587,8 +1587,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
     draw_from_uniform_prior(data, model, source, proposal, params, seed);
     
     //now rejection sample on f,theta,phi
-    int check=1;
-    while(check)
+    do
     {
         i = gsl_rng_uniform(seed)*n_f;
         j = gsl_rng_uniform(seed)*n_theta;
@@ -1600,10 +1599,8 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
                 
         p = proposal->tensor[(int)i][(int)j][(int)k];
         alpha = gsl_rng_uniform(seed)*proposal->maxp;
-        
-        if(p>alpha)check=0;
-        
-    }
+                
+    }while(p<alpha);
     
     params[0] = q;
     params[1] = costheta;
@@ -1645,8 +1642,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
     }
     
     //now rejection sample on f,theta,phi
-    int check=1;
-    while(check)
+    do
     {
         if(!fmFlag)i = gsl_rng_uniform(seed)*n_f;
         j = gsl_rng_uniform(seed)*n_theta;
@@ -1669,10 +1665,8 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         else
             p = proposal->tensor[(int)i][(int)j][(int)k];
         alpha = gsl_rng_uniform(seed)*proposal->maxp;
-        
-        if(p>alpha)check=0;
-        
-    }
+                
+    }while(p<alpha);
     
     params[0] = q;
     params[1] = costheta;

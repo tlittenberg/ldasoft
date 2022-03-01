@@ -561,11 +561,11 @@ void free_model(struct Model *model)
         free_source(model->source[n]);
     }
     free(model->source);
-    
-    for(n=0; n<8; n++) free(model->prior[n]);
+
+    for(n=0; n<model->NP; n++) free(model->prior[n]);
     free(model->prior);
     free(model->logPriorVolume);
-    
+
     for(n=0; n<model->NT; n++)
     {
         free_tdi(model->tdi[n]);
@@ -573,6 +573,11 @@ void free_model(struct Model *model)
         free_noise(model->noise[n]);
         free_calibration(model->calibration[n]);
     }
+    free(model->noise);
+    free(model->tdi);
+    free(model->residual);
+    free(model->calibration);
+    
     free(model->t0);
     free(model->t0_min);
     free(model->t0_max);

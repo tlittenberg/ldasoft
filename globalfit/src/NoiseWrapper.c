@@ -129,15 +129,18 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
     
-    /* Initialize parallel chain */
+    /* Initialize parallel chain & sampler state*/
     if(flags->resume)
+    {
         initialize_chain(chain, flags, &data->cseed, "a");
+        resume_noise_state(noise_data);
+    }
     else
+    {
         initialize_chain(chain, flags, &data->cseed, "w");
-    
-    /* Initialize GBMCMC sampler state */
-    initialize_noise_state(noise_data);
-    
+        initialize_noise_state(noise_data);
+    }
+        
     /* Set sampler counter */
     noise_data->mcmc_step = -flags->NBURN;
     
@@ -192,7 +195,51 @@ void initialize_noise_state(struct NoiseData *noise_data)
     
     sprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->psd, filename);
+  
+}
 
+void resume_noise_state(struct NoiseData *noise_data)
+{
+    /* Aliases to gbmcmc structures */
+    struct Orbit *orbit = noise_data->orbit;
+    struct Chain *chain = noise_data->chain;
+    struct Data *data   = noise_data->data;
+    struct SplineModel **model = noise_data->model;
+
+    int NC = chain->NC;    
+    
+    //count lines in file
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/current_spline_points.dat",data->dataDir);
+    FILE *splineFile = fopen(filename,"r");
+    int Nspline = 0;
+    double f,SnA,SnE;
+    while(!feof(splineFile))
+    {
+        fscanf(splineFile,"%lg %lg %lg",&f,&SnA,&SnE);
+        Nspline++;
+    }
+    rewind(splineFile);
+    Nspline--;
+    
+    //initialize spline model
+    for(int ic=0; ic<NC; ic++)
+    {
+        model[ic] = malloc(sizeof(struct SplineModel));
+        initialize_spline_model(orbit, data, model[ic], Nspline);
+    }
+    
+    //set spline model to stored values
+    for(int n=0; n<Nspline; n++)
+    {
+        fscanf(splineFile,"%lg %lg %lg",&model[0]->spline->f[n],&model[0]->spline->SnA[n],&model[0]->spline->SnE[n]);
+    }
+    fclose(splineFile);
+
+    generate_spline_noise_model(model[0]);
+    model[0]->logL = noise_log_likelihood(data, model[0]);
+    
+    for(int ic=1; ic<NC; ic++) copy_spline_model(model[0], model[ic]);
 }
 
 int update_noise_sampler(struct NoiseData *noise_data)

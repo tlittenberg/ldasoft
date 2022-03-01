@@ -33,6 +33,7 @@ void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chai
 
 void initialize_noise_sampler(struct NoiseData *noise_data);
 void initialize_noise_state(struct NoiseData *noise_data);
+void resume_noise_state(struct NoiseData *noise_data);
 
 int update_noise_sampler(struct NoiseData *noise_data);
 
