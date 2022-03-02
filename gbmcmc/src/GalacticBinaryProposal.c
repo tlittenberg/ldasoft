@@ -1186,56 +1186,109 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     double norm = 0.0;
     double maxLogL = -1e60;
     
-    //loop over sub-bins
-    for(int i=0; i<n_f; i++)
+    /* compute or restore fisher-based proposal */
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/checkpoint/fstat_prop.bin",flags->runDir);
+    FILE *propFile=NULL;
+    int check=0;
+    
+    //first check if file exists
+    if( (propFile=fopen(filename,"r")) )
     {
-        if(n_f<100)
-        {
-            if(!flags->quiet) printProgress((double)i/(double)n_f);
-        }
-        else
-        {
-            if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
-        }
+        fclose(propFile);
+        check=1;
+    }
+    
+    //if we are checkpointing and the files exist, use them
+    if(flags->resume && check)
+    {
+        propFile=fopen(filename,"rb");
         
-        double q = (double)(data->qmin) + (double)(i)*d_f;
-        double f = q/data->T;
-        
-        
-        //loop over colatitude bins
-        #pragma omp parallel for num_threads(flags->threads) collapse(2)
-        for (int j=0; j<n_theta; j++)
+        fread(&proposal->norm, sizeof proposal->norm, 1, propFile);
+        fread(&proposal->maxp, sizeof proposal->norm, 1, propFile);
+        for(int i=0; i<n_f; i++)
         {
-            //loop over longitude bins
-            for(int k=0; k<n_phi; k++)
+            for(int j=0; j<n_theta; j++)
             {
-                double theta = acos((-1. + (double)j*d_theta));
-                double phi = (double)k*d_phi;
-                
-                if(i>0 && i<n_f-1)
+                for(int k=0; k<n_phi; k++)
                 {
-                    get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
-                    
-                    if(logL_AE > maxLogL) maxLogL = logL_AE;
-                    //if(logL_AE > SNRCAP)  logL_AE = SNRCAP;//TODO: Test SNRCAP in fstatistic
-                    
-                    proposal->tensor[i][j][k] = logL_AE;//sqrt(2*logL_AE);
+                    fread(&proposal->tensor[i][j][k],sizeof proposal->tensor[i][j][k], 1, propFile);
                 }
-            }//end loop over longitude bins
-        }//end loop over colatitude bins
-    }//end loop over sub-bins
-    
-    for(int i=0; i<n_f; i++)
-        for(int j=0; j<n_theta; j++)
-            for(int k=0; k<n_phi; k++)
-                norm += proposal->tensor[i][j][k];
+            }
+        }
 
+        fclose(propFile);
+    }
     
-    //normalize
-    proposal->norm = (n_f*n_theta*n_phi)/norm;
-    proposal->maxp = maxLogL*proposal->norm;//sqrt(2.*maxLogL)*proposal->norm;
-    
-    for(int i=0; i<n_f; i++) for(int j=0; j<n_theta; j++) for(int k=0; k<n_phi; k++) proposal->tensor[i][j][k] *= proposal->norm;
+    //if no resume flag or no checkpoint file build the proposal
+    else
+    {
+        for(int i=0; i<n_f; i++)
+        {
+            if(n_f<100)
+            {
+                if(!flags->quiet) printProgress((double)i/(double)n_f);
+            }
+            else
+            {
+                if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
+            }
+            
+            double q = (double)(data->qmin) + (double)(i)*d_f;
+            double f = q/data->T;
+            
+            
+            //loop over colatitude bins
+#pragma omp parallel for num_threads(flags->threads) collapse(2)
+            for (int j=0; j<n_theta; j++)
+            {
+                //loop over longitude bins
+                for(int k=0; k<n_phi; k++)
+                {
+                    double theta = acos((-1. + (double)j*d_theta));
+                    double phi = (double)k*d_phi;
+                    
+                    if(i>0 && i<n_f-1)
+                    {
+                        get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
+                        
+                        if(logL_AE > maxLogL) maxLogL = logL_AE;
+                        //if(logL_AE > SNRCAP)  logL_AE = SNRCAP;//TODO: Test SNRCAP in fstatistic
+                        
+                        proposal->tensor[i][j][k] = logL_AE;//sqrt(2*logL_AE);
+                    }
+                }//end loop over longitude bins
+            }//end loop over colatitude bins
+        }//end loop over sub-bins
+        
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    norm += proposal->tensor[i][j][k];
+        
+        
+        //normalize
+        printf("save norm file\n");
+        proposal->norm = (n_f*n_theta*n_phi)/norm;
+        proposal->maxp = maxLogL*proposal->norm;//sqrt(2.*maxLogL)*proposal->norm;
+        
+        propFile=fopen(filename,"wb");
+        fwrite(&proposal->norm, sizeof proposal->norm, 1, propFile);
+        fwrite(&proposal->maxp, sizeof proposal->norm, 1, propFile);
+        for(int i=0; i<n_f; i++)
+        {
+            for(int j=0; j<n_theta; j++)
+            {
+                for(int k=0; k<n_phi; k++)
+                {
+                    proposal->tensor[i][j][k] *= proposal->norm;
+                    fwrite(&proposal->tensor[i][j][k],sizeof proposal->tensor[i][j][k], 1, propFile);
+                }
+            }
+        }
+        fclose(propFile);
+    }
+
     
     if(flags->verbose)
     {

@@ -339,6 +339,15 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
     sprintf(mbh_data->chainDir,"%s",mbh_data->flags->runDir);
     sprintf(filename,"%s/chain.dat",mbh_data->chainDir);
     
+    //first check if file exists
+    int check=0;
+    FILE *test=NULL;
+    if( (test=fopen(filename,"r")) )
+    {
+        fclose(test);
+        check=1;
+    }
+
     if(mbh_data->flags->resume)
     {
         //first count samples in the chain file

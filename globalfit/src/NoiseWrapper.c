@@ -129,8 +129,19 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
     
-    /* Initialize parallel chain & sampler state*/
-    if(flags->resume)
+    //first check if file exists
+    char filename[MAXSTRINGSIZE];
+    sprintf(filename,"%s/current_spline_points.dat",data->dataDir);
+    int check=0;
+    FILE *test=NULL;
+    if( (test=fopen(filename,"r")) )
+    {
+        fclose(test);
+        check=1;
+    }
+    
+    /* Initialize parallel chain & sampler state */
+    if(flags->resume && check)
     {
         initialize_chain(chain, flags, &data->cseed, "a");
         resume_noise_state(noise_data);
