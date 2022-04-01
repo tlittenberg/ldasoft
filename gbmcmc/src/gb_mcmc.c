@@ -183,8 +183,8 @@ int main(int argc, char *argv[])
      FILE *test=fopen("proposal_test.dat","w");
      for(int i=0; i<100000; i++)
      {
-     double logP = draw_from_gmm_prior(data, model[0][0], model[0][0]->source[0], proposal[0][7], model[0][0]->source[0]->params, chain->r[0]);
-     print_source_params(data, model[0][0]->source[0], test);
+     double logP = draw_from_gmm_prior(data, model[0], model[0]->source[0], proposal[7], model[0]->source[0]->params, chain->r[0]);
+     print_source_params(data, model[0]->source[0], test);
      fprintf(test,"%lg\n",logP);
      }
      fclose(test);*/

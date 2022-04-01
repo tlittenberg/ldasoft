@@ -397,6 +397,72 @@ static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, i
 
 }
 
+static void print_data_state(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, int GBMCMC_Flag, int VBMCMC_Flag, int Noise_Flag, int MBH_Flag)
+{
+    if(Noise_Flag)
+    {
+        print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
+        char filename[128];
+        sprintf(filename,"%s/data/current_spline_points.dat",noise_data->flags->runDir);
+        print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
+        
+        sprintf(filename,"%s/data/current_interpolated_spline_points.dat",noise_data->flags->runDir);
+        print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
+    }
+    if(VBMCMC_Flag)
+    {
+        for(int n=0; n<vbmcmc_data->flags->NVB; n++)print_data(vbmcmc_data->data_vec[n], vbmcmc_data->data_vec[n]->tdi[0], vbmcmc_data->flags, 0);
+    }
+    if(GBMCMC_Flag)
+    {
+        copy_noise(gbmcmc_data->model[gbmcmc_data->chain->index[0]]->noise[0], gbmcmc_data->data->noise[0]);
+        print_data(gbmcmc_data->data, gbmcmc_data->data->tdi[0], gbmcmc_data->flags, 0);
+    }
+    if(MBH_Flag)
+    {
+        char tempFileName[MAXSTRINGSIZE];
+        sprintf(tempFileName,"%s/power_data_0.dat.temp",mbh_data->flags->runDir);
+        FILE *tempFile = fopen(tempFileName,"w");
+        for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
+        {
+            int re = i;
+            int im = mbh_data->data->N-i;
+            double f = (double)i/mbh_data->data->Tobs;
+            fprintf(tempFile,"%lg %lg %lg\n",f,
+                    mbh_data->data->data[0][re]*mbh_data->data->data[0][re]+mbh_data->data->data[0][im]*mbh_data->data->data[0][im],
+                    mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
+        }
+        fclose(tempFile);
+        
+        
+        sprintf(tempFileName,"%s/data_0.dat.temp",mbh_data->flags->runDir);
+        tempFile = fopen(tempFileName,"w");
+        for(int i=0; i<mbh_data->het->MN; i++)
+        {
+            double f = (double)i/mbh_data->data->Tobs;
+            fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f, 0.0,0.0,0.0,0.0);
+            
+        }
+        for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
+        {
+            int re = 2*(i-mbh_data->het->MN);
+            int im = re+1;
+            double f = (double)i/mbh_data->data->Tobs;
+            fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f,
+                    mbh_data->tdi->A[re],mbh_data->tdi->A[im],
+                    mbh_data->tdi->E[re],mbh_data->tdi->E[im]);
+        }
+        for(int i=mbh_data->het->MM; i<mbh_data->data->N; i++)
+        {
+            double f = (double)i/mbh_data->data->Tobs;
+            fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f, 0.0,0.0,0.0,0.0);
+            
+        }
+        
+        fclose(tempFile);
+        
+    }
+}
 int main(int argc, char *argv[])
 {
     time_t start, stop;
@@ -731,69 +797,8 @@ int main(int argc, char *argv[])
         if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
                 
         /* DEBUG */
-        if(Noise_Flag)
-        {
-            print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
-            char filename[128];
-            sprintf(filename,"%s/data/current_spline_points.dat",noise_data->flags->runDir);
-            print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
+        print_data_state(noise_data,gbmcmc_data,vbmcmc_data,mbh_data,GBMCMC_Flag,VBMCMC_Flag,Noise_Flag,MBH_Flag);
 
-            sprintf(filename,"%s/data/current_interpolated_spline_points.dat",noise_data->flags->runDir);
-            print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
-        }
-        if(VBMCMC_Flag)
-        {
-            for(int n=0; n<vbmcmc_data->flags->NVB; n++)print_data(vbmcmc_data->data_vec[n], vbmcmc_data->data_vec[n]->tdi[0], vbmcmc_data->flags, 0);
-        }
-        if(GBMCMC_Flag)
-        {
-            copy_noise(gbmcmc_data->model[gbmcmc_data->chain->index[0]]->noise[0], gbmcmc_data->data->noise[0]);
-            print_data(gbmcmc_data->data, gbmcmc_data->data->tdi[0], gbmcmc_data->flags, 0);
-        }
-        if(MBH_Flag)
-        {
-            char tempFileName[MAXSTRINGSIZE];
-            sprintf(tempFileName,"%s/power_data_0.dat.temp",mbh_data->flags->runDir);
-            FILE *tempFile = fopen(tempFileName,"w");
-            for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
-            {
-                int re = i;
-                int im = mbh_data->data->N-i;
-                double f = (double)i/mbh_data->data->Tobs;
-                fprintf(tempFile,"%lg %lg %lg\n",f,
-                        mbh_data->data->data[0][re]*mbh_data->data->data[0][re]+mbh_data->data->data[0][im]*mbh_data->data->data[0][im],
-                        mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
-            }
-            fclose(tempFile);
-
-
-            sprintf(tempFileName,"%s/data_0.dat.temp",mbh_data->flags->runDir);
-            tempFile = fopen(tempFileName,"w");
-            for(int i=0; i<mbh_data->het->MN; i++)
-            {
-                double f = (double)i/mbh_data->data->Tobs;
-                fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f, 0.0,0.0,0.0,0.0);
-
-            }
-            for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
-            {
-                int re = 2*(i-mbh_data->het->MN);
-                int im = re+1;
-                double f = (double)i/mbh_data->data->Tobs;
-                fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f,
-                        mbh_data->tdi->A[re],mbh_data->tdi->A[im],
-                        mbh_data->tdi->E[re],mbh_data->tdi->E[im]);
-            }
-            for(int i=mbh_data->het->MM; i<mbh_data->data->N; i++)
-            {
-                double f = (double)i/mbh_data->data->Tobs;
-                fprintf(tempFile,"%lg %lg %lg %lg %lg\n",f, 0.0,0.0,0.0,0.0);
-
-            }
-
-            fclose(tempFile);
-
-        }
         
     }while(gbmcmc_data->status!=0);
     

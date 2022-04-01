@@ -276,10 +276,10 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             model_y->spline->f[birth] = model_x->spline->f[kmin] + (model_x->spline->f[kmax] - model_x->spline->f[kmin])*gsl_rng_uniform(chain->r[ic]);
 
             double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth]);//noise_transfer_function(model_y->spline->f[birth]/orbit->fstar);
-            double Snmin = log(Sn/10);
-            double Snmax = log(Sn*100);
-            model_y->spline->SnA[birth] = exp(Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]));
-            model_y->spline->SnE[birth] = exp(Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]));
+            double Snmin = -Sn*100.;
+            double Snmax =  Sn*100.;
+            model_y->spline->SnA[birth] = Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]);
+            model_y->spline->SnE[birth] = Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]);
             
             // now fill in all higher points over k index
             for(int k=kmax; k<model_x->spline->N; k++)

@@ -367,7 +367,6 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
         double *SnE = malloc(lines*sizeof(double));
         
         for(int l=0; l<lines; l++) fscanf(psdFile,"%lg %lg %lg",&f[l],&SnA[l],&SnE[l]);
-        fclose(psdFile);
         
         //interpolate input psd onto segment grid
         double *fint = malloc(data->N*sizeof(double));

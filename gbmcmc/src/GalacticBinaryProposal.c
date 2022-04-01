@@ -1268,7 +1268,6 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         
         
         //normalize
-        printf("save norm file\n");
         proposal->norm = (n_f*n_theta*n_phi)/norm;
         proposal->maxp = maxLogL*proposal->norm;//sqrt(2.*maxLogL)*proposal->norm;
         

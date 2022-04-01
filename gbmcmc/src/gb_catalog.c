@@ -796,9 +796,10 @@ int main(int argc, char *argv[])
     /* *************************************************************** */
     /*           Save source detection parameters to file              */
     /* *************************************************************** */
-    
+    int NMODE_start = NMODE;
     for(int d=0; d<detections; d++)
     {
+        NMODE = NMODE_start;
         FILE *out;
         
         //print detection posterior samples
