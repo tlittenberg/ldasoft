@@ -39,6 +39,9 @@ struct GlobalFitData
     struct TDI *tdi_vgb;
     struct TDI *tdi_mbh;
     struct Noise *psd;
+    
+    double block_time;
+    double max_block_time;
 };
 
 static void alloc_gf_data(struct GlobalFitData *global_fit)
@@ -463,6 +466,26 @@ static void print_data_state(struct NoiseData *noise_data, struct GBMCMCData *gb
         
     }
 }
+
+static void blocked_gibbs_load_balancing(struct GlobalFitData *global_fit, int root, int procID, int Nproc)
+{
+    
+    double *block_time_vec=malloc(sizeof(double)*Nproc);
+    
+    if(procID == root) MPI_Gather(&global_fit->block_time, 1, MPI_DOUBLE, block_time_vec, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    else               MPI_Gather(&global_fit->block_time, 1, MPI_DOUBLE, NULL, 0, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    
+    
+    if(procID==root)
+    {
+        global_fit->max_block_time=0;
+        for(int n=0; n<Nproc; n++) if(block_time_vec[n]>global_fit->max_block_time) global_fit->max_block_time=block_time_vec[n];
+    }
+    MPI_Bcast(&global_fit->max_block_time, 1, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    free(block_time_vec);
+}
+
+
 int main(int argc, char *argv[])
 {
     time_t start, stop;
@@ -705,7 +728,7 @@ int main(int argc, char *argv[])
 
     /* number of update steps for each module (scaled to MBH model update) */
     int cycle;
-
+    global_fit->max_block_time=1;
     /*
      * Master Blocked Gibbs sampler
      *
@@ -726,9 +749,11 @@ int main(int argc, char *argv[])
 
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
-            if(global_fit->nMBH>0) cycle = (int)(mbh_data->cpu_time/gbmcmc_data->cpu_time);
+            cycle = (int)(global_fit->max_block_time/gbmcmc_data->cpu_time);
             for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+            
+            global_fit->block_time = gbmcmc_data->cpu_time;
         }
            
         /* ============================= */
@@ -745,9 +770,11 @@ int main(int argc, char *argv[])
             for(int n=0; n<vbmcmc_data->flags->NVB; n++)
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
-            if(global_fit->nMBH>0) cycle = (int)(mbh_data->cpu_time/vbmcmc_data->cpu_time);
+            cycle = (int)(global_fit->max_block_time/vbmcmc_data->cpu_time);
             for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
+            
+            global_fit->block_time = vbmcmc_data->cpu_time;
         }
 
         /* ============================= */
@@ -761,10 +788,11 @@ int main(int argc, char *argv[])
 
             select_frequency_segment(noise_data->data, tdi_full);
 
-            if(global_fit->nMBH>0) cycle = (int)(mbh_data->cpu_time/noise_data->cpu_time);
+            cycle = (int)(global_fit->max_block_time/noise_data->cpu_time);
             for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 noise_data->status = update_noise_sampler(noise_data);
             
+            global_fit->block_time = noise_data->cpu_time;
         }
 
         /* ============================= */
@@ -779,8 +807,12 @@ int main(int argc, char *argv[])
             select_mbh_segment(mbh_data, tdi_full);
             
             select_mbh_noise(mbh_data, global_fit->psd);
-            for(int i=0; i<CYCLE; i++)
+            
+            cycle = (int)(global_fit->max_block_time/mbh_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
                 mbh_data->status = update_mbh_sampler(mbh_data);
+            
+            global_fit->block_time = mbh_data->cpu_time;
         }
         
         /* ============================= */
@@ -795,7 +827,10 @@ int main(int argc, char *argv[])
         if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         if(global_fit->nVGB>0)share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-                
+
+        /* send time spent in each block to root for load balancing */
+        blocked_gibbs_load_balancing(global_fit, root, procID, Nproc);
+
         /* DEBUG */
         print_data_state(noise_data,gbmcmc_data,vbmcmc_data,mbh_data,GBMCMC_Flag,VBMCMC_Flag,Noise_Flag,MBH_Flag);
 
