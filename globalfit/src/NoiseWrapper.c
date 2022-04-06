@@ -270,16 +270,12 @@ int update_noise_sampler(struct NoiseData *noise_data)
     int numThreads;
 #pragma omp parallel num_threads(flags->threads)
     {
-        int threadID;
         //Save individual thread number
-        threadID = omp_get_thread_num();
+        int threadID = omp_get_thread_num();;
         
         //Only one thread runs this section
         if(threadID==0)  numThreads = omp_get_num_threads();
         
-#pragma omp barrier
-        /* The MCMC loop */
-                
 #pragma omp barrier
         // (parallel) loop over chains
         for(int ic=threadID; ic<NC; ic+=numThreads)
@@ -290,7 +286,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
             
             //update log likelihood (data may have changed)
             model_ptr->logL = noise_log_likelihood(data, model_ptr);
-
+            
             //evolve fixed dimension sampler
             for(int steps=0; steps<100; steps++)
             {
@@ -299,20 +295,14 @@ int update_noise_sampler(struct NoiseData *noise_data)
             
             //evolve trans dimension sampler
             noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
-
+            
         }// end (parallel) loop over chains
-         
-        
-        //Next section is single threaded. Every thread must get here before continuing
-#pragma omp barrier
-        if(threadID==0){
-            spline_ptmcmc(model,chain,flags);
-            adapt_temperature_ladder(chain, noise_data->mcmc_step+flags->NBURN);
-        }
-        //Can't continue MCMC until single thread is finished
-#pragma omp barrier
         
     }// End of parallelization
+#pragma omp barrier
+    
+spline_ptmcmc(model,chain,flags);
+adapt_temperature_ladder(chain, noise_data->mcmc_step+flags->NBURN);
 
     print_spline_state(model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
 

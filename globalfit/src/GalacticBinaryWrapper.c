@@ -318,29 +318,23 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     
     /* Exchange parameters with neighbors */
     exchange_gbmcmc_source_params(gbmcmc_data);
-
+    
     /* exit if this segment is finished */
     if(gbmcmc_data->mcmc_step >= flags->NMCMC) return 0;
-    
-    //For saving the number of threads actually given
+
+    /* set flags based on current state of sampler */
+    flags->burnin   = (gbmcmc_data->mcmc_step<0) ? 1 : 0;
+    flags->maximize = (gbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
+
+    /* The MCMC loop */
     int numThreads;
 #pragma omp parallel num_threads(flags->threads)
     {
-        int threadID;
         //Save individual thread number
-        threadID = omp_get_thread_num();
+        int threadID = omp_get_thread_num();
         
         //Only one thread runs this section
-        if(threadID==0)  numThreads = omp_get_num_threads();
-        
-#pragma omp barrier
-        /* The MCMC loop */
-        
-        if(threadID==0)
-        {
-            flags->burnin   = (gbmcmc_data->mcmc_step<0) ? 1 : 0;
-            flags->maximize = (gbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
-        }
+        if(threadID==0) numThreads = omp_get_num_threads();
         
 #pragma omp barrier
         // (parallel) loop over chains
@@ -369,55 +363,50 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             }
             
         }// end (parallel) loop over chains
-         //Next section is single threaded. Every thread must get here before continuing
+    }//end parallel section
 #pragma omp barrier
-        
-        if(threadID==0){
-            ptmcmc(model,chain,flags);
-            adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
-            
-            if(gbmcmc_data->mcmc_step>=0 && gbmcmc_data->mcmc_step%5==0) print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
-            
-            //track maximum log Likelihood
-            if(gbmcmc_data->mcmc_step%100==0)
-            {
-                if(update_max_log_likelihood(model, chain, flags))
-                {
-                    gbmcmc_data->mcmc_step = -flags->NBURN;
-                }
-            }
-            
-            //update run status
-            if(gbmcmc_data->mcmc_step%data->downsample==0 && gbmcmc_data->mcmc_step>mcmc_start)
-            {
-                
-                //minimal screen output
-                print_sampler_state(gbmcmc_data);
-                
-                //save chain state to resume sampler
-                save_chain_state(data, model, chain, flags, gbmcmc_data->mcmc_step);
-                
-            }
-            
-            //dump waveforms to file, update avgLogL for thermodynamic integration
-            if(gbmcmc_data->mcmc_step>0 && gbmcmc_data->mcmc_step%data->downsample==0)
-            {
-                save_waveforms(data, model[chain->index[0]], gbmcmc_data->mcmc_step/data->downsample);
-                
-                for(int ic=0; ic<NC; ic++)
-                {
-                    chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
-                    for(int i=0; i<flags->NDATA; i++)
-                    chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
-                }
-            }
-            
-            gbmcmc_data->mcmc_step++;
+    
+    ptmcmc(model,chain,flags);
+    adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
+    
+    if(gbmcmc_data->mcmc_step>=0 && gbmcmc_data->mcmc_step%5==0) print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
+    
+    //track maximum log Likelihood
+    if(gbmcmc_data->mcmc_step%100==0)
+    {
+        if(update_max_log_likelihood(model, chain, flags))
+        {
+            gbmcmc_data->mcmc_step = -flags->NBURN;
         }
-        //Can't continue MCMC until single thread is finished
-#pragma omp barrier
+    }
+    
+    //update run status
+    if(gbmcmc_data->mcmc_step%data->downsample==0 && gbmcmc_data->mcmc_step>mcmc_start)
+    {
         
-    }// End of parallelization
+        //minimal screen output
+        print_sampler_state(gbmcmc_data);
+        
+        //save chain state to resume sampler
+        save_chain_state(data, model, chain, flags, gbmcmc_data->mcmc_step);
+        
+    }
+    
+    //dump waveforms to file, update avgLogL for thermodynamic integration
+    if(gbmcmc_data->mcmc_step>0 && gbmcmc_data->mcmc_step%data->downsample==0)
+    {
+        save_waveforms(data, model[chain->index[0]], gbmcmc_data->mcmc_step/data->downsample);
+        
+        for(int ic=0; ic<NC; ic++)
+        {
+            chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
+            for(int i=0; i<flags->NDATA; i++)
+                chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
+        }
+    }
+    
+    gbmcmc_data->mcmc_step++;
+    
     clock_t stop = clock();
     gbmcmc_data->cpu_time = (double)(stop-start);
     

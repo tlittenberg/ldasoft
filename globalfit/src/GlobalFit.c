@@ -871,7 +871,7 @@ int main(int argc, char *argv[])
     if(MBH_Flag)
     {
         /* waveform reconstructions */
-        print_mbh_waveform_reconstruction(mbh_data);
+        //print_mbh_waveform_reconstruction(mbh_data);
     }
 
     
