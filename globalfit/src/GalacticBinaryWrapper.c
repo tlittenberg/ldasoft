@@ -328,6 +328,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 
     /* The MCMC loop */
     int numThreads;
+    int numSteps = 100;
 #pragma omp parallel num_threads(flags->threads)
     {
         //Save individual thread number
@@ -345,40 +346,43 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             struct Model *model_ptr = model[chain->index[ic]];
             struct Model *trial_ptr = trial[chain->index[ic]];
             
-            for(int steps=0; steps < 100; steps++)
+            for(int steps=0; steps<numSteps; steps++)
             {
-                galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-            }
-            
-            //reverse jump birth/death move
-            if(flags->rj) galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-            
-            //update fisher matrix for each chain
-            if(gbmcmc_data->mcmc_step%100==0)
-            {
+                for(int n=0; n<100; n++)
+                {
+                    galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                }
+                
+                //reverse jump birth/death move
+                if(flags->rj) galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                
+                //update fisher matrix for each chain
                 for(int n=0; n<model_ptr->Nlive; n++)
                 {
                     galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise[FIXME]);
                 }
+                
+#pragma omp barrier
+                if(threadID==0)
+                {
+                    ptmcmc(model,chain,flags);
+                    adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
+                }
+#pragma omp barrier
+                
             }
             
         }// end (parallel) loop over chains
     }//end parallel section
 #pragma omp barrier
     
-    ptmcmc(model,chain,flags);
-    adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
     
-    if(gbmcmc_data->mcmc_step>=0 && gbmcmc_data->mcmc_step%5==0) print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
+    if(gbmcmc_data->mcmc_step>=0)
+        print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
     
     //track maximum log Likelihood
-    if(gbmcmc_data->mcmc_step%100==0)
-    {
-        if(update_max_log_likelihood(model, chain, flags))
-        {
-            gbmcmc_data->mcmc_step = -flags->NBURN;
-        }
-    }
+    if(update_max_log_likelihood(model, chain, flags))
+        gbmcmc_data->mcmc_step = -flags->NBURN;
     
     //update run status
     if(gbmcmc_data->mcmc_step%data->downsample==0 && gbmcmc_data->mcmc_step>mcmc_start)
@@ -405,7 +409,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
         }
     }
     
-    gbmcmc_data->mcmc_step++;
+    gbmcmc_data->mcmc_step+=numSteps;
     
     clock_t stop = clock();
     gbmcmc_data->cpu_time = (double)(stop-start);

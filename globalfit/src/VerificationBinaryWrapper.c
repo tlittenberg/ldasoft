@@ -204,6 +204,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
     
     //For saving the number of threads actually given
     int numThreads;
+    int numSteps=100;
 #pragma omp parallel num_threads(flags->threads)
     {
         //Save individual thread number
@@ -225,18 +226,24 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                 
                 model_ptr->logL = gaussian_log_likelihood(data_vec[n], model_ptr);
                 
-                for(int steps=0; steps < 100; steps++)
+                for(int steps=0; steps<numSteps; steps++)
                 {
-                    galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
-                }//loop over MCMC steps
-                
-                //update fisher matrix for each chain
-                if(vbmcmc_data->mcmc_step%100==0)
-                {
+                    for(int n=0; n<100; n++)
+                    {
+                        galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
+                    }//loop over MCMC steps
+                    
+                    //update fisher matrix for each chain
                     for(int i=0; i<model_ptr->Nlive; i++)
                     {
                         galactic_binary_fisher(orbit, data_vec[n], model_ptr->source[i], data_vec[n]->noise[FIXME]);
                     }
+#pragma omp barrier
+                    if(threadID==0){
+                        ptmcmc(model_vec[n],chain_vec[n],flags);
+                        adapt_temperature_ladder(chain_vec[n], vbmcmc_data->mcmc_step+flags->NBURN);
+                    }
+#pragma omp barrier
                 }
             }
             
@@ -253,16 +260,12 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
         proposal = proposal_vec[n];
         chain = chain_vec[n];
         
-        ptmcmc(model,chain,flags);
-        adapt_temperature_ladder(chain, vbmcmc_data->mcmc_step+flags->NBURN);
-        
-        if(vbmcmc_data->mcmc_step>=0 && vbmcmc_data->mcmc_step%5==0) print_chain_files(data, model, chain, flags, vbmcmc_data->mcmc_step);
+        if(vbmcmc_data->mcmc_step>=0)
+            print_chain_files(data, model, chain, flags, vbmcmc_data->mcmc_step);
         
         //track maximum log Likelihood
-        if(vbmcmc_data->mcmc_step%100)
-        {
-            if(update_max_log_likelihood(model, chain, flags)) vbmcmc_data->mcmc_step = -flags->NBURN;
-        }
+        if(update_max_log_likelihood(model, chain, flags))
+            vbmcmc_data->mcmc_step = -flags->NBURN;
         
         //store reconstructed waveform
         if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
@@ -296,7 +299,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
             }
         }
     }
-    vbmcmc_data->mcmc_step++;
+    vbmcmc_data->mcmc_step+=numSteps;
     
     clock_t stop = clock();
     vbmcmc_data->cpu_time = (double)(stop-start);
