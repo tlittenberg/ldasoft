@@ -301,9 +301,9 @@ int update_noise_sampler(struct NoiseData *noise_data)
     }// End of parallelization
 #pragma omp barrier
     
-spline_ptmcmc(model,chain,flags);
-adapt_temperature_ladder(chain, noise_data->mcmc_step+flags->NBURN);
-
+    spline_ptmcmc(model,chain,flags);
+    adapt_temperature_ladder(chain, noise_data->mcmc_step+flags->NBURN);
+    
     print_spline_state(model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
 
     //save point estimate of noise model

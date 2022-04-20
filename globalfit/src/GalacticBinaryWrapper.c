@@ -348,7 +348,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             
             for(int steps=0; steps<numSteps; steps++)
             {
-                for(int n=0; n<100; n++)
+                for(int m=0; m<100; m++)
                 {
                     galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 }
