@@ -385,7 +385,7 @@ int main(int argc, char *argv[])
     double Distance;  //distance between pairs of waveforms
     double tolerance = data->pmax; //tolerance on match to be considered associated
     double dqmax = 10;      //maximum frequency separation to try match calculation (in frequency bins)
-    int downsample = 10;
+    int downsample = 1;
     
     
     //Book-keeping
@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
     fprintf(stdout,"\nLooping over chain file\n");
     for(int i=1; i<IMAX; i++)
     {
-        if(i%(IMAX/100)==0)printProgress((double)i/(double)IMAX);
+        if(IMAX>100 && i%(IMAX/100)==0)printProgress((double)i/(double)IMAX);
         
         for(int n=0; n<N; n++) entryFlag[n] = 0;
         
