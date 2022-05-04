@@ -228,7 +228,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                 
                 for(int steps=0; steps<numSteps; steps++)
                 {
-                    for(int m=0; m<100; m++)
+                    for(int m=0; m<10; m++)
                     {
                         galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
                     }//loop over MCMC steps
