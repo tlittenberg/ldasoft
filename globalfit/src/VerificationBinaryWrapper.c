@@ -242,6 +242,10 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                     if(threadID==0){
                         ptmcmc(model_vec[n],chain_vec[n],flags);
                         adapt_temperature_ladder(chain_vec[n], vbmcmc_data->mcmc_step+flags->NBURN);
+                        
+                        if(steps%10==0 && chain_vec[n]->index[ic]==0 && vbmcmc_data->mcmc_step>=0)
+                            print_chain_files(data_vec[n], model_ptr, chain_vec[n], flags, vbmcmc_data->mcmc_step);
+
                     }
 #pragma omp barrier
                 }
@@ -260,8 +264,6 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
         proposal = proposal_vec[n];
         chain = chain_vec[n];
         
-        if(vbmcmc_data->mcmc_step>=0)
-            print_chain_files(data, model, chain, flags, vbmcmc_data->mcmc_step);
         
         //track maximum log Likelihood
         if(update_max_log_likelihood(model, chain, flags))

@@ -367,6 +367,9 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
                 {
                     ptmcmc(model,chain,flags);
                     adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
+
+                    if(steps%10==0 && chain->index[ic]==0 && gbmcmc_data->mcmc_step>=0)
+                        print_chain_files(data_ptr, model_ptr, chain, flags, gbmcmc_data->mcmc_step);
                 }
 #pragma omp barrier
                 
@@ -376,10 +379,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     }//end parallel section
 #pragma omp barrier
     
-    
-    if(gbmcmc_data->mcmc_step>=0)
-        print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
-    
+        
     //track maximum log Likelihood
     if(update_max_log_likelihood(model, chain, flags))
         gbmcmc_data->mcmc_step = -flags->NBURN;
