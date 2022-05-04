@@ -369,7 +369,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
                     adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
 
                     if(steps%10==0 && chain->index[ic]==0 && gbmcmc_data->mcmc_step>=0)
-                        print_chain_files(data_ptr, model_ptr, chain, flags, gbmcmc_data->mcmc_step);
+                        print_chain_files(data, model_ptr, chain, flags, gbmcmc_data->mcmc_step);
                 }
 #pragma omp barrier
                 
