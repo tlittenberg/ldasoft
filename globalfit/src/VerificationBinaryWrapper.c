@@ -244,7 +244,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                         adapt_temperature_ladder(chain_vec[n], vbmcmc_data->mcmc_step+flags->NBURN);
                         
                         if(steps%10==0 && chain_vec[n]->index[ic]==0 && vbmcmc_data->mcmc_step>=0)
-                            print_chain_files(data_vec[n], model_ptr, chain_vec[n], flags, vbmcmc_data->mcmc_step);
+                            print_chain_files(data_vec[n], model_vec[n], chain_vec[n], flags, vbmcmc_data->mcmc_step);
 
                     }
 #pragma omp barrier
