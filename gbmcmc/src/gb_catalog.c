@@ -796,6 +796,14 @@ int main(int argc, char *argv[])
     /* *************************************************************** */
     /*           Save source detection parameters to file              */
     /* *************************************************************** */
+    
+    const gsl_rng_type *T = gsl_rng_default;
+    const gsl_rng_type *Ttemp = gsl_rng_default;
+    gsl_rng *r = gsl_rng_alloc(T);
+    gsl_rng *rtemp = gsl_rng_alloc(Ttemp);
+    gsl_rng_env_setup();
+    gsl_rng_set (r, 190521);
+
     int NMODE_start = NMODE;
     for(int d=0; d<detections; d++)
     {
@@ -897,20 +905,10 @@ int main(int argc, char *argv[])
         
         /* Gaussian mixture model fit to posterior */
         fprintf(stdout,"\nGaussian Mixture Model fit:\n");
-        const gsl_rng_type *T = gsl_rng_default;
-        const gsl_rng_type *Ttemp = gsl_rng_default;
-        gsl_rng *r = gsl_rng_alloc(T);
-        gsl_rng *rtemp = gsl_rng_alloc(Ttemp);
-        gsl_rng_env_setup();
-        gsl_rng_set (r, 190521);
-        
-        
+                
         int counter;
         int CMAX = 10;
         double BIC;
-        
-        sprintf(filename, "%s/%s_gmm_bic.dat", outdir,entry->name);
-        out = fopen( filename, "w");
         
         counter = 0;
         gsl_rng_memcpy(rtemp, r);
@@ -938,10 +936,6 @@ int main(int argc, char *argv[])
         free(hrec);
     }//end loop over catalog entries
     
-    
-    free_noise(noise);
-    //free_orbit(orbit);TODO: free_orbit() segfaults
-    free(detection_index);
     
     return 0;
 }
