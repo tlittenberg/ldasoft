@@ -116,7 +116,8 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     struct TDI *tdi_td = malloc(sizeof(struct TDI));
         
     if(!strcmp(data->format,"frequency"))  LISA_Read_HDF5_LDC_RADLER_TDI(tdi_td, data->fileName);
-    if(!strcmp(data->format,"sangria")) LISA_Read_HDF5_LDC_TDI(tdi_td, data->fileName);
+    if(!strcmp(data->format,"sangria")) LISA_Read_HDF5_LDC_TDI(tdi_td, data->fileName, "/obs/tdi");
+    
     
     /* Select time segment of full data set */
     double start_time = data->t0[0];
@@ -150,6 +151,22 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
         E[n] = tdi_td->E[m];
         T[n] = tdi_td->T[m];
     }
+    
+    /* lets get rid of those fucking black holes */
+    struct TDI *tdi_td_mbhb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_mbhb, data->fileName, "/sky/mbhb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_mbhb->X[m];
+        Y[n] -= tdi_td_mbhb->Y[m];
+        Z[n] -= tdi_td_mbhb->Z[m];
+        A[n] -= tdi_td_mbhb->A[m];
+        E[n] -= tdi_td_mbhb->E[m];
+        T[n] -= tdi_td_mbhb->T[m];
+    }
+    free_tdi(tdi_td_mbhb);
+
     
     /* Tukey window time-domain TDI channels tdi_td */
     double alpha = (2.0*FILTER_LENGTH/Tobs);

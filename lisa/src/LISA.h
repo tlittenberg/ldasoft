@@ -293,7 +293,7 @@ void free_tdi(struct TDI *tdi);
  Hard-coded for <a href="https://lisa-ldc.lal.in2p3.fr/challenge2">LDC Sangria</a> data format.
  Performs a deep copy of TDI time series data in HDF5 to input TDI structure.
  */
-void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName);
+void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataName);
 
 /**
  \brief HDF5 parser for LISA Data

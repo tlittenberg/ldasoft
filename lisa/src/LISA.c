@@ -941,7 +941,7 @@ void free_tdi(struct TDI *tdi)
 
 #define DATASET "/obs/tdi"
 
-void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
+void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataName)
 {    
     /* LDC-formatted structure for compound HDF5 dataset */
     typedef struct tdi_dataset {
@@ -960,8 +960,8 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
     
     /* Open an existing dataset. */
-    dataset = H5Dopen(file, DATASET, H5P_DEFAULT);
-    
+    dataset = H5Dopen(file, dataName, H5P_DEFAULT);
+
     /* Get size of dataset */
     dspace = H5Dget_space(dataset);
     ndims = H5Sget_simple_extent_ndims(dspace);
