@@ -228,12 +228,11 @@ int main(int argc, char* argv[])
     /* Get max and min for each parameter */
     for(size_t n=0; n<NP; n++)
     {
-        int err = 0;
         double *temp = malloc(10*sizeof(double));
-        err = gsl_sort_vector_smallest(temp, 10, params[n]);
+        gsl_sort_vector_smallest(temp, 10, params[n]);
         pmin = temp[0] - (temp[9]-temp[0]); //pad min to avoid infs in mapping
         
-        err = gsl_sort_vector_largest(temp, 10, params[n]);
+        gsl_sort_vector_largest(temp, 10, params[n]);
         pmax = temp[0] + (temp[0]-temp[9]); //pad max to avoid infs in mapping
         
         /* cpopy max and min into each MVG structure */

@@ -670,14 +670,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
     FILE *injectionFile;
     FILE *paramFile;
     char filename[1024];
-    
-    if(flags->NINJ==0)
-    {
-        data->fmax = data->fmin + data->N/data->T;
-        data->qmin = (int)(data->fmin*data->T);
-        data->qmax = data->qmin+data->N;
-    }
-    
+        
     for(int ii = 0; ii<flags->NINJ; ii++)
     {
         
@@ -725,7 +718,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 
                 
                 //set bandwidth of data segment centered on injection
-                if(nn==0)
+                if(nn==0 && !flags->strainData)
                 {
                     data->fmin = f0 - (data->N/2)/data->T;
                     data->fmax = f0 + (data->N/2)/data->T;
@@ -781,6 +774,12 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 //Book-keeping of injection time-frequency volume
                 galactic_binary_alignment(orbit, data, inj);
                 
+                if(inj->qmax < data->qmin || inj->qmin > data->qmax)
+                {
+                    fprintf(stdout,"Injection %i is outside of the requested frequency segment\n",nn);
+                    continue;
+                }
+                
                 printf("   ...bandwidth : %i\n",inj->BW);
                 printf("   ...fdot      : %g\n",inj->dfdt*data->T*data->T);
                 printf("   ...fddot     : %g\n",inj->d2fdt2*data->T*data->T*data->T);
@@ -793,15 +792,17 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 for(int n=0; n<inj->BW; n++)
                 {
                     int i = n+inj->imin;
-                    
-                    tdi->X[2*i]   += inj->tdi->X[2*n];
-                    tdi->X[2*i+1] += inj->tdi->X[2*n+1];
-                    
-                    tdi->A[2*i]   += inj->tdi->A[2*n];
-                    tdi->A[2*i+1] += inj->tdi->A[2*n+1];
-                    
-                    tdi->E[2*i]   += inj->tdi->E[2*n];
-                    tdi->E[2*i+1] += inj->tdi->E[2*n+1];
+                    if(i>0 && i<data->N)
+                    {
+                        tdi->X[2*i]   += inj->tdi->X[2*n];
+                        tdi->X[2*i+1] += inj->tdi->X[2*n+1];
+                        
+                        tdi->A[2*i]   += inj->tdi->A[2*n];
+                        tdi->A[2*i+1] += inj->tdi->A[2*n+1];
+                        
+                        tdi->E[2*i]   += inj->tdi->E[2*n];
+                        tdi->E[2*i+1] += inj->tdi->E[2*n+1];
+                    }
                 }
                 
                 sprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);

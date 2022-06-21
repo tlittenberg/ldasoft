@@ -953,7 +953,6 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataNam
     static tdi_dataset *s1;
     
     hid_t  file, dataset, dspace; /* identifiers */
-    herr_t status; /* error handling */
     int ndims; /* dimension of dataset */
     
     /* Open an existing file. */
@@ -980,7 +979,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataNam
     H5Tinsert(s1_tid, "Y", HOFFSET(struct tdi_dataset, Y), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
     
-    status = H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
+    H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
         
     
     /* Copy LDC-formatted structure into ldasoft format */
@@ -1001,10 +1000,10 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataNam
     tdi->delta = s1[1].t - s1[0].t;
     
     /* Close the dataset. */
-    status = H5Dclose(dataset);
+    H5Dclose(dataset);
     
     /* Close the file. */
-    status = H5Fclose(file);
+    H5Fclose(file);
     
     /* Free up memory */
     free(s1);
@@ -1014,7 +1013,6 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataNam
 void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
 {
     hid_t  file, dataset, dataspace, memtype; /* identifiers */
-    herr_t status; /* error handling */
     int ndims, Nrow, Ncol; /* dimension of dataset */
     double *data; /* array for dataset */
 
@@ -1040,7 +1038,7 @@ void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
 
     
     /* Read the data */
-    status = H5Dread (dataset, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    H5Dread (dataset, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
 
     
     for(int i=0; i<Nrow; i++)
@@ -1062,9 +1060,9 @@ void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
     free(data);
 
     /* Close the dataset. */
-    status = H5Dclose(dataset);
+    H5Dclose(dataset);
 
     /* Close the file. */
-    status = H5Fclose(file);
+    H5Fclose(file);
 
 }

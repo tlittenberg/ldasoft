@@ -325,7 +325,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 
     /* The MCMC loop */
     int numThreads;
-    int numSteps = 100;
+    int numSteps = 10;
 #pragma omp parallel num_threads(flags->threads)
     {
         //Save individual thread number
@@ -348,7 +348,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 
             for(int steps=0; steps<numSteps; steps++)
             {
-                for(int m=0; m<10; m++)
+                for(int m=0; m<100; m++)
                 {
                     galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 }
