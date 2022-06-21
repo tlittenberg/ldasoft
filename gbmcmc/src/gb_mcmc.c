@@ -98,7 +98,8 @@ int main(int argc, char *argv[])
     {
         GalacticBinaryReadData(data,orbit,flags);
     }
-    else
+    
+    if(flags->NINJ>0)
     {
         /* Inject gravitational wave signal */
         if(flags->knownSource)

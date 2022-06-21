@@ -41,7 +41,6 @@ struct MBHData
     double ***Fisher; //!< Fisher Information Matrix
     double **ejump; //!< Scale for Fisher matrix proposals
     double ***evec; //!< Directions for Fisher matrix proposals
-    double ***hrec; //!< Hold point estimates of reconstructions
     int **cv; //!< Unknown
     int **av; //!< Unknown
     gsl_rng **rvec; //!< Vector of RNG seeds for multithreading PTMCMC
@@ -75,7 +74,5 @@ void initialize_mbh_sampler(struct MBHData *mbh_data);
 int update_mbh_sampler(struct MBHData *mbh_data);
 
 void get_mbh_waveform(struct MBHData *mbh_data);
-
-void print_mbh_waveform_reconstruction(struct MBHData *mbh_data);
 
 #endif /* MBHWrapper_h */

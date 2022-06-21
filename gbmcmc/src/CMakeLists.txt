@@ -1,5 +1,5 @@
 # add library
-add_library(gbmcmc STATIC GalacticBinaryFStatistic.c GalacticBinaryMatch.c GalacticBinaryPrior.c GalacticBinaryWaveform.c
+add_library(gbmcmc STATIC GalacticBinaryFStatistic.c GalacticBinaryPrior.c GalacticBinaryWaveform.c
             GalacticBinaryCatalog.c GalacticBinaryIO.c GalacticBinaryMath.c GalacticBinaryProposal.c 
             GalacticBinaryData.c GalacticBinaryMCMC.c GalacticBinaryModel.c GalacticBinaryResidual.c
             GalacticBinary.h
@@ -40,6 +40,18 @@ if(APPLE)
    target_link_libraries(gb_catalog omp)
 endif()
 install(TARGETS gb_catalog DESTINATION bin)
+
+add_executable(gb_match GalacticBinaryMatch.c)
+target_link_libraries(gb_match ${GSL_LIBRARIES})
+target_link_libraries(gb_match ${HDF5_LIBRARIES})
+target_link_libraries(gb_match m)
+target_link_libraries(gb_match tools)
+target_link_libraries(gb_match lisa)
+target_link_libraries(gb_match gbmcmc)
+if(APPLE)
+   target_link_libraries(gb_match omp)
+endif()
+install(TARGETS gb_match DESTINATION bin)
 
 add_executable(vb_mcmc vb_mcmc.c)
                 

@@ -187,9 +187,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
     
     struct Data *data = NULL;
     struct Chain *chain = NULL;
-    struct Prior *prior = NULL;
     struct Proposal **proposal = NULL;
-    struct Model **trial = NULL;
     struct Model **model = NULL;
     
     int NC = chain_vec[0]->NC;
@@ -258,9 +256,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
     for(int n=0; n<flags->NVB; n++)
     {
         model = model_vec[n];
-        trial = trial_vec[n];
         data = data_vec[n];
-        prior = prior_vec[n];
         proposal = proposal_vec[n];
         chain = chain_vec[n];
         

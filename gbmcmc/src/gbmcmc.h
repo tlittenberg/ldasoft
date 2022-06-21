@@ -17,6 +17,6 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryCatalog.h"
 #include "GalacticBinaryMCMC.h"
-
+#include "GalacticBinaryMath.h"
 
 #endif /* gbmcmc_h */

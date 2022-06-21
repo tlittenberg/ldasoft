@@ -225,9 +225,6 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
     
     gsl_set_error_handler_off();
     
-    //error catchers
-    int err = 0;
-    
     //get size of matrix (assumed to be NxN)
     size_t N = A->size1;
     
@@ -238,14 +235,14 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
     gsl_matrix_memcpy(Ainv,A);
     
     //cholesky decomposition
-    err += gsl_linalg_cholesky_decomp(Ainv);
+    gsl_linalg_cholesky_decomp(Ainv);
     
     //get condition number
     gsl_vector *work = gsl_vector_alloc(3*N);
-    err += gsl_linalg_cholesky_rcond(Ainv, R, work);
+    gsl_linalg_cholesky_rcond(Ainv, R, work);
 
     //inverse of A
-    err += gsl_linalg_cholesky_invert(Ainv);
+    gsl_linalg_cholesky_invert(Ainv);
     
     //get deteriminant, need LU decomposition
     gsl_matrix_memcpy(L,A);
@@ -264,9 +261,6 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
 
 void decompose_matrix(gsl_matrix *A, gsl_matrix *evec, gsl_vector *eval)
 {
-    //error catchers
-    int err = 0;
-    
     //get size of matrix (assumed to be NxN)
     size_t N = A->size1;
     
@@ -279,7 +273,7 @@ void decompose_matrix(gsl_matrix *A, gsl_matrix *evec, gsl_vector *eval)
     gsl_matrix_memcpy(Atemp,A);
     
     //the reason we're all here...
-    err += gsl_eigen_symmv (Atemp, eval, evec, workspace);
+    gsl_eigen_symmv (Atemp, eval, evec, workspace);
     
     gsl_matrix_free (Atemp);
     gsl_eigen_symmv_free (workspace);
