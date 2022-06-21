@@ -25,7 +25,6 @@
 
 #define N_TDI_CHANNELS 2
 #define NMAX 10
-#define CYCLE 1
 
 struct GlobalFitData
 {
@@ -263,9 +262,6 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
         MPI_Recv(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
-
-    /* Broadcast run time of first UCB setgment (used to scale other UCB updates) */
-    MPI_Bcast(&gbmcmc_data->cpu_time, 1, MPI_DOUBLE, gbmcmc_data->procID_min, MPI_COMM_WORLD);
 
 }
 
@@ -749,8 +745,10 @@ int main(int argc, char *argv[])
 
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
-            cycle = (int)(global_fit->max_block_time/gbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
+            exchange_gbmcmc_source_params(gbmcmc_data);
+
+            cycle = (int)round(global_fit->max_block_time/gbmcmc_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
                 gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
             
             global_fit->block_time = gbmcmc_data->cpu_time;
@@ -770,8 +768,8 @@ int main(int argc, char *argv[])
             for(int n=0; n<vbmcmc_data->flags->NVB; n++)
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
-            cycle = (int)(global_fit->max_block_time/vbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
+            cycle = (int)round(global_fit->max_block_time/vbmcmc_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
                 vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
             
             global_fit->block_time = vbmcmc_data->cpu_time;
@@ -788,8 +786,8 @@ int main(int argc, char *argv[])
 
             select_frequency_segment(noise_data->data, tdi_full);
 
-            cycle = (int)(global_fit->max_block_time/noise_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
+            cycle = (int)round(global_fit->max_block_time/noise_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
                 noise_data->status = update_noise_sampler(noise_data);
             
             global_fit->block_time = noise_data->cpu_time;
@@ -808,8 +806,8 @@ int main(int argc, char *argv[])
             
             select_mbh_noise(mbh_data, global_fit->psd);
             
-            cycle = (int)(global_fit->max_block_time/mbh_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
+            cycle = (int)round(1.*global_fit->max_block_time/mbh_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
                 mbh_data->status = update_mbh_sampler(mbh_data);
             
             global_fit->block_time = mbh_data->cpu_time;

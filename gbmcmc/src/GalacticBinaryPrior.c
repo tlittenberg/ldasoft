@@ -588,7 +588,7 @@ double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
         gsl_vector_set(x,n,yn);
         
         //Jacobian
-        //logJ -= log(dsigmoid(yn, xmin, xmax));
+        logJ -= log(dsigmoid(yn, xmin, xmax));
     }
     
     //sum over modes

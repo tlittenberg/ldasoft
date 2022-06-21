@@ -291,7 +291,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(isfinite(logH) && logH > loga)
         {
             proposal[nprop]->accept[ic]++;
-            copy_model(model_y,model_x);
+            copy_model_lite(model_y,model_x);
         }
     }
 }
@@ -311,6 +311,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     /*
      * BIC-inspired likelihood penalty -klogN/2
      * k = [A, inc, psi, phi]
+     * N is the bandwidth of the signal
      */
     double penalty= -2.;//1.*data->logN;
 

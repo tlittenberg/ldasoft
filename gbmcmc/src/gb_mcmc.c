@@ -228,21 +228,21 @@ int main(int argc, char *argv[])
                 //loop over frequency segments
                 struct Model *model_ptr = model[chain->index[ic]];
                 struct Model *trial_ptr = trial[chain->index[ic]];
-                
+                copy_model(model_ptr,trial_ptr);
                 
                 for(int steps=0; steps < 100; steps++)
                 {
                     //for(int j=0; j<model_ptr->Nlive; j++)
                     galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                    
-                    if( (flags->strainData || flags->simNoise) && !flags->psd)
-                        noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
-                    
+                                        
                 }//loop over MCMC steps
-                
+                                
                 //reverse jump birth/death move
                 if(flags->rj)galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 
+                if( (flags->strainData || flags->simNoise) && !flags->psd)
+                    noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
+
                 //update fisher matrix for each chain
                 if(mcmc%100==0)
                 {

@@ -226,6 +226,9 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                 
                 model_ptr->logL = gaussian_log_likelihood(data_vec[n], model_ptr);
                 
+                //sync up model and trial pointers
+                copy_model(model_ptr,trial_ptr);
+
                 for(int steps=0; steps<numSteps; steps++)
                 {
                     for(int m=0; m<10; m++)

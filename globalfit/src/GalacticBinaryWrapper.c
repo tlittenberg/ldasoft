@@ -315,10 +315,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     
     int NC = chain->NC;
     int mcmc_start = -flags->NBURN;
-    
-    /* Exchange parameters with neighbors */
-    exchange_gbmcmc_source_params(gbmcmc_data);
-    
+        
     /* exit if this segment is finished */
     if(gbmcmc_data->mcmc_step >= flags->NMCMC) return 0;
 
@@ -346,6 +343,9 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             struct Model *model_ptr = model[chain->index[ic]];
             struct Model *trial_ptr = trial[chain->index[ic]];
             
+            //sync up model and trial pointers
+            copy_model(model_ptr,trial_ptr);
+
             for(int steps=0; steps<numSteps; steps++)
             {
                 for(int m=0; m<10; m++)

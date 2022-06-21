@@ -422,6 +422,25 @@ void copy_model(struct Model *origin, struct Model *copy)
     copy->logLnorm       = origin->logLnorm;
 }
 
+void copy_model_lite(struct Model *origin, struct Model *copy)
+{
+    copy->Nlive = origin->Nlive;
+
+    //Source parameters
+    for(int n=0; n<origin->Nlive; n++)
+        copy_source(origin->source[n],copy->source[n]);
+    
+    //Source waveforms
+    for(int n=0; n<origin->NT; n++)
+    {
+        copy_tdi(origin->tdi[n],copy->tdi[n]);
+        copy_tdi(origin->residual[n],copy->residual[n]);
+    }
+    
+    //Model likelihood
+    copy->logL = origin->logL;
+}
+
 int compare_model(struct Model *a, struct Model *b)
 {
     
@@ -814,7 +833,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     {
         for(n=0; n<N2; n++)
         {
-            model->tdi[m]->X[n]=0.0;
+            //model->tdi[m]->X[n]=0.0;
             model->tdi[m]->A[n]=0.0;
             model->tdi[m]->E[n]=0.0;
         }
@@ -830,7 +849,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         {
             for(i=0; i<N2; i++)
             {
-                source->tdi->X[i]=0.0;
+                //source->tdi->X[i]=0.0;
                 source->tdi->A[i]=0.0;
                 source->tdi->E[i]=0.0;
             }
@@ -860,8 +879,10 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
                     int j_re = 2*j;
                     int j_im = j_re+1;
                     
+                    /*
                     model->tdi[m]->X[j_re] += source->tdi->X[i_re];
                     model->tdi[m]->X[j_im] += source->tdi->X[i_im];
+                    */
                     
                     model->tdi[m]->A[j_re] += source->tdi->A[i_re];
                     model->tdi[m]->A[j_im] += source->tdi->A[i_im];
