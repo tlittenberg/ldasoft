@@ -368,7 +368,7 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
     alloc_spline_model(model, data->N, Nspline);
     
     //set max and min spline points
-    model->Nmin = 3;
+    model->Nmin = 5;
     model->Nmax = Nspline;
     
     //set up psd frequency grid

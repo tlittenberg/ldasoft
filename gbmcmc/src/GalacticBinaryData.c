@@ -152,7 +152,7 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
         T[n] = tdi_td->T[m];
     }
     
-    /* lets get rid of those fucking black holes */
+    /* lets get rid of those black holes
     struct TDI *tdi_td_mbhb = malloc(sizeof(struct TDI));
     LISA_Read_HDF5_LDC_TDI(tdi_td_mbhb, data->fileName, "/sky/mbhb/tdi");
     for(int n=0; n<N; n++)
@@ -165,7 +165,50 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
         E[n] -= tdi_td_mbhb->E[m];
         T[n] -= tdi_td_mbhb->T[m];
     }
-    free_tdi(tdi_td_mbhb);
+    free_tdi(tdi_td_mbhb);*/
+    
+    /* lets get rid of the galaxy
+    struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_dgb->X[m];
+        Y[n] -= tdi_td_dgb->Y[m];
+        Z[n] -= tdi_td_dgb->Z[m];
+        A[n] -= tdi_td_dgb->A[m];
+        E[n] -= tdi_td_dgb->E[m];
+        T[n] -= tdi_td_dgb->T[m];
+    }
+    free_tdi(tdi_td_dgb);
+    
+    struct TDI *tdi_td_igb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_igb, data->fileName, "/sky/igb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_igb->X[m];
+        Y[n] -= tdi_td_igb->Y[m];
+        Z[n] -= tdi_td_igb->Z[m];
+        A[n] -= tdi_td_igb->A[m];
+        E[n] -= tdi_td_igb->E[m];
+        T[n] -= tdi_td_igb->T[m];
+    }
+    free_tdi(tdi_td_igb);
+    
+    struct TDI *tdi_td_vgb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_vgb, data->fileName, "/sky/vgb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_vgb->X[m];
+        Y[n] -= tdi_td_vgb->Y[m];
+        Z[n] -= tdi_td_vgb->Z[m];
+        A[n] -= tdi_td_vgb->A[m];
+        E[n] -= tdi_td_vgb->E[m];
+        T[n] -= tdi_td_vgb->T[m];
+    }
+    free_tdi(tdi_td_vgb); */
 
     
     /* Tukey window time-domain TDI channels tdi_td */
