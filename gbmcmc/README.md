@@ -173,7 +173,7 @@ The `t_m` values are constant unless the analysis is actively fitting for segmen
 
 If the run includes the `--verbose` flag, the file also contains `NP x N_live` additional columns cycling through the waveform parameters.
 
-    f | fdot | A | cos_colat | long | cos_inc | psi | phi
+    f | fdot | A | long | cos_colat | cos_inc | psi | phi
 
 Thus, when parsing the file, the `N_live` column should tell the parser how many additional parameter columns are appended to the end of the row. 
 
@@ -194,7 +194,7 @@ not need these files. Use `dimension_chain.dat.N` files, as described below.
 the binary parameters for the subset of models that have exactly `N` binaries.
 The columns are
 
-    f | fdot | A | cos_colat | long | cos_inc | psi | phi
+    f | fdot | A | long | cos_colat | cos_inc | psi | phi
 
 If there are more than one source, the sources cycle in the output (so line 1 is
 the first source, first posterior sample; line 2 is the second source, first
@@ -355,13 +355,13 @@ Contents of each indidvidual file are as follows:
 
 `catalog_N/LDCFFFFFFFFFF_chain.dat`: The Markov chain samples for parameters consistent with `LDCFFFFFFFFFF`. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from `gb_mcmc` with **three** additional columns appended
 
-    f | fdot | A | cos_colat | long | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance
+    f | fdot | A | long | cos_colat | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance
     
 Where `SNR` is computed relative to the noise level input using `--noise-file` or the analytic noise functions if not specified, `Waveform Match` is the match between the current sample and the reference waveform for the catalog _Entry_, used for filtering the raw chains, and `Waveform Distance` is the waveform distance between the current and reference waveforms--perhaps a future filtering criteria.
 
 `catalog_N/LDCFFFFFFFFFF_params.dat`: Point estimate of the candidate source. Parameters correspond to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency
 
-    f | fdot | A | cos_colat | long | cos_inc | psi | phi
+    f | fdot | A | long | cos_colat | cos_inc | psi | phi
 
 `catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat`: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are
 
