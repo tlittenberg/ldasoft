@@ -1271,6 +1271,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         proposal->norm = (n_f*n_theta*n_phi)/norm;
         proposal->maxp = maxLogL*proposal->norm;//sqrt(2.*maxLogL)*proposal->norm;
         
+        //store checkpointing files so we can skip this expensive step on resume
         propFile=fopen(filename,"wb");
         fwrite(&proposal->norm, sizeof proposal->norm, 1, propFile);
         fwrite(&proposal->maxp, sizeof proposal->norm, 1, propFile);
@@ -1288,7 +1289,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         fclose(propFile);
     }
 
-    
+    //print diagnostics
     if(flags->verbose)
     {
         char dirname[MAXSTRINGSIZE];

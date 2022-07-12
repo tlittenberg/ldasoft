@@ -38,6 +38,13 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryMCMC.h"
 
+static double maximization_penalty(int dimension, int bandwidth)
+{
+    //return -0.5*(double)dimension*log(2.*(double)bandwidth); //bic-inspired = -klog(N)/2
+    return -(double)dimension; //likelihood-inspired = -k
+    //return 0.0; //no penalty
+}
+
 void ptmcmc(struct Model **model, struct Chain *chain, struct Flags *flags)
 {
     int a, b;
@@ -319,7 +326,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             if(flags->maximize)
             {
                 maximize_signal_model(orbit, data, model_y, create);
-                *penalty = -2.*log(2.*model_y->source[create]->BW);
+                *penalty = maximization_penalty(4,2*model_y->source[create]->BW);
             }
             
             generate_signal_model(orbit, data, model_y, create);
@@ -349,7 +356,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             
             if(flags->maximize)
             {
-                *penalty = -2.*log(2.*model_x->source[kill]->BW);
+                *penalty = maximization_penalty(4,2*model_x->source[kill]->BW);
             }
             
             generate_signal_model(orbit, data, model_y, model_y->Nlive);
@@ -387,7 +394,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 if(flags->maximize)
                 {
                     maximize_signal_model(orbit, data, model_y, branch[n]);
-                    *penalty += -2.*log(2.*model_y->source[branch[n]]->BW);
+                    *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
                 }
                 generate_signal_model(orbit, data, model_y, branch[n]);
 
@@ -398,7 +405,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
 
             if(flags->maximize)
             {
-                *penalty -= -2.*log(2.*model_x->source[trunk]->BW);
+                *penalty -= maximization_penalty(4,2*model_x->source[trunk]->BW);
             }
 
         }
@@ -438,7 +445,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
             if(flags->maximize)
             {
                 maximize_signal_model(orbit, data, model_y, trunk);
-                *penalty -= -2.*log(2.*model_y->source[trunk]->BW);
+                *penalty -= maximization_penalty(4,2*model_y->source[trunk]->BW);
             }
             generate_signal_model(orbit, data, model_y, trunk);
 
@@ -450,7 +457,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 
                 if(flags->maximize)
                 {
-                    *penalty += -2.*log(2.*model_x->source[branch[n]]->BW);
+                    *penalty += maximization_penalty(4,2*model_x->source[branch[n]]->BW);
                 }
 
             }
@@ -505,15 +512,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     
     copy_model(model_x,model_y);
     
-    int nprop = -1;
-    int trial_n;
-    double trial_w;
-    while(nprop<0)
-    {
-        trial_n = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
-        trial_w = gsl_rng_uniform(chain->r[ic]);
-        if(trial_w < proposal[trial_n]->rjweight) nprop = trial_n;
-    }
+    int nprop;
+    do nprop = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
+    while(proposal[nprop]->rjweight < gsl_rng_uniform(chain->r[ic]));
     
     proposal[nprop]->trial[ic]++;
         
@@ -584,6 +585,12 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     {
         proposal[nprop]->accept[ic]++;
         copy_model(model_y,model_x);
+        
+        //update fisher matrix for each chain
+        for(int n=0; n<model_x->Nlive; n++)
+        {
+            galactic_binary_fisher(orbit, data, model_x->source[n], data->noise[FIXME]);
+        }
     }
     
 }

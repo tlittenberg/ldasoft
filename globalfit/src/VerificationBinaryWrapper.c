@@ -300,7 +300,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
             }
         }
     }
-    vbmcmc_data->mcmc_step+=numSteps;
+    vbmcmc_data->mcmc_step++;
     
     clock_t stop = clock();
     vbmcmc_data->cpu_time = (double)(stop-start);

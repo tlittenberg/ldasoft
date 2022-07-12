@@ -1073,17 +1073,19 @@ void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         //        }
         //    }
         
-        /* maximize parameters w/ F-statistic */
-        get_Fstat_xmax(orbit, data, source->params, Fparams);
         
-        /* unpack maximized parameters */
-        source->amp  = exp(Fparams[3]);
-        source->cosi = Fparams[4];
-        source->psi  = Fparams[5];
-        source->phi0 = Fparams[6];
-        map_params_to_array(source, source->params, data->T);
-        
-        check_range(source->params, model->prior, model->NP);
+        if(!check_range(source->params, model->prior, model->NP))
+        {
+            /* maximize parameters w/ F-statistic */
+            get_Fstat_xmax(orbit, data, source->params, Fparams);
+            
+            /* unpack maximized parameters */
+            source->amp  = exp(Fparams[3]);
+            source->cosi = Fparams[4];
+            source->psi  = Fparams[5];
+            source->phi0 = Fparams[6];
+            map_params_to_array(source, source->params, data->T);
+        }
         
         /* restore original data */
         //    copy_tdi(data_save,data->tdi[FIXME]);

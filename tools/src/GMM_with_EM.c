@@ -718,19 +718,19 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
 
 double logit(double x,double xmin,double xmax)
 {
-    return log( (x-xmin)/(xmax-x) );
+    return x;//log( (x-xmin)/(xmax-x) );
 }
 
 double sigmoid(double x,double xmin,double xmax)
 {
-    return xmin + (1./(1. + exp(-x)))*(xmax - xmin);
+    return x;//xmin + (1./(1. + exp(-x)))*(xmax - xmin);
 }
 
 
 double dsigmoid(double x, double xmin, double xmax)
 {
-    double expyn = exp(-x);
-    return (xmax-xmin) * expyn/((1.+expyn)*(1.+expyn));
+    //double expyn = exp(-x);
+    return 1.0;//(xmax-xmin) * expyn/((1.+expyn)*(1.+expyn));
 }
 
 
