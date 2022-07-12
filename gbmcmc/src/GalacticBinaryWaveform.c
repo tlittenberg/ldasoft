@@ -111,6 +111,13 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         wave_p->params[i] += epsilon;
         wave_m->params[i] -= epsilon;
         
+	// catch when cosine parameters get pushed out of bounds
+        if(i==1 || i==4)
+        {
+            if(wave_p->params[i] > 1.0) wave_p->params[i] = 1.0;
+            if(wave_m->params[i] <-1.0) wave_m->params[i] =-1.0;
+        }
+
         // complete info in source structure
         map_array_to_params(wave_p, wave_p->params, data->T);
         map_array_to_params(wave_m, wave_m->params, data->T);
