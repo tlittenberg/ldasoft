@@ -321,7 +321,8 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
 
     /* set flags based on current state of sampler */
     flags->burnin   = (gbmcmc_data->mcmc_step<0) ? 1 : 0;
-    flags->maximize = (gbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
+    flags->maximize = 0;//(gbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
+    
 
     /* The MCMC loop */
     int numThreads;
@@ -343,6 +344,9 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             struct Model *model_ptr = model[chain->index[ic]];
             struct Model *trial_ptr = trial[chain->index[ic]];
             
+            //update model likelihood using new residual
+            model_ptr->logL = gaussian_log_likelihood(data, model_ptr);
+
             //sync up model and trial pointers
             copy_model(model_ptr,trial_ptr);
 
@@ -358,19 +362,6 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
                     else
                         galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 }
-                
-                                
-#pragma omp barrier
-                if(threadID==0)
-                {
-                    ptmcmc(model,chain,flags);
-                    adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
-
-                    if(steps%10==0 && gbmcmc_data->mcmc_step>=0)
-                        print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
-                }
-#pragma omp barrier
-                
             }
             
             //update fisher matrix for each chain
@@ -384,6 +375,10 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     }//end parallel section
 #pragma omp barrier
     
+    ptmcmc(model,chain,flags);
+    adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
+                    
+    print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
         
     //track maximum log Likelihood
     if(update_max_log_likelihood(model, chain, flags))
@@ -398,7 +393,6 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
         
         //save chain state to resume sampler
         save_chain_state(data, model, chain, flags, gbmcmc_data->mcmc_step);
-        
     }
     
     //dump waveforms to file, update avgLogL for thermodynamic integration

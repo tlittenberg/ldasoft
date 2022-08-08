@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
             if(threadID==0)
             {
                 flags->burnin   = (mcmc<0) ? 1 : 0;
-                flags->maximize = (mcmc<-flags->NBURN/2) ? 1 : 0;
+                flags->maximize = 0;//(mcmc<-flags->NBURN/2) ? 1 : 0;
             }
             
             #pragma omp barrier

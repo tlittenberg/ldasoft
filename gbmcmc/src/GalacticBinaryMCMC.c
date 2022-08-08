@@ -216,7 +216,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     {
         nprop = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
         draw = gsl_rng_uniform(chain->r[ic]);
-    }while(proposal[nprop]->weight < draw);
+    }while(proposal[nprop]->weight <= draw);
     
     proposal[nprop]->trial[ic]++;
     
@@ -330,7 +330,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             generate_signal_model(orbit, data, model_y, create);
-
+            galactic_binary_fisher(orbit, data, model_y->source[create], data->noise[FIXME]);
             
         }
         else *logPy = -INFINITY;
@@ -397,6 +397,8 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                     *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
                 }
                 generate_signal_model(orbit, data, model_y, branch[n]);
+                galactic_binary_fisher(orbit, data, model_y->source[branch[n]], data->noise[FIXME]);
+
 
             }
             
@@ -448,6 +450,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 *penalty -= maximization_penalty(4,2*model_y->source[trunk]->BW);
             }
             generate_signal_model(orbit, data, model_y, trunk);
+            galactic_binary_fisher(orbit, data, model_y->source[trunk], data->noise[FIXME]);
 
             
             //get reverse move (split trunk into branches)
@@ -514,7 +517,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     
     int nprop;
     do nprop = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
-    while(proposal[nprop]->rjweight < gsl_rng_uniform(chain->r[ic]));
+    while(proposal[nprop]->rjweight <= gsl_rng_uniform(chain->r[ic]));
     
     proposal[nprop]->trial[ic]++;
         
@@ -585,12 +588,6 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     {
         proposal[nprop]->accept[ic]++;
         copy_model(model_y,model_x);
-        
-        //update fisher matrix for each chain
-        for(int n=0; n<model_x->Nlive; n++)
-        {
-            galactic_binary_fisher(orbit, data, model_x->source[n], data->noise[FIXME]);
-        }
     }
     
 }

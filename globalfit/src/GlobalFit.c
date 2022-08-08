@@ -753,7 +753,8 @@ int main(int argc, char *argv[])
             
             global_fit->block_time = gbmcmc_data->cpu_time;
         }
-           
+        if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+
         /* ============================= */
         /*   VERIFICATION BINARY MODEL   */
         /* ============================= */
@@ -822,7 +823,7 @@ int main(int argc, char *argv[])
 
         /* distribute current state of models to worker nodes */
         share_noise_model (noise_data, gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        //if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         if(global_fit->nVGB>0)share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
 

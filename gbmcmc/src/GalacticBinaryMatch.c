@@ -128,8 +128,8 @@ int main(int argc, char *argv[])
         {
             noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
             noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-            data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
-            data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+            noise->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+            noise->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
 
         }
         else
@@ -145,41 +145,42 @@ int main(int argc, char *argv[])
     
     while(!feof(chain_file2))
     {
+        for(int n=0; n<2*data->N; n++)
+        {
+            src2->tdi->A[n] = 0.0;
+            src2->tdi->E[n] = 0.0;
+        }
+        
         scan_source_params(data, src2, chain_file2);
+        galactic_binary_alignment(orbit, data, src2);
+        galactic_binary(orbit, data->format, data->T, data->t0[0], src2->params, data->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
+
         max_match=-INFINITY;
         while(!feof(chain_file1))
         {
+
             scan_source_params(data, src1, chain_file1);
             
             if( fabs(src1->params[0] - src2->params[0]) < 20.)
             {
+                for(int n=0; n<2*data->N; n++)
+                {
+                    src1->tdi->A[n] = 0.0;
+                    src1->tdi->E[n] = 0.0;
+                }
+                
                 //Book-keeping of injection time-frequency volume
                 galactic_binary_alignment(orbit, data, src1);
-                
                 galactic_binary(orbit, data->format, data->T, data->t0[0], src1->params, data->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
-                
-                galactic_binary_alignment(orbit, data, src2);
-                
-                galactic_binary(orbit, data->format, data->T, data->t0[0], src2->params, data->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
-                
+                                
                 match = waveform_match(src1, src2, noise);
                 if(match>max_match) max_match=match;
-                
-                //printf("match=%g, max match=%g\n",match,max_match);
             }
         }
         printf("%lg %lg %lg\n",max_match,snr(src2,noise),src2->f0);
         rewind(chain_file1);
     }
 
-    
-//    printf("snr of source 1 %g\n",snr(src1,noise));
-//    printf("snr of source 2 %g\n",snr(src2,noise));
-    
-    
-    
-    //Print results of overlap calc.
-    if(flags->orbit)free_orbit(orbit);
     fclose(chain_file1);
     fclose(chain_file2);
     

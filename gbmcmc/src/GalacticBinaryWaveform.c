@@ -72,18 +72,19 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     int NP = source->NP;
     
     double epsilon    = 1.0e-7;
-    double invepsilon2= 1./(2.*epsilon);
+    //double invepsilon2= 1./(2.*epsilon);
+    double invepsilon2= 1./(epsilon);
     double invstep;
     
     // Plus and minus parameters:
     double *params_p = calloc(NP,sizeof(double));
-    double *params_m = calloc(NP,sizeof(double));
+    //double *params_m = calloc(NP,sizeof(double));
     
     // Plus and minus templates for each detector:
     struct Source *wave_p = malloc(sizeof(struct Source));
-    struct Source *wave_m = malloc(sizeof(struct Source));
+    //struct Source *wave_m = malloc(sizeof(struct Source));
     alloc_source(wave_p, data->N, data->Nchannel, NP);
-    alloc_source(wave_m, data->N, data->Nchannel, NP);
+    //alloc_source(wave_m, data->N, data->Nchannel, NP);
     
     // TDI variables to hold derivatives of h
     struct TDI **dhdx = malloc(NP*sizeof(struct TDI *));
@@ -104,23 +105,23 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         for(j=0; j<NP; j++)
         {
             wave_p->params[j] = source->params[j];
-            wave_m->params[j] = source->params[j];
+            //wave_m->params[j] = source->params[j];
         }
         
         // perturb parameters
         wave_p->params[i] += epsilon;
-        wave_m->params[i] -= epsilon;
+        //wave_m->params[i] -= epsilon;
         
 	// catch when cosine parameters get pushed out of bounds
         if(i==1 || i==4)
         {
             if(wave_p->params[i] > 1.0) wave_p->params[i] = 1.0;
-            if(wave_m->params[i] <-1.0) wave_m->params[i] =-1.0;
+            //if(wave_m->params[i] <-1.0) wave_m->params[i] =-1.0;
         }
 
         // complete info in source structure
         map_array_to_params(wave_p, wave_p->params, data->T);
-        map_array_to_params(wave_m, wave_m->params, data->T);
+        //map_array_to_params(wave_m, wave_m->params, data->T);
         
         // clean up TDI arrays, just in case
         for(j=0; j<N2; j++)
@@ -128,18 +129,18 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             wave_p->tdi->X[j]=0.0;
             wave_p->tdi->A[j]=0.0;
             wave_p->tdi->E[j]=0.0;
-            wave_m->tdi->X[j]=0.0;
-            wave_m->tdi->A[j]=0.0;
-            wave_m->tdi->E[j]=0.0;
+            //wave_m->tdi->X[j]=0.0;
+            //wave_m->tdi->A[j]=0.0;
+            //wave_m->tdi->E[j]=0.0;
         }
         
         // align perturbed waveforms in data array
         galactic_binary_alignment(orbit, data, wave_p);
-        galactic_binary_alignment(orbit, data, wave_m);
+        //galactic_binary_alignment(orbit, data, wave_m);
         
         // compute perturbed waveforms
         galactic_binary(orbit, data->format, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-        galactic_binary(orbit, data->format, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+        //galactic_binary(orbit, data->format, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
         
         // central differencing derivatives of waveforms w.r.t. parameters
         switch(source->tdi->Nchannel)
@@ -147,14 +148,17 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             case 1:
                 for(n=0; n<N2; n++)
                 {
-                    dhdx[i]->X[n] = (wave_p->tdi->X[n] - wave_m->tdi->X[n])*invstep;
+                    //dhdx[i]->X[n] = (wave_p->tdi->X[n] - wave_m->tdi->X[n])*invstep;
+                    dhdx[i]->X[n] = (wave_p->tdi->X[n] - source->tdi->X[n])*invstep;
                 }
                 break;
             case 2:
                 for(n=0; n<N2; n++)
                 {
-                    dhdx[i]->A[n] = (wave_p->tdi->A[n] - wave_m->tdi->A[n])*invstep;
-                    dhdx[i]->E[n] = (wave_p->tdi->E[n] - wave_m->tdi->E[n])*invstep;
+                    //dhdx[i]->A[n] = (wave_p->tdi->A[n] - wave_m->tdi->A[n])*invstep;
+                    //dhdx[i]->E[n] = (wave_p->tdi->E[n] - wave_m->tdi->E[n])*invstep;
+                    dhdx[i]->A[n] = (wave_p->tdi->A[n] - source->tdi->A[n])*invstep;
+                    dhdx[i]->E[n] = (wave_p->tdi->E[n] - source->tdi->E[n])*invstep;
                 }
                 break;
         }
@@ -194,9 +198,9 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, NP);
     
     free(params_p);
-    free(params_m);
+    //free(params_m);
     free_source(wave_p);
-    free_source(wave_m);
+    //free_source(wave_m);
     
     for(n=0; n<NP; n++) free_tdi(dhdx[n]);
     free(dhdx);
@@ -215,7 +219,7 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
     
     //Doppler spreading
     double sintheta = sin(acos(costheta));
-    double bw = 8*T*((4.+PI2*f*(AU/CLIGHT)*sintheta)/YEAR + fdot*T);
+    double bw = 4*T*((4.+PI2*f*(AU/CLIGHT)*sintheta)/YEAR + fabs(fdot)*T);
     int DS = (int)pow(2,(int)log2(bw-1)+1);
     if(DS > Nmax) DS = Nmax;
     if(DS < Nmin) DS = Nmin;
