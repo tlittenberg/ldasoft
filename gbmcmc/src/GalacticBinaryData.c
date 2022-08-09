@@ -152,7 +152,7 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
         T[n] = tdi_td->T[m];
     }
     
-    /* lets get rid of those black holes 
+    /* lets get rid of those black holes
     struct TDI *tdi_td_mbhb = malloc(sizeof(struct TDI));
     LISA_Read_HDF5_LDC_TDI(tdi_td_mbhb, data->fileName, "/sky/mbhb/tdi");
     for(int n=0; n<N; n++)
@@ -165,7 +165,7 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
         E[n] -= tdi_td_mbhb->E[m];
         T[n] -= tdi_td_mbhb->T[m];
     }
-    free_tdi(tdi_td_mbhb);*/
+    free_tdi(tdi_td_mbhb); */
     
     /* lets get rid of the galaxy 
     struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));

@@ -330,7 +330,8 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             generate_signal_model(orbit, data, model_y, create);
-            galactic_binary_fisher(orbit, data, model_y->source[create], data->noise[FIXME]);
+            if(!check_range(model_y->source[create]->params, model_y->prior, model_y->NP))
+                galactic_binary_fisher(orbit, data, model_y->source[create], data->noise[FIXME]);
             
         }
         else *logPy = -INFINITY;
@@ -397,7 +398,8 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                     *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
                 }
                 generate_signal_model(orbit, data, model_y, branch[n]);
-                galactic_binary_fisher(orbit, data, model_y->source[branch[n]], data->noise[FIXME]);
+                if(!check_range(model_y->source[branch[n]]->params, model_y->prior, model_y->NP))
+                    galactic_binary_fisher(orbit, data, model_y->source[branch[n]], data->noise[FIXME]);
 
 
             }
@@ -450,7 +452,8 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 *penalty -= maximization_penalty(4,2*model_y->source[trunk]->BW);
             }
             generate_signal_model(orbit, data, model_y, trunk);
-            galactic_binary_fisher(orbit, data, model_y->source[trunk], data->noise[FIXME]);
+            if(!check_range(model_y->source[trunk]->params, model_y->prior, model_y->NP))
+                galactic_binary_fisher(orbit, data, model_y->source[trunk], data->noise[FIXME]);
 
             
             //get reverse move (split trunk into branches)
