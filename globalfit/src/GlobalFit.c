@@ -769,9 +769,9 @@ int main(int argc, char *argv[])
             for(int n=0; n<vbmcmc_data->flags->NVB; n++)
                 select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
 
-            cycle = (int)round(global_fit->max_block_time/vbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
-                vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
+            //cycle = (int)round(global_fit->max_block_time/vbmcmc_data->cpu_time);
+            //for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
             
             global_fit->block_time = vbmcmc_data->cpu_time;
         }
@@ -787,9 +787,9 @@ int main(int argc, char *argv[])
 
             select_frequency_segment(noise_data->data, tdi_full);
 
-            cycle = (int)round(global_fit->max_block_time/noise_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
-                noise_data->status = update_noise_sampler(noise_data);
+            //cycle = (int)round(global_fit->max_block_time/noise_data->cpu_time);
+            //for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            noise_data->status = update_noise_sampler(noise_data);
             
             global_fit->block_time = noise_data->cpu_time;
         }
@@ -807,9 +807,9 @@ int main(int argc, char *argv[])
             
             select_mbh_noise(mbh_data, global_fit->psd);
             
-            cycle = (int)round(1.*global_fit->max_block_time/mbh_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
-                mbh_data->status = update_mbh_sampler(mbh_data);
+            //cycle = (int)round(1.*global_fit->max_block_time/mbh_data->cpu_time);
+            //for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            mbh_data->status = update_mbh_sampler(mbh_data);
             
             global_fit->block_time = mbh_data->cpu_time;
         }

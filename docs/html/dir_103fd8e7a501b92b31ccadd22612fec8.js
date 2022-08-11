@@ -12,6 +12,7 @@ var dir_103fd8e7a501b92b31ccadd22612fec8 =
     [ "GalacticBinaryProposal.h", "GalacticBinaryProposal_8h.html", "GalacticBinaryProposal_8h" ],
     [ "GalacticBinaryWaveform.h", "GalacticBinaryWaveform_8h.html", "GalacticBinaryWaveform_8h" ],
     [ "gb_mcmc.c", "gb__mcmc_8c.html", "gb__mcmc_8c" ],
+    [ "gbmcmc.h", "gbmcmc_8h_source.html", null ],
     [ "gitversion.h", "gitversion_8h_source.html", null ],
     [ "vb_mcmc.c", "vb__mcmc_8c.html", "vb__mcmc_8c" ]
 ];

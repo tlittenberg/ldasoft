@@ -21,6 +21,7 @@ var structData =
     [ "N", "structData.html#a3be03de44986fc55905076acc5cdae2e", null ],
     [ "Ncache", "structData.html#aba071f495515063b39189865ea5516ed", null ],
     [ "Nchannel", "structData.html#a40984ec8faee6f66f294f19efdffc748", null ],
+    [ "Nmax", "structData.html#a01b4f47e67697ca6678e6f0b84dc60a3", null ],
     [ "noise", "structData.html#a5646530b83cfb236488c75567a94317d", null ],
     [ "NP", "structData.html#ab456e86e4cf30a20af41383cff94e535", null ],
     [ "nseed", "structData.html#aded73ae8e42873e7d905ff7f14a0a354", null ],

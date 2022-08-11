@@ -10,7 +10,6 @@ var GalacticBinaryPrior_8h =
     [ "GALAXY_Zd", "GalacticBinaryPrior_8h.html#abe95fd02e34e2d13fd65c84dbdb7b6cc", null ],
     [ "check_range", "GalacticBinaryPrior_8h.html#af1b437e6c39ea384989f72da4f7fba03", null ],
     [ "evalaute_sky_location_prior", "GalacticBinaryPrior_8h.html#a8fc1f8587b804b753a5240930e6dfd54", null ],
-    [ "evaluate_gmm_prior", "GalacticBinaryPrior_8h.html#a2e25143eced8121af1cba3ca388bcefb", null ],
     [ "evaluate_prior", "GalacticBinaryPrior_8h.html#a4a0d6349cb85dc2815e5d68499caca63", null ],
     [ "evaluate_snr_prior", "GalacticBinaryPrior_8h.html#a6ee03939465c46feba5faba1bd1f3a36", null ],
     [ "evaluate_uniform_priors", "GalacticBinaryPrior_8h.html#adb5c0e2fde9b555330f108c5c4dab69e", null ],
