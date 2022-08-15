@@ -753,8 +753,36 @@ int main(int argc, char *argv[])
             
             global_fit->block_time = gbmcmc_data->cpu_time;
         }
-        if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
 
+        /* ============================= */
+        /*  MASSIVE BLACK HOLE BINARIES  */
+        /* ============================= */
+
+        /* mbh model update */
+        if(MBH_Flag)
+        {
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
+            
+            select_mbh_segment(mbh_data, tdi_full);
+            
+            select_mbh_noise(mbh_data, global_fit->psd);
+            
+            cycle = (int)round(global_fit->max_block_time/mbh_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+                mbh_data->status = update_mbh_sampler(mbh_data);
+            
+            global_fit->block_time = mbh_data->cpu_time;
+        }
+        
+        
+        /* ========================================= */
+        /* MPI EXCHANGES OF UCB & MBH MODEL STATES */
+        /* ========================================= */
+
+        if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+
+        
         /* ============================= */
         /*   VERIFICATION BINARY MODEL   */
         /* ============================= */
@@ -794,38 +822,15 @@ int main(int argc, char *argv[])
             global_fit->block_time = noise_data->cpu_time;
         }
 
-        /* ============================= */
-        /*  MASSIVE BLACK HOLE BINARIES  */
-        /* ============================= */
-
-        /* mbh model update */
-        if(MBH_Flag)
-        {
-            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
-            
-            select_mbh_segment(mbh_data, tdi_full);
-            
-            select_mbh_noise(mbh_data, global_fit->psd);
-            
-            //cycle = (int)round(1.*global_fit->max_block_time/mbh_data->cpu_time);
-            //for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
-            mbh_data->status = update_mbh_sampler(mbh_data);
-            
-            global_fit->block_time = mbh_data->cpu_time;
-        }
-        
-        /* ============================= */
-        /* MPI EXCHANGES OF MODEL STATES */
-        /* ============================= */
-        
         /* get global status of gbmcmc samplers */
         gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
 
-        /* distribute current state of models to worker nodes */
+        /* ========================================= */
+        /* MPI EXCHANGES OF NOISE & VGB MODEL STATES */
+        /* ========================================= */
+        
         share_noise_model (noise_data, gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        //if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         if(global_fit->nVGB>0)share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
 
         /* send time spent in each block to root for load balancing */
         blocked_gibbs_load_balancing(global_fit, root, procID, Nproc);

@@ -202,7 +202,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
     
     //For saving the number of threads actually given
     int numThreads;
-    int numSteps=10;
+    int numSteps=100;
 #pragma omp parallel num_threads(flags->threads)
     {
         //Save individual thread number

@@ -167,7 +167,7 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     }
     free_tdi(tdi_td_mbhb); */
     
-    /* lets get rid of the galaxy 
+    /* lets get rid of the galaxy
     struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
     LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
     for(int n=0; n<N; n++)

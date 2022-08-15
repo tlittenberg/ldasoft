@@ -423,6 +423,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
 
     
     /* store data segment in ASCII format */
+    /*
     FILE *tempFile;
         
     sprintf(filename,"%s/power_data_0.dat",mbh_data->flags->runDir);
@@ -437,7 +438,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
                 mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
     }
     fclose(tempFile);
-    
+    */
     
     
     /* set up Fisher matrix proposal for each chain */

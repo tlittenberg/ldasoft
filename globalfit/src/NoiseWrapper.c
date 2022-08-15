@@ -289,7 +289,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
             model_ptr->logL = noise_log_likelihood(data, model_ptr);
             
             //evolve fixed dimension sampler
-            for(int steps=0; steps<10; steps++)
+            for(int steps=0; steps<100; steps++)
             {
                 noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
             }

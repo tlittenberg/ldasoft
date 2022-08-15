@@ -796,7 +796,8 @@ void copy_source(struct Source *origin, struct Source *copy)
     //Fisher
     memcpy(copy->fisher_evalue, origin->fisher_evalue, origin->NP*sizeof(double));
     memcpy(copy->params, origin->params, origin->NP*sizeof(double));
-
+    copy->fisher_update_flag = origin->fisher_update_flag;
+    
     for(int i=0; i<origin->NP; i++)
     {
         memcpy(copy->fisher_matrix[i], origin->fisher_matrix[i], origin->NP*sizeof(double));

@@ -330,9 +330,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             generate_signal_model(orbit, data, model_y, create);
-            if(!check_range(model_y->source[create]->params, model_y->prior, model_y->NP))
-                galactic_binary_fisher(orbit, data, model_y->source[create], data->noise[FIXME]);
-            
+            model_y->source[create]->fisher_update_flag = 1;
         }
         else *logPy = -INFINITY;
     }
@@ -361,7 +359,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             generate_signal_model(orbit, data, model_y, model_y->Nlive);
-
+            model_y->source[model_y->Nlive]->fisher_update_flag = 1;
         }
         else *logPy = -INFINITY;
     }
@@ -398,10 +396,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                     *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
                 }
                 generate_signal_model(orbit, data, model_y, branch[n]);
-                if(!check_range(model_y->source[branch[n]]->params, model_y->prior, model_y->NP))
-                    galactic_binary_fisher(orbit, data, model_y->source[branch[n]], data->noise[FIXME]);
-
-
+                model_y->source[branch[n]]->fisher_update_flag = 1;
             }
             
             //get reverse move (merge branches to trunk)
@@ -429,10 +424,6 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 branch[1] = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
             }while(branch[0]==branch[1]);
             
-//            if(ic==0)
-//            {
-//            printf("try merging source %i and %i\n", branch[0], branch[1]);
-//            }
             
             //pick source to replace with merged sources
             trunk = branch[0];
@@ -452,9 +443,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 *penalty -= maximization_penalty(4,2*model_y->source[trunk]->BW);
             }
             generate_signal_model(orbit, data, model_y, trunk);
-            if(!check_range(model_y->source[trunk]->params, model_y->prior, model_y->NP))
-                galactic_binary_fisher(orbit, data, model_y->source[trunk], data->noise[FIXME]);
-
+            model_y->source[trunk]->fisher_update_flag = 1;
             
             //get reverse move (split trunk into branches)
             for(int n=0; n<2; n++)
@@ -467,25 +456,6 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 }
 
             }
-            
-//            if(ic==0)
-//            {
-//            printf("model x:\n");
-//            for(int n=0; n<model_x->Nlive; n++)
-//            {
-//                print_source_params(data, model_x->source[n], stdout);
-//                printf("\n");
-//            }
-//            printf("model y:\n");
-//            for(int n=0; n<model_y->Nlive; n++)
-//            {
-//                print_source_params(data, model_y->source[n], stdout);
-//                printf("\n");
-//            }
-//            printf("Press Any Key to Continue\n");getchar();
-//            }
-
-            
         }
         else *logPy = -INFINITY;
         
@@ -535,8 +505,8 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     }
     
     
-    for(int n=0; n<model_x->Nlive; n++) logPx +=  evaluate_prior(flags, data, model_x, prior, model_x->source[n]->params);
-    for(int n=0; n<model_y->Nlive; n++) logPy +=  evaluate_prior(flags, data, model_y, prior, model_y->source[n]->params);
+    for(int n=0; n<model_x->Nlive; n++) logPx += evaluate_prior(flags, data, model_x, prior, model_x->source[n]->params);
+    for(int n=0; n<model_y->Nlive; n++) logPy += evaluate_prior(flags, data, model_y, prior, model_y->source[n]->params);
     
     
     /* Hasting's ratio */
@@ -589,6 +559,19 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(isfinite(logH) && logH > loga)
     {
+        
+        //update FIMs for sources that have changed in the proposed state
+        for(int n=0; n<model_y->Nlive; n++)
+        {
+            //only compute FIM for sources that need it
+            if(model_y->source[n]->fisher_update_flag)
+            {
+                galactic_binary_fisher(orbit, data, model_y->source[n], data->noise[FIXME]);
+                
+                //reset flag indicating FIM is up-to-date
+                model_y->source[n]->fisher_update_flag = 0;
+            }
+        }
         proposal[nprop]->accept[ic]++;
         copy_model(model_y,model_x);
     }
@@ -684,6 +667,7 @@ void initialize_gbmcmc_state(struct Data *data, struct Orbit *orbit, struct Flag
             }
             map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
             galactic_binary_fisher(orbit, data, model[ic]->source[n], data->noise[0]);
+            model[ic]->source[n]->fisher_update_flag=0;
         }
         
         // Form master model & compute likelihood of starting position
