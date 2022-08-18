@@ -118,8 +118,14 @@ int main(int argc, char *argv[])
             for(int ic=threadID; ic<NC; ic+=numThreads)
             {
                 struct SplineModel *model_ptr = model[chain->index[ic]];
-                noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
-                noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
+                for(int mc=0; mc<10; mc++)
+                {
+                    
+                    if(gsl_rng_uniform(chain->r[ic])<0.9)
+                        noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
+                    else
+                        noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
+                }
             }// end (parallel) loop over chains
             
             //Next section is single threaded. Every thread must get here before continuing
@@ -132,7 +138,18 @@ int main(int argc, char *argv[])
                 
                 if(step%10000==0)printf("noise_mcmc at step %i\n",step);
                 
-                if(step%100==0) print_spline_state(model[chain->index[0]], chainFile, step);
+                if(step%100==0)
+                {
+                    print_spline_state(model[chain->index[0]], chainFile, step);
+                    
+                    sprintf(filename,"%s/current_interpolated_spline_points.dat",data->dataDir);
+                    print_noise_model(model[chain->index[0]]->psd, filename);
+                    
+                    sprintf(filename,"%s/current_spline_points.dat",data->dataDir);
+                    print_noise_model(model[chain->index[0]]->spline, filename);
+
+
+                }
                 
                 if(step%data->downsample==0 && step/data->downsample < data->Nwave)
                 {
@@ -141,8 +158,10 @@ int main(int argc, char *argv[])
                         data->S_pow[n][0][0][step/data->downsample] = model[chain->index[0]]->psd->SnA[n];
                         data->S_pow[n][1][0][step/data->downsample] = model[chain->index[0]]->psd->SnE[n];
                     }
+                    
+
                 }
-                
+
                 step++;
                 
                 

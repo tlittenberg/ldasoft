@@ -295,7 +295,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
             }
             
             //evolve trans dimension sampler
-            //noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
+            noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
             
         }// end (parallel) loop over chains
         
