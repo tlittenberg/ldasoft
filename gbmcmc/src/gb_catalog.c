@@ -288,6 +288,33 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
     fclose(runlog);
 }
 
+
+int safe_scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
+{
+
+    int check = 0;
+    check+=fscanf(fptr,"%lg",&source->f0);
+    check+=fscanf(fptr,"%lg",&source->dfdt);
+    check+=fscanf(fptr,"%lg",&source->amp);
+    check+=fscanf(fptr,"%lg",&source->phi);
+    check+=fscanf(fptr,"%lg",&source->costheta);
+    check+=fscanf(fptr,"%lg",&source->cosi);
+    check+=fscanf(fptr,"%lg",&source->psi);
+    check+=fscanf(fptr,"%lg",&source->phi0);
+    if(source->NP>8)
+        check+=fscanf(fptr,"%lg",&source->d2fdt2);
+    
+    if(!check)
+    {
+        return 1;
+    }
+    
+    //map to parameter names (just to make code readable)
+    map_params_to_array(source, source->params, data->T);
+    return 0;
+
+}
+
 int main(int argc, char *argv[])
 {
     
@@ -298,6 +325,7 @@ int main(int argc, char *argv[])
     int NTEMP = 1;     //needed size of data structure
     size_t NMODE = 16; //default size of GMM
     size_t NTHIN = 1;  //thinning rate of chain
+    int check;
     
     /* Allocate data structures */
     struct Flags *flags = malloc(sizeof(struct Flags));
@@ -370,12 +398,12 @@ int main(int argc, char *argv[])
     
     //count lines in chain file
     int N=0;
-    while(!feof(chain_file))
-    {
-        scan_source_params(data, sample, chain_file);
-        N++;
-    }
-    N--;
+
+    char *line;
+    char buffer[16384];
+
+    while( (line=fgets(buffer, 16384, chain_file)) != NULL) N++;
+
     rewind(chain_file);
     
     
@@ -441,7 +469,7 @@ int main(int argc, char *argv[])
         FILE *noiseFile = fopen(flags->noiseFile,"r");
         for(int n=0; n<data->N; n++)
         {
-            int check = 0;
+            check = 0;
             check += fscanf(noiseFile,"%lg",&junk); //);f
             check += fscanf(noiseFile,"%lg",&noise->SnA[n]);//A_med);
             check += fscanf(noiseFile,"%lg",&noise->SnE[n]);//E_med);
@@ -461,20 +489,22 @@ int main(int argc, char *argv[])
     {
         
         //parse source in first sample of chain file
-        scan_source_params(data, sample, chain_file);
-        
-        //Book-keeping of waveform in time-frequency volume
-        galactic_binary_alignment(orbit, data, sample);
-        
-        //calculate waveform model of sample
-        galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
-        
-        //check frequencies
-        double q_sample = sample->f0 * data->T;
-        if(q_sample > data->qmin+data->qpad && q_sample < data->qmax-data->qpad)
+        check = safe_scan_source_params(data, sample, chain_file);
+        if(!check)
         {
-            //add new source to catalog
-            create_new_source(catalog, sample, noise, 0, IMAX, data->N, sample->tdi->Nchannel, data->NP);
+            //Book-keeping of waveform in time-frequency volume
+            galactic_binary_alignment(orbit, data, sample);
+            
+            //calculate waveform model of sample
+            galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+            
+            //check frequencies
+            double q_sample = sample->f0 * data->T;
+            if(q_sample > data->qmin+data->qpad && q_sample < data->qmax-data->qpad)
+            {
+                //add new source to catalog
+                create_new_source(catalog, sample, noise, 0, IMAX, data->N, sample->tdi->Nchannel, data->NP);
+            }
         }
     }
     
@@ -497,62 +527,65 @@ int main(int argc, char *argv[])
         for(int d=0; d<DMAX; d++)
         {
             //parse source parameters
-            scan_source_params(data, sample, chain_file);
+            check = safe_scan_source_params(data, sample, chain_file);
             
-            //find where the source fits in the measurement band
-            galactic_binary_alignment(orbit, data, sample);
-            
-            //calculate waveform model of sample
-            galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
-            
-            double q_sample = sample->f0 * data->T;
-            
-            if(q_sample < data->qmin+data->qpad || q_sample > data->qmax-data->qpad) continue;
-            
-            if(i%downsample!=0) continue;
-            
-            //calculate match of sample and all entries
-            matchFlag = 0;
-            for(int n=0; n<catalog->N; n++)
+            if(!check)
             {
-                entry = catalog->entry[n];
+                //find where the source fits in the measurement band
+                galactic_binary_alignment(orbit, data, sample);
                 
-                //check frequency separation
-                double q_entry  = entry->source[0]->f0 * data->T;
+                //calculate waveform model of sample
+                galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
                 
-                if( fabs(q_entry-q_sample) > dqmax ) Match = -1.0;
+                double q_sample = sample->f0 * data->T;
                 
-                //calculate match
-                else
+                if(q_sample < data->qmin+data->qpad || q_sample > data->qmax-data->qpad) continue;
+                
+                if(i%downsample!=0) continue;
+                
+                //calculate match of sample and all entries
+                matchFlag = 0;
+                for(int n=0; n<catalog->N; n++)
                 {
-                    Match = waveform_match(sample, entry->source[0], noise);
-                }
-                
-                if(Match > tolerance && !entryFlag[n])
-                {
-                    matchFlag = 1;
-                    entryFlag[n] = 1;
-                    Distance = waveform_distance(sample, entry->source[0], noise);
-                    //append sample to entry
-                    entry->match[entry->I] = Match;
-                    entry->distance[entry->I] = Distance;
-                    entry->stepFlag[i] = 1;
-                    append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel, data->NP);
+                    entry = catalog->entry[n];
                     
-                    //stop looping over entries in catalog
-                    break;
+                    //check frequency separation
+                    double q_entry  = entry->source[0]->f0 * data->T;
+                    
+                    if( fabs(q_entry-q_sample) > dqmax ) Match = -1.0;
+                    
+                    //calculate match
+                    else
+                    {
+                        Match = waveform_match(sample, entry->source[0], noise);
+                    }
+                    
+                    if(Match > tolerance && !entryFlag[n])
+                    {
+                        matchFlag = 1;
+                        entryFlag[n] = 1;
+                        Distance = waveform_distance(sample, entry->source[0], noise);
+                        //append sample to entry
+                        entry->match[entry->I] = Match;
+                        entry->distance[entry->I] = Distance;
+                        entry->stepFlag[i] = 1;
+                        append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel, data->NP);
+                        
+                        //stop looping over entries in catalog
+                        break;
+                    }
+                    
+                }//end loop over catalog entries
+                
+                
+                //if the match tolerence is never met, add as new source
+                if(!matchFlag)
+                {
+                    entryFlag[catalog->N]=1;
+                    create_new_source(catalog, sample, noise, i, IMAX, data->N, data->Nchannel, data->NP);
                 }
                 
-            }//end loop over catalog entries
-            
-            
-            //if the match tolerence is never met, add as new source
-            if(!matchFlag)
-            {
-                entryFlag[catalog->N]=1;
-                create_new_source(catalog, sample, noise, i, IMAX, data->N, data->Nchannel, data->NP);
             }
-            
         }//end loop over sources in chain sample
         
     }//end loop over chain
