@@ -32,6 +32,8 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sort_vector.h>
 
+#include <omp.h>
+
 #include <LISA.h>
 #include <GMM_with_EM.h>
 
@@ -289,7 +291,7 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
 }
 
 
-int safe_scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
+static int safe_scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
 {
 
     int check = 0;
@@ -313,6 +315,14 @@ int safe_scan_source_params(struct Data *data, struct Source *source, FILE *fptr
     map_params_to_array(source, source->params, data->T);
     return 0;
 
+}
+
+static void source_waveform_wrapper(struct Source *source, struct Data *data, struct Orbit *orbit)
+{
+    source->tdi = malloc(sizeof(struct TDI));
+    alloc_tdi(source->tdi,data->N, data->Nchannel);
+    galactic_binary_alignment(orbit, data, source);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], source->params, data->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
 }
 
 int main(int argc, char *argv[])
@@ -659,6 +669,9 @@ int main(int argc, char *argv[])
         
         entry->i = i_med;
         
+        // get waveform of median sample
+        source_waveform_wrapper(entry->source[i_med], data, orbit);
+        
         //replace stored SNR with median sample
         entry->SNR = snr(entry->source[i_med],noise);
         
@@ -674,10 +687,6 @@ int main(int argc, char *argv[])
         
         sprintf(filename, "%s/%s_waveform.dat", outdir,entry->name);
         out = fopen( filename, "w");
-        
-        
-        
-        
         
         struct Source *b=entry->source[0];
         int N = b->tdi->N;
@@ -711,6 +720,7 @@ int main(int argc, char *argv[])
             }//check that index is in range
         }//loop over waveform bins
         
+        free_tdi(entry->source[i_med]->tdi);
         free(b_A);
         free(b_E);
         fclose(out);
@@ -800,7 +810,11 @@ int main(int argc, char *argv[])
                 //check that the sources are close enough to bother looking
                 if(fabs(q_new_catalog_entry - q_old_catalog_entry) > dqmax) continue;
                 
-                copy_source(entry->source[entry->i], new_catalog_entry);
+                //copy_source(entry->source[entry->i], new_catalog_entry);
+                
+                /* parameter-only copy */
+                new_catalog_entry->NP = entry->source[entry->i]->NP;
+                memcpy(new_catalog_entry->params, entry->source[entry->i]->params, new_catalog_entry->NP*sizeof(double));
                 
                 //re-align where the source fits in the (old) measurement band
                 map_params_to_array(new_catalog_entry, new_catalog_entry->params, data_old->T);
@@ -838,6 +852,9 @@ int main(int argc, char *argv[])
     gsl_rng_set (r, 190521);
 
     int NMODE_start = NMODE;
+    
+    omp_set_num_threads(detections);
+    #pragma omp parallel for private(entry)
     for(int d=0; d<detections; d++)
     {
         NMODE = NMODE_start;
@@ -854,7 +871,12 @@ int main(int argc, char *argv[])
         for(int k=0; k<entry->I; k++)
         {
             print_source_params(data,entry->source[k],out);
+            
+            source_waveform_wrapper(entry->source[k], data, orbit);
+
             fprintf(out,"%lg %lg %lg\n",snr(entry->source[k],noise),entry->match[k],entry->distance[k]);
+            
+            free_tdi(entry->source[k]->tdi);
         }
         fclose(out);
         
@@ -872,6 +894,9 @@ int main(int argc, char *argv[])
         //insert waveform power
         for(int i=0; i<entry->I; i++)
         {
+            
+            source_waveform_wrapper(entry->source[i], data, orbit);
+
             for(int j=0; j<entry->source[i]->BW; j++)
             {
                 
@@ -886,6 +911,8 @@ int main(int argc, char *argv[])
                     hrec[k][1][i] = entry->source[i]->tdi->E[j_re]*entry->source[i]->tdi->E[j_re]+entry->source[i]->tdi->E[j_im]*entry->source[i]->tdi->E[j_im];
                 }
             }
+            
+            free_tdi(entry->source[i]->tdi);
         }
         
         //sort reconstructed power in each frequency bin and get median, CIs
@@ -937,7 +964,7 @@ int main(int argc, char *argv[])
         
         
         /* Gaussian mixture model fit to posterior */
-        fprintf(stdout,"\nGaussian Mixture Model fit:\n");
+        //fprintf(stdout,"\nGaussian Mixture Model fit:\n");
                 
         int counter;
         int CMAX = 10;

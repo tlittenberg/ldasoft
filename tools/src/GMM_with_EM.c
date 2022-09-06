@@ -609,7 +609,7 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
     /* check convergence with log likelihood & BIC */
     *logL = log_likelihood(modes, samples, NMCMC, NMODE);
     *BIC = -2.*(*logL) + (double)NMODE*((double)NP*((double)NP+3.)/2. + 1)*log((double)NMCMC);
-    printf(" logL = %g,  BIC = %g     ",*logL, *BIC);
+    //printf(" logL = %g,  BIC = %g     ",*logL, *BIC);
     
     
     /*
@@ -700,7 +700,7 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
     double BICmin = 1e60;
     while(step<NSTEP)
     {
-        printProgress((double)(step+1)/NSTEP);
+        //printProgress((double)(step+1)/NSTEP);
         if(expectation_maximization(samples, modes, NMCMC, logL, BIC)) return 1;
         else
         {
@@ -712,7 +712,7 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
             step++;
         }
     }
-    printf("\n");
+    //printf("\n");
     return 0;
 }
 

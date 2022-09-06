@@ -106,11 +106,13 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"--padding %i ",data->qpad);
     fprintf(fptr,"--duration %f ",data->T);
     fprintf(fptr,"--start-time %f ",data->t0[0]);
-    fprintf(fptr,"--source $1 --chain-file chains/dimension_chain.dat.$1 ");
+    fprintf(fptr,"--sources $1 --chain-file chains/dimension_chain.dat.$1 ");
     
     //Optional
     if(strcmp(data->format,"frequency")==0)
         fprintf(fptr,"--frac-freq ");
+    if(strcmp(data->format,"sangria")==0)
+        fprintf(fptr,"--sangria ");
     if(flags->orbit)
         fprintf(fptr,"--orbit %s ",orbit->OrbitFileName);
     if(data->NP==9)
