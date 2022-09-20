@@ -1208,6 +1208,24 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
     }
 }
 
+void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr)
+{
+    for(int n=0; n<data->N; n++)
+    {
+        int re = 2*n;
+        int im = re+1;
+        double f = data->fmin + (double)n/data->T;
+
+        int i = 0;
+        fprintf(fptr,"%.12g ",f);
+        fprintf(fptr,"%.12g ",model->tdi[i]->A[re]);
+        fprintf(fptr,"%.12g ",model->tdi[i]->A[im]);
+        fprintf(fptr,"%.12g ",model->tdi[i]->E[re]);
+        fprintf(fptr,"%.12g\n",model->tdi[i]->E[im]);
+    }
+}
+
+
 void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags)
 {
     FILE *fptr;
