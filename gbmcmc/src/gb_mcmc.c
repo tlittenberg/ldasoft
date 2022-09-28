@@ -319,6 +319,12 @@ int main(int argc, char *argv[])
     print_waveforms_reconstruction(data,flags);
     print_noise_reconstruction(data,flags);
     print_evidence(chain,flags);
+    
+    sprintf(filename,"%s/waveform_strain.dat");
+    FILE *waveFile = fopen(filename,"w");
+    print_waveform_strain(data,model,waveFile);
+    fclose(waveFile);
+
 
     sprintf(filename,"%s/avg_log_likelihood.dat",flags->runDir);
     FILE *chainFile = fopen(filename,"w");

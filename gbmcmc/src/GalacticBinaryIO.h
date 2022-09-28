@@ -125,6 +125,9 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
 void save_waveforms(struct Data *data, struct Model *model, int mcmc);
 
 /// Print waveform strain
+void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr);
+
+/// Print waveform power
 void print_waveform(struct Data *data, struct Model *model, FILE *fptr);
 
 /// Print waveform 5, 25, 50, 75, and 95 quantiles of waveform power spectrum posteriors
