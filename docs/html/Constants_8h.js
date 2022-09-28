@@ -3,7 +3,6 @@ var Constants_8h =
     [ "AU", "Constants_8h.html#ae992e5b7e1e6bc540e74aa4d3f63a269", null ],
     [ "CLIGHT", "Constants_8h.html#a579085cbd9e0993223cae68700a306cf", null ],
     [ "DEG2RAD", "Constants_8h.html#af7e8592d0a634bd3642e9fd508ea8022", null ],
-    [ "FIXME", "Constants_8h.html#a783c49c38c9489b1a10bc04049b3682f", null ],
     [ "GNEWTON", "Constants_8h.html#a9a79b2355cfb2e80430b63d5bb645330", null ],
     [ "LN2", "Constants_8h.html#a316db5f7a96e49e413e7e673ffed3ba2", null ],
     [ "MSUN", "Constants_8h.html#a32a6b190d4d681e2af4c6ce998031557", null ],

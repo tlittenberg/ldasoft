@@ -116,7 +116,8 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
     struct TDI *tdi_td = malloc(sizeof(struct TDI));
         
     if(!strcmp(data->format,"frequency"))  LISA_Read_HDF5_LDC_RADLER_TDI(tdi_td, data->fileName);
-    if(!strcmp(data->format,"sangria")) LISA_Read_HDF5_LDC_TDI(tdi_td, data->fileName);
+    if(!strcmp(data->format,"sangria")) LISA_Read_HDF5_LDC_TDI(tdi_td, data->fileName, "/obs/tdi");
+    
     
     /* Select time segment of full data set */
     double start_time = data->t0[0];
@@ -150,6 +151,65 @@ void GalacticBinaryReadHDF5(struct Data *data, struct TDI *tdi)
         E[n] = tdi_td->E[m];
         T[n] = tdi_td->T[m];
     }
+    
+    /* lets get rid of those black holes
+    struct TDI *tdi_td_mbhb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_mbhb, data->fileName, "/sky/mbhb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_mbhb->X[m];
+        Y[n] -= tdi_td_mbhb->Y[m];
+        Z[n] -= tdi_td_mbhb->Z[m];
+        A[n] -= tdi_td_mbhb->A[m];
+        E[n] -= tdi_td_mbhb->E[m];
+        T[n] -= tdi_td_mbhb->T[m];
+    }
+    free_tdi(tdi_td_mbhb); */
+    
+    /* lets get rid of the galaxy
+    struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_dgb->X[m];
+        Y[n] -= tdi_td_dgb->Y[m];
+        Z[n] -= tdi_td_dgb->Z[m];
+        A[n] -= tdi_td_dgb->A[m];
+        E[n] -= tdi_td_dgb->E[m];
+        T[n] -= tdi_td_dgb->T[m];
+    }
+    free_tdi(tdi_td_dgb);
+    
+    struct TDI *tdi_td_igb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_igb, data->fileName, "/sky/igb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_igb->X[m];
+        Y[n] -= tdi_td_igb->Y[m];
+        Z[n] -= tdi_td_igb->Z[m];
+        A[n] -= tdi_td_igb->A[m];
+        E[n] -= tdi_td_igb->E[m];
+        T[n] -= tdi_td_igb->T[m];
+    }
+    free_tdi(tdi_td_igb);
+    
+    struct TDI *tdi_td_vgb = malloc(sizeof(struct TDI));
+    LISA_Read_HDF5_LDC_TDI(tdi_td_vgb, data->fileName, "/sky/vgb/tdi");
+    for(int n=0; n<N; n++)
+    {
+        int m = n_start+n;
+        X[n] -= tdi_td_vgb->X[m];
+        Y[n] -= tdi_td_vgb->Y[m];
+        Z[n] -= tdi_td_vgb->Z[m];
+        A[n] -= tdi_td_vgb->A[m];
+        E[n] -= tdi_td_vgb->E[m];
+        T[n] -= tdi_td_vgb->T[m];
+    }
+    free_tdi(tdi_td_vgb); */
+
     
     /* Tukey window time-domain TDI channels tdi_td */
     double alpha = (2.0*FILTER_LENGTH/Tobs);
@@ -653,14 +713,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
     FILE *injectionFile;
     FILE *paramFile;
     char filename[1024];
-    
-    if(flags->NINJ==0)
-    {
-        data->fmax = data->fmin + data->N/data->T;
-        data->qmin = (int)(data->fmin*data->T);
-        data->qmax = data->qmin+data->N;
-    }
-    
+        
     for(int ii = 0; ii<flags->NINJ; ii++)
     {
         
@@ -708,7 +761,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 
                 
                 //set bandwidth of data segment centered on injection
-                if(nn==0)
+                if(nn==0 && !flags->strainData)
                 {
                     data->fmin = f0 - (data->N/2)/data->T;
                     data->fmax = f0 + (data->N/2)/data->T;
@@ -764,6 +817,12 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 //Book-keeping of injection time-frequency volume
                 galactic_binary_alignment(orbit, data, inj);
                 
+                if(inj->qmax < data->qmin || inj->qmin > data->qmax)
+                {
+                    fprintf(stdout,"Injection %i is outside of the requested frequency segment\n",nn);
+                    continue;
+                }
+                
                 printf("   ...bandwidth : %i\n",inj->BW);
                 printf("   ...fdot      : %g\n",inj->dfdt*data->T*data->T);
                 printf("   ...fddot     : %g\n",inj->d2fdt2*data->T*data->T*data->T);
@@ -776,15 +835,17 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 for(int n=0; n<inj->BW; n++)
                 {
                     int i = n+inj->imin;
-                    
-                    tdi->X[2*i]   += inj->tdi->X[2*n];
-                    tdi->X[2*i+1] += inj->tdi->X[2*n+1];
-                    
-                    tdi->A[2*i]   += inj->tdi->A[2*n];
-                    tdi->A[2*i+1] += inj->tdi->A[2*n+1];
-                    
-                    tdi->E[2*i]   += inj->tdi->E[2*n];
-                    tdi->E[2*i+1] += inj->tdi->E[2*n+1];
+                    if(i>0 && i<data->N)
+                    {
+                        tdi->X[2*i]   += inj->tdi->X[2*n];
+                        tdi->X[2*i+1] += inj->tdi->X[2*n+1];
+                        
+                        tdi->A[2*i]   += inj->tdi->A[2*n];
+                        tdi->A[2*i+1] += inj->tdi->A[2*n+1];
+                        
+                        tdi->E[2*i]   += inj->tdi->E[2*n];
+                        tdi->E[2*i+1] += inj->tdi->E[2*n+1];
+                    }
                 }
                 
                 sprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);

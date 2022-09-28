@@ -98,7 +98,8 @@ int main(int argc, char *argv[])
     {
         GalacticBinaryReadData(data,orbit,flags);
     }
-    else
+    
+    if(flags->NINJ>0)
     {
         /* Inject gravitational wave signal */
         if(flags->knownSource)
@@ -217,7 +218,7 @@ int main(int argc, char *argv[])
             if(threadID==0)
             {
                 flags->burnin   = (mcmc<0) ? 1 : 0;
-                flags->maximize = (mcmc<-flags->NBURN/2) ? 1 : 0;
+                flags->maximize = 0;//(mcmc<-flags->NBURN/2) ? 1 : 0;
             }
             
             #pragma omp barrier
@@ -228,21 +229,21 @@ int main(int argc, char *argv[])
                 //loop over frequency segments
                 struct Model *model_ptr = model[chain->index[ic]];
                 struct Model *trial_ptr = trial[chain->index[ic]];
-                
+                copy_model(model_ptr,trial_ptr);
                 
                 for(int steps=0; steps < 100; steps++)
                 {
                     //for(int j=0; j<model_ptr->Nlive; j++)
                     galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                    
-                    if( (flags->strainData || flags->simNoise) && !flags->psd)
-                        noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
-                    
+                                        
                 }//loop over MCMC steps
-                
+                                
                 //reverse jump birth/death move
                 if(flags->rj)galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 
+                if( (flags->strainData || flags->simNoise) && !flags->psd)
+                    noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
+
                 //update fisher matrix for each chain
                 if(mcmc%100==0)
                 {
@@ -318,6 +319,12 @@ int main(int argc, char *argv[])
     print_waveforms_reconstruction(data,flags);
     print_noise_reconstruction(data,flags);
     print_evidence(chain,flags);
+    
+    sprintf(filename,"%s/waveform_strain.dat");
+    FILE *waveFile = fopen(filename,"w");
+    print_waveform_strain(data,model,waveFile);
+    fclose(waveFile);
+
 
     sprintf(filename,"%s/avg_log_likelihood.dat",flags->runDir);
     FILE *chainFile = fopen(filename,"w");

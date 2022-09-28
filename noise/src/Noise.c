@@ -37,6 +37,8 @@
 
 #include "Noise.h"
 
+#define MIN_SPLINE_STENCIL 5
+#define MIN_SPLINE_SPACING 10.
 
 void alloc_spline_model(struct SplineModel *model, int Ndata, int Nspline)
 {
@@ -64,12 +66,61 @@ void copy_spline_model(struct SplineModel *origin, struct SplineModel *copy)
     
     //Model likelihood
     copy->logL = origin->logL;
+    
+    //Priors
+    copy->Nmin = origin->Nmin;
+    copy->Nmax = origin->Nmax;
 }
 
 void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
 {
     fprintf(fptr,"%i %.12g %i\n",step,model->logL,model->spline->N);
 }
+
+void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_knot, int max_knot)
+{
+    struct Noise *psd = model->psd;
+    struct Noise *spline = model->spline;
+    
+    /* find location in data vector of knot */
+    double T = 1./(psd->f[1] - psd->f[0]);
+
+    gsl_spline *cspline_A = gsl_spline_alloc(gsl_interp_akima, spline->N);
+    gsl_spline *cspline_E = gsl_spline_alloc(gsl_interp_akima, spline->N);
+    gsl_interp_accel *acc_A = gsl_interp_accel_alloc();
+    gsl_interp_accel *acc_E = gsl_interp_accel_alloc();
+
+    /* have to recompute the spline everywhere (derivatives on boundary) */
+    gsl_spline_init(cspline_A,spline->f,spline->SnA,spline->N);
+    gsl_spline_init(cspline_E,spline->f,spline->SnE,spline->N);
+
+    
+    int imin = (int)((spline->f[min_knot]-psd->f[0])*T);
+    int imax = (int)((spline->f[max_knot]-psd->f[0])*T);
+    
+    
+    for(int n=imin; n<imax; n++)
+    {
+        psd->SnA[n]=gsl_spline_eval(cspline_A,psd->f[n],acc_A);
+        psd->SnE[n]=gsl_spline_eval(cspline_E,psd->f[n],acc_E);
+        
+        /*
+         apply transfer function
+         -this catches the sharp features in the spectrum from f/fstar
+         -without needing to interpolate
+         */
+        
+        psd->SnA[n]+=psd->transfer[n];
+        psd->SnE[n]+=psd->transfer[n];
+    }
+    
+    gsl_spline_free (cspline_A);
+    gsl_spline_free (cspline_E);
+    gsl_interp_accel_free (acc_A);
+    gsl_interp_accel_free (acc_E);
+
+}
+
 
 void generate_spline_noise_model(struct SplineModel *model)
 {
@@ -112,6 +163,40 @@ double noise_log_likelihood(struct Data *data, struct SplineModel *model)
     
     return logL;
 }
+
+double noise_delta_log_likelihood(struct Data *data, struct SplineModel *model_x, struct SplineModel *model_y, double fmin, double fmax,int ic)
+{
+    double dlogL = 0.0;
+    
+    struct TDI *tdi = data->tdi[0];
+    struct Noise *psd_x = model_x->psd;
+    struct Noise *psd_y = model_y->psd;
+
+    int N = (int)floor((fmax-fmin)*data->T);
+    int imin = (int)floor((fmin-psd_x->f[0])*data->T);
+    if(imin<0)imin=0;
+    
+    /* remove contribution for current state x */
+    dlogL -= -0.5*fourier_nwip(tdi->A+2*imin, tdi->A+2*imin, psd_x->SnA+imin, N);
+    dlogL -= -0.5*fourier_nwip(tdi->E+2*imin, tdi->E+2*imin, psd_x->SnE+imin, N);
+    for(int n=imin; n<imin+N; n++)
+    {
+        dlogL += log(psd_x->SnA[n]);
+        dlogL += log(psd_x->SnE[n]);
+    }
+
+    /* add contribution for proposed state y */
+    dlogL += -0.5*fourier_nwip(tdi->A+2*imin, tdi->A+2*imin, psd_y->SnA+imin, N);
+    dlogL += -0.5*fourier_nwip(tdi->E+2*imin, tdi->E+2*imin, psd_y->SnE+imin, N);
+    for(int n=imin; n<imin+N; n++)
+    {
+        dlogL -= log(psd_y->SnA[n]);
+        dlogL -= log(psd_y->SnE[n]);
+    }
+    
+    return dlogL;
+}
+
 
 void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags *flags)
 {
@@ -159,6 +244,21 @@ void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags
         }
     }
 }
+
+static double uniform_frequency_draw(double fmin, double fmax, gsl_rng *r)
+{
+    return exp(log(fmin) + (log(fmax) - log(fmin))*gsl_rng_uniform(r));
+}
+
+static int check_frequency_spacing(double *f, int k, double T)
+{
+    if (
+        (f[k]-f[k-1])*T < MIN_SPLINE_SPACING ||
+        (f[k+1]-f[k])*T < MIN_SPLINE_SPACING
+        ) return 1;
+    else return 0;
+}
+
 void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
@@ -171,36 +271,72 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     struct SplineModel *model_x = model;
     struct SplineModel *model_y = malloc(sizeof(struct SplineModel));
     alloc_spline_model(model_y, model_x->psd->N, model_x->spline->N);
-    
+
+    //alisases for pointers to frequency vectors
+    double *fx = model_x->spline->f;
+    double *fy = model_y->spline->f;
     
     //copy current state into trial
     copy_spline_model(model_x, model_y);
     
     //pick a point any point
-    int k = (int)floor(gsl_rng_uniform(chain->r[0])*(double)model_y->spline->N);
+    int k = (int)floor(gsl_rng_uniform(chain->r[ic])*(double)model_y->spline->N);
 
+    //find the minimum and maximum indecies for stencil
+    int half_stencil = (MIN_SPLINE_STENCIL-1)/2;
+    int kmin = (k-half_stencil < 0) ? 0 : k-half_stencil;
+    int kmax = (k+half_stencil > model_x->spline->N-1) ? model_x->spline->N-1 : k+half_stencil;
     
     //update frequency
     model_y->spline->f[k] = model_x->spline->f[k];
     if(k>0 && k<model_y->spline->N-1)
-        model_y->spline->f[k] = model_x->spline->f[k-1] + (model_x->spline->f[k+1] - model_x->spline->f[k-1])*gsl_rng_uniform(chain->r[ic]);
+    {
+        /* normal draw */
+        if(gsl_rng_uniform(chain->r[ic])<0.8)
+        {
+            
+            //get shortest distance between neighboring points
+            double df_left = log(fx[k]) - log(fx[k-1]);
+            double df_right= log(fx[k+1]) - log(fx[k]);
+            double df = (df_left < df_right) ? df_left : df_right;
+            
+            //set shortest distance as 3-sigma jump for Gaussian draw
+            double sigma = df/3.;
+            
+            //draw new frequency (illegally) checking that it stays between existing points
+            do fy[k] = exp(log(fx[k]) + sigma*gsl_ran_gaussian(chain->r[ic],1));
+            while( fy[k]<fy[k-1] || fy[k]>fy[k+1]);
+        }
+        else
+        {
+            /* uniform draw */
+            fy[k] = uniform_frequency_draw(fx[k-1], fx[k+1], chain->r[ic]);
+        }
+
+        //check frequency prior
+        if(check_frequency_spacing(fy, k, data->T)) logPy = -INFINITY;
+        
+    }
 
     //update amplitude
-    double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k]);//noise_transfer_function(model_y->spline->f[k]/orbit->fstar);
-    double scale = pow(10., -2.0 + 2.0*gsl_rng_uniform(chain->r[0]));
-    model_y->spline->SnA[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
-    model_y->spline->SnE[k] += scale*Sn*gsl_ran_gaussian(chain->r[0],1);
+    double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k]);
+    double scale = pow(10., -2.0 + 2.0*gsl_rng_uniform(chain->r[ic]));
+    model_y->spline->SnA[k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
+    model_y->spline->SnE[k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
     
 
     
     //compute spline
     if(!flags->prior)
     {
-        //generate_noise_model(data, model_y);
-        generate_spline_noise_model(model_y);
+        /* compute spline model */
+        //generate_spline_noise_model(model_y); //full interpolation
+        update_spline_noise_model(model_y, k, kmin, kmax); //interpolation over stencil
         
-        //compute likelihood
+        /* get spline model likelihood */
         model_y->logL = noise_log_likelihood(data, model_y);
+        //model_y->logL = model_x->logL + noise_delta_log_likelihood(data, model_x, model_y, model_x->spline->f[kmin] , model_x->spline->f[kmax],ic);
+
         
         /*
          H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
@@ -244,6 +380,13 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
         move = 'D';
     }
     alloc_spline_model(model_y, model_x->psd->N, Nspline);
+    model_y->Nmin = model_x->Nmin;
+    model_y->Nmax = model_x->Nmax;
+
+    //alisases for pointers to frequency vectors
+    double *fx = model_x->spline->f;
+    double *fy = model_y->spline->f;
+    
     copy_noise(model_x->psd,model_y->psd);
 
     //check range
@@ -273,8 +416,12 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             
             //get grid place for new point
             int birth = kmin+1;
-            model_y->spline->f[birth] = model_x->spline->f[kmin] + (model_x->spline->f[kmax] - model_x->spline->f[kmin])*gsl_rng_uniform(chain->r[ic]);
+            fy[birth] = uniform_frequency_draw(fx[kmin], fx[kmax], chain->r[ic]);
+            
+            //check frequency prior
+            if(check_frequency_spacing(fy, birth, data->T)) logPy = -INFINITY;
 
+            
             double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth]);//noise_transfer_function(model_y->spline->f[birth]/orbit->fstar);
             double Snmin = -Sn*100.;
             double Snmax =  Sn*100.;
@@ -368,7 +515,7 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
     alloc_spline_model(model, data->N, Nspline);
     
     //set max and min spline points
-    model->Nmin = 3;
+    model->Nmin = MIN_SPLINE_STENCIL;
     model->Nmax = Nspline;
     
     //set up psd frequency grid

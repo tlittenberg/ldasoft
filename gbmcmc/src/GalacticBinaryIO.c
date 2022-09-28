@@ -106,11 +106,13 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     fprintf(fptr,"--padding %i ",data->qpad);
     fprintf(fptr,"--duration %f ",data->T);
     fprintf(fptr,"--start-time %f ",data->t0[0]);
-    fprintf(fptr,"--source $1 --chain-file chains/dimension_chain.dat.$1 ");
+    fprintf(fptr,"--sources $1 --chain-file chains/dimension_chain.dat.$1 ");
     
     //Optional
     if(strcmp(data->format,"frequency")==0)
         fprintf(fptr,"--frac-freq ");
+    if(strcmp(data->format,"sangria")==0)
+        fprintf(fptr,"--sangria ");
     if(flags->orbit)
         fprintf(fptr,"--orbit %s ",orbit->OrbitFileName);
     if(data->NP==9)
@@ -1205,6 +1207,24 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
         //    }
     }
 }
+
+void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr)
+{
+    for(int n=0; n<data->N; n++)
+    {
+        int re = 2*n;
+        int im = re+1;
+        double f = data->fmin + (double)n/data->T;
+
+        int i = 0;
+        fprintf(fptr,"%.12g ",f);
+        fprintf(fptr,"%.12g ",model->tdi[i]->A[re]);
+        fprintf(fptr,"%.12g ",model->tdi[i]->A[im]);
+        fprintf(fptr,"%.12g ",model->tdi[i]->E[re]);
+        fprintf(fptr,"%.12g\n",model->tdi[i]->E[im]);
+    }
+}
+
 
 void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags)
 {

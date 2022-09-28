@@ -1,22 +1,8 @@
 var GalacticBinaryModel_8h =
 [
-    [ "alloc_calibration", "GalacticBinaryModel_8h.html#a38f2cf23bb8f44a24f5040506b0923cd", null ],
-    [ "alloc_data", "GalacticBinaryModel_8h.html#a7a171ad88ba9f57ded9e5be29759c548", null ],
-    [ "alloc_model", "GalacticBinaryModel_8h.html#a1e2ce40c066c60db2b591b10f5e12295", null ],
-    [ "alloc_noise", "GalacticBinaryModel_8h.html#a7ebc45814152141c744e513ac6c89fa3", null ],
-    [ "alloc_source", "GalacticBinaryModel_8h.html#af4d427c1f55fb38c73f25ba924108aec", null ],
     [ "apply_calibration_model", "GalacticBinaryModel_8h.html#a0ea5f768d5e2549c7d915fb39d4983ac", null ],
     [ "compare_model", "GalacticBinaryModel_8h.html#aa9152d7274cafed11f3aef58c5aec474", null ],
-    [ "copy_calibration", "GalacticBinaryModel_8h.html#a53b8c9e7e22f51ffd98ada535d064afb", null ],
     [ "copy_data", "GalacticBinaryModel_8h.html#a7c7991d4d4c116f39a280f4ffb305bd5", null ],
-    [ "copy_model", "GalacticBinaryModel_8h.html#a0e3b9c63403d57e6c1a8446543760089", null ],
-    [ "copy_noise", "GalacticBinaryModel_8h.html#aac0726c8e74b4cfe06a47c9f41c1bd86", null ],
-    [ "copy_source", "GalacticBinaryModel_8h.html#a9356d699ff50aa1361fcef848cd2095b", null ],
-    [ "free_calibration", "GalacticBinaryModel_8h.html#a5834ab2647341d5655b91a407cc9870c", null ],
-    [ "free_chain", "GalacticBinaryModel_8h.html#a0139893a312804a38d6970d41292c233", null ],
-    [ "free_model", "GalacticBinaryModel_8h.html#adc82b05c54de08445433147948ee5f65", null ],
-    [ "free_noise", "GalacticBinaryModel_8h.html#a82c54b48e4607c9d91e860550ac48076", null ],
-    [ "free_source", "GalacticBinaryModel_8h.html#a9c14765afc01ee00538660b53adec6b0", null ],
     [ "gaussian_log_likelihood", "GalacticBinaryModel_8h.html#af29d9882e5f9119327ef735a641e6602", null ],
     [ "gaussian_log_likelihood_constant_norm", "GalacticBinaryModel_8h.html#a033e2dbb7c3a92e43634ba5b477b70c3", null ],
     [ "gaussian_log_likelihood_model_norm", "GalacticBinaryModel_8h.html#aed294af3354f45ddf6e25f21e4b27672", null ],
@@ -28,6 +14,5 @@ var GalacticBinaryModel_8h =
     [ "map_array_to_params", "GalacticBinaryModel_8h.html#a8e2448b6a3c5eda5d8f7554aa5c8a22c", null ],
     [ "map_params_to_array", "GalacticBinaryModel_8h.html#ac5233ef8561550f70d0c30b73ba456fd", null ],
     [ "maximize_signal_model", "GalacticBinaryModel_8h.html#a1616fa8f0399df0a39768c4ea3e2f776", null ],
-    [ "realloc_noise", "GalacticBinaryModel_8h.html#a67cbd1cfd4fe8c9f655d206a264860e4", null ],
     [ "update_max_log_likelihood", "GalacticBinaryModel_8h.html#afe48796e00cb3479987c1635f33c0e05", null ]
 ];

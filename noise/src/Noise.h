@@ -83,6 +83,13 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
 void generate_spline_noise_model(struct SplineModel *model);
 
 /**
+\brief Compute spline model only where interpolant changes
+ 
+ Interpolates spline points only in the vicinity of `new_knot`
+ */
+void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_knot, int max_knot);
+
+/**
  \brief Log likelihood for noise model.
  
  @param data Data structure
@@ -90,6 +97,17 @@ void generate_spline_noise_model(struct SplineModel *model);
  @return \f$  \ln p({\rm data}|{\rm spline}) \f$
  */
 double noise_log_likelihood(struct Data *data, struct SplineModel *model);
+
+/**
+ \brief Change in log likelihood for noise model.
+ 
+ @param data Data structure
+ @param model_x Current SplineModel structure containing current state
+ @param model_y Current SplineModel structure containing current state
+ @return \f$  \ln p({\rm data}|{\rm spline}_y)-\ln p({\rm data}|{\rm spline}_x) \f$
+ */
+double noise_delta_log_likelihood(struct Data *data, struct SplineModel *model_x, struct SplineModel *model_y, double fmin, double fmax, int ic);
+
 
 /**
  \brief In-place parallel tempering exchange of spline `model` states

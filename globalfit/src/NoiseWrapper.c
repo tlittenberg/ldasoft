@@ -171,7 +171,8 @@ void initialize_noise_state(struct NoiseData *noise_data)
     int NC = chain->NC;
     int Nspline = noise_data->nProc+1;
     if(Nspline>50) Nspline=50;
-    
+    if(Nspline<5) Nspline=5;
+
     int psd_check=0;
     while(!psd_check) //guard against pathological model
     {

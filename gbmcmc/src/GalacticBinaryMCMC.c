@@ -38,6 +38,13 @@
 #include "GalacticBinaryWaveform.h"
 #include "GalacticBinaryMCMC.h"
 
+static double maximization_penalty(int dimension, int bandwidth)
+{
+    //return -0.5*(double)dimension*log(2.*(double)bandwidth); //bic-inspired = -klog(N)/2
+    return -(double)dimension; //likelihood-inspired = -k
+    //return 0.0; //no penalty
+}
+
 void ptmcmc(struct Model **model, struct Chain *chain, struct Flags *flags)
 {
     int a, b;
@@ -209,7 +216,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     {
         nprop = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
         draw = gsl_rng_uniform(chain->r[ic]);
-    }while(proposal[nprop]->weight < draw);
+    }while(proposal[nprop]->weight <= draw);
     
     proposal[nprop]->trial[ic]++;
     
@@ -291,9 +298,169 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(isfinite(logH) && logH > loga)
         {
             proposal[nprop]->accept[ic]++;
-            copy_model(model_y,model_x);
+            copy_model_lite(model_y,model_x);
         }
     }
+}
+
+static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal *proposal, int ic, double *logQxy, double *logQyx, double *logPy, double *penalty)
+{
+    /* pick birth or death move */
+    if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
+    {
+        //ny=nx+1
+        model_y->Nlive++;
+        
+        //slot new source in at end of live  source array
+        int create = model_y->Nlive-1;
+        
+        if(model_y->Nlive<model_x->Nmax)
+        {
+            //draw new parameters
+            //TODO: insert draw from galaxy prior into draw_from_uniform_prior()
+            *logQyx = (*proposal->function)(data, model_y, model_y->source[create], proposal, model_y->source[create]->params, chain->r[ic]);
+            *logQxy = 0;
+            
+            map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
+            
+            if(flags->maximize)
+            {
+                maximize_signal_model(orbit, data, model_y, create);
+                *penalty = maximization_penalty(4,2*model_y->source[create]->BW);
+            }
+            
+            generate_signal_model(orbit, data, model_y, create);
+            model_y->source[create]->fisher_update_flag = 1;
+        }
+        else *logPy = -INFINITY;
+    }
+    else /* death move */
+    {
+        //ny=nx-1
+        model_y->Nlive--;
+        
+        //pick source to kill
+        int kill = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+        
+        if(model_y->Nlive>-1)
+        {
+            *logQyx = 0;
+            *logQxy = (*proposal->density)(data, model_y, model_y->source[kill], proposal, model_y->source[kill]->params);
+            
+            //consolodiate parameter structure
+            for(int j=kill; j<model_y->Nlive; j++)
+            {
+                copy_source(model_x->source[j+1],model_y->source[j]);
+            }
+            
+            if(flags->maximize)
+            {
+                *penalty = maximization_penalty(4,2*model_x->source[kill]->BW);
+            }
+            
+            generate_signal_model(orbit, data, model_y, model_y->Nlive);
+            model_y->source[model_y->Nlive]->fisher_update_flag = 1;
+        }
+        else *logPy = -INFINITY;
+    }
+}
+
+static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal *proposal, int ic, double *logQxy, double *logQyx, double *logPy, double *penalty)
+{
+    /* pick split or merge move */
+    int branch[2];
+    int trunk;
+    
+    if(gsl_rng_uniform(chain->r[ic])<0.5)/* split move */
+    {
+        //ny=nx+1
+        model_y->Nlive++;
+        
+        //pick source to split
+        trunk = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+        
+        //slot new sources in place and at end of live source array
+        branch[0] = trunk;
+        branch[1] = model_y->Nlive-1;
+        
+        if(model_y->Nlive<model_x->Nmax)
+        {
+            //draw parameters for new sources (branches of trunk)
+            for(int n=0; n<2; n++)
+            {
+                *logQyx += (*proposal->function)(data, model_y, model_y->source[branch[n]], proposal, model_y->source[branch[n]]->params, chain->r[ic]);
+                map_array_to_params(model_y->source[branch[n]], model_y->source[branch[n]]->params, data->T);
+                if(flags->maximize)
+                {
+                    maximize_signal_model(orbit, data, model_y, branch[n]);
+                    *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
+                }
+                generate_signal_model(orbit, data, model_y, branch[n]);
+                model_y->source[branch[n]]->fisher_update_flag = 1;
+            }
+            
+            //get reverse move (merge branches to trunk)
+            *logQxy += (*proposal->density)(data, model_x, model_x->source[trunk], proposal, model_x->source[trunk]->params);
+
+            if(flags->maximize)
+            {
+                *penalty -= maximization_penalty(4,2*model_x->source[trunk]->BW);
+            }
+
+        }
+        else *logPy = -INFINITY;
+    }
+    else /* merge move */
+    {
+        //ny=nx-1
+        model_y->Nlive--;
+        
+        if(model_y->Nlive>0)
+        {
+            //pick sources to merge
+            do
+            {
+                branch[0] = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+                branch[1] = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+            }while(branch[0]==branch[1]);
+            
+            
+            //pick source to replace with merged sources
+            trunk = branch[0];
+                        
+            //consolodate parameter structure
+            for(int j=branch[1]; j<model_y->Nlive; j++)
+            {
+                copy_source(model_x->source[j+1],model_y->source[j]);
+            }
+            
+            //draw parameters of trunk
+            *logQyx += (*proposal->function)(data, model_y, model_y->source[trunk], proposal, model_y->source[trunk]->params, chain->r[ic]);
+            map_array_to_params(model_y->source[trunk], model_y->source[trunk]->params, data->T);
+            if(flags->maximize)
+            {
+                maximize_signal_model(orbit, data, model_y, trunk);
+                *penalty -= maximization_penalty(4,2*model_y->source[trunk]->BW);
+            }
+            generate_signal_model(orbit, data, model_y, trunk);
+            model_y->source[trunk]->fisher_update_flag = 1;
+            
+            //get reverse move (split trunk into branches)
+            for(int n=0; n<2; n++)
+            {
+                *logQxy += (*proposal->density)(data, model_x, model_x->source[branch[n]], proposal, model_x->source[branch[n]]->params);
+                
+                if(flags->maximize)
+                {
+                    *penalty += maximization_penalty(4,2*model_x->source[branch[n]]->BW);
+                }
+
+            }
+        }
+        else *logPy = -INFINITY;
+        
+    }
+
 }
 
 void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
@@ -311,8 +478,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     /*
      * BIC-inspired likelihood penalty -klogN/2
      * k = [A, inc, psi, phi]
+     * N is the bandwidth of the signal
      */
-    double penalty= -2.;//1.*data->logN;
+    double penalty = 0.0;
 
     //shorthand pointers
     struct Model *model_x = model;
@@ -320,65 +488,25 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     
     copy_model(model_x,model_y);
     
-    int nprop = -1;
-    int trial_n;
-    double trial_w;
-    while(nprop<0)
-    {
-        trial_n = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
-        trial_w = gsl_rng_uniform(chain->r[ic]);
-        if(trial_w < proposal[trial_n]->rjweight) nprop = trial_n;
-    }
+    int nprop;
+    do nprop = (int)floor((chain->NP)*gsl_rng_uniform(chain->r[ic]));
+    while(proposal[nprop]->rjweight <= gsl_rng_uniform(chain->r[ic]));
     
     proposal[nprop]->trial[ic]++;
-    
-    /* pick birth or death move */
-    if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
+        
+    /* Choose birth/death move, or split/merge move */
+    if( gsl_rng_uniform(chain->r[ic]) < 0.5)/* birth/death move */
     {
-        //ny=nx+1
-        model_y->Nlive++;
-        
-        //slot new source in at end of live  source array
-        int create = model_y->Nlive-1;
-        
-        if(model_y->Nlive<model_x->Nmax)
-        {
-            //draw new parameters
-            //TODO: insert draw from galaxy prior into draw_from_uniform_prior()
-            logQyx = (*proposal[nprop]->function)(data, model_y, model_y->source[create], proposal[nprop], model_y->source[create]->params, chain->r[ic]);
-            logQxy = 0;
-            
-            map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
-            
-            if(flags->maximize) maximize_signal_model(orbit, data, model_y, create);
-
-        }
-        else logPy = -INFINITY;
+        rj_birth_death(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
     }
-    else /* death move */
+    else /* split/merge move */
     {
-        //ny=nx-1
-        model_y->Nlive--;
-        
-        //pick source to kill
-        int kill = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
-        
-        if(model_y->Nlive>-1)
-        {
-            logQyx = 0;
-            logQxy = (*proposal[nprop]->density)(data, model_y, model_y->source[kill], proposal[nprop], model_y->source[kill]->params);
-            
-            //consolodiate parameter structure
-            for(int j=kill; j<model_x->Nlive; j++)
-            {
-                copy_source(model_x->source[j+1],model_y->source[j]);
-            }
-        }
-        else logPy = -INFINITY;
+        rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
     }
     
-    for(int n=0; n<model_x->Nlive; n++) logPx +=  evaluate_prior(flags, data, model_x, prior, model_x->source[n]->params);
-    for(int n=0; n<model_y->Nlive; n++) logPy +=  evaluate_prior(flags, data, model_y, prior, model_y->source[n]->params);
+    
+    for(int n=0; n<model_x->Nlive; n++) logPx += evaluate_prior(flags, data, model_x, prior, model_x->source[n]->params);
+    for(int n=0; n<model_y->Nlive; n++) logPy += evaluate_prior(flags, data, model_y, prior, model_y->source[n]->params);
     
     
     /* Hasting's ratio */
@@ -386,11 +514,9 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     {
         //  Form master template
         /*
-         generate_signal_model is passed an integer telling it which source to update.
-         passing model_x->Nlive is a trick to skip waveform generation for kill move
-         and to only calculate new source for create move
+         generate_signal_model() is called inside rj proposal wrappers
+         rj_birth_death() and rj_split_merge()
          */
-        generate_signal_model(orbit, data, model_y, model_x->Nlive);
         
         //calibration error
         if(flags->calibration)
@@ -418,20 +544,34 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     logH += logPy  - logPx;  //priors
     logH += logQxy - logQyx; //proposals
     
-    //  if(model_y->Nlive > model_x->Nlive && ic==0)
-    //    if(ic==0)
-    //    {
-    //      FILE *fptr = fopen("proposal.dat","a");
-    //          fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
-    //          fprintf(stdout,"%i -> %i \n",model_x->Nlive, model_y->Nlive);
-    //      print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
-    //      fprintf(fptr,"\n");
-    //      fclose(fptr);
-    //    }
+////      if(model_y->Nlive > model_x->Nlive && ic==0 && sm_flag)
+////        if(ic==0)
+//        if(sm_flag && ic==0)
+//        {
+////          FILE *fptr = fopen("proposal.dat","a");
+//              fprintf(stdout,"%lg %lg %lg %lg %g ",model_y->logL+model_y->logLnorm, model_x->logL+model_x->logLnorm, logH, logPy  - logPx, logQxy - logQyx);
+//              fprintf(stdout,"%i -> %i \n",model_x->Nlive, model_y->Nlive);
+////          print_source_params(data, model_y->source[model_y->Nlive-1], fptr);
+////          fprintf(fptr,"\n");
+////          fclose(fptr);
+//        }
     
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(isfinite(logH) && logH > loga)
     {
+        
+        //update FIMs for sources that have changed in the proposed state
+        for(int n=0; n<model_y->Nlive; n++)
+        {
+            //only compute FIM for sources that need it
+            if(model_y->source[n]->fisher_update_flag)
+            {
+                galactic_binary_fisher(orbit, data, model_y->source[n], data->noise[FIXME]);
+                
+                //reset flag indicating FIM is up-to-date
+                model_y->source[n]->fisher_update_flag = 0;
+            }
+        }
         proposal[nprop]->accept[ic]++;
         copy_model(model_y,model_x);
     }
@@ -527,6 +667,7 @@ void initialize_gbmcmc_state(struct Data *data, struct Orbit *orbit, struct Flag
             }
             map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
             galactic_binary_fisher(orbit, data, model[ic]->source[n], data->noise[0]);
+            model[ic]->source[n]->fisher_update_flag=0;
         }
         
         // Form master model & compute likelihood of starting position

@@ -315,20 +315,18 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     
     int NC = chain->NC;
     int mcmc_start = -flags->NBURN;
-    
-    /* Exchange parameters with neighbors */
-    exchange_gbmcmc_source_params(gbmcmc_data);
-    
+        
     /* exit if this segment is finished */
     if(gbmcmc_data->mcmc_step >= flags->NMCMC) return 0;
 
     /* set flags based on current state of sampler */
     flags->burnin   = (gbmcmc_data->mcmc_step<0) ? 1 : 0;
-    flags->maximize = (gbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
+    flags->maximize = 0;//(gbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
+    
 
     /* The MCMC loop */
     int numThreads;
-    int numSteps = 100;
+    int numSteps = 10;
 #pragma omp parallel num_threads(flags->threads)
     {
         //Save individual thread number
@@ -346,39 +344,41 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             struct Model *model_ptr = model[chain->index[ic]];
             struct Model *trial_ptr = trial[chain->index[ic]];
             
+            //update model likelihood using new residual
+            model_ptr->logL = gaussian_log_likelihood(data, model_ptr);
+
+            //sync up model and trial pointers
+            copy_model(model_ptr,trial_ptr);
+
             for(int steps=0; steps<numSteps; steps++)
             {
-                for(int m=0; m<10; m++)
+                for(int m=0; m<100; m++)
                 {
-                    galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    //reverse jump birth/death or split/merge moves
+                    if(gsl_rng_uniform(chain->r[ic])<0.1 && flags->rj)
+                        galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    
+                    //fixed dimension parameter updates
+                    else
+                        galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 }
-                
-                //reverse jump birth/death move
-                if(flags->rj) galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                
-                //update fisher matrix for each chain
-                for(int n=0; n<model_ptr->Nlive; n++)
-                {
-                    galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise[FIXME]);
-                }
-                
-#pragma omp barrier
-                if(threadID==0)
-                {
-                    ptmcmc(model,chain,flags);
-                    adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
-
-                    if(steps%10==0 && gbmcmc_data->mcmc_step>=0)
-                        print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
-                }
-#pragma omp barrier
-                
             }
+            
+            //update fisher matrix for each chain
+            for(int n=0; n<model_ptr->Nlive; n++)
+            {
+                galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise[FIXME]);
+            }
+
             
         }// end (parallel) loop over chains
     }//end parallel section
 #pragma omp barrier
     
+    ptmcmc(model,chain,flags);
+    adapt_temperature_ladder(chain, gbmcmc_data->mcmc_step+flags->NBURN);
+                    
+    print_chain_files(data, model, chain, flags, gbmcmc_data->mcmc_step);
         
     //track maximum log Likelihood
     if(update_max_log_likelihood(model, chain, flags))
@@ -393,7 +393,6 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
         
         //save chain state to resume sampler
         save_chain_state(data, model, chain, flags, gbmcmc_data->mcmc_step);
-        
     }
     
     //dump waveforms to file, update avgLogL for thermodynamic integration

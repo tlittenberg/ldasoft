@@ -32,6 +32,8 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sort_vector.h>
 
+#include <omp.h>
+
 #include <LISA.h>
 #include <GMM_with_EM.h>
 
@@ -288,6 +290,41 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
     fclose(runlog);
 }
 
+
+static int safe_scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
+{
+
+    int check = 0;
+    check+=fscanf(fptr,"%lg",&source->f0);
+    check+=fscanf(fptr,"%lg",&source->dfdt);
+    check+=fscanf(fptr,"%lg",&source->amp);
+    check+=fscanf(fptr,"%lg",&source->phi);
+    check+=fscanf(fptr,"%lg",&source->costheta);
+    check+=fscanf(fptr,"%lg",&source->cosi);
+    check+=fscanf(fptr,"%lg",&source->psi);
+    check+=fscanf(fptr,"%lg",&source->phi0);
+    if(source->NP>8)
+        check+=fscanf(fptr,"%lg",&source->d2fdt2);
+    
+    if(!check)
+    {
+        return 1;
+    }
+    
+    //map to parameter names (just to make code readable)
+    map_params_to_array(source, source->params, data->T);
+    return 0;
+
+}
+
+static void source_waveform_wrapper(struct Source *source, struct Data *data, struct Orbit *orbit)
+{
+    source->tdi = malloc(sizeof(struct TDI));
+    alloc_tdi(source->tdi,data->N, data->Nchannel);
+    galactic_binary_alignment(orbit, data, source);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], source->params, data->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
+}
+
 int main(int argc, char *argv[])
 {
     
@@ -298,6 +335,7 @@ int main(int argc, char *argv[])
     int NTEMP = 1;     //needed size of data structure
     size_t NMODE = 16; //default size of GMM
     size_t NTHIN = 1;  //thinning rate of chain
+    int check;
     
     /* Allocate data structures */
     struct Flags *flags = malloc(sizeof(struct Flags));
@@ -370,12 +408,12 @@ int main(int argc, char *argv[])
     
     //count lines in chain file
     int N=0;
-    while(!feof(chain_file))
-    {
-        scan_source_params(data, sample, chain_file);
-        N++;
-    }
-    N--;
+
+    char *line;
+    char buffer[16384];
+
+    while( (line=fgets(buffer, 16384, chain_file)) != NULL) N++;
+
     rewind(chain_file);
     
     
@@ -441,7 +479,7 @@ int main(int argc, char *argv[])
         FILE *noiseFile = fopen(flags->noiseFile,"r");
         for(int n=0; n<data->N; n++)
         {
-            int check = 0;
+            check = 0;
             check += fscanf(noiseFile,"%lg",&junk); //);f
             check += fscanf(noiseFile,"%lg",&noise->SnA[n]);//A_med);
             check += fscanf(noiseFile,"%lg",&noise->SnE[n]);//E_med);
@@ -461,20 +499,22 @@ int main(int argc, char *argv[])
     {
         
         //parse source in first sample of chain file
-        scan_source_params(data, sample, chain_file);
-        
-        //Book-keeping of waveform in time-frequency volume
-        galactic_binary_alignment(orbit, data, sample);
-        
-        //calculate waveform model of sample
-        galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
-        
-        //check frequencies
-        double q_sample = sample->f0 * data->T;
-        if(q_sample > data->qmin+data->qpad && q_sample < data->qmax-data->qpad)
+        check = safe_scan_source_params(data, sample, chain_file);
+        if(!check)
         {
-            //add new source to catalog
-            create_new_source(catalog, sample, noise, 0, IMAX, data->N, sample->tdi->Nchannel, data->NP);
+            //Book-keeping of waveform in time-frequency volume
+            galactic_binary_alignment(orbit, data, sample);
+            
+            //calculate waveform model of sample
+            galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+            
+            //check frequencies
+            double q_sample = sample->f0 * data->T;
+            if(q_sample > data->qmin+data->qpad && q_sample < data->qmax-data->qpad)
+            {
+                //add new source to catalog
+                create_new_source(catalog, sample, noise, 0, IMAX, data->N, sample->tdi->Nchannel, data->NP);
+            }
         }
     }
     
@@ -497,62 +537,65 @@ int main(int argc, char *argv[])
         for(int d=0; d<DMAX; d++)
         {
             //parse source parameters
-            scan_source_params(data, sample, chain_file);
+            check = safe_scan_source_params(data, sample, chain_file);
             
-            //find where the source fits in the measurement band
-            galactic_binary_alignment(orbit, data, sample);
-            
-            //calculate waveform model of sample
-            galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
-            
-            double q_sample = sample->f0 * data->T;
-            
-            if(q_sample < data->qmin+data->qpad || q_sample > data->qmax-data->qpad) continue;
-            
-            if(i%downsample!=0) continue;
-            
-            //calculate match of sample and all entries
-            matchFlag = 0;
-            for(int n=0; n<catalog->N; n++)
+            if(!check)
             {
-                entry = catalog->entry[n];
+                //find where the source fits in the measurement band
+                galactic_binary_alignment(orbit, data, sample);
                 
-                //check frequency separation
-                double q_entry  = entry->source[0]->f0 * data->T;
+                //calculate waveform model of sample
+                galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
                 
-                if( fabs(q_entry-q_sample) > dqmax ) Match = -1.0;
+                double q_sample = sample->f0 * data->T;
                 
-                //calculate match
-                else
+                if(q_sample < data->qmin+data->qpad || q_sample > data->qmax-data->qpad) continue;
+                
+                if(i%downsample!=0) continue;
+                
+                //calculate match of sample and all entries
+                matchFlag = 0;
+                for(int n=0; n<catalog->N; n++)
                 {
-                    Match = waveform_match(sample, entry->source[0], noise);
-                }
-                
-                if(Match > tolerance && !entryFlag[n])
-                {
-                    matchFlag = 1;
-                    entryFlag[n] = 1;
-                    Distance = waveform_distance(sample, entry->source[0], noise);
-                    //append sample to entry
-                    entry->match[entry->I] = Match;
-                    entry->distance[entry->I] = Distance;
-                    entry->stepFlag[i] = 1;
-                    append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel, data->NP);
+                    entry = catalog->entry[n];
                     
-                    //stop looping over entries in catalog
-                    break;
+                    //check frequency separation
+                    double q_entry  = entry->source[0]->f0 * data->T;
+                    
+                    if( fabs(q_entry-q_sample) > dqmax ) Match = -1.0;
+                    
+                    //calculate match
+                    else
+                    {
+                        Match = waveform_match(sample, entry->source[0], noise);
+                    }
+                    
+                    if(Match > tolerance && !entryFlag[n])
+                    {
+                        matchFlag = 1;
+                        entryFlag[n] = 1;
+                        Distance = waveform_distance(sample, entry->source[0], noise);
+                        //append sample to entry
+                        entry->match[entry->I] = Match;
+                        entry->distance[entry->I] = Distance;
+                        entry->stepFlag[i] = 1;
+                        append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel, data->NP);
+                        
+                        //stop looping over entries in catalog
+                        break;
+                    }
+                    
+                }//end loop over catalog entries
+                
+                
+                //if the match tolerence is never met, add as new source
+                if(!matchFlag)
+                {
+                    entryFlag[catalog->N]=1;
+                    create_new_source(catalog, sample, noise, i, IMAX, data->N, data->Nchannel, data->NP);
                 }
                 
-            }//end loop over catalog entries
-            
-            
-            //if the match tolerence is never met, add as new source
-            if(!matchFlag)
-            {
-                entryFlag[catalog->N]=1;
-                create_new_source(catalog, sample, noise, i, IMAX, data->N, data->Nchannel, data->NP);
             }
-            
         }//end loop over sources in chain sample
         
     }//end loop over chain
@@ -626,6 +669,9 @@ int main(int argc, char *argv[])
         
         entry->i = i_med;
         
+        // get waveform of median sample
+        source_waveform_wrapper(entry->source[i_med], data, orbit);
+        
         //replace stored SNR with median sample
         entry->SNR = snr(entry->source[i_med],noise);
         
@@ -641,10 +687,6 @@ int main(int argc, char *argv[])
         
         sprintf(filename, "%s/%s_waveform.dat", outdir,entry->name);
         out = fopen( filename, "w");
-        
-        
-        
-        
         
         struct Source *b=entry->source[0];
         int N = b->tdi->N;
@@ -678,6 +720,7 @@ int main(int argc, char *argv[])
             }//check that index is in range
         }//loop over waveform bins
         
+        free_tdi(entry->source[i_med]->tdi);
         free(b_A);
         free(b_E);
         fclose(out);
@@ -690,7 +733,7 @@ int main(int argc, char *argv[])
     fflush(catalogFile);
     fprintf(stdout,"\n");
     
-    printf("getting correlation matrix\n");
+    printf("get correlation matrix\n");
     double **corr=NULL;
     corr = malloc(detections*data->NP*sizeof(double *));
     for(int n=0; n<detections*data->NP; n++)corr[n] = calloc(detections*data->NP,sizeof(double));
@@ -715,6 +758,8 @@ int main(int argc, char *argv[])
     /* *************************************************************** */
     if(flags->catalog)
     {
+        printf("get source ancestry\n");
+
         //parse file
         FILE *old_catalog_file = fopen(flags->catalogFile,"r");
         
@@ -767,10 +812,17 @@ int main(int argc, char *argv[])
                 //check that the sources are close enough to bother looking
                 if(fabs(q_new_catalog_entry - q_old_catalog_entry) > dqmax) continue;
                 
-                copy_source(entry->source[entry->i], new_catalog_entry);
+                //copy_source(entry->source[entry->i], new_catalog_entry);
                 
+                /* parameter-only copy */
+                new_catalog_entry->NP = entry->source[entry->i]->NP;
+                memcpy(new_catalog_entry->params, entry->source[entry->i]->params, new_catalog_entry->NP*sizeof(double));
+                
+                //override q parameter
+                new_catalog_entry->params[0] = entry->source[entry->i]->f0 * data_old->T;
+                new_catalog_entry->params[7] = entry->source[entry->i]->dfdt * data_old->T* data_old->T;
+
                 //re-align where the source fits in the (old) measurement band
-                map_params_to_array(new_catalog_entry, new_catalog_entry->params, data_old->T);
                 galactic_binary_alignment(orbit, data_old, new_catalog_entry);
                 
                 //calculate waveform of entry at Tcatalog
@@ -789,6 +841,7 @@ int main(int argc, char *argv[])
         }
         free_source(old_catalog_entry);
         free_source(new_catalog_entry);
+        fclose(historyFile);
     }
     
     
@@ -797,17 +850,13 @@ int main(int argc, char *argv[])
     /*           Save source detection parameters to file              */
     /* *************************************************************** */
     
-    const gsl_rng_type *T = gsl_rng_default;
-    const gsl_rng_type *Ttemp = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng *rtemp = gsl_rng_alloc(Ttemp);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, 190521);
-
-    int NMODE_start = NMODE;
+    
+    omp_set_num_threads(detections);
+    
+    printf("get parameter chains\n");
+#pragma omp parallel for default(shared) private(entry,filename)
     for(int d=0; d<detections; d++)
     {
-        NMODE = NMODE_start;
         FILE *out;
         
         //print detection posterior samples
@@ -821,10 +870,24 @@ int main(int argc, char *argv[])
         for(int k=0; k<entry->I; k++)
         {
             print_source_params(data,entry->source[k],out);
+            
+            source_waveform_wrapper(entry->source[k], data, orbit);
+
             fprintf(out,"%lg %lg %lg\n",snr(entry->source[k],noise),entry->match[k],entry->distance[k]);
+            
+            free_tdi(entry->source[k]->tdi);
         }
         fclose(out);
-        
+    }
+    
+    printf("get waveform reconstructions\n");
+#pragma omp parallel for default(shared) private(entry,filename)
+    for(int d=0; d<detections; d++)
+    {
+
+        int n = detection_index[d];
+        entry = catalog->entry[n];
+
         //create and print individual source waveform reconstructions
         double ***hrec = malloc(data->N * sizeof(double **));
         for(int j=0; j<data->N; j++)
@@ -839,6 +902,9 @@ int main(int argc, char *argv[])
         //insert waveform power
         for(int i=0; i<entry->I; i++)
         {
+            
+            source_waveform_wrapper(entry->source[i], data, orbit);
+
             for(int j=0; j<entry->source[i]->BW; j++)
             {
                 
@@ -853,6 +919,8 @@ int main(int argc, char *argv[])
                     hrec[k][1][i] = entry->source[i]->tdi->E[j_re]*entry->source[i]->tdi->E[j_re]+entry->source[i]->tdi->E[j_im]*entry->source[i]->tdi->E[j_im];
                 }
             }
+            
+            free_tdi(entry->source[i]->tdi);
         }
         
         //sort reconstructed power in each frequency bin and get median, CIs
@@ -867,7 +935,7 @@ int main(int argc, char *argv[])
         double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
         
         sprintf(filename, "%s/%s_power_reconstruction.dat", outdir,entry->name);
-        out = fopen( filename, "w");
+        FILE *out = fopen( filename, "w");
         
         
         for(int j=0; j<data->N; j++)
@@ -901,30 +969,7 @@ int main(int argc, char *argv[])
         }
         
         fclose(out);
-        
-        
-        /* Gaussian mixture model fit to posterior */
-        fprintf(stdout,"\nGaussian Mixture Model fit:\n");
-                
-        int counter;
-        int CMAX = 10;
-        double BIC;
-        
-        counter = 0;
-        gsl_rng_memcpy(rtemp, r);
-        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, (size_t)data->NP, NMODE, NTHIN, r, &BIC))
-        {
-            counter++;
-            if(counter>CMAX)
-            {
-                fprintf(stderr,"WARNING:\n");
-                fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
-                NMODE/=2;
-                counter = 0;
-            }
-            printf("\rRetry %i/%i: ",counter,CMAX);
-        }
-        
+
         for(int i=0; i<data->N; i++)
         {
             for(int j=0; j<data->Nchannel; j++)
@@ -934,6 +979,42 @@ int main(int argc, char *argv[])
             free(hrec[i]);
         }
         free(hrec);
+    }
+    
+    printf("get gaussian mixture model\n");
+
+#pragma omp parallel for default(shared) private(entry)
+    for(int d=0; d<detections; d++)
+    {
+        int n = detection_index[d];
+        entry = catalog->entry[n];
+
+        /* Gaussian mixture model fit to posterior */
+        //fprintf(stdout,"\nGaussian Mixture Model fit:\n");
+        const gsl_rng_type *T = gsl_rng_default;
+        gsl_rng *r = gsl_rng_alloc(T);
+        gsl_rng_env_setup();
+        gsl_rng_set (r, 190521);
+
+        int counter;
+        int CMAX = 10;
+        int NMODE_start = NMODE;
+        double BIC;
+        
+        counter = 0;
+        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, (size_t)data->NP, NMODE_start, 1, r, &BIC))
+        {
+            counter++;
+            if(counter>CMAX)
+            {
+                fprintf(stderr,"WARNING:\n");
+                fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
+                NMODE_start/=2;
+                counter = 0;
+            }
+        }
+        
+        gsl_rng_free(r);
     }//end loop over catalog entries
     
     

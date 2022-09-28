@@ -144,6 +144,7 @@ void copy_data(struct Data *origin, struct Data *copy);
 void copy_source(struct Source *origin, struct Source *copy);
 void copy_model(struct Model *origin, struct Model *copy);
 void copy_noise(struct Noise *origin, struct Noise *copy);
+void copy_model_lite(struct Model *origin, struct Model *copy);
 void copy_calibration(struct Calibration *origin, struct Calibration *copy);
 ///@}
 

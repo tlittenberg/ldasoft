@@ -187,9 +187,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
     
     struct Data *data = NULL;
     struct Chain *chain = NULL;
-    struct Prior *prior = NULL;
     struct Proposal **proposal = NULL;
-    struct Model **trial = NULL;
     struct Model **model = NULL;
     
     int NC = chain_vec[0]->NC;
@@ -200,7 +198,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
     
     /* set flags based on current state of sampler */
     flags->burnin   = (vbmcmc_data->mcmc_step<0) ? 1 : 0;
-    flags->maximize = (vbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
+    flags->maximize = 0;//(vbmcmc_data->mcmc_step<-flags->NBURN/2) ? 1 : 0;
     
     //For saving the number of threads actually given
     int numThreads;
@@ -226,31 +224,12 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                 
                 model_ptr->logL = gaussian_log_likelihood(data_vec[n], model_ptr);
                 
-                for(int steps=0; steps<numSteps; steps++)
-                {
-                    for(int m=0; m<10; m++)
-                    {
-                        galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
-                    }//loop over MCMC steps
-                    
-                    //update fisher matrix for each chain
-                    for(int i=0; i<model_ptr->Nlive; i++)
-                    {
-                        galactic_binary_fisher(orbit, data_vec[n], model_ptr->source[i], data_vec[n]->noise[FIXME]);
-                    }
-#pragma omp barrier
-                    if(threadID==0){
-                        ptmcmc(model_vec[n],chain_vec[n],flags);
-                        adapt_temperature_ladder(chain_vec[n], vbmcmc_data->mcmc_step+flags->NBURN);
-                        
-                        if(steps%10==0 && chain_vec[n]->index[ic]==0 && vbmcmc_data->mcmc_step>=0)
-                            print_chain_files(data_vec[n], model_vec[n], chain_vec[n], flags, vbmcmc_data->mcmc_step);
+                //sync up model and trial pointers
+                copy_model(model_ptr,trial_ptr);
 
-                    }
-#pragma omp barrier
-                }
+                for(int steps=0; steps<numSteps; steps++)
+                        galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
             }
-            
         }// end (parallel) loop over chains
     }//end parallel section
 #pragma omp barrier
@@ -258,12 +237,20 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
     for(int n=0; n<flags->NVB; n++)
     {
         model = model_vec[n];
-        trial = trial_vec[n];
         data = data_vec[n];
-        prior = prior_vec[n];
         proposal = proposal_vec[n];
         chain = chain_vec[n];
         
+        //update fisher matrix for each chain
+        for(int i=0; i<model[chain->index[0]]->Nlive; i++)
+        {
+            galactic_binary_fisher(orbit, data, model[chain->index[0]]->source[i], data->noise[FIXME]);
+        }
+
+        ptmcmc(model_vec[n],chain_vec[n],flags);
+        adapt_temperature_ladder(chain_vec[n], vbmcmc_data->mcmc_step+flags->NBURN);
+        
+        print_chain_files(data_vec[n], model_vec[n], chain_vec[n], flags, vbmcmc_data->mcmc_step);
         
         //track maximum log Likelihood
         if(update_max_log_likelihood(model, chain, flags))
@@ -291,7 +278,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
         //dump waveforms to file, update avgLogL for thermodynamic integration
         if(vbmcmc_data->mcmc_step>0 && vbmcmc_data->mcmc_step%data->downsample==0)
         {
-            save_waveforms(data, model[chain->index[0]], vbmcmc_data->mcmc_step/data->downsample);
+            save_waveforms(data, model[chain->index[0]], vbmcmc_data->mcmc_step%data->Nwave);
             
             for(int ic=0; ic<NC; ic++)
             {
@@ -301,7 +288,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
             }
         }
     }
-    vbmcmc_data->mcmc_step+=numSteps;
+    vbmcmc_data->mcmc_step++;
     
     clock_t stop = clock();
     vbmcmc_data->cpu_time = (double)(stop-start);

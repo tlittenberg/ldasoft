@@ -853,14 +853,29 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
     gsl_set_error_handler_off();
     
     /* set up GSL spline */
+    
+    /* Standard cubic spline */
+    //gsl_spline *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
+    
+    /*
+     Non-rounded Akima spline with natural boundary conditions.
+     This method uses the non-rounded corner algorithm of Wodicka.
+     Akima splines are ideal for fitting curves with rapidly
+     changing second derivatives.  They are C1 differentiable.
+     See
+     https://www.gnu.org/software/gsl/doc/html/interp.html#c.gsl_interp_type.gsl_interp_akima
+     */
+    gsl_spline *cspline = gsl_spline_alloc(gsl_interp_akima, N);
+    
     /*
      Steffen's splines are guaranteed to be monotonic between
      control points.  Local maxima and minima only occur at
      at control points. See
      https://www.gnu.org/software/gsl/doc/html/interp.html#c.gsl_interp_type.gsl_interp_steffen
      */
-    gsl_spline       *cspline = gsl_spline_alloc(gsl_interp_steffen, N);
-    gsl_interp_accel *acc     = gsl_interp_accel_alloc();
+    //gsl_spline *cspline = gsl_spline_alloc(gsl_interp_steffen, N);
+    
+    gsl_interp_accel *acc = gsl_interp_accel_alloc();
     
     /* get derivatives */
     int status = gsl_spline_init(cspline,x,y,N);
@@ -941,7 +956,7 @@ void free_tdi(struct TDI *tdi)
 
 #define DATASET "/obs/tdi"
 
-void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
+void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataName)
 {    
     /* LDC-formatted structure for compound HDF5 dataset */
     typedef struct tdi_dataset {
@@ -953,15 +968,14 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     static tdi_dataset *s1;
     
     hid_t  file, dataset, dspace; /* identifiers */
-    herr_t status; /* error handling */
     int ndims; /* dimension of dataset */
     
     /* Open an existing file. */
     file = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
     
     /* Open an existing dataset. */
-    dataset = H5Dopen(file, DATASET, H5P_DEFAULT);
-    
+    dataset = H5Dopen(file, dataName, H5P_DEFAULT);
+
     /* Get size of dataset */
     dspace = H5Dget_space(dataset);
     ndims = H5Sget_simple_extent_ndims(dspace);
@@ -980,7 +994,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     H5Tinsert(s1_tid, "Y", HOFFSET(struct tdi_dataset, Y), H5T_IEEE_F64LE);
     H5Tinsert(s1_tid, "Z", HOFFSET(struct tdi_dataset, Z), H5T_IEEE_F64LE);
     
-    status = H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
+    H5Dread(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
         
     
     /* Copy LDC-formatted structure into ldasoft format */
@@ -1001,10 +1015,10 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
     tdi->delta = s1[1].t - s1[0].t;
     
     /* Close the dataset. */
-    status = H5Dclose(dataset);
+    H5Dclose(dataset);
     
     /* Close the file. */
-    status = H5Fclose(file);
+    H5Fclose(file);
     
     /* Free up memory */
     free(s1);
@@ -1014,7 +1028,6 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName)
 void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
 {
     hid_t  file, dataset, dataspace, memtype; /* identifiers */
-    herr_t status; /* error handling */
     int ndims, Nrow, Ncol; /* dimension of dataset */
     double *data; /* array for dataset */
 
@@ -1040,7 +1053,7 @@ void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
 
     
     /* Read the data */
-    status = H5Dread (dataset, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    H5Dread (dataset, memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
 
     
     for(int i=0; i<Nrow; i++)
@@ -1062,9 +1075,9 @@ void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
     free(data);
 
     /* Close the dataset. */
-    status = H5Dclose(dataset);
+    H5Dclose(dataset);
 
     /* Close the file. */
-    status = H5Fclose(file);
+    H5Fclose(file);
 
 }

@@ -238,7 +238,6 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     mbh_data->paramx = double_matrix(mbh_data->NC,NParams);
     mbh_data->paramy = double_matrix(mbh_data->NC,NParams);
     mbh_data->history = double_tensor(mbh_data->NC,mbh_data->NH,NParams);
-    mbh_data->hrec = NULL;//double_tensor(mbh_data->data->N/2, mbh_data->data->Nch, 100);
     mbh_data->ejump = double_matrix(mbh_data->NC,NParams);
     mbh_data->Fisher = double_tensor(mbh_data->NC,NParams,NParams);
     mbh_data->evec = double_tensor(mbh_data->NC,NParams,NParams);
@@ -252,17 +251,6 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     
     for (int i=0; i< mbh_data->NC; i++) mbh_data->who[i] = i;
 
-    /* zero out hrec
-     Initializing arrays to zero costs more memory than allocating them!
-     Only initialize arrays that will get used -- these are big!
-     */
-//    if(procID>=mbh_data->procID_min && procID <=mbh_data->procID_max)
-//    {
-//    for(int i=0; i<mbh_data->data->N/2; i++)
-//        for(int j=0; j<mbh_data->data->Nch; j++)
-//            for(int k=0; k<100; k++)
-//                mbh_data->hrec[i][j][k] = 0.0;
-//    }
     
     /* Set up RNG for MBH sampler */
     const gsl_rng_type * P;
@@ -339,15 +327,6 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
     sprintf(mbh_data->chainDir,"%s",mbh_data->flags->runDir);
     sprintf(filename,"%s/chain.dat",mbh_data->chainDir);
     
-    //first check if file exists
-    int check=0;
-    FILE *test=NULL;
-    if( (test=fopen(filename,"r")) )
-    {
-        fclose(test);
-        check=1;
-    }
-
     if(mbh_data->flags->resume)
     {
         //first count samples in the chain file
@@ -444,6 +423,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
 
     
     /* store data segment in ASCII format */
+    /*
     FILE *tempFile;
         
     sprintf(filename,"%s/power_data_0.dat",mbh_data->flags->runDir);
@@ -458,7 +438,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
                 mbh_data->data->data[1][re]*mbh_data->data->data[1][re]+mbh_data->data->data[1][im]*mbh_data->data->data[1][im]);
     }
     fclose(tempFile);
-    
+    */
     
     
     /* set up Fisher matrix proposal for each chain */
@@ -499,7 +479,6 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     int *who = mbh_data->who;
     double *heat = mbh_data->heat;
     double ***history = mbh_data->history;
-    double ***hrec = mbh_data->hrec;
     double ***Fisher = mbh_data->Fisher;
     double **ejump = mbh_data->ejump;
     double ***evec = mbh_data->evec;
@@ -600,18 +579,6 @@ int update_mbh_sampler(struct MBHData *mbh_data)
         if(cycle%100==0) print_mbh_chain_file(dat, het, who, paramx, logLx, sx, 2, 1, chain);
 
     }//end cycle
-        
-
-    // save point estimate of reconstructed waveform power spectrum
-//    int i = mbh_data->mcmc_step%100;
-//    for(int k=mbh_data->het->MN; k<mbh_data->het->MM; k++)
-//    {
-//        int re = 2*(k-mbh_data->het->MN);
-//        int im = re+1;
-//        hrec[k][0][i] = mbh_data->tdi->A[re]*mbh_data->tdi->A[re]+mbh_data->tdi->A[im]*mbh_data->tdi->A[im];
-//        hrec[k][1][i] = mbh_data->tdi->E[re]*mbh_data->tdi->E[re]+mbh_data->tdi->E[im]*mbh_data->tdi->E[im];
-//    }
-//
     
     free(m);
     freehet(mbh_data->het);
@@ -667,56 +634,3 @@ void get_mbh_waveform(struct MBHData *mbh_data)
 
 }
 
-void print_mbh_waveform_reconstruction(struct MBHData *mbh_data)
-{
-    char filename[1024];
-    FILE *fptr_rec;
-
-    sprintf(filename,"%s/power_reconstruction.dat",mbh_data->flags->runDir);
-    fptr_rec=fopen(filename,"w");
-
-    double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
-    double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
-
-    for(int n=0; n<mbh_data->data->N/2; n++)
-    {
-        for(int m=0; m<mbh_data->data->Nch; m++)
-        {
-            gsl_sort(mbh_data->hrec[n][m],1,100);
-        }
-    }
-    
-    for(int i=0; i<mbh_data->data->N/2; i++)
-    {
-        double f = (double)(i)/mbh_data->data->Tobs;
-
-        A_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][0], 1, 100);
-        A_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.25);
-        A_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.75);
-        A_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.05);
-        A_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][0], 1, 100, 0.95);
-
-        E_med   = gsl_stats_median_from_sorted_data   (mbh_data->hrec[i][1], 1, 100);
-        E_lo_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.25);
-        E_hi_50 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.75);
-        E_lo_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.05);
-        E_hi_90 = gsl_stats_quantile_from_sorted_data (mbh_data->hrec[i][1], 1, 100, 0.95);
-
-        
-        fprintf(fptr_rec,"%.12g ",f);
-        fprintf(fptr_rec,"%lg ",A_med);
-        fprintf(fptr_rec,"%lg ",A_lo_50);
-        fprintf(fptr_rec,"%lg ",A_hi_50);
-        fprintf(fptr_rec,"%lg ",A_lo_90);
-        fprintf(fptr_rec,"%lg ",A_hi_90);
-        fprintf(fptr_rec,"%lg ",E_med);
-        fprintf(fptr_rec,"%lg ",E_lo_50);
-        fprintf(fptr_rec,"%lg ",E_hi_50);
-        fprintf(fptr_rec,"%lg ",E_lo_90);
-        fprintf(fptr_rec,"%lg ",E_hi_90);
-        fprintf(fptr_rec,"\n");
-
-    }
-    
-    fclose(fptr_rec);
-}

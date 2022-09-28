@@ -25,7 +25,6 @@
 
 #define N_TDI_CHANNELS 2
 #define NMAX 10
-#define CYCLE 1
 
 struct GlobalFitData
 {
@@ -263,9 +262,6 @@ static void share_gbmcmc_model(struct GBMCMCData *gbmcmc_data,
         MPI_Recv(gf->tdi_ucb->A, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_ucb->E, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
     }
-
-    /* Broadcast run time of first UCB setgment (used to scale other UCB updates) */
-    MPI_Bcast(&gbmcmc_data->cpu_time, 1, MPI_DOUBLE, gbmcmc_data->procID_min, MPI_COMM_WORLD);
 
 }
 
@@ -749,50 +745,13 @@ int main(int argc, char *argv[])
 
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
-            cycle = (int)(global_fit->max_block_time/gbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
+            exchange_gbmcmc_source_params(gbmcmc_data);
+
+            cycle = (int)round(global_fit->max_block_time/gbmcmc_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
                 gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
             
             global_fit->block_time = gbmcmc_data->cpu_time;
-        }
-           
-        /* ============================= */
-        /*   VERIFICATION BINARY MODEL   */
-        /* ============================= */
-
-        /* vbmcmc sampler gibbs update */
-        if(VBMCMC_Flag)
-        {
-            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
-
-            select_vbmcmc_segments(vbmcmc_data, tdi_full);
-
-            for(int n=0; n<vbmcmc_data->flags->NVB; n++)
-                select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
-
-            cycle = (int)(global_fit->max_block_time/vbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
-                vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
-            
-            global_fit->block_time = vbmcmc_data->cpu_time;
-        }
-
-        /* ============================= */
-        /*    INSTRUMENT NOISE MODEL     */
-        /* ============================= */
-
-        /* noise model update */
-        if(Noise_Flag)
-        {
-            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
-
-            select_frequency_segment(noise_data->data, tdi_full);
-
-            cycle = (int)(global_fit->max_block_time/noise_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
-                noise_data->status = update_noise_sampler(noise_data);
-            
-            global_fit->block_time = noise_data->cpu_time;
         }
 
         /* ============================= */
@@ -808,25 +767,70 @@ int main(int argc, char *argv[])
             
             select_mbh_noise(mbh_data, global_fit->psd);
             
-            cycle = (int)(global_fit->max_block_time/mbh_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1)*CYCLE; i++)
+            cycle = (int)round(global_fit->max_block_time/mbh_data->cpu_time);
+            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
                 mbh_data->status = update_mbh_sampler(mbh_data);
             
             global_fit->block_time = mbh_data->cpu_time;
         }
         
-        /* ============================= */
-        /* MPI EXCHANGES OF MODEL STATES */
-        /* ============================= */
         
+        /* ========================================= */
+        /* MPI EXCHANGES OF UCB & MBH MODEL STATES */
+        /* ========================================= */
+
+        if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+        if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
+
+        
+        /* ============================= */
+        /*   VERIFICATION BINARY MODEL   */
+        /* ============================= */
+
+        /* vbmcmc sampler gibbs update */
+        if(VBMCMC_Flag)
+        {
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
+
+            select_vbmcmc_segments(vbmcmc_data, tdi_full);
+
+            for(int n=0; n<vbmcmc_data->flags->NVB; n++)
+                select_noise_segment(global_fit->psd, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n], vbmcmc_data->model_vec[n]);
+
+            //cycle = (int)round(global_fit->max_block_time/vbmcmc_data->cpu_time);
+            //for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            vbmcmc_data->status = update_vbmcmc_sampler(vbmcmc_data);
+            
+            global_fit->block_time = vbmcmc_data->cpu_time;
+        }
+
+        /* ============================= */
+        /*    INSTRUMENT NOISE MODEL     */
+        /* ============================= */
+
+        /* noise model update */
+        if(Noise_Flag)
+        {
+            create_residual(global_fit, GBMCMC_Flag, VBMCMC_Flag, MBH_Flag);
+
+            select_frequency_segment(noise_data->data, tdi_full);
+
+            //cycle = (int)round(global_fit->max_block_time/noise_data->cpu_time);
+            //for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+            noise_data->status = update_noise_sampler(noise_data);
+            
+            global_fit->block_time = noise_data->cpu_time;
+        }
+
         /* get global status of gbmcmc samplers */
         gbmcmc_data->status = get_gbmcmc_status(gbmcmc_data,Nproc,root,procID);
 
-        /* distribute current state of models to worker nodes */
+        /* ========================================= */
+        /* MPI EXCHANGES OF NOISE & VGB MODEL STATES */
+        /* ========================================= */
+        
         share_noise_model (noise_data, gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        if(global_fit->nUCB>0)share_gbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
         if(global_fit->nVGB>0)share_vbmcmc_model(gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
-        if(global_fit->nMBH>0)share_mbh_model   (gbmcmc_data, vbmcmc_data, mbh_data, global_fit, root, procID);
 
         /* send time spent in each block to root for load balancing */
         blocked_gibbs_load_balancing(global_fit, root, procID, Nproc);

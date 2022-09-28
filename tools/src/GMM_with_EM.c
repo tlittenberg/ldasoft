@@ -225,9 +225,6 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
     
     gsl_set_error_handler_off();
     
-    //error catchers
-    int err = 0;
-    
     //get size of matrix (assumed to be NxN)
     size_t N = A->size1;
     
@@ -238,14 +235,14 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
     gsl_matrix_memcpy(Ainv,A);
     
     //cholesky decomposition
-    err += gsl_linalg_cholesky_decomp(Ainv);
+    gsl_linalg_cholesky_decomp(Ainv);
     
     //get condition number
     gsl_vector *work = gsl_vector_alloc(3*N);
-    err += gsl_linalg_cholesky_rcond(Ainv, R, work);
+    gsl_linalg_cholesky_rcond(Ainv, R, work);
 
     //inverse of A
-    err += gsl_linalg_cholesky_invert(Ainv);
+    gsl_linalg_cholesky_invert(Ainv);
     
     //get deteriminant, need LU decomposition
     gsl_matrix_memcpy(L,A);
@@ -264,9 +261,6 @@ void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *d
 
 void decompose_matrix(gsl_matrix *A, gsl_matrix *evec, gsl_vector *eval)
 {
-    //error catchers
-    int err = 0;
-    
     //get size of matrix (assumed to be NxN)
     size_t N = A->size1;
     
@@ -279,7 +273,7 @@ void decompose_matrix(gsl_matrix *A, gsl_matrix *evec, gsl_vector *eval)
     gsl_matrix_memcpy(Atemp,A);
     
     //the reason we're all here...
-    err += gsl_eigen_symmv (Atemp, eval, evec, workspace);
+    gsl_eigen_symmv (Atemp, eval, evec, workspace);
     
     gsl_matrix_free (Atemp);
     gsl_eigen_symmv_free (workspace);
@@ -615,7 +609,7 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
     /* check convergence with log likelihood & BIC */
     *logL = log_likelihood(modes, samples, NMCMC, NMODE);
     *BIC = -2.*(*logL) + (double)NMODE*((double)NP*((double)NP+3.)/2. + 1)*log((double)NMCMC);
-    printf(" logL = %g,  BIC = %g     ",*logL, *BIC);
+    //printf(" logL = %g,  BIC = %g     ",*logL, *BIC);
     
     
     /*
@@ -706,7 +700,7 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
     double BICmin = 1e60;
     while(step<NSTEP)
     {
-        printProgress((double)(step+1)/NSTEP);
+        //printProgress((double)(step+1)/NSTEP);
         if(expectation_maximization(samples, modes, NMCMC, logL, BIC)) return 1;
         else
         {
@@ -718,25 +712,25 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
             step++;
         }
     }
-    printf("\n");
+    //printf("\n");
     return 0;
 }
 
 double logit(double x,double xmin,double xmax)
 {
-    return log( (x-xmin)/(xmax-x) );
+    return x;//log( (x-xmin)/(xmax-x) );
 }
 
 double sigmoid(double x,double xmin,double xmax)
 {
-    return xmin + (1./(1. + exp(-x)))*(xmax - xmin);
+    return x;//xmin + (1./(1. + exp(-x)))*(xmax - xmin);
 }
 
 
 double dsigmoid(double x, double xmin, double xmax)
 {
-    double expyn = exp(-x);
-    return (xmax-xmin) * expyn/((1.+expyn)*(1.+expyn));
+    //double expyn = exp(-x);
+    return 1.0;//(xmax-xmin) * expyn/((1.+expyn)*(1.+expyn));
 }
 
 

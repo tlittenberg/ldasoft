@@ -106,11 +106,26 @@ void append_sample_to_entry(struct Entry *entry, struct Source *sample, int IMAX
 {
     //malloc source structure for this sample's entry
     entry->source[entry->I] = malloc(sizeof(struct Source));
+    /* This is taking up too much memory
     alloc_source(entry->source[entry->I], NFFT, Nchannel, NP);
     
     //copy chain sample into catalog entry
     copy_source(sample, entry->source[entry->I]);
+    */
+
+    /* leaner way of storing source info */
     
+    //only copy source parameters
+    entry->source[entry->I]->NP = NP;
+    entry->source[entry->I]->params=calloc(NP,sizeof(double));
+    memcpy(entry->source[entry->I]->params, sample->params, sample->NP*sizeof(double));
+    
+    //need Tobs which isn't stored in entries
+    double T = sample->params[0]/sample->f0;
+    
+    //get physical parameters for waveform calculations later
+    map_array_to_params(entry->source[entry->I], entry->source[entry->I]->params, T);
+
     //increment number of stored samples for this entry
     entry->I++;
 }
@@ -222,7 +237,7 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
 
 int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct Entry *entry, char *outdir, size_t NP, size_t NMODE, size_t NTHIN, gsl_rng *seed, double *BIC)
 {
-    fprintf(stdout,"Event %s, NMODE=%i\n",entry->name,(int)NMODE);
+    if(flags->verbose)fprintf(stdout,"Event %s, NMODE=%i\n",entry->name,(int)NMODE);
     
     // number of samples
     size_t NMCMC = entry->I;

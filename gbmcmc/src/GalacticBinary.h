@@ -363,6 +363,7 @@ struct Source
     double **fisher_matrix; //!<Fisher approximation to inverse covariance matrix
     double **fisher_evectr; //!<Eigenvectors of covariance matrix
     double *fisher_evalue;  //!<Eigenvalues of covariance matrix
+    int fisher_update_flag; //!<1 if fisher needs update, 0 if not
     ///@}
 };
 

@@ -422,6 +422,25 @@ void copy_model(struct Model *origin, struct Model *copy)
     copy->logLnorm       = origin->logLnorm;
 }
 
+void copy_model_lite(struct Model *origin, struct Model *copy)
+{
+    copy->Nlive = origin->Nlive;
+
+    //Source parameters
+    for(int n=0; n<origin->Nlive; n++)
+        copy_source(origin->source[n],copy->source[n]);
+    
+    //Source waveforms
+    for(int n=0; n<origin->NT; n++)
+    {
+        copy_tdi(origin->tdi[n],copy->tdi[n]);
+        copy_tdi(origin->residual[n],copy->residual[n]);
+    }
+    
+    //Model likelihood
+    copy->logL = origin->logL;
+}
+
 int compare_model(struct Model *a, struct Model *b)
 {
     
@@ -777,7 +796,8 @@ void copy_source(struct Source *origin, struct Source *copy)
     //Fisher
     memcpy(copy->fisher_evalue, origin->fisher_evalue, origin->NP*sizeof(double));
     memcpy(copy->params, origin->params, origin->NP*sizeof(double));
-
+    copy->fisher_update_flag = origin->fisher_update_flag;
+    
     for(int i=0; i<origin->NP; i++)
     {
         memcpy(copy->fisher_matrix[i], origin->fisher_matrix[i], origin->NP*sizeof(double));
@@ -814,7 +834,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     {
         for(n=0; n<N2; n++)
         {
-            model->tdi[m]->X[n]=0.0;
+            //model->tdi[m]->X[n]=0.0;
             model->tdi[m]->A[n]=0.0;
             model->tdi[m]->E[n]=0.0;
         }
@@ -830,7 +850,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         {
             for(i=0; i<N2; i++)
             {
-                source->tdi->X[i]=0.0;
+                //source->tdi->X[i]=0.0;
                 source->tdi->A[i]=0.0;
                 source->tdi->E[i]=0.0;
             }
@@ -860,8 +880,10 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
                     int j_re = 2*j;
                     int j_im = j_re+1;
                     
+                    /*
                     model->tdi[m]->X[j_re] += source->tdi->X[i_re];
                     model->tdi[m]->X[j_im] += source->tdi->X[i_im];
+                    */
                     
                     model->tdi[m]->A[j_re] += source->tdi->A[i_re];
                     model->tdi[m]->A[j_im] += source->tdi->A[i_im];
@@ -1052,17 +1074,19 @@ void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         //        }
         //    }
         
-        /* maximize parameters w/ F-statistic */
-        get_Fstat_xmax(orbit, data, source->params, Fparams);
         
-        /* unpack maximized parameters */
-        source->amp  = exp(Fparams[3]);
-        source->cosi = Fparams[4];
-        source->psi  = Fparams[5];
-        source->phi0 = Fparams[6];
-        map_params_to_array(source, source->params, data->T);
-        
-        check_range(source->params, model->prior, model->NP);
+        if(!check_range(source->params, model->prior, model->NP))
+        {
+            /* maximize parameters w/ F-statistic */
+            get_Fstat_xmax(orbit, data, source->params, Fparams);
+            
+            /* unpack maximized parameters */
+            source->amp  = exp(Fparams[3]);
+            source->cosi = Fparams[4];
+            source->psi  = Fparams[5];
+            source->phi0 = Fparams[6];
+            map_params_to_array(source, source->params, data->T);
+        }
         
         /* restore original data */
         //    copy_tdi(data_save,data->tdi[FIXME]);
