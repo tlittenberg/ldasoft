@@ -117,6 +117,13 @@ double snr_prior(double SNR);
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise);
 
 /**
+ \brief Compute waveform signal to noise ratio
+ @param a waveform \f$h_a\f$
+ @return \f$\rho =  \sqrt{\sum_I (h_I|h_I)} \f$
+ */
+double waveform_snr(struct Source *h, struct Noise *noise, struct Orbit *orbit);
+
+/**
 \brief Compute distance between waveforms
    
  @param a waveform \f$h_a\f$

@@ -175,6 +175,33 @@ double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
     return match;
 }
 
+double waveform_snr(struct Source *h, struct Noise *noise, struct Orbit *orbit)
+{
+    double *SnA = calloc(h->BW,sizeof(double));
+    double *SnE = calloc(h->BW,sizeof(double));
+
+    double T = h->params[0]/h->f0;
+
+    double h_fmin = h->f0 - (double)h->BW/2./T;
+
+    for(int i=0; i<h->BW; i++)
+    {
+        double f = h_fmin + i/T;
+        SnA[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+        SnE[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+        SnA[i] += GBnoise_FF(T, orbit->fstar, f)/sqrt(2.);
+        SnE[i] += GBnoise_FF(T, orbit->fstar, f)/sqrt(2.);
+    }
+        
+    double hh = fourier_nwip(h->tdi->A,h->tdi->A,noise->SnA,h->BW) + fourier_nwip(h->tdi->E,h->tdi->E,noise->SnE,h->BW);
+    
+    double snr = sqrt(hh);
+        
+    free(SnA);
+    free(SnE);
+
+    return snr;
+}
 
 double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise)
 {

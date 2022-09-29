@@ -119,12 +119,13 @@ int main(int argc, char *argv[])
     for(int n=0; n<data->N; n++)
     {
         double f = data->fmin + (double)(n)/data->T;
+        noise->f[n] = f;
         if(strcmp(data->format,"phase")==0)
         {
             noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
             noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
         }
-        else if(strcmp(data->format,"frequency")==0)
+        else if(strcmp(data->format,"frequency")==0 || strcmp(data->format,"sangria")==0)
         {
             noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
             noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
