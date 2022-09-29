@@ -161,10 +161,11 @@ for file in rec_files:
     plt.savefig('plots/'+name+'_reconstructions.png', dpi=300)
     
 # Individual Corner Plots
-parameters=[r'$f_0$',r'$\dot f$',r'$A$',r'$\phi$',r'$\cos\theta$',r'$\cos\iota$',r'$\psi$',r'$\varphi_0$']
+parameters=[r'$f_0$',r'$\dot f$',r'$\log_{10} A$',r'$\phi$',r'$\cos\theta$',r'$\cos\iota$',r'$\psi$',r'$\varphi_0$']
 for file in chain_files:
     c=ChainConsumer()
     chain=np.loadtxt(file,usecols=(0,1,2,3,4,5,6,7))
+    chain[:,2] = np.log10(chain[:,2])
     name = file.replace('/','_').split('_')[2]
     c.add_chain(chain,parameters=parameters,color=aqua,name=name)
     c.configure(sigmas=[0,1,2,3])
@@ -193,7 +194,7 @@ c.configure(plot_hists=False,sigmas=[0,1,2])
 plot=c.plotter.plot(figsize=(10,5),extents=[(0,2*np.pi),(-1,1)],filename='plots/pe_net_sky.png')
 
 # Joint f-A Plane
-parameters=[r'$f_0$',r'$A$']
+parameters=[r'$f_0$',r'$\log_{10} A$']
 
 c=ChainConsumer()
 arrays = [np.loadtxt(f, usecols=(0,2)) for f in chain_files]
