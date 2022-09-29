@@ -733,7 +733,7 @@ int main(int argc, char *argv[])
     fflush(catalogFile);
     fprintf(stdout,"\n");
     
-    printf("getting correlation matrix\n");
+    printf("get correlation matrix\n");
     double **corr=NULL;
     corr = malloc(detections*data->NP*sizeof(double *));
     for(int n=0; n<detections*data->NP; n++)corr[n] = calloc(detections*data->NP,sizeof(double));
@@ -758,6 +758,8 @@ int main(int argc, char *argv[])
     /* *************************************************************** */
     if(flags->catalog)
     {
+        printf("get source ancestry\n");
+
         //parse file
         FILE *old_catalog_file = fopen(flags->catalogFile,"r");
         
@@ -816,8 +818,11 @@ int main(int argc, char *argv[])
                 new_catalog_entry->NP = entry->source[entry->i]->NP;
                 memcpy(new_catalog_entry->params, entry->source[entry->i]->params, new_catalog_entry->NP*sizeof(double));
                 
+                //override q parameter
+                new_catalog_entry->params[0] = entry->source[entry->i]->f0 * data_old->T;
+                new_catalog_entry->params[7] = entry->source[entry->i]->dfdt * data_old->T* data_old->T;
+
                 //re-align where the source fits in the (old) measurement band
-                map_params_to_array(new_catalog_entry, new_catalog_entry->params, data_old->T);
                 galactic_binary_alignment(orbit, data_old, new_catalog_entry);
                 
                 //calculate waveform of entry at Tcatalog
@@ -836,6 +841,7 @@ int main(int argc, char *argv[])
         }
         free_source(old_catalog_entry);
         free_source(new_catalog_entry);
+        fclose(historyFile);
     }
     
     
@@ -844,20 +850,13 @@ int main(int argc, char *argv[])
     /*           Save source detection parameters to file              */
     /* *************************************************************** */
     
-    const gsl_rng_type *T = gsl_rng_default;
-    const gsl_rng_type *Ttemp = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng *rtemp = gsl_rng_alloc(Ttemp);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, 190521);
-
-    int NMODE_start = NMODE;
     
     omp_set_num_threads(detections);
-    #pragma omp parallel for private(entry)
+    
+    printf("get parameter chains\n");
+#pragma omp parallel for default(shared) private(entry,filename)
     for(int d=0; d<detections; d++)
     {
-        NMODE = NMODE_start;
         FILE *out;
         
         //print detection posterior samples
@@ -879,7 +878,16 @@ int main(int argc, char *argv[])
             free_tdi(entry->source[k]->tdi);
         }
         fclose(out);
-        
+    }
+    
+    printf("get waveform reconstructions\n");
+#pragma omp parallel for default(shared) private(entry,filename)
+    for(int d=0; d<detections; d++)
+    {
+
+        int n = detection_index[d];
+        entry = catalog->entry[n];
+
         //create and print individual source waveform reconstructions
         double ***hrec = malloc(data->N * sizeof(double **));
         for(int j=0; j<data->N; j++)
@@ -927,7 +935,7 @@ int main(int argc, char *argv[])
         double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
         
         sprintf(filename, "%s/%s_power_reconstruction.dat", outdir,entry->name);
-        out = fopen( filename, "w");
+        FILE *out = fopen( filename, "w");
         
         
         for(int j=0; j<data->N; j++)
@@ -961,30 +969,7 @@ int main(int argc, char *argv[])
         }
         
         fclose(out);
-        
-        
-        /* Gaussian mixture model fit to posterior */
-        //fprintf(stdout,"\nGaussian Mixture Model fit:\n");
-                
-        int counter;
-        int CMAX = 10;
-        double BIC;
-        
-        counter = 0;
-        gsl_rng_memcpy(rtemp, r);
-        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, (size_t)data->NP, NMODE, NTHIN, r, &BIC))
-        {
-            counter++;
-            if(counter>CMAX)
-            {
-                fprintf(stderr,"WARNING:\n");
-                fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
-                NMODE/=2;
-                counter = 0;
-            }
-            printf("\rRetry %i/%i: ",counter,CMAX);
-        }
-        
+
         for(int i=0; i<data->N; i++)
         {
             for(int j=0; j<data->Nchannel; j++)
@@ -994,6 +979,42 @@ int main(int argc, char *argv[])
             free(hrec[i]);
         }
         free(hrec);
+    }
+    
+    printf("get gaussian mixture model\n");
+
+#pragma omp parallel for default(shared) private(entry)
+    for(int d=0; d<detections; d++)
+    {
+        int n = detection_index[d];
+        entry = catalog->entry[n];
+
+        /* Gaussian mixture model fit to posterior */
+        //fprintf(stdout,"\nGaussian Mixture Model fit:\n");
+        const gsl_rng_type *T = gsl_rng_default;
+        gsl_rng *r = gsl_rng_alloc(T);
+        gsl_rng_env_setup();
+        gsl_rng_set (r, 190521);
+
+        int counter;
+        int CMAX = 10;
+        int NMODE_start = NMODE;
+        double BIC;
+        
+        counter = 0;
+        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, (size_t)data->NP, NMODE_start, 1, r, &BIC))
+        {
+            counter++;
+            if(counter>CMAX)
+            {
+                fprintf(stderr,"WARNING:\n");
+                fprintf(stderr,"Gaussian Mixture Model failed to converge for source %s\n",entry->name);
+                NMODE_start/=2;
+                counter = 0;
+            }
+        }
+        
+        gsl_rng_free(r);
     }//end loop over catalog entries
     
     
