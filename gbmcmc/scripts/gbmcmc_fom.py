@@ -126,7 +126,7 @@ for file in rec_files:
     A = np.loadtxt(data,usecols=(1))
     E = np.loadtxt(data,usecols=(2))
     ax1.semilogy(f*1000,A,color=orange,label=r'data')
-    ax2.semilogy(f*1000,A,color=orange)
+    ax2.semilogy(f*1000,E,color=orange)
         
     f = np.loadtxt(file,usecols=(0))
     A50 = np.loadtxt(file,usecols=(1))

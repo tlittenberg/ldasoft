@@ -630,16 +630,8 @@ void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fd
 
 void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *xmax)
 {
-    long M_filter, N_filter;
-    
-    M_filter = (data->N-2*data->qpad)/4;
-    N_filter = (data->N-2*data->qpad)/4;
-        
     struct Filter *F_filter = malloc(sizeof(struct Filter));
-    
-    F_filter->M_filter = M_filter;
-    F_filter->N_filter = N_filter;
-    
+        
     double f0 = x[0]/data->T;
     double theta = acos(x[1]);
     double phi = x[2];
@@ -651,6 +643,18 @@ void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *x
     F_filter->q      = (long)x[0];
     F_filter->theta  = theta;
     F_filter->phi    = phi;
+    
+ 
+    long M_filter, N_filter;
+    
+    int BW = galactic_binary_bandwidth(orbit->L, orbit->fstar, f0, fdot, cos(theta), 1.e-22, data->T, data->N);
+    
+    M_filter = BW;
+    N_filter = BW;
+
+    F_filter->M_filter = M_filter;
+    F_filter->N_filter = N_filter;
+
     
     init_A_filters(orbit, data, F_filter);
     
