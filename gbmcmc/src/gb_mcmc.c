@@ -320,9 +320,9 @@ int main(int argc, char *argv[])
     print_noise_reconstruction(data,flags);
     print_evidence(chain,flags);
     
-    sprintf(filename,"%s/waveform_strain.dat",flags->runDir);
+    sprintf(filename,"%s/data/waveform_strain.dat",flags->runDir);
     FILE *waveFile = fopen(filename,"w");
-    print_waveform_strain(data,model,waveFile);
+    print_waveform_strain(data,model[chain->index[0]],waveFile);
     fclose(waveFile);
 
 
