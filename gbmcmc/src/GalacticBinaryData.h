@@ -59,6 +59,16 @@ void GalacticBinaryAddNoise(struct Data *data, struct TDI *tdi);
  */
 void GalacticBinarySimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
+
+/**
+ \brief Injection routine for ENSEMBLE of EM-known binaries
+ 
+  **THIS FUNCTION AND GalacticBinaryInjectVerificationSource() NEED TO BE CONSOLIDATED**
+ EM observations do not provide information about polarization angle \f$\psi\f$ or (currently) initial phase \f$\varphi_0\f$. Those two parameters are missing from the injection files and drawn from their priors.
+ 
+ */
+void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Flags *flags);
+
 /**
  \brief Injection routine for EM-known binaries
  

@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
             galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
             
             //check frequencies
-            double q_sample = sample->f0 * data->T;
+            int q_sample = (int)floor(sample->f0 * data->T);
             if(q_sample > data->qmin+data->qpad && q_sample < data->qmax-data->qpad)
             {
                 //add new source to catalog

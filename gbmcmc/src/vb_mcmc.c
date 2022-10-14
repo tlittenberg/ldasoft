@@ -130,9 +130,10 @@ int main(int argc, char *argv[])
     {
         chain=chain_vec[n];
         data=data_vec[n];
+        data->nseed+=n;
 
         char subDir[MAXSTRINGSIZE];
-        sprintf(subDir,"%s/seg%i",flags->runDir,n);
+        sprintf(subDir,"%s/seg%02d",flags->runDir,n);
         mkdir(subDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
         sprintf(data->dataDir,"%s/data",subDir);
@@ -158,7 +159,12 @@ int main(int argc, char *argv[])
         GetVerificationBinary(data, flags, vbFile);
         
         /* Read strain data */
-        GalacticBinaryReadData(data,orbit,flags);
+        if(flags->hdf5Data)
+            GalacticBinaryReadData(data,orbit,flags);
+
+        /* Simulate strain data */
+        else
+            GalacticBinaryInjectVerificationSet(data, orbit, flags);
         
         /* set approximate f/fstar for segment */
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);

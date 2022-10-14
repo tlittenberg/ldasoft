@@ -485,6 +485,47 @@ void GalacticBinarySimulateData(struct Data *data, struct Orbit *orbit, struct F
 
 }
 
+void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Flags *flags)
+{
+    //TODO: Combine this function w/ GalacticBinaryInjectVerificationSource()
+
+    //get max and min samples
+    data->fmin = data->inj->f0 - (data->N/2)/data->T;
+    data->fmax = data->inj->f0 + (data->N/2)/data->T;
+    data->qmin = (int)(data->fmin*data->T);
+    data->qmax = data->qmin+data->N;
+    
+    //recompute fmin and fmax so they align with a bin
+    data->fmin = data->qmin/data->T;
+    data->fmax = data->qmax/data->T;
+
+    galactic_binary(orbit, data->format, data->T, data->t0[0], data->inj->params, data->NP, data->inj->tdi->X, data->inj->tdi->A, data->inj->tdi->E, data->inj->BW, 2);
+    
+    //Add waveform to data TDI channels
+    for(int j=0; j<data->inj->BW; j++)
+    {
+        int i = j+data->inj->imin;
+        if(i>0 && i<data->N)
+        {
+            data->tdi[0]->X[2*i]   += data->inj->tdi->X[2*j];
+            data->tdi[0]->X[2*i+1] += data->inj->tdi->X[2*j+1];
+            
+            data->tdi[0]->A[2*i]   += data->inj->tdi->A[2*j];
+            data->tdi[0]->A[2*i+1] += data->inj->tdi->A[2*j+1];
+            
+            data->tdi[0]->E[2*i]   += data->inj->tdi->E[2*j];
+            data->tdi[0]->E[2*i+1] += data->inj->tdi->E[2*j+1];
+        }
+    }
+
+    //Get noise spectrum for data segment
+    GalacticBinaryGetNoiseModel(data,orbit,flags);
+
+    //Add Gaussian noise to injection
+    if(flags->simNoise) GalacticBinaryAddNoise(data,data->tdi[0]);
+
+}
+
 void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
     //TODO: support Michelson-only injection
