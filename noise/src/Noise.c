@@ -38,7 +38,7 @@
 #include "Noise.h"
 
 #define MIN_SPLINE_STENCIL 5
-#define MIN_SPLINE_SPACING 10.
+#define MIN_SPLINE_SPACING 256.
 
 void alloc_spline_model(struct SplineModel *model, int Ndata, int Nspline)
 {

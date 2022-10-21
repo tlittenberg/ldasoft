@@ -733,6 +733,10 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
     double sf = data->sine_f_on_fstar;
     double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
     
+    //extra factors from TDI convention used for fractional-frequency data
+    if(strcmp("frequency",data->format) == 0 || strcmp("sangria",data->format) == 0)
+        sf *= 8.*asin(data->sine_f_on_fstar);
+        
     //get GW amplitude
     double amp = exp(params[3]);
     

@@ -745,11 +745,22 @@ int main(int argc, char *argv[])
 
             select_noise_segment(global_fit->psd, gbmcmc_data->data, gbmcmc_data->chain, gbmcmc_data->model);
             
-            exchange_gbmcmc_source_params(gbmcmc_data);
 
             cycle = (int)round(global_fit->max_block_time/gbmcmc_data->cpu_time);
-            for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
-                gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+
+            exchange_gbmcmc_source_params(gbmcmc_data);
+            if(procID%2==0)
+            {
+                for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+                    gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+            }
+            
+            exchange_gbmcmc_source_params(gbmcmc_data);
+            if(procID%2!=0)
+            {
+                for(int i=0; i<((cycle > 1 ) ? cycle : 1); i++)
+                    gbmcmc_data->status = update_gbmcmc_sampler(gbmcmc_data);
+            }
             
             global_fit->block_time = gbmcmc_data->cpu_time;
         }
