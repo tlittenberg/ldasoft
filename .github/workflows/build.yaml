@@ -1,0 +1,134 @@
+name: SonarCloud
+on:
+  push:
+    branches:
+      - master
+      - sonar_cloud_test
+  pull_request:
+    types: [opened, synchronize, reopened]
+env:
+  LDASOFT_PREFIX: /usr/local/lib/ldasoft
+  MBH_HOME: /usr/local/lib/mbh
+  MPI_DIR: /usr/local/lib/omp
+  GSL_ROOT_DIR: /usr/local/lib/gsl
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    container: 'centos:7'
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Check source content
+        run: |
+          ls -al
+
+      - name: Prerequisites packages
+        run: |
+          yum update -y
+          # Using latest gcc
+          yum install centos-release-scl epel-release -y \
+            && rpms="bzip2 cmake3 devtoolset-11-toolchain git python3-pip wget" \
+            && yum install ${rpms} -y \
+            && for rpm in ${rpms} ; do yum install "${rpm}" -y ; done
+          
+          # cmake is called instead of cmake3, making it a symlink.
+          # scl needs to be called with scal enable command, thus the proxy script below.
+          ln -s /usr/bin/cmake3 /usr/bin/cmake \
+            && sclCreateProxy() { \
+            cmd="$1" \
+            sclName="$2" \
+            && echo '#!/bin/sh' >/usr/bin/"${cmd}" \
+            && echo exec scl enable "${sclName}" -- "${cmd}" \"\$@\" >>/usr/bin/"${cmd}" \
+            && chmod 775 /usr/bin/"${cmd}" \
+            ; } \
+            && sclCreateProxy make devtoolset-11 \
+            && sclCreateProxy gcc devtoolset-11 \
+            && sclCreateProxy g++ devtoolset-11 \
+            && sclCreateProxy gfortran devtoolset-11
+            
+
+          # Needed for sonar-scanner.
+          # ERROR: Error when running: 'node -v'. Is Node.js available during analysis?
+          yum install rh-nodejs14-nodejs -y
+          sclCreateProxy node rh-nodejs14
+          
+          rpms="libgomp hdf5-devel" \
+            && yum install ${rpms} -y \
+            && for rpm in ${rpms} ; do yum install "${rpm}" -y ; done
+            
+          # unzip needed to install sonar-scanner.
+          yum install unzip -y
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v1
+
+      - name: Prerequisites of Globalfit OpenMPI
+        run: |
+          mkdir /tmp/openmpi && cd /tmp/openmpi \
+            && wget https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.4.tar.bz2 \
+            && tar xf openmpi-*.tar.bz2 \
+            && cd openmpi-* \
+            && ./configure --prefix=$MPI_DIR \
+            && make -j4 all >/dev/null \
+            && make install >/dev/null \
+            && cd .. && rm /tmp/openmpi -rf
+          export PATH="${PATH}:${MPI_DIR}/bin"
+
+      - name: Prerequisites of Globalfit  Gsl
+        run: |
+          mkdir /tmp/gsl && cd /tmp/gsl \
+            && wget https://mirror.ibcp.fr/pub/gnu/gsl/gsl-2.7.1.tar.gz \
+            && tar xf gsl-* \
+            && cd gsl-* \
+            && mkdir "${GSL_ROOT_DIR}" -p \
+            && ./configure --prefix="${GSL_ROOT_DIR}" \
+            && make && make check && make install \
+            && rm /tmp/gsl -rf
+
+      - name: Prerequisites of Globalfit build MBH
+        run: |
+          export PATH="${PATH}:${MPI_DIR}/bin"
+          git clone https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole.git -b global-fit
+          cd LISA-Massive-Black-Hole \
+            && bash -x ./install.sh ${MBH_HOME}
+
+      - name: Prerequisites of Globalfit configure globalfit CMakeLists for MBH path
+        run: |
+          export PATH="${PATH}:${MPI_DIR}/bin"
+          pwd
+          id
+          ls -al \
+            && sed ./globalfit/src/CMakeLists.txt -i -e "s,^#include_directories.*,include_directories(\"${MBH_HOME}/include\"),g" \
+            && sed ./globalfit/src/CMakeLists.txt -i -e "s,^#link_directories.*,link_directories(\"${MBH_HOME}/lib\"),g" \
+            && cat ./globalfit/src/CMakeLists.txt \
+            && find ${MBH_HOME}/lib
+
+      - name: Run build-wrapper
+        run: |
+          export PATH="${PATH}:${MPI_DIR}/bin"
+          export LDASOFT_PREFIX=/usr/local/lib/ldasoft
+          export MBH_DIR="${MBH_HOME}/lib/cmake/mbh"
+          type build-wrapper-linux-x86-64
+          echo "Running scl enable devtoolset-11 -- build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./install.sh ${LDASOFT_PREFIX}"
+          
+          # Warning scl messes with build-wrapper. Running build-wrapper INSIDE scl works.
+          rm /usr/bin/{make,gcc,g++,gfortran} -f
+          scl enable devtoolset-11 -- build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./install.sh ${LDASOFT_PREFIX}
+          
+      - name: Cat build-wrapper-dump.json
+        run: |
+          find . -iname "build-wrapper-dump.json"
+          find . -iname "build-wrapper-dump.json" -exec cat {} \;
+
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+
