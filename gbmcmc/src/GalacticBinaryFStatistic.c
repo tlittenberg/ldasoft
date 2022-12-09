@@ -575,16 +575,12 @@ void calc_a_i(struct Filter *F_filter)
 void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fdot, double theta, double phi, double *logL_X, double *logL_AE, double *Fparams)
 {
     long M_filter, N_filter;
-    M_filter = (data->N-2*data->qpad)/4;
-    N_filter = (data->N-2*data->qpad)/4;
     long q;
     
     q = (long)(f0*data->T); 	// carrier frequency bin
     
     struct Filter *F_filter = malloc(sizeof(struct Filter));
     
-    F_filter->M_filter = M_filter;
-    F_filter->N_filter = N_filter;
     
     F_filter->f0     = f0;
     F_filter->fdot   = fdot;
@@ -593,6 +589,13 @@ void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fd
     F_filter->theta  = theta;
     F_filter->phi    = phi;
     
+
+    int BW = galactic_binary_bandwidth(orbit->L, orbit->fstar, f0, fdot, cos(theta), 1.e-22, data->T, data->N);
+    M_filter = BW;
+    N_filter = BW;
+
+    F_filter->M_filter = M_filter;
+    F_filter->N_filter = N_filter;
     init_A_filters(orbit, data, F_filter);
     
     /////////
@@ -648,7 +651,6 @@ void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *x
     long M_filter, N_filter;
     
     int BW = galactic_binary_bandwidth(orbit->L, orbit->fstar, f0, fdot, cos(theta), 1.e-22, data->T, data->N);
-    
     M_filter = BW;
     N_filter = BW;
 
