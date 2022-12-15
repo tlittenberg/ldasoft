@@ -80,8 +80,8 @@ CMakeFiles
 */src/CMakeFiles
 
 Makefile
-*/Makefile
-*/src/Makefile
+**/Makefile
+!docs/latex/Makefile
 
 CMakeCache.txt
 CMakeScripts/
