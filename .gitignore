@@ -54,6 +54,9 @@ ldasoft.xcworkspace/
 ldasoft.xcodeproj
 ldasoft.build
 
+#Vim junk
+*.swp
+
 #install directories
 build
 master
