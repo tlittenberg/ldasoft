@@ -26,6 +26,7 @@ gslcblas
 openmp
 mpi
 hdf5
+
 ```
 The `GlobalFit` pipeline additionally requires the `global-fit` branch of [`LISA-Massive-Black-Hole`](https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/tree/global-fit) to be installed.
 
