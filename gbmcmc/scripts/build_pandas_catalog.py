@@ -125,7 +125,7 @@ for key in keys:
                 dfs.append(df)
 
                 # Build data frame for chain for this particular source
-                chain_cols = ['Frequency','Frequency Derivative','Amplitude','Ecliptic Longitude','coslat','cosinc','Initial Phase','Polarization','SNR','entry match', 'waveform measure']
+                chain_cols = ['Frequency','Frequency Derivative','Amplitude','Ecliptic Longitude','coslat','cosinc','Polarization','Initial Phase','SNR','entry match', 'waveform measure']
                 chain_df = pd.read_table(catDir+'/'+entryName +'_chain.dat',delimiter = ' ',index_col = False, names=chain_cols)
                 chain_df['Ecliptic Latitude']=np.pi/2.0-np.arccos(pd.to_numeric(chain_df['coslat'],'coerce'))
                 chain_df['Inclination']=np.arccos(pd.to_numeric(chain_df['cosinc'],'coerce'))
@@ -152,8 +152,8 @@ for key in keys:
                 "fdot" : "Frequency Derivative",
                 "amp" : "Amplitude",
                 "lon" : "Ecliptic Longitude",
-                "psi" : "Initial Phase",
-                "phi" : "Polarization"})
+                "psi" : "Polarization",
+                "phi" : "Initial Phase"})
 
             cat_df = pd.concat([cat_df,entry_df],axis=1)
             # add the data for this segment into the list of dataframes
