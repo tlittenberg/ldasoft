@@ -1,8 +1,4 @@
 
-#MBH library
-#include_directories(/Users/tyson/temp/include)
-#link_directories(/Users/tyson/temp/lib)
-
 #GBMCMC library
 include_directories ("${PROJECT_SOURCE_DIR}/tools/src/")              
 include_directories ("${PROJECT_SOURCE_DIR}/lisa/src/")
@@ -18,7 +14,7 @@ target_link_libraries(global_fit lisa)
 target_link_libraries(global_fit gbmcmc)
 target_link_libraries(global_fit noise)
 target_link_libraries(global_fit mpi)
-target_link_libraries(global_fit mbh)
+target_link_libraries(global_fit MBH::mbh)
 if(APPLE)
    target_link_libraries(global_fit omp)
 endif()
