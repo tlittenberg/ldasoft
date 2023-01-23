@@ -54,6 +54,9 @@ ldasoft.xcworkspace/
 ldasoft.xcodeproj
 ldasoft.build
 
+#Vim junk
+*.swp
+
 #install directories
 build
 master
@@ -77,8 +80,8 @@ CMakeFiles
 */src/CMakeFiles
 
 Makefile
-*/Makefile
-*/src/Makefile
+**/Makefile
+!docs/latex/Makefile
 
 CMakeCache.txt
 CMakeScripts/

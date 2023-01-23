@@ -1,13 +1,14 @@
 #!/bin/bash
-
-set -e
+set -o errexit
+set -o nounset
+set -o pipefail
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 INSTALL_PREFIX"
   exit 1
 fi
 
-INSTALL_PREFIX=$1
+INSTALL_PREFIX="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 
 rm -rf build
 mkdir -p build
