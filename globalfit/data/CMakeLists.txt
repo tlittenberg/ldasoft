@@ -1,0 +1,1 @@
+install(DIRECTORY "./" DESTINATION data FILES_MATCHING PATTERN "*.dat")
