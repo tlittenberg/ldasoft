@@ -2,60 +2,64 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-set -o xtrace
 
-# Build LDASOFT and MBH from scratch w/ Conda
+# Build LDASOFT and MBH from scratch in a conda environment.
+# Pack the environment and exes into a single folder structure
 
-# Assume we run from ldasoft root (TODO fix this so we don't need to assume)
-# We use build-conda as a staging area.
-BUILD_DIR="$(pwd)/build-conda"
-
+# Get the directory of the current script
 SOURCE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# We use build-conda as the staging area
+BUILD_DIR="${SOURCE_DIR}/build_conda"
 
 rm -rf ${BUILD_DIR}
 mkdir -p ${BUILD_DIR}
 pushd ${BUILD_DIR}
 
-	# Build a brand-new conda env in BUILD_DIR
-	conda env create -f $SOURCE_DIR/environment.yml -p ${BUILD_DIR}/conda_env
+	# Build a brand-new conda env.
+	CONDA_ENV_YML="${SOURCE_DIR}/environment.yml"
+	CONDA_ENV_DIR="${BUILD_DIR}/conda-env"
+	conda env create -f ${CONDA_ENV_YML} -p ${CONDA_ENV_DIR}
 
 	# Activate our conda env
-	eval $(conda shell.bash activate ${BUILD_DIR}/conda_env)
+	eval $(conda shell.bash activate ${CONDA_ENV_DIR})
 
-	# Tell cmake where to find conda stuff
+	# Tell cmake where to find conda environment
 	export CMAKE_PREFIX_PATH="${CONDA_PREFIX}:${CMAKE_PREFIX_PATH:-}"
 
 	# Module load our stuff from hyak
-	module load ompi/4.1.4 # Note this also loads gcc and ucx
+	module load ompi # Note this also loads gcc and ucx
 	module load cmake
 
 	# Hyaks load of gcc/11.2.x sets $CC to mpiCC which is technically a c++ compiler
-	# cmake gets mad about this so we set CC in order to point it right
+	# cmake gets mad about this so we set CC to a c compiler (mpicc) in order to keep
+	# cmake happy.
 	export CC="mpicc"
 
 	# Build and install MBH from source
 	#
-	# TODO Ergonomics: What is the right place to get MBH from? is git okay, or
-	# will this typically be a local checkout that we should build the ability
-	# to specify
+	# TODO: This is pointed mtauraso's fork of MBH because some patches are not yet merged.
+	# build-fixup branch includes these two PRs:
+	#
+	# https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/pull/5
+	# https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/pull/4
+	#
+	MBH_GIT="https://github.com/mtauraso/LISA-Massive-Black-Hole.git"
+	MBH_BRANCH="build-fixup"
+	MBH_SOURCE_DIR="${BUILD_DIR}/mbh-src"
+	MBH_INSTALL_DIR="${BUILD_DIR}/mbh-install"
 
-	export MBH_GIT="https://github.com/mtauraso/LISA-Massive-Black-Hole.git"
-	export MBH_BRANCH="build-fixup"
-
-	git clone --branch ${MBH_BRANCH} ${MBH_GIT} ${BUILD_DIR}/mbh
-
-	pushd ${BUILD_DIR}/mbh
-		./install.sh ${BUILD_DIR}/mbh-install
+	git clone --branch ${MBH_BRANCH} ${MBH_GIT} ${MBH_SOURCE_DIR}
+	pushd ${MBH_SOURCE_DIR}
+		./install.sh ${MBH_INSTALL_DIR}
 	popd
 	
-	# Tell cmake where mbh is
-	export CMAKE_PREFIX_PATH="${BUILD_DIR}/mbh-install/:${CMAKE_PREFIX_PATH}"
+	# Tell cmake where to find MBH
+	CMAKE_PREFIX_PATH="${MBH_INSTALL_DIR}:${CMAKE_PREFIX_PATH}"
+	LDASOFT_INSTALL_DIR="${BUILD_DIR}/ldasoft-install"
 	
 	# Build and install ldasoft
 	pushd ${SOURCE_DIR}
-		./install.sh ${BUILD_DIR}/ldasoft-install
+		./install.sh ${LDASOFT_INSTALL_DIR}
 	popd
 popd
-
-
-

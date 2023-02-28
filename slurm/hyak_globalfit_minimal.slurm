@@ -1,7 +1,7 @@
 #!/bin/bash
 # All Sbatch stuff needs to be a continuous comment
 #
-#SBATCH --job-name=global_fit_LDC2a_dev
+#SBATCH --job-name=globalfit
 #SBATCH --mail-type=NONE
 #SBATCH --mail-user=mtauraso
 #SBATCH --account=gwastro
@@ -20,38 +20,32 @@
 #SBATCH --ntasks-per-node=5
 #SBATCH --mem-per-cpu=4G
 #
-#Don't move any environment variables into slurm-land
-#SBATCH --export=ALL
-#
-#Kill us after a time
+#Kill us after 10h for now
 #SBATCH --time=10:00:00
-
-
-# SLURM says we get them for free... with a job ID, which is better actually
-# stdout and stderr logging (Slurm docs says we'll get these files anyway)
-# SBATCH --output=slurm_12.out
-# SBATCH --error=slurm_12.err
 
 set -o xtrace
 
-
 DATA_DIR="/gscratch/gwastro/mtauraso"
-LDASOFT_DIR="/mmfs1/home/mtauraso/ldasoft/build-conda/ldasoft-install"
 
-# TODO: Would like to have the build script build the environment in the build_conda dir
-# That way we can build this all off of a single directory tree
-#
-# It may then be possible in the preamble to unpack miniconda and the env into /tmp
-# Which if successful could give us the same perf as apptainer one-file strategy
-CONDA_DIR="${LDASOFT_DIR}/../conda_env"
-OMPI_VERSION="4.1.4"
+# TODO: Pack PACKAGE_DIR
+# Depending on things like inode limits and f/s speed, it may be desirable to
+# zip this directory and then unpack it on a node in /tmp somewhere.
+# As written, hyak's backplane is responsible for moving many small files which
+# are mostly our conda environment
+PACKAGE_DIR="/mmfs1/home/mtauraso/ldasoft/build_conda"
 
-# input data and verification galactic binary files
+LDASOFT_DIR="${PACKAGE_DIR}/ldasoft-install"
+
+
+# input data from LDC
 data="${DATA_DIR}/LDC2_sangria_training_v2.h5"
-vgb="${LDASOFT_DIR}/data/ldc_sangria_vgb_list.dat"
 
+# verification binaries data file
+vgb="${LDASOFT_DIR}/data/ldc_sangria_vgb_list.dat"
 # path/to/search_sources.dat (contains starting point for MBH sampler)
 mbh="${LDASOFT_DIR}/data/"
+# working directory is where we look for ucb_frequency_spacing.dat
+workingdir="${LDASOFT_DIR}/data"
 
 fmin=0.0003
 samples=128
@@ -64,7 +58,7 @@ samples_max=128
 Tobs=7864320
 padding=32
 #ucb=/benchmarks/ldc/sangria/sangria_training_01mo/gb_catalog.cache
-outdir="${DATA_DIR}/global_fit_LDC2a_dev"
+outdir="${DATA_DIR}/global_fit_LDC2a_training_01mo"
 
 #Tobs=15728640
 #padding=64
@@ -78,10 +72,6 @@ outdir="${DATA_DIR}/global_fit_LDC2a_dev"
 
 Tstart=0
 sources=40
-
-#Set up whatever package we need to run with
-#module load gsl-2.7.1-gcc-9.4.0-ylwugg3
-#module load hdf5-1.12.2-gcc-9.4.0-f5p3zoy
 
 global_fit_cmd="global_fit \
 --h5-data ${data} \
@@ -103,12 +93,13 @@ global_fit_cmd="global_fit \
 
 # Activate conda first, and then load modules
 # This ensures that any hyak module stuff appears first in $PATH/$LD_LIBRARY_PATH
-eval $(conda shell.bash activate ${CONDA_DIR})
+CONDA_ENV_DIR="${PACKAGE_DIR}/conda-env"
+eval $(conda shell.bash activate ${CONDA_ENV_DIR})
 export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}"
 
-module load ompi/${OMPI_VERSION}
+module load ompi
 
-
-srun -n ${SLURM_NTASKS} --chdir ${mbh} ${LDASOFT_DIR}/bin/${global_fit_cmd}
+# Run the global fit command ensuring we have set the working directory properly
+srun -n ${SLURM_NTASKS} --chdir ${workingdir} ${LDASOFT_DIR}/bin/${global_fit_cmd}
 
 

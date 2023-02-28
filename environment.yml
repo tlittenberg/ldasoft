@@ -1,19 +1,15 @@
 name: ldasoft-global-fit
 
 # Goal of this is to provide a conda environment that works
-# WITH the environment on a compute node to allow ldasoft/mbh
+# with the environment on a hyak compute node to allow ldasoft/mbh
 # to be built with the compute nodes libs available at compile time
 #
-# Entering this env should look something like
-# module load cmake/<version>
-# module load ompi/<version> (which may also load ucx/gcc)
-# module load gcc/<version>
+# It is also intended to supply dependent libraries at runtime
 #
-# conda activate ldasoft-global-fit
-#
-# It is desirable that this env not directly contain a compiler, but if it is unavoidable an additional bypass will be needed
-# We want to use/find Hyak compute node compiler and MPI wrapper
-#
+# For interoperating with hyak's LMODs, it is necessary to load
+# modules after this environment is activated, because this 
+# environment will download MPI/UCX libraries; however, they 
+# will not necessarily be the correct versions.
 #
 channels:
         - defaults
