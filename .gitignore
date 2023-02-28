@@ -59,6 +59,7 @@ ldasoft.build
 
 #install directories
 build
+build-conda
 master
 fstat
 bayesline
