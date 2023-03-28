@@ -12,14 +12,25 @@ SOURCE_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # We use build-conda as the staging area
 BUILD_DIR="${SOURCE_DIR}/build_conda"
 
-rm -rf ${BUILD_DIR}
-mkdir -p ${BUILD_DIR}
+# 0 unless we need to rebuild conda env (Takes a long time)
+REBUILD_CONDA=$(cmp --silent -- "${BUILD_DIR}/environment.yml" "${SOURCE_DIR}/environment.yml"; echo $?)
+
+if [[ $REBUILD_CONDA -ne 0 ]]; then
+	rm -rf ${BUILD_DIR}
+	mkdir -p ${BUILD_DIR}
+else
+	rm -rf ${BUILD_DIR}/mbh-src ${BUILD_DIR}/mbh-install ${BUILD_DIR}/ldasoft-install
+fi
+
 pushd ${BUILD_DIR}
 
-	# Build a brand-new conda env.
-	CONDA_ENV_YML="${SOURCE_DIR}/environment.yml"
 	CONDA_ENV_DIR="${BUILD_DIR}/conda-env"
-	conda env create -f ${CONDA_ENV_YML} -p ${CONDA_ENV_DIR}
+	if [[ $REBUILD_CONDA -ne 0 ]]; then
+		CONDA_ENV_YML="${SOURCE_DIR}/environment.yml"
+		# Build a brand-new conda env.
+		conda env create -f ${CONDA_ENV_YML} -p ${CONDA_ENV_DIR}
+		cp ${CONDA_ENV_YML} "${BUILD_DIR}/environment.yml"
+	fi
 
 	# Activate our conda env
 	eval $(conda shell.bash activate ${CONDA_ENV_DIR})

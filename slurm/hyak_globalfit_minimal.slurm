@@ -99,6 +99,24 @@ export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}"
 
 module load ompi
 
+#export UCX_LOG_LEVEL="info"
+
+cleanup() 
+{
+	echo "In cleanup function looking for core dumps"
+	# List core dumps available
+	coredumpctl list ${LDASOFT_DIR}/bin/global_fit
+
+	# Dump the last coredump to ${outdir}/core-<epoch seconds>
+	DATE=$(date +%s)
+	coredumpctl -1 --output=${outdir}/core-$DATE.coredump dump
+
+	# Now dump dmesg to the log
+	dmesg | grep -i oom
+}
+
+trap cleanup SIGINT SIGABRT SIGQUIT SIGTERM
+
 # Run the global fit command ensuring we have set the working directory properly
 srun -n ${SLURM_NTASKS} --chdir ${workingdir} ${LDASOFT_DIR}/bin/${global_fit_cmd}
 
