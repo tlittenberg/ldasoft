@@ -50,10 +50,10 @@ struct MBHData
     int NMBH; //!< Number of MBHs found from search in data segment
     double logLmax; //!< Max log likelihood
     
-    char searchDir[MAXSTRINGSIZE]; //!<store `DIRNAME` containing output from mbh search
+    char searchDir[PATH_BUFSIZE]; //!<store `DIRNAME` containing output from mbh search
     double **segParams; //!<store parameters from search phase
     
-    char chainDir[MAXSTRINGSIZE]; //!<location to print chain files
+    char chainDir[PATH_BUFSIZE]; //!<location to print chain files
     FILE *chainFile;
     
     double cpu_time; //!<CPU time for single update

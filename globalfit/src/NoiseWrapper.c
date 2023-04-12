@@ -131,7 +131,7 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
     
     //first check if file exists
     char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/current_spline_points.dat",data->dataDir);
+    pathprintf(filename,"%s/current_spline_points.dat",data->dataDir);
     int check=0;
     FILE *test=NULL;
     if( (test=fopen(filename,"r")) )
@@ -201,11 +201,11 @@ void initialize_noise_state(struct NoiseData *noise_data)
             Nspline++; //more control points keep interpolation closer to theoretical Sn(f)
         }
     }
-    char filename[128];
-    sprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->spline, filename);
     
-    sprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
+    pathprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->psd, filename);
   
 }
@@ -221,14 +221,14 @@ void resume_noise_state(struct NoiseData *noise_data)
     int NC = chain->NC;    
     
     //count lines in file
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/current_spline_points.dat",data->dataDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/current_spline_points.dat",data->dataDir);
     FILE *splineFile = fopen(filename,"r");
     int Nspline = 0;
     double f,SnA,SnE;
     while(!feof(splineFile))
     {
-        fscanf(splineFile,"%lg %lg %lg",&f,&SnA,&SnE);
+        ufscanf(splineFile,"%lg %lg %lg",&f,&SnA,&SnE);
         Nspline++;
     }
     rewind(splineFile);
@@ -244,7 +244,7 @@ void resume_noise_state(struct NoiseData *noise_data)
     //set spline model to stored values
     for(int n=0; n<Nspline; n++)
     {
-        fscanf(splineFile,"%lg %lg %lg",&model[0]->spline->f[n],&model[0]->spline->SnA[n],&model[0]->spline->SnE[n]);
+        ufscanf(splineFile,"%lg %lg %lg",&model[0]->spline->f[n],&model[0]->spline->SnA[n],&model[0]->spline->SnE[n]);
     }
     fclose(splineFile);
 

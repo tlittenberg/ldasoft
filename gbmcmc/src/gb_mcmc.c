@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     
     int NMAX = 10;   //max number of frequency & time segments
 
-    char filename[MAXSTRINGSIZE];
+    char filename[PATH_BUFSIZE];
 
     /* check arguments */
     print_LISA_ASCII_art(stdout);
@@ -78,9 +78,9 @@ int main(int argc, char *argv[])
     int mcmc_start = -flags->NBURN;
     
     /* Setup output directories for chain and data structures */
-    sprintf(data->dataDir,"%s/data",flags->runDir);
-    sprintf(chain->chainDir,"%s/chains",flags->runDir);
-    sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+    pathprintf(data->dataDir,"%s/data",flags->runDir);
+    pathprintf(chain->chainDir,"%s/chains",flags->runDir);
+    pathprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
     
     mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         
         for(int ic=0; ic<chain->NC; ic++)
         {
-            sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
+            pathprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
             
             if( (fptr = fopen(filename,"r")) == NULL )
             {
@@ -320,13 +320,13 @@ int main(int argc, char *argv[])
     print_noise_reconstruction(data,flags);
     print_evidence(chain,flags);
     
-    sprintf(filename,"%s/data/waveform_strain.dat",flags->runDir);
+    pathprintf(filename,"%s/data/waveform_strain.dat",flags->runDir);
     FILE *waveFile = fopen(filename,"w");
     print_waveform_strain(data,model[chain->index[0]],waveFile);
     fclose(waveFile);
 
 
-    sprintf(filename,"%s/avg_log_likelihood.dat",flags->runDir);
+    pathprintf(filename,"%s/avg_log_likelihood.dat",flags->runDir);
     FILE *chainFile = fopen(filename,"w");
     for(int ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data->downsample));
     fclose(chainFile);
@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
     stop = time(NULL);
     
     printf(" ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
-    sprintf(filename,"%s/gb_mcmc.log",flags->runDir);
+    pathprintf(filename,"%s/gb_mcmc.log",flags->runDir);
     FILE *runlog = fopen(filename,"a");
     fprintf(runlog," ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
     fclose(runlog);

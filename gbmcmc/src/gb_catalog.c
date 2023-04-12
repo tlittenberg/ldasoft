@@ -634,12 +634,12 @@ int main(int argc, char *argv[])
     /*           Format selected entries as L3 data products           */
     /* *************************************************************** */
     
-    char outdir[MAXSTRINGSIZE];
-    sprintf(outdir,"catalog_%i",DMAX);
+    char outdir[PATH_BUFSIZE];
+    pathprintf(outdir,"catalog_%i",DMAX);
     mkdir(outdir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     
-    char filename[128];
-    sprintf(filename,"%s/entries.dat",outdir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/entries.dat",outdir);
     FILE *catalogFile = fopen(filename,"w");
     
     double f_med;
@@ -679,13 +679,13 @@ int main(int argc, char *argv[])
         sprintf(entry->name,"LDC%010li",(long)(f_med*1e10));
         
         //print point estimate parameters at median frequency
-        sprintf(filename, "%s/%s_params.dat", outdir, entry->name);
+        pathprintf(filename, "%s/%s_params.dat", outdir, entry->name);
         FILE *out = fopen(filename, "w");
         print_source_params(data,entry->source[i_med],out);
         fprintf(out,"\n");
         fclose(out);
         
-        sprintf(filename, "%s/%s_waveform.dat", outdir,entry->name);
+        pathprintf(filename, "%s/%s_waveform.dat", outdir,entry->name);
         out = fopen( filename, "w");
         
         struct Source *b=entry->source[0];
@@ -740,7 +740,7 @@ int main(int argc, char *argv[])
 
     get_correlation_matrix(data, catalog, detection_index, detections, IMAX, corr);
 
-    sprintf(filename,"%s/correlation_matrix.dat",outdir);
+    pathprintf(filename,"%s/correlation_matrix.dat",outdir);
     FILE *corrFile = fopen(filename,"w");
     for(int n=0; n<detections*data->NP; n++)
     {
@@ -783,7 +783,7 @@ int main(int argc, char *argv[])
         Nsource--;
         rewind(old_catalog_file);
         
-        sprintf(filename,"%s/history.dat",outdir);
+        pathprintf(filename,"%s/history.dat",outdir);
         FILE *historyFile = fopen(filename,"w");
         for(int i=0; i<Nsource; i++)
         {
@@ -863,7 +863,7 @@ int main(int argc, char *argv[])
         int n = detection_index[d];
         entry = catalog->entry[n];
         
-        sprintf(filename, "%s/%s_chain.dat", outdir,entry->name);
+        pathprintf(filename, "%s/%s_chain.dat", outdir,entry->name);
         out = fopen( filename, "w");
         
         //add parameters to file
@@ -934,7 +934,7 @@ int main(int argc, char *argv[])
         double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
         double E_med,E_lo_50,E_hi_50,E_lo_90,E_hi_90;
         
-        sprintf(filename, "%s/%s_power_reconstruction.dat", outdir,entry->name);
+        pathprintf(filename, "%s/%s_power_reconstruction.dat", outdir,entry->name);
         FILE *out = fopen( filename, "w");
         
         

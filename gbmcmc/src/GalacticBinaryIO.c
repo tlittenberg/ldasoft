@@ -31,6 +31,7 @@
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_statistics.h>
 
+#include <util.h>
 #include <LISA.h>
 
 #include "GalacticBinary.h"
@@ -70,9 +71,9 @@ void print_version(FILE *fptr)
 void setup_run_directories(struct Flags *flags, struct Data *data, struct Chain *chain)
 {
     
-    sprintf(data->dataDir,"%s/data",flags->runDir);
-    sprintf(chain->chainDir,"%s/chains",flags->runDir);
-    sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+    pathprintf(data->dataDir,"%s/data",flags->runDir);
+    pathprintf(chain->chainDir,"%s/chains",flags->runDir);
+    pathprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
 
     mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -88,8 +89,8 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     int samples = data->N - 2*data->qpad;
     double fmin = data->fmin + data->qpad/data->T;
     
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/example_gb_catalog.sh",flags->runDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/example_gb_catalog.sh",flags->runDir);
     FILE *fptr = fopen(filename,"w");
     
     fprintf(fptr,"#!/bin/sh\n\n");
@@ -774,11 +775,11 @@ void parse_vb_list(int argc, char **argv, struct Flags *flags)
 
 void save_chain_state(struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int step)
 {
-    char filename[128];
+    char filename[PATH_BUFSIZE];
     FILE *stateFile;
     for(int ic=0; ic<chain->NC; ic++)
     {
-        sprintf(filename,"%s/chain_state_%i.dat",chain->chkptDir,ic);
+        pathprintf(filename,"%s/chain_state_%i.dat",chain->chkptDir,ic);
         stateFile = fopen(filename,"w");
         
         int n = chain->index[ic];
@@ -803,12 +804,12 @@ void save_chain_state(struct Data *data, struct Model **model, struct Chain *cha
 
 void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **model, struct Chain *chain, struct Flags *flags, int *step)
 {
-    char filename[128];
+    char filename[PATH_BUFSIZE];
     FILE *stateFile;
     chain->logLmax=0.0;
     for(int ic=0; ic<chain->NC; ic++)
     {
-        sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
+        pathprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
         stateFile = fopen(filename,"r");
         
         int n = chain->index[ic];
@@ -906,8 +907,8 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
         {
             if(chain->dimensionFile[D]==NULL)
             {
-                char filename[MAXSTRINGSIZE];
-                sprintf(filename,"%s/dimension_chain.dat.%i",chain->chainDir,D);
+                char filename[PATH_BUFSIZE];
+                pathprintf(filename,"%s/dimension_chain.dat.%i",chain->chainDir,D);
                 if(flags->resume)chain->dimensionFile[D] = fopen(filename,"a");
                 else             chain->dimensionFile[D] = fopen(filename,"w");
             }
@@ -1229,9 +1230,9 @@ void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr)
 void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags)
 {
     FILE *fptr;
-    char filename[128];
+    char filename[PATH_BUFSIZE];
     
-    sprintf(filename,"%s/waveform_draw.dat",data->dataDir);
+    pathprintf(filename,"%s/waveform_draw.dat",data->dataDir);
     fptr=fopen(filename,"w");
     print_waveform(data, model, fptr);
     fclose(fptr);
@@ -1240,11 +1241,11 @@ void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *f
 void print_noise_reconstruction(struct Data *data, struct Flags *flags)
 {
     FILE *fptr_Snf;
-    char filename[MAXSTRINGSIZE];
+    char filename[PATH_BUFSIZE];
     
     for(int k=0; k<data->NT; k++)
     {
-        sprintf(filename,"%s/power_noise_t%i.dat",data->dataDir,k);
+        pathprintf(filename,"%s/power_noise_t%i.dat",data->dataDir,k);
         fptr_Snf=fopen(filename,"w");
 
         for(int i=0; i<data->N; i++)
@@ -1287,7 +1288,7 @@ void print_noise_reconstruction(struct Data *data, struct Flags *flags)
 
 void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
 {
-    char filename[1024];
+    char filename[PATH_BUFSIZE];
     FILE *fptr_rec;
     FILE *fptr_res;
     FILE *fptr_var;
@@ -1325,11 +1326,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
             }
         }
         
-        sprintf(filename,"%s/power_reconstruction_t%i.dat",data->dataDir,k);
+        pathprintf(filename,"%s/power_reconstruction_t%i.dat",data->dataDir,k);
         fptr_rec=fopen(filename,"w");
-        sprintf(filename,"%s/power_residual_t%i.dat",data->dataDir,k);
+        pathprintf(filename,"%s/power_residual_t%i.dat",data->dataDir,k);
         fptr_res=fopen(filename,"w");
-        sprintf(filename,"%s/variance_residual_t%i.dat",data->dataDir,k);
+        pathprintf(filename,"%s/variance_residual_t%i.dat",data->dataDir,k);
         fptr_var=fopen(filename,"w");
         
         double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
@@ -1411,10 +1412,10 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
 
 void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_index)
 {
-    char filename[128];
+    char filename[PATH_BUFSIZE];
     FILE *fptr;
 
-    sprintf(filename,"%s/waveform_injection_%i.dat",data->dataDir,t_index);
+    pathprintf(filename,"%s/waveform_injection_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1427,7 +1428,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/power_injection_%i.dat",data->dataDir,t_index);
+    pathprintf(filename,"%s/power_injection_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -1440,7 +1441,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/power_data_%i.dat",data->dataDir,t_index);
+    pathprintf(filename,"%s/power_data_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1454,7 +1455,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/data_%i.dat",data->dataDir,t_index);
+    pathprintf(filename,"%s/data_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1468,7 +1469,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/power_noise_%i.dat",data->dataDir,t_index);
+    pathprintf(filename,"%s/power_noise_%i.dat",data->dataDir,t_index);
     fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)
@@ -1485,8 +1486,8 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
 
 void print_evidence(struct Chain *chain,struct Flags *flags)
 {
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/evidence.dat",flags->runDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/evidence.dat",flags->runDir);
     FILE *zFile = fopen(filename,"w");
     for(int i=0; i<flags->DMAX; i++) fprintf(zFile,"%i %i\n",i,chain->dimension[0][i]);
     fclose(zFile);

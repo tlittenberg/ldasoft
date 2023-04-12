@@ -198,7 +198,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
 {
     int ic;
     int NC = chain->NC;
-    char filename[MAXSTRINGSIZE];
+    char filename[PATH_BUFSIZE];
 
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));
@@ -232,19 +232,19 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     
     if(!flags->quiet)
     {
-        sprintf(filename,"%s/log_likelihood_chain.dat",chain->chainDir);
+        pathprintf(filename,"%s/log_likelihood_chain.dat",chain->chainDir);
         chain->likelihoodFile = fopen(filename,mode);
         
-        sprintf(filename,"%s/temperature_chain.dat",chain->chainDir);
+        pathprintf(filename,"%s/temperature_chain.dat",chain->chainDir);
         chain->temperatureFile = fopen(filename,mode);
     }
     
     chain->chainFile = malloc(NC*sizeof(FILE *));
-    sprintf(filename,"%s/model_chain.dat.0",chain->chainDir);
+    pathprintf(filename,"%s/model_chain.dat.0",chain->chainDir);
     chain->chainFile[0] = fopen(filename,mode);
     
     chain->parameterFile = malloc(NC*sizeof(FILE *));
-    sprintf(filename,"%s/parameter_chain.dat.0",chain->chainDir);
+    pathprintf(filename,"%s/parameter_chain.dat.0",chain->chainDir);
     chain->parameterFile[0] = fopen(filename,mode);
     
     chain->dimensionFile = malloc(flags->DMAX*sizeof(FILE *));
@@ -255,13 +255,13 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     }
     
     chain->noiseFile = malloc(NC*sizeof(FILE *));
-    sprintf(filename,"%s/noise_chain.dat.0",chain->chainDir);
+    pathprintf(filename,"%s/noise_chain.dat.0",chain->chainDir);
     chain->noiseFile[0] = fopen(filename,mode);
     
     if(flags->calibration)
     {
         chain->calibrationFile = malloc(NC*sizeof(FILE *));
-        sprintf(filename,"%s/calibration_chain.dat.0",chain->chainDir);
+        pathprintf(filename,"%s/calibration_chain.dat.0",chain->chainDir);
         chain->calibrationFile[0] = fopen(filename,mode);
     }
     
@@ -269,13 +269,13 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     {
         for(ic=1; ic<NC; ic++)
         {
-            sprintf(filename,"%s/parameter_chain.dat.%i",chain->chainDir,ic);
+            pathprintf(filename,"%s/parameter_chain.dat.%i",chain->chainDir,ic);
             chain->parameterFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"%s/model_chain.dat.%i",chain->chainDir,ic);
+            pathprintf(filename,"%s/model_chain.dat.%i",chain->chainDir,ic);
             chain->chainFile[ic] = fopen(filename,mode);
             
-            sprintf(filename,"%s/noise_chain.dat.%i",chain->chainDir,ic);
+            pathprintf(filename,"%s/noise_chain.dat.%i",chain->chainDir,ic);
             chain->noiseFile[ic] = fopen(filename,mode);
         }
     }

@@ -132,13 +132,13 @@ int main(int argc, char *argv[])
         data=data_vec[n];
         data->nseed+=n;
 
-        char subDir[MAXSTRINGSIZE];
-        sprintf(subDir,"%s/seg%02d",flags->runDir,n);
+        char subDir[PATH_BUFSIZE];
+        pathprintf(subDir,"%s/seg%02d",flags->runDir,n);
         mkdir(subDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-        sprintf(data->dataDir,"%s/data",subDir);
-        sprintf(chain->chainDir,"%s/chains",subDir);
-        sprintf(chain->chkptDir,"%s/checkpoint",subDir);
+        pathprintf(data->dataDir,"%s/data",subDir);
+        pathprintf(chain->chainDir,"%s/chains",subDir);
+        pathprintf(chain->chkptDir,"%s/checkpoint",subDir);
         
         mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -182,9 +182,7 @@ int main(int argc, char *argv[])
     }
 
     /* Setup the rest of the model */
-    struct Prior *prior = NULL;
     struct Proposal **proposal = NULL;
-    struct Model **trial = NULL;
     struct Model **model = NULL;
     struct Prior **prior_vec = malloc(flags->NVB*sizeof(struct Prior *));
     struct Proposal ***proposal_vec = malloc(flags->NVB*sizeof(struct Proposal **));
@@ -218,7 +216,7 @@ int main(int argc, char *argv[])
             
             for(int ic=0; ic<chain_vec[n]->NC; ic++)
             {
-                sprintf(filename,"%s/chain_state_%i.dat",chain_vec[n]->chkptDir,ic);
+                pathprintf(filename,"%s/chain_state_%i.dat",chain_vec[n]->chkptDir,ic);
                 
                 if( (fptr = fopen(filename,"r")) == NULL )
                 {
@@ -302,9 +300,7 @@ int main(int argc, char *argv[])
                 for(int n=0; n<flags->NVB; n++)
                 {
                     model = model_vec[n];
-                    trial = trial_vec[n];
                     data = data_vec[n];
-                    prior = prior_vec[n];
                     proposal = proposal_vec[n];
                     chain = chain_vec[n];
                     
@@ -372,7 +368,7 @@ int main(int argc, char *argv[])
     stop = time(NULL);
     
     printf(" ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
-    sprintf(filename,"%s/vb_mcmc.log",flags->runDir);
+    pathprintf(filename,"%s/vb_mcmc.log",flags->runDir);
     FILE *runlog = fopen(filename,"a");
     fprintf(runlog," ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
     fclose(runlog);

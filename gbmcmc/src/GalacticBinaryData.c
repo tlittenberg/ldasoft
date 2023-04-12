@@ -30,6 +30,7 @@
 
 #include <LISA.h>
 #include <GMM_with_EM.h>
+#include <util.h>
 
 #include "GalacticBinary.h"
 #include "GalacticBinaryIO.h"
@@ -416,7 +417,7 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
         double f_temp, SnA_temp, SnE_temp;
         while(!feof(psdFile))
         {
-            fscanf(psdFile,"%lg %lg %lg",&f_temp,&SnA_temp,&SnE_temp);
+            ufscanf(psdFile,"%lg %lg %lg",&f_temp,&SnA_temp,&SnE_temp);
             lines++;
         }
         rewind(psdFile);
@@ -426,7 +427,7 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
         double *SnA = malloc(lines*sizeof(double));
         double *SnE = malloc(lines*sizeof(double));
         
-        for(int l=0; l<lines; l++) fscanf(psdFile,"%lg %lg %lg",&f[l],&SnA[l],&SnE[l]);
+        for(int l=0; l<lines; l++) ufscanf(psdFile,"%lg %lg %lg",&f[l],&SnA[l],&SnE[l]);
         
         //interpolate input psd onto segment grid
         double *fint = malloc(data->N*sizeof(double));
@@ -540,7 +541,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
     
     FILE *injectionFile;
     FILE *paramFile;
-    char filename[MAXSTRINGSIZE];
+    char filename[PATH_BUFSIZE];
     char header[MAXSTRINGSIZE];
     
     for(int ii = 0; ii<flags->NINJ; ii++)
@@ -630,7 +631,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             map_params_to_array(inj, inj->params, data->T);
             
             //save parameters to file
-            sprintf(filename,"%s/injection_parameters_%i_%i.dat",flags->runDir,ii,jj);
+            pathprintf(filename,"%s/injection_parameters_%i_%i.dat",flags->runDir,ii,jj);
             paramFile=fopen(filename,"w");
             fprintf(paramFile,"%lg ",data->t0[jj]);
             print_source_params(data, inj, paramFile);
@@ -658,7 +659,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
                 tdi->E[2*i+1] = inj->tdi->E[2*n+1];
             }
             
-            sprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);
+            pathprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             for(int i=0; i<data->N; i++)
             {
@@ -671,7 +672,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             }
             fclose(fptr);
             
-            sprintf(filename,"%s/data/power_injection_%i_%i.dat",flags->runDir,ii,jj);
+            pathprintf(filename,"%s/data/power_injection_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             for(int i=0; i<data->N; i++)
             {
@@ -702,7 +703,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             
             galactic_binary_fisher(orbit, data, inj, data->noise[jj]);
             
-            sprintf(filename,"%s/data/power_data_%i_%i.dat",flags->runDir,ii,jj);
+            pathprintf(filename,"%s/data/power_data_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             
             for(int i=0; i<data->N; i++)
@@ -717,7 +718,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             fclose(fptr);
             fclose(injectionFile);
             
-            sprintf(filename,"%s/data/data_%i_%i.dat",flags->runDir,ii,jj);
+            pathprintf(filename,"%s/data/data_%i_%i.dat",flags->runDir,ii,jj);
             fptr=fopen(filename,"w");
             
             for(int i=0; i<data->N; i++)
@@ -753,7 +754,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
     
     FILE *injectionFile;
     FILE *paramFile;
-    char filename[1024];
+    char filename[PATH_BUFSIZE];
         
     for(int ii = 0; ii<flags->NINJ; ii++)
     {
@@ -847,7 +848,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 map_params_to_array(inj, inj->params, data->T);
                 
                 //save parameters to file
-                sprintf(filename,"%s/injection_parameters_%i_%i.dat",flags->runDir,ii,jj);
+                pathprintf(filename,"%s/injection_parameters_%i_%i.dat",flags->runDir,ii,jj);
                 if(nn==0)paramFile=fopen(filename,"w");
                 else     paramFile=fopen(filename,"a");
                 fprintf(paramFile,"%lg ",data->t0[jj]);
@@ -889,7 +890,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                     }
                 }
                 
-                sprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);
+                pathprintf(filename,"%s/data/waveform_injection_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 for(int i=0; i<data->N; i++)
                 {
@@ -902,7 +903,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 }
                 fclose(fptr);
                 
-                sprintf(filename,"%s/data/power_injection_%i_%i.dat",flags->runDir,ii,jj);
+                pathprintf(filename,"%s/data/power_injection_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 for(int i=0; i<data->N; i++)
                 {
@@ -953,7 +954,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                     for(int j=0; j<data->NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
                 }
                 
-                sprintf(filename,"%s/data/power_data_%i_%i.dat",flags->runDir,ii,jj);
+                pathprintf(filename,"%s/data/power_data_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 
                 for(int i=0; i<data->N; i++)
@@ -967,7 +968,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 }
                 fclose(fptr);
                 
-                sprintf(filename,"%s/data/data_%i_%i.dat",flags->runDir,ii,jj);
+                pathprintf(filename,"%s/data/data_%i_%i.dat",flags->runDir,ii,jj);
                 fptr=fopen(filename,"w");
                 
                 for(int i=0; i<data->N; i++)
@@ -1220,7 +1221,7 @@ void GalacticBinaryLoadCatalog(struct Data *data)
     /* load catalog from cache file */
     for(int n=0; n<data->catalog->N; n++)
     {
-        char filename[MAXSTRINGSIZE];
+        char filename[PATH_BUFSIZE];
         
         struct Entry *entry = data->catalog->entry[n];
         struct Source *source = data->catalog->entry[n]->source[0];
@@ -1228,11 +1229,11 @@ void GalacticBinaryLoadCatalog(struct Data *data)
         
         /* gaussian mixture model */
         gmm->NP = (size_t)data->NP;
-        sprintf(filename,"%s%s_gmm.bin",entry->path,entry->name);
+        pathprintf(filename,"%s%s_gmm.bin",entry->path,entry->name);
         read_gmm_binary(gmm, filename);
         
         /* source parameters */
-        sprintf(filename,"%s%s_params.dat",entry->path,entry->name);
+        pathprintf(filename,"%s%s_params.dat",entry->path,entry->name);
         FILE *fptr = NULL;
         if((fptr = fopen(filename,"r")) == NULL)
         {
@@ -1310,8 +1311,8 @@ void GalacticBinaryCleanEdges(struct Data *data, struct Orbit *orbit, struct Fla
         }
     }
     
-    char filename[128];
-    sprintf(filename,"%s/data/power_residual_%i_%i.dat",flags->runDir,0,0);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/data/power_residual_%i_%i.dat",flags->runDir,0,0);
     FILE *fptr=fopen(filename,"w");
     
     for(int i=0; i<data->N; i++)

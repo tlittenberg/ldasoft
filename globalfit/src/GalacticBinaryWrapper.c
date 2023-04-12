@@ -103,7 +103,7 @@ void setup_frequency_segment(struct GBMCMCData *gbmcmc_data)
         int fgridsize=0;
         while(!feof(fgrid))
         {
-            fscanf(fgrid,"%i%i%lg%lg",&id,&n,&fstart,&fstop);
+            ufscanf(fgrid,"%i%i%lg%lg",&id,&n,&fstart,&fstop);
             fgridsize++;
         }
         rewind(fgrid);
@@ -114,7 +114,7 @@ void setup_frequency_segment(struct GBMCMCData *gbmcmc_data)
         
         for(int i=0; i<fgridsize; i++)
         {
-            fscanf(fgrid,"%i%i%lg%lg",&id,&n,&fstart,&fstop);
+            ufscanf(fgrid,"%i%i%lg%lg",&id,&n,&fstart,&fstop);
             fmin[i] = fstart;
             fmax[i] = fstop;;
         }
@@ -258,7 +258,7 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
     /* Start analysis from saved chain state */
     if(flags->resume)
     {
-        char filename[MAXSTRINGSIZE];
+        char filename[PATH_BUFSIZE];
         
         //check for files needed to resume
         FILE *fptr = NULL;
@@ -266,7 +266,7 @@ void initialize_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
         
         for(int ic=0; ic<chain->NC; ic++)
         {
-            sprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
+            pathprintf(filename,"%s/checkpoint/chain_state_%i.dat",flags->runDir,ic);
             
             if( (fptr = fopen(filename,"r")) == NULL )
             {

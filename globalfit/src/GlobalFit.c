@@ -401,11 +401,11 @@ static void print_data_state(struct NoiseData *noise_data, struct GBMCMCData *gb
     if(Noise_Flag)
     {
         print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
-        char filename[128];
-        sprintf(filename,"%s/data/current_spline_points.dat",noise_data->flags->runDir);
+        char filename[PATH_BUFSIZE];
+        pathprintf(filename,"%s/data/current_spline_points.dat",noise_data->flags->runDir);
         print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
         
-        sprintf(filename,"%s/data/current_interpolated_spline_points.dat",noise_data->flags->runDir);
+        pathprintf(filename,"%s/data/current_interpolated_spline_points.dat",noise_data->flags->runDir);
         print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
     }
     if(VBMCMC_Flag)
@@ -419,8 +419,8 @@ static void print_data_state(struct NoiseData *noise_data, struct GBMCMCData *gb
     }
     if(MBH_Flag)
     {
-        char tempFileName[MAXSTRINGSIZE];
-        sprintf(tempFileName,"%s/power_data_0.dat.temp",mbh_data->flags->runDir);
+        char tempFileName[PATH_BUFSIZE];
+        pathprintf(tempFileName,"%s/power_data_0.dat.temp",mbh_data->flags->runDir);
         FILE *tempFile = fopen(tempFileName,"w");
         for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
         {
@@ -434,7 +434,7 @@ static void print_data_state(struct NoiseData *noise_data, struct GBMCMCData *gb
         fclose(tempFile);
         
         
-        sprintf(tempFileName,"%s/data_0.dat.temp",mbh_data->flags->runDir);
+        pathprintf(tempFileName,"%s/data_0.dat.temp",mbh_data->flags->runDir);
         tempFile = fopen(tempFileName,"w");
         for(int i=0; i<mbh_data->het->MN; i++)
         {
@@ -590,44 +590,45 @@ int main(int argc, char *argv[])
     
     if(procID==0)
     {
-        sprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
+        //pathprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
+        pathappendprintf(noise_data->flags->runDir, "/noise");
         setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
         
     }
     else if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
     {
-        sprintf(vbmcmc_data->flags->runDir,"%s/vgb",vbmcmc_data->flags->runDir);
+        pathappendprintf(vbmcmc_data->flags->runDir,"/vgb");
         mkdir(vbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
         //save original runDir
-        char runDir[MAXSTRINGSIZE];
-        sprintf(runDir,"%s",vbmcmc_data->flags->runDir);
+        char runDir[PATH_BUFSIZE];
+        pathprintf(runDir,"%s",vbmcmc_data->flags->runDir);
 
         for(int n=0; n<vbmcmc_data->flags->NVB; n++)
         {
             //temporarily assign runDir to seg subdir
-            sprintf(vbmcmc_data->flags->runDir,"%s/seg_%04d",runDir,n);
+            pathprintf(vbmcmc_data->flags->runDir,"%s/seg_%04d",runDir,n);
             setup_run_directories(vbmcmc_data->flags, vbmcmc_data->data_vec[n], vbmcmc_data->chain_vec[n]);
         }
         
         //restore original runDir
-        sprintf(vbmcmc_data->flags->runDir,"%s",runDir);
+        pathprintf(vbmcmc_data->flags->runDir,"%s",runDir);
 
     }
     else if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
     {
-        sprintf(gbmcmc_data->flags->runDir,"%s/ucb",gbmcmc_data->flags->runDir);
+        pathappendprintf(gbmcmc_data->flags->runDir,"/ucb");
         mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-        sprintf(gbmcmc_data->flags->runDir,"%s/seg_%04d",gbmcmc_data->flags->runDir, procID-gbmcmc_data->procID_min);
+        pathappendprintf(gbmcmc_data->flags->runDir,"/seg_%04d",procID-gbmcmc_data->procID_min);
         setup_run_directories(gbmcmc_data->flags, gbmcmc_data->data, gbmcmc_data->chain);
     }
     else if(procID>=mbh_data->procID_min && procID <=mbh_data->procID_max)
     {
-        sprintf(mbh_data->flags->runDir,"%s/mbh",mbh_data->flags->runDir);
+        pathappendprintf(mbh_data->flags->runDir,"/mbh");
         mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-        sprintf(mbh_data->flags->runDir,"%s/src%04d",mbh_data->flags->runDir, procID-mbh_data->procID_min);
+        pathappendprintf(mbh_data->flags->runDir,"/src%04d",procID-mbh_data->procID_min);
         mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     }
@@ -874,11 +875,11 @@ int main(int argc, char *argv[])
     }
     if(Noise_Flag)
     {
-        char filename[128];
-        sprintf(filename,"%s/data/final_spline_points.dat",noise_data->flags->runDir);
+        char filename[PATH_BUFSIZE];
+        pathprintf(filename,"%s/data/final_spline_points.dat",noise_data->flags->runDir);
         print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
 
-        sprintf(filename,"%s/data/final_interpolated_spline_points.dat",noise_data->flags->runDir);
+        pathprintf(filename,"%s/data/final_interpolated_spline_points.dat",noise_data->flags->runDir);
         print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
 
         print_noise_reconstruction(noise_data->data, noise_data->flags);
