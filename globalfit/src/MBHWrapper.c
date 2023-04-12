@@ -79,8 +79,8 @@ void parse_mbh_args(int argc, char **argv, struct MBHData *data)
     {
         int NMBH_search = 0;
         
-        char filename[MAXSTRINGSIZE];
-        sprintf(filename,"%s/search_sources.dat",data->searchDir);
+        char filename[PATH_BUFSIZE];
+        pathprintf(filename,"%s/search_sources.dat",data->searchDir);
         FILE *searchFile = fopen(filename,"r");
         
         
@@ -99,8 +99,8 @@ void parse_mbh_args(int argc, char **argv, struct MBHData *data)
             
             //burn off first two columns (what are they?)
             double x;
-            fscanf(searchFile,"%lg %lg",&x,&x);
-            for(int j=0; j<NParams; j++) fscanf(searchFile,"%lg",&searchParams[i][j]);
+            ufscanf(searchFile,"%lg %lg",&x,&x);
+            for(int j=0; j<NParams; j++) ufscanf(searchFile,"%lg",&searchParams[i][j]);
             
             //merger time is parameter 5
             double t_merge = searchParams[i][5];
@@ -323,9 +323,9 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
 {
     
     /* set up chain directory and file */
-    char filename[MAXSTRINGSIZE];
-    sprintf(mbh_data->chainDir,"%s",mbh_data->flags->runDir);
-    sprintf(filename,"%s/chain.dat",mbh_data->chainDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(mbh_data->chainDir,"%s",mbh_data->flags->runDir);
+    pathprintf(filename,"%s/chain.dat",mbh_data->chainDir);
     
     if(mbh_data->flags->resume)
     {
@@ -339,8 +339,8 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
         rewind(mbh_data->chainFile);
         
         //copy all but last (corrupted) line of chain.dat to new file
-        char newfilename[MAXSTRINGSIZE];
-        sprintf(newfilename,"%s/chain.dat.new",mbh_data->chainDir);
+        char newfilename[PATH_BUFSIZE];
+        pathprintf(newfilename,"%s/chain.dat.new",mbh_data->chainDir);
         FILE *newChainFile = fopen(newfilename,"w");
         for(int i=0; i<MBHSTEPS-1; i++)
         {
@@ -369,7 +369,7 @@ void initialize_mbh_sampler(struct MBHData *mbh_data)
         fflush(stdout);
 
         //reopen chain.dat to append new samples
-        sprintf(filename,"%s/chain.dat",mbh_data->chainDir);
+        pathprintf(filename,"%s/chain.dat",mbh_data->chainDir);
         mbh_data->chainFile = fopen(filename,"a");
 
     }

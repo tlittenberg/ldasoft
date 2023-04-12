@@ -37,16 +37,9 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include "GMM_with_EM.h"
+#include <util.h>
 
-static void printProgress (double percentage)
-{
-    int val = (int) (percentage * 100);
-    int lpad = (int) (percentage * PBWIDTH);
-    int rpad = PBWIDTH - lpad;
-    printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-    fflush (stdout);
-}
+#include "GMM_with_EM.h"
 
 void printUsage(const char *program)
 {
@@ -78,7 +71,7 @@ void read_gmm_binary(struct GMM *gmm, char filename[])
     /* Read GMM results to binary for pick up by other processes */
     if( (fptr = fopen(filename,"rb"))!=NULL)
     {
-        fread(&gmm->NMODE, sizeof gmm->NMODE, 1, fptr);
+        ufread(&gmm->NMODE, sizeof gmm->NMODE, 1, fptr);
         
         gmm->modes = malloc(gmm->NMODE*sizeof(struct MVG*));
         for(size_t n=0; n<gmm->NMODE; n++)

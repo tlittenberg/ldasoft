@@ -56,8 +56,8 @@
 
 static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal, char runDir[])
 {
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/fstat/Fstat.gpi",runDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/fstat/Fstat.gpi",runDir);
     FILE *fptr = fopen(filename,"w");
     
     fprintf(fptr,"!rm Fstat.mp4\n");
@@ -135,8 +135,8 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
     int BW = 20;
     double *power = data->p;
     double total  = 0.0;
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/data/frequency_proposal.dat",flags->runDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/data/frequency_proposal.dat",flags->runDir);
     FILE *temp = fopen(filename,"w");
     for(int i=0; i<data->N-BW; i++)
     {
@@ -1187,8 +1187,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     double maxLogL = -1e60;
     
     /* compute or restore fisher-based proposal */
-    char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/checkpoint/fstat_prop.bin",flags->runDir);
+    char filename[PATH_BUFSIZE];
+    pathprintf(filename,"%s/checkpoint/fstat_prop.bin",flags->runDir);
     FILE *propFile=NULL;
     int check=0;
     
@@ -1204,15 +1204,15 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     {
         propFile=fopen(filename,"rb");
         
-        fread(&proposal->norm, sizeof proposal->norm, 1, propFile);
-        fread(&proposal->maxp, sizeof proposal->norm, 1, propFile);
+        ufread(&proposal->norm, sizeof proposal->norm, 1, propFile);
+        ufread(&proposal->maxp, sizeof proposal->norm, 1, propFile);
         for(int i=0; i<n_f; i++)
         {
             for(int j=0; j<n_theta; j++)
             {
                 for(int k=0; k<n_phi; k++)
                 {
-                    fread(&proposal->tensor[i][j][k],sizeof proposal->tensor[i][j][k], 1, propFile);
+                    ufread(&proposal->tensor[i][j][k],sizeof proposal->tensor[i][j][k], 1, propFile);
                 }
             }
         }
@@ -1292,14 +1292,14 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     //print diagnostics
     if(flags->verbose)
     {
-        char dirname[MAXSTRINGSIZE];
-        sprintf(dirname,"%s/fstat",flags->runDir);
+        char dirname[PATH_BUFSIZE];
+        pathprintf(dirname,"%s/fstat",flags->runDir);
         mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        char filename[MAXSTRINGSIZE];
+        char filename[PATH_BUFSIZE];
         
         for(int i=0; i<n_f; i++)
         {
-            sprintf(filename,"%s/fstat/skymap_%05d.dat",flags->runDir,i);
+            pathprintf(filename,"%s/fstat/skymap_%05d.dat",flags->runDir,i);
             FILE *fptr=fopen(filename,"w");
             for (int j=0; j<n_theta; j++)
             {

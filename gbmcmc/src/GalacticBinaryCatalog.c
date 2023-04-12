@@ -213,7 +213,7 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
             for(int i=0; i<IMAX; i++)
             {
                 //is this a valid pairing?
-                if(n_entry->stepFlag[i]*m_entry->stepFlag[i])
+                if(n_entry->stepFlag[i] && m_entry->stepFlag[i])
                 {
                     double X = n_entry->source[ncount]->params[nx];
                     double Y = m_entry->source[mcount]->params[mx];

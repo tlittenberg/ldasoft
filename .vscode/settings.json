@@ -1,0 +1,9 @@
+{
+    "cmake.configureSettings" : {
+        // Assumes you have LISA-Massive-Black-Hole installed next to
+        // your ldasoft checkout. Allows vscode cmake extension to work
+        //
+        //  If MBH is elsewhere, simply change this
+        "CMAKE_PREFIX_PATH":"${workspaceFolder}/../mbh-install"
+    }
+}

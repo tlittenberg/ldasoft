@@ -20,13 +20,14 @@
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <util.h>
 
 /**
 @file GalacticBinary.h
 \brief Definition of data structures.
 */
 
-#define MAXSTRINGSIZE 1024 //!<maximum number of characters for `path+filename` strings
+#define MAXSTRINGSIZE 1024 //!<maximum number of characters for a line in a data file.
 
 /*!
  * \brief Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.
@@ -96,7 +97,7 @@ struct Data
      format = "sangria" for fractional frequency w/ LDC Sangria-era TDI & phase conventions
      */
     char format[16];
-    char dataDir[MAXSTRINGSIZE]; //!<Directory for storing data files
+    char dataDir[PATH_BUFSIZE]; //!<Directory for storing data files
 
     //Spectrum proposal
     double *p; //!<power spectral density of data
@@ -114,7 +115,7 @@ struct Data
     double ****r_pow; //!<Store residual power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
     double ****h_pow; //!<Store waveform power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
     double ****S_pow; //!<Store noise power samples \f$ N \times N_\rm{channel} \times NT \times NMCMC \f$
-    char fileName[MAXSTRINGSIZE]; //!<place holder for filnames
+    char fileName[PATH_BUFSIZE]; //!<place holder for filnames
     ///@}
 
     /** @name Signal Injections */
@@ -187,18 +188,18 @@ struct Flags
     /** @name Input File Names
      */
      ///@{
-    char runDir[MAXSTRINGSIZE];       //!<store `DIRECTORY` to serve as top level directory for output files.
-    char vbFile[MAXSTRINGSIZE];       //!<store `FILENAME` of list of known binaries `vb_mcmc`
+    char runDir[PATH_BUFSIZE];       //!<store `DIRECTORY` to serve as top level directory for output files.
+    char vbFile[PATH_BUFSIZE];       //!<store `FILENAME` of list of known binaries `vb_mcmc`
     char **injFile;                   //!<`[--inj=FILENAME]`: list of injection files. Can support up to `NINJ=10` separate injections.
-    char noiseFile[MAXSTRINGSIZE];    //!<file containing reconstructed noise model for `gb_catalog` to compute SNRs against.
-    char cdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input chain file from Flags::update.
-    char gmmFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input gmm file from Flags::update.
-    char covFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input covariance matrix file from Flags::updateCov.
-    char matchInfile1[MAXSTRINGSIZE]; //!<input waveform \f$A\f$ for computing match \f$(h_A|h_B)\f$
-    char matchInfile2[MAXSTRINGSIZE]; //!<input waveform \f$B\f$ for computing match \f$(h_A|h_B)\f$
-    char pdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input priors for Flags:knownSource.
-    char psdFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input psd file from Flags::psd.
-    char catalogFile[MAXSTRINGSIZE];  //!<store `FILENAME` containing previously identified detections from Flags::catalog for cleaning padding regions
+    char noiseFile[PATH_BUFSIZE];    //!<file containing reconstructed noise model for `gb_catalog` to compute SNRs against.
+    char cdfFile[PATH_BUFSIZE];      //!<store `FILENAME` of input chain file from Flags::update.
+    char gmmFile[PATH_BUFSIZE];      //!<store `FILENAME` of input gmm file from Flags::update.
+    char covFile[PATH_BUFSIZE];      //!<store `FILENAME` of input covariance matrix file from Flags::updateCov.
+    char matchInfile1[PATH_BUFSIZE]; //!<input waveform \f$A\f$ for computing match \f$(h_A|h_B)\f$
+    char matchInfile2[PATH_BUFSIZE]; //!<input waveform \f$B\f$ for computing match \f$(h_A|h_B)\f$
+    char pdfFile[PATH_BUFSIZE];      //!<store `FILENAME` of input priors for Flags:knownSource.
+    char psdFile[PATH_BUFSIZE];      //!<store `FILENAME` of input psd file from Flags::psd.
+    char catalogFile[PATH_BUFSIZE];  //!<store `FILENAME` containing previously identified detections from Flags::catalog for cleaning padding regions
      ///@}
 };
 
@@ -301,8 +302,8 @@ struct Chain
     FILE *temperatureFile;
     ///@}
     
-    char chainDir[MAXSTRINGSIZE]; //!<store chain directory.
-    char chkptDir[MAXSTRINGSIZE]; //!<store checkpoint directory.
+    char chainDir[PATH_BUFSIZE]; //!<store chain directory.
+    char chkptDir[PATH_BUFSIZE]; //!<store checkpoint directory.
 
 };
 

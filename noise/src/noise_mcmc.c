@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 {
     time_t start, stop;
     start = time(NULL);
-    char filename[128];
+    char filename[PATH_BUFSIZE];
     
     print_LISA_ASCII_art(stdout);
     
@@ -47,9 +47,9 @@ int main(int argc, char *argv[])
      */
     
     /* Setup output directories for data and chain files */
-    sprintf(data->dataDir,"%s/data",flags->runDir);
-    sprintf(chain->chainDir,"%s/chains",flags->runDir);
-    sprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
+    pathprintf(data->dataDir,"%s/data",flags->runDir);
+    pathprintf(chain->chainDir,"%s/chains",flags->runDir);
+    pathprintf(chain->chkptDir,"%s/checkpoint",flags->runDir);
     
     mkdir(flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     mkdir(data->dataDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -82,15 +82,15 @@ int main(int argc, char *argv[])
         initialize_spline_model(orbit, data, model[ic], Nspline);
     }
     
-    sprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
+    pathprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->spline, filename);
     
-    sprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
+    pathprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->psd, filename);
     
     
     //MCMC
-    sprintf(filename,"%s/chain_file.dat",chain->chainDir);
+    pathprintf(filename,"%s/chain_file.dat",chain->chainDir);
     FILE *chainFile = fopen(filename,"w");
 
     int numThreads;
@@ -175,10 +175,10 @@ int main(int argc, char *argv[])
     
     fclose(chainFile);
     
-    sprintf(filename,"%s/final_spline_points.dat",data->dataDir);
+    pathprintf(filename,"%s/final_spline_points.dat",data->dataDir);
     print_noise_model(model[chain->index[0]]->spline, filename);
     
-    sprintf(filename,"%s/final_interpolated_spline_points.dat",data->dataDir);
+    pathprintf(filename,"%s/final_interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[chain->index[0]]->psd, filename);
     
     print_noise_reconstruction(data, flags);
