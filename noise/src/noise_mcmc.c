@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
         #pragma omp barrier
         
         /* The MCMC loop */
-        for(; step<100000;)
+        for(; step<flags->NMCMC;)
         {
             
             #pragma omp barrier
@@ -136,9 +136,9 @@ int main(int argc, char *argv[])
             {
                 spline_ptmcmc(model, chain, flags);
                 
-                if(step%10000==0)printf("noise_mcmc at step %i\n",step);
+                if(step%(flags->NMCMC/10)==0)printf("noise_mcmc at step %i\n",step);
                 
-                if(step%100==0)
+                if(step%(flags->NMCMC/100)==0)
                 {
                     print_spline_state(model[chain->index[0]], chainFile, step);
                     
