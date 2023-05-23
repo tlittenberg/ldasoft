@@ -322,3 +322,8 @@ int update_noise_sampler(struct NoiseData *noise_data)
 
     return 1;
 }
+
+void print_nmcmc_state(struct NoiseData *noise_data, FILE *fptr, int counter)
+{
+    
+}

@@ -75,4 +75,6 @@ int update_mbh_sampler(struct MBHData *mbh_data);
 
 void get_mbh_waveform(struct MBHData *mbh_data);
 
+void print_mbh_state(struct MBHData *mbh_data, FILE *fptr, int counter);
+
 #endif /* MBHWrapper_h */

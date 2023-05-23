@@ -306,3 +306,29 @@ void select_vbmcmc_segments(struct VBMCMCData *vbmcmc_data, struct TDI *tdi)
         //print_data(data, data->tdi[0], flags, 0);
     }
 }
+
+void print_vbmcmc_state(struct VBMCMCData *vbmcmc_data, FILE *fptr, int counter)
+{
+    struct Data **data_vec   = vbmcmc_data->data_vec;
+    struct Model ***model_vec = vbmcmc_data->model_vec;
+    struct Chain **chain_vec = vbmcmc_data->chain_vec;
+    struct Flags *flags = vbmcmc_data->flags;
+    
+    fprintf(fptr,"%i %i " ,counter, flags->NVB);
+    
+    for(int n=0; n<flags->NVB; n++)
+    {
+        struct Model **model = model_vec[n];
+        struct Data *data = data_vec[n];
+        struct Chain *chain = chain_vec[n];
+        
+        int m = chain->index[0];
+
+        for(int i=0; i<model[m]->Nlive; i++)
+        {
+            print_source_params(data, model[m]->source[i], fptr);
+        }
+    }
+    fprintf(fptr,"\n");
+
+}

@@ -634,3 +634,13 @@ void get_mbh_waveform(struct MBHData *mbh_data)
 
 }
 
+void print_mbh_state(struct MBHData *mbh_data, FILE *fptr, int counter)
+{
+    double **paramx = mbh_data->paramx;
+
+    int q = mbh_data->who[0];
+    fprintf(fptr, "%i ",counter);
+    for(int i=0; i<NParams; i++) fprintf(fptr, "%.15e ", paramx[q][i]);
+    fprintf(fptr,"\n");
+}
+

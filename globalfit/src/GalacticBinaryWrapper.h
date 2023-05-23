@@ -25,7 +25,7 @@
 struct GBMCMCData
 {
     
-    int mcmc_step; //!<current step number of GBMCMC sampelr
+    int mcmc_step; //!<current step number of GBMCMC sampler
     int status; //!<flag indicating if sampler is still working (0) or finished (1)
     
     int procID; //!<MPI process identifier
@@ -120,6 +120,12 @@ void exchange_gbmcmc_source_params(struct GBMCMCData *gbmcmc_data);
  @returns 0 when all GBMCMC samplers are complete
  */
 int get_gbmcmc_status(struct GBMCMCData *gbmcmc_data, int Nproc, int root, int procID);
+
+/**
+ \brief Print current state of sampler in single line indexed by overall iteration number
+ 
+ */
+void print_gbmcmc_state(struct GBMCMCData *gbmcmc_data, FILE *fptr, int counter);
 
 #endif /* GalacticBinaryWrapper_h */
 

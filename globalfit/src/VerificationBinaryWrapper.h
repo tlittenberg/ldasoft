@@ -40,4 +40,6 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data);
 
 void select_vbmcmc_segments(struct VBMCMCData *vbmcmc_data, struct TDI *tdi);
 
+void print_vbmcmc_state(struct VBMCMCData *vbmcmc_data, FILE *fptr, int counter);
+
 #endif /* VerificationBinaryWrapper_h */

@@ -41,6 +41,8 @@ struct GlobalFitData
     
     double block_time;
     double max_block_time;
+    
+    FILE *chainFile;
 };
 
 static void alloc_gf_data(struct GlobalFitData *global_fit)
@@ -463,6 +465,21 @@ static void print_data_state(struct NoiseData *noise_data, struct GBMCMCData *gb
     }
 }
 
+static void print_globalfit_state(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_data, struct VBMCMCData *vbmcmc_data, struct MBHData *mbh_data, int GBMCMC_Flag, int VBMCMC_Flag, int Noise_Flag, int MBH_Flag, FILE *fptr, int counter)
+{
+    if(Noise_Flag)
+        print_nmcmc_state(noise_data, fptr, counter);
+    
+    if(VBMCMC_Flag)
+        print_vbmcmc_state(vbmcmc_data, fptr, counter);
+    
+    if(GBMCMC_Flag)
+        print_gbmcmc_state(gbmcmc_data, fptr, counter);
+    
+    if(MBH_Flag)
+        print_mbh_state(mbh_data, fptr, counter);
+}
+
 static void blocked_gibbs_load_balancing(struct GlobalFitData *global_fit, int root, int procID, int Nproc)
 {
     
@@ -585,17 +602,38 @@ int main(int argc, char *argv[])
    }
 
     /* Setup output directories for chain and data structures */
-    if(procID==0) mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if(procID==0)
+    {
+        /* top level run directory */
+        mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        
+        /* chains directory for global fit joint samples */
+        char dirname[MAXSTRINGSIZE];
+        sprintf(dirname,"%s/samples",gbmcmc_data->flags->runDir);
+        mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
     MPI_Barrier(MPI_COMM_WORLD);
     
     if(procID==0)
     {
+        /* joint chain file for noise parameters */
+        char filename[MAXSTRINGSIZE];
+        sprintf(filename,"%s/samples/noise_samples_%04d.dat",noise_data->flags->runDir,procID);
+        global_fit->chainFile=fopen(filename,"w");
+
+        /* output directory for noise module */
         sprintf(noise_data->flags->runDir,"%s/noise",noise_data->flags->runDir);
         setup_run_directories(noise_data->flags, noise_data->data, noise_data->chain);
-        
     }
     else if(procID>=vbmcmc_data->procID_min && procID<=vbmcmc_data->procID_max)
     {
+        
+        /* joint chain file for noise parameters */
+        char filename[MAXSTRINGSIZE];
+        sprintf(filename,"%s/samples/vgb_samples_%04d.dat",vbmcmc_data->flags->runDir,procID);
+        printf("try creating file %s\n",filename);
+        global_fit->chainFile=fopen(filename,"w");
+
         sprintf(vbmcmc_data->flags->runDir,"%s/vgb",vbmcmc_data->flags->runDir);
         mkdir(vbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
@@ -612,24 +650,35 @@ int main(int argc, char *argv[])
         
         //restore original runDir
         sprintf(vbmcmc_data->flags->runDir,"%s",runDir);
-
     }
     else if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
     {
+        /* joint chain file for noise parameters */
+        char filename[MAXSTRINGSIZE];
+        sprintf(filename,"%s/samples/ucb_samples_%04d.dat",gbmcmc_data->flags->runDir,procID);
+        global_fit->chainFile=fopen(filename,"w");
+
         sprintf(gbmcmc_data->flags->runDir,"%s/ucb",gbmcmc_data->flags->runDir);
         mkdir(gbmcmc_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
         sprintf(gbmcmc_data->flags->runDir,"%s/seg_%04d",gbmcmc_data->flags->runDir, procID-gbmcmc_data->procID_min);
         setup_run_directories(gbmcmc_data->flags, gbmcmc_data->data, gbmcmc_data->chain);
+
     }
     else if(procID>=mbh_data->procID_min && procID <=mbh_data->procID_max)
     {
+        
+        /* joint chain file for noise parameters */
+        char filename[MAXSTRINGSIZE];
+        sprintf(filename,"%s/samples/mbh_samples_%04d.dat",mbh_data->flags->runDir,procID);
+        global_fit->chainFile=fopen(filename,"w");
+
         sprintf(mbh_data->flags->runDir,"%s/mbh",mbh_data->flags->runDir);
         mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
         sprintf(mbh_data->flags->runDir,"%s/src%04d",mbh_data->flags->runDir, procID-mbh_data->procID_min);
         mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
+        
     }
        
     if(procID>=gbmcmc_data->procID_min && procID<=gbmcmc_data->procID_max)
@@ -729,6 +778,7 @@ int main(int argc, char *argv[])
      * Master Blocked Gibbs sampler
      *
      */
+    int global_fit_counter = 0;
     do
     {
         cycle=1;
@@ -849,7 +899,11 @@ int main(int argc, char *argv[])
         /* DEBUG */
         print_data_state(noise_data,gbmcmc_data,vbmcmc_data,mbh_data,GBMCMC_Flag,VBMCMC_Flag,Noise_Flag,MBH_Flag);
 
+        /* save state of global model */
+        print_globalfit_state(noise_data,gbmcmc_data,vbmcmc_data,mbh_data,GBMCMC_Flag,VBMCMC_Flag,Noise_Flag,MBH_Flag, global_fit->chainFile, global_fit_counter);
         
+        global_fit_counter++;
+
     }while(gbmcmc_data->status!=0);
     
     /*
@@ -888,7 +942,7 @@ int main(int argc, char *argv[])
         /* waveform reconstructions */
         //print_mbh_waveform_reconstruction(mbh_data);
     }
-
+    fclose(global_fit->chainFile);
     
     //print total run time
     stop = time(NULL);

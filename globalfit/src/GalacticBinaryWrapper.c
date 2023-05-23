@@ -601,3 +601,19 @@ int get_gbmcmc_status(struct GBMCMCData *gbmcmc_data, int Nproc, int root, int p
     return GBMCMC_Status;
 }
 
+void print_gbmcmc_state(struct GBMCMCData *gbmcmc_data, FILE *fptr, int counter)
+{
+    struct Data *data   = gbmcmc_data->data;
+    struct Model **model = gbmcmc_data->model;
+    struct Chain *chain = gbmcmc_data->chain;
+    
+    int n = chain->index[0];
+
+    fprintf(fptr,"%i %i ", counter, model[n]->Nlive);
+    for(int i=0; i<model[n]->Nlive; i++)
+    {
+        print_source_params(data, model[n]->source[i], fptr);
+    }
+    fprintf(fptr,"\n");
+}
+
