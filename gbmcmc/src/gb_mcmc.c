@@ -233,14 +233,16 @@ int main(int argc, char *argv[])
                 
                 for(int steps=0; steps < 100; steps++)
                 {
-                    //for(int j=0; j<model_ptr->Nlive; j++)
-                    galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    //reverse jump birth/death or split/merge moves
+                    if(gsl_rng_uniform(chain->r[ic])<0.25 && flags->rj)
+                        galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    
+                    //fixed dimension parameter updates
+                    else
+                        galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                                         
                 }//loop over MCMC steps
-                                
-                //reverse jump birth/death move
-                if(flags->rj)galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                
+                                                
                 if( (flags->strainData || flags->simNoise) && !flags->psd)
                     noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
 

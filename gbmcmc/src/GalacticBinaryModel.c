@@ -35,6 +35,8 @@
 #include "GalacticBinaryFStatistic.h"
 
 #define FIXME 0
+#define find_max(x,y) (((x) >= (y)) ? (x) : (y))
+#define find_min(x,y) (((x) <= (y)) ? (x) : (y))
 
 void map_array_to_params(struct Source *source, double *params, double T)
 {
@@ -896,6 +898,83 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     }//loop over sources
 }
 
+void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id)
+{
+    int i,j,m;
+    int N2=data->N*2;
+    int NT=model_x->NT;
+    struct Source *source_x = model_x->source[source_id];
+    struct Source *source_y = model_y->source[source_id];
+    
+    //subtract current nth source from  model
+    //Loop over time segments
+    for(m=0; m<NT; m++)
+    {
+        for(i=0; i<source_x->BW; i++)
+        {
+            j = i+source_x->imin;
+            
+            if(j>-1 && j<data->N)
+            {
+                int i_re = 2*i;
+                int i_im = i_re+1;
+                int j_re = 2*j;
+                int j_im = j_re+1;
+                
+                /*
+                 model_y->tdi[m]->X[j_re] -= source_x->tdi->X[i_re];
+                 model_y->tdi[m]->X[j_im] -= source_x->tdi->X[i_im];
+                 */
+                
+                model_y->tdi[m]->A[j_re] -= source_x->tdi->A[i_re];
+                model_y->tdi[m]->A[j_im] -= source_x->tdi->A[i_im];
+                
+                model_y->tdi[m]->E[j_re] -= source_x->tdi->E[i_re];
+                model_y->tdi[m]->E[j_im] -= source_x->tdi->E[i_im];
+            }//check that source_id is in range
+        }//loop over waveform bins
+
+        //generate proposed signal model
+        for(i=0; i<N2; i++)
+        {
+            //source->tdi->X[i]=0.0;
+            source_y->tdi->A[i]=0.0;
+            source_y->tdi->E[i]=0.0;
+        }
+
+        map_array_to_params(source_y, source_y->params, data->T);
+        galactic_binary_alignment(orbit, data, source_y);
+        for(int m=0; m<NT; m++)
+            galactic_binary(orbit, data->format, data->T, model_y->t0[m], source_y->params, source_y->NP, source_y->tdi->X, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
+
+        //subtract proposed nth source to model
+        for(i=0; i<source_y->BW; i++)
+        {
+            j = i+source_y->imin;
+            
+            if(j>-1 && j<data->N)
+            {
+                int i_re = 2*i;
+                int i_im = i_re+1;
+                int j_re = 2*j;
+                int j_im = j_re+1;
+                
+                /*
+                 model_y->tdi[m]->X[j_re] += source_y->tdi->X[i_re];
+                 model_y->tdi[m]->X[j_im] += source_y->tdi->X[i_im];
+                 */
+                
+                model_y->tdi[m]->A[j_re] += source_y->tdi->A[i_re];
+                model_y->tdi[m]->A[j_im] += source_y->tdi->A[i_im];
+                
+                model_y->tdi[m]->E[j_re] += source_y->tdi->E[i_re];
+                model_y->tdi[m]->E[j_im] += source_y->tdi->E[i_im];
+            }//check that source_id is in range
+        }//loop over waveform bins
+    }
+}
+
+
 void generate_power_law_noise_model(struct Data *data, struct Model *model)
 {
     struct Noise *noise = NULL;
@@ -1192,6 +1271,101 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
         }
     }
     return logLnorm;
+}
+
+double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Model *model_y, int source_id)
+{
+    /*
+    *
+    * Update residual and only sum over affected bins
+    *
+    */
+    
+    double deltalogL = 0.0;
+    double deltalogL2 = 0.0;
+    struct Source *source_x = model_x->source[source_id];
+    struct Source *source_y = model_y->source[source_id];
+
+    //loop over time segments
+    for(int n=0; n<model_x->NT; n++)
+    {
+        struct TDI *residual_x = model_x->residual[n];
+        struct TDI *residual_y = model_y->residual[n];
+        
+        //add current source back into residual
+        for(int i=0; i<source_x->BW; i++)
+        {
+            int j = i+source_x->imin;
+            if(j>-1 && j<data->N)
+            {
+                int i_re = 2*i;
+                int i_im = i_re+1;
+                int j_re = 2*j;
+                int j_im = j_re+1;
+                
+                //residual_y->X[i_re] += source_x->tdi->X[i_re];
+                //residual_y->X[i_im] += source_x->tdi->X[i_im];
+                residual_y->A[j_re] += source_x->tdi->A[i_re];
+                residual_y->A[j_im] += source_x->tdi->A[i_im];
+                residual_y->E[j_re] += source_x->tdi->E[i_re];
+                residual_y->E[j_im] += source_x->tdi->E[i_im];
+            }
+        }
+
+        //form proposed residual by subtracting new source
+        for(int i=0; i<source_y->BW; i++)
+        {
+            int j = i+source_y->imin;
+            if(j>-1 && j<data->N)
+            {
+                int i_re = 2*i;
+                int i_im = i_re+1;
+                int j_re = 2*j;
+                int j_im = j_re+1;
+                
+                //residual_y->X[i_re] -= source_y->tdi->X[i_re];
+                //residual_y->X[i_im] -= source_y->tdi->X[i_im];
+                residual_y->A[j_re] -= source_y->tdi->A[i_re];
+                residual_y->A[j_im] -= source_y->tdi->A[i_im];
+                residual_y->E[j_re] -= source_y->tdi->E[i_re];
+                residual_y->E[j_im] -= source_y->tdi->E[i_im];
+            }
+        }
+
+        //find range of integration
+        int imin = find_min(source_x->imin,source_y->imin);
+        int imax = find_max(source_y->imin+source_y->BW,source_x->imin+source_x->BW);
+        
+        //keep it in bounds
+        if(imax>data->N)imax=data->N;
+        if(imin<0)imin=0;
+
+        //the complex array elements to skip in the sum
+        int skip=2*imin;
+        
+        switch(data->Nchannel)
+        {
+            case 1:
+                deltalogL -= -0.5*fourier_nwip(residual_x->X+skip, residual_x->X+skip, model_x->noise[n]->SnX+imin, imax-imin);
+                deltalogL += -0.5*fourier_nwip(residual_y->X+skip, residual_y->X+skip, model_x->noise[n]->SnX+imin, imax-imin);
+                break;
+                
+            case 2:
+                deltalogL -= -0.5*fourier_nwip(residual_x->A+skip, residual_x->A+skip, model_x->noise[n]->SnA+imin, imax-imin);
+                deltalogL -= -0.5*fourier_nwip(residual_x->E+skip, residual_x->E+skip, model_x->noise[n]->SnE+imin, imax-imin);
+
+                deltalogL += -0.5*fourier_nwip(residual_y->A+skip, residual_y->A+skip, model_y->noise[n]->SnA+imin, imax-imin);
+                deltalogL += -0.5*fourier_nwip(residual_y->E+skip, residual_y->E+skip, model_y->noise[n]->SnE+imin, imax-imin);
+
+                break;
+            default:
+                fprintf(stderr,"Unsupported number of channels in delta_log_likelihood()\n");
+                exit(1);
+        }
+    }//end loop over time segments
+        
+    return deltalogL;
+
 }
 
 int update_max_log_likelihood(struct Model **model, struct Chain *chain, struct Flags *flags)

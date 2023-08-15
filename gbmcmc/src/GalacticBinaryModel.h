@@ -37,6 +37,14 @@
 void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id);
 
 /**
+\brief Modify galactic binary model waveform
+
+ Computes LISA response to signal with parameters indexed by `source_id`
+ in the Model::Source, and updates meta template of all sources in the model.
+ */
+void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id);
+
+/**
 \brief F-statistic maximization of galactic binary parameters
 
  Wrapper of GalacticBinaryFstatistic.c functions for maximizing waveform
@@ -95,8 +103,16 @@ double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *mo
  
  @return \f$ \sum_{\rm TDI} \sum_f \log S_{n,{\rm TDI}}(f) \f$
  */
-
 double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model);
+
+/**
+ \brief Compute difference in log Likelihood from changing parameters of one source
+ 
+ Updates residuals from changing single source `source_id` and computes change in likelihood sum only over frequency range where waveforms were non-zero.
+ @return \f$ -\frac{1}{2}\left[(d-h_{\rm new}|d-h__{\rm new}) - (d-h_{\rm old}|d-h_{\rm old})\right] \f$
+ */
+double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Model *model_y, int source_id);
+
 
 /**
  \brief Check for increase in maximum log likelihood
