@@ -272,10 +272,13 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     {
         if(!flags->prior)
         {
-            //  Form master template
-            generate_signal_model(orbit, data, model_y, n);
+            //form master template
+            //generate_signal_model(orbit, data, model_y, n);
             
-            //calibration error
+            //update master template
+            update_signal_model(orbit, data, model_x, model_y, n);
+            
+            //add calibration error
             if(flags->calibration)
             {
                 generate_calibration_model(data, model_y);
@@ -283,7 +286,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
             }
             
             //get likelihood for y
-            model_y->logL = gaussian_log_likelihood(data, model_y);
+            //model_y->logL = gaussian_log_likelihood(data, model_y);
+            
+            //get delta log likelihood
+            model_y->logL = model_x->logL + delta_log_likelihood(data, model_x, model_y, n);
             
             /*
              H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)

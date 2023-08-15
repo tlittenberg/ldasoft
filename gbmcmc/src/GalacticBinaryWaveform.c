@@ -219,7 +219,7 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
     
     //Doppler spreading
     double sintheta = sin(acos(costheta));
-    double bw = 4*T*((4.+PI2*f*(AU/CLIGHT)*sintheta)/YEAR + fabs(fdot)*T);
+    double bw = 2*T*((4.+PI2*f*(AU/CLIGHT)*sintheta)/YEAR + fabs(fdot)*T);
     int DS = (int)pow(2,(int)log2(bw-1)+1);
     if(DS > Nmax) DS = Nmax;
     if(DS < Nmin) DS = Nmin;
