@@ -66,7 +66,7 @@ if v:
 
     
 # build the metadata data Frame and write to the file
-metaDF = pd.DataFrame(data = metaDict, index={catName})
+metaDF = pd.DataFrame(data = metaDict, index=[catName])
 catOutFile = os.path.join(outDir,catFile)
 metaDF.to_hdf(catOutFile, key='metadata',mode='w')  # this overwrites so you get a new catalog if you run this more than once
 

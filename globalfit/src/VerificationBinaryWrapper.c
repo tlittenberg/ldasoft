@@ -69,6 +69,7 @@ void setup_vbmcmc_data(struct VBMCMCData *vbmcmc_data, struct GBMCMCData *gbmcmc
      */
     flags->knownSource = 1;
     flags->snrPrior    = 0;
+    flags->galaxyPrior = 0;
     flags->fixSky      = 1;
     flags->fixFreq     = 1;
     flags->cheat       = 1; //initializes chain at injection values

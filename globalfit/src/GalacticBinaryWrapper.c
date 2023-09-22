@@ -71,10 +71,11 @@ void setup_gbmcmc_data(struct GBMCMCData *gbmcmc_data, struct TDI *tdi_full)
     /* Load gb catalog cache file for proposals/priors */
     if(flags->catalog)
     {
-        if(procID==procID_min) GalacticBinaryLoadCatalogCache(data, flags);
+        //if(procID==procID_min)
+        GalacticBinaryLoadCatalogCache(data, flags);
         
-        broadcast_cache(data, procID_min, procID);
-        
+        //broadcast_cache(data, procID_min, procID);
+
         GalacticBinaryParseCatalogCache(data);
         GalacticBinaryLoadCatalog(data);
     }
@@ -346,6 +347,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             
             //update model likelihood using new residual
             model_ptr->logL = gaussian_log_likelihood(data, model_ptr);
+            model_ptr->logLnorm = gaussian_log_likelihood_model_norm(data, model_ptr);
 
             //sync up model and trial pointers
             copy_model(model_ptr,trial_ptr);
@@ -355,7 +357,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
                 for(int m=0; m<100; m++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(gsl_rng_uniform(chain->r[ic])<0.1 && flags->rj)
+                    if(gsl_rng_uniform(chain->r[ic])<0.25 && flags->rj)
                         galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     
                     //fixed dimension parameter updates

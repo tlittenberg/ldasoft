@@ -169,7 +169,7 @@ for file in chain_files:
     name = file.replace('/','_').split('_')[2]
     c.add_chain(chain,parameters=parameters,color=aqua,name=name)
     c.configure(sigmas=[0,1,2,3])
-    c.plotter.plot(filename='plots/'+name+'_corner.png')
+    #c.plotter.plot(filename='plots/'+name+'_corner.png')
     
 # Joint Sky Map
 parameters=[r'$\phi$',r'$\cos\theta$']
@@ -178,7 +178,7 @@ c=ChainConsumer()
 arrays = [np.loadtxt(f, usecols=(3,4)) for f in chain_files]
 chain=np.concatenate(arrays)
 c.add_chain(chain,parameters=parameters,name=' ',plot_contour=True, color=aqua)
-c.configure(plot_hists=False, sigmas=np.linspace(0,3,20),bins=10.0)
+c.configure(plot_hists=False, sigmas=np.linspace(0,3,20))
 plot=c.plotter.plot(figsize=(10,5),extents=[(0,2*np.pi),(-1,1)],filename='plots/pe_joint_sky.png')
 
 # Combined Sky Map
@@ -223,7 +223,7 @@ c=ChainConsumer()
 arrays = [np.loadtxt(f, usecols=(0,1)) for f in chain_files]
 chain=np.concatenate(arrays)
 c.add_chain(chain,parameters=parameters,name=' ',plot_contour=True, color=aqua)
-c.configure(plot_hists=False, sigmas=np.linspace(0,3,20),bins=10.0)
+c.configure(plot_hists=False, sigmas=np.linspace(0,3,20))
 plot=c.plotter.plot(figsize=(10,5),filename='plots/pe_joint_ffdot.png')
 
 # Combined f-fdot Plane

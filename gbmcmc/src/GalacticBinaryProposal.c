@@ -740,7 +740,8 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
     if(gsl_rng_uniform(seed)<0.5) draw_from_extrinsic_prior(data, model, source, proposal, params, seed);
     
     //perturb frequency by 1 fm
-    double scale = floor(6*gsl_ran_gaussian(seed,1));
+    double scale = 1.0;//floor(6*gsl_ran_gaussian(seed,1));
+    if(gsl_rng_uniform(seed)<0.5) scale*=-1.0;
     
     params[0] += scale*fm;
     //params[7] += scale*fm*fm;
@@ -1778,7 +1779,7 @@ double prior_density(struct Data *data, struct Model *model, UNUSED struct Sourc
     {
         if(params[i]!=params[i])
         {
-            fprintf(stderr,"parameter %i not a number\n",i);
+            fprintf(stderr,"WARNING: parameter %i not a number (line %d of file %s)\n",i,__LINE__,__FILE__);
             return -INFINITY;
         }
     }

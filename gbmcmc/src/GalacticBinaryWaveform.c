@@ -71,7 +71,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     
     int NP = source->NP;
     
-    double epsilon    = 1.0e-7;
+    double epsilon    = 1.0e-5;
     //double invepsilon2= 1./(2.*epsilon);
     double invepsilon2= 1./(epsilon);
     double invstep;

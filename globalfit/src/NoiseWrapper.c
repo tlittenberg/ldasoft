@@ -83,8 +83,8 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     }
 
     //pad noise model
-    //noise_data->data->fmin /= 1.1;
-    //noise_data->data->fmax *= 1.1;
+    noise_data->data->fmin -= 1./T;
+    noise_data->data->fmax += 1./T;
 
     //adjust noise model bandwidth to account for MBHs
     if(mbh_data->NMBH>0)
@@ -289,13 +289,17 @@ int update_noise_sampler(struct NoiseData *noise_data)
             model_ptr->logL = noise_log_likelihood(data, model_ptr);
             
             //evolve fixed dimension sampler
-            for(int steps=0; steps<100; steps++)
+            for(int steps=0; steps<200; steps++)
             {
-                noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
+                //evolve trans dimension sampler
+                if(gsl_rng_uniform(chain->r[ic])<0.25)
+                    noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
+                
+                else
+                    noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
+                
             }
             
-            //evolve trans dimension sampler
-            noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
             
         }// end (parallel) loop over chains
         
