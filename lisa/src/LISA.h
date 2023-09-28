@@ -226,11 +226,11 @@ void free_orbit(struct Orbit *orbit);
 ///@{
 
 /// LISA TDI (phase)
-void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
+void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
 /// LISA TDI (frequency)
-void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI);
+void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
 /// LISA TDI (LDC Sangria data)
-void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *A, double *E, int BW, int NI);
+void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
 ///@}
 
 /** @name  LISA Noise Model for equal arm, TDI1.5 configuration */
@@ -246,6 +246,8 @@ double Tnoise_FF(double L, double fstar, double f);
 double XYZnoise(double L, double fstar, double f);
 /// Michelson-like X,Y,Z channel noise (frequency)
 double XYZnoise_FF(double L, double fstar, double f);
+/// Michelson-like X,Y,Z channel cross spectra (frequency)
+double XYZcross_FF(double L, double fstar, double f);
 /// Confusion noise estimate for A,E channels (phase)
 double GBnoise(double T, double f);
 /// Confusion noise estimate for A,E channel (frequency)

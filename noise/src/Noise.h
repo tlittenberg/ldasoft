@@ -48,7 +48,7 @@ struct SplineModel
 /**
  \brief Allocates spline model structure and contents.
  */
-void alloc_spline_model(struct SplineModel *model, int Ndata, int Nspline);
+void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int Nspline);
 
 /**
  \brief Free allocated spline model.

@@ -65,11 +65,11 @@ double power_spectrum(double *data, int n);
   
  @param a complex amplitude array
  @param b complex amplitude array
- @param Sn noise power spectral density
+ @param invC inverse covariance matrix
  @param n number of frequency bins in sum
- @return \f$(a|b) =  4 \sum_n \frac{a^*_n b_n}{S_n} \f$
+ @return \f$(a|b) =  4 \sum_n a^*_n b_n C^-1_n \f$
  */
-double fourier_nwip(double *a, double *b, double *Sn, int n);
+double fourier_nwip(double *a, double *b, double *invC, int n);
 
 /**
 \brief Signal to noise ratio
@@ -115,13 +115,6 @@ double snr_prior(double SNR);
  @return \f$  M = \frac{(h_a|h_b)}{\sqrt{(h_a|h_a)+(h_b|h_b)}} \f$
  */
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise);
-
-/**
- \brief Compute waveform signal to noise ratio
- @param a waveform \f$h_a\f$
- @return \f$\rho =  \sqrt{\sum_I (h_I|h_I)} \f$
- */
-double waveform_snr(struct Source *h, struct Noise *noise, struct Orbit *orbit);
 
 /**
 \brief Compute distance between waveforms

@@ -322,7 +322,7 @@ static void source_waveform_wrapper(struct Source *source, struct Data *data, st
     source->tdi = malloc(sizeof(struct TDI));
     alloc_tdi(source->tdi,data->N, data->Nchannel);
     galactic_binary_alignment(orbit, data, source);
-    galactic_binary(orbit, data->format, data->T, data->t0[0], source->params, data->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], source->params, data->NP, source->tdi->X, source->tdi->Y, source->tdi->Z ,source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
 }
 
 int main(int argc, char *argv[])
@@ -442,7 +442,7 @@ int main(int argc, char *argv[])
     
     struct Noise *noise = NULL;
     noise = malloc(flags->NT*sizeof(struct Noise));
-    alloc_noise(noise, data->N);
+    alloc_noise(noise, data->N, data->Nchannel);
     
     //Noise model
     //Get noise spectrum for data segment
@@ -453,24 +453,25 @@ int main(int argc, char *argv[])
             double f = data->fmin + (double)(n)/data->T;
             if(strcmp(data->format,"phase")==0)
             {
-                noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-                noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+                noise->C[0][0][n] = AEnoise(orbit->L, orbit->fstar, f);
+                noise->C[1][1][n] = AEnoise(orbit->L, orbit->fstar, f);
             }
             else if(strcmp(data->format,"frequency")==0)
             {
-                noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                noise->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                noise->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f);
             }
             else if(strcmp(data->format,"sangria")==0)
             {
-                noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-                noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                noise->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                noise->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
             }
             else
             {
                 fprintf(stderr,"Unsupported data format %s",data->format);
                 exit(1);
             }
+            invert_noise_covariance_matrix(noise, n);
         }
     }
     else
@@ -481,13 +482,14 @@ int main(int argc, char *argv[])
         {
             check = 0;
             check += fscanf(noiseFile,"%lg",&junk); //);f
-            check += fscanf(noiseFile,"%lg",&noise->SnA[n]);//A_med);
-            check += fscanf(noiseFile,"%lg",&noise->SnE[n]);//E_med);
+            check += fscanf(noiseFile,"%lg",&noise->C[0][0][n]);//A_med);
+            check += fscanf(noiseFile,"%lg",&noise->C[1][1][n]);//E_med);
             if(!check)
             {
                 fprintf(stderr,"Error reading %s\n",flags->noiseFile);
                 exit(1);
             }
+            invert_noise_covariance_matrix(noise, n);
         }
         fclose(noiseFile);
     }
@@ -506,7 +508,7 @@ int main(int argc, char *argv[])
             galactic_binary_alignment(orbit, data, sample);
             
             //calculate waveform model of sample
-            galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+            galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
             
             //check frequencies
             int q_sample = (int)floor(sample->f0 * data->T);
@@ -545,7 +547,7 @@ int main(int argc, char *argv[])
                 galactic_binary_alignment(orbit, data, sample);
                 
                 //calculate waveform model of sample
-                galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+                galactic_binary(orbit, data->format, data->T, data->t0[0], sample->params, data->NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
                 
                 double q_sample = sample->f0 * data->T;
                 
@@ -799,7 +801,7 @@ int main(int argc, char *argv[])
             if(q_old_catalog_entry < data_old->qmin || q_old_catalog_entry > data_old->qmax) continue;
             
             //calculate waveform model of sample at Tcatalog
-            galactic_binary(orbit, data->format, data_old->T, data->t0[0], old_catalog_entry->params, data->NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
+            galactic_binary(orbit, data->format, data_old->T, data->t0[0], old_catalog_entry->params, data->NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->Y,old_catalog_entry->tdi->Z,old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
             
             //check against new catalog
             for(int d=0; d<detections; d++)
@@ -826,7 +828,7 @@ int main(int argc, char *argv[])
                 galactic_binary_alignment(orbit, data_old, new_catalog_entry);
                 
                 //calculate waveform of entry at Tcatalog
-                galactic_binary(orbit, data->format, data_old->T, data->t0[0], new_catalog_entry->params, data->NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
+                galactic_binary(orbit, data->format, data_old->T, data->t0[0], new_catalog_entry->params, data->NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->Y, new_catalog_entry->tdi->Z, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
                 
                 
                 Match = waveform_match(old_catalog_entry,new_catalog_entry,noise);

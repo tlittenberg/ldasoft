@@ -186,10 +186,10 @@ void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd)
     for(int i=0; i<psd->N; i++)
     {
         //TODO: Check this factor of 2!
-        mbh_data->data->SN[0][i+nstart] = 2*psd->SnA[i];
-        mbh_data->data->SN[1][i+nstart] = 2*psd->SnE[i];
-        mbh_data->data->SM[0][i+nstart] = 2*psd->SnA[i];
-        mbh_data->data->SM[1][i+nstart] = 2*psd->SnE[i];
+        mbh_data->data->SN[0][i+nstart] = 2*psd->C[0][0][i];
+        mbh_data->data->SN[1][i+nstart] = 2*psd->C[1][1][i];
+        mbh_data->data->SM[0][i+nstart] = 2*psd->C[0][0][i];
+        mbh_data->data->SM[1][i+nstart] = 2*psd->C[1][1][i];
     }
 }
 

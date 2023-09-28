@@ -362,8 +362,15 @@ static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *g
         copy_noise(model_psd,global_fit->psd);
     }
     
-    MPI_Bcast(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    for(int i=0; i<global_fit->psd->Nchannel; i++)
+    {
+        for(int j=0; j<global_fit->psd->Nchannel; j++)
+        {
+            MPI_Bcast(global_fit->psd->C[i][j], global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            MPI_Bcast(global_fit->psd->invC[i][j], global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+        }
+    }
+    MPI_Bcast(global_fit->psd->detC, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
 }
 
 static void create_residual(struct GlobalFitData *global_fit, int GBMCMC_Flag, int VBMCMC_Flag, int MBH_Flag)
@@ -715,7 +722,7 @@ int main(int argc, char *argv[])
     setup_noise_data(noise_data, gbmcmc_data, vbmcmc_data, mbh_data, tdi_full, procID);
 
     /* allocate global fit noise model for all processes */
-    alloc_noise(global_fit->psd, noise_data->data->N);
+    alloc_noise(global_fit->psd, noise_data->data->Nchannel, noise_data->data->N);
     
     /*
      * Initialize all of the samplers
@@ -739,9 +746,16 @@ int main(int argc, char *argv[])
 
     }
     MPI_Bcast(global_fit->psd->f, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(global_fit->psd->SnX, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(global_fit->psd->SnA, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(global_fit->psd->SnE, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    for(int i=0; i<global_fit->psd->Nchannel; i++)
+    {
+        for(int j=0; j<global_fit->psd->Nchannel; j++)
+        {
+            MPI_Bcast(global_fit->psd->C[i][j], global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+            MPI_Bcast(global_fit->psd->invC[i][j], global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+        }
+    }
+    MPI_Bcast(global_fit->psd->detC, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
+
     share_noise_model(noise_data,gbmcmc_data,vbmcmc_data,mbh_data,global_fit,root,procID);
 
     /* Assign processes to VB model */

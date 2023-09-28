@@ -139,27 +139,10 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     //choose proposal distribution
     for(int i=0; i<flags->NT; i++)
     {
-        switch(data->Nchannel)
+        for(int n=0; n<data->Nchannel; n++)
         {
-            case 1:
-                model_y->noise[i]->etaX = model_x->noise[i]->etaX + 0.1*gsl_ran_gaussian(chain->r[ic],1);
-                break;
-            case 2:
-                model_y->noise[i]->etaA = model_x->noise[i]->etaA + 0.1*gsl_ran_gaussian(chain->r[ic],1);
-                model_y->noise[i]->etaE = model_x->noise[i]->etaE + 0.1*gsl_ran_gaussian(chain->r[ic],1);
-                break;
-        }
-        
-        //get priors for x and y
-        switch(data->Nchannel)
-        {
-            case 1:
-                if(model_y->noise[i]->etaX < 0.01 || model_y->noise[i]->etaX>100) logPy=-INFINITY;
-                break;
-            case 2:
-                if(model_y->noise[i]->etaA < 0.01 || model_y->noise[i]->etaA>100.) logPy=-INFINITY;
-                if(model_y->noise[i]->etaE < 0.01 || model_y->noise[i]->etaE>100.) logPy=-INFINITY;
-                break;
+            model_y->noise[i]->eta[n] = model_x->noise[i]->eta[n] + 0.1*gsl_ran_gaussian(chain->r[ic],1);
+            if(model_y->noise[i]->eta[n] < 0.01 || model_y->noise[i]->eta[n]>100) logPy=-INFINITY;
         }
     }
     
@@ -273,10 +256,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(!flags->prior)
         {
             //form master template
-            //generate_signal_model(orbit, data, model_y, n);
+            generate_signal_model(orbit, data, model_y, n);
             
             //update master template
-            update_signal_model(orbit, data, model_x, model_y, n);
+            //update_signal_model(orbit, data, model_x, model_y, n);
             
             //add calibration error
             if(flags->calibration)
@@ -286,11 +269,24 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
             }
             
             //get likelihood for y
-            //model_y->logL = gaussian_log_likelihood(data, model_y);
+            model_y->logL = gaussian_log_likelihood(data, model_y);
             
             //get delta log likelihood
-            model_y->logL = model_x->logL + delta_log_likelihood(data, model_x, model_y, n);
-            
+            //model_y->logL = model_x->logL + delta_log_likelihood(data, model_x, model_y, n);
+            if(chain->index[ic]==0)
+            {
+                for(int i=0; i<data->Nchannel; i++)
+                {
+                    for(int j=0; j<data->Nchannel; j++)
+                    {
+                        if(model_y->noise[0]->invC[i][j][0]>=0.0) printf("+%.3g ",model_y->noise[0]->invC[i][j][0]);
+                        else printf("%.3g ",model_y->noise[0]->invC[i][j][0]);
+                    }
+                    printf("\n");
+                }
+                printf("detC=%.3g ",model_y->noise[0]->detC[0]);
+                printf("logLx=%lg, logLy=%lg\n",model_x->logL, model_y->logL);
+            }
             /*
              H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
              */
@@ -696,6 +692,22 @@ void initialize_gbmcmc_state(struct Data *data, struct Orbit *orbit, struct Flag
         
         if(ic==0) chain->logLmax += model[ic]->logL + model[ic]->logLnorm;
         
+        if(ic==0)
+        {
+            printf("==== initial inverse covariance matrix ====\n");
+            for(int i=0; i<data->Nchannel; i++)
+            {
+                for(int j=0; j<data->Nchannel; j++)
+                {
+                    if(model[ic]->noise[0]->invC[i][j][0]>=0.0) printf("+%.3g ",model[ic]->noise[0]->invC[i][j][0]);
+                    else printf("%.3g ",model[ic]->noise[0]->invC[i][j][0]);
+                }
+                printf("\n");
+            }
+            printf("detC=%.3g\n",model[ic]->noise[0]->detC[0]);
+            printf("===========================================\n");
+
+        }
     }//end loop over chains
 
 }

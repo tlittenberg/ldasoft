@@ -39,6 +39,7 @@
 
 #include "GMM_with_EM.h"
 
+/*
 static void printProgress (double percentage)
 {
     int val = (int) (percentage * 100);
@@ -46,7 +47,7 @@ static void printProgress (double percentage)
     int rpad = PBWIDTH - lpad;
     printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
     fflush (stdout);
-}
+}*/
 
 void printUsage(const char *program)
 {

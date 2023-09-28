@@ -375,35 +375,26 @@ struct Noise
     /// Number of data samples fit by noise model
     int N;
     
+    /// Number of TDI channels
+    int Nchannel;
+    
     ///@name Constant Noise Parameters
-    ///Each \f$\eta\f$ is a multiplier to the assumed noise level \f$S_n\f$ stored in Data structure. One per channel (`X` for 4-link, `A`,`E` for 6-link)
+    ///Each \f$\eta\f$ is a multiplier to the assumed noise level \f$S_n\f$ stored in Data structure. One per channel (`X` for 4-link, `A`,`E` or `X`,`Y`,`Z` for 6-link)
     ///@{
-    double etaA;
-    double etaE;
-    double etaX;
+    double *eta;
     ///@}
     
     ///@name Noise Model
     ///Composite noise model to use over the analysis window \f$\eta_I \times Sn_I\f$
     ///@{
     double *f;
-    double *SnA;
-    double *SnE;
-    double *SnX;
+    
+    double ***C;    //!<Covariance matrix
+    double ***invC; //!<Inverse covariance matrix>
+    double *detC;   //!<Determinent of covariance matrix
+    
     double *transfer;
     ///@}
-    
-    ///@name UNDER CONSTRUCTION! noise parameters for power-law fit
-    ///Parameters are noise levels at reference frequency \f$S_{n,0}\f$ and power law index \f$\alpha\f$.
-    ///@{
-    double SnA_0;
-    double SnE_0;
-    double SnX_0;
-    double alpha_A;
-    double alpha_E;
-    double alpha_X;
-    ///@}
-
 };
 
 /**
@@ -416,6 +407,8 @@ struct Calibration
     double dampA;
     double dampE;
     double dampX;
+    double dampY;
+    double dampZ;
     ///@}
     
     ///@name Overall phase parameters for each TDI channel
@@ -423,6 +416,8 @@ struct Calibration
     double dphiA;
     double dphiE;
     double dphiX;
+    double dphiY;
+    double dphiZ;
     ///@}
 
     ///@name Phase correction to Re and Im part of TDI channels
@@ -430,9 +425,13 @@ struct Calibration
     double real_dphiA;
     double real_dphiE;
     double real_dphiX;
+    double real_dphiY;
+    double real_dphiZ;
     double imag_dphiA;
     double imag_dphiE;
     double imag_dphiX;
+    double imag_dphiY;
+    double imag_dphiZ;
     ///@}
 
 };

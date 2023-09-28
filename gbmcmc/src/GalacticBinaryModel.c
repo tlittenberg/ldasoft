@@ -91,7 +91,7 @@ void alloc_data(struct Data *data, struct Flags *flags)
         
         alloc_tdi(data->tdi[n], data->N, data->Nchannel);
         alloc_tdi(data->raw[n], data->N, data->Nchannel);
-        alloc_noise(data->noise[n], data->N);
+        alloc_noise(data->noise[n], data->N, data->Nchannel);
     }
     
     //reconstructed signal model
@@ -365,7 +365,7 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, 
         model->tdi[n]         = malloc( sizeof(struct TDI)         );
         model->residual[n]    = malloc( sizeof(struct TDI)         );
         model->calibration[n] = malloc( sizeof(struct Calibration) );
-        alloc_noise(model->noise[n],NFFT);
+        alloc_noise(model->noise[n],NFFT, Nchannel);
         alloc_tdi(model->tdi[n],  NFFT, Nchannel);
         alloc_tdi(model->residual[n],  NFFT, Nchannel);
         alloc_calibration(model->calibration[n]);
@@ -519,16 +519,20 @@ int compare_model(struct Model *a, struct Model *b)
         struct Noise *nb = b->noise[n];
         
         if(na->N != nb->N) return 1;
-        
-        if(na->etaA != nb->etaA) return 1;
-        if(na->etaE != nb->etaE) return 1;
-        if(na->etaX != nb->etaX) return 1;
-        
-        for(int i=0; i<na->N; i++)
+        if(na->Nchannel != nb->Nchannel) return 1;
+
+        for(int n=0; n<na->Nchannel; n++)
         {
-            if(na->SnA[i] != nb->SnA[i]) return 1;
-            if(na->SnE[i] != nb->SnE[i]) return 1;
-            if(na->SnX[i] != nb->SnX[i]) return 1;
+            if(na->eta[n] != nb->eta[n]) return 1;
+            for(int i=0; i<na->N; i++) if(na->detC[i] != nb->detC[i]) return 1;
+            for(int m=n; m<na->Nchannel; m++)
+            {
+                for(int i=0; i<na->N; i++)
+                {
+                    if(na->C[n][m][i] != nb->C[n][m][i]) return 1;
+                    if(na->invC[n][m][i] != nb->invC[n][m][i]) return 1;
+                }
+            }
         }
     }
     
@@ -606,66 +610,87 @@ void free_model(struct Model *model)
 }
 
 
-void alloc_noise(struct Noise *noise, int NFFT)
+void alloc_noise(struct Noise *noise, int NFFT, int Nchannel)
 {
-    noise->N    = NFFT;
+    noise->N = NFFT;
+    noise->Nchannel = Nchannel;
     
-    noise->etaA = 1.0;
-    noise->etaE = 1.0;
-    noise->etaX = 1.0;
-    
+    noise->eta = calloc(Nchannel,sizeof(double));
+
     noise->f   = calloc(NFFT,sizeof(double));
-    noise->SnA = calloc(NFFT,sizeof(double));
-    noise->SnE = calloc(NFFT,sizeof(double));
-    noise->SnX = calloc(NFFT,sizeof(double));
+
+    noise->C    = malloc(Nchannel*sizeof(double **));
+    noise->invC = malloc(Nchannel*sizeof(double **));
+    
+    noise->C    = malloc(Nchannel*sizeof(double **));
+    noise->invC = malloc(Nchannel*sizeof(double **));
+
+    for(int i=0; i<Nchannel; i++)
+    {
+        noise->eta[i] = 1.0;
+        noise->C[i]    = malloc(Nchannel*sizeof(double *));
+        noise->invC[i] = malloc(Nchannel*sizeof(double *));
+        
+        for(int j=0; j<Nchannel; j++)
+        {
+            noise->C[i][j]    = calloc(NFFT,sizeof(double));
+            noise->invC[i][j] = calloc(NFFT,sizeof(double));
+        }
+    }
+
+    noise->detC = calloc(NFFT,sizeof(double));
     noise->transfer = calloc(NFFT,sizeof(double));
     
     int n;
     for(n=0; n<NFFT; n++)
     {
-        noise->SnA[n]=1.0;
-        noise->SnE[n]=1.0;
-        noise->SnX[n]=1.0;
+        for(int i=0; i<Nchannel; i++) noise->C[i][i][n] = 1.0;
+        for(int i=0; i<Nchannel; i++)
+        {
+            for(int j=i+1; i<Nchannel; i++)
+            {
+                noise->C[i][j][n] = 0.0;
+                noise->C[j][i][n] = 0.0;
+            }
+        }
         noise->transfer[n] = 1.0;
     }
 }
 
-void realloc_noise(struct Noise *noise, int NFFT)
-{
-    noise->N = NFFT;
-    noise->f = realloc(noise->f,NFFT*sizeof(double));
-    noise->SnA = realloc(noise->SnA,NFFT*sizeof(double));
-    noise->SnE = realloc(noise->SnE,NFFT*sizeof(double));
-    noise->SnX = realloc(noise->SnX,NFFT*sizeof(double));
-
-    for(int n=0; n<NFFT; n++)
-    {
-        noise->SnA[n]=1.0;
-        noise->SnE[n]=1.0;
-        noise->SnX[n]=1.0;
-    }
-
-}
-
 void copy_noise(struct Noise *origin, struct Noise *copy)
 {
-    copy->etaA = origin->etaA;
-    copy->etaE = origin->etaE;
-    copy->etaX = origin->etaX;
-    
-    memcpy(copy->f,   origin->f,   origin->N*sizeof(double));
-    memcpy(copy->SnX, origin->SnX, origin->N*sizeof(double));
-    memcpy(copy->SnA, origin->SnA, origin->N*sizeof(double));
-    memcpy(copy->SnE, origin->SnE, origin->N*sizeof(double));
+    memcpy(copy->eta,origin->eta,origin->Nchannel*sizeof(double));
+
+    memcpy(copy->f, origin->f, origin->N*sizeof(double));
+
+    for(int i=0; i<origin->Nchannel; i++)
+    {
+        for(int j=0; j<origin->Nchannel; j++)
+        {
+            memcpy(copy->C[i][j], origin->C[i][j], origin->N*sizeof(double));
+            memcpy(copy->invC[i][j], origin->invC[i][j], origin->N*sizeof(double));
+        }
+    }
+    memcpy(copy->detC, origin->detC, origin->N*sizeof(double));
     memcpy(copy->transfer, origin->transfer, origin->N*sizeof(double));
 }
 
 void free_noise(struct Noise *noise)
 {
     free(noise->f);
-    free(noise->SnA);
-    free(noise->SnE);
-    free(noise->SnX);
+    for(int i=0; i<noise->Nchannel; i++)
+    {
+        for(int j=0; j<noise->Nchannel; j++)
+        {
+            free(noise->C[i][j]);
+            free(noise->invC[i][j]);
+        }
+        free(noise->C[i]);
+        free(noise->invC[i]);
+    }
+    free(noise->C);
+    free(noise->invC);
+    free(noise->detC);
     free(noise->transfer);
     free(noise);
 }
@@ -868,7 +893,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         {
             //Simulate gravitational wave signal
             /* the source_id = -1 condition is redundent if the model->tdi structure is up to date...*/
-            if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+            if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0[m], source->params, source->NP, source->tdi->X, source->tdi->Y, source->tdi->Z, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
             
             //Add waveform to model TDI channels
             for(i=0; i<source->BW; i++)
@@ -882,16 +907,31 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
                     int j_re = 2*j;
                     int j_im = j_re+1;
                     
-                    /*
-                    model->tdi[m]->X[j_re] += source->tdi->X[i_re];
-                    model->tdi[m]->X[j_im] += source->tdi->X[i_im];
-                    */
-                    
-                    model->tdi[m]->A[j_re] += source->tdi->A[i_re];
-                    model->tdi[m]->A[j_im] += source->tdi->A[i_im];
-                    
-                    model->tdi[m]->E[j_re] += source->tdi->E[i_re];
-                    model->tdi[m]->E[j_im] += source->tdi->E[i_im];
+                    switch(data->Nchannel)
+                    {
+                        case 1:
+                             model->tdi[m]->X[j_re] += source->tdi->X[i_re];
+                             model->tdi[m]->X[j_im] += source->tdi->X[i_im];
+                            break;
+                            
+                        case 2:
+                            model->tdi[m]->A[j_re] += source->tdi->A[i_re];
+                            model->tdi[m]->A[j_im] += source->tdi->A[i_im];
+                            
+                            model->tdi[m]->E[j_re] += source->tdi->E[i_re];
+                            model->tdi[m]->E[j_im] += source->tdi->E[i_im];
+                            break;
+                        case 3:
+                            model->tdi[m]->X[j_re] += source->tdi->X[i_re];
+                            model->tdi[m]->X[j_im] += source->tdi->X[i_im];
+                            
+                            model->tdi[m]->Y[j_re] += source->tdi->Y[i_re];
+                            model->tdi[m]->Y[j_im] += source->tdi->Y[i_im];
+                            
+                            model->tdi[m]->Z[j_re] += source->tdi->Z[i_re];
+                            model->tdi[m]->Z[j_im] += source->tdi->Z[i_im];
+                            break;
+                    }
                 }//check that source_id is in range
             }//loop over waveform bins
         }//end loop over time segments
@@ -921,31 +961,57 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
                 int j_re = 2*j;
                 int j_im = j_re+1;
                 
-                /*
-                 model_y->tdi[m]->X[j_re] -= source_x->tdi->X[i_re];
-                 model_y->tdi[m]->X[j_im] -= source_x->tdi->X[i_im];
-                 */
-                
-                model_y->tdi[m]->A[j_re] -= source_x->tdi->A[i_re];
-                model_y->tdi[m]->A[j_im] -= source_x->tdi->A[i_im];
-                
-                model_y->tdi[m]->E[j_re] -= source_x->tdi->E[i_re];
-                model_y->tdi[m]->E[j_im] -= source_x->tdi->E[i_im];
+                switch(data->Nchannel)
+                {
+                    case 1:
+                        model_y->tdi[m]->X[j_re] -= source_x->tdi->X[i_re];
+                        model_y->tdi[m]->X[j_im] -= source_x->tdi->X[i_im];
+                        break;
+                    case 2:
+                        model_y->tdi[m]->A[j_re] -= source_x->tdi->A[i_re];
+                        model_y->tdi[m]->A[j_im] -= source_x->tdi->A[i_im];
+                        
+                        model_y->tdi[m]->E[j_re] -= source_x->tdi->E[i_re];
+                        model_y->tdi[m]->E[j_im] -= source_x->tdi->E[i_im];
+                        break;
+                    case 3:
+                        model_y->tdi[m]->X[j_re] -= source_x->tdi->X[i_re];
+                        model_y->tdi[m]->X[j_im] -= source_x->tdi->X[i_im];
+                        
+                        model_y->tdi[m]->Y[j_re] -= source_x->tdi->Y[i_re];
+                        model_y->tdi[m]->Y[j_im] -= source_x->tdi->Y[i_im];
+
+                        model_y->tdi[m]->Z[j_re] -= source_x->tdi->Z[i_re];
+                        model_y->tdi[m]->Z[j_im] -= source_x->tdi->Z[i_im];
+                        break;
+                }
             }//check that source_id is in range
         }//loop over waveform bins
 
         //generate proposed signal model
         for(i=0; i<N2; i++)
         {
-            //source->tdi->X[i]=0.0;
-            source_y->tdi->A[i]=0.0;
-            source_y->tdi->E[i]=0.0;
+            switch(data->Nchannel)
+            {
+                case 1:
+                    source_y->tdi->X[i]=0.0;
+                    break;
+                case 2:
+                    source_y->tdi->A[i]=0.0;
+                    source_y->tdi->E[i]=0.0;
+                    break;
+                case 3:
+                    source_y->tdi->X[i]=0.0;
+                    source_y->tdi->Y[i]=0.0;
+                    source_y->tdi->Z[i]=0.0;
+                    break;
+            }
         }
 
         map_array_to_params(source_y, source_y->params, data->T);
         galactic_binary_alignment(orbit, data, source_y);
         for(int m=0; m<NT; m++)
-            galactic_binary(orbit, data->format, data->T, model_y->t0[m], source_y->params, source_y->NP, source_y->tdi->X, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
+            galactic_binary(orbit, data->format, data->T, model_y->t0[m], source_y->params, source_y->NP, source_y->tdi->X,source_y->tdi->Y,source_y->tdi->Z, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
 
         //subtract proposed nth source to model
         for(i=0; i<source_y->BW; i++)
@@ -959,74 +1025,87 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
                 int j_re = 2*j;
                 int j_im = j_re+1;
                 
-                /*
-                 model_y->tdi[m]->X[j_re] += source_y->tdi->X[i_re];
-                 model_y->tdi[m]->X[j_im] += source_y->tdi->X[i_im];
-                 */
-                
-                model_y->tdi[m]->A[j_re] += source_y->tdi->A[i_re];
-                model_y->tdi[m]->A[j_im] += source_y->tdi->A[i_im];
-                
-                model_y->tdi[m]->E[j_re] += source_y->tdi->E[i_re];
-                model_y->tdi[m]->E[j_im] += source_y->tdi->E[i_im];
+                switch(data->Nchannel)
+                {
+                    case 1:
+                        model_y->tdi[m]->X[j_re] += source_y->tdi->X[i_re];
+                        model_y->tdi[m]->X[j_im] += source_y->tdi->X[i_im];
+                        break;
+                    case 2:
+                        model_y->tdi[m]->A[j_re] += source_y->tdi->A[i_re];
+                        model_y->tdi[m]->A[j_im] += source_y->tdi->A[i_im];
+                        
+                        model_y->tdi[m]->E[j_re] += source_y->tdi->E[i_re];
+                        model_y->tdi[m]->E[j_im] += source_y->tdi->E[i_im];
+                        break;
+                    case 3:
+                        model_y->tdi[m]->X[j_re] += source_y->tdi->X[i_re];
+                        model_y->tdi[m]->X[j_im] += source_y->tdi->X[i_im];
+                        
+                        model_y->tdi[m]->Y[j_re] += source_y->tdi->Y[i_re];
+                        model_y->tdi[m]->Y[j_im] += source_y->tdi->Y[i_im];
+                        
+                        model_y->tdi[m]->Z[j_re] += source_y->tdi->Z[i_re];
+                        model_y->tdi[m]->Z[j_im] += source_y->tdi->Z[i_im];
+                        break;
+                }
             }//check that source_id is in range
         }//loop over waveform bins
     }
 }
 
-
-void generate_power_law_noise_model(struct Data *data, struct Model *model)
+void invert_noise_covariance_matrix(struct Noise *noise, int n)
 {
-    struct Noise *noise = NULL;
-    double df_on_fmin   = 1./(double)data->qmin;
-    
-    
-    for(int m=0; m<model->NT; m++)
+    int X,Y,Z,A,E;
+    switch(noise->Nchannel)
     {
-        noise = model->noise[m];
-        switch(data->Nchannel)
-        {
-            case 1:
-                for(int n=0; n<data->N; n++)
-            {
-                //Taylor expansion Sn(f/fmin)^alpha
-                noise->SnX[n] = noise->SnX_0*(1.0 + noise->alpha_X * df_on_fmin);
-            }
-                break;
-            case 2:
-                for(int n=0; n<data->N; n++)
-            {
-                //Taylor expansion Sn(f/fmin)^alpha
-                noise->SnA[n] = noise->SnA_0*(1.0 + noise->alpha_A * df_on_fmin);
-                noise->SnE[n] = noise->SnE_0*(1.0 + noise->alpha_E * df_on_fmin);
-            }
-                break;
-            default:
-                break;
-        }
+        case 1:
+            X=0;
+            noise->detC[n] = noise->C[X][X][n];
+            noise->invC[X][X][n] = 1./noise->C[X][X][n];
+            break;
+        case 2:
+            A=0, E=1;
+            noise->detC[n] = noise->C[A][A][n]*noise->C[E][E][n];
+            noise->invC[A][A][n] = 1./noise->C[A][A][n];
+            noise->invC[E][E][n] = 1./noise->C[E][E][n];
+            break;
+        case 3:
+            X=0, Y=1, Z=2;
+            double cxx = noise->C[X][X][n];
+            double cyy = noise->C[Y][Y][n];
+            double czz = noise->C[Z][Z][n];
+            double cxy = noise->C[X][Y][n];
+            double cxz = noise->C[X][Z][n];
+            double cyz = noise->C[Y][Z][n];
+            noise->detC[n] = cxx*(czz*cyy - cyz*cyz) - cxy*(cxy*czz - cxz*cyz) + cxz*(cxy*cyz - cyy*cxz);
+            double invdetC = 1./noise->detC[n];
+            noise->invC[X][X][n] = (cxx*cyy - cyz*cyz)*invdetC;
+            noise->invC[Y][Y][n] = (czz*cxx - cxz*cxz)*invdetC;
+            noise->invC[Z][Z][n] = (cxx*cyy - cxy*cxy)*invdetC;
+            noise->invC[X][Y][n] = (cxz*cyz - czz*cxy)*invdetC;
+            noise->invC[X][Z][n] = (cxy*cyz - cxz*cyy)*invdetC;
+            noise->invC[Y][Z][n] = (cxy*cxz - cxx*cyz)*invdetC;
+            noise->invC[Y][X][n] = noise->invC[X][Y][n];
+            noise->invC[Z][X][n] = noise->invC[X][Z][n];
+            noise->invC[Z][Y][n] = noise->invC[Y][Z][n];
+            break;
     }
-    
 }
 
 void generate_noise_model(struct Data *data, struct Model *model)
 {
     for(int m=0; m<model->NT; m++)
     {
-        switch(data->Nchannel)
+        for(int n=0; n<data->N; n++)
         {
-            case 1:
-                for(int n=0; n<data->N; n++) model->noise[m]->SnX[n] = data->noise[m]->SnX[n]*model->noise[m]->etaX;
-                break;
-            case 2:
-                for(int n=0; n<data->N; n++)
-            {
-                model->noise[m]->f[n] = data->fmin + (double)n/data->T;
-                model->noise[m]->SnA[n] = data->noise[m]->SnA[n]*model->noise[m]->etaA;
-                model->noise[m]->SnE[n] = data->noise[m]->SnE[n]*model->noise[m]->etaE;
-            }
-                break;
-            default:
-                break;
+            model->noise[m]->f[n] = data->fmin + (double)n/data->T;
+
+            for(int i=0; i<data->Nchannel; i++)
+                for(int j=i; j<data->Nchannel; j++)
+                    model->noise[m]->C[i][j][n] = model->noise[m]->C[j][i][n] = data->noise[m]->C[i][j][n]*sqrt(model->noise[m]->eta[i]*model->noise[m]->eta[j]);
+
+            invert_noise_covariance_matrix(model->noise[m], n);
         }
     }
 }
@@ -1048,6 +1127,16 @@ void generate_calibration_model(struct Data *data, struct Model *model)
                 
                 calibration->real_dphiE = cos(calibration->dphiE);
                 calibration->imag_dphiE = sin(calibration->dphiE);
+                break;
+            case 3:
+                calibration->real_dphiX = cos(calibration->dphiX);
+                calibration->imag_dphiX = sin(calibration->dphiX);
+                
+                calibration->real_dphiY = cos(calibration->dphiY);
+                calibration->imag_dphiY = sin(calibration->dphiY);
+
+                calibration->real_dphiZ = cos(calibration->dphiZ);
+                calibration->imag_dphiZ = sin(calibration->dphiZ);
                 break;
             default:
                 break;
@@ -1109,6 +1198,38 @@ void apply_calibration_model(struct Data *data, struct Model *model)
                     
                     model->tdi[m]->E[i_re] = dA*(h_re*cal_re - h_im*cal_im);
                     model->tdi[m]->E[i_im] = dA*(h_re*cal_im + h_im*cal_re);
+                    break;
+                case 3:
+                    h_re = model->tdi[m]->X[i_re];
+                    h_im = model->tdi[m]->X[i_im];
+                    
+                    dA     = (1.0 + model->calibration[m]->dampX);
+                    cal_re = model->calibration[m]->real_dphiX;
+                    cal_im = model->calibration[m]->imag_dphiX;
+                    
+                    model->tdi[m]->X[i_re] = dA*(h_re*cal_re - h_im*cal_im);
+                    model->tdi[m]->X[i_im] = dA*(h_re*cal_im + h_im*cal_re);
+                    
+                    
+                    h_re = model->tdi[m]->Y[i_re];
+                    h_im = model->tdi[m]->Y[i_im];
+                    
+                    dA     = (1.0 + model->calibration[m]->dampY);
+                    cal_re = model->calibration[m]->real_dphiY;
+                    cal_im = model->calibration[m]->imag_dphiY;
+                    
+                    model->tdi[m]->Y[i_re] = dA*(h_re*cal_re - h_im*cal_im);
+                    model->tdi[m]->Y[i_im] = dA*(h_re*cal_im + h_im*cal_re);
+
+                    h_re = model->tdi[m]->Z[i_re];
+                    h_im = model->tdi[m]->Z[i_im];
+                    
+                    dA     = (1.0 + model->calibration[m]->dampZ);
+                    cal_re = model->calibration[m]->real_dphiZ;
+                    cal_im = model->calibration[m]->imag_dphiZ;
+                    
+                    model->tdi[m]->Z[i_re] = dA*(h_re*cal_re - h_im*cal_im);
+                    model->tdi[m]->Z[i_im] = dA*(h_re*cal_im + h_im*cal_re);
                     break;
                 default:
                     break;
@@ -1187,7 +1308,7 @@ double gaussian_log_likelihood(struct Data *data, struct Model *model)
     */
     
     int N2 = data->N*2;
-    double logL = 0.0;
+    double chi2 = 0.0; //chi^2, where logL = -chi^2 / 2
     
     //loop over time segments
     for(int n=0; n<model->NT; n++)
@@ -1197,26 +1318,37 @@ double gaussian_log_likelihood(struct Data *data, struct Model *model)
         for(int i=0; i<N2; i++)
         {
             residual->X[i] = data->tdi[n]->X[i] - model->tdi[n]->X[i];
+            residual->Y[i] = data->tdi[n]->Y[i] - model->tdi[n]->Y[i];
+            residual->Z[i] = data->tdi[n]->Z[i] - model->tdi[n]->Z[i];
             residual->A[i] = data->tdi[n]->A[i] - model->tdi[n]->A[i];
             residual->E[i] = data->tdi[n]->E[i] - model->tdi[n]->E[i];
         }
-        
+                
         switch(data->Nchannel)
         {
             case 1:
-                logL += -0.5*fourier_nwip(residual->X, residual->X, model->noise[n]->SnX, data->N);
+                chi2 += fourier_nwip(residual->X, residual->X, model->noise[n]->invC[0][0], data->N);
                 break;
             case 2:
-                logL += -0.5*fourier_nwip(residual->A, residual->A, model->noise[n]->SnA, data->N);
-                logL += -0.5*fourier_nwip(residual->E, residual->E, model->noise[n]->SnE, data->N);
+                chi2 += fourier_nwip(residual->A, residual->A, model->noise[n]->invC[0][0], data->N);
+                chi2 += fourier_nwip(residual->E, residual->E, model->noise[n]->invC[1][1], data->N);
+                break;
+            case 3:
+                chi2 += fourier_nwip(residual->X, residual->X, model->noise[n]->invC[0][0], data->N);
+                chi2 += fourier_nwip(residual->Y, residual->Y, model->noise[n]->invC[1][1], data->N);
+                chi2 += fourier_nwip(residual->Z, residual->Z, model->noise[n]->invC[2][2], data->N);
+
+                chi2 += 2.0*fourier_nwip(residual->X, residual->Y, model->noise[n]->invC[0][1], data->N);
+                chi2 += 2.0*fourier_nwip(residual->X, residual->Z, model->noise[n]->invC[0][2], data->N);
+                chi2 += 2.0*fourier_nwip(residual->Y, residual->Z, model->noise[n]->invC[1][2], data->N);
+
                 break;
             default:
                 fprintf(stderr,"Unsupported number of channels in gaussian_log_likelihood()\n");
                 exit(1);
         }
     }
-    
-    return logL;
+    return -0.5*chi2;
 }
 
 double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *model)
@@ -1226,21 +1358,7 @@ double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *mo
     
     //loop over time segments
     for(int n=0; n<model->NT; n++)
-    {
-        switch(data->Nchannel)
-        {
-            case 1:
-                logLnorm -= (double)data->N*log(model->noise[n]->etaX);
-                break;
-            case 2:
-                logLnorm -= (double)data->N*log(model->noise[n]->etaA);
-                logLnorm -= (double)data->N*log(model->noise[n]->etaE);
-                break;
-            default:
-                fprintf(stderr,"Unsupported number of channels in gaussian_log_likelihood()\n");
-                exit(1);
-        }
-    }
+        logLnorm -= (double)data->N*log(model->noise[n]->detC[0]);
     
     return logLnorm;
 }
@@ -1252,24 +1370,9 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
     
     //loop over time segments
     for(int m=0; m<model->NT; m++)
-    {
-        switch(data->Nchannel)
-        {
-            case 1:
-                for(int n=0; n<data->N; n++) logLnorm -= log(model->noise[m]->SnX[n]);
-                break;
-            case 2:
-                for(int n=0; n<data->N; n++)
-                {
-                    logLnorm -= log(model->noise[m]->SnA[n]);
-                    logLnorm -= log(model->noise[m]->SnE[n]);
-                }
-                break;
-            default:
-                fprintf(stderr,"Unsupported number of channels in gaussian_log_likelihood()\n");
-                exit(1);
-        }
-    }
+        for(int n=0; n<data->N; n++) 
+            logLnorm -= log(model->noise[m]->detC[n]);
+
     return logLnorm;
 }
 
@@ -1282,7 +1385,6 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
     */
     
     double deltalogL = 0.0;
-    double deltalogL2 = 0.0;
     struct Source *source_x = model_x->source[source_id];
     struct Source *source_y = model_y->source[source_id];
 
@@ -1303,8 +1405,12 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
                 int j_re = 2*j;
                 int j_im = j_re+1;
                 
-                //residual_y->X[i_re] += source_x->tdi->X[i_re];
-                //residual_y->X[i_im] += source_x->tdi->X[i_im];
+                residual_y->X[i_re] += source_x->tdi->X[i_re];
+                residual_y->X[i_im] += source_x->tdi->X[i_im];
+                residual_y->Y[i_re] += source_x->tdi->Y[i_re];
+                residual_y->Y[i_im] += source_x->tdi->Y[i_im];
+                residual_y->Z[i_re] += source_x->tdi->Z[i_re];
+                residual_y->Z[i_im] += source_x->tdi->Z[i_im];
                 residual_y->A[j_re] += source_x->tdi->A[i_re];
                 residual_y->A[j_im] += source_x->tdi->A[i_im];
                 residual_y->E[j_re] += source_x->tdi->E[i_re];
@@ -1323,8 +1429,12 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
                 int j_re = 2*j;
                 int j_im = j_re+1;
                 
-                //residual_y->X[i_re] -= source_y->tdi->X[i_re];
-                //residual_y->X[i_im] -= source_y->tdi->X[i_im];
+                residual_y->X[i_re] -= source_y->tdi->X[i_re];
+                residual_y->X[i_im] -= source_y->tdi->X[i_im];
+                residual_y->Y[i_re] -= source_y->tdi->Y[i_re];
+                residual_y->Y[i_im] -= source_y->tdi->Y[i_im];
+                residual_y->Z[i_re] -= source_y->tdi->Z[i_re];
+                residual_y->Z[i_im] -= source_y->tdi->Z[i_im];
                 residual_y->A[j_re] -= source_y->tdi->A[i_re];
                 residual_y->A[j_im] -= source_y->tdi->A[i_im];
                 residual_y->E[j_re] -= source_y->tdi->E[i_re];
@@ -1346,17 +1456,34 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
         switch(data->Nchannel)
         {
             case 1:
-                deltalogL -= -0.5*fourier_nwip(residual_x->X+skip, residual_x->X+skip, model_x->noise[n]->SnX+imin, imax-imin);
-                deltalogL += -0.5*fourier_nwip(residual_y->X+skip, residual_y->X+skip, model_x->noise[n]->SnX+imin, imax-imin);
+                deltalogL -= fourier_nwip(residual_x->X+skip, residual_x->X+skip, model_x->noise[n]->invC[0][0]+imin, imax-imin);
+                deltalogL += fourier_nwip(residual_y->X+skip, residual_y->X+skip, model_x->noise[n]->invC[0][0]+imin, imax-imin);
                 break;
                 
             case 2:
-                deltalogL -= -0.5*fourier_nwip(residual_x->A+skip, residual_x->A+skip, model_x->noise[n]->SnA+imin, imax-imin);
-                deltalogL -= -0.5*fourier_nwip(residual_x->E+skip, residual_x->E+skip, model_x->noise[n]->SnE+imin, imax-imin);
+                deltalogL -= fourier_nwip(residual_x->A+skip, residual_x->A+skip, model_x->noise[n]->invC[0][0]+imin, imax-imin);
+                deltalogL -= fourier_nwip(residual_x->E+skip, residual_x->E+skip, model_x->noise[n]->invC[1][1]+imin, imax-imin);
 
-                deltalogL += -0.5*fourier_nwip(residual_y->A+skip, residual_y->A+skip, model_y->noise[n]->SnA+imin, imax-imin);
-                deltalogL += -0.5*fourier_nwip(residual_y->E+skip, residual_y->E+skip, model_y->noise[n]->SnE+imin, imax-imin);
+                deltalogL += fourier_nwip(residual_y->A+skip, residual_y->A+skip, model_y->noise[n]->invC[0][0]+imin, imax-imin);
+                deltalogL += fourier_nwip(residual_y->E+skip, residual_y->E+skip, model_y->noise[n]->invC[1][1]+imin, imax-imin);
 
+                break;
+            case 3:
+                deltalogL -= fourier_nwip(residual_x->X+skip, residual_x->X+skip, model_x->noise[n]->invC[0][0]+imin, imax-imin);
+                deltalogL -= fourier_nwip(residual_x->Y+skip, residual_x->Y+skip, model_x->noise[n]->invC[1][1]+imin, imax-imin);
+                deltalogL -= fourier_nwip(residual_x->Z+skip, residual_x->Z+skip, model_x->noise[n]->invC[2][2]+imin, imax-imin);
+                deltalogL -= 2.0*fourier_nwip(residual_x->X+skip, residual_x->Y+skip, model_x->noise[n]->invC[0][1]+imin, imax-imin);
+                deltalogL -= 2.0*fourier_nwip(residual_x->X+skip, residual_x->Z+skip, model_x->noise[n]->invC[0][2]+imin, imax-imin);
+                deltalogL -= 2.0*fourier_nwip(residual_x->Y+skip, residual_x->Z+skip, model_x->noise[n]->invC[1][2]+imin, imax-imin);
+
+                deltalogL += fourier_nwip(residual_y->X+skip, residual_y->X+skip, model_y->noise[n]->invC[0][0]+imin, imax-imin);
+                deltalogL += fourier_nwip(residual_y->Y+skip, residual_y->Y+skip, model_y->noise[n]->invC[1][1]+imin, imax-imin);
+                deltalogL += fourier_nwip(residual_y->Z+skip, residual_y->Z+skip, model_y->noise[n]->invC[2][2]+imin, imax-imin);
+                deltalogL += 2.0*fourier_nwip(residual_y->X+skip, residual_y->Y+skip, model_y->noise[n]->invC[0][1]+imin, imax-imin);
+                deltalogL += 2.0*fourier_nwip(residual_y->X+skip, residual_y->Z+skip, model_y->noise[n]->invC[0][2]+imin, imax-imin);
+                deltalogL += 2.0*fourier_nwip(residual_y->Y+skip, residual_y->Z+skip, model_y->noise[n]->invC[1][2]+imin, imax-imin);
+
+                //TODO: add cross terms
                 break;
             default:
                 fprintf(stderr,"Unsupported number of channels in delta_log_likelihood()\n");
@@ -1364,7 +1491,7 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
         }
     }//end loop over time segments
         
-    return deltalogL;
+    return -0.5*deltalogL;
 
 }
 

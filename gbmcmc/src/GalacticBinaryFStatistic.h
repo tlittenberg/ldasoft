@@ -16,10 +16,10 @@
 
 struct Filter
 {
-    double *A1_fX, *A1_fA, *A1_fE;
-    double *A2_fX, *A2_fA, *A2_fE;
-    double *A3_fX, *A3_fA, *A3_fE;
-    double *A4_fX, *A4_fA, *A4_fE;
+    double *A1_fX, *A1_fY, *A1_fZ, *A1_fA, *A1_fE;
+    double *A2_fX, *A2_fY, *A2_fZ, *A2_fA, *A2_fE;
+    double *A3_fX, *A3_fY, *A3_fZ, *A3_fA, *A3_fE;
+    double *A4_fX, *A4_fY, *A4_fZ, *A4_fA, *A4_fE;
     
     long M_filter, N_filter;
     

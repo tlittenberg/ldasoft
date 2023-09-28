@@ -44,11 +44,19 @@ void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chai
     int q0 = (int)(model[0]->noise[0]->f[0]*Tobs);
     int dq = q0 - qstart;
     
-    for(int i=0; i<chain->NC; i++)
+    for(int n=0; n<chain->NC; n++)
     {
-        memcpy(model[i]->noise[0]->SnX, psd_full->SnX+dq, data->N*sizeof(double));
-        memcpy(model[i]->noise[0]->SnA, psd_full->SnA+dq, data->N*sizeof(double));
-        memcpy(model[i]->noise[0]->SnE, psd_full->SnE+dq, data->N*sizeof(double));
+        for(int i=0; i<model[n]->noise[0]->Nchannel; i++)
+        {
+            for(int j=0; j<model[n]->noise[0]->Nchannel; j++)
+            {
+                
+                memcpy(model[n]->noise[0]->C[i][j], psd_full->C[i][j]+dq, data->N*sizeof(double));
+                memcpy(model[n]->noise[0]->invC[i][j], psd_full->invC[i][j]+dq, data->N*sizeof(double));
+            }
+        }
+        memcpy(model[n]->noise[0]->detC, psd_full->detC+dq, data->N*sizeof(double));
+
     }
 
 }
@@ -190,7 +198,7 @@ void initialize_noise_state(struct NoiseData *noise_data)
         {
             for(int n=0; n<data->N; n++)
             {
-                if(model[ic]->psd->SnA[n] < 0.0 || model[ic]->psd->SnE[n] < 0.0) psd_check=0;
+                if(model[ic]->psd->C[0][0][n] < 0.0 || model[ic]->psd->C[1][1][n] < 0.0) psd_check=0;
             }
         }
         
@@ -244,7 +252,7 @@ void resume_noise_state(struct NoiseData *noise_data)
     //set spline model to stored values
     for(int n=0; n<Nspline; n++)
     {
-        fscanf(splineFile,"%lg %lg %lg",&model[0]->spline->f[n],&model[0]->spline->SnA[n],&model[0]->spline->SnE[n]);
+        fscanf(splineFile,"%lg %lg %lg",&model[0]->spline->f[n],&model[0]->spline->C[0][0][n],&model[0]->spline->C[1][1][n]);
     }
     fclose(splineFile);
 
@@ -315,8 +323,8 @@ int update_noise_sampler(struct NoiseData *noise_data)
     int i = (noise_data->mcmc_step+flags->NBURN)%data->Nwave;
     for(int n=0; n<data->N; n++)
     {
-        data->S_pow[n][0][0][i] = model[chain->index[0]]->psd->SnA[n];
-        data->S_pow[n][1][0][i] = model[chain->index[0]]->psd->SnE[n];
+        data->S_pow[n][0][0][i] = model[chain->index[0]]->psd->C[0][0][n];
+        data->S_pow[n][1][0][i] = model[chain->index[0]]->psd->C[1][1][n];
     }
     
     noise_data->mcmc_step++;

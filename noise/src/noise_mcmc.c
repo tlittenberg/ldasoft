@@ -155,8 +155,8 @@ int main(int argc, char *argv[])
                 {
                     for(int n=0; n<data->N; n++)
                     {
-                        data->S_pow[n][0][0][step/data->downsample] = model[chain->index[0]]->psd->SnA[n];
-                        data->S_pow[n][1][0][step/data->downsample] = model[chain->index[0]]->psd->SnE[n];
+                        data->S_pow[n][0][0][step/data->downsample] = model[chain->index[0]]->psd->C[0][0][n];
+                        data->S_pow[n][1][0][step/data->downsample] = model[chain->index[0]]->psd->C[1][1][n];
                     }
                     
 

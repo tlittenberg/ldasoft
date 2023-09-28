@@ -731,7 +731,7 @@ double evaluate_snr_prior(struct Data *data, struct Model *model, double *params
     
     //calculate noise model estimate
     double sf = data->sine_f_on_fstar;
-    double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+    double sn = model->noise[0]->C[0][0][n]*model->noise[0]->eta[0];
     
     //extra factors from TDI convention used for fractional-frequency data
     if(strcmp("frequency",data->format) == 0 || strcmp("sangria",data->format) == 0)
@@ -787,7 +787,34 @@ double evaluate_calibration_prior(struct Data *data, struct Model *model)
                 //phase
                 dphi = model->calibration[m]->dphiE;
                 logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+                break;
+            case 3:
                 
+                //amplitude
+                dA   = model->calibration[m]->dampX;
+                logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+                
+                //phase
+                dphi = model->calibration[m]->dphiX;
+                logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+                
+                //amplitude
+                dA   = model->calibration[m]->dampY;
+                logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+                
+                //phase
+                dphi = model->calibration[m]->dphiY;
+                logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+
+                //amplitude
+                dA   = model->calibration[m]->dampZ;
+                logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+                
+                //phase
+                dphi = model->calibration[m]->dphiZ;
+                logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+                break;
+
             default:
                 break;
         }//end switch

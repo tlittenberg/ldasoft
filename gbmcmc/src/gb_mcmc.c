@@ -147,7 +147,6 @@ int main(int argc, char *argv[])
     struct Model **trial = malloc(sizeof(struct Model*)*NC);
     struct Model **model = malloc(sizeof(struct Model*)*NC);
     initialize_gbmcmc_state(data, orbit, flags, chain, proposal, model, trial);
-
     
     /* Start analysis from saved chain state */
     if(flags->resume)
@@ -240,7 +239,9 @@ int main(int argc, char *argv[])
                     //fixed dimension parameter updates
                     else
                         galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                                        
+                          
+                    if(steps>10) exit(1);
+
                 }//loop over MCMC steps
                                                 
                 if( (flags->strainData || flags->simNoise) && !flags->psd)

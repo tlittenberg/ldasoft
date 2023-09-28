@@ -63,6 +63,13 @@ void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
 void generate_noise_model(struct Data *data, struct Model *model);
 
 /**
+ \brief Analytic in-place inversion of noise covariance matrix
+ 
+ Substitutes contents of noise->Cij[n] with inverse, and sets deteriminent noise->detC[n]
+ */
+void invert_noise_covariance_matrix(struct Noise *noise, int n);
+
+/**
  \brief Create LISA instrument calibration model
  
  Computes phase and amplitude corrections from Model::calibration parameters.
@@ -144,8 +151,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
 ///@{
 void alloc_data(struct Data *data, struct Flags *flags);
 void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel, int NP, int NT);
-void alloc_noise(struct Noise *noise, int NFFT);
-void realloc_noise(struct Noise *noise, int NFFT);
+void alloc_noise(struct Noise *noise, int NFFT, int Nchannel);
 void alloc_source(struct Source *source, int NFFT, int Nchannel, int NP);
 void alloc_calibration(struct Calibration *calibration);
 ///@}

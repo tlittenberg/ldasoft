@@ -369,41 +369,60 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
 
             if(strcmp(data->format,"phase")==0)
             {
-                data->noise[0]->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-                data->noise[0]->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+                data->noise[0]->C[0][0][n] = AEnoise(orbit->L, orbit->fstar, f);
+                data->noise[0]->C[1][1][n] = AEnoise(orbit->L, orbit->fstar, f);
+                data->noise[0]->C[0][1][n] = 0.0;
                 if(flags->confNoise)
                 {
-                    data->noise[0]->SnA[n] += GBnoise(data->T,f);
-                    data->noise[0]->SnE[n] += GBnoise(data->T,f);
+                    data->noise[0]->C[0][0][n] += GBnoise(data->T,f);
+                    data->noise[0]->C[1][1][n] += GBnoise(data->T,f);
                 }
             }
             else if(strcmp(data->format,"frequency")==0)
             {
-                data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                data->noise[0]->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                data->noise[0]->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                data->noise[0]->C[0][1][n] = 0.0;
                 if(flags->confNoise)
                 {
-                    data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f);
-                    data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f);
+                    data->noise[0]->C[0][0][n] += GBnoise_FF(data->T, orbit->fstar, f);
+                    data->noise[0]->C[1][1][n] += GBnoise_FF(data->T, orbit->fstar, f);
                 }
             }
             else if(strcmp(data->format,"sangria")==0)
             {
                 //TODO: Need a sqrt(2) to match Sangria data/noise
-                data->noise[0]->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-                data->noise[0]->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->C[0][1][n] = 0.0;
                 if(flags->confNoise)
                 {
-                    data->noise[0]->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
-                    data->noise[0]->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+                    data->noise[0]->C[0][0][n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+                    data->noise[0]->C[1][1][n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
                 }
             }
-            
             else
             {
                 fprintf(stderr,"Unsupported data format %s\n",data->format);
                 exit(1);
             }
+
+            //TODO: 3-channel model only has support for Sangria data conventions
+            if(data->Nchannel==3)
+            {
+                //TODO: Need a sqrt(2) to match Sangria data/noise
+                data->noise[0]->C[0][0][n] = XYZnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->C[1][1][n] = XYZnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->C[2][2][n] = XYZnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+
+                data->noise[0]->C[0][1][n] = data->noise[0]->C[1][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->C[0][2][n] = data->noise[0]->C[2][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                data->noise[0]->C[1][2][n] = data->noise[0]->C[2][1][n] = XYZcross_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                
+            }
+            
+            invert_noise_covariance_matrix(data->noise[0], n);
+
         }
     }
     //use PSD from file
@@ -432,8 +451,8 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
         double *fint = malloc(data->N*sizeof(double));
         for(int n=0; n<data->N; n++) fint[n] = data->fmin + (double)(n)/data->T;
 
-        CubicSplineGSL(lines, f, SnA, data->N, fint, data->noise[0]->SnA);
-        CubicSplineGSL(lines, f, SnE, data->N, fint, data->noise[0]->SnE);
+        CubicSplineGSL(lines, f, SnA, data->N, fint, data->noise[0]->C[0][0]);
+        CubicSplineGSL(lines, f, SnE, data->N, fint, data->noise[0]->C[1][1]);
         
         free(f);
         free(SnA);
@@ -453,16 +472,79 @@ void GalacticBinaryAddNoise(struct Data *data, struct TDI *tdi)
     gsl_rng_env_setup();
     gsl_rng_set (r, data->nseed);
     
-    for(int n=0; n<data->N; n++)
+    double n_re[data->Nchannel];
+    double n_im[data->Nchannel];
+    double u_re[data->Nchannel];
+    double u_im[data->Nchannel];
+    
+    //get LU decomposition of covariance matrix
+    double **L = malloc(data->Nchannel*sizeof(double*));
+    double **C = malloc(data->Nchannel*sizeof(double*));
+    for(int i=0; i<data->Nchannel; i++)
     {
-        tdi->A[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
-        tdi->A[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnA[n]/2.));
-        
-        tdi->E[2*n]   += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
-        tdi->E[2*n+1] += gsl_ran_gaussian (r, sqrt(data->noise[0]->SnE[n]/2.));
+        L[i] = malloc(data->Nchannel*sizeof(double));
+        C[i] = malloc(data->Nchannel*sizeof(double));
     }
     
+    
+    
+    for(int n=0; n<data->N; n++)
+    {
+        for(int i=0; i<data->Nchannel; i++)
+        {
+            u_re[i] = gsl_ran_gaussian (r,1);
+            u_im[i] = gsl_ran_gaussian (r,1);
+            n_re[i] = n_im[i] = 0.0;
+        }
+ 
+        // make sure both diagonals of the covariance matrix are filled
+        for(int i=0; i<data->Nchannel; i++)
+            for(int j=i; j<data->Nchannel; j++)
+                C[i][j] = C[j][i] = data->noise[0]->C[i][j][n];
+
+        cholesky_decomp(C, L, data->Nchannel);
+
+        // n = Lu
+        for(int i=0; i<data->Nchannel; i++)
+        {
+            for(int j=0; j<data->Nchannel; j++)
+            {
+                    n_re[i] += L[i][j]*u_re[j]/sqrt(2.);
+                    n_im[i] += L[i][j]*u_im[j]/sqrt(2.);
+            }
+        }
+        
+        switch(data->Nchannel)
+        {
+            case 1:
+                tdi->X[2*n]   += n_re[0];
+                tdi->X[2*n+1] += n_im[0];
+                break;
+            case 2:
+                tdi->A[2*n]   += n_re[0];
+                tdi->A[2*n+1] += n_im[0];
+                tdi->E[2*n]   += n_re[1];
+                tdi->E[2*n+1] += n_im[1];
+                break;
+            case 3:
+                tdi->X[2*n]   += n_re[0];
+                tdi->X[2*n+1] += n_im[0];
+                tdi->Y[2*n]   += n_re[1];
+                tdi->Y[2*n+1] += n_im[1];
+                tdi->Z[2*n]   += n_re[2];
+                tdi->Z[2*n+1] += n_im[2];
+                break;
+        }
+    }
+
     gsl_rng_free(r);
+    for(int i=0; i<data->Nchannel; i++)
+    {
+        free(L[i]);
+        free(C[i]);
+    }
+    free(L);
+    free(C);
 }
 
 void GalacticBinarySimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
@@ -499,7 +581,7 @@ void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit,
     data->fmin = data->qmin/data->T;
     data->fmax = data->qmax/data->T;
 
-    galactic_binary(orbit, data->format, data->T, data->t0[0], data->inj->params, data->NP, data->inj->tdi->X, data->inj->tdi->A, data->inj->tdi->E, data->inj->BW, 2);
+    galactic_binary(orbit, data->format, data->T, data->t0[0], data->inj->params, data->NP, data->inj->tdi->X, data->inj->tdi->Y, data->inj->tdi->Z, data->inj->tdi->A, data->inj->tdi->E, data->inj->BW, 2);
     
     //Add waveform to data TDI channels
     for(int j=0; j<data->inj->BW; j++)
@@ -509,7 +591,13 @@ void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit,
         {
             data->tdi[0]->X[2*i]   += data->inj->tdi->X[2*j];
             data->tdi[0]->X[2*i+1] += data->inj->tdi->X[2*j+1];
-            
+
+            data->tdi[0]->Y[2*i]   += data->inj->tdi->Y[2*j];
+            data->tdi[0]->Y[2*i+1] += data->inj->tdi->Y[2*j+1];
+
+            data->tdi[0]->Z[2*i]   += data->inj->tdi->Z[2*j];
+            data->tdi[0]->Z[2*i+1] += data->inj->tdi->Z[2*j+1];
+
             data->tdi[0]->A[2*i]   += data->inj->tdi->A[2*j];
             data->tdi[0]->A[2*i+1] += data->inj->tdi->A[2*j+1];
             
@@ -616,6 +704,8 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
                 inj->tdi->A[n] = 0.0;
                 inj->tdi->E[n] = 0.0;
                 inj->tdi->X[n] = 0.0;
+                inj->tdi->Y[n] = 0.0;
+                inj->tdi->Z[n] = 0.0;
             }
             
             //map parameters to vector
@@ -641,7 +731,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             galactic_binary_alignment(orbit, data, inj);
             
             //Simulate gravitational wave signal
-            galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+            galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, 8, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
             
             //Add waveform to data TDI channels
             for(int n=0; n<inj->BW; n++)
@@ -650,7 +740,13 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
                 
                 tdi->X[2*i]   = inj->tdi->X[2*n];
                 tdi->X[2*i+1] = inj->tdi->X[2*n+1];
-                
+
+                tdi->Y[2*i]   = inj->tdi->Y[2*n];
+                tdi->Y[2*i+1] = inj->tdi->Y[2*n+1];
+
+                tdi->Z[2*i]   = inj->tdi->Z[2*n];
+                tdi->Z[2*i+1] = inj->tdi->Z[2*n+1];
+
                 tdi->A[2*i]   = inj->tdi->A[2*n];
                 tdi->A[2*i+1] = inj->tdi->A[2*n+1];
                 
@@ -663,11 +759,18 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             for(int i=0; i<data->N; i++)
             {
                 double f = (double)(i+data->qmin)/data->T;
-                fprintf(fptr,"%lg %lg %lg %lg %lg",
-                        f,
-                        tdi->A[2*i],tdi->A[2*i+1],
-                        tdi->E[2*i],tdi->E[2*i+1]);
-                fprintf(fptr,"\n");
+                switch(data->Nchannel)
+                {
+                    case 1:
+                        fprintf(fptr,"%lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                        break;
+                    case 2:
+                        fprintf(fptr,"%lg %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                        break;
+                    case 3:
+                        fprintf(fptr,"%lg %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                        break;
+                }
             }
             fclose(fptr);
             
@@ -676,11 +779,18 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             for(int i=0; i<data->N; i++)
             {
                 double f = (double)(i+data->qmin)/data->T;
-                fprintf(fptr,"%.12g %lg %lg ",
-                        f,
-                        tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-                        tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-                fprintf(fptr,"\n");
+                switch(data->Nchannel)
+                {
+                    case 1:
+                        fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                        break;
+                    case 2:
+                        fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                        break;
+                    case 3:
+                        fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1],tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                        break;
+                }
             }
             fclose(fptr);
             
@@ -708,11 +818,18 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             for(int i=0; i<data->N; i++)
             {
                 double f = (double)(i+data->qmin)/data->T;
-                fprintf(fptr,"%.12g %lg %lg ",
-                        f,
-                        tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-                        tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-                fprintf(fptr,"\n");
+                switch(data->Nchannel)
+                {
+                    case 1:
+                        fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                        break;
+                    case 2:
+                        fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                        break;
+                    case 3:
+                        fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1], tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                        break;
+                }
             }
             fclose(fptr);
             fclose(injectionFile);
@@ -723,11 +840,18 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
             for(int i=0; i<data->N; i++)
             {
                 double f = (double)(i+data->qmin)/data->T;
-                fprintf(fptr,"%.12g %lg %lg %lg %lg",
-                        f,
-                        tdi->A[2*i],tdi->A[2*i+1],
-                        tdi->E[2*i],tdi->E[2*i+1]);
-                fprintf(fptr,"\n");
+                switch(data->Nchannel)
+                {
+                    case 1:
+                        fprintf(fptr,"%.12g %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                        break;
+                    case 2:
+                        fprintf(fptr,"%.12g %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                        break;
+                    case 3:
+                        fprintf(fptr,"%.12g %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                        break;
+                }
             }
             fclose(fptr);
             
@@ -741,7 +865,6 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
         }//end jj loop over time segments
         gsl_rng_free(r);
     }
-    
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
 void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags)
@@ -825,6 +948,8 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                     inj->tdi->A[n] = 0.0;
                     inj->tdi->E[n] = 0.0;
                     inj->tdi->X[n] = 0.0;
+                    inj->tdi->Y[n] = 0.0;
+                    inj->tdi->Z[n] = 0.0;
                 }
                 
                 //map polarization angle into [0:pi], preserving relation to phi0
@@ -870,7 +995,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 
                 //Simulate gravitational wave signal
                 printf("   ...t0        : %g\n",data->t0[jj]);
-                galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+                galactic_binary(orbit, data->format, data->T, data->t0[jj], inj->params, data->NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
                 
                 //Add waveform to data TDI channels
                 for(int n=0; n<inj->BW; n++)
@@ -880,7 +1005,13 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                     {
                         tdi->X[2*i]   += inj->tdi->X[2*n];
                         tdi->X[2*i+1] += inj->tdi->X[2*n+1];
-                        
+
+                        tdi->Y[2*i]   += inj->tdi->Y[2*n];
+                        tdi->Y[2*i+1] += inj->tdi->Y[2*n+1];
+
+                        tdi->Z[2*i]   += inj->tdi->Z[2*n];
+                        tdi->Z[2*i+1] += inj->tdi->Z[2*n+1];
+
                         tdi->A[2*i]   += inj->tdi->A[2*n];
                         tdi->A[2*i+1] += inj->tdi->A[2*n+1];
                         
@@ -894,11 +1025,18 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 for(int i=0; i<data->N; i++)
                 {
                     double f = (double)(i+data->qmin)/data->T;
-                    fprintf(fptr,"%lg %lg %lg %lg %lg",
-                            f,
-                            tdi->A[2*i],tdi->A[2*i+1],
-                            tdi->E[2*i],tdi->E[2*i+1]);
-                    fprintf(fptr,"\n");
+                    switch(data->Nchannel)
+                    {
+                        case 1:
+                            fprintf(fptr,"%lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                            break;
+                        case 2:
+                            fprintf(fptr,"%lg %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                            break;
+                        case 3:
+                            fprintf(fptr,"%lg %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                            break;
+                    }
                 }
                 fclose(fptr);
                 
@@ -907,11 +1045,18 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 for(int i=0; i<data->N; i++)
                 {
                     double f = (double)(i+data->qmin)/data->T;
-                    fprintf(fptr,"%.12g %lg %lg ",
-                            f,
-                            tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-                            tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-                    fprintf(fptr,"\n");
+                    switch(data->Nchannel)
+                    {
+                        case 1:
+                            fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                            break;
+                        case 2:
+                            fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                            break;
+                        case 3:
+                            fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1],tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                            break;
+                    }
                 }
                 fclose(fptr);
                 
@@ -959,11 +1104,18 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 for(int i=0; i<data->N; i++)
                 {
                     double f = (double)(i+data->qmin)/data->T;
-                    fprintf(fptr,"%.12g %lg %lg ",
-                            f,
-                            tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-                            tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-                    fprintf(fptr,"\n");
+                    switch(data->Nchannel)
+                    {
+                        case 1:
+                            fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                            break;
+                        case 2:
+                            fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                            break;
+                        case 3:
+                            fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1], tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                            break;
+                    }
                 }
                 fclose(fptr);
                 
@@ -973,21 +1125,20 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 for(int i=0; i<data->N; i++)
                 {
                     double f = (double)(i+data->qmin)/data->T;
-                    fprintf(fptr,"%.12g %lg %lg %lg %lg",
-                            f,
-                            tdi->A[2*i],tdi->A[2*i+1],
-                            tdi->E[2*i],tdi->E[2*i+1]);
-                    fprintf(fptr,"\n");
+                    switch(data->Nchannel)
+                    {
+                        case 1:
+                            fprintf(fptr,"%.12g %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                            break;
+                        case 2:
+                            fprintf(fptr,"%.12g %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                            break;
+                        case 3:
+                            fprintf(fptr,"%.12g %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                            break;
+                    }
                 }
                 fclose(fptr);
-                
-                //TODO: fill X vectors with A channel for now
-                for(int n=0; n<data->N; n++)
-                {
-                    tdi->X[2*n]   = tdi->A[2*n];
-                    tdi->X[2*n+1] = tdi->A[2*n+1];
-                }
-                
             }//end jj loop over segments
         }//end nn loop over sources in file
         fclose(injectionFile);
@@ -1101,6 +1252,8 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
             inj->tdi->A[n] = 0.0;
             inj->tdi->E[n] = 0.0;
             inj->tdi->X[n] = 0.0;
+            inj->tdi->Y[n] = 0.0;
+            inj->tdi->Z[n] = 0.0;
         }
         
         //map parameters to vector
@@ -1120,7 +1273,7 @@ void GalacticBinaryCatalogSNR(struct Data *data, struct Orbit *orbit, struct Fla
         
         //Simulate gravitational wave signal
         double t0 = data->t0[0];
-        galactic_binary(orbit, data->format, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+        galactic_binary(orbit, data->format, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
         
         //Get noise spectrum for data segment
         GalacticBinaryGetNoiseModel(data,orbit,flags);

@@ -57,7 +57,7 @@ double power_spectrum(double *data, int n)
     return (Re*Re + Im*Im);
 }
 
-double fourier_nwip(double *a, double *b, double *Sn, int n)
+double fourier_nwip(double *a, double *b, double *invC, int n)
 {
     int i, j, k;
     double arg, product;
@@ -71,7 +71,7 @@ double fourier_nwip(double *a, double *b, double *Sn, int n)
         ReA = a[j]; ImA = a[k];
         ReB = b[j]; ImB = b[k];
         product = ReA*ReB + ImA*ImB;
-        arg += product/Sn[i];
+        arg += product*invC[i];
     }
     
     return(2.0*arg);
@@ -88,11 +88,19 @@ double snr(struct Source *source, struct Noise *noise)
     switch(source->tdi->Nchannel)
     {
         case 1: //Michelson
-            snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->SnX,source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->invC[0][0],source->tdi->N);
             break;
         case 2: //A&E
-            snr2 += fourier_nwip(source->tdi->A,source->tdi->A,noise->SnA,source->tdi->N);
-            snr2 += fourier_nwip(source->tdi->E,source->tdi->E,noise->SnE,source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->A,source->tdi->A,noise->invC[0][0],source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->E,source->tdi->E,noise->invC[1][1],source->tdi->N);
+            break;
+        case 3: //XYZ
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->invC[0][0],source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->Y,source->tdi->Y,noise->invC[1][1],source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->Z,source->tdi->Z,noise->invC[2][2],source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->Y,noise->invC[0][1],source->tdi->N)*2.;
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->Z,noise->invC[0][2],source->tdi->N)*2.;
+            snr2 += fourier_nwip(source->tdi->Y,source->tdi->Z,noise->invC[1][2],source->tdi->N)*2.;
             break;
     }
     
@@ -161,9 +169,9 @@ double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
     }//loop over waveform bins
     
     
-    double aa = fourier_nwip(a_A,a_A,noise->SnA,N) + fourier_nwip(a_E,a_E,noise->SnE,N);
-    double bb = fourier_nwip(b_A,b_A,noise->SnA,N) + fourier_nwip(b_E,b_E,noise->SnE,N);
-    double ab = fourier_nwip(a_A,b_A,noise->SnA,N) + fourier_nwip(a_E,b_E,noise->SnE,N);
+    double aa = fourier_nwip(a_A,a_A,noise->invC[0][0],N) + fourier_nwip(a_E,a_E,noise->invC[1][1],N);
+    double bb = fourier_nwip(b_A,b_A,noise->invC[0][0],N) + fourier_nwip(b_E,b_E,noise->invC[1][1],N);
+    double ab = fourier_nwip(a_A,b_A,noise->invC[0][0],N) + fourier_nwip(a_E,b_E,noise->invC[1][1],N);
     
     match = ab/sqrt(aa*bb);
     
@@ -173,34 +181,6 @@ double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
     free(b_E);
     
     return match;
-}
-
-double waveform_snr(struct Source *h, struct Noise *noise, struct Orbit *orbit)
-{
-    double *SnA = calloc(h->BW,sizeof(double));
-    double *SnE = calloc(h->BW,sizeof(double));
-
-    double T = h->params[0]/h->f0;
-
-    double h_fmin = h->f0 - (double)h->BW/2./T;
-
-    for(int i=0; i<h->BW; i++)
-    {
-        double f = h_fmin + i/T;
-        SnA[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-        SnE[i] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-        SnA[i] += GBnoise_FF(T, orbit->fstar, f)/sqrt(2.);
-        SnE[i] += GBnoise_FF(T, orbit->fstar, f)/sqrt(2.);
-    }
-        
-    double hh = fourier_nwip(h->tdi->A,h->tdi->A,noise->SnA,h->BW) + fourier_nwip(h->tdi->E,h->tdi->E,noise->SnE,h->BW);
-    
-    double snr = sqrt(hh);
-        
-    free(SnA);
-    free(SnE);
-
-    return snr;
 }
 
 double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise)
@@ -255,9 +235,9 @@ double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise
   }//loop over waveform bins
 
   
-    double aa = fourier_nwip(a_A,a_A,noise->SnA,N) + fourier_nwip(a_E,a_E,noise->SnE,N);
-    double bb = fourier_nwip(b_A,b_A,noise->SnA,N) + fourier_nwip(b_E,b_E,noise->SnE,N);
-    double ab = fourier_nwip(a_A,b_A,noise->SnA,N) + fourier_nwip(a_E,b_E,noise->SnE,N);
+    double aa = fourier_nwip(a_A,a_A,noise->invC[0][0],N) + fourier_nwip(a_E,a_E,noise->invC[1][1],N);
+    double bb = fourier_nwip(b_A,b_A,noise->invC[0][0],N) + fourier_nwip(b_E,b_E,noise->invC[1][1],N);
+    double ab = fourier_nwip(a_A,b_A,noise->invC[0][0],N) + fourier_nwip(a_E,b_E,noise->invC[1][1],N);
 
   double distance = (aa + bb - 2*ab)/4.;  
 

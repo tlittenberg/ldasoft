@@ -353,29 +353,19 @@ static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *
     
 }
 
-void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
+void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI)
 {
     int i,j,k;
-    int BW2   = BW*2;
     int BWon2 = BW/2;
     double fonfs;
     double c3, s3, c2, s2, c1, s1;
     double f;
-    double X[BW2+1],Y[BW2+1],Z[BW2+1];
-    double phiLS, cLS, sLS;
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
     double dPhi = invfstar/T;
     double cosdPhi = cos(dPhi);
     double sindPhi = sin(dPhi);
     double prefactor;
-    
-    //phiLS = PI2*f0*(0.5-LonC);//1 s sampling rate
-    //TODO: sampling rate is hard-coded into tdi function
-    phiLS = PI2*f0*(7.5-L/CLIGHT);//15 s sampling rate
-                                  //phiLS = PI2*f0*(dt/2.0-LonC);//arbitrary sampling rate
-    cLS = cos(phiLS);
-    sLS = sin(phiLS);
     
     /* Initialize recursion */
     i = 0;
@@ -418,8 +408,10 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
         (d[1][3][k]-d[1][2][k])*c1 - (d[1][3][j]-d[1][2][j])*s1 +
         (d[3][1][k]-d[2][1][k]));
         
+        /* Michelson channel for single IFO
         M[j] = prefactor*(X[j]*cLS - X[k]*sLS);
         M[k] =-prefactor*(X[j]*sLS + X[k]*cLS);
+         */
         
         //save some CPU time when only X-channel is needed
         if(NI>1)
@@ -454,16 +446,13 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
     }
 }
 
-void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *M, double *A, double *E, int BW, int NI)
+void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI)
 {
     int i,j,k;
-    int BW2   = BW*2;
     int BWon2 = BW/2;
     double fonfs,fonfs2;
     double c3, s3, c2, s2, c1, s1;
     double f;
-    double X[BW2+1],Y[BW2+1],Z[BW2+1];
-    double phiSL, cSL, sSL;
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
     double dPhi = invfstar/T;
@@ -471,9 +460,6 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     double sindPhi = sin(dPhi);
     double prefactor;
     
-    phiSL = PIon2 - PI2*f0*(L/CLIGHT);
-    cSL = cos(phiSL);
-    sSL = sin(phiSL);
     
     /* Initialize recursion */
     i = 0;
@@ -518,8 +504,10 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
         (d[1][3][k]-d[1][2][k])*c1 - (d[1][3][j]-d[1][2][j])*s1 +
         (d[3][1][k]-d[2][1][k]));
         
+        /* Michelson channels for single IFO
         M[j] = prefactor*(X[j]*cSL - X[k]*sSL);
         M[k] = prefactor*(X[j]*sSL + X[k]*cSL);
+         */
         
         //save some CPU time when only X-channel is needed
         if(NI>1)
@@ -552,15 +540,13 @@ void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long 
     }
 }
 
-void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *A, double *E, int BW, int NI)
+void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI)
 {
     int i,j,k;
-    int BW2   = BW*2;
     int BWon2 = BW/2;
     double prefactor,fonfs;
     double c2, s2, c1, s1;
     double f;
-    double Y[BW2+1],Z[BW2+1];
     double sqT=sqrt(T);
     double invfstar = 1./fstar;
     double norm = 4.0*invfstar*sqT;
@@ -684,12 +670,25 @@ double XYZnoise_FF(double L, double fstar, double f)
 {
     double Spm, Sop;
     
-    get_noise_levels("scirdv1",f,&Spm,&Sop);
+    get_noise_levels("radler",f,&Spm,&Sop);
     
     double x = f/fstar;
     double cosx  = cos(x);
 
     return 16. * noise_transfer_function(x) * ( 2.*(1.0 + cosx*cosx)*Spm + Sop );
+}
+
+double XYZcross_FF(double L, double fstar, double f)
+{
+    double Spm, Sop;
+    
+    get_noise_levels("radler",f,&Spm,&Sop);
+    
+    double x = f/fstar;
+    double sinx  = sin(x);
+    double sin2x = sin(2*x);
+
+    return -4. * sinx * sin2x * ( 4.*Spm + Sop );
 }
 
 double AEnoise_FF(double L, double fstar, double f)

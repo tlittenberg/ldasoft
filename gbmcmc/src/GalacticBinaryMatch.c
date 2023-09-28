@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     
     struct Noise *noise = NULL;
     noise = malloc(flags->NT*sizeof(struct Noise));
-    alloc_noise(noise, data->N);
+    alloc_noise(noise, data->N, 2);
     
     
     for(int n=0; n<2*data->N; n++)
@@ -122,15 +122,15 @@ int main(int argc, char *argv[])
         noise->f[n] = f;
         if(strcmp(data->format,"phase")==0)
         {
-            noise->SnA[n] = AEnoise(orbit->L, orbit->fstar, f);
-            noise->SnE[n] = AEnoise(orbit->L, orbit->fstar, f);
+            noise->C[0][0][n] = AEnoise(orbit->L, orbit->fstar, f);
+            noise->C[1][1][n] = AEnoise(orbit->L, orbit->fstar, f);
         }
         else if(strcmp(data->format,"frequency")==0 || strcmp(data->format,"sangria")==0)
         {
-            noise->SnA[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-            noise->SnE[n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-            noise->SnA[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
-            noise->SnE[n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+            noise->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+            noise->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+            noise->C[0][0][n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+            noise->C[1][1][n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
 
         }
         else
@@ -138,6 +138,7 @@ int main(int argc, char *argv[])
             fprintf(stderr,"Unsupported data format %s",data->format);
             exit(1);
         }
+        invert_noise_covariance_matrix(noise,n);
     }
     
     
@@ -154,7 +155,7 @@ int main(int argc, char *argv[])
         
         scan_source_params(data, src2, chain_file2);
         galactic_binary_alignment(orbit, data, src2);
-        galactic_binary(orbit, data->format, data->T, data->t0[0], src2->params, data->NP, src2->tdi->X, src2->tdi->A, src2->tdi->E, src2->BW, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0[0], src2->params, data->NP, src2->tdi->X, src2->tdi->Y, src2->tdi->Z, src2->tdi->A, src2->tdi->E, src2->BW, 2);
 
         max_match=-INFINITY;
         while(!feof(chain_file1))
@@ -172,7 +173,7 @@ int main(int argc, char *argv[])
                 
                 //Book-keeping of injection time-frequency volume
                 galactic_binary_alignment(orbit, data, src1);
-                galactic_binary(orbit, data->format, data->T, data->t0[0], src1->params, data->NP, src1->tdi->X, src1->tdi->A, src1->tdi->E, src1->BW, 2);
+                galactic_binary(orbit, data->format, data->T, data->t0[0], src1->params, data->NP, src1->tdi->X, src1->tdi->Y,src1->tdi->Z, src1->tdi->A, src1->tdi->E, src1->BW, 2);
                                 
                 match = waveform_match(src1, src2, noise);
                 if(match>max_match) max_match=match;

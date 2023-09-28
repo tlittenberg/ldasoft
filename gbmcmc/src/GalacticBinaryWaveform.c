@@ -71,7 +71,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     
     int NP = source->NP;
     
-    double epsilon    = 1.0e-5;
+    double epsilon    = 1.0e-7;
     //double invepsilon2= 1./(2.*epsilon);
     double invepsilon2= 1./(epsilon);
     double invstep;
@@ -127,11 +127,10 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         for(j=0; j<N2; j++)
         {
             wave_p->tdi->X[j]=0.0;
+            wave_p->tdi->Y[j]=0.0;
+            wave_p->tdi->Z[j]=0.0;
             wave_p->tdi->A[j]=0.0;
             wave_p->tdi->E[j]=0.0;
-            //wave_m->tdi->X[j]=0.0;
-            //wave_m->tdi->A[j]=0.0;
-            //wave_m->tdi->E[j]=0.0;
         }
         
         // align perturbed waveforms in data array
@@ -139,8 +138,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         //galactic_binary_alignment(orbit, data, wave_m);
         
         // compute perturbed waveforms
-        galactic_binary(orbit, data->format, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-        //galactic_binary(orbit, data->format, data->T, data->t0[0], wave_m->params, NP, wave_m->tdi->X, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+        galactic_binary(orbit, data->format, data->T, data->t0[0], wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->Y, wave_p->tdi->Z, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
         
         // central differencing derivatives of waveforms w.r.t. parameters
         switch(source->tdi->Nchannel)
@@ -148,19 +146,31 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             case 1:
                 for(n=0; n<wave_p->BW*2; n++)
                 {
-//                    dhdx[i]->X[n] = (wave_p->tdi->X[n] - wave_m->tdi->X[n])*invstep;
                     dhdx[i]->X[n] = (wave_p->tdi->X[n] - source->tdi->X[n])*invstep;
                 }
                 break;
             case 2:
                 for(n=0; n<wave_p->BW*2; n++)
                 {
-//                    dhdx[i]->A[n] = (wave_p->tdi->A[n] - wave_m->tdi->A[n])*invstep;
-//                    dhdx[i]->E[n] = (wave_p->tdi->E[n] - wave_m->tdi->E[n])*invstep;
                     dhdx[i]->A[n] = (wave_p->tdi->A[n] - source->tdi->A[n])*invstep;
                     dhdx[i]->E[n] = (wave_p->tdi->E[n] - source->tdi->E[n])*invstep;
                 }
                 break;
+            case 3:
+                for(n=0; n<wave_p->BW*2; n++)
+                {
+                    /* Use AE channels for Fisher matrix cuz it's just a proposal*/
+                    dhdx[i]->A[n] = (wave_p->tdi->A[n] - source->tdi->A[n])*invstep;
+                    dhdx[i]->E[n] = (wave_p->tdi->E[n] - source->tdi->E[n])*invstep;
+                     
+                    
+                    /*
+                    dhdx[i]->X[n] = (wave_p->tdi->X[n] - source->tdi->X[n])*invstep;
+                    dhdx[i]->Y[n] = (wave_p->tdi->Y[n] - source->tdi->Y[n])*invstep;
+                    dhdx[i]->Z[n] = (wave_p->tdi->Z[n] - source->tdi->Z[n])*invstep;*/
+                }
+                break;
+
         }
     }
     
@@ -173,17 +183,31 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             switch(source->tdi->Nchannel)
             {
                 case 1:
-                    source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->X, dhdx[j]->X, noise->SnX, wave_p->BW);
+                    source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->X, dhdx[j]->X, noise->invC[0][0], wave_p->BW);
                     break;
                 case 2:
-                    source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->A, dhdx[j]->A, noise->SnA, wave_p->BW);
-                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->SnE, wave_p->BW);
+                    source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->A, dhdx[j]->A, noise->invC[0][0], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->invC[1][1], wave_p->BW);
                     break;
+                case 3:
+                    source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->A, dhdx[j]->A, noise->invC[0][0], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->invC[1][1], wave_p->BW);
+                    break;
+
+                    /*
+                    source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->X, dhdx[j]->X, noise->invC[0][0], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Y, dhdx[j]->Y, noise->invC[1][1], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Z, dhdx[j]->Z, noise->invC[2][2], wave_p->BW);
+
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->Y, noise->invC[0][1], wave_p->BW)*2.;
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->Z, noise->invC[0][2], wave_p->BW)*2.;
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Y, dhdx[j]->Z, noise->invC[1][2], wave_p->BW)*2.;
+                    break;*/
             }
             if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
             {
                 fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,__FILE__);
-                fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->SnA[data->N/2],noise->SnE[data->N/2]);
+                fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->C[0][0][data->N/2],noise->C[1][1][data->N/2]);
                 for(int k=0; k<NP; k++)
                 {
                     fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
@@ -247,7 +271,7 @@ void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct So
     source->imax = source->imin + source->BW;  
 }
 
-void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, double *params, int NP, double *X, double *A, double *E, int BW, int NI)
+void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, double *params, int NP, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI)
 {
     /*   Indicies   */
     int i,j,n;
@@ -543,11 +567,11 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     
     /*   Call subroutines for synthesizing different TDI data channels  */
     if(strcmp("phase",format) == 0)
-        LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+        LISA_tdi(orbit->L, orbit->fstar, T, d, f0, q, X-1, Y-1, Z-1, A-1, E-1, BW, NI);
     else if(strcmp("frequency",format) == 0)
-        LISA_tdi_FF(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+        LISA_tdi_FF(orbit->L, orbit->fstar, T, d, f0, q, X-1, Y-1, Z-1, A-1, E-1, BW, NI);
     else if(strcmp("sangria",format) == 0)
-        LISA_tdi_Sangria(orbit->L, orbit->fstar, T, d, f0, q, X-1, A-1, E-1, BW, NI);
+        LISA_tdi_Sangria(orbit->L, orbit->fstar, T, d, f0, q, X-1, Y-1, Z-1, A-1, E-1, BW, NI);
     else
     {
         fprintf(stderr,"Unsupported data format %s",format);

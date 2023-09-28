@@ -118,7 +118,7 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
     if(data->NP==9)
         fprintf(fptr,"--f-double-dot ");
     if(data->Nchannel==1)
-        fprintf(fptr,"--links 4 ");
+        fprintf(fptr,"--channels 1 ");
     
     fprintf(fptr,"\n\n");
     
@@ -244,7 +244,7 @@ void print_usage()
     //LISA
     fprintf(stdout,"       =========== LISA =========== \n");
     fprintf(stdout,"       --orbit       : orbit ephemerides file (2.5 GM MLDC)\n");
-    fprintf(stdout,"       --links       : number of links [4->X,6->AE] (6)    \n");
+    fprintf(stdout,"       --channels    : # of channels [1->X,2->AE,3->XYZ] (2)\n");
     fprintf(stdout,"       --frac-freq   : fractional frequency data (phase)   \n");
     fprintf(stdout,"       --sangria     : use LDC Sangria TDI conventions     \n");
     fprintf(stdout,"\n");
@@ -420,7 +420,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
         {"h5-data",    required_argument, 0, 0},
         {"psd",        required_argument, 0, 0},
         {"fmin",       required_argument, 0, 0},
-        {"links",      required_argument, 0, 0},
+        {"channels",   required_argument, 0, 0},
         {"update-cov", required_argument, 0, 0},
         {"match-in1",  required_argument, 0, 0},
         {"match-in2",  required_argument, 0, 0},
@@ -610,22 +610,16 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
                     sprintf(flags->matchInfile2,"%s",optarg);
                 }
                 
-                if(strcmp("links",long_options[long_index].name) == 0)
+                if(strcmp("channels",long_options[long_index].name) == 0)
                 {
-                    int Nlinks = (int)atoi(optarg);
-                    switch(Nlinks)
+                    data->Nchannel = (int)atoi(optarg);
+                    if(data->Nchannel<1 || data->Nchannel>3)
                     {
-                        case 4:
-                            data->Nchannel=1;
-                            break;
-                        case 6:
-                            data->Nchannel=2;
-                            break;
-                        default:
-                            fprintf(stderr,"Requested umber of links (%i) not supported\n",Nlinks);
-                            fprintf(stderr,"Use --links 4 for X (Michelson) data\n");
-                            fprintf(stderr,"    --links 6 for AE data\n");
-                            exit(1);
+                        fprintf(stderr,"Requested umber of channels (%i) not supported\n",data->Nchannel);
+                        fprintf(stderr,"Use --channels 1 for X (Michelson) data\n");
+                        fprintf(stderr,"    --channels 2 for AE data\n");
+                        fprintf(stderr,"    --channels 3 for XYZ data\n");
+                        exit(1);
                     }
                 }
                 break;
@@ -895,7 +889,7 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
             //numerical SNR
             double snr_n = snr(model[n]->source[i], data->noise[0]);
             //analytic SNR
-            double snr_a = analytic_snr(exp(model[n]->source[i]->params[3]), data->noise[0]->SnA[0], data->sine_f_on_fstar, data->sqT);
+            double snr_a = analytic_snr(exp(model[n]->source[i]->params[3]), data->noise[0]->C[0][0][0], data->sine_f_on_fstar, data->sqT);
             
             fprintf(chain->parameterFile[0],"%lg %lg ",snr_a,snr_n);
         }
@@ -1028,18 +1022,9 @@ void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *s
     check+=fscanf(fptr, "%lg %lg ", &model->logL, &model->logLnorm);
     
     for(int i=0; i<model->NT; i++)
-    {
-        switch(data->Nchannel)
-        {
-            case 1:
-                check+=fscanf(fptr, "%lg", &model->noise[i]->etaX);
-                break;
-            case 2:
-                check+=fscanf(fptr, "%lg", &model->noise[i]->etaA);
-                check+=fscanf(fptr, "%lg", &model->noise[i]->etaE);
-                break;
-        }
-    }
+        for(int n=0; n<data->Nchannel; n++)
+            check+=fscanf(fptr, "%lg", &model->noise[i]->eta[n]);
+
     if(!check)
     {
         fprintf(stderr,"Error reading noise file\n");
@@ -1053,18 +1038,9 @@ void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int s
     fprintf(fptr, "%lg %lg ",model->logL, model->logLnorm);
     
     for(int i=0; i<model->NT; i++)
-    {
-        switch(data->Nchannel)
-        {
-            case 1:
-                fprintf(fptr, "%lg ", model->noise[i]->etaX);
-                break;
-            case 2:
-                fprintf(fptr, "%lg ", model->noise[i]->etaA);
-                fprintf(fptr, "%lg ", model->noise[i]->etaE);
-                break;
-        }
-    }
+        for(int n=0; n<data->Nchannel; n++)
+            fprintf(fptr, "%lg ", model->noise[i]->eta[n]);
+
     fprintf(fptr, "\n");
 }
 
@@ -1113,7 +1089,7 @@ void scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
 void save_waveforms(struct Data *data, struct Model *model, int mcmc)
 {
     int n_re,n_im;
-    double A_re,A_im,E_re,E_im,X_re,X_im,R_re,R_im;
+    double A_re,A_im,E_re,E_im,X_re,X_im,Y_re,Y_im,Z_re,Z_im,R_re,R_im;
     
     for(int i=0; i<model->NT; i++)
     {
@@ -1140,7 +1116,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
                 data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
                 data->h_pow[n][0][i][mcmc] = X_re*X_re + X_im*X_im;
                 
-                data->S_pow[n][0][i][mcmc] = model->noise[i]->SnX[n];
+                data->S_pow[n][0][i][mcmc] = 1./model->noise[i]->invC[0][0][n];
             }
                 break;
             case 2:
@@ -1178,8 +1154,63 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
                 data->h_pow[n][0][i][mcmc] = A_re*A_re + A_im*A_im;
                 data->h_pow[n][1][i][mcmc] = E_re*E_re + E_im*E_im;
                 
-                data->S_pow[n][0][i][mcmc] = model->noise[i]->SnA[n];
-                data->S_pow[n][1][i][mcmc] = model->noise[i]->SnE[n];
+                data->S_pow[n][0][i][mcmc] = 1./model->noise[i]->invC[0][0][n];
+                data->S_pow[n][1][i][mcmc] = 1./model->noise[i]->invC[1][1][n];
+            }
+                break;
+            case 3:
+                for(int n=0; n<data->N; n++)
+            {
+                n_re = 2*n;
+                n_im = n_re++;
+                
+                X_re = model->tdi[i]->X[n_re];
+                X_im = model->tdi[i]->X[n_im];
+                Y_re = model->tdi[i]->Y[n_re];
+                Y_im = model->tdi[i]->Y[n_im];
+                Z_re = model->tdi[i]->Z[n_re];
+                Z_im = model->tdi[i]->Z[n_im];
+
+                data->h_rec[n_re][0][i][mcmc] = X_re;
+                data->h_rec[n_im][0][i][mcmc] = X_im;
+                data->h_rec[n_re][1][i][mcmc] = Y_re;
+                data->h_rec[n_im][1][i][mcmc] = Y_im;
+                data->h_rec[n_re][2][i][mcmc] = Z_re;
+                data->h_rec[n_im][2][i][mcmc] = Z_im;
+
+                R_re = data->tdi[i]->X[n_re] - A_re;
+                R_im = data->tdi[i]->X[n_im] - A_im;
+                
+                data->h_res[n_re][0][i][mcmc] = R_re;
+                data->h_res[n_im][0][i][mcmc] = R_im;
+                
+                data->r_pow[n][0][i][mcmc] = R_re*R_re + R_im*R_im;
+                
+                R_re = data->tdi[i]->Y[n_re] - Y_re;
+                R_im = data->tdi[i]->Y[n_im] - Y_im;
+                
+                data->h_res[n_re][1][i][mcmc] = R_re;
+                data->h_res[n_im][1][i][mcmc] = R_im;
+                
+                data->r_pow[n][1][i][mcmc] = R_re*R_re + R_im*R_im;
+                
+                R_re = data->tdi[i]->Z[n_re] - Z_re;
+                R_im = data->tdi[i]->Z[n_im] - Z_im;
+                
+                data->h_res[n_re][2][i][mcmc] = R_re;
+                data->h_res[n_im][2][i][mcmc] = R_im;
+                
+                data->r_pow[n][2][i][mcmc] = R_re*R_re + R_im*R_im;
+                
+                
+                data->h_pow[n][0][i][mcmc] = X_re*X_re + X_im*X_im;
+                data->h_pow[n][1][i][mcmc] = Y_re*Y_re + Y_im*Y_im;
+                data->h_pow[n][2][i][mcmc] = Z_re*Z_re + Z_im*Z_im;
+
+                data->S_pow[n][0][i][mcmc] = 1./model->noise[i]->invC[0][0][n];
+                data->S_pow[n][1][i][mcmc] = 1./model->noise[i]->invC[1][1][n];
+                data->S_pow[n][2][i][mcmc] = 1./model->noise[i]->invC[2][2][n];
+
             }
                 break;
         }
@@ -1197,12 +1228,34 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
         //    {
         int i = 0;
         fprintf(fptr,"%.12g ",f);
-        fprintf(fptr,"%.12g ",data->tdi[i]->A[re]*data->tdi[i]->A[re] + data->tdi[i]->A[im]*data->tdi[i]->A[im]);
-        fprintf(fptr,"%.12g ",data->tdi[i]->E[re]*data->tdi[i]->E[re] + data->tdi[i]->E[im]*data->tdi[i]->E[im]);
-        fprintf(fptr,"%.12g ",model->tdi[i]->A[re]*model->tdi[i]->A[re] + model->tdi[i]->A[im]*model->tdi[i]->A[im]);
-        fprintf(fptr,"%.12g ",model->tdi[i]->E[re]*model->tdi[i]->E[re] + model->tdi[i]->E[im]*model->tdi[i]->E[im]);
-        fprintf(fptr,"%.12g ",(data->tdi[i]->A[re]-model->tdi[i]->A[re])*(data->tdi[i]->A[re]-model->tdi[i]->A[re]) + (data->tdi[i]->A[im]-model->tdi[i]->A[im])*(data->tdi[i]->A[im]-model->tdi[i]->A[im]) );
-        fprintf(fptr,"%.12g ",(data->tdi[i]->E[re]-model->tdi[i]->E[re])*(data->tdi[i]->E[re]-model->tdi[i]->E[re]) + (data->tdi[i]->E[im]-model->tdi[i]->E[im])*(data->tdi[i]->E[im]-model->tdi[i]->E[im]) );
+        switch(data->Nchannel)
+        {
+            case 2:
+                fprintf(fptr,"%.12g ",data->tdi[i]->A[re]*data->tdi[i]->A[re] + data->tdi[i]->A[im]*data->tdi[i]->A[im]);
+                fprintf(fptr,"%.12g ",data->tdi[i]->E[re]*data->tdi[i]->E[re] + data->tdi[i]->E[im]*data->tdi[i]->E[im]);
+                
+                fprintf(fptr,"%.12g ",model->tdi[i]->A[re]*model->tdi[i]->A[re] + model->tdi[i]->A[im]*model->tdi[i]->A[im]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->E[re]*model->tdi[i]->E[re] + model->tdi[i]->E[im]*model->tdi[i]->E[im]);
+                
+                fprintf(fptr,"%.12g ",(data->tdi[i]->A[re]-model->tdi[i]->A[re])*(data->tdi[i]->A[re]-model->tdi[i]->A[re]) + (data->tdi[i]->A[im]-model->tdi[i]->A[im])*(data->tdi[i]->A[im]-model->tdi[i]->A[im]) );
+                fprintf(fptr,"%.12g ",(data->tdi[i]->E[re]-model->tdi[i]->E[re])*(data->tdi[i]->E[re]-model->tdi[i]->E[re]) + (data->tdi[i]->E[im]-model->tdi[i]->E[im])*(data->tdi[i]->E[im]-model->tdi[i]->E[im]) );
+                
+                break;
+            case 3:
+                fprintf(fptr,"%.12g ",data->tdi[i]->X[re]*data->tdi[i]->X[re] + data->tdi[i]->X[im]*data->tdi[i]->X[im]);
+                fprintf(fptr,"%.12g ",data->tdi[i]->Y[re]*data->tdi[i]->Y[re] + data->tdi[i]->Y[im]*data->tdi[i]->Y[im]);
+                fprintf(fptr,"%.12g ",data->tdi[i]->Z[re]*data->tdi[i]->Z[re] + data->tdi[i]->Z[im]*data->tdi[i]->Z[im]);
+
+                fprintf(fptr,"%.12g ",model->tdi[i]->X[re]*model->tdi[i]->X[re] + model->tdi[i]->X[im]*model->tdi[i]->X[im]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->Y[re]*model->tdi[i]->Y[re] + model->tdi[i]->Y[im]*model->tdi[i]->Y[im]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->Z[re]*model->tdi[i]->Z[re] + model->tdi[i]->Z[im]*model->tdi[i]->Z[im]);
+                
+                fprintf(fptr,"%.12g ",(data->tdi[i]->X[re]-model->tdi[i]->X[re])*(data->tdi[i]->X[re]-model->tdi[i]->X[re]) + (data->tdi[i]->X[im]-model->tdi[i]->X[im])*(data->tdi[i]->X[im]-model->tdi[i]->X[im]) );
+                fprintf(fptr,"%.12g ",(data->tdi[i]->Y[re]-model->tdi[i]->Y[re])*(data->tdi[i]->Y[re]-model->tdi[i]->Y[re]) + (data->tdi[i]->Y[im]-model->tdi[i]->Y[im])*(data->tdi[i]->Y[im]-model->tdi[i]->Y[im]) );
+                fprintf(fptr,"%.12g ",(data->tdi[i]->Z[re]-model->tdi[i]->Z[re])*(data->tdi[i]->Z[re]-model->tdi[i]->Z[re]) + (data->tdi[i]->Z[im]-model->tdi[i]->Z[im])*(data->tdi[i]->Z[im]-model->tdi[i]->Z[im]) );
+
+                break;
+        }
         fprintf(fptr,"\n");
         //    }
     }
@@ -1218,10 +1271,24 @@ void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr)
 
         int i = 0;
         fprintf(fptr,"%.12g ",f);
-        fprintf(fptr,"%.12g ",model->tdi[i]->A[re]);
-        fprintf(fptr,"%.12g ",model->tdi[i]->A[im]);
-        fprintf(fptr,"%.12g ",model->tdi[i]->E[re]);
-        fprintf(fptr,"%.12g\n",model->tdi[i]->E[im]);
+        switch(data->Nchannel)
+        {
+            case 2:
+                fprintf(fptr,"%.12g ",model->tdi[i]->A[re]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->A[im]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->E[re]);
+                fprintf(fptr,"%.12g\n",model->tdi[i]->E[im]);
+                break;
+            case 3:
+                fprintf(fptr,"%.12g ",model->tdi[i]->X[re]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->X[im]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->Y[re]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->Y[im]);
+                fprintf(fptr,"%.12g ",model->tdi[i]->Z[re]);
+                fprintf(fptr,"%.12g\n",model->tdi[i]->Z[im]);
+                break;
+
+        }
     }
 }
 
@@ -1254,30 +1321,22 @@ void print_noise_reconstruction(struct Data *data, struct Flags *flags)
 
             
             double f = (double)(i+data->qmin)/data->T;
-            
-            double A_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][0][k], 1, data->Nwave);
-            double A_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.25);
-            double A_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.75);
-            double A_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.05);
-            double A_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][0][k], 1, data->Nwave, 0.95);
-            
-            double E_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][1][k], 1, data->Nwave);
-            double E_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.25);
-            double E_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.75);
-            double E_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.05);
-            double E_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][1][k], 1, data->Nwave, 0.95);
-                        
             fprintf(fptr_Snf,"%.12g ",f);
-            fprintf(fptr_Snf,"%lg ",A_med);
-            fprintf(fptr_Snf,"%lg ",A_lo_50);
-            fprintf(fptr_Snf,"%lg ",A_hi_50);
-            fprintf(fptr_Snf,"%lg ",A_lo_90);
-            fprintf(fptr_Snf,"%lg ",A_hi_90);
-            fprintf(fptr_Snf,"%lg ",E_med);
-            fprintf(fptr_Snf,"%lg ",E_lo_50);
-            fprintf(fptr_Snf,"%lg ",E_hi_50);
-            fprintf(fptr_Snf,"%lg ",E_lo_90);
-            fprintf(fptr_Snf,"%lg ",E_hi_90);
+
+            for(int j=0; j<data->Nchannel; j++)
+            {
+                double S_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][j][k], 1, data->Nwave);
+                double S_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j][k], 1, data->Nwave, 0.25);
+                double S_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j][k], 1, data->Nwave, 0.75);
+                double S_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j][k], 1, data->Nwave, 0.05);
+                double S_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j][k], 1, data->Nwave, 0.95);
+
+                fprintf(fptr_Snf,"%lg ",S_med);
+                fprintf(fptr_Snf,"%lg ",S_lo_50);
+                fprintf(fptr_Snf,"%lg ",S_hi_50);
+                fprintf(fptr_Snf,"%lg ",S_lo_90);
+                fprintf(fptr_Snf,"%lg ",S_hi_90);
+            }
             fprintf(fptr_Snf,"\n");
         }
         fclose(fptr_Snf);
@@ -1419,11 +1478,18 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     for(int i=0; i<data->N; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%lg %lg %lg %lg %lg",
-                f,
-                tdi->A[2*i],tdi->A[2*i+1],
-                tdi->E[2*i],tdi->E[2*i+1]);
-        fprintf(fptr,"\n");
+        switch(data->Nchannel)
+        {
+            case 1:
+                fprintf(fptr,"%lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                break;
+            case 2:
+                fprintf(fptr,"%lg %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                break;
+            case 3:                
+                fprintf(fptr,"%lg %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                break;
+        }
     }
     fclose(fptr);
     
@@ -1432,11 +1498,18 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     for(int i=0; i<data->N; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%.12g %lg %lg ",
-                f,
-                tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-                tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-        fprintf(fptr,"\n");
+        switch(data->Nchannel)
+        {
+            case 1:
+                fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                break;
+            case 2:
+                fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                break;
+            case 3:
+                fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1], tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                break;
+        }
     }
     fclose(fptr);
     
@@ -1446,11 +1519,18 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     for(int i=0; i<data->N; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%.12g %lg %lg ",
-                f,
-                tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1],
-                tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-        fprintf(fptr,"\n");
+        switch(data->Nchannel)
+        {
+            case 1:
+                fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                break;
+            case 2:
+                fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                break;
+            case 3:
+                fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1], tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                break;
+        }
     }
     fclose(fptr);
     
@@ -1460,11 +1540,18 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     for(int i=0; i<data->N; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%.12g %lg %lg %lg %lg",
-                f,
-                tdi->A[2*i],tdi->A[2*i+1],
-                tdi->E[2*i],tdi->E[2*i+1]);
-        fprintf(fptr,"\n");
+        switch(data->Nchannel)
+        {
+            case 1:
+                fprintf(fptr,"%.12g %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                break;
+            case 2:
+                fprintf(fptr,"%.12g %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                break;
+            case 3:
+                fprintf(fptr,"%.12g %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                break;
+        }
     }
     fclose(fptr);
     
@@ -1474,11 +1561,18 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags, int t_i
     for(int i=0; i<data->N; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%.12g %lg %lg ",
-                f,
-                data->noise[t_index]->SnA[i],
-                data->noise[t_index]->SnE[i]);
-        fprintf(fptr,"\n");
+        switch(data->Nchannel)
+        {
+            case 1:
+                fprintf(fptr,"%.12g %lg\n", f, data->noise[t_index]->C[0][0][i]);
+                break;
+            case 2:
+                fprintf(fptr,"%.12g %lg %lg\n", f, data->noise[t_index]->C[0][0][i], data->noise[t_index]->C[1][1][i]);
+                break;
+            case 3:
+                fprintf(fptr,"%.12g %lg %lg %lg\n", f, data->noise[t_index]->C[0][0][i], data->noise[t_index]->C[1][1][i], data->noise[t_index]->C[2][2][i]);
+                break;
+        }
     }
     fclose(fptr);
 }

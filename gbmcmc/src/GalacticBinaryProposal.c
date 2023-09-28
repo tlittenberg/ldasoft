@@ -143,8 +143,8 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
         power[i]=0.0;
         for(int n=i; n<i+BW; n++)
         {
-            double SnA = data->noise[FIXME]->SnA[n];
-            double SnE = data->noise[FIXME]->SnE[n];
+            double SnA = data->noise[FIXME]->C[0][0][n];
+            double SnE = data->noise[FIXME]->C[1][1][n];
             
             double AA = data->tdi[FIXME]->A[2*n]*data->tdi[FIXME]->A[2*n]+data->tdi[FIXME]->A[2*n+1]*data->tdi[FIXME]->A[2*n+1];
             double EE = data->tdi[FIXME]->E[2*n]*data->tdi[FIXME]->E[2*n]+data->tdi[FIXME]->E[2*n+1]*data->tdi[FIXME]->E[2*n+1];
@@ -172,9 +172,9 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
     total = 0.0;
     for(int n=0; n<data->N; n++)
     {
-        double SnA = data->noise[FIXME]->SnA[n];
-        double SnE = data->noise[FIXME]->SnE[n];
-        
+        double SnA = data->noise[FIXME]->C[0][0][n];
+        double SnE = data->noise[FIXME]->C[1][1][n];
+
         double AA = data->tdi[FIXME]->A[2*n]*data->tdi[FIXME]->A[2*n]+data->tdi[FIXME]->A[2*n+1]*data->tdi[FIXME]->A[2*n+1];
         double EE = data->tdi[FIXME]->E[2*n]*data->tdi[FIXME]->E[2*n]+data->tdi[FIXME]->E[2*n+1]*data->tdi[FIXME]->E[2*n+1];
         
@@ -462,7 +462,7 @@ double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED stru
 {
     int n = (int)floor(params[0] - model->prior[0][0]);
     double sf = data->sine_f_on_fstar;
-    double sn = model->noise[0]->SnA[n]*model->noise[0]->etaA;
+    double sn = model->noise[0]->C[0][0][n]*model->noise[0]->eta[0];
     double SNR1  = analytic_snr(1, sn, sf, data->sqT);
     double iSNR1 = 1./SNR1;
     
