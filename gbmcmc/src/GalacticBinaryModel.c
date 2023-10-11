@@ -861,7 +861,9 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
     {
         for(n=0; n<N2; n++)
         {
-            //model->tdi[m]->X[n]=0.0;
+            model->tdi[m]->X[n]=0.0;
+            model->tdi[m]->Y[n]=0.0;
+            model->tdi[m]->Z[n]=0.0;
             model->tdi[m]->A[n]=0.0;
             model->tdi[m]->E[n]=0.0;
         }

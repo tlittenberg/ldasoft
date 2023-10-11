@@ -273,20 +273,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
             
             //get delta log likelihood
             //model_y->logL = model_x->logL + delta_log_likelihood(data, model_x, model_y, n);
-            if(chain->index[ic]==0)
-            {
-                for(int i=0; i<data->Nchannel; i++)
-                {
-                    for(int j=0; j<data->Nchannel; j++)
-                    {
-                        if(model_y->noise[0]->invC[i][j][0]>=0.0) printf("+%.3g ",model_y->noise[0]->invC[i][j][0]);
-                        else printf("%.3g ",model_y->noise[0]->invC[i][j][0]);
-                    }
-                    printf("\n");
-                }
-                printf("detC=%.3g ",model_y->noise[0]->detC[0]);
-                printf("logLx=%lg, logLy=%lg\n",model_x->logL, model_y->logL);
-            }
+
             /*
              H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
              */
