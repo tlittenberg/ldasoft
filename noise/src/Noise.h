@@ -45,10 +45,24 @@ struct SplineModel
     struct Noise *psd; //!< Reconstructed noise model
 };
 
+struct InstrumentModel
+{
+    int Nlink;
+    double logL; //!< log Likelihood of model
+    double *sp; //!< position noise parameters
+    double *sa; //!< acceleration noise parameters
+    struct Noise *psd; //!< Reconstructed noise model
+};
+
 /**
  \brief Allocates spline model structure and contents.
  */
 void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int Nspline);
+
+/**
+ \brief Allocates instrument model structure and contents.
+ */
+void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel);
 
 /**
  \brief Free allocated spline model.
@@ -56,14 +70,29 @@ void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int 
 void free_spline_model(struct SplineModel *model);
 
 /**
+ \brief Free allocated spline model.
+ */
+void free_instrument_model(struct InstrumentModel *model);
+
+/**
  \brief Deep copy of SplineModel structure from `origin` into `copy`
  */
 void copy_spline_model(struct SplineModel *origin, struct SplineModel *copy);
 
 /**
+ \brief Deep copy of InstrumentModel structure from `origin` into `copy`
+ */
+void copy_instrument_model(struct InstrumentModel *origin, struct InstrumentModel *copy);
+
+/**
  \brief Print current state of spline model to ASCII
  */
 void print_spline_state(struct SplineModel *model, FILE *fptr, int step);
+
+/**
+ \brief Print current state of instrument model to ASCII
+ */
+void print_instrument_state(struct InstrumentModel *model, FILE *fptr, int step);
 
 /**
  \brief Wrapper to `GSL` cubic spline interpolation routines.
@@ -81,6 +110,11 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
  \brief Wrapper to `CubicSplineGSL` functions for generating PSD model based on current state of `model`
  */
 void generate_spline_noise_model(struct SplineModel *model);
+
+/**
+ \brief Compute noise covariance matrix model based on current state of `model`
+ */
+void generate_instrument_noise_model(struct InstrumentModel *model);
 
 /**
 \brief Compute spline model only where interpolant changes
@@ -110,9 +144,10 @@ double noise_delta_log_likelihood(struct Data *data, struct SplineModel *model_x
 
 
 /**
- \brief In-place parallel tempering exchange of spline `model` states
+ \brief In-place parallel tempering exchange of `model` states
  */
 void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags *flags);
+void noise_ptmcmc(struct InstrumentModel **model, struct Chain *chain, struct Flags *flags);
 
 /**
  \brief Fixed-dimension update of each parallel tempered spline `model` state
@@ -125,9 +160,19 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
 void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct SplineModel *model, struct Chain *chain, struct Flags *flags, int ic);
 
 /**
+ \brief Fixed-dimension update of each parallel tempered instrument noise `model` state
+ */
+void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct Chain *chain, struct Flags *flags, int ic);
+
+/**
  \brief Set initial state of spline `model`
  */
 void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct SplineModel *model, int Nspline);
+
+/**
+ \brief Set initial state of instrument noise `model`
+ */
+void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model);
 
 /**
  \brief Print full PSD model to file named `filename`

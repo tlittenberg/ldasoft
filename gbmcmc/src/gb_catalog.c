@@ -448,9 +448,11 @@ int main(int argc, char *argv[])
     //Get noise spectrum for data segment
     if(flags->simNoise)
     {
+        double Sop, Spm;
         for(int n=0; n<data->N; n++)
         {
             double f = data->fmin + (double)(n)/data->T;
+            get_noise_levels("radler", f, &Spm, &Sop);
             if(strcmp(data->format,"phase")==0)
             {
                 noise->C[0][0][n] = AEnoise(orbit->L, orbit->fstar, f);
@@ -458,13 +460,13 @@ int main(int argc, char *argv[])
             }
             else if(strcmp(data->format,"frequency")==0)
             {
-                noise->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f);
-                noise->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f);
+                noise->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);
+                noise->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);
             }
             else if(strcmp(data->format,"sangria")==0)
             {
-                noise->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
-                noise->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f)/sqrt(2.);
+                noise->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
+                noise->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
             }
             else
             {

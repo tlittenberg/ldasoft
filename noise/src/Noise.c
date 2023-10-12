@@ -49,10 +49,27 @@ void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int 
     alloc_noise(model->spline, Nchannel, Nspline);
 }
 
+void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel)
+{
+    model->Nlink=6;
+    model->sp = malloc(model->Nlink*sizeof(double));
+    model->sa = malloc(model->Nlink*sizeof(double));
+    model->psd = malloc(sizeof(struct Noise));
+    alloc_noise(model->psd, Nchannel, Ndata);
+}
+
 void free_spline_model(struct SplineModel *model)
 {
     free_noise(model->psd);
     free_noise(model->spline);
+    free(model);
+}
+
+void free_instrument_model(struct InstrumentModel *model)
+{
+    free(model->sp);
+    free(model->sa);
+    free_noise(model->psd);
     free(model);
 }
 
@@ -72,10 +89,33 @@ void copy_spline_model(struct SplineModel *origin, struct SplineModel *copy)
     copy->Nmax = origin->Nmax;
 }
 
+void copy_instrument_model(struct InstrumentModel *origin, struct InstrumentModel *copy)
+{
+    //Noise model parameters
+    copy_noise(origin->psd,copy->psd);
+
+    //Model likelihood
+    copy->logL = origin->logL;
+
+    //Instrument model Parameters
+    copy->Nlink = origin->Nlink;
+    memcpy(copy->sp, origin->sp, origin->Nlink*sizeof(double));
+    memcpy(copy->sa, origin->sa, origin->Nlink*sizeof(double));
+}
+
 void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
 {
     fprintf(fptr,"%i %.12g %i\n",step,model->logL,model->spline->N);
 }
+
+void print_instrument_state(struct InstrumentModel *model, FILE *fptr, int step)
+{
+    fprintf(fptr,"%i %.12g ",step,model->logL);
+    for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->sa[i]);
+    for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->sp[i]);
+    fprintf(fptr,"\n");
+}
+
 
 void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_knot, int max_knot)
 {
@@ -156,9 +196,23 @@ double noise_log_likelihood(struct Data *data, struct SplineModel *model)
     
     int N = data->N;
     
-    logL += -0.5*fourier_nwip(tdi->A, tdi->A, psd->invC[0][0], N);
-    logL += -0.5*fourier_nwip(tdi->E, tdi->E, psd->invC[1][1], N);
-    
+    switch(data->Nchannel)
+    {
+        case 1:
+            break;
+        case 2:
+            logL += -0.5*fourier_nwip(tdi->A, tdi->A, psd->invC[0][0], N);
+            logL += -0.5*fourier_nwip(tdi->E, tdi->E, psd->invC[1][1], N);
+            break;
+        case 3:
+            logL += -0.5*fourier_nwip(tdi->X, tdi->X, psd->invC[0][0], N);
+            logL += -0.5*fourier_nwip(tdi->Y, tdi->Y, psd->invC[1][1], N);
+            logL += -0.5*fourier_nwip(tdi->Z, tdi->Z, psd->invC[2][2], N);
+            logL += -fourier_nwip(tdi->X, tdi->Y, psd->invC[0][1], N);
+            logL += -fourier_nwip(tdi->X, tdi->Z, psd->invC[0][2], N);
+            logL += -fourier_nwip(tdi->Y, tdi->Z, psd->invC[1][2], N);
+            break;
+    }
     for(int n=0; n<N; n++)
         logL -= log(psd->detC[n]);
     
@@ -194,6 +248,53 @@ double noise_delta_log_likelihood(struct Data *data, struct SplineModel *model_x
 
 
 void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags *flags)
+{
+    int a, b;
+    int olda, oldb;
+    
+    double heat1, heat2;
+    double logL1, logL2;
+    double dlogL;
+    double H;
+    double alpha;
+    double beta;
+    
+    int NC = chain->NC;
+    
+    for(b=NC-1; b>0; b--)
+    {
+        a = b - 1;
+        chain->acceptance[a]=0;
+        
+        olda = chain->index[a];
+        oldb = chain->index[b];
+        
+        heat1 = chain->temperature[a];
+        heat2 = chain->temperature[b];
+        
+        logL1 = model[olda]->logL;
+        logL2 = model[oldb]->logL;
+        
+        //Hot chains jump more rarely
+        if(gsl_rng_uniform(chain->r[a])<1.0)
+        {
+            dlogL = logL2 - logL1;
+            H  = (heat2 - heat1)/(heat2*heat1);
+            
+            alpha = exp(dlogL*H);
+            beta  = gsl_rng_uniform(chain->r[a]);
+            
+            if(alpha >= beta)
+            {
+                chain->index[a] = oldb;
+                chain->index[b] = olda;
+                chain->acceptance[a]=1;
+            }
+        }
+    }
+}
+
+void noise_ptmcmc(struct InstrumentModel **model, struct Chain *chain, struct Flags *flags)
 {
     int a, b;
     int olda, oldb;
@@ -314,7 +415,9 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     }
 
     //update amplitude
-    double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k]);
+    double Sop, Spm;
+    get_noise_levels("radler", model_y->spline->f[k], &Spm, &Sop);
+    double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k], Spm, Sop);
     double scale = pow(10., -2.0 + 2.0*gsl_rng_uniform(chain->r[ic]));
     model_y->spline->C[0][0][k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
     model_y->spline->C[1][1][k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
@@ -419,8 +522,10 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             //check frequency prior
             if(check_frequency_spacing(fy, birth, data->T)) logPy = -INFINITY;
 
-            
-            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth]);//noise_transfer_function(model_y->spline->f[birth]/orbit->fstar);
+            double Spm,Sop;
+            get_noise_levels("radler", model_y->spline->f[birth], &Spm, &Sop);
+
+            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth], Spm, Sop);//noise_transfer_function(model_y->spline->f[birth]/orbit->fstar);
             double Snmin = -Sn*100.;
             double Snmax =  Sn*100.;
             model_y->spline->C[0][0][birth] = Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]);
@@ -506,6 +611,11 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
     free_spline_model(model_y);
 }
 
+void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct Chain *chain, struct Flags *flags, int ic)
+{
+}
+
+
 void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct SplineModel *model, int Nspline)
 {
     
@@ -520,8 +630,10 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
     for(int n=0; n<model->psd->N; n++)
     {
         double f = data->fmin + (double)n/data->T;
+        double Spm, Sop;
+        get_noise_levels("radler", f, &Spm, &Sop);
         model->psd->f[n] = f;
-        model->psd->transfer[n] = AEnoise_FF(orbit->L, orbit->fstar, f);//noise_transfer_function(f/orbit->fstar);
+        model->psd->transfer[n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);//noise_transfer_function(f/orbit->fstar);
     }
     
     //divide into Nspline control points
@@ -539,6 +651,29 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
     model->spline->f[0] -= 0.5/data->T;
     
     generate_spline_noise_model(model);
+    model->logL = noise_log_likelihood(data, model);
+}
+
+void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model)
+{
+    // initialize data models
+    alloc_instrument_model(model, data->N, data->Nchannel);
+    
+    // set up psd frequency grid
+    for(int n=0; n<model->psd->N; n++)
+        model->psd->f[n] = data->fmin + (double)n/data->T;
+
+    // initialize noise levels
+    double Spm, Sop;
+    get_noise_levels("radler", 1.0, &Spm, &Sop); //reference values at 1 Hz
+    for(int i=0; i<model->Nlink; i++)
+    {
+        model->sp[i] = Sop;
+        model->sa[i] = Spm;
+    }
+    
+    // get noise covariance matrix for initial parameters
+    generate_instrument_noise_model(model);
     model->logL = noise_log_likelihood(data, model);
 }
 

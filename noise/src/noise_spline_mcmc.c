@@ -72,16 +72,20 @@ int main(int argc, char *argv[])
         GalacticBinarySimulateData(data, orbit, flags);
     
     /*
-     * Initialize Instrument Noise Model
+     * Initialize Spline Model
      */
-    struct InstrumentModel **model = malloc(chain->NC*sizeof(struct InstrumentModel *));
+    int Nspline = 32+1;
+    struct SplineModel **model = malloc(chain->NC*sizeof(struct SplineModel *));
     for(int ic=0; ic<chain->NC; ic++)
     {
-        model[ic] = malloc(sizeof(struct InstrumentModel));
-        initialize_instrument_model(orbit, data, model[ic]);
+        model[ic] = malloc(sizeof(struct SplineModel));
+        initialize_spline_model(orbit, data, model[ic], Nspline);
     }
-        
-    sprintf(filename,"%s/instrument_noise_model.dat",data->dataDir);
+    
+    sprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
+    print_noise_model(model[0]->spline, filename);
+    
+    sprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[0]->psd, filename);
     
     
@@ -113,10 +117,14 @@ int main(int argc, char *argv[])
             // (parallel) loop over chains
             for(int ic=threadID; ic<NC; ic+=numThreads)
             {
-                struct InstrumentModel *model_ptr = model[chain->index[ic]];
+                struct SplineModel *model_ptr = model[chain->index[ic]];
                 for(int mc=0; mc<10; mc++)
                 {
-                   noise_instrument_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
+                    
+                    if(gsl_rng_uniform(chain->r[ic])<0.9)
+                        noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
+                    else
+                        noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
                 }
             }// end (parallel) loop over chains
             
@@ -126,24 +134,32 @@ int main(int argc, char *argv[])
             
             if(threadID==0)
             {
-                noise_ptmcmc(model, chain, flags);
+                spline_ptmcmc(model, chain, flags);
                 
                 if(step%(flags->NMCMC/10)==0)printf("noise_mcmc at step %i\n",step);
                 
                 if(step%(flags->NMCMC/100)==0)
                 {
-                    print_instrument_state(model[chain->index[0]], chainFile, step);
+                    print_spline_state(model[chain->index[0]], chainFile, step);
                     
-                    sprintf(filename,"%s/current_instrument_noise_model.dat",data->dataDir);
+                    sprintf(filename,"%s/current_interpolated_spline_points.dat",data->dataDir);
                     print_noise_model(model[chain->index[0]]->psd, filename);
                     
+                    sprintf(filename,"%s/current_spline_points.dat",data->dataDir);
+                    print_noise_model(model[chain->index[0]]->spline, filename);
+
+
                 }
                 
                 if(step%data->downsample==0 && step/data->downsample < data->Nwave)
                 {
                     for(int n=0; n<data->N; n++)
-                        for(int i=0; i<data->N; i++)
-                            data->S_pow[n][i][0][step/data->downsample] = model[chain->index[0]]->psd->C[i][i][n];
+                    {
+                        data->S_pow[n][0][0][step/data->downsample] = model[chain->index[0]]->psd->C[0][0][n];
+                        data->S_pow[n][1][0][step/data->downsample] = model[chain->index[0]]->psd->C[1][1][n];
+                    }
+                    
+
                 }
 
                 step++;
@@ -159,12 +175,15 @@ int main(int argc, char *argv[])
     
     fclose(chainFile);
     
-    sprintf(filename,"%s/final_instrument_noise_model.dat",data->dataDir);
+    sprintf(filename,"%s/final_spline_points.dat",data->dataDir);
+    print_noise_model(model[chain->index[0]]->spline, filename);
+    
+    sprintf(filename,"%s/final_interpolated_spline_points.dat",data->dataDir);
     print_noise_model(model[chain->index[0]]->psd, filename);
     
     print_noise_reconstruction(data, flags);
 
-    for(int ic=0; ic<chain->NC; ic++) free_instrument_model(model[ic]);
+    for(int ic=0; ic<chain->NC; ic++) free_spline_model(model[ic]);
     free(model);
     
     //print total run time

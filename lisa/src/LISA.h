@@ -235,19 +235,20 @@ void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, 
 
 /** @name  LISA Noise Model for equal arm, TDI1.5 configuration */
 ///@{
-
+/// Pre-configured proof mass and optical path length noises
+void get_noise_levels(char model[], double f, double *Spm, double *Sop);
 /// A and E noise (phase)
 double AEnoise(double L, double fstar, double f);
 /// A and E noise (frequency)
-double AEnoise_FF(double L, double fstar, double f);
+double AEnoise_FF(double L, double fstar, double f, double Spm, double Sop);
 /// T noise (frequency)
-double Tnoise_FF(double L, double fstar, double f);
+double Tnoise_FF(double L, double fstar, double f, double Spm, double Sop);
 /// Michelson-like X,Y,Z channel noise (phase)
 double XYZnoise(double L, double fstar, double f);
 /// Michelson-like X,Y,Z channel noise (frequency)
-double XYZnoise_FF(double L, double fstar, double f);
+double XYZnoise_FF(double L, double fstar, double f, double Spm, double Sop);
 /// Michelson-like X,Y,Z channel cross spectra (frequency)
-double XYZcross_FF(double L, double fstar, double f);
+double XYZcross_FF(double L, double fstar, double f, double Spm, double Sop);
 /// Confusion noise estimate for A,E channels (phase)
 double GBnoise(double T, double f);
 /// Confusion noise estimate for A,E channel (frequency)

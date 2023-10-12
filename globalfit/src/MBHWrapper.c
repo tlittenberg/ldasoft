@@ -270,10 +270,13 @@ void setup_mbh_data(struct MBHData *mbh_data, struct GBMCMCData *gbmcmc_data, st
     for(int i=0; i<mbh_data->data->N/2; i++)
     {
         double f = (double)i/mbh_data->data->Tobs;
-        mbh_data->data->SM[0][i] = AEnoise_FF(Larm, fstar, f)/sqrt(2.);
-        mbh_data->data->SM[1][i] = AEnoise_FF(Larm, fstar, f)/sqrt(2.);
-        mbh_data->data->SN[0][i] = AEnoise_FF(Larm, fstar, f)/sqrt(2.);
-        mbh_data->data->SN[1][i] = AEnoise_FF(Larm, fstar, f)/sqrt(2.);
+        double Sop,Spm;
+        get_noise_levels("radler", f, &Spm, &Sop);
+
+        mbh_data->data->SM[0][i] = AEnoise_FF(Larm, fstar, f, Spm, Sop)/sqrt(2.);
+        mbh_data->data->SM[1][i] = AEnoise_FF(Larm, fstar, f, Spm, Sop)/sqrt(2.);
+        mbh_data->data->SN[0][i] = AEnoise_FF(Larm, fstar, f, Spm, Sop)/sqrt(2.);
+        mbh_data->data->SN[1][i] = AEnoise_FF(Larm, fstar, f, Spm, Sop)/sqrt(2.);
     }
     
     //get max and min frequency extent of MBH models

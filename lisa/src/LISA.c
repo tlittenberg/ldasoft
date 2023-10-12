@@ -633,7 +633,7 @@ static double ipow(double x, int n)
  commit #491bf4b3
  (c) LISA 2019
 */
-static void get_noise_levels(char model[], double f, double *Spm, double *Sop)
+void get_noise_levels(char model[], double f, double *Spm, double *Sop)
 {
     if (strcmp(model, "radler") == 0)
     {
@@ -666,24 +666,16 @@ static void get_noise_levels(char model[], double f, double *Spm, double *Sop)
     }
 }
 
-double XYZnoise_FF(double L, double fstar, double f)
+double XYZnoise_FF(double L, double fstar, double f, double Spm, double Sop)
 {
-    double Spm, Sop;
-    
-    get_noise_levels("radler",f,&Spm,&Sop);
-    
     double x = f/fstar;
     double cosx  = cos(x);
 
     return 16. * noise_transfer_function(x) * ( 2.*(1.0 + cosx*cosx)*Spm + Sop );
 }
 
-double XYZcross_FF(double L, double fstar, double f)
+double XYZcross_FF(double L, double fstar, double f, double Spm, double Sop)
 {
-    double Spm, Sop;
-    
-    get_noise_levels("radler",f,&Spm,&Sop);
-    
     double x = f/fstar;
     double sinx  = sin(x);
     double sin2x = sin(2*x);
@@ -691,34 +683,23 @@ double XYZcross_FF(double L, double fstar, double f)
     return -4. * sinx * sin2x * ( 4.*Spm + Sop );
 }
 
-double AEnoise_FF(double L, double fstar, double f)
+double AEnoise_FF(double L, double fstar, double f, double Spm, double Sop)
 {
-
-    double Spm, Sop;
-    
-    get_noise_levels("radler",f,&Spm,&Sop);
-
     double x = f/fstar;
     
     double cosx  = cos(x);
     double cos2x = cos(2.*x);
     
     return  8. * noise_transfer_function(x) * ( 2.*Spm*(3. + 2.*cosx + cos2x) + Sop*(2. + cosx) );
-    
 }
 
-double Tnoise_FF(double L, double fstar, double f)
+double Tnoise_FF(double L, double fstar, double f, double Spm, double Sop)
 {
-    double Spm, Sop;
-    
-    get_noise_levels("radler",f,&Spm,&Sop);
-
     double x = f/fstar;
     
     double cosx  = cos(x);
 
     return 16.0 * Sop * (1.0 - cosx) * noise_transfer_function(x) + 128.0 * Spm * noise_transfer_function(x) * sin(0.5*x)*sin(0.5*x)*sin(0.5*x)*sin(0.5*x);
-
 }
 
 /*
@@ -831,6 +812,7 @@ double noise_transfer_function(double x)
 
 void test_noise_model(struct Orbit *orbit)
 {
+    double Spm,Sop;
     double fstart = log10(1e-5);
     double fstop = log10(0.1);
     int Nf = 1000;
@@ -839,7 +821,8 @@ void test_noise_model(struct Orbit *orbit)
     for(int nf=0; nf<Nf; nf++)
     {
         double ftemp = pow(10,fstart + nf*df);
-        fprintf(psdfile,"%lg %lg %lg\n",ftemp,AEnoise_FF(orbit->L,orbit->fstar,ftemp),Tnoise_FF(orbit->L,orbit->fstar,ftemp));
+        get_noise_levels("radler", ftemp, &Spm, &Sop);
+        fprintf(psdfile,"%lg %lg %lg\n",ftemp,AEnoise_FF(orbit->L,orbit->fstar,ftemp,Spm,Sop),Tnoise_FF(orbit->L,orbit->fstar,ftemp,Spm,Sop));
     }
     fclose(psdfile);
 }
