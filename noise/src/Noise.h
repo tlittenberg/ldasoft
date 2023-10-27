@@ -52,7 +52,34 @@ struct InstrumentModel
     double *sp; //!< position noise parameters
     double *sa; //!< acceleration noise parameters
     struct Noise *psd; //!< Reconstructed noise model
+    
+    /** @name Link level noise parameters */
+     ///@{
+    double sa12;
+    double sa13;
+    double sa21;
+    double sa23;
+    double sa31;
+    double sa32;
+    double sp12;
+    double sp13;
+    double sp21;
+    double sp23;
+    double sp31;
+    double sp32;
+    ///@}
 };
+
+/**
+ \brief Converts physical noise parameters to array expected by InstrumentModel
+ */
+void map_noise_params_to_array(struct InstrumentModel *model);
+
+/**
+ \brief Converts array expected by InstrumentModel to
+ physical noise parameters
+ */
+void map_array_to_noise_params(struct InstrumentModel *model);
 
 /**
  \brief Allocates spline model structure and contents.
@@ -114,7 +141,7 @@ void generate_spline_noise_model(struct SplineModel *model);
 /**
  \brief Compute noise covariance matrix model based on current state of `model`
  */
-void generate_instrument_noise_model(struct InstrumentModel *model);
+void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, struct InstrumentModel *model);
 
 /**
 \brief Compute spline model only where interpolant changes
@@ -130,7 +157,7 @@ void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_
  @param model SplineModel structure containing current state
  @return \f$  \ln p({\rm data}|{\rm spline}) \f$
  */
-double noise_log_likelihood(struct Data *data, struct SplineModel *model);
+double noise_log_likelihood(struct Data *data, struct Noise *noise);
 
 /**
  \brief Change in log likelihood for noise model.
@@ -178,5 +205,10 @@ void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct 
  \brief Print full PSD model to file named `filename`
  */
 void print_noise_model(struct Noise *noise, char filename[]);
+
+/**
+ \brief Print data whitened by modeled variance to file named `filename`
+ */
+void print_whitened_data(struct Data *data, struct Noise *noise, char filename[]);
 
 #endif /* NoiseMCMC_h */

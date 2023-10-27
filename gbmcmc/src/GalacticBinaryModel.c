@@ -217,7 +217,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
         for(int id=0; id<flags->DMAX; id++) chain->dimension[ic][id] = 0;
     }
     //set hottest chain to ~infinite temperature
-    chain->temperature[NC-1] = 1e12;
+    if(NC>1) chain->temperature[NC-1] = 1e12;
     chain->logLmax = 0.0;
     
     chain->r = malloc(NC*sizeof(gsl_rng *));
@@ -1082,7 +1082,7 @@ void invert_noise_covariance_matrix(struct Noise *noise, int n)
             double cyz = noise->C[Y][Z][n];
             noise->detC[n] = cxx*(czz*cyy - cyz*cyz) - cxy*(cxy*czz - cxz*cyz) + cxz*(cxy*cyz - cyy*cxz);
             double invdetC = 1./noise->detC[n];
-            noise->invC[X][X][n] = (cxx*cyy - cyz*cyz)*invdetC;
+            noise->invC[X][X][n] = (cyy*czz - cyz*cyz)*invdetC;
             noise->invC[Y][Y][n] = (czz*cxx - cxz*cxz)*invdetC;
             noise->invC[Z][Z][n] = (cxx*cyy - cxy*cxy)*invdetC;
             noise->invC[X][Y][n] = (cxz*cyz - czz*cxy)*invdetC;
@@ -1485,7 +1485,6 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
                 deltalogL += 2.0*fourier_nwip(residual_y->X+skip, residual_y->Z+skip, model_y->noise[n]->invC[0][2]+imin, imax-imin);
                 deltalogL += 2.0*fourier_nwip(residual_y->Y+skip, residual_y->Z+skip, model_y->noise[n]->invC[1][2]+imin, imax-imin);
 
-                //TODO: add cross terms
                 break;
             default:
                 fprintf(stderr,"Unsupported number of channels in delta_log_likelihood()\n");

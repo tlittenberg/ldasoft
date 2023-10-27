@@ -395,14 +395,14 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
             else if(strcmp(data->format,"sangria")==0)
             {
                 //TODO: Need a sqrt(2) to match Sangria data/noise
-                get_noise_levels("radler",f,&Spm,&Sop);
-                data->noise[0]->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
-                data->noise[0]->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
+                get_noise_levels("sangria",f,&Spm,&Sop);
+                data->noise[0]->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);
+                data->noise[0]->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);
                 data->noise[0]->C[0][1][n] = 0.0;
                 if(flags->confNoise)
                 {
-                    data->noise[0]->C[0][0][n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
-                    data->noise[0]->C[1][1][n] += GBnoise_FF(data->T, orbit->fstar, f)/sqrt(2.);
+                    data->noise[0]->C[0][0][n] += GBnoise_FF(data->T, orbit->fstar, f);
+                    data->noise[0]->C[1][1][n] += GBnoise_FF(data->T, orbit->fstar, f);
                 }
             }
             else
@@ -415,14 +415,14 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
             if(data->Nchannel==3)
             {
                 //TODO: Need a sqrt(2) to match Sangria data/noise
-                get_noise_levels("radler",f,&Spm,&Sop);
-                data->noise[0]->C[0][0][n] = XYZnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
-                data->noise[0]->C[1][1][n] = XYZnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
-                data->noise[0]->C[2][2][n] = XYZnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
+                get_noise_levels("sangria",f,&Spm,&Sop);
+                data->noise[0]->C[0][0][n] = XYZnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);
+                data->noise[0]->C[1][1][n] = XYZnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);
+                data->noise[0]->C[2][2][n] = XYZnoise_FF(orbit->L, orbit->fstar, f, Spm, Sop);
 
-                data->noise[0]->C[0][1][n] = data->noise[0]->C[1][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
-                data->noise[0]->C[0][2][n] = data->noise[0]->C[2][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
-                data->noise[0]->C[1][2][n] = data->noise[0]->C[2][1][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop)/sqrt(2.);
+                data->noise[0]->C[0][1][n] = data->noise[0]->C[1][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop);
+                data->noise[0]->C[0][2][n] = data->noise[0]->C[2][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop);
+                data->noise[0]->C[1][2][n] = data->noise[0]->C[2][1][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop);
                 
             }
             

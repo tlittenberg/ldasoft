@@ -129,20 +129,19 @@ int main(int argc, char *argv[])
                 noise_ptmcmc(model, chain, flags);
                 
                 if(step%(flags->NMCMC/10)==0)printf("noise_mcmc at step %i\n",step);
+
+                print_instrument_state(model[chain->index[0]], chainFile, step);
                 
                 if(step%(flags->NMCMC/100)==0)
                 {
-                    print_instrument_state(model[chain->index[0]], chainFile, step);
-                    
                     sprintf(filename,"%s/current_instrument_noise_model.dat",data->dataDir);
                     print_noise_model(model[chain->index[0]]->psd, filename);
-                    
                 }
                 
                 if(step%data->downsample==0 && step/data->downsample < data->Nwave)
                 {
                     for(int n=0; n<data->N; n++)
-                        for(int i=0; i<data->N; i++)
+                        for(int i=0; i<data->Nchannel; i++)
                             data->S_pow[n][i][0][step/data->downsample] = model[chain->index[0]]->psd->C[i][i][n];
                 }
 
@@ -163,6 +162,9 @@ int main(int argc, char *argv[])
     print_noise_model(model[chain->index[0]]->psd, filename);
     
     print_noise_reconstruction(data, flags);
+
+    sprintf(filename,"%s/whitened_data.dat",data->dataDir);
+    print_whitened_data(data, model[0]->psd, filename);
 
     for(int ic=0; ic<chain->NC; ic++) free_instrument_model(model[ic]);
     free(model);

@@ -257,7 +257,7 @@ void resume_noise_state(struct NoiseData *noise_data)
     fclose(splineFile);
 
     generate_spline_noise_model(model[0]);
-    model[0]->logL = noise_log_likelihood(data, model[0]);
+    model[0]->logL = noise_log_likelihood(data, model[0]->psd);
     
     for(int ic=1; ic<NC; ic++) copy_spline_model(model[0], model[ic]);
 }
@@ -294,7 +294,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
             struct SplineModel *model_ptr = model[chain->index[ic]];
             
             //update log likelihood (data may have changed)
-            model_ptr->logL = noise_log_likelihood(data, model_ptr);
+            model_ptr->logL = noise_log_likelihood(data, model_ptr->psd);
             
             //evolve fixed dimension sampler
             for(int steps=0; steps<200; steps++)

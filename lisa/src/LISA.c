@@ -658,6 +658,11 @@ void get_noise_levels(char model[], double f, double *Spm, double *Sop)
       double Soms_nu = Soms_d*(fonc)*(fonc);
       *Sop = Soms_nu;
     }
+    else if (strcmp(model, "sangria") == 0)
+    {
+        *Spm = 9.00e-30 / (PI2*f*CLIGHT)/(PI2*f*CLIGHT) * (1.0 + pow(0.4e-3/f,2)) * (1.0 + pow(f/8.0e-3,4));
+        *Sop = 2.25e-22 * (PI2*f/CLIGHT)*(PI2*f/CLIGHT) * (1.0 + pow(2.0e-3/f,4));
+    }
     /* more else if clauses */
     else /* default: */
     {
@@ -677,10 +682,9 @@ double XYZnoise_FF(double L, double fstar, double f, double Spm, double Sop)
 double XYZcross_FF(double L, double fstar, double f, double Spm, double Sop)
 {
     double x = f/fstar;
-    double sinx  = sin(x);
-    double sin2x = sin(2*x);
+    double cosx  = cos(x);
 
-    return -4. * sinx * sin2x * ( 4.*Spm + Sop );
+    return -8. * noise_transfer_function(x) * cosx * ( 4.*Spm + Sop );
 }
 
 double AEnoise_FF(double L, double fstar, double f, double Spm, double Sop)
