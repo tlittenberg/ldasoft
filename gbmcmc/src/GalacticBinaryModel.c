@@ -1056,42 +1056,46 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
     }
 }
 
-void invert_noise_covariance_matrix(struct Noise *noise, int n)
+void invert_noise_covariance_matrix(struct Noise *noise)
 {
     int X,Y,Z,A,E;
-    switch(noise->Nchannel)
+    
+    for(int n=0; n<noise->N; n++)
     {
-        case 1:
-            X=0;
-            noise->detC[n] = noise->C[X][X][n];
-            noise->invC[X][X][n] = 1./noise->C[X][X][n];
-            break;
-        case 2:
-            A=0, E=1;
-            noise->detC[n] = noise->C[A][A][n]*noise->C[E][E][n];
-            noise->invC[A][A][n] = 1./noise->C[A][A][n];
-            noise->invC[E][E][n] = 1./noise->C[E][E][n];
-            break;
-        case 3:
-            X=0, Y=1, Z=2;
-            double cxx = noise->C[X][X][n];
-            double cyy = noise->C[Y][Y][n];
-            double czz = noise->C[Z][Z][n];
-            double cxy = noise->C[X][Y][n];
-            double cxz = noise->C[X][Z][n];
-            double cyz = noise->C[Y][Z][n];
-            noise->detC[n] = cxx*(czz*cyy - cyz*cyz) - cxy*(cxy*czz - cxz*cyz) + cxz*(cxy*cyz - cyy*cxz);
-            double invdetC = 1./noise->detC[n];
-            noise->invC[X][X][n] = (cyy*czz - cyz*cyz)*invdetC;
-            noise->invC[Y][Y][n] = (czz*cxx - cxz*cxz)*invdetC;
-            noise->invC[Z][Z][n] = (cxx*cyy - cxy*cxy)*invdetC;
-            noise->invC[X][Y][n] = (cxz*cyz - czz*cxy)*invdetC;
-            noise->invC[X][Z][n] = (cxy*cyz - cxz*cyy)*invdetC;
-            noise->invC[Y][Z][n] = (cxy*cxz - cxx*cyz)*invdetC;
-            noise->invC[Y][X][n] = noise->invC[X][Y][n];
-            noise->invC[Z][X][n] = noise->invC[X][Z][n];
-            noise->invC[Z][Y][n] = noise->invC[Y][Z][n];
-            break;
+        switch(noise->Nchannel)
+        {
+            case 1:
+                X=0;
+                noise->detC[n] = noise->C[X][X][n];
+                noise->invC[X][X][n] = 1./noise->C[X][X][n];
+                break;
+            case 2:
+                A=0, E=1;
+                noise->detC[n] = noise->C[A][A][n]*noise->C[E][E][n];
+                noise->invC[A][A][n] = 1./noise->C[A][A][n];
+                noise->invC[E][E][n] = 1./noise->C[E][E][n];
+                break;
+            case 3:
+                X=0, Y=1, Z=2;
+                double cxx = noise->C[X][X][n];
+                double cyy = noise->C[Y][Y][n];
+                double czz = noise->C[Z][Z][n];
+                double cxy = noise->C[X][Y][n];
+                double cxz = noise->C[X][Z][n];
+                double cyz = noise->C[Y][Z][n];
+                noise->detC[n] = cxx*(czz*cyy - cyz*cyz) - cxy*(cxy*czz - cxz*cyz) + cxz*(cxy*cyz - cyy*cxz);
+                double invdetC = 1./noise->detC[n];
+                noise->invC[X][X][n] = (cyy*czz - cyz*cyz)*invdetC;
+                noise->invC[Y][Y][n] = (czz*cxx - cxz*cxz)*invdetC;
+                noise->invC[Z][Z][n] = (cxx*cyy - cxy*cxy)*invdetC;
+                noise->invC[X][Y][n] = (cxz*cyz - czz*cxy)*invdetC;
+                noise->invC[X][Z][n] = (cxy*cyz - cxz*cyy)*invdetC;
+                noise->invC[Y][Z][n] = (cxy*cxz - cxx*cyz)*invdetC;
+                noise->invC[Y][X][n] = noise->invC[X][Y][n];
+                noise->invC[Z][X][n] = noise->invC[X][Z][n];
+                noise->invC[Z][Y][n] = noise->invC[Y][Z][n];
+                break;
+        }
     }
 }
 
@@ -1107,8 +1111,8 @@ void generate_noise_model(struct Data *data, struct Model *model)
                 for(int j=i; j<data->Nchannel; j++)
                     model->noise[m]->C[i][j][n] = model->noise[m]->C[j][i][n] = data->noise[m]->C[i][j][n]*sqrt(model->noise[m]->eta[i]*model->noise[m]->eta[j]);
 
-            invert_noise_covariance_matrix(model->noise[m], n);
         }
+        invert_noise_covariance_matrix(model->noise[m]);
     }
 }
 

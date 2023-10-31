@@ -141,9 +141,9 @@ int main(int argc, char *argv[])
             fprintf(stderr,"Unsupported data format %s",data->format);
             exit(1);
         }
-        invert_noise_covariance_matrix(noise,n);
     }
-    
+    invert_noise_covariance_matrix(noise);
+
     
     double max_match;
     double match;

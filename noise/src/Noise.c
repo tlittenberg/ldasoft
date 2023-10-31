@@ -42,36 +42,54 @@
 
 void map_array_to_noise_params(struct InstrumentModel *model)
 {
-    model->sa12 = model->sa[0];
-    model->sa13 = model->sa[1];
-    model->sa21 = model->sa[2];
-    model->sa23 = model->sa[3];
-    model->sa31 = model->sa[4];
-    model->sa32 = model->sa[5];
+    model->sacc12 = model->sacc[0];
+    model->sacc13 = model->sacc[1];
+    model->sacc21 = model->sacc[2];
+    model->sacc23 = model->sacc[3];
+    model->sacc31 = model->sacc[4];
+    model->sacc32 = model->sacc[5];
     
-    model->sp12 = model->sp[0];
-    model->sp13 = model->sp[1];
-    model->sp21 = model->sp[2];
-    model->sp23 = model->sp[3];
-    model->sp31 = model->sp[4];
-    model->sp32 = model->sp[5];
+    model->soms12 = model->soms[0];
+    model->soms13 = model->soms[1];
+    model->soms21 = model->soms[2];
+    model->soms23 = model->soms[3];
+    model->soms31 = model->soms[4];
+    model->soms32 = model->soms[5];
 }
 
 void map_noise_params_to_array(struct InstrumentModel *model)
 {
-    model->sa[0] = model->sa12;
-    model->sa[1] = model->sa13;
-    model->sa[2] = model->sa21;
-    model->sa[3] = model->sa23;
-    model->sa[4] = model->sa31;
-    model->sa[5] = model->sa32;
+    model->sacc[0] = model->sacc12;
+    model->sacc[1] = model->sacc13;
+    model->sacc[2] = model->sacc21;
+    model->sacc[3] = model->sacc23;
+    model->sacc[4] = model->sacc31;
+    model->sacc[5] = model->sacc32;
     
-    model->sp[0] = model->sp12;
-    model->sp[1] = model->sp13;
-    model->sp[2] = model->sp21;
-    model->sp[3] = model->sp23;
-    model->sp[4] = model->sp31;
-    model->sp[5] = model->sp32;
+    model->soms[0] = model->soms12;
+    model->soms[1] = model->soms13;
+    model->soms[2] = model->soms21;
+    model->soms[3] = model->soms23;
+    model->soms[4] = model->soms31;
+    model->soms[5] = model->soms32;
+}
+
+void map_array_to_foreground_params(struct ForegroundModel *model)
+{
+    model->Amp   = exp(model->sgal[0]);
+    model->f1    = exp(model->sgal[1]);
+    model->alpha = model->sgal[2];
+    model->fk    = exp(model->sgal[3]);
+    model->f2    = exp(model->sgal[4]);
+}
+
+void map_foreground_params_to_array(struct ForegroundModel *model)
+{
+    model->sgal[0] = log(model->Amp);
+    model->sgal[1] = log(model->f1);
+    model->sgal[2] = model->alpha;
+    model->sgal[3] = log(model->fk);
+    model->sgal[4] = log(model->f2);
 }
 
 void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int Nspline)
@@ -86,8 +104,16 @@ void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int 
 void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel)
 {
     model->Nlink=6;
-    model->sp = malloc(model->Nlink*sizeof(double));
-    model->sa = malloc(model->Nlink*sizeof(double));
+    model->soms = malloc(model->Nlink*sizeof(double));
+    model->sacc = malloc(model->Nlink*sizeof(double));
+    model->psd = malloc(sizeof(struct Noise));
+    alloc_noise(model->psd, Ndata, Nchannel);
+}
+
+void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nchannel)
+{
+    model->Nparams=5;
+    model->sgal = malloc(model->Nparams*sizeof(double));
     model->psd = malloc(sizeof(struct Noise));
     alloc_noise(model->psd, Ndata, Nchannel);
 }
@@ -101,9 +127,16 @@ void free_spline_model(struct SplineModel *model)
 
 void free_instrument_model(struct InstrumentModel *model)
 {
-    free(model->sp);
-    free(model->sa);
+    free(model->soms);
+    free(model->sacc);
     free_noise(model->psd);
+    free(model);
+}
+
+void free_foreground_model(struct ForegroundModel *model)
+{
+    free_noise(model->psd);
+    free(model->sgal);
     free(model);
 }
 
@@ -133,8 +166,23 @@ void copy_instrument_model(struct InstrumentModel *origin, struct InstrumentMode
 
     //Instrument model Parameters
     copy->Nlink = origin->Nlink;
-    memcpy(copy->sp, origin->sp, origin->Nlink*sizeof(double));
-    memcpy(copy->sa, origin->sa, origin->Nlink*sizeof(double));
+    memcpy(copy->soms, origin->soms, origin->Nlink*sizeof(double));
+    memcpy(copy->sacc, origin->sacc, origin->Nlink*sizeof(double));
+}
+
+void copy_foreground_model(struct ForegroundModel *origin, struct ForegroundModel *copy)
+{
+    //Noise model parameters
+    copy_noise(origin->psd,copy->psd);
+    
+    //Model likelihood
+    copy->logL = origin->logL;
+
+    //Foreground model Parameters
+    copy->Tobs = origin->Tobs;
+    copy->Nparams = origin->Nparams;
+    memcpy(copy->sgal, origin->sgal, origin->Nparams*sizeof(double));
+    
 }
 
 void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
@@ -145,8 +193,15 @@ void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
 void print_instrument_state(struct InstrumentModel *model, FILE *fptr, int step)
 {
     fprintf(fptr,"%i %.12g ",step,model->logL);
-    for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->sa[i]);
-    for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->sp[i]);
+    for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->sacc[i]);
+    for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->soms[i]);
+    fprintf(fptr,"\n");
+}
+
+void print_foreground_state(struct ForegroundModel *model, FILE *fptr, int step)
+{
+    fprintf(fptr,"%i %.12g ",step,model->logL);
+    for(int i=0; i<model->Nparams; i++)fprintf(fptr,"%.12g ", model->sgal[i]);
     fprintf(fptr,"\n");
 }
 
@@ -187,9 +242,9 @@ void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_
         psd->C[0][0][n]+=psd->transfer[n];
         psd->C[1][1][n]+=psd->transfer[n];
         
-        invert_noise_covariance_matrix(psd, n);
     }
-    
+    invert_noise_covariance_matrix(psd);
+
     gsl_spline_free (cspline_A);
     gsl_spline_free (cspline_E);
     gsl_interp_accel_free (acc_A);
@@ -217,8 +272,8 @@ void generate_spline_noise_model(struct SplineModel *model)
         psd->C[0][0][n]+=psd->transfer[n];
         psd->C[1][1][n]+=psd->transfer[n];
         
-        invert_noise_covariance_matrix(psd, n);
     }
+    invert_noise_covariance_matrix(psd);
 }
 
 void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, struct InstrumentModel *model)
@@ -248,33 +303,33 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
         switch(data->Nchannel)
         {
             case 1:
-                Sacc = model->sa12 * acc_transfer_function;
-                Soms = model->sp12 * oms_transfer_function;
+                Sacc = model->sacc12 * acc_transfer_function;
+                Soms = model->soms12 * oms_transfer_function;
                 model->psd->C[0][0][n] = XYZnoise_FF(orbit->L, orbit->fstar, f, Sacc, Soms);
                 break;
             case 2:
-                Sacc = model->sa12 * acc_transfer_function;
-                Soms = model->sp12 * oms_transfer_function;
+                Sacc = model->sacc12 * acc_transfer_function;
+                Soms = model->soms12 * oms_transfer_function;
                 model->psd->C[0][0][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Sacc, Soms);
                 model->psd->C[1][1][n] = AEnoise_FF(orbit->L, orbit->fstar, f, Sacc, Soms);
                 model->psd->C[0][1][n] = 0.0;
                 break;
             case 3:
-
-                Sacc12 = model->sa12 * acc_transfer_function;
-                Sacc21 = model->sa21 * acc_transfer_function;
-                Sacc23 = model->sa23 * acc_transfer_function;
-                Sacc32 = model->sa32 * acc_transfer_function;
-                Sacc13 = model->sa13 * acc_transfer_function;
-                Sacc31 = model->sa31 * acc_transfer_function;
-
-                Soms12 = model->sp12 * oms_transfer_function;
-                Soms21 = model->sp21 * oms_transfer_function;
-                Soms23 = model->sp23 * oms_transfer_function;
-                Soms32 = model->sp32 * oms_transfer_function;
-                Soms13 = model->sp13 * oms_transfer_function;
-                Soms31 = model->sp31 * oms_transfer_function;
-
+                
+                Sacc12 = model->sacc12 * acc_transfer_function;
+                Sacc21 = model->sacc21 * acc_transfer_function;
+                Sacc23 = model->sacc23 * acc_transfer_function;
+                Sacc32 = model->sacc32 * acc_transfer_function;
+                Sacc13 = model->sacc13 * acc_transfer_function;
+                Sacc31 = model->sacc31 * acc_transfer_function;
+                
+                Soms12 = model->soms12 * oms_transfer_function;
+                Soms21 = model->soms21 * oms_transfer_function;
+                Soms23 = model->soms23 * oms_transfer_function;
+                Soms32 = model->soms32 * oms_transfer_function;
+                Soms13 = model->soms13 * oms_transfer_function;
+                Soms31 = model->soms31 * oms_transfer_function;
+                
                 
                 //OMS noise
                 model->psd->C[0][0][n] = (Soms12+Soms21+Soms13+Soms31)*.25;
@@ -311,10 +366,67 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
                 break;
         }
         
-        invert_noise_covariance_matrix(model->psd, n);
-        
+        //Normalization
+        for(int i=0; i<data->Nchannel; i++)
+            for(int j=0; j<data->Nchannel; j++)
+                model->psd->C[i][j][n] *= 2.0;
     }
+}
+
+void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, struct ForegroundModel *model)
+{
+    double f;
+    double fk,f1;
+    double Sgal;
     
+    map_array_to_foreground_params(model);
+    
+//    double logT = log10(model->Tobs/YEAR);
+//    fk = pow(10., model->ak * logT + model->bk );
+//    f1 = pow(10., model->a1 * logT + model->b1 );
+        
+    for(int n=0; n<data->N; n++)
+    {
+        f = model->psd->f[n];
+        
+        Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
+        
+        switch(data->Nchannel)
+        {
+            case 1:
+                model->psd->C[0][0][n] = Sgal;
+                break;
+            case 2:
+                model->psd->C[0][0][n] = model->psd->C[1][1][n] = 1.5*Sgal;
+                model->psd->C[0][1][n] = model->psd->C[1][0][n] = 0;
+                break;
+            case 3:
+                model->psd->C[0][0][n] = model->psd->C[1][1][n] = model->psd->C[2][2][n] = Sgal;
+                model->psd->C[0][1][n] = model->psd->C[0][2][n] = model->psd->C[1][2][n] = -0.5*Sgal;
+                model->psd->C[1][0][n] = model->psd->C[2][0][n] = model->psd->C[2][1][n] = -0.5*Sgal;
+                break;
+        }
+        
+        //Normalization
+        for(int i=0; i<data->Nchannel; i++)
+            for(int j=0; j<data->Nchannel; j++)
+                model->psd->C[i][j][n] *= 2.0;
+
+    }
+}
+
+void generate_full_covariance_matrix(struct Noise *full, struct Noise *component, int Nchannel)
+{
+    for(int n=0; n<full->N; n++)
+    {
+        for(int i=0; i<Nchannel; i++)
+        {
+            for(int j=0; j<Nchannel; j++)
+            {
+                full->C[i][j][n] += component->C[i][j][n];
+            }
+        }
+    }
 }
 
 double noise_log_likelihood(struct Data *data, struct Noise *noise)
@@ -741,7 +853,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
     free_spline_model(model_y);
 }
 
-void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct Chain *chain, struct Flags *flags, int ic)
+void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct ForegroundModel *galaxy, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -772,28 +884,37 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     else if(gsl_rng_uniform(chain->r[ic])>0.25)
         scale = 0.001;
     else
-        scale = 0.001;    
+        scale = 0.001;
     
     /* get proposed noise parameters */
     
     //update one link at a time
     int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
-    model_y->sa[i] = model_x->sa[i] + scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
-    model_y->sp[i] = model_x->sp[i] + scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
+    model_y->sacc[i] = model_x->sacc[i] + scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
+    model_y->soms[i] = model_x->soms[i] + scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
     
     //check priors
-    if(model_y->sa[i] < Sacc_min || model_y->sa[i] > Sacc_max) logPy = -INFINITY;
-    if(model_y->sp[i] < Soms_min || model_y->sp[i] > Soms_max) logPy = -INFINITY;
+    if(model_y->sacc[i] < Sacc_min || model_y->sacc[i] > Sacc_max) logPy = -INFINITY;
+    if(model_y->soms[i] < Soms_min || model_y->soms[i] > Soms_max) logPy = -INFINITY;
 
     //OMS noise is degenerate on a link
-    model_y->sp[1] = model_y->sp[0]; //Soms12 and Soms21
-    model_y->sp[3] = model_y->sp[2]; //Soms23 and Soms32
-    model_y->sp[5] = model_y->sp[4]; //Soms13 and Soms31
+    model_y->soms[1] = model_y->soms[0]; //Soms12 and Soms21
+    model_y->soms[3] = model_y->soms[2]; //Soms23 and Soms32
+    model_y->soms[5] = model_y->soms[4]; //Soms13 and Soms31
 
     //get noise covariance matrix for initial parameters
     if(logPy > -INFINITY && !flags->prior)
     {
         generate_instrument_noise_model(data,orbit,model_y);
+
+        //add foreground noise contribution
+        if(flags->confNoise) 
+        {
+            generate_galactic_foreground_model(data,orbit,galaxy);
+            generate_full_covariance_matrix(model_y->psd,galaxy->psd, data->Nchannel);
+        }
+        
+        invert_noise_covariance_matrix(model_y->psd);
 
         model_y->logL = noise_log_likelihood(data, model_y->psd);
 
@@ -805,9 +926,101 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     if(logH > loga)
     {
         copy_instrument_model(model_y, model_x);
+        if(flags->confNoise) galaxy->logL = model_x->logL;
     }
     
     free_instrument_model(model_y);
+}
+
+void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct Chain *chain, struct Flags *flags, int ic)
+{
+    double logH  = 0.0; //(log) Hastings ratio
+    double loga  = 1.0; //(log) transition probability
+    
+    double logPx  = 0.0; //(log) prior density for model x (current state)
+    double logPy  = 0.0; //(log) prior density for model y (proposed state)
+    
+    //shorthand pointers
+    struct ForegroundModel *model_x = model;
+    struct ForegroundModel *model_y = malloc(sizeof(struct ForegroundModel));
+    alloc_foreground_model(model_y, data->N, data->Nchannel);
+    copy_foreground_model(model_x,model_y);
+    
+    /* set priors */
+    double **prior = malloc(sizeof(double *)*model_x->Nparams);
+    for(int n=0; n<model_x->Nparams; n++)
+        prior[n] = malloc(sizeof(double)*2);
+    
+    //log(A)
+    prior[0][0] = -86.0;
+    prior[0][1] = -82.0;
+    
+    //f1
+    prior[1][0] = log(0.0001);
+    prior[1][1] = log(0.01);
+    
+    //alpha
+    prior[2][0] = 0.0;
+    prior[2][1] = 3.0;
+    
+    //fk
+    prior[3][0] = log(0.0001);
+    prior[3][1] = log(0.01);
+    
+    //f2
+    prior[4][0] = log(0.0001);
+    prior[4][1] = log(0.01);
+        
+    /* get proposed noise parameters */
+
+    //get jump sizes
+    double scale;
+    if(gsl_rng_uniform(chain->r[ic])>0.75)
+        scale = 1;
+    else if(gsl_rng_uniform(chain->r[ic])>0.5)
+        scale = 0.1;
+    else if(gsl_rng_uniform(chain->r[ic])>0.25)
+        scale = 0.01;
+    else
+        scale = 0.01;
+
+    //pick which parameter to update
+    int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nparams);
+    model_y->sgal[i] = model_x->sgal[i] + scale * 0.5*(prior[i][1]-prior[i][0]) * gsl_ran_gaussian(chain->r[ic],1);
+
+    //check priors
+    for(int n=0; n<model_y->Nparams; n++)
+        if(model_y->sgal[n] < prior[n][0] || model_y->sgal[n] > prior[n][1]) 
+            logPy = -INFINITY;
+
+    //get noise covariance matrix for initial parameters
+    if(logPy > -INFINITY && !flags->prior)
+    {
+        generate_instrument_noise_model(data,orbit,noise);
+        generate_galactic_foreground_model(data,orbit,model_y);
+
+        //add instrument noise contribution
+        generate_full_covariance_matrix(model_y->psd, noise->psd, data->Nchannel);
+        
+        invert_noise_covariance_matrix(model_y->psd);
+
+        model_y->logL = noise_log_likelihood(data, model_y->psd);
+
+        logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+    }
+    logH += logPy - logPx; //priors
+
+    loga = log(gsl_rng_uniform(chain->r[ic]));
+    if(logH > loga)
+    {
+        copy_foreground_model(model_y, model_x);
+        noise->logL = model_x->logL;
+    }
+    
+    free_foreground_model(model_y);
+    for(int n=0; n<model_x->Nparams; n++) free(prior[n]);
+    free(prior);
+
 }
 
 
@@ -861,13 +1074,34 @@ void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct 
     // initialize noise levels
     for(int i=0; i<model->Nlink; i++)
     {
-        model->sp[i] = 2.25e-22;
-        model->sa[i] = 9.00e-30;
+        model->soms[i] = 2.25e-22;
+        model->sacc[i] = 9.00e-30;
     }
     
     // get noise covariance matrix for initial parameters
     generate_instrument_noise_model(data,orbit,model);
-    model->logL = noise_log_likelihood(data, model->psd);
+}
+
+void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model)
+{
+    // initialize data models
+    alloc_foreground_model(model, data->N, data->Nchannel);
+    
+    // set up psd frequency grid
+    for(int n=0; n<model->psd->N; n++)
+        model->psd->f[n] = data->fmin + (double)n/data->T;
+
+    // initialize foreground parameters levels
+    model->Tobs  =  data->T;
+    model->Amp   =  1e-36;
+    model->f1    =  0.001;
+    model->alpha =  1.58;
+    model->fk    =  0.001;
+    model->f2    =  0.001;
+    map_foreground_params_to_array(model);
+    
+    // get noise covariance matrix for initial parameters
+    generate_galactic_foreground_model(data,orbit,model);
 }
 
 void print_noise_model(struct Noise *noise, char filename[])

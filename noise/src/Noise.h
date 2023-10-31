@@ -47,27 +47,45 @@ struct SplineModel
 
 struct InstrumentModel
 {
-    int Nlink;
-    double logL; //!< log Likelihood of model
-    double *sp; //!< position noise parameters
-    double *sa; //!< acceleration noise parameters
-    struct Noise *psd; //!< Reconstructed noise model
+    int Nlink;         //!< number of interferometer links (6 for 3-spacecraft constellation)
+    double logL;       //!< log Likelihood of model
+    double *soms;      //!< optical metrology system noise parameters
+    double *sacc;      //!< acceleration noise parameters
+    struct Noise *psd; //!< power and cross spectral densities
     
     /** @name Link level noise parameters */
      ///@{
-    double sa12;
-    double sa13;
-    double sa21;
-    double sa23;
-    double sa31;
-    double sa32;
-    double sp12;
-    double sp13;
-    double sp21;
-    double sp23;
-    double sp31;
-    double sp32;
+    double sacc12;
+    double sacc13;
+    double sacc21;
+    double sacc23;
+    double sacc31;
+    double sacc32;
+    double soms12;
+    double soms13;
+    double soms21;
+    double soms23;
+    double soms31;
+    double soms32;
     ///@}
+};
+
+struct ForegroundModel
+{
+    int Nparams;       //!< number of foreground parameters (7)
+    double Tobs;       //!< observation time (in seconds)
+    double *sgal;      //!< galactic foreground parameters
+    double logL;       //!< log Likelihood of model
+    struct Noise *psd; //!< power and cross spectral densities
+
+    /** @name galactic foreground parameters from Digman & Cornish 10.3847/1538-4357/ac9139*/
+     ///@{
+    double Amp;   //!< overall amplitude  (~2.13e-37)
+    double f1;
+    double alpha; //!< spectral index of low frequency part (~1.58)
+    double fk;
+    double f2;    //!< some other frequency parameter? (~0.53 mHz)
+     ///@}
 };
 
 /**
@@ -82,6 +100,17 @@ void map_noise_params_to_array(struct InstrumentModel *model);
 void map_array_to_noise_params(struct InstrumentModel *model);
 
 /**
+ \brief Converts phenomenological foreground parameters to array expected by ForegroundModel
+ */
+void map_foreground_params_to_array(struct ForegroundModel *model);
+
+/**
+ \brief Converts array expected by ForegroundModel to
+ phenomenological foreground parameters
+ */
+void map_array_to_foreground_params(struct ForegroundModel *model);
+
+/**
  \brief Allocates spline model structure and contents.
  */
 void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int Nspline);
@@ -90,6 +119,11 @@ void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int 
  \brief Allocates instrument model structure and contents.
  */
 void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel);
+
+/**
+ \brief Allocates galactic foreground model structure and contents.
+ */
+void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nchannel);
 
 /**
  \brief Free allocated spline model.
@@ -102,6 +136,11 @@ void free_spline_model(struct SplineModel *model);
 void free_instrument_model(struct InstrumentModel *model);
 
 /**
+ \brief Free allocated spline model.
+ */
+void free_foreground_model(struct ForegroundModel *model);
+
+/**
  \brief Deep copy of SplineModel structure from `origin` into `copy`
  */
 void copy_spline_model(struct SplineModel *origin, struct SplineModel *copy);
@@ -112,6 +151,11 @@ void copy_spline_model(struct SplineModel *origin, struct SplineModel *copy);
 void copy_instrument_model(struct InstrumentModel *origin, struct InstrumentModel *copy);
 
 /**
+ \brief Deep copy of ForegroundModel structure from `origin` into `copy`
+ */
+void copy_foreground_model(struct ForegroundModel *origin, struct ForegroundModel *copy);
+
+/**
  \brief Print current state of spline model to ASCII
  */
 void print_spline_state(struct SplineModel *model, FILE *fptr, int step);
@@ -120,6 +164,11 @@ void print_spline_state(struct SplineModel *model, FILE *fptr, int step);
  \brief Print current state of instrument model to ASCII
  */
 void print_instrument_state(struct InstrumentModel *model, FILE *fptr, int step);
+
+/**
+ \brief Print current state of instrument model to ASCII
+ */
+void print_foreground_state(struct ForegroundModel *model, FILE *fptr, int step);
 
 /**
  \brief Wrapper to `GSL` cubic spline interpolation routines.
@@ -139,9 +188,19 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
 void generate_spline_noise_model(struct SplineModel *model);
 
 /**
- \brief Compute noise covariance matrix model based on current state of `model`
+ \brief Compute instrument model contribution to noise covariance matrix based on current state of `model`
  */
 void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, struct InstrumentModel *model);
+
+/**
+ \brief Compute galactic foreground contribution to covariance matrix based on current state of `model`
+ */
+void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, struct ForegroundModel *model);
+
+/**
+ \brief Add components to `full` noise covariance matrix `C`
+ */
+void generate_full_covariance_matrix(struct Noise *full, struct Noise *component, int Nchannel);
 
 /**
 \brief Compute spline model only where interpolant changes
@@ -189,7 +248,12 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
 /**
  \brief Fixed-dimension update of each parallel tempered instrument noise `model` state
  */
-void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct Chain *chain, struct Flags *flags, int ic);
+void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct ForegroundModel *galaxy, struct Chain *chain, struct Flags *flags, int ic);
+
+/**
+ \brief Fixed-dimension update of each parallel tempered galactic foreground noise `model` state
+ */
+void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct Chain *chain, struct Flags *flags, int ic);
 
 /**
  \brief Set initial state of spline `model`
@@ -200,6 +264,11 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
  \brief Set initial state of instrument noise `model`
  */
 void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model);
+
+/**
+ \brief Set initial state of instrument noise `model`
+ */
+void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model);
 
 /**
  \brief Print full PSD model to file named `filename`

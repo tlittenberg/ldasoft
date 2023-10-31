@@ -423,12 +423,26 @@ void GalacticBinaryGetNoiseModel(struct Data *data, struct Orbit *orbit, struct 
                 data->noise[0]->C[0][1][n] = data->noise[0]->C[1][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop);
                 data->noise[0]->C[0][2][n] = data->noise[0]->C[2][0][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop);
                 data->noise[0]->C[1][2][n] = data->noise[0]->C[2][1][n] = XYZcross_FF(orbit->L, orbit->fstar, f, Spm, Sop);
-                
-            }
-            
-            invert_noise_covariance_matrix(data->noise[0], n);
 
+                if(flags->confNoise)
+                {
+                    double GBnoise=GBnoise_FF(data->T, orbit->fstar, f)/1.5; //GBnoise_FF() is hard-coded for AE channels
+                    data->noise[0]->C[0][0][n] += GBnoise;
+                    data->noise[0]->C[1][1][n] += GBnoise;
+                    data->noise[0]->C[2][2][n] += GBnoise;
+                    data->noise[0]->C[0][1][n] += -0.5*GBnoise;
+                    data->noise[0]->C[0][2][n] += -0.5*GBnoise;
+                    data->noise[0]->C[1][2][n] += -0.5*GBnoise;
+                    data->noise[0]->C[1][0][n] += -0.5*GBnoise;
+                    data->noise[0]->C[2][0][n] += -0.5*GBnoise;
+                    data->noise[0]->C[2][1][n] += -0.5*GBnoise;
+                }
+
+            }
         }
+        
+        invert_noise_covariance_matrix(data->noise[0]);
+
     }
     //use PSD from file
     else

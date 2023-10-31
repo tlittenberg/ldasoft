@@ -67,7 +67,7 @@ void generate_noise_model(struct Data *data, struct Model *model);
  
  Substitutes contents of noise->Cij[n] with inverse, and sets deteriminent noise->detC[n]
  */
-void invert_noise_covariance_matrix(struct Noise *noise, int n);
+void invert_noise_covariance_matrix(struct Noise *noise);
 
 /**
  \brief Create LISA instrument calibration model

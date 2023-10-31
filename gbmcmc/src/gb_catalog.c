@@ -473,8 +473,8 @@ int main(int argc, char *argv[])
                 fprintf(stderr,"Unsupported data format %s",data->format);
                 exit(1);
             }
-            invert_noise_covariance_matrix(noise, n);
         }
+        invert_noise_covariance_matrix(noise);
     }
     else
     {
@@ -491,8 +491,8 @@ int main(int argc, char *argv[])
                 fprintf(stderr,"Error reading %s\n",flags->noiseFile);
                 exit(1);
             }
-            invert_noise_covariance_matrix(noise, n);
         }
+        invert_noise_covariance_matrix(noise);
         fclose(noiseFile);
     }
     
