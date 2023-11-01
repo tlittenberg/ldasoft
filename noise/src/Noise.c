@@ -381,16 +381,13 @@ void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, 
     
     map_array_to_foreground_params(model);
     
-//    double logT = log10(model->Tobs/YEAR);
-//    fk = pow(10., model->ak * logT + model->bk );
-//    f1 = pow(10., model->a1 * logT + model->b1 );
-        
     for(int n=0; n<data->N; n++)
     {
         f = model->psd->f[n];
         
-        Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
-        
+        //Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
+        Sgal = model->Amp*pow(f,5./3.) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
+
         switch(data->Nchannel)
         {
             case 1:
@@ -867,6 +864,10 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     alloc_instrument_model(model_y, data->N, data->Nchannel);
     copy_instrument_model(model_x,model_y);
     
+    //structure for full noise covariance matrix
+    struct Noise *psd =  malloc(sizeof(struct Noise));
+    alloc_noise(psd, data->N, data->Nchannel);
+    
     //set priors
     double Sacc = 9.00e-30;
     double Soms = 2.25e-22;
@@ -906,17 +907,15 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     if(logPy > -INFINITY && !flags->prior)
     {
         generate_instrument_noise_model(data,orbit,model_y);
+        copy_noise(model_y->psd,psd);
 
         //add foreground noise contribution
         if(flags->confNoise) 
-        {
-            generate_galactic_foreground_model(data,orbit,galaxy);
-            generate_full_covariance_matrix(model_y->psd,galaxy->psd, data->Nchannel);
-        }
+            generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
         
-        invert_noise_covariance_matrix(model_y->psd);
+        invert_noise_covariance_matrix(psd);
 
-        model_y->logL = noise_log_likelihood(data, model_y->psd);
+        model_y->logL = noise_log_likelihood(data, psd);
 
         logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
     }
@@ -929,6 +928,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         if(flags->confNoise) galaxy->logL = model_x->logL;
     }
     
+    free_noise(psd);
     free_instrument_model(model_y);
 }
 
@@ -946,6 +946,10 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     alloc_foreground_model(model_y, data->N, data->Nchannel);
     copy_foreground_model(model_x,model_y);
     
+    //structure for full noise covariance matrix
+    struct Noise *psd =  malloc(sizeof(struct Noise));
+    alloc_noise(psd, data->N, data->Nchannel);
+
     /* set priors */
     double **prior = malloc(sizeof(double *)*model_x->Nparams);
     for(int n=0; n<model_x->Nparams; n++)
@@ -996,15 +1000,15 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     //get noise covariance matrix for initial parameters
     if(logPy > -INFINITY && !flags->prior)
     {
-        generate_instrument_noise_model(data,orbit,noise);
         generate_galactic_foreground_model(data,orbit,model_y);
+        copy_noise(model_y->psd,psd);
 
         //add instrument noise contribution
-        generate_full_covariance_matrix(model_y->psd, noise->psd, data->Nchannel);
+        generate_full_covariance_matrix(psd, noise->psd, data->Nchannel);
         
-        invert_noise_covariance_matrix(model_y->psd);
+        invert_noise_covariance_matrix(psd);
 
-        model_y->logL = noise_log_likelihood(data, model_y->psd);
+        model_y->logL = noise_log_likelihood(data, psd);
 
         logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
     }
@@ -1017,6 +1021,7 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         noise->logL = model_x->logL;
     }
     
+    free_noise(psd);
     free_foreground_model(model_y);
     for(int n=0; n<model_x->Nparams; n++) free(prior[n]);
     free(prior);
