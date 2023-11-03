@@ -663,16 +663,18 @@ void copy_noise(struct Noise *origin, struct Noise *copy)
 
     memcpy(copy->f, origin->f, origin->N*sizeof(double));
 
-    for(int i=0; i<origin->Nchannel; i++)
-    {
-        for(int j=0; j<origin->Nchannel; j++)
-        {
-            memcpy(copy->C[i][j], origin->C[i][j], origin->N*sizeof(double));
-            memcpy(copy->invC[i][j], origin->invC[i][j], origin->N*sizeof(double));
-        }
-    }
+    copy_Cij(origin->C, copy->C, origin->Nchannel, origin->N);
+    copy_Cij(origin->invC, copy->invC, origin->Nchannel, origin->N);
+
     memcpy(copy->detC, origin->detC, origin->N*sizeof(double));
     memcpy(copy->transfer, origin->transfer, origin->N*sizeof(double));
+}
+
+void copy_Cij(double ***origin, double ***copy, int M, int N)
+{
+    for(int i=0; i<M; i++)
+        for(int j=0; j<M; j++)
+            memcpy(copy[i][j], origin[i][j], N*sizeof(double));
 }
 
 void free_noise(struct Noise *noise)

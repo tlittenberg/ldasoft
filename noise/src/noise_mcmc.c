@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
                 print_instrument_state(model[chain->index[0]], noiseChainFile, step);
                 if(flags->confNoise) print_foreground_state(galaxy[chain->index[0]], foregroundChainFile, step);
 
-                if(step%(flags->NMCMC/100)==0)
+                if(step%(flags->NMCMC/10)==0)
                 {
                     generate_instrument_noise_model(data,orbit,model[chain->index[0]]);
                     sprintf(filename,"%s/current_instrument_noise_model.dat",data->dataDir);

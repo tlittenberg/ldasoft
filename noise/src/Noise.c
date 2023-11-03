@@ -43,34 +43,42 @@
 void map_array_to_noise_params(struct InstrumentModel *model)
 {
     model->sacc12 = model->sacc[0];
-    model->sacc13 = model->sacc[1];
-    model->sacc21 = model->sacc[2];
-    model->sacc23 = model->sacc[3];
-    model->sacc31 = model->sacc[4];
+    model->sacc21 = model->sacc[1];
+
+    model->sacc13 = model->sacc[2];
+    model->sacc31 = model->sacc[3];
+
+    model->sacc23 = model->sacc[4];
     model->sacc32 = model->sacc[5];
     
     model->soms12 = model->soms[0];
-    model->soms13 = model->soms[1];
-    model->soms21 = model->soms[2];
-    model->soms23 = model->soms[3];
-    model->soms31 = model->soms[4];
+    model->soms21 = model->soms[1];
+    
+    model->soms13 = model->soms[2];
+    model->soms31 = model->soms[3];
+    
+    model->soms23 = model->soms[4];
     model->soms32 = model->soms[5];
 }
 
 void map_noise_params_to_array(struct InstrumentModel *model)
 {
     model->sacc[0] = model->sacc12;
-    model->sacc[1] = model->sacc13;
-    model->sacc[2] = model->sacc21;
-    model->sacc[3] = model->sacc23;
-    model->sacc[4] = model->sacc31;
+    model->sacc[1] = model->sacc21;
+    
+    model->sacc[2] = model->sacc13;
+    model->sacc[3] = model->sacc31;
+    
+    model->sacc[4] = model->sacc23;
     model->sacc[5] = model->sacc32;
     
     model->soms[0] = model->soms12;
-    model->soms[1] = model->soms13;
-    model->soms[2] = model->soms21;
-    model->soms[3] = model->soms23;
-    model->soms[4] = model->soms31;
+    model->soms[1] = model->soms21;
+    
+    model->soms[2] = model->soms13;
+    model->soms[3] = model->soms31;
+    
+    model->soms[4] = model->soms23;
     model->soms[5] = model->soms32;
 }
 
@@ -876,58 +884,105 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     double Soms_min = 2.25e-22/10;
     double Soms_max = 2.25e-22*10;
 
-    //get jump sizes
-    double scale;
-    if(gsl_rng_uniform(chain->r[ic])>0.75)
-        scale = 0.1;
-    else if(gsl_rng_uniform(chain->r[ic])>0.5)
-        scale = 0.01;
-    else if(gsl_rng_uniform(chain->r[ic])>0.25)
-        scale = 0.001;
-    else
-        scale = 0.001;
-    
-    /* get proposed noise parameters */
-    
-    //update one link at a time
-    int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
-    model_y->sacc[i] = model_x->sacc[i] + scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
-    model_y->soms[i] = model_x->soms[i] + scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
-    
-    //check priors
-    if(model_y->sacc[i] < Sacc_min || model_y->sacc[i] > Sacc_max) logPy = -INFINITY;
-    if(model_y->soms[i] < Soms_min || model_y->soms[i] > Soms_max) logPy = -INFINITY;
-
-    //OMS noise is degenerate on a link
-    model_y->soms[1] = model_y->soms[0]; //Soms12 and Soms21
-    model_y->soms[3] = model_y->soms[2]; //Soms23 and Soms32
-    model_y->soms[5] = model_y->soms[4]; //Soms13 and Soms31
-
-    //get noise covariance matrix for initial parameters
-    if(logPy > -INFINITY && !flags->prior)
+    for(int mc=0; mc<10; mc++)
     {
-        generate_instrument_noise_model(data,orbit,model_y);
-        copy_noise(model_y->psd,psd);
-
-        //add foreground noise contribution
-        if(flags->confNoise) 
-            generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
         
-        invert_noise_covariance_matrix(psd);
-
-        model_y->logL = noise_log_likelihood(data, psd);
-
-        logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+        //get jump sizes
+        double acc_jump,oms_jump;
+        double scale;
+        if(gsl_rng_uniform(chain->r[ic])>0.75)
+            scale = 1;
+        else if(gsl_rng_uniform(chain->r[ic])>0.5)
+            scale = 0.1;
+        else if(gsl_rng_uniform(chain->r[ic])>0.25)
+            scale = 0.01;
+        else
+            scale = 0.001;
+        
+        /* get proposed noise parameters */
+        
+        int type;
+        
+        int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
+        int j = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
+        if(i==j) type = 0;
+        else type = 1;
+        
+        switch(type)
+        {
+            case 0:
+                //update one link at a time
+                model_y->sacc[i] = model_x->sacc[i] + scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
+                model_y->soms[i] = model_x->soms[i] + scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
+                
+                //OMS noise is degenerate on a link
+                if(i%2==0) model_y->soms[i+1] = model_y->soms[i];
+                else model_y->soms[i-1] = model_y->soms[i];
+                
+                //check priors
+                if(model_y->sacc[i] < Sacc_min || model_y->sacc[i] > Sacc_max) logPy = -INFINITY;
+                if(model_y->soms[i] < Soms_min || model_y->soms[i] > Soms_max) logPy = -INFINITY;
+                
+                break;
+            case 1:
+                acc_jump = scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
+                oms_jump = scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
+                if(abs(i-j)==1)
+                {
+                    model_y->sacc[i] = model_x->sacc[i] + acc_jump;
+                    model_y->sacc[j] = model_x->sacc[j] - acc_jump;
+                    model_y->soms[i] = model_x->soms[i] + oms_jump;
+                }
+                else
+                {
+                    model_y->sacc[i] = model_x->sacc[i] + acc_jump;
+                    model_y->sacc[j] = model_x->sacc[j] + acc_jump;
+                    model_y->soms[i] = model_x->soms[i] + oms_jump;
+                    model_y->soms[j] = model_x->soms[j] - oms_jump;
+                }
+                
+                //OMS noise is degenerate on a link
+                if(i%2==0) model_y->soms[i+1] = model_y->soms[i];
+                else model_y->soms[i-1] = model_y->soms[i];
+                
+                if(j%2==0) model_y->soms[j+1] = model_y->soms[j];
+                else model_y->soms[j-1] = model_y->soms[j];
+                
+                
+                //check priors
+                if(model_y->sacc[i] < Sacc_min || model_y->sacc[i] > Sacc_max) logPy = -INFINITY;
+                if(model_y->sacc[j] < Sacc_min || model_y->sacc[j] > Sacc_max) logPy = -INFINITY;
+                if(model_y->soms[i] < Soms_min || model_y->soms[i] > Soms_max) logPy = -INFINITY;
+                if(model_y->soms[j] < Soms_min || model_y->soms[j] > Soms_max) logPy = -INFINITY;
+                
+                break;
+        }
+        
+        //get noise covariance matrix for initial parameters
+        if(logPy > -INFINITY && !flags->prior)
+        {
+            generate_instrument_noise_model(data,orbit,model_y);
+            copy_Cij(model_y->psd->C, psd->C, psd->Nchannel, psd->N);
+            
+            //add foreground noise contribution
+            if(flags->confNoise)
+                generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
+            
+            invert_noise_covariance_matrix(psd);
+            
+            model_y->logL = noise_log_likelihood(data, psd);
+            
+            logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+        }
+        logH += logPy - logPx; //priors
+        
+        loga = log(gsl_rng_uniform(chain->r[ic]));
+        if(logH > loga)
+        {
+            copy_instrument_model(model_y, model_x);
+            if(flags->confNoise) galaxy->logL = model_x->logL;
+        }
     }
-    logH += logPy - logPx; //priors
-
-    loga = log(gsl_rng_uniform(chain->r[ic]));
-    if(logH > loga)
-    {
-        copy_instrument_model(model_y, model_x);
-        if(flags->confNoise) galaxy->logL = model_x->logL;
-    }
-    
     free_noise(psd);
     free_instrument_model(model_y);
 }
@@ -975,50 +1030,65 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     prior[4][0] = log(0.0001);
     prior[4][1] = log(0.01);
         
-    /* get proposed noise parameters */
-
-    //get jump sizes
-    double scale;
-    if(gsl_rng_uniform(chain->r[ic])>0.75)
-        scale = 1;
-    else if(gsl_rng_uniform(chain->r[ic])>0.5)
-        scale = 0.1;
-    else if(gsl_rng_uniform(chain->r[ic])>0.25)
-        scale = 0.01;
-    else
-        scale = 0.01;
-
-    //pick which parameter to update
-    int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nparams);
-    model_y->sgal[i] = model_x->sgal[i] + scale * 0.5*(prior[i][1]-prior[i][0]) * gsl_ran_gaussian(chain->r[ic],1);
-
-    //check priors
-    for(int n=0; n<model_y->Nparams; n++)
-        if(model_y->sgal[n] < prior[n][0] || model_y->sgal[n] > prior[n][1]) 
-            logPy = -INFINITY;
-
-    //get noise covariance matrix for initial parameters
-    if(logPy > -INFINITY && !flags->prior)
+    for(int mc=0; mc<10; mc++)
     {
-        generate_galactic_foreground_model(data,orbit,model_y);
-        copy_noise(model_y->psd,psd);
-
-        //add instrument noise contribution
-        generate_full_covariance_matrix(psd, noise->psd, data->Nchannel);
         
-        invert_noise_covariance_matrix(psd);
-
-        model_y->logL = noise_log_likelihood(data, psd);
-
-        logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
-    }
-    logH += logPy - logPx; //priors
-
-    loga = log(gsl_rng_uniform(chain->r[ic]));
-    if(logH > loga)
-    {
-        copy_foreground_model(model_y, model_x);
-        noise->logL = model_x->logL;
+        /* get proposed noise parameters */
+        
+        //get jump sizes
+        double scale;
+        if(gsl_rng_uniform(chain->r[ic])>0.75)
+            scale = 1;
+        else if(gsl_rng_uniform(chain->r[ic])>0.5)
+            scale = 0.1;
+        else if(gsl_rng_uniform(chain->r[ic])>0.25)
+            scale = 0.01;
+        else
+            scale = 0.001;
+        
+        if(gsl_rng_uniform(chain->r[ic])<0.5)
+        {
+            //pick which parameter to update
+            int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nparams);
+            model_y->sgal[i] = model_x->sgal[i] + scale * 0.5*(prior[i][1]-prior[i][0]) * gsl_ran_gaussian(chain->r[ic],1);
+        }
+        else
+        {
+            //jump along correlated directions for tanh model
+            double jump = scale * gsl_ran_gaussian(chain->r[ic],1);
+            model_y->sgal[0] = model_x->sgal[0] + 0.5*(prior[0][1]-prior[0][0]) * jump;
+            model_y->sgal[3] = model_x->sgal[3] - 0.5*(prior[3][1]-prior[3][0]) * jump;
+            model_y->sgal[4] = model_x->sgal[4] + 0.5*(prior[4][1]-prior[4][0]) * jump;
+        }
+        
+        //check priors
+        for(int n=0; n<model_y->Nparams; n++)
+            if(model_y->sgal[n] < prior[n][0] || model_y->sgal[n] > prior[n][1])
+                logPy = -INFINITY;
+        
+        //get noise covariance matrix for initial parameters
+        if(logPy > -INFINITY && !flags->prior)
+        {
+            generate_galactic_foreground_model(data,orbit,model_y);
+            copy_Cij(model_y->psd->C, psd->C, psd->Nchannel, psd->N);
+            
+            //add instrument noise contribution
+            generate_full_covariance_matrix(psd, noise->psd, data->Nchannel);
+            
+            invert_noise_covariance_matrix(psd);
+            
+            model_y->logL = noise_log_likelihood(data, psd);
+            
+            logH += (model_y->logL - model_x->logL)/chain->temperature[ic]; //delta logL
+        }
+        logH += logPy - logPx; //priors
+        
+        loga = log(gsl_rng_uniform(chain->r[ic]));
+        if(logH > loga)
+        {
+            copy_foreground_model(model_y, model_x);
+            noise->logL = model_x->logL;
+        }
     }
     
     free_noise(psd);
