@@ -45,41 +45,42 @@ void map_array_to_noise_params(struct InstrumentModel *model)
     model->sacc12 = model->sacc[0];
     model->sacc21 = model->sacc[1];
 
-    model->sacc13 = model->sacc[2];
-    model->sacc31 = model->sacc[3];
+    model->sacc23 = model->sacc[2];
+    model->sacc32 = model->sacc[3];
 
-    model->sacc23 = model->sacc[4];
-    model->sacc32 = model->sacc[5];
-    
+    model->sacc13 = model->sacc[4];
+    model->sacc31 = model->sacc[5];
+
     model->soms12 = model->soms[0];
     model->soms21 = model->soms[1];
+        
+    model->soms23 = model->soms[2];
+    model->soms32 = model->soms[3];
     
-    model->soms13 = model->soms[2];
-    model->soms31 = model->soms[3];
-    
-    model->soms23 = model->soms[4];
-    model->soms32 = model->soms[5];
+    model->soms13 = model->soms[4];
+    model->soms31 = model->soms[5];
+
 }
 
 void map_noise_params_to_array(struct InstrumentModel *model)
 {
     model->sacc[0] = model->sacc12;
     model->sacc[1] = model->sacc21;
+        
+    model->sacc[2] = model->sacc23;
+    model->sacc[3] = model->sacc32;
     
-    model->sacc[2] = model->sacc13;
-    model->sacc[3] = model->sacc31;
-    
-    model->sacc[4] = model->sacc23;
-    model->sacc[5] = model->sacc32;
-    
+    model->sacc[4] = model->sacc13;
+    model->sacc[5] = model->sacc31;
+
     model->soms[0] = model->soms12;
     model->soms[1] = model->soms21;
     
-    model->soms[2] = model->soms13;
-    model->soms[3] = model->soms31;
-    
-    model->soms[4] = model->soms23;
-    model->soms[5] = model->soms32;
+    model->soms[2] = model->soms23;
+    model->soms[3] = model->soms32;
+
+    model->soms[4] = model->soms13;
+    model->soms[5] = model->soms31;
 }
 
 void map_array_to_foreground_params(struct ForegroundModel *model)
@@ -384,7 +385,6 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
 void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, struct ForegroundModel *model)
 {
     double f;
-    double fk,f1;
     double Sgal;
     
     map_array_to_foreground_params(model);
@@ -393,8 +393,7 @@ void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, 
     {
         f = model->psd->f[n];
         
-        //Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
-        Sgal = model->Amp*pow(f,5./3.) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
+        Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * 0.5*( 1. + tanh( (model->fk - f)/model->f2 ) );
 
         switch(data->Nchannel)
         {
@@ -876,6 +875,15 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     struct Noise *psd =  malloc(sizeof(struct Noise));
     alloc_noise(psd, data->N, data->Nchannel);
     
+    //initialize likelihood
+    //TODO: this shouldn't be necessary
+    generate_instrument_noise_model(data,orbit,model_x);
+    copy_Cij(model_x->psd->C, psd->C, psd->Nchannel, psd->N);
+    if(flags->confNoise) generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
+    invert_noise_covariance_matrix(psd);
+    model_x->logL = noise_log_likelihood(data, psd);
+
+    
     //set priors
     double Sacc = 9.00e-30;
     double Soms = 2.25e-22;
@@ -883,6 +891,35 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     double Sacc_max = 9.00e-30*10;
     double Soms_min = 2.25e-22/10;
     double Soms_max = 2.25e-22*10;
+    
+    //set correlation matrix
+    double *acc_jump_vec = malloc(model_x->Nlink*sizeof(double));
+    double **correlation_matrix = malloc(model_x->Nlink*sizeof(double *));
+    for(int n=0; n<model_x->Nlink; n++)
+    {
+        correlation_matrix[n] = malloc(model_x->Nlink*sizeof(double));
+        correlation_matrix[n][n] = +1.0;
+    }
+    correlation_matrix[0][1] = correlation_matrix[1][0] = -1.0;
+    correlation_matrix[2][3] = correlation_matrix[3][2] = -1.0;
+    correlation_matrix[4][5] = correlation_matrix[5][4] = -1.0;
+
+    correlation_matrix[0][2] = correlation_matrix[2][0] = +1.0;
+    correlation_matrix[0][3] = correlation_matrix[3][0] = -1.0;
+    correlation_matrix[0][4] = correlation_matrix[4][0] = -1.0;
+    correlation_matrix[0][5] = correlation_matrix[5][0] = +1.0;
+
+    correlation_matrix[1][2] = correlation_matrix[2][1] = -1.0;
+    correlation_matrix[1][3] = correlation_matrix[3][1] = +1.0;
+    correlation_matrix[1][4] = correlation_matrix[4][1] = +1.0;
+    correlation_matrix[1][5] = correlation_matrix[5][1] = -1.0;
+
+    correlation_matrix[2][4] = correlation_matrix[4][2] = -1.0;
+    correlation_matrix[2][5] = correlation_matrix[5][2] = +1.0;
+
+    correlation_matrix[3][4] = correlation_matrix[4][3] = +1.0;
+    correlation_matrix[3][5] = correlation_matrix[5][3] = -1.0;
+
 
     for(int mc=0; mc<10; mc++)
     {
@@ -903,15 +940,15 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         
         int type;
         
-        int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
-        int j = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
-        if(i==j) type = 0;
-        else type = 1;
+        int i;
+        int j;
+        type = (int)(gsl_rng_uniform(chain->r[ic])*3.);
         
         switch(type)
         {
             case 0:
                 //update one link at a time
+                i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
                 model_y->sacc[i] = model_x->sacc[i] + scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
                 model_y->soms[i] = model_x->soms[i] + scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
                 
@@ -925,8 +962,16 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
                 
                 break;
             case 1:
+                //update pair of links according to correlations
+                i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
+                do 
+                {
+                    j = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
+                }while(i!=j);
+                
                 acc_jump = scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
                 oms_jump = scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
+                
                 if(abs(i-j)==1)
                 {
                     model_y->sacc[i] = model_x->sacc[i] + acc_jump;
@@ -948,13 +993,31 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
                 if(j%2==0) model_y->soms[j+1] = model_y->soms[j];
                 else model_y->soms[j-1] = model_y->soms[j];
                 
-                
                 //check priors
                 if(model_y->sacc[i] < Sacc_min || model_y->sacc[i] > Sacc_max) logPy = -INFINITY;
                 if(model_y->sacc[j] < Sacc_min || model_y->sacc[j] > Sacc_max) logPy = -INFINITY;
                 if(model_y->soms[i] < Soms_min || model_y->soms[i] > Soms_max) logPy = -INFINITY;
                 if(model_y->soms[j] < Soms_min || model_y->soms[j] > Soms_max) logPy = -INFINITY;
                 
+                break;
+            case 2:
+                //update acceleration noise using correlation matrix
+                for(i=0; i<model_x->Nlink; i++)
+                {
+                    acc_jump_vec[i] = scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
+                    model_y->sacc[i] = model_x->sacc[i];
+                }
+                
+                
+                for(i=0; i<model_x->Nlink; i++)
+                {
+                    for(j=0; j<model_x->Nlink; j++)
+                    {
+                        model_y->sacc[i] += correlation_matrix[i][j] * acc_jump_vec[j];
+                    }
+                    //check priors
+                    if(model_y->sacc[i] < Sacc_min || model_y->sacc[i] > Sacc_max) logPy = -INFINITY;
+                }
                 break;
         }
         
@@ -985,6 +1048,11 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     }
     free_noise(psd);
     free_instrument_model(model_y);
+    free(acc_jump_vec);
+    for(int n=0; n<model_x->Nlink; n++)
+        free(correlation_matrix[n]);
+    free(correlation_matrix);
+
 }
 
 void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct Chain *chain, struct Flags *flags, int ic)
@@ -1005,10 +1073,42 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     struct Noise *psd =  malloc(sizeof(struct Noise));
     alloc_noise(psd, data->N, data->Nchannel);
 
-    /* set priors */
+    //initialize likelhood
+    //TODO: this shouldn't be necessary!
+    generate_galactic_foreground_model(data,orbit,model_x);
+    copy_Cij(model_x->psd->C, psd->C, psd->Nchannel, psd->N);
+    generate_full_covariance_matrix(psd, noise->psd, data->Nchannel);
+    invert_noise_covariance_matrix(psd);
+    model_x->logL = noise_log_likelihood(data, psd);
+
+    
+    //set priors
     double **prior = malloc(sizeof(double *)*model_x->Nparams);
     for(int n=0; n<model_x->Nparams; n++)
         prior[n] = malloc(sizeof(double)*2);
+    
+    //set correlation matrix
+    double *acc_jump_vec = malloc(model_x->Nparams*sizeof(double));
+    double **correlation_matrix = malloc(model_x->Nparams*sizeof(double *));
+    for(int n=0; n<model_x->Nparams; n++)
+    {
+        correlation_matrix[n] = malloc(model_x->Nparams*sizeof(double));
+        correlation_matrix[n][n] = +1.0;
+    }
+    correlation_matrix[0][1] = correlation_matrix[1][0] = -1.0;
+    correlation_matrix[0][2] = correlation_matrix[2][0] = -1.0;
+    correlation_matrix[0][3] = correlation_matrix[3][0] = -1.0;
+    correlation_matrix[0][4] = correlation_matrix[4][0] = +1.0;
+
+    correlation_matrix[1][2] = correlation_matrix[2][1] = +1.0;
+    correlation_matrix[1][3] = correlation_matrix[3][1] = +1.0;
+    correlation_matrix[1][4] = correlation_matrix[4][1] = -1.0;
+
+    correlation_matrix[2][3] = correlation_matrix[3][2] = +1.0;
+    correlation_matrix[2][4] = correlation_matrix[4][2] = -1.0;
+
+    correlation_matrix[3][4] = correlation_matrix[4][3] = -1.0;
+    
     
     //log(A)
     prior[0][0] = -86.0;
@@ -1024,10 +1124,10 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     
     //fk
     prior[3][0] = log(0.0001);
-    prior[3][1] = log(0.01);
+    prior[3][1] = log(0.1);
     
     //f2
-    prior[4][0] = log(0.0001);
+    prior[4][0] = log(0.00001);
     prior[4][1] = log(0.01);
         
     for(int mc=0; mc<10; mc++)
@@ -1038,27 +1138,37 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         //get jump sizes
         double scale;
         if(gsl_rng_uniform(chain->r[ic])>0.75)
-            scale = 1;
-        else if(gsl_rng_uniform(chain->r[ic])>0.5)
             scale = 0.1;
-        else if(gsl_rng_uniform(chain->r[ic])>0.25)
+        else if(gsl_rng_uniform(chain->r[ic])>0.5)
             scale = 0.01;
-        else
+        else if(gsl_rng_uniform(chain->r[ic])>0.25)
             scale = 0.001;
+        else
+            scale = 0.0001;
         
         if(gsl_rng_uniform(chain->r[ic])<0.5)
         {
             //pick which parameter to update
             int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nparams);
-            model_y->sgal[i] = model_x->sgal[i] + scale * 0.5*(prior[i][1]-prior[i][0]) * gsl_ran_gaussian(chain->r[ic],1);
+            model_y->sgal[i] = model_x->sgal[i] + scale * 0.5*(prior[i][1]+prior[i][0]) * gsl_ran_gaussian(chain->r[ic],1);
         }
         else
         {
-            //jump along correlated directions for tanh model
-            double jump = scale * gsl_ran_gaussian(chain->r[ic],1);
-            model_y->sgal[0] = model_x->sgal[0] + 0.5*(prior[0][1]-prior[0][0]) * jump;
-            model_y->sgal[3] = model_x->sgal[3] - 0.5*(prior[3][1]-prior[3][0]) * jump;
-            model_y->sgal[4] = model_x->sgal[4] + 0.5*(prior[4][1]-prior[4][0]) * jump;
+            //jump along correlated directions
+            double jump=gsl_ran_gaussian(chain->r[ic],1);
+            for(int n=0; n<model_x->Nparams; n++)
+            {
+                acc_jump_vec[n] = scale *  0.5*(prior[n][1]+prior[n][0]) * jump;
+                model_y->sgal[n] = model_x->sgal[n];
+            }
+            
+            //pick which vector
+            int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nparams);
+            
+            //jump
+            for(int j=0; j<model_x->Nparams; j++)
+                model_y->sgal[j] += correlation_matrix[i][j] * acc_jump_vec[j];
+
         }
         
         //check priors
@@ -1095,7 +1205,9 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     free_foreground_model(model_y);
     for(int n=0; n<model_x->Nparams; n++) free(prior[n]);
     free(prior);
-
+    for(int n=0; n<model_x->Nparams; n++)
+        free(correlation_matrix[n]);
+    free(correlation_matrix);
 }
 
 
@@ -1168,11 +1280,11 @@ void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct 
 
     // initialize foreground parameters levels
     model->Tobs  =  data->T;
-    model->Amp   =  1e-36;
-    model->f1    =  0.001;
-    model->alpha =  1.58;
-    model->fk    =  0.001;
-    model->f2    =  0.001;
+    model->Amp   =  3.86677e-37;
+    model->f1    =  0.00344439;
+    model->alpha =  1.629667;
+    model->fk    =  0.0102644;
+    model->f2    =  4.810781e-4;
     map_foreground_params_to_array(model);
     
     // get noise covariance matrix for initial parameters
