@@ -679,22 +679,6 @@ void initialize_gbmcmc_state(struct Data *data, struct Orbit *orbit, struct Flag
         
         if(ic==0) chain->logLmax += model[ic]->logL + model[ic]->logLnorm;
         
-        if(ic==0)
-        {
-            printf("==== initial inverse covariance matrix ====\n");
-            for(int i=0; i<data->Nchannel; i++)
-            {
-                for(int j=0; j<data->Nchannel; j++)
-                {
-                    if(model[ic]->noise[0]->invC[i][j][0]>=0.0) printf("+%.3g ",model[ic]->noise[0]->invC[i][j][0]);
-                    else printf("%.3g ",model[ic]->noise[0]->invC[i][j][0]);
-                }
-                printf("\n");
-            }
-            printf("detC=%.3g\n",model[ic]->noise[0]->detC[0]);
-            printf("===========================================\n");
-
-        }
     }//end loop over chains
 
 }

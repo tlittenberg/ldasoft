@@ -108,8 +108,8 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     
     alloc_data(noise_data->data, noise_data->flags);
     
-    noise_data->model = malloc(sizeof(struct SplineModel*)*gbmcmc_data->chain->NC);
-    
+    noise_data->inst_model = malloc(sizeof(struct InstrumentModel*)*gbmcmc_data->chain->NC);
+
     //get max and min samples
     noise_data->data->qmin = (int)(noise_data->data->fmin*noise_data->data->T);
     noise_data->data->qmax = noise_data->data->qmin+noise_data->data->N;
@@ -174,48 +174,39 @@ void initialize_noise_state(struct NoiseData *noise_data)
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
-    struct SplineModel **model = noise_data->model;
+    struct Flags *flags = noise_data->flags;
+    struct InstrumentModel **inst_model = noise_data->inst_model;
+    struct ForegroundModel **conf_model = noise_data->conf_model;
 
     int NC = chain->NC;
-    int Nspline = noise_data->nProc+1;
-    if(Nspline>50) Nspline=50;
-    if(Nspline<5) Nspline=5;
-
-    int psd_check=0;
-    while(!psd_check) //guard against pathological model
-    {
-        psd_check=1;
-        
-        //populate spline model
-        for(int ic=0; ic<NC; ic++)
-        {
-            model[ic] = malloc(sizeof(struct SplineModel));
-            initialize_spline_model(orbit, data, model[ic], Nspline);
-        }
-        
-        //scan through interpolated model and check sign
-        for(int ic=0; ic<NC; ic++)
-        {
-            for(int n=0; n<data->N; n++)
-            {
-                if(model[ic]->psd->C[0][0][n] < 0.0 || model[ic]->psd->C[1][1][n] < 0.0) psd_check=0;
-            }
-        }
-        
-        //if check fails free memory, increase control points, and try again
-        if(!psd_check)
-        {
-            for(int ic=0; ic<NC; ic++) free_spline_model(model[ic]);
-            Nspline++; //more control points keep interpolation closer to theoretical Sn(f)
-        }
-    }
-    char filename[128];
-    sprintf(filename,"%s/initial_spline_points.dat",data->dataDir);
-    print_noise_model(model[0]->spline, filename);
     
-    sprintf(filename,"%s/interpolated_spline_points.dat",data->dataDir);
-    print_noise_model(model[0]->psd, filename);
-  
+    //populate spline model
+    for(int ic=0; ic<NC; ic++)
+    {
+        /* Initialize Instrument Noise Model */
+        inst_model[ic] = malloc(sizeof(struct InstrumentModel));
+        initialize_instrument_model(orbit, data, inst_model[ic]);
+        
+        /* Initialize Galactic Foreground Model */
+        if(flags->confNoise) 
+        {
+            conf_model[ic] = malloc(sizeof(struct ForegroundModel));
+            initialize_foreground_model(orbit, data, conf_model[ic]);
+        }
+
+    }
+    
+    char filename[128];
+    sprintf(filename,"%s/instrument_noise_model.dat",data->dataDir);
+    print_noise_model(inst_model[0]->psd, filename);
+    
+    if(flags->confNoise)
+    {
+        sprintf(filename,"%s/foreground_noise_model.dat",data->dataDir);
+        print_noise_model(conf_model[0]->psd, filename);
+    }
+
+
 }
 
 void resume_noise_state(struct NoiseData *noise_data)
@@ -224,42 +215,48 @@ void resume_noise_state(struct NoiseData *noise_data)
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
-    struct SplineModel **model = noise_data->model;
+    struct InstrumentModel **inst_model = noise_data->inst_model;
 
     int NC = chain->NC;    
     
     //count lines in file
     char filename[MAXSTRINGSIZE];
-    sprintf(filename,"%s/current_spline_points.dat",data->dataDir);
-    FILE *splineFile = fopen(filename,"r");
-    int Nspline = 0;
-    double f,SnA,SnE;
-    while(!feof(splineFile))
+    sprintf(filename,"%s/noise_chain.dat",data->dataDir);
+    FILE *noiseFile = fopen(filename,"r");
+    int i;
+    double junk;
+    int Nstep=0;
+    while(!feof(noiseFile))
     {
-        fscanf(splineFile,"%lg %lg %lg",&f,&SnA,&SnE);
-        Nspline++;
+        fscanf(noiseFile,"%i %lg",&i,&junk);//iteration and logL
+        for(int n=0; n<inst_model[0]->Nlink; n++) fscanf(noiseFile,"%lg",&junk);//acceleration noise parameters
+        for(int n=0; n<inst_model[0]->Nlink; n++) fscanf(noiseFile,"%lg",&junk);//OMS noise parameters
+        Nstep++;
     }
-    rewind(splineFile);
-    Nspline--;
+    rewind(noiseFile);
+    Nstep--;
     
-    //initialize spline model
+    //initialize instrument noise model
     for(int ic=0; ic<NC; ic++)
     {
-        model[ic] = malloc(sizeof(struct SplineModel));
-        initialize_spline_model(orbit, data, model[ic], Nspline);
+        inst_model[ic] = malloc(sizeof(struct InstrumentModel));
+        initialize_instrument_model(orbit, data, inst_model[ic]);
     }
     
-    //set spline model to stored values
-    for(int n=0; n<Nspline; n++)
+    //set instrument model to stored values
+    for(int n=0; n<Nstep; n++)
     {
-        fscanf(splineFile,"%lg %lg %lg",&model[0]->spline->f[n],&model[0]->spline->C[0][0][n],&model[0]->spline->C[1][1][n]);
+        fscanf(noiseFile,"%i %lg",&i,&junk);//iteration and logL
+        for(int n=0; n<inst_model[0]->Nlink; n++) fscanf(noiseFile,"%lg",&inst_model[0]->sacc[n]);//acceleration noise parameters
+        for(int n=0; n<inst_model[0]->Nlink; n++) fscanf(noiseFile,"%lg",&inst_model[0]->soms[n]);//OMS noise parameters
     }
-    fclose(splineFile);
+    fclose(noiseFile);
 
-    generate_spline_noise_model(model[0]);
-    model[0]->logL = noise_log_likelihood(data, model[0]->psd);
+    generate_instrument_noise_model(data,orbit,inst_model[0]);
+    invert_noise_covariance_matrix(inst_model[0]->psd);
+    inst_model[0]->logL = noise_log_likelihood(data, inst_model[0]->psd);
     
-    for(int ic=1; ic<NC; ic++) copy_spline_model(model[0], model[ic]);
+    for(int ic=1; ic<NC; ic++) copy_instrument_model(inst_model[0], inst_model[ic]);
 }
 
 int update_noise_sampler(struct NoiseData *noise_data)
@@ -271,8 +268,9 @@ int update_noise_sampler(struct NoiseData *noise_data)
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
-    struct SplineModel **model = noise_data->model;
-
+    struct InstrumentModel **inst_model = noise_data->inst_model;
+    struct ForegroundModel **conf_model = noise_data->conf_model;
+    
     int NC = chain->NC;
     
     //For saving the number of threads actually given
@@ -291,21 +289,17 @@ int update_noise_sampler(struct NoiseData *noise_data)
         {
             
             //loop over frequency segments
-            struct SplineModel *model_ptr = model[chain->index[ic]];
-            
+            struct InstrumentModel *inst_model_ptr = inst_model[chain->index[ic]];
+            struct ForegroundModel *conf_model_ptr = conf_model[chain->index[ic]];
+
             //update log likelihood (data may have changed)
-            model_ptr->logL = noise_log_likelihood(data, model_ptr->psd);
+            inst_model_ptr->logL = noise_log_likelihood(data, inst_model_ptr->psd);
             
             //evolve fixed dimension sampler
-            for(int steps=0; steps<200; steps++)
+            for(int steps=0; steps<10; steps++)
             {
-                //evolve trans dimension sampler
-                if(gsl_rng_uniform(chain->r[ic])<0.25)
-                    noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);
-                
-                else
-                    noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
-                
+                noise_instrument_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, chain, flags, ic);
+                if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, chain, flags, ic);
             }
             
             
@@ -314,17 +308,25 @@ int update_noise_sampler(struct NoiseData *noise_data)
     }// End of parallelization
 #pragma omp barrier
     
-    spline_ptmcmc(model,chain,flags);
+    noise_ptmcmc(inst_model,chain,flags);
     adapt_temperature_ladder(chain, noise_data->mcmc_step+flags->NBURN);
     
-    print_spline_state(model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
+    print_instrument_state(inst_model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
+    print_foreground_state(conf_model[chain->index[0]], chain->foregroundFile[0], noise_data->mcmc_step);
 
     //save point estimate of noise model
     int i = (noise_data->mcmc_step+flags->NBURN)%data->Nwave;
+    generate_instrument_noise_model(data,orbit,inst_model[chain->index[0]]);
+    if(flags->confNoise)
+    {
+        generate_galactic_foreground_model(data,orbit,conf_model[chain->index[0]]);
+        generate_full_covariance_matrix(inst_model[chain->index[0]]->psd,conf_model[chain->index[0]]->psd, data->Nchannel);
+    }
+
     for(int n=0; n<data->N; n++)
     {
-        data->S_pow[n][0][0][i] = model[chain->index[0]]->psd->C[0][0][n];
-        data->S_pow[n][1][0][i] = model[chain->index[0]]->psd->C[1][1][n];
+        for(int m=0; m<data->Nchannel; m++)
+            data->S_pow[n][m][0][i] = inst_model[chain->index[0]]->psd->C[m][m][n];
     }
     
     noise_data->mcmc_step++;

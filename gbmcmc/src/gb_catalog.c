@@ -665,7 +665,7 @@ int main(int argc, char *argv[])
         
         index = calloc(entry->I,(sizeof(size_t)));
         gsl_sort_index(index,f_vec,1,entry->I);
-        i_med = index[entry->I/2];
+        i_med = (int)index[entry->I/2];
         free(f_vec);
         free(index);
         
@@ -1002,7 +1002,7 @@ int main(int argc, char *argv[])
 
         int counter;
         int CMAX = 10;
-        int NMODE_start = NMODE;
+        int NMODE_start = (int)NMODE;
         double BIC;
         
         counter = 0;

@@ -11,7 +11,7 @@ target_link_libraries(noise gbmcmc tools m ${GSL_LIBRARIES} ${HDF5_LIBRARIES})
 install(TARGETS noise DESTINATION lib)
 install(DIRECTORY "./" DESTINATION include FILES_MATCHING PATTERN "*.h")
 
-add_executable(noise_spline_mcmc noise_spline_mcmc.c Noise.c Noise.h)
+add_executable(noise_spline_mcmc noise_spline_mcmc.c)
 
 target_link_libraries(noise_spline_mcmc ${GSL_LIBRARIES})
 target_link_libraries(noise_spline_mcmc m)
@@ -25,7 +25,7 @@ if(APPLE)
 endif()
 install(TARGETS noise_spline_mcmc DESTINATION bin)
 
-add_executable(noise_mcmc noise_mcmc.c Noise.c Noise.h)
+add_executable(noise_mcmc noise_mcmc.c)
 
 target_link_libraries(noise_mcmc ${GSL_LIBRARIES})
 target_link_libraries(noise_mcmc m)

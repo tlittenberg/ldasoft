@@ -963,7 +963,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataNam
     ndims = H5Sget_simple_extent_ndims(dspace);
     hsize_t dims[ndims];
     H5Sget_simple_extent_dims(dspace, dims, NULL);
-    int Nsamples = dims[0];
+    int Nsamples = (int)dims[0];
     
     s1 = malloc(Nsamples*sizeof(struct tdi_dataset));
     alloc_tdi(tdi, Nsamples/2, 3);

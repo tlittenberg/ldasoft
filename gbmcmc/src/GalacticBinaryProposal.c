@@ -236,7 +236,7 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     
     //choose which entry
     int ngmm = (int)floor(gsl_rng_uniform(seed)*proposal->Ngmm);
-    int NMODES = proposal->gmm[ngmm]->NMODE;
+    int NMODES = (int)proposal->gmm[ngmm]->NMODE;
     
     struct MVG **modes = proposal->gmm[ngmm]->modes;
     struct MVG *mode = NULL;

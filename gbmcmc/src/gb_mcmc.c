@@ -39,8 +39,7 @@
 #include <omp.h>
 
 #include <LISA.h>
-
-#include "gbmcmc.h"
+#include <gbmcmc.h>
 
 /**
  * This is the main function
@@ -51,10 +50,10 @@ int main(int argc, char *argv[])
     
     time_t start, stop;
     start = time(NULL);
-    
+    char filename[MAXSTRINGSIZE];
+
     int NMAX = 10;   //max number of frequency & time segments
 
-    char filename[MAXSTRINGSIZE];
 
     /* check arguments */
     print_LISA_ASCII_art(stdout);
@@ -93,11 +92,9 @@ int main(int argc, char *argv[])
     /* Initialize LISA orbit model */
     initialize_orbit(data, orbit, flags);
 
-    /* Inject strain data */
+    /* read data */
     if(flags->strainData)
-    {
         GalacticBinaryReadData(data,orbit,flags);
-    }
     
     if(flags->NINJ>0)
     {
@@ -240,8 +237,6 @@ int main(int argc, char *argv[])
                     else
                         galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                           
-                    if(steps>10) exit(1);
-
                 }//loop over MCMC steps
                                                 
                 if( (flags->strainData || flags->simNoise) && !flags->psd)

@@ -568,6 +568,7 @@ void GalacticBinaryAddNoise(struct Data *data, struct TDI *tdi)
 
 void GalacticBinarySimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
+    if(!flags->quiet) fprintf(stdout,"\n==== GalacticBinarySimulateData ====\n");
     struct TDI *tdi = data->tdi[0];
 
     //get max and min samples

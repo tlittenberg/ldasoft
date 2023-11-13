@@ -22,8 +22,9 @@ struct NoiseData
     struct Orbit *orbit;
     struct Chain *chain;
     struct Data  *data;
-    struct SplineModel **model;
-    
+    struct InstrumentModel **inst_model;
+    struct ForegroundModel **conf_model;
+
     double cpu_time; //!<CPU time for single update
 };
 

@@ -15,6 +15,9 @@ foreach(policy
   endif()
 endforeach()
 
+# Set compiler
+set(CMAKE_C_COMPILER mpicc)
+
 project(ldasoft VERSION 1.0.0 LANGUAGES C)
 
 # External packages
@@ -24,8 +27,6 @@ find_package(HDF5 REQUIRED)
 find_package(MPI REQUIRED)
 find_package(MBH)
 
-# Set compiler
-set(CMAKE_C_COMPILER mpicc)
 
 # set cflags
 if(APPLE)
@@ -33,7 +34,6 @@ if(APPLE)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -Wall -std=gnu99")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -g -O0 -std=gnu99")
 
 # Set git version header file
 message(STATUS "Resolving GIT Version")

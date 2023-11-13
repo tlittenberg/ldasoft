@@ -358,7 +358,7 @@ static void share_noise_model(struct NoiseData *noise_data, struct GBMCMCData *g
     if(procID==root)
     {
         ic = noise_data->chain->index[0];
-        struct Noise *model_psd = noise_data->model[ic]->psd;
+        struct Noise *model_psd = noise_data->inst_model[ic]->psd;
         copy_noise(model_psd,global_fit->psd);
     }
     
@@ -411,11 +411,10 @@ static void print_data_state(struct NoiseData *noise_data, struct GBMCMCData *gb
     {
         print_data(noise_data->data, noise_data->data->tdi[0], noise_data->flags, 0);
         char filename[128];
-        sprintf(filename,"%s/data/current_spline_points.dat",noise_data->flags->runDir);
-        print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
-        
-        sprintf(filename,"%s/data/current_interpolated_spline_points.dat",noise_data->flags->runDir);
-        print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
+        sprintf(filename,"%s/current_instrument_noise_model.dat",noise_data->flags->runDir);
+        generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
+        print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
+
     }
     if(VBMCMC_Flag)
     {
@@ -741,7 +740,7 @@ int main(int argc, char *argv[])
         initialize_noise_sampler(noise_data);
 
         int ic = noise_data->chain->index[0];
-        struct Noise *model_psd = noise_data->model[ic]->psd;
+        struct Noise *model_psd = noise_data->inst_model[ic]->psd;
         copy_noise(model_psd,global_fit->psd);
 
     }
@@ -943,11 +942,9 @@ int main(int argc, char *argv[])
     if(Noise_Flag)
     {
         char filename[128];
-        sprintf(filename,"%s/data/final_spline_points.dat",noise_data->flags->runDir);
-        print_noise_model(noise_data->model[noise_data->chain->index[0]]->spline, filename);
-
-        sprintf(filename,"%s/data/final_interpolated_spline_points.dat",noise_data->flags->runDir);
-        print_noise_model(noise_data->model[noise_data->chain->index[0]]->psd, filename);
+        sprintf(filename,"%s/final_instrument_noise_model.dat",noise_data->flags->runDir);
+        generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
+        print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
 
         print_noise_reconstruction(noise_data->data, noise_data->flags);
     }

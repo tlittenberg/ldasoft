@@ -256,6 +256,7 @@ struct Chain
      Columns:  `step | logL | logL_norm | etaA | eta E`
      */
     FILE **noiseFile;
+    FILE **foregroundFile;
     
     /**
      \brief Markov chain state (iterations, likelihoods, etc.): `chains/model_chain.dat.M`

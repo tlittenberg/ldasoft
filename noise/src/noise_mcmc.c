@@ -19,33 +19,28 @@
 #include <omp.h>
 
 #include <LISA.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryMath.h>
-#include <GalacticBinaryData.h>
-#include <GalacticBinaryModel.h>
-
-#include "Noise.h"
+#include <gbmcmc.h>
+#include <Noise.h>
 
 int main(int argc, char *argv[])
 {
     time_t start, stop;
     start = time(NULL);
-    char filename[128];
+    char filename[MAXSTRINGSIZE];
     
+    /* check arguments */
     print_LISA_ASCII_art(stdout);
-    
+    print_version(stdout);
+    if(argc==1) print_usage();
+
+    /* Allocate data structures */
     struct Data *data   = malloc(sizeof(struct Data));
     struct Flags *flags = malloc(sizeof(struct Flags));
     struct Orbit *orbit = malloc(sizeof(struct Orbit));
     struct Chain *chain = malloc(sizeof(struct Chain));
     
     parse(argc,argv,data,orbit,flags,chain,1);
-    
-    /*
-     * Get Data
-     */
-    
+        
     /* Setup output directories for data and chain files */
     sprintf(data->dataDir,"%s/data",flags->runDir);
     sprintf(chain->chainDir,"%s/chains",flags->runDir);
@@ -71,9 +66,8 @@ int main(int argc, char *argv[])
     else if (flags->simNoise)
         GalacticBinarySimulateData(data, orbit, flags);
     
-    /*
-     * Initialize Instrument Noise Model
-     */
+    /* Initialize Instrument Noise Model */
+    printf("   ...initialize instrument noise model\n");
     struct InstrumentModel **model = malloc(chain->NC*sizeof(struct InstrumentModel *));
     for(int ic=0; ic<chain->NC; ic++)
     {
@@ -84,9 +78,8 @@ int main(int argc, char *argv[])
     print_noise_model(model[0]->psd, filename);
 
 
-    /*
-     * Initialize Galactic Foreground Model
-     */
+    /* Initialize Galactic Foreground Model */
+    if(flags->confNoise)printf("   ...initialize foreground noise model\n");
     struct ForegroundModel **galaxy = malloc(chain->NC*sizeof(struct ForegroundModel *));
     for(int ic=0; ic<chain->NC; ic++)
     {
@@ -99,14 +92,11 @@ int main(int argc, char *argv[])
         print_noise_model(galaxy[0]->psd, filename);
     }
 
-    /*
-     * Combine noise components to form covariance matrix
-     */
-
+    /* Combine noise components to form covariance matrix */
     for(int ic=0; ic<chain->NC; ic++)
         if(flags->confNoise) generate_full_covariance_matrix(model[ic]->psd, galaxy[ic]->psd, data->Nchannel);
 
-    //compute
+    /* get initial likelihood */
     for(int ic=0; ic<chain->NC; ic++)
     {
         invert_noise_covariance_matrix(model[ic]->psd);
@@ -119,6 +109,8 @@ int main(int argc, char *argv[])
     
     
     //MCMC
+    printf("\n==== Noise MCMC Sampler ====\n");
+    
     sprintf(filename,"%s/noise_chain.dat",chain->chainDir);
     FILE *noiseChainFile = fopen(filename,"w");
 
@@ -136,6 +128,7 @@ int main(int argc, char *argv[])
     #pragma omp parallel num_threads(flags->threads)
     {
         int threadID;
+        
         //Save individual thread number
         threadID = omp_get_thread_num();
         
@@ -225,6 +218,10 @@ int main(int argc, char *argv[])
         generate_galactic_foreground_model(data,orbit,galaxy[chain->index[0]]);
         sprintf(filename,"%s/final_foreground_noise_model.dat",data->dataDir);
         print_noise_model(galaxy[chain->index[0]]->psd, filename);
+        
+        generate_full_covariance_matrix(model[chain->index[0]]->psd, galaxy[chain->index[0]]->psd, data->Nchannel);
+        sprintf(filename,"%s/final_full_noise_model.dat",data->dataDir);
+        print_noise_model(model[chain->index[0]]->psd, filename);
     }
     
     print_noise_reconstruction(data, flags);

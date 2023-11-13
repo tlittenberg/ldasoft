@@ -608,7 +608,7 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
     }
     
     /* check convergence with log likelihood & BIC */
-    *logL = log_likelihood(modes, samples, NMCMC, NMODE);
+    *logL = log_likelihood(modes, samples, (int)NMCMC, (int)NMODE);
     *BIC = -2.*(*logL) + (double)NMODE*((double)NP*((double)NP+3.)/2. + 1)*log((double)NMCMC);
     //printf(" logL = %g,  BIC = %g     ",*logL, *BIC);
     
