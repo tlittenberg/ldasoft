@@ -551,9 +551,9 @@ void exchange_gbmcmc_source_params(struct GBMCMCData *gbmcmc_data)
         {
             for(int n=0; n<2*data->N; n++)
             {
-                //TODO: need support for X,Y,Z,T channels
-                data->tdi[i]->A[n] = data->raw[i]->A[n] - new_model->tdi[i]->A[n];
-                data->tdi[i]->E[n] = data->raw[i]->E[n] - new_model->tdi[i]->E[n];
+                data->tdi[i]->X[n] = data->raw[i]->X[n] - new_model->tdi[i]->X[n];
+                data->tdi[i]->Y[n] = data->raw[i]->Y[n] - new_model->tdi[i]->Y[n];
+                data->tdi[i]->Z[n] = data->raw[i]->Z[n] - new_model->tdi[i]->Z[n];
             }
         }
                 

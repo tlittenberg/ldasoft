@@ -109,6 +109,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct GBMCMCData *gbmcmc_da
     alloc_data(noise_data->data, noise_data->flags);
     
     noise_data->inst_model = malloc(sizeof(struct InstrumentModel*)*gbmcmc_data->chain->NC);
+    noise_data->conf_model = malloc(sizeof(struct ForegroundModel*)*gbmcmc_data->chain->NC);
 
     //get max and min samples
     noise_data->data->qmin = (int)(noise_data->data->fmin*noise_data->data->T);
@@ -312,7 +313,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
     adapt_temperature_ladder(chain, noise_data->mcmc_step+flags->NBURN);
     
     print_instrument_state(inst_model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
-    print_foreground_state(conf_model[chain->index[0]], chain->foregroundFile[0], noise_data->mcmc_step);
+    if(flags->confNoise) print_foreground_state(conf_model[chain->index[0]], chain->foregroundFile[0], noise_data->mcmc_step);
 
     //save point estimate of noise model
     int i = (noise_data->mcmc_step+flags->NBURN)%data->Nwave;
@@ -322,6 +323,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
         generate_galactic_foreground_model(data,orbit,conf_model[chain->index[0]]);
         generate_full_covariance_matrix(inst_model[chain->index[0]]->psd,conf_model[chain->index[0]]->psd, data->Nchannel);
     }
+    invert_noise_covariance_matrix(inst_model[chain->index[0]]->psd);
 
     for(int n=0; n<data->N; n++)
     {

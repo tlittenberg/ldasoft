@@ -260,6 +260,13 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     sprintf(filename,"%s/noise_chain.dat.0",chain->chainDir);
     chain->noiseFile[0] = fopen(filename,mode);
     
+    if(flags->confNoise)
+    {
+        chain->foregroundFile = malloc(NC*sizeof(FILE *));
+        sprintf(filename,"%s/foreground_chain.dat.0",chain->chainDir);
+        chain->foregroundFile[0] = fopen(filename,mode);
+    }
+    
     if(flags->calibration)
     {
         chain->calibrationFile = malloc(NC*sizeof(FILE *));
@@ -622,9 +629,6 @@ void alloc_noise(struct Noise *noise, int NFFT, int Nchannel)
     noise->C    = malloc(Nchannel*sizeof(double **));
     noise->invC = malloc(Nchannel*sizeof(double **));
     
-    noise->C    = malloc(Nchannel*sizeof(double **));
-    noise->invC = malloc(Nchannel*sizeof(double **));
-
     for(int i=0; i<Nchannel; i++)
     {
         noise->eta[i] = 1.0;

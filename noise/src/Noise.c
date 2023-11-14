@@ -106,8 +106,8 @@ void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int 
     model->psd = malloc(sizeof(struct Noise));
     model->spline=malloc(sizeof(struct Noise));
     
-    alloc_noise(model->psd, Nchannel, Ndata);
-    alloc_noise(model->spline, Nchannel, Nspline);
+    alloc_noise(model->psd, Ndata, Nchannel);
+    alloc_noise(model->spline, Nspline, Nchannel);
 }
 
 void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel)
@@ -848,7 +848,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
         
         free_noise(model_x->spline);
         model_x->spline = malloc(sizeof(struct Noise));
-        alloc_noise(model_x->spline,data->Nchannel, model_y->spline->N);
+        alloc_noise(model_x->spline,model_y->spline->N, data->Nchannel);
          
         
         copy_spline_model(model_y, model_x);
