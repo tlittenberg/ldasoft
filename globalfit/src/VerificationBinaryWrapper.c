@@ -224,7 +224,8 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
                 struct Model *trial_ptr = trial_vec[n][chain_vec[n]->index[ic]];
                 
                 model_ptr->logL = gaussian_log_likelihood(data_vec[n], model_ptr);
-                
+                model_ptr->logLnorm = gaussian_log_likelihood_model_norm(data_vec[n], model_ptr);
+
                 //sync up model and trial pointers
                 copy_model(model_ptr,trial_ptr);
 
@@ -243,9 +244,9 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
         chain = chain_vec[n];
         
         //update fisher matrix for each chain
-        for(int i=0; i<model[chain->index[0]]->Nlive; i++)
+        for(int ic=0; ic<NC; ic++)
         {
-            galactic_binary_fisher(orbit, data, model[chain->index[0]]->source[i], data->noise[FIXME]);
+            galactic_binary_fisher(orbit, data, model[chain->index[ic]]->source[0], model[chain->index[ic]]->noise[FIXME]);
         }
 
         ptmcmc(model_vec[n],chain_vec[n],flags);

@@ -369,7 +369,7 @@ int update_gbmcmc_sampler(struct GBMCMCData *gbmcmc_data)
             //update fisher matrix for each chain
             for(int n=0; n<model_ptr->Nlive; n++)
             {
-                galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise[FIXME]);
+                galactic_binary_fisher(orbit, data, model_ptr->source[n], model_ptr->noise[FIXME]);
             }
 
             
