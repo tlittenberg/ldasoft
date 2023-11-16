@@ -88,6 +88,53 @@ static void share_data(struct TDI *tdi_full, int root, int procID)
     
 }
 
+static void dump_data(struct Data *data, struct Flags *flags)
+{
+    FILE *fptr;
+    char filename[MAXSTRINGSIZE];
+    struct TDI *tdi = data->tdi[0];
+
+    sprintf(filename,"%s/data/power_data.dat",flags->runDir);
+    printf("filename=%s\n",filename);
+    fptr = fopen(filename,"w");
+    for(int i=0; i<data->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        switch(tdi->Nchannel)
+        {
+            case 1:
+                fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                break;
+            case 2:
+                fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                break;
+            case 3:
+                fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1], tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                break;
+        }
+    }
+    fclose(fptr);
+
+    sprintf(filename,"%s/data/data.dat",flags->runDir);
+    fptr = fopen(filename,"w");
+    for(int i=0; i<tdi->N; i++)
+    {
+        double f = (double)(i+data->qmin)/data->T;
+        switch(data->Nchannel)
+        {
+            case 1:
+                fprintf(fptr,"%.12g %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                break;
+            case 2:
+                fprintf(fptr,"%.12g %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                break;
+            case 3:
+                fprintf(fptr,"%.12g %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                break;
+        }
+    }
+    fclose(fptr);
+}
 
 static void share_vbmcmc_model(struct GBMCMCData *gbmcmc_data,
                                struct VBMCMCData *vbmcmc_data,
@@ -649,6 +696,10 @@ int main(int argc, char *argv[])
         char dirname[MAXSTRINGSIZE];
         sprintf(dirname,"%s/samples",gbmcmc_data->flags->runDir);
         mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        /* data directory for raw data dump */
+        sprintf(dirname,"%s/data",gbmcmc_data->flags->runDir);
+        mkdir(dirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
     MPI_Barrier(MPI_COMM_WORLD);
     
@@ -754,6 +805,9 @@ int main(int argc, char *argv[])
 
     /* allocate global fit noise model for all processes */
     alloc_noise(global_fit->psd, noise_data->data->N, noise_data->data->Nchannel);
+    
+    /* print ASCII copy of raw data for visualizations */
+    if(procID == 0) dump_data(noise_data->data, flags);
     
     /*
      * Initialize all of the samplers
