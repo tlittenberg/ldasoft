@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.3"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LDASoft: gbmcmc/src/GalacticBinaryModel.h File Reference</title>
+<title>GLASS: gbmcmc/src/GalacticBinaryModel.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,9 +33,9 @@ MathJax.Hub.Config({
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="GBMCMC.png"/></td>
   <td id="projectalign">
-   <div id="projectname">LDASoft
+   <div id="projectname">GLASS
    </div>
-   <div id="projectbrief">LISA Data Analysis Software</div>
+   <div id="projectbrief">Global LISA Analysis Software Suite</div>
   </td>
  </tr>
  </tbody>
@@ -108,12 +108,18 @@ Functions</h2></td></tr>
 <tr class="memitem:addaa8f8b33ce94b3e333e762355a122b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#addaa8f8b33ce94b3e333e762355a122b">generate_signal_model</a> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, int source_id)</td></tr>
 <tr class="memdesc:addaa8f8b33ce94b3e333e762355a122b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create galactic binary model waveform.  <a href="GalacticBinaryModel_8h.html#addaa8f8b33ce94b3e333e762355a122b">More...</a><br /></td></tr>
 <tr class="separator:addaa8f8b33ce94b3e333e762355a122b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a851138dba7576140b4d21b7fcedb94b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#a851138dba7576140b4d21b7fcedb94b3">update_signal_model</a> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model_x, struct <a class="el" href="structModel.html">Model</a> *model_y, int source_id)</td></tr>
+<tr class="memdesc:a851138dba7576140b4d21b7fcedb94b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Modify galactic binary model waveform.  <a href="GalacticBinaryModel_8h.html#a851138dba7576140b4d21b7fcedb94b3">More...</a><br /></td></tr>
+<tr class="separator:a851138dba7576140b4d21b7fcedb94b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1616fa8f0399df0a39768c4ea3e2f776"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#a1616fa8f0399df0a39768c4ea3e2f776">maximize_signal_model</a> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, int source_id)</td></tr>
 <tr class="memdesc:a1616fa8f0399df0a39768c4ea3e2f776"><td class="mdescLeft">&#160;</td><td class="mdescRight">F-statistic maximization of galactic binary parameters.  <a href="GalacticBinaryModel_8h.html#a1616fa8f0399df0a39768c4ea3e2f776">More...</a><br /></td></tr>
 <tr class="separator:a1616fa8f0399df0a39768c4ea3e2f776"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d05914da5fd4f3afe8b7fa7b12aedae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#a9d05914da5fd4f3afe8b7fa7b12aedae">generate_noise_model</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model)</td></tr>
 <tr class="memdesc:a9d05914da5fd4f3afe8b7fa7b12aedae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create LISA instrument noise model.  <a href="GalacticBinaryModel_8h.html#a9d05914da5fd4f3afe8b7fa7b12aedae">More...</a><br /></td></tr>
 <tr class="separator:a9d05914da5fd4f3afe8b7fa7b12aedae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa832de50c97ec75e53423259310ab758"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#aa832de50c97ec75e53423259310ab758">invert_noise_covariance_matrix</a> (struct <a class="el" href="structNoise.html">Noise</a> *noise)</td></tr>
+<tr class="memdesc:aa832de50c97ec75e53423259310ab758"><td class="mdescLeft">&#160;</td><td class="mdescRight">Analytic in-place inversion of noise covariance matrix.  <a href="GalacticBinaryModel_8h.html#aa832de50c97ec75e53423259310ab758">More...</a><br /></td></tr>
+<tr class="separator:aa832de50c97ec75e53423259310ab758"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae9f1345cdb131ac555e8b7a47ecdadf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#aae9f1345cdb131ac555e8b7a47ecdadf">generate_calibration_model</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model)</td></tr>
 <tr class="memdesc:aae9f1345cdb131ac555e8b7a47ecdadf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create LISA instrument calibration model.  <a href="GalacticBinaryModel_8h.html#aae9f1345cdb131ac555e8b7a47ecdadf">More...</a><br /></td></tr>
 <tr class="separator:aae9f1345cdb131ac555e8b7a47ecdadf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,6 +135,9 @@ Functions</h2></td></tr>
 <tr class="memitem:aed294af3354f45ddf6e25f21e4b27672"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#aed294af3354f45ddf6e25f21e4b27672">gaussian_log_likelihood_model_norm</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model)</td></tr>
 <tr class="memdesc:aed294af3354f45ddf6e25f21e4b27672"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute normalization of Gaussian likelihood for arbitrary noise level.  <a href="GalacticBinaryModel_8h.html#aed294af3354f45ddf6e25f21e4b27672">More...</a><br /></td></tr>
 <tr class="separator:aed294af3354f45ddf6e25f21e4b27672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc5cdc7f964694db56c9765d63fed4bf"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="GalacticBinaryModel_8h.html#abc5cdc7f964694db56c9765d63fed4bf">delta_log_likelihood</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model_x, struct <a class="el" href="structModel.html">Model</a> *model_y, int source_id)</td></tr>
+<tr class="memdesc:abc5cdc7f964694db56c9765d63fed4bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute difference in log Likelihood from changing parameters of one source.  <a href="GalacticBinaryModel_8h.html#abc5cdc7f964694db56c9765d63fed4bf">More...</a><br /></td></tr>
+<tr class="separator:abc5cdc7f964694db56c9765d63fed4bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe48796e00cb3479987c1635f33c0e05"><td class="memItemLeft" align="right" valign="top"><a id="afe48796e00cb3479987c1635f33c0e05" name="afe48796e00cb3479987c1635f33c0e05"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>update_max_log_likelihood</b> (struct <a class="el" href="structModel.html">Model</a> **model, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags)</td></tr>
 <tr class="memdesc:afe48796e00cb3479987c1635f33c0e05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check for increase in maximum log likelihood. <br /></td></tr>
@@ -163,12 +172,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_data</b> (struc
 <tr class="memitem:a1e2ce40c066c60db2b591b10f5e12295"><td class="memItemLeft" align="right" valign="top"><a id="a1e2ce40c066c60db2b591b10f5e12295" name="a1e2ce40c066c60db2b591b10f5e12295"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_model</b> (struct <a class="el" href="structModel.html">Model</a> *model, int Nmax, int NFFT, int Nchannel, int NP, int NT)</td></tr>
 <tr class="separator:a1e2ce40c066c60db2b591b10f5e12295"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ebc45814152141c744e513ac6c89fa3"><td class="memItemLeft" align="right" valign="top"><a id="a7ebc45814152141c744e513ac6c89fa3" name="a7ebc45814152141c744e513ac6c89fa3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_noise</b> (struct <a class="el" href="structNoise.html">Noise</a> *noise, int NFFT)</td></tr>
-<tr class="separator:a7ebc45814152141c744e513ac6c89fa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67cbd1cfd4fe8c9f655d206a264860e4"><td class="memItemLeft" align="right" valign="top"><a id="a67cbd1cfd4fe8c9f655d206a264860e4" name="a67cbd1cfd4fe8c9f655d206a264860e4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>realloc_noise</b> (struct <a class="el" href="structNoise.html">Noise</a> *noise, int NFFT)</td></tr>
-<tr class="separator:a67cbd1cfd4fe8c9f655d206a264860e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef500c5db2072209da7cf11c2317cce6"><td class="memItemLeft" align="right" valign="top"><a id="aef500c5db2072209da7cf11c2317cce6" name="aef500c5db2072209da7cf11c2317cce6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_noise</b> (struct <a class="el" href="structNoise.html">Noise</a> *noise, int NFFT, int Nchannel)</td></tr>
+<tr class="separator:aef500c5db2072209da7cf11c2317cce6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4d427c1f55fb38c73f25ba924108aec"><td class="memItemLeft" align="right" valign="top"><a id="af4d427c1f55fb38c73f25ba924108aec" name="af4d427c1f55fb38c73f25ba924108aec"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_source</b> (struct <a class="el" href="structSource.html">Source</a> *source, int NFFT, int Nchannel, int NP)</td></tr>
 <tr class="separator:af4d427c1f55fb38c73f25ba924108aec"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -185,6 +191,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_model</b> (struc
 <tr class="memitem:aac0726c8e74b4cfe06a47c9f41c1bd86"><td class="memItemLeft" align="right" valign="top"><a id="aac0726c8e74b4cfe06a47c9f41c1bd86" name="aac0726c8e74b4cfe06a47c9f41c1bd86"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_noise</b> (struct <a class="el" href="structNoise.html">Noise</a> *origin, struct <a class="el" href="structNoise.html">Noise</a> *copy)</td></tr>
 <tr class="separator:aac0726c8e74b4cfe06a47c9f41c1bd86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67938ebd9131bbb8a727f68b525ea149"><td class="memItemLeft" align="right" valign="top"><a id="a67938ebd9131bbb8a727f68b525ea149" name="a67938ebd9131bbb8a727f68b525ea149"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_Cij</b> (double ***origin, double ***copy, int M, int N)</td></tr>
+<tr class="separator:a67938ebd9131bbb8a727f68b525ea149"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d7165549e4b4f81273636d630d7837f"><td class="memItemLeft" align="right" valign="top"><a id="a5d7165549e4b4f81273636d630d7837f" name="a5d7165549e4b4f81273636d630d7837f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_model_lite</b> (struct <a class="el" href="structModel.html">Model</a> *origin, struct <a class="el" href="structModel.html">Model</a> *copy)</td></tr>
 <tr class="separator:a5d7165549e4b4f81273636d630d7837f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -272,6 +281,49 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_calibration</b> 
 <dl class="section return"><dt>Returns</dt><dd>0 if models are identical </dd>
 <dd>
 1 if models are different </dd></dl>
+
+</div>
+</div>
+<a id="abc5cdc7f964694db56c9765d63fed4bf" name="abc5cdc7f964694db56c9765d63fed4bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc5cdc7f964694db56c9765d63fed4bf">&#9670;&nbsp;</a></span>delta_log_likelihood()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double delta_log_likelihood </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model_x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model_y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>source_id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Compute difference in log Likelihood from changing parameters of one source. </p>
+<p >Updates residuals from changing single source <code>source_id</code> and computes change in likelihood sum only over frequency range where waveforms were non-zero. </p><dl class="section return"><dt>Returns</dt><dd>\( -\frac{1}{2}\left[(d-h_{\rm new}|d-h__{\rm new}) - (d-h_{\rm old}|d-h_{\rm old})\right] \) </dd></dl>
 
 </div>
 </div>
@@ -475,6 +527,27 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_calibration</b> 
 
 </div>
 </div>
+<a id="aa832de50c97ec75e53423259310ab758" name="aa832de50c97ec75e53423259310ab758"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa832de50c97ec75e53423259310ab758">&#9670;&nbsp;</a></span>invert_noise_covariance_matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void invert_noise_covariance_matrix </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structNoise.html">Noise</a> *&#160;</td>
+          <td class="paramname"><em>noise</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Analytic in-place inversion of noise covariance matrix. </p>
+<p >Substitutes contents of noise-&gt;Cij[n] with inverse, and sets deteriminent noise-&gt;detC[n] </p>
+
+</div>
+</div>
 <a id="a1616fa8f0399df0a39768c4ea3e2f776" name="a1616fa8f0399df0a39768c4ea3e2f776"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1616fa8f0399df0a39768c4ea3e2f776">&#9670;&nbsp;</a></span>maximize_signal_model()</h2>
 
@@ -516,6 +589,55 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_calibration</b> 
 <p>F-statistic maximization of galactic binary parameters. </p>
 <p >Wrapper of GalacticBinaryFstatistic.c functions for maximizing waveform over \((\mathcal{A},\cos\iota,\psi,\varphi_0)\) by filtering on original data.</p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>test filtering on residuals</dd></dl>
+
+</div>
+</div>
+<a id="a851138dba7576140b4d21b7fcedb94b3" name="a851138dba7576140b4d21b7fcedb94b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a851138dba7576140b4d21b7fcedb94b3">&#9670;&nbsp;</a></span>update_signal_model()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void update_signal_model </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structOrbit.html">Orbit</a> *&#160;</td>
+          <td class="paramname"><em>orbit</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model_x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structModel.html">Model</a> *&#160;</td>
+          <td class="paramname"><em>model_y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>source_id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Modify galactic binary model waveform. </p>
+<p >Computes LISA response to signal with parameters indexed by <code>source_id</code> in the Model::Source, and updates meta template of all sources in the model. </p>
 
 </div>
 </div>

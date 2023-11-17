@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['c_0',['C',['../structMVG.html#a5a321514a0e6421baae34a9f3984d1ee',1,'MVG']]],
+  ['c_0',['C',['../structNoise.html#a907723fa2398a46d4e5f31c85a78b35f',1,'Noise::C()'],['../structMVG.html#a5a321514a0e6421baae34a9f3984d1ee',1,'MVG::C()']]],
   ['cache_1',['cache',['../structData.html#a19aaf9e0c4c84ac528228d2c5d12198e',1,'Data']]],
   ['calibration_2',['calibration',['../structFlags.html#ad00e015c84ba7365ecbe9edba0afa24f',1,'Flags::calibration()'],['../structModel.html#a9ab3bf5c810c3309d3618a55f9ecf5f1',1,'Model::calibration()']]],
   ['calibrationfile_3',['calibrationFile',['../structChain.html#aa1656395b51a7969ca0e183e6ab2c8b0',1,'Chain']]],

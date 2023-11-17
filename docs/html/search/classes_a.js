@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['sample_0',['Sample',['../structSample.html',1,'']]],
-  ['source_1',['Source',['../structSource.html',1,'']]],
-  ['splinemodel_2',['SplineModel',['../structSplineModel.html',1,'']]]
+  ['prior_0',['Prior',['../structPrior.html',1,'']]],
+  ['proposal_1',['Proposal',['../structProposal.html',1,'']]]
 ];

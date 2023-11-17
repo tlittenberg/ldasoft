@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['orbit_0',['Orbit',['../structOrbit.html',1,'']]]
+  ['noise_0',['Noise',['../structNoise.html',1,'']]],
+  ['noisedata_1',['NoiseData',['../structNoiseData.html',1,'']]]
 ];

@@ -1,6 +1,6 @@
 var GalacticBinaryWaveform_8h =
 [
-    [ "galactic_binary", "GalacticBinaryWaveform_8h.html#a760ef0a604a22ece220ed7f5b5d6205b", null ],
+    [ "galactic_binary", "GalacticBinaryWaveform_8h.html#a9d069fe23ae3e4644200db917dd3ea3e", null ],
     [ "galactic_binary_alignment", "GalacticBinaryWaveform_8h.html#a83dd310bc696e85059ce0a838d61e045", null ],
     [ "galactic_binary_Amp", "GalacticBinaryWaveform_8h.html#a5c0690180520fdee2364df46988d7485", null ],
     [ "galactic_binary_bandwidth", "GalacticBinaryWaveform_8h.html#a71eeb38f8dbebe3286e55de7ade6f4b6", null ],

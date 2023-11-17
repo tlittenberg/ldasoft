@@ -9,7 +9,7 @@ var searchData=
   ['delta_6',['delta',['../structTDI.html#a04093b976b5a17e50262ef1b124d1286',1,'TDI']]],
   ['density_7',['density',['../structProposal.html#a9c600af1bf6f47a578be3bc60cead450',1,'Proposal']]],
   ['detached_8',['detached',['../structFlags.html#aefec4a9462f3b193837da1959a4f76a9',1,'Flags']]],
-  ['detc_9',['detC',['../structMVG.html#a8220f409dd92a0ed74c93a71fb924850',1,'MVG']]],
+  ['detc_9',['detC',['../structNoise.html#a727f698c3f5d0095b3d0833f67cf6e19',1,'Noise::detC()'],['../structMVG.html#a8220f409dd92a0ed74c93a71fb924850',1,'MVG::detC()']]],
   ['dfdt_10',['dfdt',['../structSource.html#a313001075cc0808f9843185e77de7fa2',1,'Source']]],
   ['dimension_11',['dimension',['../structChain.html#aa63851a8163ac41d4dcf3af2f6a1e3bf',1,'Chain']]],
   ['dimensionfile_12',['dimensionFile',['../structChain.html#a229f5af69a6a1417256f88a4c76d61f4',1,'Chain']]],

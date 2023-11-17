@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.3"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LDASoft: noise/src/Noise.h File Reference</title>
+<title>GLASS: noise/src/Noise.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,9 +33,9 @@ MathJax.Hub.Config({
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="GBMCMC.png"/></td>
   <td id="projectalign">
-   <div id="projectname">LDASoft
+   <div id="projectname">GLASS
    </div>
-   <div id="projectbrief">LISA Data Analysis Software</div>
+   <div id="projectbrief">Global LISA Analysis Software Suite</div>
   </td>
  </tr>
  </tbody>
@@ -108,25 +108,77 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSplineModel.html">SplineModel</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> strictire for spline model used in noise model.  <a href="structSplineModel.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstrumentModel.html">InstrumentModel</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structForegroundModel.html">ForegroundModel</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a2f5e4518ac2fdb15056e78d24a5f9e1c"><td class="memItemLeft" align="right" valign="top"><a id="a2f5e4518ac2fdb15056e78d24a5f9e1c" name="a2f5e4518ac2fdb15056e78d24a5f9e1c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_spline_model</b> (struct <a class="el" href="structSplineModel.html">SplineModel</a> *model, int Ndata, int Nspline)</td></tr>
-<tr class="memdesc:a2f5e4518ac2fdb15056e78d24a5f9e1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocates spline model structure and contents. <br /></td></tr>
-<tr class="separator:a2f5e4518ac2fdb15056e78d24a5f9e1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66a39515bad64d0a14641503263385ed"><td class="memItemLeft" align="right" valign="top"><a id="a66a39515bad64d0a14641503263385ed" name="a66a39515bad64d0a14641503263385ed"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>map_noise_params_to_array</b> (struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model)</td></tr>
+<tr class="memdesc:a66a39515bad64d0a14641503263385ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts physical noise parameters to array expected by <a class="el" href="structInstrumentModel.html">InstrumentModel</a>. <br /></td></tr>
+<tr class="separator:a66a39515bad64d0a14641503263385ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86fe4d9682e046c83d62026059ecaa49"><td class="memItemLeft" align="right" valign="top"><a id="a86fe4d9682e046c83d62026059ecaa49" name="a86fe4d9682e046c83d62026059ecaa49"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>map_array_to_noise_params</b> (struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model)</td></tr>
+<tr class="memdesc:a86fe4d9682e046c83d62026059ecaa49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts array expected by <a class="el" href="structInstrumentModel.html">InstrumentModel</a> to physical noise parameters. <br /></td></tr>
+<tr class="separator:a86fe4d9682e046c83d62026059ecaa49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6a2ecc9b3132ece090ef11307df768f"><td class="memItemLeft" align="right" valign="top"><a id="ac6a2ecc9b3132ece090ef11307df768f" name="ac6a2ecc9b3132ece090ef11307df768f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>map_foreground_params_to_array</b> (struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model)</td></tr>
+<tr class="memdesc:ac6a2ecc9b3132ece090ef11307df768f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts phenomenological foreground parameters to array expected by <a class="el" href="structForegroundModel.html">ForegroundModel</a>. <br /></td></tr>
+<tr class="separator:ac6a2ecc9b3132ece090ef11307df768f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfe7fd96474a942ccbb430b16cea8681"><td class="memItemLeft" align="right" valign="top"><a id="acfe7fd96474a942ccbb430b16cea8681" name="acfe7fd96474a942ccbb430b16cea8681"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>map_array_to_foreground_params</b> (struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model)</td></tr>
+<tr class="memdesc:acfe7fd96474a942ccbb430b16cea8681"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts array expected by <a class="el" href="structForegroundModel.html">ForegroundModel</a> to phenomenological foreground parameters. <br /></td></tr>
+<tr class="separator:acfe7fd96474a942ccbb430b16cea8681"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad33c1beb5f16e1958e8eede34a6c3171"><td class="memItemLeft" align="right" valign="top"><a id="ad33c1beb5f16e1958e8eede34a6c3171" name="ad33c1beb5f16e1958e8eede34a6c3171"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_spline_model</b> (struct <a class="el" href="structSplineModel.html">SplineModel</a> *model, int Ndata, int Nchannel, int Nspline)</td></tr>
+<tr class="memdesc:ad33c1beb5f16e1958e8eede34a6c3171"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocates spline model structure and contents. <br /></td></tr>
+<tr class="separator:ad33c1beb5f16e1958e8eede34a6c3171"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91d7def9b77b796959cc5f1762c8be5b"><td class="memItemLeft" align="right" valign="top"><a id="a91d7def9b77b796959cc5f1762c8be5b" name="a91d7def9b77b796959cc5f1762c8be5b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_instrument_model</b> (struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model, int Ndata, int Nchannel)</td></tr>
+<tr class="memdesc:a91d7def9b77b796959cc5f1762c8be5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocates instrument model structure and contents. <br /></td></tr>
+<tr class="separator:a91d7def9b77b796959cc5f1762c8be5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f3b41667273010729d7cd9bc220ad06"><td class="memItemLeft" align="right" valign="top"><a id="a8f3b41667273010729d7cd9bc220ad06" name="a8f3b41667273010729d7cd9bc220ad06"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>alloc_foreground_model</b> (struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model, int Ndata, int Nchannel)</td></tr>
+<tr class="memdesc:a8f3b41667273010729d7cd9bc220ad06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocates galactic foreground model structure and contents. <br /></td></tr>
+<tr class="separator:a8f3b41667273010729d7cd9bc220ad06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7f3384ab8c7443782bae5f08e99b969"><td class="memItemLeft" align="right" valign="top"><a id="af7f3384ab8c7443782bae5f08e99b969" name="af7f3384ab8c7443782bae5f08e99b969"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>free_spline_model</b> (struct <a class="el" href="structSplineModel.html">SplineModel</a> *model)</td></tr>
 <tr class="memdesc:af7f3384ab8c7443782bae5f08e99b969"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free allocated spline model. <br /></td></tr>
 <tr class="separator:af7f3384ab8c7443782bae5f08e99b969"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9acdf11cea3d00b504005567a14c5fda"><td class="memItemLeft" align="right" valign="top"><a id="a9acdf11cea3d00b504005567a14c5fda" name="a9acdf11cea3d00b504005567a14c5fda"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>free_instrument_model</b> (struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model)</td></tr>
+<tr class="memdesc:a9acdf11cea3d00b504005567a14c5fda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free allocated spline model. <br /></td></tr>
+<tr class="separator:a9acdf11cea3d00b504005567a14c5fda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8822da0d665e0300718896901e2d1f50"><td class="memItemLeft" align="right" valign="top"><a id="a8822da0d665e0300718896901e2d1f50" name="a8822da0d665e0300718896901e2d1f50"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>free_foreground_model</b> (struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model)</td></tr>
+<tr class="memdesc:a8822da0d665e0300718896901e2d1f50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free allocated spline model. <br /></td></tr>
+<tr class="separator:a8822da0d665e0300718896901e2d1f50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afbe1038a36342f43027e2f7b27641f4e"><td class="memItemLeft" align="right" valign="top"><a id="afbe1038a36342f43027e2f7b27641f4e" name="afbe1038a36342f43027e2f7b27641f4e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_spline_model</b> (struct <a class="el" href="structSplineModel.html">SplineModel</a> *origin, struct <a class="el" href="structSplineModel.html">SplineModel</a> *copy)</td></tr>
 <tr class="memdesc:afbe1038a36342f43027e2f7b27641f4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deep copy of <a class="el" href="structSplineModel.html" title="Data strictire for spline model used in noise model.">SplineModel</a> structure from <code>origin</code> into <code>copy</code> <br /></td></tr>
 <tr class="separator:afbe1038a36342f43027e2f7b27641f4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3759a07b7d6ccc08f3141a0d8e87d6ba"><td class="memItemLeft" align="right" valign="top"><a id="a3759a07b7d6ccc08f3141a0d8e87d6ba" name="a3759a07b7d6ccc08f3141a0d8e87d6ba"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_instrument_model</b> (struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *origin, struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *copy)</td></tr>
+<tr class="memdesc:a3759a07b7d6ccc08f3141a0d8e87d6ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deep copy of <a class="el" href="structInstrumentModel.html">InstrumentModel</a> structure from <code>origin</code> into <code>copy</code> <br /></td></tr>
+<tr class="separator:a3759a07b7d6ccc08f3141a0d8e87d6ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34e3eaaa042c2dd9580cc3230381ae97"><td class="memItemLeft" align="right" valign="top"><a id="a34e3eaaa042c2dd9580cc3230381ae97" name="a34e3eaaa042c2dd9580cc3230381ae97"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_foreground_model</b> (struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *origin, struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *copy)</td></tr>
+<tr class="memdesc:a34e3eaaa042c2dd9580cc3230381ae97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deep copy of <a class="el" href="structForegroundModel.html">ForegroundModel</a> structure from <code>origin</code> into <code>copy</code> <br /></td></tr>
+<tr class="separator:a34e3eaaa042c2dd9580cc3230381ae97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa526e66c19f5c5aa4ce7d449853902be"><td class="memItemLeft" align="right" valign="top"><a id="aa526e66c19f5c5aa4ce7d449853902be" name="aa526e66c19f5c5aa4ce7d449853902be"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>print_spline_state</b> (struct <a class="el" href="structSplineModel.html">SplineModel</a> *model, FILE *fptr, int step)</td></tr>
 <tr class="memdesc:aa526e66c19f5c5aa4ce7d449853902be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print current state of spline model to ASCII. <br /></td></tr>
 <tr class="separator:aa526e66c19f5c5aa4ce7d449853902be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb12f5ea4b424c0e127887612383035f"><td class="memItemLeft" align="right" valign="top"><a id="aeb12f5ea4b424c0e127887612383035f" name="aeb12f5ea4b424c0e127887612383035f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>print_instrument_state</b> (struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model, FILE *fptr, int step)</td></tr>
+<tr class="memdesc:aeb12f5ea4b424c0e127887612383035f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print current state of instrument model to ASCII. <br /></td></tr>
+<tr class="separator:aeb12f5ea4b424c0e127887612383035f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b0d46b6ddaeb7c11890a574e6eb14f7"><td class="memItemLeft" align="right" valign="top"><a id="a3b0d46b6ddaeb7c11890a574e6eb14f7" name="a3b0d46b6ddaeb7c11890a574e6eb14f7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>print_foreground_state</b> (struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model, FILE *fptr, int step)</td></tr>
+<tr class="memdesc:a3b0d46b6ddaeb7c11890a574e6eb14f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print current state of instrument model to ASCII. <br /></td></tr>
+<tr class="separator:a3b0d46b6ddaeb7c11890a574e6eb14f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a805d240e93c0309da5a4c6985defab31"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Noise_8h.html#a805d240e93c0309da5a4c6985defab31">CubicSplineGSL</a> (int N, double *x, double *y, int Nint, double *xint, double *yint)</td></tr>
 <tr class="memdesc:a805d240e93c0309da5a4c6985defab31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper to <code>GSL</code> cubic spline interpolation routines.  <a href="Noise_8h.html#a805d240e93c0309da5a4c6985defab31">More...</a><br /></td></tr>
 <tr class="separator:a805d240e93c0309da5a4c6985defab31"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -134,13 +186,34 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_spline_state</b
 void&#160;</td><td class="memItemRight" valign="bottom"><b>generate_spline_noise_model</b> (struct <a class="el" href="structSplineModel.html">SplineModel</a> *model)</td></tr>
 <tr class="memdesc:afc8a37db623d072e8cad72ba737f6ed2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper to <code>CubicSplineGSL</code> functions for generating PSD model based on current state of <code>model</code> <br /></td></tr>
 <tr class="separator:afc8a37db623d072e8cad72ba737f6ed2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5e1a4829bbca6cadc4ee3f3b7118797"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Noise_8h.html#aa5e1a4829bbca6cadc4ee3f3b7118797">noise_log_likelihood</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structSplineModel.html">SplineModel</a> *model)</td></tr>
-<tr class="memdesc:aa5e1a4829bbca6cadc4ee3f3b7118797"><td class="mdescLeft">&#160;</td><td class="mdescRight">Log likelihood for noise model.  <a href="Noise_8h.html#aa5e1a4829bbca6cadc4ee3f3b7118797">More...</a><br /></td></tr>
-<tr class="separator:aa5e1a4829bbca6cadc4ee3f3b7118797"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cae5912ed928a0f1aa7547cdba3b439"><td class="memItemLeft" align="right" valign="top"><a id="a7cae5912ed928a0f1aa7547cdba3b439" name="a7cae5912ed928a0f1aa7547cdba3b439"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>generate_instrument_noise_model</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model)</td></tr>
+<tr class="memdesc:a7cae5912ed928a0f1aa7547cdba3b439"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute instrument model contribution to noise covariance matrix based on current state of <code>model</code> <br /></td></tr>
+<tr class="separator:a7cae5912ed928a0f1aa7547cdba3b439"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7afa86611d69c005ea989f1673d5a679"><td class="memItemLeft" align="right" valign="top"><a id="a7afa86611d69c005ea989f1673d5a679" name="a7afa86611d69c005ea989f1673d5a679"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>generate_galactic_foreground_model</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model)</td></tr>
+<tr class="memdesc:a7afa86611d69c005ea989f1673d5a679"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute galactic foreground contribution to covariance matrix based on current state of <code>model</code> <br /></td></tr>
+<tr class="separator:a7afa86611d69c005ea989f1673d5a679"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e8961d0a07424a80bd4e706d3ff1718"><td class="memItemLeft" align="right" valign="top"><a id="a5e8961d0a07424a80bd4e706d3ff1718" name="a5e8961d0a07424a80bd4e706d3ff1718"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>generate_full_covariance_matrix</b> (struct <a class="el" href="structNoise.html">Noise</a> *full, struct <a class="el" href="structNoise.html">Noise</a> *component, int Nchannel)</td></tr>
+<tr class="memdesc:a5e8961d0a07424a80bd4e706d3ff1718"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add components to <code>full</code> noise covariance matrix <code>C</code> <br /></td></tr>
+<tr class="separator:a5e8961d0a07424a80bd4e706d3ff1718"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e20140669e6f74b3c92c1acb39bf657"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Noise_8h.html#a1e20140669e6f74b3c92c1acb39bf657">update_spline_noise_model</a> (struct <a class="el" href="structSplineModel.html">SplineModel</a> *model, int new_knot, int min_knot, int max_knot)</td></tr>
+<tr class="memdesc:a1e20140669e6f74b3c92c1acb39bf657"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute spline model only where interpolant changes.  <a href="Noise_8h.html#a1e20140669e6f74b3c92c1acb39bf657">More...</a><br /></td></tr>
+<tr class="separator:a1e20140669e6f74b3c92c1acb39bf657"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cf2f367bbacd347b5d674907db49d16"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Noise_8h.html#a5cf2f367bbacd347b5d674907db49d16">noise_log_likelihood</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structNoise.html">Noise</a> *noise)</td></tr>
+<tr class="memdesc:a5cf2f367bbacd347b5d674907db49d16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Log likelihood for noise model.  <a href="Noise_8h.html#a5cf2f367bbacd347b5d674907db49d16">More...</a><br /></td></tr>
+<tr class="separator:a5cf2f367bbacd347b5d674907db49d16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5b47a78dd99341bfe56c36f40a8ab6f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="Noise_8h.html#af5b47a78dd99341bfe56c36f40a8ab6f">noise_delta_log_likelihood</a> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structSplineModel.html">SplineModel</a> *model_x, struct <a class="el" href="structSplineModel.html">SplineModel</a> *model_y, double fmin, double fmax, int ic)</td></tr>
+<tr class="memdesc:af5b47a78dd99341bfe56c36f40a8ab6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change in log likelihood for noise model.  <a href="Noise_8h.html#af5b47a78dd99341bfe56c36f40a8ab6f">More...</a><br /></td></tr>
+<tr class="separator:af5b47a78dd99341bfe56c36f40a8ab6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b437dfcc2bbb8aae74471fbe36c5d08"><td class="memItemLeft" align="right" valign="top"><a id="a4b437dfcc2bbb8aae74471fbe36c5d08" name="a4b437dfcc2bbb8aae74471fbe36c5d08"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>spline_ptmcmc</b> (struct <a class="el" href="structSplineModel.html">SplineModel</a> **model, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags)</td></tr>
-<tr class="memdesc:a4b437dfcc2bbb8aae74471fbe36c5d08"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place parallel tempering exchange of spline <code>model</code> states. <br /></td></tr>
+<tr class="memdesc:a4b437dfcc2bbb8aae74471fbe36c5d08"><td class="mdescLeft">&#160;</td><td class="mdescRight">In-place parallel tempering exchange of <code>model</code> states. <br /></td></tr>
 <tr class="separator:a4b437dfcc2bbb8aae74471fbe36c5d08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9ff4400beaf4ac21cf054d6813ffa4d"><td class="memItemLeft" align="right" valign="top"><a id="aa9ff4400beaf4ac21cf054d6813ffa4d" name="aa9ff4400beaf4ac21cf054d6813ffa4d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>noise_ptmcmc</b> (struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> **model, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags)</td></tr>
+<tr class="separator:aa9ff4400beaf4ac21cf054d6813ffa4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5fff402753a58cd58695c4ff1973c721"><td class="memItemLeft" align="right" valign="top"><a id="a5fff402753a58cd58695c4ff1973c721" name="a5fff402753a58cd58695c4ff1973c721"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>noise_spline_model_mcmc</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structSplineModel.html">SplineModel</a> *model, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, int ic)</td></tr>
 <tr class="memdesc:a5fff402753a58cd58695c4ff1973c721"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fixed-dimension update of each parallel tempered spline <code>model</code> state. <br /></td></tr>
@@ -149,14 +222,34 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>noise_spline_model_mc
 void&#160;</td><td class="memItemRight" valign="bottom"><b>noise_spline_model_rjmcmc</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structSplineModel.html">SplineModel</a> *model, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, int ic)</td></tr>
 <tr class="memdesc:a0823581af7946b76200fdccffd4a4ebb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trans-dimension update of each parallel tempered spline <code>model</code> state. <br /></td></tr>
 <tr class="separator:a0823581af7946b76200fdccffd4a4ebb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f529466fd3fc51f7bce91765f36bec8"><td class="memItemLeft" align="right" valign="top"><a id="a5f529466fd3fc51f7bce91765f36bec8" name="a5f529466fd3fc51f7bce91765f36bec8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>noise_instrument_model_mcmc</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model, struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *galaxy, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, int ic)</td></tr>
+<tr class="memdesc:a5f529466fd3fc51f7bce91765f36bec8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fixed-dimension update of each parallel tempered instrument noise <code>model</code> state. <br /></td></tr>
+<tr class="separator:a5f529466fd3fc51f7bce91765f36bec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a724a47f6956f2407b3ad635ad8ceefad"><td class="memItemLeft" align="right" valign="top"><a id="a724a47f6956f2407b3ad635ad8ceefad" name="a724a47f6956f2407b3ad635ad8ceefad"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>noise_foreground_model_mcmc</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *noise, struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model, struct <a class="el" href="structChain.html">Chain</a> *chain, struct <a class="el" href="structFlags.html">Flags</a> *flags, int ic)</td></tr>
+<tr class="memdesc:a724a47f6956f2407b3ad635ad8ceefad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fixed-dimension update of each parallel tempered galactic foreground noise <code>model</code> state. <br /></td></tr>
+<tr class="separator:a724a47f6956f2407b3ad635ad8ceefad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15247455eaa4a8bfcb377516f3cd08e9"><td class="memItemLeft" align="right" valign="top"><a id="a15247455eaa4a8bfcb377516f3cd08e9" name="a15247455eaa4a8bfcb377516f3cd08e9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initialize_spline_model</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structSplineModel.html">SplineModel</a> *model, int Nspline)</td></tr>
 <tr class="memdesc:a15247455eaa4a8bfcb377516f3cd08e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set initial state of spline <code>model</code> <br /></td></tr>
 <tr class="separator:a15247455eaa4a8bfcb377516f3cd08e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84f805f57075599833f5d3b84e4ee21b"><td class="memItemLeft" align="right" valign="top"><a id="a84f805f57075599833f5d3b84e4ee21b" name="a84f805f57075599833f5d3b84e4ee21b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>initialize_instrument_model</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structInstrumentModel.html">InstrumentModel</a> *model)</td></tr>
+<tr class="memdesc:a84f805f57075599833f5d3b84e4ee21b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set initial state of instrument noise <code>model</code> <br /></td></tr>
+<tr class="separator:a84f805f57075599833f5d3b84e4ee21b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e29bfb61da6f5dd3cd1b03dd31a4fae"><td class="memItemLeft" align="right" valign="top"><a id="a7e29bfb61da6f5dd3cd1b03dd31a4fae" name="a7e29bfb61da6f5dd3cd1b03dd31a4fae"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>initialize_foreground_model</b> (struct <a class="el" href="structOrbit.html">Orbit</a> *orbit, struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structForegroundModel.html">ForegroundModel</a> *model)</td></tr>
+<tr class="memdesc:a7e29bfb61da6f5dd3cd1b03dd31a4fae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set initial state of instrument noise <code>model</code> <br /></td></tr>
+<tr class="separator:a7e29bfb61da6f5dd3cd1b03dd31a4fae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19ab3d952ca5baf1222e06c713c6daa0"><td class="memItemLeft" align="right" valign="top"><a id="a19ab3d952ca5baf1222e06c713c6daa0" name="a19ab3d952ca5baf1222e06c713c6daa0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>print_noise_model</b> (struct <a class="el" href="structNoise.html">Noise</a> *noise, char filename[])</td></tr>
 <tr class="memdesc:a19ab3d952ca5baf1222e06c713c6daa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print full PSD model to file named <code>filename</code> <br /></td></tr>
 <tr class="separator:a19ab3d952ca5baf1222e06c713c6daa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2647cd8473c3a86110df5872fcad97ba"><td class="memItemLeft" align="right" valign="top"><a id="a2647cd8473c3a86110df5872fcad97ba" name="a2647cd8473c3a86110df5872fcad97ba"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>print_whitened_data</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structNoise.html">Noise</a> *noise, char filename[])</td></tr>
+<tr class="memdesc:a2647cd8473c3a86110df5872fcad97ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print data whitened by modeled variance to file named <code>filename</code> <br /></td></tr>
+<tr class="separator:a2647cd8473c3a86110df5872fcad97ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Sampling routines for <a class="el" href="structNoise.html" title="Structure containing parameters and meta data for noise model in narrow-band analysis segment.">Noise</a> module. </p>
@@ -229,8 +322,71 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_noise_model</b>
 
 </div>
 </div>
-<a id="aa5e1a4829bbca6cadc4ee3f3b7118797" name="aa5e1a4829bbca6cadc4ee3f3b7118797"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa5e1a4829bbca6cadc4ee3f3b7118797">&#9670;&nbsp;</a></span>noise_log_likelihood()</h2>
+<a id="af5b47a78dd99341bfe56c36f40a8ab6f" name="af5b47a78dd99341bfe56c36f40a8ab6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5b47a78dd99341bfe56c36f40a8ab6f">&#9670;&nbsp;</a></span>noise_delta_log_likelihood()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double noise_delta_log_likelihood </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structData.html">Data</a> *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structSplineModel.html">SplineModel</a> *&#160;</td>
+          <td class="paramname"><em>model_x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct <a class="el" href="structSplineModel.html">SplineModel</a> *&#160;</td>
+          <td class="paramname"><em>model_y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>fmin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>fmax</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ic</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Change in log likelihood for noise model. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td><a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> structure </td></tr>
+    <tr><td class="paramname">model_x</td><td>Current <a class="el" href="structSplineModel.html" title="Data strictire for spline model used in noise model.">SplineModel</a> structure containing current state </td></tr>
+    <tr><td class="paramname">model_y</td><td>Current <a class="el" href="structSplineModel.html" title="Data strictire for spline model used in noise model.">SplineModel</a> structure containing current state </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>\( \ln p({\rm data}|{\rm spline}_y)-\ln p({\rm data}|{\rm spline}_x) \) </dd></dl>
+
+</div>
+</div>
+<a id="a5cf2f367bbacd347b5d674907db49d16" name="a5cf2f367bbacd347b5d674907db49d16"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5cf2f367bbacd347b5d674907db49d16">&#9670;&nbsp;</a></span>noise_log_likelihood()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -244,8 +400,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_noise_model</b>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">struct <a class="el" href="structSplineModel.html">SplineModel</a> *&#160;</td>
-          <td class="paramname"><em>model</em>&#160;</td>
+          <td class="paramtype">struct <a class="el" href="structNoise.html">Noise</a> *&#160;</td>
+          <td class="paramname"><em>noise</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -264,6 +420,49 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>print_noise_model</b>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>\( \ln p({\rm data}|{\rm spline}) \) </dd></dl>
+
+</div>
+</div>
+<a id="a1e20140669e6f74b3c92c1acb39bf657" name="a1e20140669e6f74b3c92c1acb39bf657"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e20140669e6f74b3c92c1acb39bf657">&#9670;&nbsp;</a></span>update_spline_noise_model()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void update_spline_noise_model </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structSplineModel.html">SplineModel</a> *&#160;</td>
+          <td class="paramname"><em>model</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>new_knot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>min_knot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>max_knot</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Compute spline model only where interpolant changes. </p>
+<p >Interpolates spline points only in the vicinity of <code>new_knot</code> </p>
 
 </div>
 </div>

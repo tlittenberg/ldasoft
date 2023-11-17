@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.3"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LDASoft: gbmcmc/src/GalacticBinaryIO.h File Reference</title>
+<title>GLASS: gbmcmc/src/GalacticBinaryIO.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,9 +33,9 @@ MathJax.Hub.Config({
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="GBMCMC.png"/></td>
   <td id="projectalign">
-   <div id="projectname">LDASoft
+   <div id="projectname">GLASS
    </div>
-   <div id="projectbrief">LISA Data Analysis Software</div>
+   <div id="projectbrief">Global LISA Analysis Software Suite</div>
   </td>
  </tr>
  </tbody>
@@ -208,9 +208,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>scan_source_params</b
 void&#160;</td><td class="memItemRight" valign="bottom"><b>save_waveforms</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, int mcmc)</td></tr>
 <tr class="memdesc:ad61cb57f958dd84e0e15ea52682736ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy current state of reconstructed waveform (strain and power) and noise model to arrays to be used to compute reconstruction quantiles. <br /></td></tr>
 <tr class="separator:ad61cb57f958dd84e0e15ea52682736ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a116ddb44fc2a1ecd8fc498bc0b9ac7f3"><td class="memItemLeft" align="right" valign="top"><a id="a116ddb44fc2a1ecd8fc498bc0b9ac7f3" name="a116ddb44fc2a1ecd8fc498bc0b9ac7f3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>print_waveform_strain</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, FILE *fptr)</td></tr>
+<tr class="memdesc:a116ddb44fc2a1ecd8fc498bc0b9ac7f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print waveform strain. <br /></td></tr>
+<tr class="separator:a116ddb44fc2a1ecd8fc498bc0b9ac7f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab633da528f19e25d18c751510b059c19"><td class="memItemLeft" align="right" valign="top"><a id="ab633da528f19e25d18c751510b059c19" name="ab633da528f19e25d18c751510b059c19"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>print_waveform</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structModel.html">Model</a> *model, FILE *fptr)</td></tr>
-<tr class="memdesc:ab633da528f19e25d18c751510b059c19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print waveform strain. <br /></td></tr>
+<tr class="memdesc:ab633da528f19e25d18c751510b059c19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print waveform power. <br /></td></tr>
 <tr class="separator:ab633da528f19e25d18c751510b059c19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa58d64118a4c4fc278bbfc66f1bb9f8d"><td class="memItemLeft" align="right" valign="top"><a id="aa58d64118a4c4fc278bbfc66f1bb9f8d" name="aa58d64118a4c4fc278bbfc66f1bb9f8d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>print_waveforms_reconstruction</b> (struct <a class="el" href="structData.html">Data</a> *data, struct <a class="el" href="structFlags.html">Flags</a> *flags)</td></tr>

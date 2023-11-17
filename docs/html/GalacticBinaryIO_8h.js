@@ -13,6 +13,7 @@ var GalacticBinaryIO_8h =
     [ "print_version", "GalacticBinaryIO_8h.html#a397bc3cb60048c2cf89fb14986d89025", null ],
     [ "print_waveform", "GalacticBinaryIO_8h.html#ab633da528f19e25d18c751510b059c19", null ],
     [ "print_waveform_draw", "GalacticBinaryIO_8h.html#aba563bb72758a612dd115c24ac84b1a0", null ],
+    [ "print_waveform_strain", "GalacticBinaryIO_8h.html#a116ddb44fc2a1ecd8fc498bc0b9ac7f3", null ],
     [ "print_waveforms_reconstruction", "GalacticBinaryIO_8h.html#aa58d64118a4c4fc278bbfc66f1bb9f8d", null ],
     [ "printProgress", "GalacticBinaryIO_8h.html#a9d3b483a858efb84ce776bed255b6dd6", null ],
     [ "save_waveforms", "GalacticBinaryIO_8h.html#ad61cb57f958dd84e0e15ea52682736ac", null ],

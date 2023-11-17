@@ -5,6 +5,7 @@ var GalacticBinaryData_8h =
     [ "GalacticBinaryCleanEdges", "GalacticBinaryData_8h.html#ac0ccea154ac4b7c827d941352c2e6dd8", null ],
     [ "GalacticBinaryGetNoiseModel", "GalacticBinaryData_8h.html#af3f56227fb83acbe87ad55987db8a3a7", null ],
     [ "GalacticBinaryInjectSimulatedSource", "GalacticBinaryData_8h.html#abfda38ec6308a6c68a9a17c49bedf0d0", null ],
+    [ "GalacticBinaryInjectVerificationSet", "GalacticBinaryData_8h.html#ab1d0850aa9e140c5dc894f19938c0333", null ],
     [ "GalacticBinaryInjectVerificationSource", "GalacticBinaryData_8h.html#a83751c76ea092fc93f5f40125afa3d59", null ],
     [ "GalacticBinaryLoadCatalog", "GalacticBinaryData_8h.html#a3c10b45253cbc724a221bd2f751d9eac", null ],
     [ "GalacticBinaryLoadCatalogCache", "GalacticBinaryData_8h.html#ac56930f8806ec7d1b4e2144dc4056c04", null ],

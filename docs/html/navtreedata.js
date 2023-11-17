@@ -24,7 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "LDASoft", "index.html", [
+  [ "GLASS", "index.html", [
     [ "Doxygen code documentation", "index.html#autotoc_md0", null ],
     [ "Acknowledgment", "index.html#autotoc_md1", null ],
     [ "C Dependencies", "index.html#autotoc_md2", null ],
@@ -110,7 +110,7 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", "globals_dup" ],
-        [ "Functions", "globals_func.html", null ],
+        [ "Functions", "globals_func.html", "globals_func" ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -120,8 +120,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Constants_8h.html",
-"Noise_8h.html#aa5e1a4829bbca6cadc4ee3f3b7118797",
-"structFlags.html#a0e180de144de26732c748a0d5aa04375"
+"Noise_8h.html#a0823581af7946b76200fdccffd4a4ebb",
+"structData.html#a3d638edc3bb44936e2ffd2ba195aabae",
+"structSource.html#a64518fc0bb8e1ed531af5b80d8a3afe7"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

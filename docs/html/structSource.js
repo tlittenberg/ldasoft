@@ -11,6 +11,7 @@ var structSource =
     [ "fisher_evalue", "structSource.html#adae6ab67cc03ab0cadc5f159936bdf30", null ],
     [ "fisher_evectr", "structSource.html#a42ee4a24ff54ffafb93501c7fb89f0cd", null ],
     [ "fisher_matrix", "structSource.html#a5df63e1051bf6e31a2d9d50b4ce03b53", null ],
+    [ "fisher_update_flag", "structSource.html#aca652aac0bbf282877ff2d3631a2c408", null ],
     [ "imax", "structSource.html#a0c042cda651c7d4fef2820f2ae9901cf", null ],
     [ "imin", "structSource.html#a4cce9ab25939c3a116e0c42ed1647db2", null ],
     [ "m1", "structSource.html#aa7d7ef13a42ead0ab30c4eb5230c4413", null ],

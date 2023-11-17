@@ -4,7 +4,7 @@ var GalacticBinaryMath_8h =
     [ "binary_search", "GalacticBinaryMath_8h.html#ab4a868b858e559d8a660ef849bdce1cb", null ],
     [ "chirpmass", "GalacticBinaryMath_8h.html#af44d01bd4c020c57a52e5e31f0d303bb", null ],
     [ "cholesky_decomp", "GalacticBinaryMath_8h.html#a2431c31bce9711b866999db85774919a", null ],
-    [ "fourier_nwip", "GalacticBinaryMath_8h.html#af6be40ef7d76705dfd7be5c1fdcbf780", null ],
+    [ "fourier_nwip", "GalacticBinaryMath_8h.html#a42753a40e6e270bd069ade41702ba4cc", null ],
     [ "invert_matrix", "GalacticBinaryMath_8h.html#a1081e9f1e9ee4e1eb158abe18efc4656", null ],
     [ "ipow", "GalacticBinaryMath_8h.html#a6bda7243d9d6427acdcf175555f631f6", null ],
     [ "matrix_eigenstuff", "GalacticBinaryMath_8h.html#ac836ddf6f14586138a159517163d3e4c", null ],
