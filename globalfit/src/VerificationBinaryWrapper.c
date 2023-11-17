@@ -278,9 +278,9 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
         }
         
         //dump waveforms to file, update avgLogL for thermodynamic integration
-        if(vbmcmc_data->mcmc_step>0 && vbmcmc_data->mcmc_step%data->downsample==0)
+        if(vbmcmc_data->mcmc_step%data->downsample==0)
         {
-            save_waveforms(data, model[chain->index[0]], vbmcmc_data->mcmc_step%data->Nwave);
+            save_waveforms(data, model[chain->index[0]], vbmcmc_data->mcmc_step/data->downsample);
             
             for(int ic=0; ic<NC; ic++)
             {
@@ -290,7 +290,7 @@ int update_vbmcmc_sampler(struct VBMCMCData *vbmcmc_data)
             }
         }
     }
-    vbmcmc_data->mcmc_step++;
+    vbmcmc_data->mcmc_step+=numSteps;
     
     clock_t stop = clock();
     vbmcmc_data->cpu_time = (double)(stop-start);
