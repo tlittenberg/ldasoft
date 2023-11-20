@@ -19,13 +19,8 @@
 #include <omp.h>
 
 #include <LISA.h>
-#include <GalacticBinary.h>
-#include <GalacticBinaryIO.h>
-#include <GalacticBinaryMath.h>
-#include <GalacticBinaryData.h>
-#include <GalacticBinaryModel.h>
-
-#include "Noise.h"
+#include <ucb.h>
+#include <Noise.h>
 
 int main(int argc, char *argv[])
 {

@@ -55,7 +55,7 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_sort_vector.h>
 
-#include "GMM_with_EM.h"
+#include "gmm.h"
 
 
 

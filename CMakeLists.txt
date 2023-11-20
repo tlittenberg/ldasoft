@@ -58,10 +58,10 @@ set (GITVERSION "\"${_build_version}\"")
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/gitversion.h.in"
-  "${PROJECT_SOURCE_DIR}/gbmcmc/src/gitversion.h"
+  "${PROJECT_SOURCE_DIR}/data/src/gitversion.h"
   )
 
-install (FILES "${PROJECT_SOURCE_DIR}/gbmcmc/src/gitversion.h"
+install (FILES "${PROJECT_SOURCE_DIR}/data/src/gitversion.h"
          DESTINATION include)
 
 message(STATUS "Resolving GIT Version")
@@ -73,9 +73,10 @@ set (GITVERSION "\"${_build_version}\"")
 
 
 add_subdirectory(tools)
-add_subdirectory(lisa)
-add_subdirectory(gbmcmc)
+add_subdirectory(data)
+add_subdirectory(ucb)
 add_subdirectory(noise)
+add_subdirectory(apps)
 if(MBH_FOUND)
   add_subdirectory(globalfit)
 else()
