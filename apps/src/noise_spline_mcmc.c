@@ -18,9 +18,9 @@
 
 #include <omp.h>
 
-#include <LISA.h>
-#include <ucb.h>
-#include <Noise.h>
+#include <lisa.h>
+#include <data.h>
+#include <noise.h>
 
 int main(int argc, char *argv[])
 {
@@ -62,9 +62,9 @@ int main(int argc, char *argv[])
     
     /* read data */
     if(flags->strainData)
-        GalacticBinaryReadData(data,orbit,flags);
+        ReadData(data,orbit,flags);
     else if (flags->simNoise)
-        GalacticBinarySimulateData(data, orbit, flags);
+        SimulateData(data, orbit, flags);
     
     /*
      * Initialize Spline Model
@@ -150,8 +150,8 @@ int main(int argc, char *argv[])
                 {
                     for(int n=0; n<data->N; n++)
                     {
-                        data->S_pow[n][0][0][step/data->downsample] = model[chain->index[0]]->psd->C[0][0][n];
-                        data->S_pow[n][1][0][step/data->downsample] = model[chain->index[0]]->psd->C[1][1][n];
+                        data->S_pow[n][0][step/data->downsample] = model[chain->index[0]]->psd->C[0][0][n];
+                        data->S_pow[n][1][step/data->downsample] = model[chain->index[0]]->psd->C[1][1][n];
                     }
                     
 
