@@ -39,6 +39,6 @@ void resume_noise_state(struct NoiseData *noise_data);
 int update_noise_sampler(struct NoiseData *noise_data);
 
 /* bad name because of naming conflict in GalacticBinaryIO.c */
-void print_nmcmc_state(struct NoiseData *noise_data, FILE *fptr, int counter);
+void print_noise_state(struct NoiseData *noise_data, FILE *fptr, int counter);
 
 #endif /* NoiseWrapper_h */

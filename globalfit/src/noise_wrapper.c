@@ -311,8 +311,17 @@ int update_noise_sampler(struct NoiseData *noise_data)
     noise_ptmcmc(inst_model,chain,flags);
     adapt_temperature_ladder(chain, noise_data->mcmc_step+flags->NBURN);
     
-    print_instrument_state(inst_model[chain->index[0]], chain->noiseFile[0], noise_data->mcmc_step);
-    if(flags->confNoise) print_foreground_state(conf_model[chain->index[0]], chain->foregroundFile[0], noise_data->mcmc_step);
+    //print chain files
+    fprintf(chain->noiseFile[0],"%i %.12g ",noise_data->mcmc_step,inst_model[chain->index[0]]->logL);
+    print_instrument_state(inst_model[chain->index[0]], chain->noiseFile[0]);
+    fprintf(chain->noiseFile[0],"\n");
+
+    if(flags->confNoise)
+    {
+        fprintf(chain->foregroundFile[0],"%i %.12g ",noise_data->mcmc_step, conf_model[chain->index[0]]->logL);
+        print_foreground_state(conf_model[chain->index[0]], chain->foregroundFile[0]);
+        fprintf(chain->foregroundFile[0],"\n");
+    }
 
     //save point estimate of noise model
     int i = (noise_data->mcmc_step+flags->NBURN)%data->Nwave;
@@ -338,7 +347,16 @@ int update_noise_sampler(struct NoiseData *noise_data)
     return 1;
 }
 
-void print_nmcmc_state(struct NoiseData *noise_data, FILE *fptr, int counter)
+void print_noise_state(struct NoiseData *noise_data, FILE *fptr, int counter)
 {
-    
+    struct Chain *chain = noise_data->chain;
+    int ic = chain->index[0];
+
+    struct InstrumentModel *inst_model = noise_data->inst_model[ic];
+    struct ForegroundModel *conf_model = noise_data->conf_model[ic];
+
+    fprintf(fptr,"%i ",counter);
+    print_instrument_state(inst_model, fptr);
+    if(noise_data->flags->confNoise) print_foreground_state(conf_model, fptr);
+    fprintf(fptr,"\n");
 }

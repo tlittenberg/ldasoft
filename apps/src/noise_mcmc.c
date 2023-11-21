@@ -163,9 +163,18 @@ int main(int argc, char *argv[])
                 noise_ptmcmc(model, chain, flags);
                 
                 if(step%(flags->NMCMC/10)==0)printf("noise_mcmc at step %i\n",step);
+                
+                // print chain files
+                fprintf(noiseChainFile,"%i %.12g ",step,model[chain->index[0]]->logL);
+                print_instrument_state(model[chain->index[0]], noiseChainFile);
+                fprintf(noiseChainFile,"\n");
 
-                print_instrument_state(model[chain->index[0]], noiseChainFile, step);
-                if(flags->confNoise) print_foreground_state(galaxy[chain->index[0]], foregroundChainFile, step);
+                if(flags->confNoise) 
+                {
+                    fprintf(foregroundChainFile,"%i %.12g ",step,galaxy[chain->index[0]]->logL);
+                    print_foreground_state(galaxy[chain->index[0]], foregroundChainFile);
+                    fprintf(foregroundChainFile,"\n");
+                }
 
                 if(step%(flags->NMCMC/10)==0)
                 {

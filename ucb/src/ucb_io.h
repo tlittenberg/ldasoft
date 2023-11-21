@@ -58,11 +58,11 @@ void scan_chain_state(struct Data *data, struct Chain *chain, struct Model *mode
 ///@}
 
 /** @name Noise Chain File
- Print/read current state of noise model, e.g. to Chain::noiseFile
+ Print/read current state of psd model, e.g. to Chain::noiseFile
  */
 ///@{
-void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int step);
-void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *step);
+void print_psd_state(struct Data *data, struct Model *model, FILE *fptr, int step);
+void scan_psd_state(struct Data *data, struct Model *model, FILE *fptr, int *step);
 ///@}
 
 /** @name Calibration Chain File

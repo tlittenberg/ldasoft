@@ -34,19 +34,15 @@ void print_spline_state(struct SplineModel *model, FILE *fptr, int step)
     fprintf(fptr,"%i %.12g %i\n",step,model->logL,model->spline->N);
 }
 
-void print_instrument_state(struct InstrumentModel *model, FILE *fptr, int step)
+void print_instrument_state(struct InstrumentModel *model, FILE *fptr)
 {
-    fprintf(fptr,"%i %.12g ",step,model->logL);
     for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->sacc[i]);
     for(int i=0; i<model->Nlink; i++)fprintf(fptr,"%.12g ", model->soms[i]);
-    fprintf(fptr,"\n");
 }
 
-void print_foreground_state(struct ForegroundModel *model, FILE *fptr, int step)
+void print_foreground_state(struct ForegroundModel *model, FILE *fptr)
 {
-    fprintf(fptr,"%i %.12g ",step,model->logL);
     for(int i=0; i<model->Nparams; i++)fprintf(fptr,"%.12g ", model->sgal[i]);
-    fprintf(fptr,"\n");
 }
 
 void print_noise_model(struct Noise *noise, char filename[])

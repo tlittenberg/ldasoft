@@ -115,7 +115,7 @@ void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct T
     for(int n=0; n<flags->NVB; n++)
     {
         vgb_data->prior_vec[n] = malloc(sizeof(struct Prior));
-        vgb_data->proposal_vec[n] = malloc(NP*sizeof(struct Proposal*));
+        vgb_data->proposal_vec[n] = malloc(vgb_data->chain_vec[n]->NProp*sizeof(struct Proposal*));
         vgb_data->trial_vec[n] = malloc(sizeof(struct Model*)*vgb_data->chain_vec[n]->NC);
         vgb_data->model_vec[n] = malloc(sizeof(struct Model*)*vgb_data->chain_vec[n]->NC);
     }
@@ -193,7 +193,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
     int mcmc_start = -flags->NBURN;
     
     /* exit if this segment is finished */
-    if(vgb_data->mcmc_step >= flags->NMCMC) return 0;
+    //if(vgb_data->mcmc_step >= flags->NMCMC) return 0; //just keep sampling!
     
     /* set flags based on current state of sampler */
     flags->burnin   = (vgb_data->mcmc_step<0) ? 1 : 0;
@@ -293,7 +293,9 @@ int update_vgb_sampler(struct VGBData *vgb_data)
     clock_t stop = clock();
     vgb_data->cpu_time = (double)(stop-start);
     
-    return 1;
+    /* return status depends on if we have collected enough samples */
+    if(vgb_data->mcmc_step >= flags->NMCMC) return 0;
+    else return 1;
 }
 
 void select_vgb_segments(struct VGBData *vgb_data, struct TDI *tdi)

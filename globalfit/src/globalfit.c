@@ -489,7 +489,7 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
     {
         print_data(noise_data->data, noise_data->data->tdi, noise_data->flags);
         char filename[128];
-        sprintf(filename,"%s/current_instrument_noise_model.dat",noise_data->flags->runDir);
+        sprintf(filename,"%s/data/current_instrument_noise_model.dat",noise_data->flags->runDir);
         generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
         print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
 
@@ -506,7 +506,7 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
     if(MBH_Flag)
     {
         char tempFileName[MAXSTRINGSIZE];
-        sprintf(tempFileName,"%s/power_data_0.dat.temp",mbh_data->flags->runDir);
+        sprintf(tempFileName,"%s/data/power_data.dat.temp",mbh_data->flags->runDir);
         FILE *tempFile = fopen(tempFileName,"w");
         for(int i=mbh_data->het->MN; i<mbh_data->het->MM; i++)
         {
@@ -553,7 +553,7 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
 static void print_globalfit_state(struct NoiseData *noise_data, struct UCBData *ucb_data, struct VGBData *vgb_data, struct MBHData *mbh_data, int UCB_Flag, int VGB_Flag, int Noise_Flag, int MBH_Flag, FILE *fptr, int counter)
 {
     if(Noise_Flag)
-        print_nmcmc_state(noise_data, fptr, counter);
+        print_noise_state(noise_data, fptr, counter);
     
     if(VGB_Flag)
         print_vgb_state(vgb_data, fptr, counter);
@@ -1028,7 +1028,7 @@ int main(int argc, char *argv[])
     if(Noise_Flag)
     {
         char filename[128];
-        sprintf(filename,"%s/final_instrument_noise_model.dat",noise_data->flags->runDir);
+        sprintf(filename,"%s/data/final_instrument_noise_model.dat",noise_data->flags->runDir);
         generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
         print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
 

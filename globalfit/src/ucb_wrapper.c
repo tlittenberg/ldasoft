@@ -287,7 +287,7 @@ int update_ucb_sampler(struct UCBData *ucb_data)
     int mcmc_start = -flags->NBURN;
         
     /* exit if this segment is finished */
-    if(ucb_data->mcmc_step >= flags->NMCMC) return 0;
+    //if(ucb_data->mcmc_step >= flags->NMCMC) return 0; just keep sampling!
 
     /* set flags based on current state of sampler */
     flags->burnin   = (ucb_data->mcmc_step<0) ? 1 : 0;
@@ -384,7 +384,9 @@ int update_ucb_sampler(struct UCBData *ucb_data)
     clock_t stop = clock();
     ucb_data->cpu_time = (double)(stop-start);
     
-    return 1;
+    /* return status depends on if we have collected enough samples */
+    if(ucb_data->mcmc_step >= flags->NMCMC) return 0;
+    else return 1;
 }
 
 void exchange_ucb_source_params(struct UCBData *ucb_data)

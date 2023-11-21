@@ -177,7 +177,7 @@ void save_chain_state(struct Data *data, struct Model **model, struct Chain *cha
         fprintf(stateFile,"%.12g\n",chain->logLmax);
         
         print_chain_state(data, chain, model[n], flags, stateFile, step);
-        print_noise_state(data, model[n], stateFile, step);
+        print_psd_state(data, model[n], stateFile, step);
         if(flags->calibration)
             print_calibration_state(data, model[n], stateFile, step);
         
@@ -212,7 +212,7 @@ void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **
         }
         
         scan_chain_state(data, chain, model[n], flags, stateFile, step);
-        scan_noise_state(data, model[n], stateFile, step);
+        scan_psd_state(data, model[n], stateFile, step);
         if(flags->calibration)
             scan_calibration_state(data, model[n], stateFile, step);
         
@@ -265,7 +265,7 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
     
     print_chain_state(data, chain, model[n], flags, chain->chainFile[0], step);
     if(!flags->quiet || step>0)
-        print_noise_state(data, model[n], chain->noiseFile[0], step);
+        print_psd_state(data, model[n], chain->noiseFile[0], step);
     if(flags->calibration)
         print_calibration_state(data, model[n], chain->calibrationFile[0], step);
     
@@ -316,7 +316,7 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
         {
             n = chain->index[ic];
             print_chain_state(data, chain, model[n], flags, chain->chainFile[ic], step);
-            print_noise_state(data, model[n], chain->noiseFile[ic], step);
+            print_psd_state(data, model[n], chain->noiseFile[ic], step);
         }//loop over chains
     }//verbose flag
 }
@@ -407,7 +407,7 @@ void print_calibration_state(struct Data *data, struct Model *model, FILE *fptr,
     fprintf(fptr, "\n");
 }
 
-void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *step)
+void scan_psd_state(struct Data *data, struct Model *model, FILE *fptr, int *step)
 {
     int check=0;
     check+=fscanf(fptr, "%i ",step);
@@ -423,7 +423,7 @@ void scan_noise_state(struct Data *data, struct Model *model, FILE *fptr, int *s
     }
 }
 
-void print_noise_state(struct Data *data, struct Model *model, FILE *fptr, int step)
+void print_psd_state(struct Data *data, struct Model *model, FILE *fptr, int step)
 {
     fprintf(fptr, "%i ",step);
     fprintf(fptr, "%lg %lg ",model->logL, model->logLnorm);
