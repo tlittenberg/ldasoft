@@ -96,7 +96,6 @@ static void dump_data(struct Data *data, struct Flags *flags)
     struct TDI *tdi = data->tdi;
 
     sprintf(filename,"%s/data/power_data.dat",flags->runDir);
-    printf("filename=%s\n",filename);
     fptr = fopen(filename,"w");
     for(int i=0; i<data->N; i++)
     {
@@ -721,7 +720,6 @@ int main(int argc, char *argv[])
         /* joint chain file for noise parameters */
         char filename[MAXSTRINGSIZE];
         sprintf(filename,"%s/samples/vgb_samples_%04d.dat",vgb_data->flags->runDir,procID);
-        printf("try creating file %s\n",filename);
         global_fit->chainFile=fopen(filename,"w");
 
         sprintf(vgb_data->flags->runDir,"%s/vgb",vgb_data->flags->runDir);

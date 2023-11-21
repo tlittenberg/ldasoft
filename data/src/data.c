@@ -105,6 +105,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     int NC = chain->NC;
     char filename[MAXSTRINGSIZE];
 
+    chain->NProp = 9; //number of proposals
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));
     chain->temperature = calloc(NC,sizeof(double));

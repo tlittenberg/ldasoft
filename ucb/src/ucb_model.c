@@ -291,11 +291,6 @@ void free_model(struct Model *model)
     free_tdi(model->residual);
     free_noise(model->noise);
     free_calibration(model->calibration);
-
-    free(model->noise);
-    free(model->tdi);
-    free(model->residual);
-    free(model->calibration);
     
     free(model);
 }
