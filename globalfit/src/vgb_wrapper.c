@@ -68,7 +68,7 @@ void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct T
     flags->fixFreq     = 1;
     flags->cheat       = 1; //initializes chain at injection values
     flags->NINJ        = flags->NVB;
-    flags->NBURN       = 0; //no burn in for vgb
+    //flags->NBURN       = 0; //no burn in for vgb
     
     /* parse verification binary files */
     FILE *vbFile = fopen(flags->vbFile,"r");
@@ -201,7 +201,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
     
     //For saving the number of threads actually given
     int numThreads;
-    int numSteps=100;
+    int numSteps=10;
 #pragma omp parallel num_threads(flags->threads)
     {
         //Save individual thread number
@@ -250,41 +250,44 @@ int update_vgb_sampler(struct VGBData *vgb_data)
         ptmcmc(model_vec[n],chain_vec[n],flags);
         adapt_temperature_ladder(chain_vec[n], vgb_data->mcmc_step+flags->NBURN);
         
-        print_chain_files(data_vec[n], model_vec[n], chain_vec[n], flags, vgb_data->mcmc_step);
-        
-        //track maximum log Likelihood
-        if(update_max_log_likelihood(model, chain, flags))
-            vgb_data->mcmc_step = -flags->NBURN;
-        
-        //store reconstructed waveform
-        if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
-        
-        //update run status
-        if(vgb_data->mcmc_step%data->downsample==0 && vgb_data->mcmc_step>mcmc_start)
+        if(vgb_data->mcmc_step < flags->NMCMC)
         {
+            print_chain_files(data_vec[n], model_vec[n], chain_vec[n], flags, vgb_data->mcmc_step);
             
-            if(!flags->quiet)
+            //track maximum log Likelihood
+            if(update_max_log_likelihood(model, chain, flags))
+                vgb_data->mcmc_step = -flags->NBURN;
+            
+            //store reconstructed waveform
+            if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
+            
+            //update run status
+            if(vgb_data->mcmc_step%data->downsample==0 && vgb_data->mcmc_step>mcmc_start)
             {
-                print_chain_state(data, chain, model[chain->index[0]], flags, stdout, vgb_data->mcmc_step); //writing to file
-                fprintf(stdout,"Sources: %i\n",model[chain->index[0]]->Nlive);
-                print_acceptance_rates(proposal, UCB_PROPOSAL_NPROP, 0, stdout);
+                
+                if(!flags->quiet)
+                {
+                    print_chain_state(data, chain, model[chain->index[0]], flags, stdout, vgb_data->mcmc_step); //writing to file
+                    fprintf(stdout,"Sources: %i\n",model[chain->index[0]]->Nlive);
+                    print_acceptance_rates(proposal, UCB_PROPOSAL_NPROP, 0, stdout);
+                }
+                
+                //save chain state to resume sampler
+                save_chain_state(data, model, chain, flags, vgb_data->mcmc_step);
+                
             }
             
-            //save chain state to resume sampler
-            save_chain_state(data, model, chain, flags, vgb_data->mcmc_step);
-            
-        }
-        
-        //dump waveforms to file, update avgLogL for thermodynamic integration
-        if(vgb_data->mcmc_step%data->downsample==0)
-        {
-            save_waveforms(data, model[chain->index[0]], vgb_data->mcmc_step/data->downsample);
-            
-            for(int ic=0; ic<NC; ic++)
+            //dump waveforms to file, update avgLogL for thermodynamic integration
+            if(vgb_data->mcmc_step%data->downsample==0)
             {
-                chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
-                for(int i=0; i<flags->NDATA; i++)
-                    chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
+                save_waveforms(data, model[chain->index[0]], vgb_data->mcmc_step/data->downsample);
+                
+                for(int ic=0; ic<NC; ic++)
+                {
+                    chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
+                    for(int i=0; i<flags->NDATA; i++)
+                        chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
+                }
             }
         }
     }

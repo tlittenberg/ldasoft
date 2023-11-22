@@ -348,37 +348,39 @@ int update_ucb_sampler(struct UCBData *ucb_data)
     
     ptmcmc(model,chain,flags);
     adapt_temperature_ladder(chain, ucb_data->mcmc_step+flags->NBURN);
-                    
-    print_chain_files(data, model, chain, flags, ucb_data->mcmc_step);
-        
-    //track maximum log Likelihood
-    if(update_max_log_likelihood(model, chain, flags))
-        ucb_data->mcmc_step = -flags->NBURN;
     
-    //update run status
-    if(ucb_data->mcmc_step%data->downsample==0 && ucb_data->mcmc_step>mcmc_start)
+    if(ucb_data->mcmc_step < flags->NMCMC)
     {
+        print_chain_files(data, model, chain, flags, ucb_data->mcmc_step);
         
-        //minimal screen output
-        print_sampler_state(ucb_data);
+        //track maximum log Likelihood
+        if(update_max_log_likelihood(model, chain, flags))
+            ucb_data->mcmc_step = -flags->NBURN;
         
-        //save chain state to resume sampler
-        save_chain_state(data, model, chain, flags, ucb_data->mcmc_step);
-    }
-    
-    //dump waveforms to file, update avgLogL for thermodynamic integration
-    if(ucb_data->mcmc_step>0 && ucb_data->mcmc_step%data->downsample==0)
-    {
-        save_waveforms(data, model[chain->index[0]], ucb_data->mcmc_step/data->downsample);
-        
-        for(int ic=0; ic<NC; ic++)
+        //update run status
+        if(ucb_data->mcmc_step%data->downsample==0 && ucb_data->mcmc_step>mcmc_start)
         {
-            chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
-            for(int i=0; i<flags->NDATA; i++)
-                chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
+            
+            //minimal screen output
+            print_sampler_state(ucb_data);
+            
+            //save chain state to resume sampler
+            save_chain_state(data, model, chain, flags, ucb_data->mcmc_step);
+        }
+        
+        //dump waveforms to file, update avgLogL for thermodynamic integration
+        if(ucb_data->mcmc_step>0 && ucb_data->mcmc_step%data->downsample==0)
+        {
+            save_waveforms(data, model[chain->index[0]], ucb_data->mcmc_step/data->downsample);
+            
+            for(int ic=0; ic<NC; ic++)
+            {
+                chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
+                for(int i=0; i<flags->NDATA; i++)
+                    chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
+            }
         }
     }
-    
     ucb_data->mcmc_step+=numSteps;
     
     clock_t stop = clock();
