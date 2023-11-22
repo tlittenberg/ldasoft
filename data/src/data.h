@@ -209,9 +209,6 @@ struct Chain
     /// Number of chains
     int NC;
     
-    /// Number of proposals being used by chain
-    int NProp;
-
     /// Array containing current order of chains in temperature ladder
     int *index;
     

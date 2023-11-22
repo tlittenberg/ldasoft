@@ -34,6 +34,8 @@
 #define UNUSED
 #endif
 
+#define UCB_PROPOSAL_NPROP 9 ///< Number of defined proposal distributions for UCB sampler
+
 /*!
  \brief Prototype structure for proposal distributions.
  

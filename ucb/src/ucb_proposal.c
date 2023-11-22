@@ -765,7 +765,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
     double check  =0.0;
     double rjcheck=0.0;
     
-    for(int i=0; i<chain->NProp; i++)
+    for(int i=0; i<UCB_PROPOSAL_NPROP; i++)
     {
         proposal[i] = malloc(sizeof(struct Proposal));
 
@@ -904,14 +904,14 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
     
     if(!flags->quiet)
     {
-        fprintf(stdout,"\n============== Proposal Cocktail ==============\n");
+        fprintf(stdout,"\n============ UCB Proposal Cocktail ============\n");
         fprintf(stdout,"   MCMC proposals:\n");
-        for(int i=0; i<chain->NProp; i++)
+        for(int i=0; i<UCB_PROPOSAL_NPROP; i++)
         {
             if(proposal[i]->weight>0.0)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->weight);
         }
         fprintf(stdout,"   RJMCMC proposals:\n");
-        for(int i=0; i<chain->NProp; i++)
+        for(int i=0; i<UCB_PROPOSAL_NPROP; i++)
         {
             if(proposal[i]->rjweight)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->rjweight);
         }
@@ -925,7 +925,7 @@ void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior
     double check  =0.0;
     double rjcheck=0.0;
     
-    for(int i=0; i<chain->NProp; i++)
+    for(int i=0; i<UCB_PROPOSAL_NPROP; i++)
     {
         proposal[i] = malloc(sizeof(struct Proposal));
 
@@ -952,7 +952,6 @@ void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior
                 break;
             case 1:
                 sprintf(proposal[i]->name,"fstat draw");
-                //setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
                 proposal[i]->function = &draw_from_fstatistic;
                 proposal[i]->density  = &evaluate_fstatistic_proposal;
                 proposal[i]->weight   = 0.0;
@@ -961,15 +960,6 @@ void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior
                 break;
             case 2:
                 sprintf(proposal[i]->name,"fstat jump");
-                
-                //re-use setup of fstat proposal from case 0
-                proposal[i]->size   = proposal[1]->size;
-                proposal[i]->norm   = proposal[1]->norm;
-                proposal[i]->maxp   = proposal[1]->maxp;
-                proposal[i]->vector = proposal[1]->vector;
-                proposal[i]->matrix = proposal[1]->matrix;
-                proposal[i]->tensor = proposal[1]->tensor;
-                
                 proposal[i]->function = &jump_from_fstatistic;
                 proposal[i]->density  = &evaluate_fstatistic_proposal;
                 proposal[i]->weight   = 0.0;
@@ -1055,14 +1045,14 @@ void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior
     
     if(!flags->quiet)
     {
-        fprintf(stdout,"\n============== Proposal Cocktail ==============\n");
+        fprintf(stdout,"\n============ VGB Proposal Cocktail ============\n");
         fprintf(stdout,"   MCMC proposals:\n");
-        for(int i=0; i<chain->NProp; i++)
+        for(int i=0; i<UCB_PROPOSAL_NPROP; i++)
         {
             if(proposal[i]->weight>0.0)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->weight);
         }
         fprintf(stdout,"   RJMCMC proposals:\n");
-        for(int i=0; i<chain->NProp; i++)
+        for(int i=0; i<UCB_PROPOSAL_NPROP; i++)
         {
             if(proposal[i]->rjweight)fprintf(stdout,"     %i) %s %lg\n",i,proposal[i]->name,proposal[i]->rjweight);
         }

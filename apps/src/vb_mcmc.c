@@ -154,8 +154,7 @@ int main(int argc, char *argv[])
         if(n>0)
         {
             copy_data(data_vec[0],data);
-            chain->NC    = chain_vec[0]->NC;    //number of chains
-            chain->NProp = chain_vec[0]->NProp; //number of proposals
+            chain->NC = chain_vec[0]->NC;    //number of chains
         }
         
         /* Initialize data structures */
@@ -203,7 +202,7 @@ int main(int argc, char *argv[])
         prior_vec[n] = malloc(sizeof(struct Prior));
         
         /* Initialize MCMC proposals */
-        proposal_vec[n] = malloc(chain->NProp*sizeof(struct Proposal*));
+        proposal_vec[n] = malloc(UCB_PROPOSAL_NPROP*sizeof(struct Proposal*));
         initialize_vb_proposal(orbit, data_vec[n], prior_vec[n], chain_vec[n], flags, proposal_vec[n], DMAX);
         
         /* Initialize data models */
@@ -336,7 +335,7 @@ int main(int argc, char *argv[])
                         {
                             print_chain_state(data, chain, model[chain->index[0]], flags, stdout, mcmc); //writing to file
                             fprintf(stdout,"Sources: %i\n",model[chain->index[0]]->Nlive);
-                            print_acceptance_rates(proposal, chain->NProp, 0, stdout);
+                            print_acceptance_rates(proposal, UCB_PROPOSAL_NPROP, 0, stdout);
                         }
 
                         //save chain state to resume sampler

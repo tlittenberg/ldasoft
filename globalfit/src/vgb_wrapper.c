@@ -93,7 +93,7 @@ void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct T
         struct Source *vgb=vgb_vec[n];
         
         copy_data(ucb_data->data,data);
-        chain->NC = chain_vec[0]->NC; //number of chains
+        chain->NC = ucb_data->chain->NC; //number of chains
         
         /* Initialize data structures */
         alloc_data(data, flags);
@@ -115,9 +115,9 @@ void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct T
     for(int n=0; n<flags->NVB; n++)
     {
         vgb_data->prior_vec[n] = malloc(sizeof(struct Prior));
-        vgb_data->proposal_vec[n] = malloc(vgb_data->chain_vec[n]->NProp*sizeof(struct Proposal*));
-        vgb_data->trial_vec[n] = malloc(sizeof(struct Model*)*vgb_data->chain_vec[n]->NC);
-        vgb_data->model_vec[n] = malloc(sizeof(struct Model*)*vgb_data->chain_vec[n]->NC);
+        vgb_data->trial_vec[n] = malloc(sizeof(struct Model*)*chain_vec[n]->NC);
+        vgb_data->model_vec[n] = malloc(sizeof(struct Model*)*chain_vec[n]->NC);
+        vgb_data->proposal_vec[n] = malloc(UCB_PROPOSAL_NPROP*sizeof(struct Proposal*));
     }
     
     /*
@@ -267,7 +267,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
             {
                 print_chain_state(data, chain, model[chain->index[0]], flags, stdout, vgb_data->mcmc_step); //writing to file
                 fprintf(stdout,"Sources: %i\n",model[chain->index[0]]->Nlive);
-                print_acceptance_rates(proposal, chain->NProp, 0, stdout);
+                print_acceptance_rates(proposal, UCB_PROPOSAL_NPROP, 0, stdout);
             }
             
             //save chain state to resume sampler

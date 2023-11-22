@@ -54,7 +54,7 @@ void setup_ucb_data(struct UCBData *ucb_data, struct TDI *tdi_full)
     if(procID==procID_max) flags->quiet = 0;
     
     /* Finish allocating UCB structures now that we know the number of PT chains */
-    ucb_data->proposal = malloc(chain->NProp*sizeof(struct Proposal*));
+    ucb_data->proposal = malloc(UCB_PROPOSAL_NPROP*sizeof(struct Proposal*));
     ucb_data->model = malloc(sizeof(struct Model*)*chain->NC);
     ucb_data->trial = malloc(sizeof(struct Model*)*chain->NC);
 

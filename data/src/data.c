@@ -105,7 +105,6 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     int NC = chain->NC;
     char filename[MAXSTRINGSIZE];
 
-    chain->NProp = 9; //number of proposals
     chain->index = calloc(NC,sizeof(int));
     chain->acceptance = calloc(NC,sizeof(double));
     chain->temperature = calloc(NC,sizeof(double));
@@ -1556,7 +1555,6 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     flags->NBURN       = 100000;
     flags->threads     = omp_get_max_threads();
     sprintf(flags->runDir,"./");
-    chain->NProp       = 9; //number of proposals
     chain->NC          = 12;//number of chains
         
     /*

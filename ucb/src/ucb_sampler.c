@@ -195,7 +195,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     int nprop;
     do
     {
-        nprop = (int)floor((chain->NProp)*gsl_rng_uniform(chain->r[ic]));
+        nprop = (int)floor((UCB_PROPOSAL_NPROP)*gsl_rng_uniform(chain->r[ic]));
         draw = gsl_rng_uniform(chain->r[ic]);
     }while(proposal[nprop]->weight <= draw);
     
@@ -476,7 +476,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     copy_model(model_x,model_y);
     
     int nprop;
-    do nprop = (int)floor((chain->NProp)*gsl_rng_uniform(chain->r[ic]));
+    do nprop = (int)floor((UCB_PROPOSAL_NPROP)*gsl_rng_uniform(chain->r[ic]));
     while(proposal[nprop]->rjweight <= gsl_rng_uniform(chain->r[ic]));
     
     proposal[nprop]->trial[ic]++;

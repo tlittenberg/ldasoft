@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     if(flags->update) set_gmm_prior(flags, data, prior, catalog);
 
     /* Initialize MCMC proposals */
-    struct Proposal **proposal = malloc(chain->NProp*sizeof(struct Proposal*));
+    struct Proposal **proposal = malloc(UCB_PROPOSAL_NPROP*sizeof(struct Proposal*));
     initialize_proposal(orbit, data, prior, chain, flags, catalog, proposal, DMAX);
     
     /* Test noise model */
@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
                     {
                         print_chain_state(data, chain, model[chain->index[0]], flags, stdout, mcmc); //writing to file
                         fprintf(stdout,"Sources: %i\n",model[chain->index[0]]->Nlive);
-                        print_acceptance_rates(proposal, chain->NProp, 0, stdout);
+                        print_acceptance_rates(proposal, UCB_PROPOSAL_NPROP, 0, stdout);
                     }
                     
                     //save chain state to resume sampler
