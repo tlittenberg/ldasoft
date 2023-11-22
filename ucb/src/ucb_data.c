@@ -38,9 +38,9 @@
 #include "ucb_data.h"
 
 
-void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
+void UCBInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
 {
-    //TODO: Combine this function w/ GalacticBinaryInjectVerificationSource()
+    //TODO: Combine this function w/ UCBInjectVerificationSource()
 
     //get max and min samples
     data->fmin = inj->f0 - (data->N/2)/data->T;
@@ -52,7 +52,7 @@ void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit,
     data->fmin = data->qmin/data->T;
     data->fmax = data->qmax/data->T;
 
-    galactic_binary(orbit, data->format, data->T, data->t0, inj->params, NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, data->Nchannel);
+    galactic_binary(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, data->Nchannel);
     
     //Add waveform to data TDI channels
     for(int j=0; j<inj->BW; j++)
@@ -85,10 +85,10 @@ void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit,
 
 }
 
-void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
+void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
 {
     //TODO: support Michelson-only injection
-    if(!flags->quiet) fprintf(stdout,"\n==== GalacticBinaryInjectVerificationSource ====\n");
+    if(!flags->quiet) fprintf(stdout,"\n==== UCBInjectVerificationSource ====\n");
     
     FILE *fptr;
     
@@ -332,7 +332,7 @@ void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orb
     
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
-void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
+void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
 {
     FILE *fptr;
     alloc_source(inj, data->N, data->Nchannel);
@@ -425,7 +425,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
             inj->cosi     = cos(iota);
             inj->phi0     = phi0;
             inj->psi      = psi;
-            if(NP>8)
+            if(UCB_MODEL_NP>8)
                 inj->d2fdt2 = 11.0/3.0*dfdt*dfdt/f0;
             //inj->d2fdt2 = fddot;
             
@@ -455,7 +455,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
             
             //Simulate gravitational wave signal
             printf("   ...t0        : %g\n",data->t0);
-            galactic_binary(orbit, data->format, data->T, data->t0, inj->params, NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+            galactic_binary(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
             
             //Add waveform to data TDI channels
             for(int n=0; n<inj->BW; n++)
@@ -539,10 +539,10 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
             if(!flags->quiet)
             {
                 fprintf(stdout,"\n Fisher Matrix:\n");
-                for(int i=0; i<NP; i++)
+                for(int i=0; i<UCB_MODEL_NP; i++)
                 {
                     fprintf(stdout," ");
-                    for(int j=0; j<NP; j++)
+                    for(int j=0; j<UCB_MODEL_NP; j++)
                     {
                         if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
                         else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
@@ -552,7 +552,7 @@ void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit,
                 
                 
                 printf("\n Fisher std. errors:\n");
-                for(int j=0; j<NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
+                for(int j=0; j<UCB_MODEL_NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
             }
             
             sprintf(filename,"%s/data/power_data_%i.dat",flags->runDir,ii);
@@ -653,7 +653,7 @@ void GetVerificationBinary(struct Data *data, struct Flags *flags, struct Source
 
 
 
-void GalacticBinaryLoadCatalogCache(struct Data *data, struct Flags *flags, struct Catalog *catalog)
+void UCBLoadCatalogCache(struct Data *data, struct Flags *flags, struct Catalog *catalog)
 {
     /* check that file exists */
     FILE *catalog_file = NULL;
@@ -735,7 +735,7 @@ void GalacticBinaryLoadCatalogCache(struct Data *data, struct Flags *flags, stru
         struct GMM *gmm = catalog->entry[n]->gmm;
         
         /* gaussian mixture model */
-        gmm->NParams = (size_t)NP;
+        gmm->NParams = (size_t)UCB_MODEL_NP;
         sprintf(filename,"%s%s_gmm.bin",entry->path,entry->name);
         read_gmm_binary(gmm, filename);
         
@@ -753,84 +753,3 @@ void GalacticBinaryLoadCatalogCache(struct Data *data, struct Flags *flags, stru
     }
 }
 
-void GalacticBinaryCleanEdges(struct Data *data, struct Orbit *orbit, struct Flags *flags)
-{
-    //parse file
-    FILE *catalog_file = fopen(flags->catalogFile,"r");
-    
-    //count number of sources
-    
-    struct Source *catalog_entry = NULL;
-    catalog_entry = malloc(sizeof(struct Source));
-    alloc_source(catalog_entry, data->N, data->Nchannel);
-    
-    
-    int Nsource = 0;
-    while(!feof(catalog_file))
-    {
-        scan_source_params(data, catalog_entry, catalog_file);
-        Nsource++;
-    }
-    Nsource--;
-    rewind(catalog_file);
-    
-    
-    //allocate model & source structures
-    struct Model *catalog = malloc(sizeof(struct Model));
-    alloc_model(catalog, Nsource, data->N, data->Nchannel);
-    
-    catalog->Nlive = 0;
-    for(int n=0; n<Nsource; n++)
-    {
-        scan_source_params(data, catalog_entry, catalog_file);
-        
-        //find where the source fits in the measurement band
-        galactic_binary_alignment(orbit, data, catalog_entry);
-        double q0   = catalog_entry->params[0];
-        double qmax = catalog_entry->params[0] + catalog_entry->BW/2;
-        double qmin = catalog_entry->params[0] - catalog_entry->BW/2;
-        
-        
-        /*
-         only substract tails of sources outside of window that leak in.
-         this means we are redundantly fitting sources in the overlap region, but that's better than fitting bad residuals
-         */
-        if( (q0 < data->qmin && qmax > data->qmin) || (q0 > data->qmax && qmin < data->qmax) )
-        {
-            copy_source(catalog_entry, catalog->source[catalog->Nlive]);
-            catalog->Nlive++;
-        }
-    }
-    
-    
-    //for binaries in padded region, compute model
-    generate_signal_model(orbit, data, catalog, -1);
-    
-    //remove from data
-    for(int i=0; i<data->N*2; i++)
-    {
-        data->tdi->X[i] -= catalog->tdi->X[i];
-        data->tdi->A[i] -= catalog->tdi->A[i];
-        data->tdi->E[i] -= catalog->tdi->E[i];
-    }
-    
-    char filename[128];
-    sprintf(filename,"%s/data/power_residual_%i_%i.dat",flags->runDir,0,0);
-    FILE *fptr=fopen(filename,"w");
-    
-    for(int i=0; i<data->N; i++)
-    {
-        double f = (double)(i+data->qmin)/data->T;
-        fprintf(fptr,"%.12g %lg %lg ",
-                f,
-                data->tdi->A[2*i]*data->tdi->A[2*i]+data->tdi->A[2*i+1]*data->tdi->A[2*i+1],
-                data->tdi->E[2*i]*data->tdi->E[2*i]+data->tdi->E[2*i+1]*data->tdi->E[2*i+1]);
-        fprintf(fptr,"\n");
-    }
-    fclose(fptr);
-    
-    //clean up after yourself
-    fclose(catalog_file);
-    free_model(catalog);
-    free_source(catalog_entry);
-}

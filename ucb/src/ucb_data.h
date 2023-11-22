@@ -33,11 +33,11 @@
 /**
  \brief Injection routine for ENSEMBLE of EM-known binaries
  
-  **THIS FUNCTION AND GalacticBinaryInjectVerificationSource() NEED TO BE CONSOLIDATED**
+  **THIS FUNCTION AND UCBInjectVerificationSource() NEED TO BE CONSOLIDATED**
  EM observations do not provide information about polarization angle \f$\psi\f$ or (currently) initial phase \f$\varphi_0\f$. Those two parameters are missing from the injection files and drawn from their priors.
  
  */
-void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj);
+void UCBInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj);
 
 /**
  \brief Injection routine for EM-known binaries
@@ -45,14 +45,14 @@ void GalacticBinaryInjectVerificationSet(struct Data *data, struct Orbit *orbit,
  EM observations do not provide information about polarization angle \f$\psi\f$ or (currently) initial phase \f$\varphi_0\f$. Those two parameters are missing from the injection files and drawn from their priors.
  
  */
-void GalacticBinaryInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj);
+void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj);
 
 /**
  \brief Injection routine for generic binaries
  
  Unlike verification sources, this code expects the polarization angle \f$\psi\f$ or (currently) initial phase \f$\varphi_0\f$ to be included in the parameter files.
  */
-void GalacticBinaryInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj);
+void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj);
 
 /**
  \brief parse VB parameter files and convert got GBMCMC parameters
@@ -62,16 +62,7 @@ void GetVerificationBinary(struct Data *data, struct Flags *flags, struct Source
 /**
  \brief Store full contents of input cache file from `--catalog` argument
  */
-void GalacticBinaryLoadCatalogCache(struct Data *data, struct Flags *flags, struct Catalog *catalog);
-
-/**
- \brief Removes known sources which are outside of analysis window but whose signal power may extend into the region of interest.
- 
- Signal parameters are read from file picked input using the `--catalog` command line option. Sources with \f$f_0<f_{\rm min}\f$ but \f$f_0 + (B/2)/T > f_{\rm min}\f$ are removed from the data.
- 
- Any sources in the catalog with \f$ f_{\rm min}\leq f_0 \leq f_{\rm max} \f$ (including window padding) are not used in the subtraction.
- */
-void GalacticBinaryCleanEdges(struct Data *data, struct Orbit *orbit, struct Flags *flags);
+void UCBLoadCatalogCache(struct Data *data, struct Flags *flags, struct Catalog *catalog);
 
 
 

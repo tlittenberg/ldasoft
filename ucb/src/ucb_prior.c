@@ -364,12 +364,12 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
         fprintf(stdout,"====================================\n\n");
     }
     
-    if(NP>7)
+    if(UCB_MODEL_NP>7)
     {
         model->prior[7][0] = fdotmin*data->T*data->T;
         model->prior[7][1] = fdotmax*data->T*data->T;
     }
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
     {
         model->prior[8][0] = fddotmin*data->T*data->T*data->T;
         model->prior[8][1] = fddotmax*data->T*data->T*data->T;
@@ -456,14 +456,14 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     }
     
     //set prior volume
-    for(int n=0; n<NP; n++) model->logPriorVolume[n] = log(model->prior[n][1]-model->prior[n][0]);
+    for(int n=0; n<UCB_MODEL_NP; n++) model->logPriorVolume[n] = log(model->prior[n][1]-model->prior[n][0]);
     
 }
 
 int check_range(double *params, double **uniform_prior)
 {
     //nan check
-    for(int n=0; n<NP; n++) if(params[n]!=params[n]) return 1;
+    for(int n=0; n<UCB_MODEL_NP; n++) if(params[n]!=params[n]) return 1;
     
     //frequency bin (uniform)
     if(params[0]<uniform_prior[0][0] || params[0]>uniform_prior[0][1]) return 1;
@@ -490,10 +490,10 @@ int check_range(double *params, double **uniform_prior)
     while(params[6]>uniform_prior[6][1]) params[6] -= PI2;
     
     //fdot (bins/Tobs)
-    if(NP>7) if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return 1;
+    if(UCB_MODEL_NP>7) if(params[7]<uniform_prior[7][0] || params[7]>uniform_prior[7][1]) return 1;
     
     //fddot
-    if(NP>8) if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return 1;
+    if(UCB_MODEL_NP>8) if(params[8]<uniform_prior[8][0] || params[8]>uniform_prior[8][1]) return 1;
 
     return 0;
 }
@@ -513,7 +513,7 @@ void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior, 
     {
         prior->gmm->modes[n] = malloc(sizeof(struct MVG));
         
-        alloc_MVG(prior->gmm->modes[n], NP);
+        alloc_MVG(prior->gmm->modes[n], UCB_MODEL_NP);
     }
 
     //combine modes into one GMM
@@ -536,7 +536,7 @@ void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior, 
 
 double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
 {
-    gsl_vector *x = gsl_vector_alloc(NP);
+    gsl_vector *x = gsl_vector_alloc(UCB_MODEL_NP);
     
     /* pointers to GMM contents */
     struct MVG **modes = gmm->modes;
@@ -555,14 +555,14 @@ double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
     gsl_vector_set(x,4,source->cosi);
     gsl_vector_set(x,5,source->psi);
     gsl_vector_set(x,6,source->phi0);
-    if(NP>7)
+    if(UCB_MODEL_NP>7)
         gsl_vector_set(x,7,source->dfdt);
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
         gsl_vector_set(x,8,source->d2fdt2);
 
     //map parameters to R
     double xmin,xmax,xn,yn, logJ = 0;
-    for(size_t n=0; n<NP; n++)
+    for(size_t n=0; n<UCB_MODEL_NP; n++)
     {
         xmin = gsl_matrix_get(modes[0]->minmax,n,0);
         xmax = gsl_matrix_get(modes[0]->minmax,n,1);
@@ -647,10 +647,10 @@ double evaluate_uniform_priors(double *params, double **uniform_prior, double *l
     logP -= logPriorVolume[6];
     
     //fdot (bins/Tobs)
-    if(NP>7) logP -= logPriorVolume[7];
+    if(UCB_MODEL_NP>7) logP -= logPriorVolume[7];
     
     //fddot
-    if(NP>8) logP -= logPriorVolume[8];
+    if(UCB_MODEL_NP>8) logP -= logPriorVolume[8];
     
     return logP;
 }

@@ -218,7 +218,7 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
     }while(data->p[q]<alpha);
 
     //random draws for other parameters
-    for(int n=1; n<NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    for(int n=1; n<UCB_MODEL_NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
     
     return 0;
 }
@@ -230,7 +230,7 @@ double draw_from_prior(struct Data *data, struct Model *model, struct Source *so
 
 double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-    double ran_no[NP];
+    double ran_no[UCB_MODEL_NP];
     
     //choose which entry
     int ngmm = (int)floor(gsl_rng_uniform(seed)*proposal->Ngmm);
@@ -250,20 +250,20 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     
 
     //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
-    for(int n=0; n<NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         ran_no[n] = gsl_ran_gaussian(seed,1.0);
     }
     
-    double x[NP];
+    double x[UCB_MODEL_NP];
     //the matrix multiplication...
-    for(int n=0; n<NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         //start at mean
         x[n] = gsl_vector_get(mode->mu,n);
         
         //add contribution from each row of invC
-        for(int m=0; m<NP; m++) x[n] += ran_no[m]*gsl_matrix_get(mode->L,n,m);
+        for(int m=0; m<UCB_MODEL_NP; m++) x[n] += ran_no[m]*gsl_matrix_get(mode->L,n,m);
         
         //map params from R back to interval
         double min = gsl_matrix_get(mode->minmax,n,0);
@@ -280,8 +280,8 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     source->cosi = x[4];
     source->psi = x[5];
     source->phi0 = x[6];
-    if(NP>7) source->dfdt = x[7];
-    if(NP>8) source->d2fdt2 = x[8];
+    if(UCB_MODEL_NP>7) source->dfdt = x[7];
+    if(UCB_MODEL_NP>8) source->d2fdt2 = x[8];
     map_params_to_array(source, params, data->T);
     
     return gmm_prior_density(data, model, source, proposal, params);
@@ -340,7 +340,7 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     logQ -= model->logPriorVolume[n];
     
     //fdot
-    if(NP>7)
+    if(UCB_MODEL_NP>7)
     {
         n = 7;
         params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
@@ -348,7 +348,7 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     }
     
     //f-double-dot
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
     {
         n = 8;
         params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
@@ -494,11 +494,11 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
 {
     int i,j;
     //double sqNP = sqrt((double)source->NP);
-    double Amps[NP];
-    double jump[NP];
+    double Amps[UCB_MODEL_NP];
+    double jump[UCB_MODEL_NP];
     
     //draw the eigen-jump amplitudes from N[0,1] scaled by evalue & dimension
-    for(i=0; i<NP; i++)
+    for(i=0; i<UCB_MODEL_NP; i++)
     {
         //Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i])/sqNP;
         Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i]);
@@ -506,14 +506,14 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
     }
     
     //choose one eigenvector to jump along
-    i = (int)(gsl_rng_uniform(seed)*(double)NP);
-    for (j=0; j<NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
+    i = (int)(gsl_rng_uniform(seed)*(double)UCB_MODEL_NP);
+    for (j=0; j<UCB_MODEL_NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
     
     //check jump value, set to small value if singular
-    for(i=0; i<NP; i++) if(jump[i]!=jump[i]) jump[i] = 0.01*source->params[i];
+    for(i=0; i<UCB_MODEL_NP; i++) if(jump[i]!=jump[i]) jump[i] = 0.01*source->params[i];
     
     //jump from current position
-    for(i=0; i<NP; i++) params[i] = source->params[i] + jump[i];
+    for(i=0; i<UCB_MODEL_NP; i++) params[i] = source->params[i] + jump[i];
     
     //safety check for cos(latitude) parameters
     //cosine co-latitude
@@ -521,7 +521,7 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
     //cosine inclination
     if(params[4] >= 1.) params[4] = source->params[4] - jump[4];
     
-    for(int j=0; j<NP; j++)
+    for(int j=0; j<UCB_MODEL_NP; j++)
     {
         if(params[j]!=params[j])
         {
@@ -539,7 +539,7 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
     int N = proposal->size;
     double **cdf = proposal->matrix;
     
-    for(int n=0; n<NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         
         //draw n from U[0,N]
@@ -570,7 +570,7 @@ double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source 
     
     int i,j;
     
-    for(int n=0; n<NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         if(params[n]<model->prior[n][0] || params[n]>=model->prior[n][1]) return -INFINITY;
         
@@ -587,7 +587,7 @@ double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source 
 
 double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
 {
-    double ran_no[NP];
+    double ran_no[UCB_MODEL_NP];
 
     int ns=(int)floor(gsl_rng_uniform(seed)*proposal->size);
 
@@ -604,19 +604,19 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
     double scale = 1.;
     
     //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
-    for(int n=0; n<NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         ran_no[n] = gsl_ran_gaussian(seed,scale);
     }
     
     //the matrix multiplication...
-    for(int n=0; n<NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         //start at mean
         params[n] = mean[n];
         
         //add contribution from each row of invC
-        for(int k=0; k<NP; k++) params[n] += ran_no[k]*Lij[n][k];
+        for(int k=0; k<UCB_MODEL_NP; k++) params[n] += ran_no[k]*Lij[n][k];
         
     }
         
@@ -663,7 +663,7 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
     
     
     //rejection sample everything else
-    for(int n=0; n< NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         if(params[n]<model->prior[n][0] || params[n]>model->prior[n][1])  return -INFINITY;
     }
@@ -672,7 +672,7 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
      if everything is in bounds, evaluate the probability (density)
      */
     int Nmodes = proposal->size*2;
-    double delta_x[NP];
+    double delta_x[UCB_MODEL_NP];
     
     //helper pointers
     double *mean    = NULL;
@@ -693,7 +693,7 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
         invCij = proposal->tensor[Nmodes+i];
         
         //compute distances between mode and current params
-        for(int n=0; n<NP; n++)
+        for(int n=0; n<UCB_MODEL_NP; n++)
         {
             delta_x[n] = params[n]-mean[n];
             
@@ -708,7 +708,9 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
         
         //assemble argument of exponential
         arg = 0.0;
-        for(int n=0; n<NP; n++) for(int m=0; m<NP; m++) arg += delta_x[n] * invCij[n][m] * delta_x[m];
+        for(int n=0; n<UCB_MODEL_NP; n++)
+            for(int m=0; m<UCB_MODEL_NP; m++)
+                arg += delta_x[n] * invCij[n][m] * delta_x[m];
         
         p += weight * norm * exp(-0.5*arg);
     }
@@ -749,7 +751,7 @@ double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct
     if(gsl_rng_uniform(seed) < 0.5 ) d_psi *= -1.;
     
     //jump from current position
-    for(int i=0; i<NP; i++) params[i] = source->params[i];
+    for(int i=0; i<UCB_MODEL_NP; i++) params[i] = source->params[i];
     
     params[5] += d_psi;
     params[6] += d_phi;
@@ -1327,7 +1329,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     proposal->size=0;
     while(!feof(fptr))
     {
-        for(int j=0; j<NP; j++)
+        for(int j=0; j<UCB_MODEL_NP; j++)
         {
             int check = fscanf(fptr,"%lg",&junk);
             if(!check)
@@ -1344,8 +1346,8 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     if(!flags->quiet)fprintf(stdout, "  samples in chain: %i\n",proposal->size);
     
     proposal->vector = calloc(proposal->size , sizeof(double));
-    proposal->matrix = malloc(NP * sizeof(double*));
-    for(int j=0; j<NP; j++) proposal->matrix[j] = calloc(proposal->size , sizeof(double));
+    proposal->matrix = malloc(UCB_MODEL_NP * sizeof(double*));
+    for(int j=0; j<UCB_MODEL_NP; j++) proposal->matrix[j] = calloc(proposal->size , sizeof(double));
     
     struct Model *temp = malloc(sizeof(struct Model));
     alloc_model(temp,NMAX,data->N,data->Nchannel);
@@ -1353,12 +1355,12 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     for(int n=0; n<proposal->size; n++)
     {
         scan_source_params(data, temp->source[0], fptr);
-        for(int j=0; j<NP; j++) proposal->matrix[j][n] = temp->source[0]->params[j];
+        for(int j=0; j<UCB_MODEL_NP; j++) proposal->matrix[j][n] = temp->source[0]->params[j];
     }
     free_model(temp);
     
     //now sort each row of the matrix
-    for(int j=0; j<NP; j++)
+    for(int j=0; j<UCB_MODEL_NP; j++)
     {
         //fill up proposal vector
         for(int n=0; n<proposal->size; n++)
@@ -1395,7 +1397,7 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
     double **invCij = NULL;
     double **Lij  = NULL;
     double *mean = NULL;
-    double ran_no[NP];
+    double ran_no[UCB_MODEL_NP];
     
     //renormalization asymptotically converges.  Do a few laps
     for(int j = 0; j<3; j++)
@@ -1416,19 +1418,19 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
             {
                 
                 //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
-                for(int m=0; m<NP; m++)
+                for(int m=0; m<UCB_MODEL_NP; m++)
                 {
                     ran_no[m] = gsl_ran_gaussian(seed,scale);
                 }
                 
                 //the matrix multiplication...
-                for(int n=0; n<NP; n++)
+                for(int n=0; n<UCB_MODEL_NP; n++)
                 {
                     //start at mean
                     model->source[0]->params[n] = mean[n];
                     
                     //add contribution from each row of invC
-                    for(int k=0; k<NP; k++) model->source[0]->params[n] += ran_no[k]*Lij[n][k];
+                    for(int k=0; k<UCB_MODEL_NP; k++) model->source[0]->params[n] += ran_no[k]*Lij[n][k];
                 }
                 
                 
@@ -1446,9 +1448,9 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
             invCij = proposal->tensor[Nmodes+i];
             Lij = proposal->tensor[i];
             
-            for(int n=0; n<NP; n++)
+            for(int n=0; n<UCB_MODEL_NP; n++)
             {
-                for(int m=0; m<NP; m++)
+                for(int m=0; m<UCB_MODEL_NP; m++)
                 {
                     invCij[n][m] /= gamma2;
                     Lij[n][m]    *= gamma;
@@ -1489,16 +1491,16 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     
     //centroids
     proposal->matrix = malloc(Ncov*sizeof(double*));
-    for(int j=0; j<Ncov; j++) proposal->matrix[j] = calloc(NP , sizeof(double));
+    for(int j=0; j<Ncov; j++) proposal->matrix[j] = calloc(UCB_MODEL_NP , sizeof(double));
     
     //covariance matrix and friends
     proposal->tensor = malloc((Ncov*2)*sizeof(double**));
     for(int j=0; j<Ncov*2; j++)
     {
-        proposal->tensor[j] = malloc(NP * sizeof(double*));
-        for(int k=0; k<NP; k++)
+        proposal->tensor[j] = malloc(UCB_MODEL_NP * sizeof(double*));
+        for(int k=0; k<UCB_MODEL_NP; k++)
         {
-            proposal->tensor[j][k] = calloc(NP , sizeof(double));
+            proposal->tensor[j][k] = calloc(UCB_MODEL_NP , sizeof(double));
         }
     }
     
@@ -1524,11 +1526,11 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
         
         //absorb normalization constants into stored determinant detCij
         //    proposal->vector[n*Ncov+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));
-        proposal->vector[n*2+1]=1./(pow(PI2,0.5*NP)*sqrt(detCij));
+        proposal->vector[n*2+1]=1./(pow(PI2,0.5*UCB_MODEL_NP)*sqrt(detCij));
         
         //second row has the centroids
         mean = proposal->matrix[n];
-        for(int i=0; i<NP; i++)
+        for(int i=0; i<UCB_MODEL_NP; i++)
         {
             check = fscanf(fptr, "%lg", &mean[i]);
             if(!check)
@@ -1541,7 +1543,7 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
         //next NP rows have the covariance matrix
         Cij = proposal->tensor[Ncov+n];
         check=0.0;
-        for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) check+=fscanf(fptr, "%lg", &Cij[i][j]);
+        for(int i=0; i<UCB_MODEL_NP; i++) for(int j=0; j<UCB_MODEL_NP; j++) check+=fscanf(fptr, "%lg", &Cij[i][j]);
         if(!check)
         {
             fprintf(stderr,"Error reading %s\n",flags->covFile);
@@ -1558,7 +1560,7 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
         //next NP rows are the lower half of the cholesky decomp.
         Lij = proposal->tensor[n];
         check=0;
-        for(int i=0; i<NP; i++) for(int j=0; j<NP; j++) check+=fscanf(fptr, "%lg", &Lij[i][j]);
+        for(int i=0; i<UCB_MODEL_NP; i++) for(int j=0; j<UCB_MODEL_NP; j++) check+=fscanf(fptr, "%lg", &Lij[i][j]);
         if(!check)
         {
             fprintf(stderr,"Error reading %s\n",flags->covFile);
@@ -1566,7 +1568,7 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
         }
 
         //get inverse of Cij (invert_matrix writes over contents of input)
-        invert_matrix(Cij,NP);
+        invert_matrix(Cij,UCB_MODEL_NP);
         
     }
     
@@ -1729,7 +1731,7 @@ double prior_density(struct Data *data, struct Model *model, UNUSED struct Sourc
     double **uniform_prior = model->prior;
     
     //guard against nan's, but do so loudly
-    for(int i=0; i<NP; i++)
+    for(int i=0; i<UCB_MODEL_NP; i++)
     {
         if(params[i]!=params[i])
         {

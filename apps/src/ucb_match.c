@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
         
         scan_source_params(data, src2, chain_file2);
         galactic_binary_alignment(orbit, data, src2);
-        galactic_binary(orbit, data->format, data->T, data->t0, src2->params, NP, src2->tdi->X, src2->tdi->Y, src2->tdi->Z, src2->tdi->A, src2->tdi->E, src2->BW, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0, src2->params, UCB_MODEL_NP, src2->tdi->X, src2->tdi->Y, src2->tdi->Z, src2->tdi->A, src2->tdi->E, src2->BW, 2);
 
         max_match=-INFINITY;
         while(!feof(chain_file1))
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
                 
                 //Book-keeping of injection time-frequency volume
                 galactic_binary_alignment(orbit, data, src1);
-                galactic_binary(orbit, data->format, data->T, data->t0, src1->params, NP, src1->tdi->X, src1->tdi->Y,src1->tdi->Z, src1->tdi->A, src1->tdi->E, src1->BW, 2);
+                galactic_binary(orbit, data->format, data->T, data->t0, src1->params, UCB_MODEL_NP, src1->tdi->X, src1->tdi->Y,src1->tdi->Z, src1->tdi->A, src1->tdi->E, src1->BW, 2);
                                 
                 match = waveform_match(src1, src2, noise);
                 if(match>max_match) max_match=match;

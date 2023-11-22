@@ -223,7 +223,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         // map to conventions for waveform generator
         params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0, params, NP, F_filter->A1_fX, F_filter->A1_fY, F_filter->A1_fZ, F_filter->A1_fA, F_filter->A1_fE, (int)M_filter, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A1_fX, F_filter->A1_fY, F_filter->A1_fZ, F_filter->A1_fA, F_filter->A1_fE, (int)M_filter, 2);
         
     } else if (filter_id == 2){
         
@@ -242,7 +242,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         // map to conventions for waveform generator
         params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0, params, NP, F_filter->A2_fX, F_filter->A2_fY, F_filter->A2_fZ, F_filter->A2_fA, F_filter->A2_fE, (int)M_filter, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A2_fX, F_filter->A2_fY, F_filter->A2_fZ, F_filter->A2_fA, F_filter->A2_fE, (int)M_filter, 2);
         
     } else if (filter_id == 3){
         
@@ -261,7 +261,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         // map to conventions for waveform generator
         params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0, params, NP, F_filter->A3_fX, F_filter->A3_fY, F_filter->A3_fZ, F_filter->A3_fA, F_filter->A3_fE, (int)M_filter, 2);
+        galactic_binary(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A3_fX, F_filter->A3_fY, F_filter->A3_fZ, F_filter->A3_fA, F_filter->A3_fE, (int)M_filter, 2);
         
     } else {
         

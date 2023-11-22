@@ -65,7 +65,7 @@ void setup_ucb_data(struct UCBData *ucb_data, struct TDI *tdi_full)
     
     /* Load gb catalog cache file for proposals/priors */
     if(flags->catalog)
-        GalacticBinaryLoadCatalogCache(data, flags, catalog);
+        UCBLoadCatalogCache(data, flags, catalog);
     
     /*
      Initialize measured time of model update.
@@ -428,16 +428,16 @@ void exchange_ucb_source_params(struct UCBData *ucb_data)
     }
     
     //build array of all source parameters to ship
-    int Nparams = Nshare*NP;
+    int Nparams = Nshare*UCB_MODEL_NP;
     double params[Nparams]; //TODO: Allow for different number of parameters for each source
     Nshare = 0;
     for(int i=0; i<Nlive; i++)
     {
         if(share_flag[i])
         {
-            for(int n=0; n<NP; n++)
+            for(int n=0; n<UCB_MODEL_NP; n++)
             {
-                params[Nshare*NP+n] = source[i]->params[n];
+                params[Nshare*UCB_MODEL_NP+n] = source[i]->params[n];
             }
             Nshare++;
             
@@ -482,7 +482,7 @@ void exchange_ucb_source_params(struct UCBData *ucb_data)
     
     /* populate new model structure with neighboring waveforms */
     int Nparams_new = Nparams_left + Nparams_right;
-    int Nlive_new = Nparams_new/NP;
+    int Nlive_new = Nparams_new/UCB_MODEL_NP;
     
     if(Nlive_new > 0)
     {
@@ -494,19 +494,19 @@ void exchange_ucb_source_params(struct UCBData *ucb_data)
         
         /* unpack recieved parameter vectors into source structures and generate waveforms */
         int m=0;
-        for(int n=0; n<Nparams_left/NP; n++)
+        for(int n=0; n<Nparams_left/UCB_MODEL_NP; n++)
         {
-            for(int i=0; i<NP; i++)
+            for(int i=0; i<UCB_MODEL_NP; i++)
             {
-                new_model->source[n]->params[i] = params_left[n*NP+i];
+                new_model->source[n]->params[i] = params_left[n*UCB_MODEL_NP+i];
             }
         }
-        for(int n=0; n<Nparams_right/NP; n++)
+        for(int n=0; n<Nparams_right/UCB_MODEL_NP; n++)
         {
-            for(int i=0; i<NP; i++)
+            for(int i=0; i<UCB_MODEL_NP; i++)
             {
-                m = Nparams_left/NP + n;
-                new_model->source[m]->params[i] = params_right[n*NP+i];
+                m = Nparams_left/UCB_MODEL_NP + n;
+                new_model->source[m]->params[i] = params_right[n*UCB_MODEL_NP+i];
             }
         }
         

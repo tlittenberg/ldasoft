@@ -278,7 +278,7 @@ static int safe_scan_source_params(struct Data *data, struct Source *source, FIL
     check+=fscanf(fptr,"%lg",&source->cosi);
     check+=fscanf(fptr,"%lg",&source->psi);
     check+=fscanf(fptr,"%lg",&source->phi0);
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
         check+=fscanf(fptr,"%lg",&source->d2fdt2);
     
     if(!check)
@@ -297,7 +297,7 @@ static void source_waveform_wrapper(struct Source *source, struct Data *data, st
     source->tdi = malloc(sizeof(struct TDI));
     alloc_tdi(source->tdi,data->N, data->Nchannel);
     galactic_binary_alignment(orbit, data, source);
-    galactic_binary(orbit, data->format, data->T, data->t0, source->params, NP, source->tdi->X, source->tdi->Y, source->tdi->Z ,source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
+    galactic_binary(orbit, data->format, data->T, data->t0, source->params, UCB_MODEL_NP, source->tdi->X, source->tdi->Y, source->tdi->Z ,source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
 }
 
 int main(int argc, char *argv[])
@@ -360,12 +360,12 @@ int main(int argc, char *argv[])
     //frequency & derivatives
     model->prior[0][0] /= data->T;
     model->prior[0][1] /= data->T;
-    if(NP>7)
+    if(UCB_MODEL_NP>7)
     {
         model->prior[7][0] /= data->T*data->T;
         model->prior[7][1] /= data->T*data->T;
     }
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
     {
         model->prior[8][0] /= data->T*data->T*data->T;
         model->prior[8][1] /= data->T*data->T*data->T;
@@ -483,7 +483,7 @@ int main(int argc, char *argv[])
             galactic_binary_alignment(orbit, data, sample);
             
             //calculate waveform model of sample
-            galactic_binary(orbit, data->format, data->T, data->t0, sample->params, NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+            galactic_binary(orbit, data->format, data->T, data->t0, sample->params, UCB_MODEL_NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
             
             //check frequencies
             int q_sample = (int)floor(sample->f0 * data->T);
@@ -522,7 +522,7 @@ int main(int argc, char *argv[])
                 galactic_binary_alignment(orbit, data, sample);
                 
                 //calculate waveform model of sample
-                galactic_binary(orbit, data->format, data->T, data->t0, sample->params, NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+                galactic_binary(orbit, data->format, data->T, data->t0, sample->params, UCB_MODEL_NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
                 
                 double q_sample = sample->f0 * data->T;
                 
@@ -712,16 +712,16 @@ int main(int argc, char *argv[])
     
     printf("get correlation matrix\n");
     double **corr=NULL;
-    corr = malloc(detections*NP*sizeof(double *));
-    for(int n=0; n<detections*NP; n++)corr[n] = calloc(detections*NP,sizeof(double));
+    corr = malloc(detections*UCB_MODEL_NP*sizeof(double *));
+    for(int n=0; n<detections*UCB_MODEL_NP; n++)corr[n] = calloc(detections*UCB_MODEL_NP,sizeof(double));
 
     get_correlation_matrix(data, catalog, detection_index, detections, IMAX, corr);
 
     sprintf(filename,"%s/correlation_matrix.dat",outdir);
     FILE *corrFile = fopen(filename,"w");
-    for(int n=0; n<detections*NP; n++)
+    for(int n=0; n<detections*UCB_MODEL_NP; n++)
     {
-        for(int m=0; m<detections*NP; m++)
+        for(int m=0; m<detections*UCB_MODEL_NP; m++)
         {
             fprintf(corrFile,"%+.3f ",corr[n][m]);
         }
@@ -776,7 +776,7 @@ int main(int argc, char *argv[])
             if(q_old_catalog_entry < data_old->qmin || q_old_catalog_entry > data_old->qmax) continue;
             
             //calculate waveform model of sample at Tcatalog
-            galactic_binary(orbit, data->format, data_old->T, data->t0, old_catalog_entry->params, NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->Y,old_catalog_entry->tdi->Z,old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
+            galactic_binary(orbit, data->format, data_old->T, data->t0, old_catalog_entry->params, UCB_MODEL_NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->Y,old_catalog_entry->tdi->Z,old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
             
             //check against new catalog
             for(int d=0; d<detections; d++)
@@ -792,7 +792,7 @@ int main(int argc, char *argv[])
                 //copy_source(entry->source[entry->i], new_catalog_entry);
                 
                 /* parameter-only copy */
-                memcpy(new_catalog_entry->params, entry->source[entry->i]->params, NP*sizeof(double));
+                memcpy(new_catalog_entry->params, entry->source[entry->i]->params, UCB_MODEL_NP*sizeof(double));
                 
                 //override q parameter
                 new_catalog_entry->params[0] = entry->source[entry->i]->f0 * data_old->T;
@@ -802,7 +802,7 @@ int main(int argc, char *argv[])
                 galactic_binary_alignment(orbit, data_old, new_catalog_entry);
                 
                 //calculate waveform of entry at Tcatalog
-                galactic_binary(orbit, data->format, data_old->T, data->t0, new_catalog_entry->params, NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->Y, new_catalog_entry->tdi->Z, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
+                galactic_binary(orbit, data->format, data_old->T, data->t0, new_catalog_entry->params, UCB_MODEL_NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->Y, new_catalog_entry->tdi->Z, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
                 
                 
                 Match = waveform_match(old_catalog_entry,new_catalog_entry,noise);

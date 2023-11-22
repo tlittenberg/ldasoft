@@ -54,7 +54,7 @@ double analytic_snr(double A, double Sn, double Sf, double sqT);
 /**
 \brief Compute prior on SNR
   
- Shouldn't this be in GalacticBinaryPrior.h?
+ Shouldn't this be in ucb_prior.h?
  Peak of distribution `SNRPEAK` \f$\rho_*\f$ defined in Constants.h
  
  @param SNR signal to noise ratio \f$\rho\f$ of source

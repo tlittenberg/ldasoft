@@ -46,9 +46,9 @@ void map_array_to_params(struct Source *source, double *params, double T)
     source->cosi     = params[4];
     source->psi      = params[5];
     source->phi0     = params[6];
-    if(NP>7)
+    if(UCB_MODEL_NP>7)
         source->dfdt   = params[7]/(T*T);
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
         source->d2fdt2 = params[8]/(T*T*T);
 }
 
@@ -61,9 +61,9 @@ void map_params_to_array(struct Source *source, double *params, double T)
     params[4] = source->cosi;
     params[5] = source->psi;
     params[6] = source->phi0;
-    if(NP>7)
+    if(UCB_MODEL_NP>7)
         params[7] = source->dfdt*T*T;
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
         params[8] = source->d2fdt2*T*T*T;
 }
 
@@ -93,9 +93,9 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
         alloc_source(model->source[n],NFFT,Nchannel);
     }
     
-    model->logPriorVolume = calloc(NP,sizeof(double));
-    model->prior = malloc(NP*sizeof(double *));
-    for(n=0; n<NP; n++) model->prior[n] = calloc(2,sizeof(double));
+    model->logPriorVolume = calloc(UCB_MODEL_NP,sizeof(double));
+    model->prior = malloc(UCB_MODEL_NP*sizeof(double *));
+    for(n=0; n<UCB_MODEL_NP; n++) model->prior[n] = calloc(2,sizeof(double));
 }
 
 void copy_model(struct Model *origin, struct Model *copy)
@@ -123,7 +123,7 @@ void copy_model(struct Model *origin, struct Model *copy)
     
     
     //Source parameter priors
-    for(int n=0; n<NP; n++)
+    for(int n=0; n<UCB_MODEL_NP; n++)
     {
         for(int j=0; j<2; j++) copy->prior[n][j] = origin->prior[n][j];
         copy->logPriorVolume[n] = origin->logPriorVolume[n];
@@ -212,7 +212,7 @@ int compare_model(struct Model *a, struct Model *b)
         }
         
         //Package parameters for waveform generator
-        for(int j=0; j<NP; j++) if(sa->params[j] != sb->params[j]) return 1;
+        for(int j=0; j<UCB_MODEL_NP; j++) if(sa->params[j] != sb->params[j]) return 1;
         
     }
     
@@ -283,7 +283,7 @@ void free_model(struct Model *model)
     }
     free(model->source);
 
-    for(n=0; n<NP; n++) free(model->prior[n]);
+    for(n=0; n<UCB_MODEL_NP; n++) free(model->prior[n]);
     free(model->prior);
     free(model->logPriorVolume);
 
@@ -326,20 +326,20 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel)
     
     
     //Package parameters for waveform generator
-    source->params=calloc(NP,sizeof(double));
+    source->params=calloc(UCB_MODEL_NP,sizeof(double));
     
     //Response
     source->tdi = malloc(sizeof(struct TDI));
     alloc_tdi(source->tdi,NFFT, Nchannel);
     
     //FIsher
-    source->fisher_matrix = malloc(NP*sizeof(double *));
-    source->fisher_evectr = malloc(NP*sizeof(double *));
-    source->fisher_evalue = calloc(NP,sizeof(double));
-    for(int i=0; i<NP; i++)
+    source->fisher_matrix = malloc(UCB_MODEL_NP*sizeof(double *));
+    source->fisher_evectr = malloc(UCB_MODEL_NP*sizeof(double *));
+    source->fisher_evalue = calloc(UCB_MODEL_NP,sizeof(double));
+    for(int i=0; i<UCB_MODEL_NP; i++)
     {
-        source->fisher_matrix[i] = calloc(NP,sizeof(double));
-        source->fisher_evectr[i] = calloc(NP,sizeof(double));
+        source->fisher_matrix[i] = calloc(UCB_MODEL_NP,sizeof(double));
+        source->fisher_evectr[i] = calloc(UCB_MODEL_NP,sizeof(double));
     }
 };
 
@@ -377,21 +377,21 @@ void copy_source(struct Source *origin, struct Source *copy)
 
     
     //Fisher
-    memcpy(copy->fisher_evalue, origin->fisher_evalue, NP*sizeof(double));
-    memcpy(copy->params, origin->params, NP*sizeof(double));
+    memcpy(copy->fisher_evalue, origin->fisher_evalue, UCB_MODEL_NP*sizeof(double));
+    memcpy(copy->params, origin->params, UCB_MODEL_NP*sizeof(double));
     copy->fisher_update_flag = origin->fisher_update_flag;
     
-    for(int i=0; i<NP; i++)
+    for(int i=0; i<UCB_MODEL_NP; i++)
     {
-        memcpy(copy->fisher_matrix[i], origin->fisher_matrix[i], NP*sizeof(double));
-        memcpy(copy->fisher_evectr[i], origin->fisher_evectr[i], NP*sizeof(double));
+        memcpy(copy->fisher_matrix[i], origin->fisher_matrix[i], UCB_MODEL_NP*sizeof(double));
+        memcpy(copy->fisher_evectr[i], origin->fisher_evectr[i], UCB_MODEL_NP*sizeof(double));
     }
     
 }
 
 void free_source(struct Source *source)
 {
-    for(int i=0; i<NP; i++)
+    for(int i=0; i<UCB_MODEL_NP; i++)
     {
         free(source->fisher_matrix[i]);
         free(source->fisher_evectr[i]);
@@ -442,7 +442,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         
         //Simulate gravitational wave signal
         /* the source_id = -1 condition is redundent if the model->tdi structure is up to date...*/
-        if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0, source->params, NP, source->tdi->X, source->tdi->Y, source->tdi->Z, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+        if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0, source->params, UCB_MODEL_NP, source->tdi->X, source->tdi->Y, source->tdi->Z, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
         
         //Add waveform to model TDI channels
         for(i=0; i<source->BW; i++)
@@ -555,7 +555,7 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
     map_array_to_params(source_y, source_y->params, data->T);
     galactic_binary_alignment(orbit, data, source_y);
 
-    galactic_binary(orbit, data->format, data->T, model_y->t0, source_y->params, NP, source_y->tdi->X,source_y->tdi->Y,source_y->tdi->Z, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
+    galactic_binary(orbit, data->format, data->T, model_y->t0, source_y->params, UCB_MODEL_NP, source_y->tdi->X,source_y->tdi->Y,source_y->tdi->Z, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
 
     //subtract proposed nth source to model
     for(i=0; i<source_y->BW; i++)
@@ -736,7 +736,7 @@ void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
 {
     if(source_id < model->Nlive)
     {
-        double *Fparams = calloc(NP,sizeof(double));
+        double *Fparams = calloc(UCB_MODEL_NP,sizeof(double));
         
         struct Source *source = model->source[source_id];
         

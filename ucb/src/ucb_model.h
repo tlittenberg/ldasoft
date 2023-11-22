@@ -28,7 +28,7 @@
 
 #include <stdio.h>
 
-#define NP 8 ///< Number of source parameters for UCB model
+#define UCB_MODEL_NP 8 ///< Number of source parameters for UCB model
 
 /**
 \brief Hierarchical structure of UCB model
@@ -102,7 +102,7 @@ struct Source
     ///@}
     
     ///@name Derived Parameters
-    ///See GalacticBinary.c for functions to convert between intrinsic and derived parameters
+    ///See data.c for functions to convert between intrinsic and derived parameters
     ///@{
     double m1;  //!< Primary component mass \f$m_1 \geq m_2\f$
     double m2;  //!< Secondary component mass \f$m_2 \leq m_1\f$
@@ -149,7 +149,7 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
 /**
 \brief F-statistic maximization of galactic binary parameters
 
- Wrapper of GalacticBinaryFstatistic.c functions for maximizing waveform
+ Wrapper of UCBFstatistic.c functions for maximizing waveform
  over \f$(\mathcal{A},\cos\iota,\psi,\varphi_0)\f$ by filtering on
  original data.
  
@@ -222,12 +222,12 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
 int update_max_log_likelihood(struct Model **model, struct Chain *chain, struct Flags *flags);
 
 /**
- \brief Converts physical UCB parameters to array expected by GalacticBinaryWaveform.c
+ \brief Converts physical UCB parameters to array expected by ucb_waveform.c
  */
 void map_params_to_array(struct Source *source, double *params, double T);
 
 /**
- \brief Converts array expected by GalacticBinaryWaveform.c to
+ \brief Converts array expected by ucb_waveform.c to
  physical UCB parameters
  */
 void map_array_to_params(struct Source *source, double *params, double T);

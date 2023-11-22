@@ -100,9 +100,9 @@ int main(int argc, char *argv[])
         
         /* Inject gravitational wave signal */
         if(flags->knownSource)
-            GalacticBinaryInjectVerificationSource(data,orbit,flags,inj);
+            UCBInjectVerificationSource(data,orbit,flags,inj);
         else
-            GalacticBinaryInjectSimulatedSource(data,orbit,flags,inj);
+            UCBInjectSimulatedSource(data,orbit,flags,inj);
         
         /* set approximate f/fstar for segment */
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     /* Load catalog cache file for proposals/priors */
     struct Catalog *catalog=malloc(sizeof(struct Catalog));
     if(flags->catalog)
-        GalacticBinaryLoadCatalogCache(data, flags, catalog);
+        UCBLoadCatalogCache(data, flags, catalog);
 
     
     /* Initialize data-dependent proposal */

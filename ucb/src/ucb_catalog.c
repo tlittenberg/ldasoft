@@ -126,8 +126,8 @@ void append_sample_to_entry(struct Entry *entry, struct Source *sample, int IMAX
     /* leaner way of storing source info */
     
     //only copy source parameters
-    entry->source[entry->I]->params=calloc(NP,sizeof(double));
-    memcpy(entry->source[entry->I]->params, sample->params, NP*sizeof(double));
+    entry->source[entry->I]->params=calloc(UCB_MODEL_NP,sizeof(double));
+    memcpy(entry->source[entry->I]->params, sample->params, UCB_MODEL_NP*sizeof(double));
     
     //need Tobs which isn't stored in entries
     double T = sample->params[0]/sample->f0;
@@ -151,12 +151,12 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
     
     for(int d=0; d<detections; d++)
     {
-        mean[d] = calloc(NP,sizeof(double));
-        var[d] = calloc(NP,sizeof(double));
+        mean[d] = calloc(UCB_MODEL_NP,sizeof(double));
+        var[d] = calloc(UCB_MODEL_NP,sizeof(double));
         
         entry = catalog->entry[detection_index[d]];
 
-        for(int n=0; n<NP; n++)
+        for(int n=0; n<UCB_MODEL_NP; n++)
         {
             double x;
             
@@ -185,7 +185,7 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
     /*
      compute correlation matrix
      */
-    int N = detections*NP;
+    int N = detections*UCB_MODEL_NP;
     struct Entry *n_entry=NULL;
     struct Entry *m_entry=NULL;
     
@@ -194,16 +194,16 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
         for(int m=0; m<N; m++)
         {
             //which source row?
-            int nd = n/NP;
+            int nd = n/UCB_MODEL_NP;
 
             //which source column?
-            int md = m/NP;
+            int md = m/UCB_MODEL_NP;
 
             //which parameter row?
-            int nx = n - nd*NP;
+            int nx = n - nd*UCB_MODEL_NP;
             
             //which parameter column?
-            int mx = m - md*NP;
+            int mx = m - md*UCB_MODEL_NP;
                         
             //which entries?
             n_entry = catalog->entry[detection_index[nd]];
@@ -260,7 +260,7 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     for(size_t n=0; n<NMCMC; n++)
     {
         samples[n] = malloc(sizeof(struct Sample));
-        samples[n]->x = gsl_vector_alloc(NP);
+        samples[n]->x = gsl_vector_alloc(UCB_MODEL_NP);
         samples[n]->p = gsl_vector_alloc(NMODE);
         samples[n]->w = gsl_vector_alloc(NMODE);
     }
@@ -270,7 +270,7 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     for(size_t n=0; n<NMODE; n++)
     {
         modes[n] = malloc(sizeof(struct MVG));
-        alloc_MVG(modes[n],NP);
+        alloc_MVG(modes[n],UCB_MODEL_NP);
     }
     
     // Logistic mapping of samples onto R
@@ -279,9 +279,9 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     gsl_vector *y_vec = gsl_vector_alloc(NMCMC);
     
     /* parse chain file */
-    gsl_vector **params = malloc(NP*sizeof(gsl_vector *));
-    for(size_t n=0; n<NP; n++) params[n] = gsl_vector_alloc(NMCMC);
-    double value[NP];
+    gsl_vector **params = malloc(UCB_MODEL_NP*sizeof(gsl_vector *));
+    for(size_t n=0; n<UCB_MODEL_NP; n++) params[n] = gsl_vector_alloc(NMCMC);
+    double value[UCB_MODEL_NP];
     for(size_t i=0; i<NMCMC; i++)
     {
         value[0] = entry->source[i*NTHIN]->f0;
@@ -291,12 +291,12 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
         value[4] = entry->source[i*NTHIN]->cosi;
         value[5] = entry->source[i*NTHIN]->psi;
         value[6] = entry->source[i*NTHIN]->phi0;
-        if(NP>7)
+        if(UCB_MODEL_NP>7)
             value[7] = entry->source[i*NTHIN]->dfdt;
-        if(NP>8)
+        if(UCB_MODEL_NP>8)
             value[8] = entry->source[i*NTHIN]->d2fdt2;
         
-        for(size_t n=0; n<NP; n++)
+        for(size_t n=0; n<UCB_MODEL_NP; n++)
         {
             //gsl_vector_set(samples[i]->x,n,value[n]);
             gsl_vector_set(params[n],i,value[n]);
@@ -304,7 +304,7 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     }
     
     /* Use priors to set min and max of each parameter*/
-    for(size_t n=0; n<NP; n++)
+    for(size_t n=0; n<UCB_MODEL_NP; n++)
     {
         // copy max and min into each MVG structure
         for(size_t k=0; k<NMODE; k++)
@@ -316,7 +316,7 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     
     
     /* map params to R with logit function */
-    for(size_t n=0; n<NP; n++)
+    for(size_t n=0; n<UCB_MODEL_NP; n++)
     {
         pmin = gsl_matrix_get(modes[0]->minmax,n,0);
         pmax = gsl_matrix_get(modes[0]->minmax,n,1);

@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 
         /* Simulate strain data */
         else
-            GalacticBinaryInjectVerificationSet(data, orbit, flags, inj);
+            UCBInjectVerificationSet(data, orbit, flags, inj);
         
         /* set approximate f/fstar for segment */
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);

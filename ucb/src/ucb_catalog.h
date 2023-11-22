@@ -52,7 +52,7 @@ struct Entry
     char name[128];         //!<source name
     char parent[128];       //!<source parent name
     char path[1024];        //!<path to catalog entry
-    struct Source **source; //!<source structure contains parameters, defined in GalacticBinary.h
+    struct Source **source; //!<source structure contains parameters, defined in ucb.h
     double *match;          //!<match between sample and ref. source
     double *distance;       //!<metric distance between sample and ref. source
     double evidence;        //!<source evidence

@@ -245,7 +245,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     double invstep;
     
     // Plus and minus parameters:
-    double *params_p = calloc(NP,sizeof(double));
+    double *params_p = calloc(UCB_MODEL_NP,sizeof(double));
     //double *params_m = calloc(NP,sizeof(double));
     
     // Plus and minus templates for each detector:
@@ -255,8 +255,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     //alloc_source(wave_m, data->N, data->Nchannel, NP);
     
     // TDI variables to hold derivatives of h
-    struct TDI **dhdx = malloc(NP*sizeof(struct TDI *));
-    for(n=0; n<NP; n++)
+    struct TDI **dhdx = malloc(UCB_MODEL_NP*sizeof(struct TDI *));
+    for(n=0; n<UCB_MODEL_NP; n++)
     {
         dhdx[n] = malloc(sizeof(struct TDI));
         alloc_tdi(dhdx[n], data->N, data->Nchannel);
@@ -264,13 +264,13 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     
     /* assumes all the parameters are log or angle */
     int N2 = data->N*2;
-    for(i=0; i<NP; i++)
+    for(i=0; i<UCB_MODEL_NP; i++)
     {
         //step size for derivatives
         invstep = invepsilon2;
         
         // copy parameters
-        for(j=0; j<NP; j++)
+        for(j=0; j<UCB_MODEL_NP; j++)
         {
             wave_p->params[j] = source->params[j];
             //wave_m->params[j] = source->params[j];
@@ -306,7 +306,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         //galactic_binary_alignment(orbit, data, wave_m);
         
         // compute perturbed waveforms
-        galactic_binary(orbit, data->format, data->T, data->t0, wave_p->params, NP, wave_p->tdi->X, wave_p->tdi->Y, wave_p->tdi->Z, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
+        galactic_binary(orbit, data->format, data->T, data->t0, wave_p->params, UCB_MODEL_NP, wave_p->tdi->X, wave_p->tdi->Y, wave_p->tdi->Z, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
         
         // central differencing derivatives of waveforms w.r.t. parameters
         switch(source->tdi->Nchannel)
@@ -343,9 +343,9 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     }
     
     // Calculate fisher matrix
-    for(i=0; i<NP; i++)
+    for(i=0; i<UCB_MODEL_NP; i++)
     {
-        for(j=i; j<NP; j++)
+        for(j=i; j<UCB_MODEL_NP; j++)
         {
             //source->fisher_matrix[i][j] = 10.0; //fisher gets a "DC" level to keep the inversion stable
             switch(source->tdi->Nchannel)
@@ -376,7 +376,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             {
                 fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,__FILE__);
                 fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->C[0][0][data->N/2],noise->C[1][1][data->N/2]);
-                for(int k=0; k<NP; k++)
+                for(int k=0; k<UCB_MODEL_NP; k++)
                 {
                     fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
                 }
@@ -387,14 +387,14 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     }
     
     // Calculate eigenvalues and eigenvectors of fisher matrix
-    matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, NP);
+    matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, UCB_MODEL_NP);
     
     free(params_p);
     //free(params_m);
     free_source(wave_p);
     //free_source(wave_m);
     
-    for(n=0; n<NP; n++) free_tdi(dhdx[n]);
+    for(n=0; n<UCB_MODEL_NP; n++) free_tdi(dhdx[n]);
     free(dhdx);
 }
 

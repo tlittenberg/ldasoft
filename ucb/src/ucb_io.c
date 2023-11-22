@@ -68,7 +68,7 @@ void print_gb_catalog_script(struct Flags *flags, struct Data *data, struct Orbi
         fprintf(fptr,"--sangria ");
     if(flags->orbit)
         fprintf(fptr,"--orbit %s ",orbit->OrbitFileName);
-    if(NP==9)
+    if(UCB_MODEL_NP==9)
         fprintf(fptr,"--f-double-dot ");
     if(data->Nchannel==1)
         fprintf(fptr,"--channels 1 ");
@@ -447,7 +447,7 @@ void print_source_params(struct Data *data, struct Source *source, FILE *fptr)
     fprintf(fptr,"%.12g ",source->cosi);
     fprintf(fptr,"%.12g ",source->psi);
     fprintf(fptr,"%.12g ",source->phi0);
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
         fprintf(fptr,"%.12g ",source->d2fdt2);
 }
 
@@ -462,7 +462,7 @@ void scan_source_params(struct Data *data, struct Source *source, FILE *fptr)
     check+=fscanf(fptr,"%lg",&source->cosi);
     check+=fscanf(fptr,"%lg",&source->psi);
     check+=fscanf(fptr,"%lg",&source->phi0);
-    if(NP>8)
+    if(UCB_MODEL_NP>8)
         check+=fscanf(fptr,"%lg",&source->d2fdt2);
     
     if(!check)
