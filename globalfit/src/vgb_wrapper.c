@@ -49,7 +49,7 @@ void alloc_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, int proc
 
 void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct TDI *tdi_full)
 {
-    /* Aliases to gbmcmc structures */
+    /* Aliases to ucb structures */
     struct Flags *flags = vgb_data->flags;
     struct Orbit *orbit = vgb_data->orbit;
     struct Chain **chain_vec = vgb_data->chain_vec;
@@ -174,7 +174,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
 {
     clock_t start = clock();
     
-    /* Aliases to gbmcmc structures */
+    /* Aliases to ucb structures */
     struct Flags *flags = vgb_data->flags;
     struct Orbit *orbit = vgb_data->orbit;
     struct Chain **chain_vec = vgb_data->chain_vec;

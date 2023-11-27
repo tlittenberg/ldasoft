@@ -74,7 +74,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, st
     
     noise_data->data->T = T;
     
-    //set noise model to cover gbmcmc segment
+    //set noise model to cover ucb segment
     noise_data->data->fmin = ucb_data->data->fmin;
     noise_data->data->fmax = ucb_data->data->fmax;
     
@@ -132,7 +132,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, st
 
 void initialize_noise_sampler(struct NoiseData *noise_data)
 {
-    /* Aliases to gbmcmc structures */
+    /* Aliases to ucb structures */
     struct Flags *flags = noise_data->flags;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
@@ -170,7 +170,7 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
 
 void initialize_noise_state(struct NoiseData *noise_data)
 {
-    /* Aliases to gbmcmc structures */
+    /* Aliases to ucb structures */
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
@@ -211,7 +211,7 @@ void initialize_noise_state(struct NoiseData *noise_data)
 
 void resume_noise_state(struct NoiseData *noise_data)
 {
-    /* Aliases to gbmcmc structures */
+    /* Aliases to ucb structures */
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
@@ -263,7 +263,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
 {
     clock_t start = clock();
     
-    /* Aliases to gbmcmc structures */
+    /* Aliases to ucb structures */
     struct Flags *flags = noise_data->flags;
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;

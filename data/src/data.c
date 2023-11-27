@@ -970,7 +970,7 @@ void ReadHDF5(struct Data *data, struct TDI *tdi)
         T[n] *= rft_norm;
     }
         
-    /* unpack GSL-formatted arrays to the way GBMCMC expects them */
+    /* unpack GSL-formatted arrays to the way GLASS expects them */
     unpack_gsl_rft_output(tdi->X, X, N);
     unpack_gsl_rft_output(tdi->Y, Y, N);
     unpack_gsl_rft_output(tdi->Z, Z, N);
@@ -1419,7 +1419,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
 void print_usage()
 {
     fprintf(stdout,"\n");
-    fprintf(stdout,"=============== GBMCMC Usage: ============== \n");
+    fprintf(stdout,"=============== GLASS Usage: ============== \n");
     fprintf(stdout,"REQUIRED:\n");
     fprintf(stdout,"\n");
     fprintf(stdout,"OPTIONAL:\n");
@@ -1499,7 +1499,7 @@ void print_usage()
     
     fprintf(stdout,"--\n");
     fprintf(stdout,"EXAMPLE:\n");
-    fprintf(stdout,"gb_mcmc --inj [path to]/ldasoft/ucb/etc/sources/precision/PrecisionSource_0.txt\n");
+    fprintf(stdout,"ucb_mcmc --inj [path to]/ldasoft/ucb/etc/sources/precision/PrecisionSource_0.txt\n");
     fprintf(stdout,"\n");
     fprintf(stdout,"USEFUL TOBS:\n");
     fprintf(stdout,"   1 wk: %.0f\n",62914560./2./52.);
@@ -1846,7 +1846,7 @@ void parse(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct
     }
     
     //Print version control
-//    sprintf(filename,"gb_mcmc.log");
+//    sprintf(filename,"glass.log");
 //    FILE *runlog = fopen(filename,"w");
 //    print_version(runlog);
     

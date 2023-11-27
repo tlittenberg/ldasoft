@@ -13,7 +13,8 @@
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_randist.h>
 
-#include <LISA.h>
+#include <lisa.h>
+#include <data.h>
 
 #define RAD2ARCMIN 3437.75
 #define RAD2DEGREE 57.295833313961
@@ -55,7 +56,7 @@ int main(int argc, char* argv[])
 
   if(argc<3)
   {
-    fprintf(stdout,"Usage: gb_mcmc_chirpmass parameter_chain.dat.0 9 [alpha] [dalpha]\n");
+    fprintf(stdout,"Usage: ucb_chirpmass parameter_chain.dat.0 9 [alpha] [dalpha]\n");
     return 1;
   }
   

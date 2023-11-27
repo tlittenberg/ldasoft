@@ -19,8 +19,8 @@
  */
 
 /**
- @file gb_mcmc.c
- \brief Main function for stand-alone GBMCMC sampler
+ @file ucb_mcmc.c
+ \brief Main function for stand-alone ucb_mcmc sampler
  */
 
 /*  REQUIRED LIBRARIES  */
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
     stop = time(NULL);
     
     printf(" ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
-    sprintf(filename,"%s/gb_mcmc.log",flags->runDir);
+    sprintf(filename,"%s/ucb_mcmc.log",flags->runDir);
     FILE *runlog = fopen(filename,"a");
     fprintf(runlog," ELAPSED TIME = %g seconds on %i thread(s)\n",(double)(stop-start),numThreads);
     fclose(runlog);

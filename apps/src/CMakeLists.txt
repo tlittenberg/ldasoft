@@ -42,6 +42,18 @@ if(APPLE)
 endif()
 install(TARGETS ucb_match DESTINATION bin)
 
+add_executable(ucb_chirpmass ucb_chirpmass.c)
+target_link_libraries(ucb_chirpmass ${GSL_LIBRARIES})
+target_link_libraries(ucb_chirpmass ${HDF5_LIBRARIES})
+target_link_libraries(ucb_chirpmass m)
+target_link_libraries(ucb_chirpmass tools)
+target_link_libraries(ucb_chirpmass data)
+target_link_libraries(ucb_chirpmass ucb)
+if(APPLE)
+   target_link_libraries(ucb_chirpmass omp)
+endif()
+install(TARGETS ucb_chirpmass DESTINATION bin)
+
 add_executable(vgb_mcmc vgb_mcmc.c)
                 
 target_link_libraries(vgb_mcmc ${GSL_LIBRARIES})
