@@ -19,9 +19,9 @@ blue='#005778'
 figsize = (20,5)
 
 # Load files
-data = 'data/power_data_0.dat'
-res  = 'data/power_residual_t0.dat'
-wave = 'data/power_reconstruction_t0.dat'
+data = 'data/power_data.dat'
+res  = 'data/power_residual.dat'
+wave = 'data/power_reconstruction.dat'
 rec_files = glob.glob('catalog*/*power_reconstruction.dat')
 chain_files = glob.glob('catalog*/*chain.dat')
 entry_files = glob.glob('catalog*/entries.dat')

@@ -58,10 +58,10 @@ set (GITVERSION "\"${_build_version}\"")
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/gitversion.h.in"
-  "${PROJECT_SOURCE_DIR}/data/src/gitversion.h"
+  "${PROJECT_SOURCE_DIR}/utils/src/gitversion.h"
   )
 
-install (FILES "${PROJECT_SOURCE_DIR}/data/src/gitversion.h"
+install (FILES "${PROJECT_SOURCE_DIR}/utils/src/gitversion.h"
          DESTINATION include)
 
 message(STATUS "Resolving GIT Version")
@@ -72,8 +72,7 @@ set (GITVERSION "\"${_build_version}\"")
 # Internal products
 
 
-add_subdirectory(tools)
-add_subdirectory(data)
+add_subdirectory(utils)
 add_subdirectory(ucb)
 add_subdirectory(noise)
 add_subdirectory(apps)
