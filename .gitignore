@@ -1,5 +1,6 @@
 .DS_Store
 
+utils/src/gitversion.h
 gbmcmc/src/gitversion.h
 GBMCMC.png
 
