@@ -34,6 +34,7 @@ struct SplineModel
 {
     int Nmin; //!< Minimum number of spline control points
     int Nmax; //!< Maximum number of spline control points
+    int Nchannel; //!< Number of TDI channels
     double logL; //!< Log likelhood of spline model
     struct Noise *spline; //!< Spline control points
     struct Noise *psd; //!< Reconstructed noise model

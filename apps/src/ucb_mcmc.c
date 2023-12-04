@@ -47,7 +47,7 @@ static void print_usage()
     print_ucb_usage();
     
     fprintf(stdout,"EXAMPLE:\n");
-    fprintf(stdout,"glass_ucb_mcmc --inj [path to]/ldasoft/ucb/etc/sources/precision/PrecisionSource_0.txt --cheat\n");
+    fprintf(stdout,"ucb_mcmc --inj [path to]/ldasoft/ucb/etc/sources/precision/PrecisionSource_0.txt --cheat\n");
     fprintf(stdout,"\n");
 
     exit(0);

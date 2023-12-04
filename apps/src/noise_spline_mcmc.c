@@ -25,7 +25,7 @@ static void print_usage()
 {
     print_glass_usage();
     fprintf(stdout,"EXAMPLE:\n");
-    fprintf(stdout,"glass_noise_spline_mcmc --sim-noise --conf-noise --duration 7864320 --fmin 1e-4 --fmax 8e-3\n");
+    fprintf(stdout,"noise_spline_mcmc --sim-noise --conf-noise --duration 7864320 --fmin 1e-4 --fmax 8e-3\n");
     fprintf(stdout,"\n");
     exit(0);
 }
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
                 
                 if(step%(flags->NMCMC/10)==0)printf("noise_spline_mcmc at step %i\n",step);
                 
-                if(step%(flags->NMCMC/100)==0)
+                if(step%(flags->NMCMC/10)==0)
                 {
                     print_spline_state(model[chain->index[0]], chainFile, step);
                     
@@ -188,6 +188,9 @@ int main(int argc, char *argv[])
     print_noise_model(model[chain->index[0]]->psd, filename);
     
     print_noise_reconstruction(data, flags);
+
+    sprintf(filename,"%s/whitened_data.dat",data->dataDir);
+    print_whitened_data(data, model[chain->index[0]]->psd, filename);
 
     for(int ic=0; ic<chain->NC; ic++) free_spline_model(model[ic]);
     free(model);

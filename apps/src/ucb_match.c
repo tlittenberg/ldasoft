@@ -27,7 +27,7 @@
 #include <glass_ucb.h>
 
 // CODE USAGE:
-// glass_ucb_match --match-in1 /path/to/input1.dat --match-in2 /path/to/input2.dat --frac-freq --fmin 0.001249 --samples 512 --duration 62914560
+// ucb_match --match-in1 /path/to/input1.dat --match-in2 /path/to/input2.dat --frac-freq --fmin 0.001249 --samples 512 --duration 62914560
 
 static void print_usage()
 {

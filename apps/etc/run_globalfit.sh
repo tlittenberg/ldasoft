@@ -7,9 +7,10 @@
 #SBATCH --tasks-per-node=8
 #SBATCH --cpus-per-task=12
 
-globalfit="glass_global_fit"
+globalfit="${GLASS_PREFIX}/global_fit"
 data="~/ldc/sangria/data/LDC2_sangria_training_v2.h5"
-vgb="~/ldasoft/apps/etc/hmcnc.dat"
+vgb="${GLASS_REPO}/apps/etc/hmcnc.dat"
+outdir="${GLASS_TEST}/globalfit"
 
 #path/to/search_sources.dat (contains starting point for MBH sampler)
 mbh="~/ldasoft/apps/etc/"
@@ -21,7 +22,6 @@ samples_max=128
 
 Tobs=7864320
 padding=32
-outdir="globalfit"
 
 #Tobs=31457280
 #padding=128

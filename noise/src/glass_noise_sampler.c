@@ -153,9 +153,9 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     int k = (int)floor(gsl_rng_uniform(chain->r[ic])*(double)model_y->spline->N);
 
     //find the minimum and maximum indecies for stencil
-    int half_stencil = (MIN_SPLINE_STENCIL-1)/2;
-    int kmin = (k-half_stencil < 0) ? 0 : k-half_stencil;
-    int kmax = (k+half_stencil > model_x->spline->N-1) ? model_x->spline->N-1 : k+half_stencil;
+    //int half_stencil = (MIN_SPLINE_STENCIL-1)/2;
+    //int kmin = (k-half_stencil < 0) ? 0 : k-half_stencil;
+    //int kmax = (k+half_stencil > model_x->spline->N-1) ? model_x->spline->N-1 : k+half_stencil;
     
     //update frequency
     model_y->spline->f[k] = model_x->spline->f[k];
@@ -191,10 +191,12 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     //update amplitude
     double Sop, Spm;
     get_noise_levels("sangria", model_y->spline->f[k], &Spm, &Sop);
-    double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k], Spm, Sop);
+    double Sn;
+    if(model_y->Nchannel==2) Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k], Spm, Sop);
+    else Sn = XYZnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k], Spm, Sop);
     double scale = pow(10., -2.0 + 2.0*gsl_rng_uniform(chain->r[ic]));
-    model_y->spline->C[0][0][k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
-    model_y->spline->C[1][1][k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
+    for(int n=0; n<model_y->Nchannel; n++)
+        model_y->spline->C[n][n][k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
     
 
     
@@ -202,8 +204,8 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     if(!flags->prior)
     {
         /* compute spline model */
-        //generate_spline_noise_model(model_y); //full interpolation
-        update_spline_noise_model(model_y, k, kmin, kmax); //interpolation over stencil
+        generate_spline_noise_model(model_y); //full interpolation
+        //update_spline_noise_model(model_y, k, kmin, kmax); //interpolation over stencil
         
         /* get spline model likelihood */
         model_y->logL = noise_log_likelihood(data, model_y->psd);
@@ -282,10 +284,11 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             for(int k=0; k<=kmin; k++)
             {
                 model_y->spline->f[k] = model_x->spline->f[k];
-                model_y->spline->C[0][0][k] = model_x->spline->C[0][0][k];
-                model_y->spline->C[1][1][k] = model_x->spline->C[1][1][k];
-                model_y->spline->invC[0][0][k] = model_x->spline->invC[0][0][k];
-                model_y->spline->invC[1][1][k] = model_x->spline->invC[1][1][k];
+                for(int n=0; n<model_y->Nchannel; n++)
+                {
+                    model_y->spline->C[n][n][k] = model_x->spline->C[n][n][k];
+                    model_y->spline->invC[n][n][k] = model_x->spline->invC[n][n][k];
+                }
                 model_y->spline->detC[k] = model_x->spline->detC[k];
             }
             
@@ -299,18 +302,21 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             double Spm,Sop;
             get_noise_levels("sangria", model_y->spline->f[birth], &Spm, &Sop);
 
-            double Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth], Spm, Sop);//noise_transfer_function(model_y->spline->f[birth]/orbit->fstar);
+            double Sn;
+            if(model_y->Nchannel==2) Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth], Spm, Sop);
+            else Sn = XYZnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[birth], Spm, Sop);
+
             double Snmin = -Sn*100.;
             double Snmax =  Sn*100.;
-            model_y->spline->C[0][0][birth] = Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]);
-            model_y->spline->C[1][1][birth] = Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]);
+            for(int n=0; n<model_y->Nchannel; n++)
+                model_y->spline->C[n][n][birth] = Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]);
             
             // now fill in all higher points over k index
             for(int k=kmax; k<model_x->spline->N; k++)
             {
                 model_y->spline->f[k+1] = model_x->spline->f[k];
-                model_y->spline->C[0][0][k+1] = model_x->spline->C[0][0][k];
-                model_y->spline->C[1][1][k+1] = model_x->spline->C[1][1][k];
+                for(int n=0; n<model_y->Nchannel; n++)
+                    model_y->spline->C[n][n][k+1] = model_x->spline->C[n][n][k];
             }
             break;
 
@@ -328,16 +334,16 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             for(int k=0; k<kill; k++)
             {
                 model_y->spline->f[k] = model_x->spline->f[k];
-                model_y->spline->C[0][0][k] = model_x->spline->C[0][0][k];
-                model_y->spline->C[1][1][k] = model_x->spline->C[1][1][k];
+                for(int n=0; n<model_y->Nchannel; n++)
+                    model_y->spline->C[n][n][k] = model_x->spline->C[n][n][k];
             }
             
             // now fill in all higher points over k index
             for(int k=kill; k<model_y->spline->N; k++)
             {
                 model_y->spline->f[k] = model_x->spline->f[k+1];
-                model_y->spline->C[0][0][k] = model_x->spline->C[0][0][k+1];
-                model_y->spline->C[1][1][k] = model_x->spline->C[1][1][k+1];
+                for(int n=0; n<model_y->Nchannel; n++)
+                    model_y->spline->C[n][n][k] = model_x->spline->C[n][n][k+1];
             }
             
             break;

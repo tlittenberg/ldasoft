@@ -23,7 +23,7 @@
 void print_usage_catalog()
 {
     fprintf(stdout,"\n");
-    fprintf(stdout,"============== GBCATALOG Usage: ============ \n");
+    fprintf(stdout,"================ UCB CATALOG: ============== \n");
     fprintf(stdout,"REQUIRED:\n");
     fprintf(stdout,"       --chain-file  : chain file to be sorted into catalog\n");
     fprintf(stdout,"       --sources     : maximum number of sources (10)      \n");

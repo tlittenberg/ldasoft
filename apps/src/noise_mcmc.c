@@ -25,7 +25,7 @@ static void print_usage()
 {
     print_glass_usage();
     fprintf(stdout,"EXAMPLE:\n");
-    fprintf(stdout,"glass_noise_mcmc --sim-noise --conf-noise --duration 7864320 --fmin 1e-4 --fmax 8e-3\n");
+    fprintf(stdout,"noise_mcmc --sim-noise --conf-noise --duration 7864320 --fmin 1e-4 --fmax 8e-3\n");
     fprintf(stdout,"\n");
     exit(0);
 }

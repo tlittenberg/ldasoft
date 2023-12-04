@@ -30,16 +30,6 @@ void UCBInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Fla
 {
     //TODO: Combine this function w/ UCBInjectVerificationSource()
 
-    //get max and min samples
-    data->fmin = inj->f0 - (data->N/2)/data->T;
-    data->fmax = inj->f0 + (data->N/2)/data->T;
-    data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
-    
-    //recompute fmin and fmax so they align with a bin
-    data->fmin = data->qmin/data->T;
-    data->fmax = data->qmax/data->T;
-
     //Book-keeping of injection time-frequency volume
     galactic_binary_alignment(orbit, data, inj);
 

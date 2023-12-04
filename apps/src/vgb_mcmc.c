@@ -48,7 +48,7 @@ static void print_usage()
     print_ucb_usage();
 
     fprintf(stdout,"EXAMPLE:\n");
-    fprintf(stdout,"glass_vgb_mcmc --known-sources /path/to/full_list.txt --quiet \n");
+    fprintf(stdout,"vgb_mcmc --known-sources /path/to/full_list.txt --quiet \n");
     fprintf(stdout,"\n");
 
     exit(0);
@@ -150,6 +150,13 @@ int main(int argc, char *argv[])
         chain=chain_vec[n];
         data=data_vec[n];
         inj=inj_vec[n];
+
+        if(n>0)
+        {
+            copy_data(data_vec[0],data);
+            chain->NC = chain_vec[0]->NC;    //number of chains
+        }
+
         alloc_source(inj, data->N, data->Nchannel);
 
         data->nseed+=n;
@@ -166,11 +173,6 @@ int main(int argc, char *argv[])
         mkdir(chain->chainDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         mkdir(chain->chkptDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-        if(n>0)
-        {
-            copy_data(data_vec[0],data);
-            chain->NC = chain_vec[0]->NC;    //number of chains
-        }
         
         /* Initialize data structures */
         alloc_data(data, flags);
@@ -192,6 +194,12 @@ int main(int argc, char *argv[])
         //print various data products for plotting
         print_data(data, data->tdi, flags);
         
+        //save parameters to file
+        sprintf(filename,"%s/data/injection_parameters.dat",subDir);
+        FILE *paramFile=fopen(filename,"w");
+        print_source_params(data, inj, paramFile);
+        fprintf(paramFile,"\n");
+        fclose(paramFile);
         
         /* Initialize parallel chain */
         if(flags->resume)

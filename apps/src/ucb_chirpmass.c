@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
   if(argc<3)
   {
-    fprintf(stdout,"Usage: glass_ucb_chirpmass parameter_chain.dat.0 9 [alpha] [dalpha]\n");
+    fprintf(stdout,"Usage: ucb_chirpmass parameter_chain.dat.0 9 [alpha] [dalpha]\n");
     return 1;
   }
   
