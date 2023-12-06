@@ -84,6 +84,7 @@ void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flag
     data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
 }
 
+//TODO: Move file pointers to Model instead of Chain structs
 void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode)
 {
     int ic;
