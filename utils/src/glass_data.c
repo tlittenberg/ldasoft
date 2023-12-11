@@ -439,7 +439,7 @@ void free_calibration(struct Calibration *calibration)
     free(calibration);
 }
 
-void ReadHDF5(struct Data *data, struct TDI *tdi)
+void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags)
 {
     /* LDASOFT-formatted structure for TDI data */
     struct TDI *tdi_td = malloc(sizeof(struct TDI));
@@ -481,64 +481,73 @@ void ReadHDF5(struct Data *data, struct TDI *tdi)
         T[n] = tdi_td->T[m];
     }
     
-    /* lets get rid of those black holes
-    struct TDI *tdi_td_mbhb = malloc(sizeof(struct TDI));
-    LISA_Read_HDF5_LDC_TDI(tdi_td_mbhb, data->fileName, "/sky/mbhb/tdi");
-    for(int n=0; n<N; n++)
+    /* lets get rid of those black holes */
+    if(flags->no_mbh)
     {
-        int m = n_start+n;
-        X[n] -= tdi_td_mbhb->X[m];
-        Y[n] -= tdi_td_mbhb->Y[m];
-        Z[n] -= tdi_td_mbhb->Z[m];
-        A[n] -= tdi_td_mbhb->A[m];
-        E[n] -= tdi_td_mbhb->E[m];
-        T[n] -= tdi_td_mbhb->T[m];
+        struct TDI *tdi_td_mbhb = malloc(sizeof(struct TDI));
+        LISA_Read_HDF5_LDC_TDI(tdi_td_mbhb, data->fileName, "/sky/mbhb/tdi");
+        for(int n=0; n<N; n++)
+        {
+            int m = n_start+n;
+            X[n] -= tdi_td_mbhb->X[m];
+            Y[n] -= tdi_td_mbhb->Y[m];
+            Z[n] -= tdi_td_mbhb->Z[m];
+            A[n] -= tdi_td_mbhb->A[m];
+            E[n] -= tdi_td_mbhb->E[m];
+            T[n] -= tdi_td_mbhb->T[m];
+        }
+        free_tdi(tdi_td_mbhb);
     }
-    free_tdi(tdi_td_mbhb); */
     
-    /* lets get rid of the galaxy
-    struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
-    LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
-    for(int n=0; n<N; n++)
+    /* lets get rid of the galaxy */
+    if(flags->no_ucb)
     {
-        int m = n_start+n;
-        X[n] -= tdi_td_dgb->X[m];
-        Y[n] -= tdi_td_dgb->Y[m];
-        Z[n] -= tdi_td_dgb->Z[m];
-        A[n] -= tdi_td_dgb->A[m];
-        E[n] -= tdi_td_dgb->E[m];
-        T[n] -= tdi_td_dgb->T[m];
-    }
-    free_tdi(tdi_td_dgb);
+        struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
+        LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
+        for(int n=0; n<N; n++)
+        {
+            int m = n_start+n;
+            X[n] -= tdi_td_dgb->X[m];
+            Y[n] -= tdi_td_dgb->Y[m];
+            Z[n] -= tdi_td_dgb->Z[m];
+            A[n] -= tdi_td_dgb->A[m];
+            E[n] -= tdi_td_dgb->E[m];
+            T[n] -= tdi_td_dgb->T[m];
+        }
+        free_tdi(tdi_td_dgb);
     
-    struct TDI *tdi_td_igb = malloc(sizeof(struct TDI));
-    LISA_Read_HDF5_LDC_TDI(tdi_td_igb, data->fileName, "/sky/igb/tdi");
-    for(int n=0; n<N; n++)
-    {
-        int m = n_start+n;
-        X[n] -= tdi_td_igb->X[m];
-        Y[n] -= tdi_td_igb->Y[m];
-        Z[n] -= tdi_td_igb->Z[m];
-        A[n] -= tdi_td_igb->A[m];
-        E[n] -= tdi_td_igb->E[m];
-        T[n] -= tdi_td_igb->T[m];
+        struct TDI *tdi_td_igb = malloc(sizeof(struct TDI));
+        LISA_Read_HDF5_LDC_TDI(tdi_td_igb, data->fileName, "/sky/igb/tdi");
+        for(int n=0; n<N; n++)
+        {
+            int m = n_start+n;
+            X[n] -= tdi_td_igb->X[m];
+            Y[n] -= tdi_td_igb->Y[m];
+            Z[n] -= tdi_td_igb->Z[m];
+            A[n] -= tdi_td_igb->A[m];
+            E[n] -= tdi_td_igb->E[m];
+            T[n] -= tdi_td_igb->T[m];
+        }
+        free_tdi(tdi_td_igb);
     }
-    free_tdi(tdi_td_igb);
-    
-    struct TDI *tdi_td_vgb = malloc(sizeof(struct TDI));
-    LISA_Read_HDF5_LDC_TDI(tdi_td_vgb, data->fileName, "/sky/vgb/tdi");
-    for(int n=0; n<N; n++)
-    {
-        int m = n_start+n;
-        X[n] -= tdi_td_vgb->X[m];
-        Y[n] -= tdi_td_vgb->Y[m];
-        Z[n] -= tdi_td_vgb->Z[m];
-        A[n] -= tdi_td_vgb->A[m];
-        E[n] -= tdi_td_vgb->E[m];
-        T[n] -= tdi_td_vgb->T[m];
-    }
-    free_tdi(tdi_td_vgb); */
 
+    /* lets get rid of the verification binaries */
+    if(flags->no_vgb)
+    {
+        struct TDI *tdi_td_vgb = malloc(sizeof(struct TDI));
+        LISA_Read_HDF5_LDC_TDI(tdi_td_vgb, data->fileName, "/sky/vgb/tdi");
+        for(int n=0; n<N; n++)
+        {
+            int m = n_start+n;
+            X[n] -= tdi_td_vgb->X[m];
+            Y[n] -= tdi_td_vgb->Y[m];
+            Z[n] -= tdi_td_vgb->Z[m];
+            A[n] -= tdi_td_vgb->A[m];
+            E[n] -= tdi_td_vgb->E[m];
+            T[n] -= tdi_td_vgb->T[m];
+        }
+        free_tdi(tdi_td_vgb);
+    }
     
     /* Tukey window time-domain TDI channels tdi_td */
     double alpha = (2.0*FILTER_LENGTH/Tobs);
@@ -649,7 +658,7 @@ void ReadData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
     /* load full dataset */
     struct TDI *tdi_full = malloc(sizeof(struct TDI));
     if(flags->hdf5Data)
-        ReadHDF5(data,tdi_full);
+        ReadHDF5(data,tdi_full,flags);
     else
         ReadASCII(data,tdi_full);
     
@@ -1011,6 +1020,10 @@ void print_glass_usage()
     fprintf(stdout,"       =========== Data =========== \n");
     fprintf(stdout,"       --data        : strain data file (ASCII)            \n");
     fprintf(stdout,"       --h5-data     : strain data file (HDF5)             \n");
+    fprintf(stdout,"       --h5-no-mbh   : remove mbhs from HDF5 data          \n");
+    fprintf(stdout,"       --h5-no-ucb   : remove ucbs from HDF5 data          \n");
+    fprintf(stdout,"       --h5-no-vgb   : remove vgbs from HDF5 data          \n");
+    fprintf(stdout,"       --h5-no-noise : remove noise from HDF5 data (TODO)  \n");
     fprintf(stdout,"       --psd         : psd data file (ASCII)               \n");
     fprintf(stdout,"       --samples     : number of frequency bins (512)      \n");
     fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
@@ -1084,6 +1097,12 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     chain->NC          = 12;//number of chains
     int set_fmax_flag  = 0; //flag watching for if fmax is set by CLI
     
+    /* Simulated data building blocks */
+    flags->no_mbh = 0;
+    flags->no_ucb = 0;
+    flags->no_vgb = 0;
+    flags->no_noise = 0;
+    
     /*
      default data format is 'phase'
      optional support for 'frequency' a la LDCs
@@ -1139,6 +1158,10 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
         {"no-burnin",   no_argument, 0, 0 },
         {"no-rj",       no_argument, 0, 0 },
         {"calibration", no_argument, 0, 0 },
+        {"h5-no-mbh",   no_argument, 0, 0 },
+        {"h5-no-ucb",   no_argument, 0, 0 },
+        {"h5-no-vgb",   no_argument, 0, 0 },
+        {"h5-no-noise", no_argument, 0, 0 },
         {0, 0, 0, 0}
     };
     
@@ -1166,6 +1189,10 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
                 if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
                 if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
                 if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
+                if(strcmp("h5-no-mbh",   long_options[long_index].name) == 0) flags->no_mbh     = 1;
+                if(strcmp("h5-no-ucb",   long_options[long_index].name) == 0) flags->no_ucb     = 1;
+                if(strcmp("h5-no-vgb",   long_options[long_index].name) == 0) flags->no_vgb     = 1;
+                if(strcmp("h5-no-noise", long_options[long_index].name) == 0) flags->no_noise   = 1;
                 if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
                 if(strcmp("rundir",      long_options[long_index].name) == 0) strcpy(flags->runDir,optarg);
                 if(strcmp("phase",       long_options[long_index].name) == 0) sprintf(data->format,"phase");

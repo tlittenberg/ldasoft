@@ -55,7 +55,7 @@ double snr(struct Source *source, struct Noise *noise)
 
 double snr_prior(double SNR)
 {
-    //SNRPEAK defined in Constants.h
+    //SNRPEAK defined in glass_constants.h
     double dfac  = 1.+SNR/(4.*SNRPEAK);
     double dfac5 = ipow(dfac,5);
     return (3.*SNR)/(4.*SNRPEAK*SNRPEAK*dfac5);

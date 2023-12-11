@@ -26,7 +26,7 @@ Tstart=0
 sources=40
 
 
-cmd="${globalfit} --h5-data ${data} --sangria --fmin ${fmin} --chains 12 --threads 12 --start-time ${Tstart} --duration ${Tobs} --samples ${samples} --padding ${padding} --sources ${sources} --rundir ${outdir} --known-sources ${vgb} "
+cmd="${globalfit} --h5-data ${data} --h5-no-mbh --sangria --fmin ${fmin} --chains 12 --threads 12 --start-time ${Tstart} --duration ${Tobs} --samples ${samples} --padding ${padding} --sources ${sources} --rundir ${outdir} --known-sources ${vgb} "
 
 
 #--mbh-search-path ${mbh}"
