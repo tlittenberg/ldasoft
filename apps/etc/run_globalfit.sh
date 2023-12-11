@@ -9,6 +9,7 @@
 
 globalfit="${GLASS_PREFIX}/global_fit"
 data="~/ldc/sangria/data/LDC2_sangria_training_v2.h5"
+data="/Users/tlittenb/Research/GlobalFit/sangria/data/LDC2_sangria_training_v2.h5"
 vgb="${GLASS_REPO}/apps/etc/hmcnc.dat"
 outdir="${GLASS_TEST}/globalfit"
 
@@ -31,7 +32,7 @@ Tstart=0
 sources=40
 
 
-cmd="${globalfit} --h5-data ${data} --sangria --fmin ${fmin} --chains 12 --threads 12 --start-time ${Tstart} --duration ${Tobs} --samples ${samples} --padding ${padding} --sources ${sources} --rundir ${outdir} --known-sources ${vgb} "
+cmd="${globalfit} --h5-data ${data} --h5-no-mbh --sangria --fmin ${fmin} --chains 12 --threads 12 --start-time ${Tstart} --duration ${Tobs} --samples ${samples} --padding ${padding} --sources ${sources} --rundir ${outdir} --known-sources ${vgb} "
 
 
 #--mbh-search-path ${mbh}"

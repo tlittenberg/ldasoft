@@ -582,12 +582,6 @@ static void print_usage()
 
 int main(int argc, char *argv[])
 {
-    fprintf(stdout, "\n================= GLOBAL FIT ================\n");
-
-    //check command line format
-    print_LISA_ASCII_art(stdout);
-    if(argc==1) print_usage();
-
     time_t start, stop;
     start = time(NULL);
 
@@ -600,6 +594,14 @@ int main(int argc, char *argv[])
     /* get process ID, and total number of processes */
     MPI_Comm_size(MPI_COMM_WORLD, &Nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &procID);
+
+    //check command line format
+    if(procID==root) 
+    {
+        fprintf(stdout, "\n================= GLOBAL FIT ================\n");
+        print_LISA_ASCII_art(stdout);
+    }
+    if(argc==1) print_usage();
 
     /* Allocate structures to hold global model */
     struct GlobalFitData *global_fit = malloc(sizeof(struct GlobalFitData));
@@ -774,7 +776,7 @@ int main(int argc, char *argv[])
     alloc_data(data, flags);
             
     /* root process reads data */
-    if(procID==root) ReadHDF5(data,global_fit->tdi_full);
+    if(procID==root) ReadHDF5(data,global_fit->tdi_full,flags);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* alias of full TDI data */

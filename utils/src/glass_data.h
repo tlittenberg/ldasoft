@@ -195,6 +195,14 @@ struct Flags
     char psdFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input psd file from Flags::psd.
     char catalogFile[MAXSTRINGSIZE];  //!<store `FILENAME` containing previously identified detections from Flags::catalog for cleaning padding regions
      ///@}
+     
+    /** @name Remove components of simulated data  */
+     ///@{
+    int no_mbh;
+    int no_ucb;
+    int no_vgb;
+    int no_noise;
+     ///@}
 };
 
 /**
@@ -434,7 +442,7 @@ void ReadData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 /**
  \brief Reads LDC-formatted HDF5 data using `--h5-data` flag
  */
-void ReadHDF5(struct Data *data, struct TDI *tdi);
+void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags);
 
 /**
  \brief Reads ASCII data using `--data` flag
