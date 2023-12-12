@@ -1169,7 +1169,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     int long_index=0;
     
     //Loop through argv string and pluck out arguments
-    while ((opt = getopt_long_only(argc, argv,"apl:b:", long_options, &long_index )) != -1)
+    while ((opt = getopt_long_only(argc, argv_copy,"apl:b:", long_options, &long_index )) != -1)
     {
         switch (opt)
         {

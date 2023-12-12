@@ -85,7 +85,7 @@ void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct T
         struct Data *data=data_vec[n];
         struct Source *vgb=vgb_vec[n];
         
-        copy_data(ucb_data->data,data);
+        //copy_data(ucb_data->data,data);
         chain->NC = ucb_data->chain->NC; //number of chains
         
         /* Initialize data structures */
@@ -271,7 +271,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
             }
             
             //dump waveforms to file, update avgLogL for thermodynamic integration
-            if(vgb_data->mcmc_step%data->downsample==0)
+            if(vgb_data->mcmc_step>=0 && vgb_data->mcmc_step%data->downsample==0)
             {
                 save_waveforms(data, model[chain->index[0]], vgb_data->mcmc_step/data->downsample);
                 

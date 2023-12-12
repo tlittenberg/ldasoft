@@ -1,2 +1,1 @@
-<<<<<<< HEAD
-#define GITVERSION "d085feee"
+#define GITVERSION "c6297c0"

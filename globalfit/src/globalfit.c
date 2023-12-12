@@ -622,10 +622,10 @@ int main(int argc, char *argv[])
     struct Data  *data  = ucb_data->data;
 
     /* all processes parse command line and set defaults/flags */
+    parse_data_args(argc,argv,data,orbit,flags,chain);
     parse_vgb_args(argc, argv, flags);
     parse_mbh_args(argc, argv, mbh_data);
     parse_ucb_args(argc, argv, flags);
-    parse_data_args(argc,argv,data,orbit,flags,chain);
     if(procID==0 && flags->help) print_usage();
     
     /* Allocate remaining data structures */
