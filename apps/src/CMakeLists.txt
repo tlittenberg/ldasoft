@@ -87,3 +87,10 @@ if(APPLE)
    target_link_libraries(noise_spline_mcmc omp)
 endif()
 install(TARGETS noise_spline_mcmc DESTINATION bin)
+
+add_executable(ucb_grid ucb_grid.c)
+target_link_libraries(ucb_grid ${GSL_LIBRARIES})
+target_link_libraries(ucb_grid m)
+install(TARGETS ucb_grid DESTINATION bin)
+
+

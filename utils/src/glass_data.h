@@ -173,6 +173,7 @@ struct Flags
     int confNoise;  //!<`[--conf-noise; default=FALSE]`: include model of confusion noise in \f$S_n(f)\f$, either for simulating noise or as starting value for parameterized noise model.
     int resume;     //!<`[--resume; default=FALSE]`: restart sampler from run state saved during checkpointing. Starts from scratch if no checkpointing files are found.
     int catalog;    //!<`[--catalog=FILENAME; default=FALSE]`: use list of previously detected sources supplied in `FILENAME` to clean bandwidth padding (`gb_mcmc`) or for building family tree (`gb_catalog`).
+    int grid;       //!<`[--ucb-grid=FILENAME; default=FALSE]`: flag indicating if a gridfile was supplied
     int threads;    //!<number of openMP threads for parallel tempering
     int psd;        //!<`[--psd=FILENAME; default=FALSE]`: use PSD input as ASCII file from command line
     int help;       //!<`[--help]`: print command line usage and exit
@@ -184,6 +185,7 @@ struct Flags
      ///@{
     char runDir[MAXSTRINGSIZE];       //!<store `DIRECTORY` to serve as top level directory for output files.
     char vbFile[MAXSTRINGSIZE];       //!<store `FILENAME` of list of known binaries `vb_mcmc`
+    char ucbGridFile[MAXSTRINGSIZE];  //!<`[--ucb-grid=FILENAME]` frequency grid for multiband UCB analysis
     char **injFile;                   //!<`[--inj=FILENAME]`: list of injection files. Can support up to `NINJ=10` separate injections.
     char noiseFile[MAXSTRINGSIZE];    //!<file containing reconstructed noise model for `gb_catalog` to compute SNRs against.
     char cdfFile[MAXSTRINGSIZE];      //!<store `FILENAME` of input chain file from Flags::update.

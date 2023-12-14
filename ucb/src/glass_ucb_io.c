@@ -46,6 +46,7 @@ void print_ucb_usage()
     fprintf(stdout,"       --update      : gmm of posterior as prior [filename]\n");
     fprintf(stdout,"       --update-cov  : use cov matrix proposal [filename]  \n");
     fprintf(stdout,"       --catalog     : list of known sources               \n");
+    fprintf(stdout,"       --ucb-grid    : ucb frequency grid [filename]       \n");
     fprintf(stdout,"\n");
 
     //Injections
@@ -75,6 +76,7 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags)
     flags->detached    = 0;
     flags->knownSource = 0;
     flags->catalog     = 0;
+    flags->grid        = 0;
     flags->update      = 0;
     flags->updateCov   = 0;
     flags->match       = 0;
@@ -95,6 +97,7 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags)
         {"match-in2",  required_argument, 0, 0},
         {"em-prior",   required_argument, 0, 0},
         {"catalog",    required_argument, 0, 0},
+        {"ucb-grid",   required_argument, 0, 0},
         
         /* These options don’t set a flag.
          We distinguish them by their indices. */
@@ -154,6 +157,12 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags)
                     checkfile(optarg);
                     flags->catalog = 1;
                     sprintf(flags->catalogFile,"%s",optarg);
+                }
+                if(strcmp("ucb-grid",long_options[long_index].name) == 0)
+                {
+                    checkfile(optarg);
+                    flags->grid = 1;
+                    sprintf(flags->ucbGridFile,"%s",optarg);
                 }
                 if(strcmp("inj", long_options[long_index].name) == 0)
                 {

@@ -65,17 +65,15 @@ void setup_ucb_data(struct UCBData *ucb_data, struct TDI *tdi_full)
     ucb_data->cpu_time = 1.0;
 }
 
-#define GRIDFILE "ucb_frequency_spacing.dat"
-
 void setup_frequency_segment(struct UCBData *ucb_data)
 {
     int procID = ucb_data->procID;
     int procID_min = ucb_data->procID_min;
     struct Data *data = ucb_data->data;
 
-    if(access(GRIDFILE,F_OK)==0)
+    if(ucb_data->flags->grid)
     {
-        FILE *fgrid=fopen(GRIDFILE,"r");
+        FILE *fgrid=fopen(ucb_data->flags->ucbGridFile,"r");
         int n,id;
         double fstart,fstop;
         int fgridsize=0;
@@ -106,7 +104,7 @@ void setup_frequency_segment(struct UCBData *ucb_data)
     }
     else
     {
-        if(procID==procID_min) fprintf(stdout,"Did not find %s, manually setting up frequency grid\n",GRIDFILE);
+        if(procID==procID_min) fprintf(stdout,"Did not find grid file, manually setting up frequency grid\n");
                 
         data->fmin = data->fmin + (procID - procID_min)*data->N/data->T;
         data->fmax = data->fmin + data->N/data->T;
