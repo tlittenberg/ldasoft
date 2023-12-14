@@ -1107,7 +1107,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
      default data format is 'phase'
      optional support for 'frequency' a la LDCs
      */
-    sprintf(data->format,"frequency");
+    sprintf(data->format,"sangria");
         
     data->T        = 31457280; /* one "mldc years" at 15s sampling */
     data->t0       = 0.0; /* start time of data segment in seconds */

@@ -4,7 +4,7 @@ import os
 cwd = os.getcwd()
 dirnames = glob.glob(cwd+"/*/catalog*/")
 print(cwd)
-cache = open('gb_catalog.cache','w')
+cache = open('ucb_catalog.cache','w')
 
 for dir in dirnames:
     print(dir)

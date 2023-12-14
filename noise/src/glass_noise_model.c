@@ -255,7 +255,7 @@ void generate_spline_noise_model(struct SplineModel *model)
 
 void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, struct InstrumentModel *model)
 {
-    double f;
+    double f,f2;
     double x;
     double cosx;
     double oms_transfer_function;
@@ -268,14 +268,43 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
 
     map_array_to_noise_params(model);
 
+    double acc_units = 2.81837551648e-19;//1./(PI2*CLIGHT)/(PI2*CLIGHT)
+    double oms_units = 4.39256635604e-16;//PI2*PI2/CLIGHT/CLIGHT
+    double acc_fmax  = 0.01; //Hz (maximum frequency for computing acc contribution
+    
     for(int n=0; n<data->N; n++)
     {
         f = model->psd->f[n];
         x = f/orbit->fstar;
+        f2= f*f;
+        
+        //at low frequency use linear approximation for trig functions
+        if(x<0.1)
+        {
+            cosx = 1.0;
+            tdi_transfer_function = x*x;
+        }
+        else
+        {
+            cosx = cos(x);
+            tdi_transfer_function = noise_transfer_function(x);
+        }
+
         cosx = cos(x);
-        acc_transfer_function = 1./(PI2*f*CLIGHT)/(PI2*f*CLIGHT) * (1.0 + pow(0.4e-3/f,2)) * (1.0 + pow(f/8.0e-3,4));
-        oms_transfer_function = (PI2*f/CLIGHT)*(PI2*f/CLIGHT) * (1.0 + pow(2.0e-3/f,4));
         tdi_transfer_function = noise_transfer_function(x);
+
+        if(f<acc_fmax) //at f<~.1mHz acceleration noise is < 1% of the total noise budget
+            acc_transfer_function = acc_units / f2 * (1.0 + pow(0.4e-3/f,2)) * (1.0 + pow(f/8.0e-3,4));
+        else
+            acc_transfer_function = 0.0;
+
+        oms_transfer_function = oms_units * f2 * (1.0 + pow(2.0e-3/f,4));
+
+        //absorb factor of -8 into tdi transfer function to cut down on multiplications
+        tdi_transfer_function *= -8.0;
+        
+        //absorb additional factor of 2 for overall PSD normalization
+        tdi_transfer_function *= 2.0;
         
         switch(data->Nchannel)
         {
@@ -293,12 +322,15 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
                 break;
             case 3:
                 
-                Sacc12 = model->sacc12 * acc_transfer_function;
-                Sacc21 = model->sacc21 * acc_transfer_function;
-                Sacc23 = model->sacc23 * acc_transfer_function;
-                Sacc32 = model->sacc32 * acc_transfer_function;
-                Sacc13 = model->sacc13 * acc_transfer_function;
-                Sacc31 = model->sacc31 * acc_transfer_function;
+                if(f<acc_fmax) //at f<~.1mHz acceleration noise is < 1% of the total noise budget
+                {
+                    Sacc12 = model->sacc12 * acc_transfer_function;
+                    Sacc21 = model->sacc21 * acc_transfer_function;
+                    Sacc23 = model->sacc23 * acc_transfer_function;
+                    Sacc32 = model->sacc32 * acc_transfer_function;
+                    Sacc13 = model->sacc13 * acc_transfer_function;
+                    Sacc31 = model->sacc31 * acc_transfer_function;
+                }
                 
                 Soms12 = model->soms12 * oms_transfer_function;
                 Soms21 = model->soms21 * oms_transfer_function;
@@ -306,34 +338,56 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
                 Soms32 = model->soms32 * oms_transfer_function;
                 Soms13 = model->soms13 * oms_transfer_function;
                 Soms31 = model->soms31 * oms_transfer_function;
-                
-                
-                //OMS noise
-                model->psd->C[0][0][n] = (Soms12+Soms21+Soms13+Soms31)*.25;
-                model->psd->C[1][1][n] = (Soms23+Soms32+Soms21+Soms12)*.25;
-                model->psd->C[2][2][n] = (Soms31+Soms13+Soms32+Soms23)*.25;
+            
+                //Start from scratch
+                model->psd->C[0][0][n] = 0.;
+                model->psd->C[1][1][n] = 0.;
+                model->psd->C[2][2][n] = 0.;
 
-                model->psd->C[0][1][n] = (Soms12 + Soms21)*.5;
-                model->psd->C[0][2][n] = (Soms13 + Soms31)*.5;
-                model->psd->C[1][2][n] = (Soms32 + Soms23)*.5;
+                model->psd->C[0][1][n] = 0.;
+                model->psd->C[0][2][n] = 0.;
+                model->psd->C[1][2][n] = 0.;
+
+                //OMS noise
+                model->psd->C[0][0][n] += (Soms12+Soms21+Soms13+Soms31)*.25;
+                model->psd->C[1][1][n] += (Soms23+Soms32+Soms21+Soms12)*.25;
+                model->psd->C[2][2][n] += (Soms31+Soms13+Soms32+Soms23)*.25;
+
+                model->psd->C[0][1][n] += (Soms12 + Soms21)*.5;
+                model->psd->C[0][2][n] += (Soms13 + Soms31)*.5;
+                model->psd->C[1][2][n] += (Soms32 + Soms23)*.5;
                 
                 //Acceleration noise
-                model->psd->C[0][0][n] += 2. * ( (Sacc12 + Sacc13)*.5 + ((Sacc21 + Sacc31)*.5)*cosx*cosx );
-                model->psd->C[1][1][n] += 2. * ( (Sacc23 + Sacc21)*.5 + ((Sacc32 + Sacc12)*.5)*cosx*cosx );
-                model->psd->C[2][2][n] += 2. * ( (Sacc31 + Sacc32)*.5 + ((Sacc13 + Sacc23)*.5)*cosx*cosx );
+                if(f<acc_fmax) //at f<~.1mHz acceleration noise is < 1% of the total noise budget
+                {
+                    //distribute through factors of 2
+                    /*
+                    model->psd->C[0][0][n] += 2. * ( (Sacc12 + Sacc13)*.5 + ((Sacc21 + Sacc31)*.5)*cosx*cosx );
+                    model->psd->C[1][1][n] += 2. * ( (Sacc23 + Sacc21)*.5 + ((Sacc32 + Sacc12)*.5)*cosx*cosx );
+                    model->psd->C[2][2][n] += 2. * ( (Sacc31 + Sacc32)*.5 + ((Sacc13 + Sacc23)*.5)*cosx*cosx );
 
-                model->psd->C[0][1][n] += 4. * ( (Sacc12 + Sacc21)*.5 );
-                model->psd->C[0][2][n] += 4. * ( (Sacc13 + Sacc31)*.5 );
-                model->psd->C[1][2][n] += 4. * ( (Sacc32 + Sacc23)*.5 );
+                    model->psd->C[0][1][n] += 4. * ( (Sacc12 + Sacc21)*.5 );
+                    model->psd->C[0][2][n] += 4. * ( (Sacc13 + Sacc31)*.5 );
+                    model->psd->C[1][2][n] += 4. * ( (Sacc32 + Sacc23)*.5 );
+                    */
+                    model->psd->C[0][0][n] += ( (Sacc12 + Sacc13) + ((Sacc21 + Sacc31))*cosx*cosx );
+                    model->psd->C[1][1][n] += ( (Sacc23 + Sacc21) + ((Sacc32 + Sacc12))*cosx*cosx );
+                    model->psd->C[2][2][n] += ( (Sacc31 + Sacc32) + ((Sacc13 + Sacc23))*cosx*cosx );
 
-                //TDI transfer functions
-                model->psd->C[0][0][n] *= 16. * tdi_transfer_function;
-                model->psd->C[1][1][n] *= 16. * tdi_transfer_function;
-                model->psd->C[2][2][n] *= 16. * tdi_transfer_function;
+                    model->psd->C[0][1][n] += 2.*(Sacc12 + Sacc21);
+                    model->psd->C[0][2][n] += 2.*(Sacc13 + Sacc31);
+                    model->psd->C[1][2][n] += 2.*(Sacc32 + Sacc23);
+                }
+                
 
-                model->psd->C[0][1][n] *= -8. * tdi_transfer_function * cosx ;
-                model->psd->C[0][2][n] *= -8. * tdi_transfer_function * cosx ;
-                model->psd->C[1][2][n] *= -8. * tdi_transfer_function * cosx ;
+                //TDI transfer functions (note tdi_transfer_function has abosrbed a factor of -8)
+                model->psd->C[0][0][n] *= -2. * tdi_transfer_function;
+                model->psd->C[1][1][n] *= -2. * tdi_transfer_function;
+                model->psd->C[2][2][n] *= -2. * tdi_transfer_function;
+
+                model->psd->C[0][1][n] *= tdi_transfer_function * cosx ;
+                model->psd->C[0][2][n] *= tdi_transfer_function * cosx ;
+                model->psd->C[1][2][n] *= tdi_transfer_function * cosx ;
                 
                 //Symmetry
                 model->psd->C[1][0][n] = model->psd->C[0][1][n];
@@ -344,9 +398,9 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
         }
         
         //Normalization
-        for(int i=0; i<data->Nchannel; i++)
-            for(int j=0; j<data->Nchannel; j++)
-                model->psd->C[i][j][n] *= 2.0;
+//        for(int i=0; i<data->Nchannel; i++)
+//            for(int j=0; j<data->Nchannel; j++)
+//                model->psd->C[i][j][n] *= 2.0;
     }
 }
 
@@ -361,8 +415,18 @@ void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, 
     {
         f = model->psd->f[n];
         
-        Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * 0.5*( 1. + tanh( (model->fk - f)/model->f2 ) );
-
+        //skip confusion noise calculation at high frequencies where contribution is negligible
+        int high_f_check = 0;
+        if(f>model->f1*10) high_f_check = 1;
+        
+        if(high_f_check) Sgal = 0.0;
+        else
+        {
+            //absorb normalization factor of 2 and distribute
+            //Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * 0.5*( 1. + tanh( (model->fk - f)/model->f2 ) );
+            Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
+        }
+        
         switch(data->Nchannel)
         {
             case 1:
@@ -379,11 +443,11 @@ void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, 
                 break;
         }
         
-        //Normalization
+        /*Normalization -- note absorbed into definition of Sgal
         for(int i=0; i<data->Nchannel; i++)
             for(int j=0; j<data->Nchannel; j++)
                 model->psd->C[i][j][n] *= 2.0;
-
+        */
     }
 }
 

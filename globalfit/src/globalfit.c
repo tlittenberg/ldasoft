@@ -482,6 +482,12 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
         sprintf(filename,"%s/data/current_instrument_noise_model.dat",noise_data->flags->runDir);
         generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
         print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
+        
+        if(noise_data->flags->confNoise)
+        {
+            sprintf(filename,"%s/data/current_foreground_noise_model.dat",noise_data->flags->runDir);
+            print_noise_model(noise_data->conf_model[noise_data->chain->index[0]]->psd, filename);
+        }
 
     }
     if(VGB_Flag)

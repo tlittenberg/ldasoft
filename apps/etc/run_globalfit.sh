@@ -13,7 +13,7 @@ padding=8
 #Tobs=7864320
 #padding=32
 
-cmd="${globalfit} --h5-data ${data} --h5-no-mbh --sangria --chains 12 --threads 12 --duration ${Tobs} --rundir ${outdir} --known-sources ${vgb} --h5-no-mbh --padding ${padding} --samples ${samples}"
+cmd="${globalfit} --h5-data ${data} --h5-no-mbh --chains 12 --threads 12 --duration ${Tobs} --rundir ${outdir} --known-sources ${vgb} --h5-no-mbh --padding ${padding} --samples ${samples}"
 
 
 #--mbh-search-path ${mbh}"
