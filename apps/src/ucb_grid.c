@@ -50,8 +50,33 @@ int main(int argc, char* argv[])
     {
         double fstart = f[0]-(f[1]-f[0]);
         double fstop = (f[n+UCB_PER_SEGMENT]+f[n+UCB_PER_SEGMENT+1])/2;
-        fprintf(outfile,"%i %i %lg %lg\n",0, (int)((fstop-fstart)*YEAR), fstart,fstop);
-        seg++;
+
+
+	//check that the step isn't too large
+        double segment_sub_bandwidth = fstop - fstart;
+        if(segment_sub_bandwidth > MAX_SEGMENT_BANDWIDTH)
+        {
+            double overfactor = round((fstop-fstart)/(MAX_SEGMENT_BANDWIDTH));
+            fprintf(stdout,"WARNING: Wide segment at %lg Hz by a factor of %lg (%i bins)\n",f[n], overfactor, (int)(segment_sub_bandwidth*YEAR));
+            segment_sub_bandwidth = segment_sub_bandwidth / overfactor;
+            for(int j=0; j<overfactor; j++)
+            {
+                fstop=fstart+segment_sub_bandwidth;
+                fprintf(outfile,"%i %i %lg %lg\n",seg, (int)(segment_sub_bandwidth*YEAR), fstart, fstop);
+                fstart=fstop;
+                seg++;
+            }
+
+        }
+        else
+        {
+            fprintf(outfile,"%i %i %lg %lg\n",seg, (int)(segment_sub_bandwidth*YEAR), fstart, fstop);
+            seg++;
+        }
+        //n+=UCB_PER_SEGMENT;
+
+        //fprintf(outfile,"%i %i %lg %lg\n",0, (int)((fstop-fstart)*YEAR), fstart,fstop);
+        //seg++;
         n=UCB_PER_SEGMENT;
     }
     
