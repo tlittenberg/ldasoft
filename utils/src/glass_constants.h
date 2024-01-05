@@ -31,19 +31,17 @@
 
 /* --------------  MATHEMATICAL CONSTANTS  -------------- */
 /* Some square roots */
-#define SQ2 1.4142135623731  ///< \f$\sqrt{2}\f$
 #define SQ3 1.73205080757    ///< \f$\sqrt{3}\f$
 #define SQ8 2.82842712474619 ///< \f$\sqrt{8}\f$
 
-/* Pi's and frinds */
-//use math.h (M_PI) for PI
+/* Pi's and frinds
+ use math.h where possible
+ M_PI for PI,
+ M_PI_2 for PI/2
+ M_PI_4 for PI/4
+ */
 #define PI2   6.283185307179586      ///< \f$2\pi\f$
-#define PIon2 1.57079632679          ///< \f$\pi/2\f$
-#define PIon4 0.78539816339          ///< \f$\pi/4\f$
 #define RT2PI 2.5066282746310005024  ///< \f$\sqrt{2\pi}\f$
-
-/* Natural log of 2 */
-#define LN2 0.693147180559945 ///< \f$\ln{2}\f$
 
 /* Convert between angles*/
 #define RAD2DEG 0.01745329251 ///< 1 deg [rad]
@@ -71,6 +69,9 @@
 
 //! Year [s]
 #define YEAR 31457280.0
+
+//! Day [s]
+#define DAY 86400.0
 
 //! Astronomical unit [m]
 #define AU 1.49597870700e11

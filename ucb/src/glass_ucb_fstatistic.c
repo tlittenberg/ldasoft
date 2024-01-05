@@ -204,7 +204,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     if (filter_id == 1)
     {
         A_f      = 2.0;
-        iota_f   = PIon2;
+        iota_f   = M_PI_2;
         psi_f    = 0.0;
         phase_f  = 0.0;
         
@@ -224,8 +224,8 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     } else if (filter_id == 2){
         
         A_f      = 2.0;
-        iota_f   = PIon2;
-        psi_f    = PIon4;
+        iota_f   = M_PI_2;
+        psi_f    = M_PI_4;
         phase_f  = M_PI;
         
         params[3] = A_f;
@@ -243,9 +243,9 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     } else if (filter_id == 3){
         
         A_f      = 2.0;
-        iota_f   = PIon2;
+        iota_f   = M_PI_2;
         psi_f    = 0.0;
-        phase_f  = 3.0*PIon2;
+        phase_f  = 3.0*M_PI_2;
         
         params[3] = A_f;
         params[4] = iota_f;
@@ -262,9 +262,9 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     } else {
         
         A_f      = 2.0;
-        iota_f   = PIon2;
-        psi_f    = PIon4;
-        phase_f  = PIon2;
+        iota_f   = M_PI_2;
+        psi_f    = M_PI_4;
+        phase_f  = M_PI_2;
         
         params[3] = A_f;
         params[4] = iota_f;

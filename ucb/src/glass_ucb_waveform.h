@@ -167,9 +167,9 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
 /**
  \brief Galactic binary waveform generator using fast-slow decomposition first described in <a href="https://journals.aps.org/prd/abstract/10.1103/PhysRevD.76.083006">Cornish and Littenberg, PRD 76, 083006</a>.
 
- Computes the frequency domain TDI response to a circular, slowly evolving, binary with parameters params.  The detector geometry is defined in Orbit.  The format of the TDI data, either "phase" or "frequency" is specified by format.  The TDI response is defined in LISA_tdi() (phase) or LISA_tdi_FF() (frequency).
+ Computes the frequency domain TDI response to a circular, slowly evolving, binary with parameters params.  The detector geometry is defined in Orbit.  The format of the TDI data, either "phase", "frequency", or "sangria", is specified by format.  The TDI response is defined in LISA_tdi() (phase), LISA_tdi_FF() (frequency), or LISA_tdi_Sangria() (frequency circa LDC2.1).
  
- The TDI response is returned for a single Michelson-like channel, or the two orthogonal channels A and E.  The T channel is practically a noise-only channel at typical UCB frequencies.
+ The TDI response is returned for the Michelson-like channels (XYZ), or the two orthogonal channels A and E.  The T channel is practically a noise-only channel at typical UCB frequencies and is therefore neglected.
  
  The array params[] is required to contain parameters: \f$ f_0T,\cos\theta,\phi,\log\mathcal{A},\cos\iota,\psi,\varphi_0\f$,
  where \f$\theta\f$ is the ecliptic co-latitude and \f$\phi\f$ is the ecliptic longitude.
@@ -177,16 +177,39 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
  
  
  @param[in] orbit LISA ephemerides
- @param[in] format TDI format, "phase" or "frequency"
+ @param[in] format TDI format, "phase" or "frequency" or "sangria"
  @param[in] T observation time \f$ T_{\rm obs}\ [{\rm s}]\f$
  @param[in] t0 start time of observations \f$ t_0\ [{\rm s}]\f$
  @param[in] params[] source parameters
  @param[in] NParams number of source parameters (7, 8, or 9)
  @param[in] BW source bandwidth [bins]
- @param[in] NI number of interferometer channels (1 for X, 2 for A,E)
- @param[out] X single Michelson channel (4-link constellation)
+ @param[in] NI number of interferometer channels (1 for X, 2 for A,E, 3 for X,Y,Z)
+ @param[out] X,Y,Z Michelson channels
  @param[out] A,E noise orthogonal TDI channels
  */
 void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, double params[], int NParams, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
+
+/**
+ \brief Wavelet domain galactic binary waveform generator as first described in <a href="https://https://journals.aps.org/prd/abstract/10.1103/PhysRevD.102.124038">Cornish, PRD 102, 124038</a>.
+
+ Computes the wavelet domain TDI response to a circular, slowly evolving, binary with parameters params.  The detector geometry is defined in Orbit.  The format of the TDI data is hard-coded to match the conventions of LDC2.1.
+ 
+ The TDI response is returned for the two orthogonal channels A and E.  The T channel is practically a noise-only channel at typical UCB frequencies and is therefore neglected.
+
+ The array params[] is required to contain parameters: \f$ f_0T,\cos\theta,\phi,\log\mathcal{A},\cos\iota,\psi,\varphi_0\f$,
+ where \f$\theta\f$ is the ecliptic co-latitude and \f$\phi\f$ is the ecliptic longitude.
+ Extra parameters for non-zero frequency evolution are optional: \f$ \dot{f}T^2, \ddot{f}T^3 \f$.
+ 
+ @param[in] orbit LISA ephemerides
+ @param[in] wdm defines wavelet basis
+ @param[in] Tobs observation time \f$ T_{\rm obs}\ [{\rm s}]\f$
+ @param[in] t0 start time of observations \f$ t_0\ [{\rm s}]\f$
+ @param[in] params[] source parameters
+ @param[in] NM
+ @param[in] HBW
+ @param[in] Alist,Elist list of active wavelet pixels for A and E channel
+ @param[in] waveA,waveE wavelet domain A and E channel response
+ */
+void galactic_binary_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int NM, double HBW, int *Alist, int *Elist, double *waveA, double *waveE);
 
 #endif /* ucb_waveform_h */

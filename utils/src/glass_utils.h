@@ -40,5 +40,6 @@
 #include "glass_data.h"
 #include "glass_math.h"
 #include "glass_gmm.h"
+#include "glass_wavelet.h"
 
 #endif /* utils_h */

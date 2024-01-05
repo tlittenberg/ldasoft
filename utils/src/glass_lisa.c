@@ -325,10 +325,9 @@ static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
      * A = (Z-X)/sqrt(2)
      * E = (X-2Y+Z)/sqrt(6)
      */
-    double invSQ2 = 0.707106781186547;
     double invSQ6 = 0.408248290463863;
     
-    *A = (Z-X)*invSQ2;
+    *A = (Z-X)*M_SQRT1_2;
     *E = (X-2*Y+Z)*invSQ6;
 
 }

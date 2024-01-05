@@ -9,6 +9,7 @@ add_library(glass_ucb STATIC glass_ucb_fstatistic.c glass_ucb_prior.c glass_ucb_
 include_directories ("${PROJECT_SOURCE_DIR}/utils/src/")
 include_directories ("${PROJECT_SOURCE_DIR}/ucb/src/")
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
+target_link_libraries(glass_ucb m ${GSL_LIBRARIES} ${HDF5_LIBRARIES})
 
 install(TARGETS glass_ucb DESTINATION lib)
 install(DIRECTORY "./" DESTINATION include FILES_MATCHING PATTERN "*.h")
