@@ -318,7 +318,7 @@ static void triple_angle(double cosA, double sinA, double cos2A, double *cos3A, 
     *sin3A = 2.*sinA*cos2A + sinA;
 }
 
-static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
+void XYZ2AE(double X, double Y, double Z, double *A, double *E)
 {
     /*
      * Conventions in ldc/common/series/tdi.py
@@ -332,7 +332,7 @@ static void XYZ2AE(double X, double Y, double Z, double *A, double *E)
 
 }
 
-static void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *T)
+void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *T)
 {
     /*
      * Conventions in ldc/common/series/tdi.py
@@ -989,5 +989,82 @@ void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName)
 
     /* Close the file. */
     H5Fclose(file);
+
+}
+
+void LISA_detector_tensor(double L, double eplus[4][4], double ecross[4][4], double x[4], double y[4], double z[4], double k[4], double dplus[4][4], double dcross[4][4], double kdotr[4][4])
+{
+
+    /*   Spacecraft position and separation vector   */
+    double r12[4]={0},r13[4]={0},r23[4]={0};
+
+    //Unit separation vector from spacecrafts i to j
+    r12[1] = (x[2] - x[1])/L;   r13[1] = (x[3] - x[1])/L;   r23[1] = (x[3] - x[2])/L;
+    r12[2] = (y[2] - y[1])/L;   r13[2] = (y[3] - y[1])/L;   r23[2] = (y[3] - y[2])/L;
+    r12[3] = (z[2] - z[1])/L;   r13[3] = (z[3] - z[1])/L;   r23[3] = (z[3] - z[2])/L;
+    
+    
+    //Zero arrays to be summed
+    dplus[1][2]  = dplus[1][3]  = dplus[2][1]  = dplus[2][3]  = dplus[3][1]  = dplus[3][2]  = 0.;
+    dcross[1][2] = dcross[1][3] = dcross[2][1] = dcross[2][3] = dcross[3][1] = dcross[3][2] = 0.;
+    
+    //Convenient quantities d+ & dx
+    for(int i=1; i<=3; i++)
+    {
+        for(int j=1; j<=3; j++)
+        {
+            dplus[1][2]  += r12[i]*r12[j]*eplus[i][j];   dcross[1][2] += r12[i]*r12[j]*ecross[i][j];
+            dplus[2][3]  += r23[i]*r23[j]*eplus[i][j];   dcross[2][3] += r23[i]*r23[j]*ecross[i][j];
+            dplus[1][3]  += r13[i]*r13[j]*eplus[i][j];   dcross[1][3] += r13[i]*r13[j]*ecross[i][j];
+        }
+    }
+    
+    //Make use of symmetry
+    dplus[2][1] = dplus[1][2];  dcross[2][1] = dcross[1][2];
+    dplus[3][2] = dplus[2][3];  dcross[3][2] = dcross[2][3];
+    dplus[3][1] = dplus[1][3];  dcross[3][1] = dcross[1][3];
+    
+    //Zero arrays to be summed
+    kdotr[1][2] = kdotr[1][3] = kdotr[2][1] = kdotr[2][3] = kdotr[3][1] = kdotr[3][2] = 0.;
+    for(int i=1; i<=3; i++)
+    {
+        kdotr[1][2] += k[i]*r12[i];   kdotr[1][3] += k[i]*r13[i];   kdotr[2][3] += k[i]*r23[i];
+    }
+    
+    //Make use of antisymmetry
+    kdotr[2][1] = -kdotr[1][2];
+    kdotr[3][1] = -kdotr[1][3];
+    kdotr[3][2] = -kdotr[2][3];
+}
+
+void LISA_polarization_tensor(double costh, double phi, double eplus[4][4], double ecross[4][4], double k[4])
+{
+    /*   Gravitational Wave basis vectors   */
+    double u[4],v[4];
+
+    /*   Sky location angles   */
+    double sinth = sqrt(1.0 - costh*costh);
+    double cosph = cos(phi);
+    double sinph = sin(phi);
+
+    /*   Tensor construction for building slowly evolving LISA response   */
+    //Gravitational Wave source basis vectors
+    u[1] =  costh*cosph;  u[2] =  costh*sinph;  u[3] = -sinth;
+    v[1] =  sinph;        v[2] = -cosph;        v[3] =  0.;
+    k[1] = -sinth*cosph;  k[2] = -sinth*sinph;  k[3] = -costh;
+    
+    //GW polarization basis tensors
+    /*
+     * LDC convention:
+     * https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc
+     */
+    for(int i=1;i<=3;i++)
+    {
+        for(int j=1;j<=3;j++)
+        {
+            eplus[i][j]  = v[i]*v[j] - u[i]*u[j];
+            ecross[i][j] = u[i]*v[j] + v[i]*u[j];
+        }
+    }
 
 }

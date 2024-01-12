@@ -206,10 +206,16 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
  @param[in] t0 start time of observations \f$ t_0\ [{\rm s}]\f$
  @param[in] params[] source parameters
  @param[in] NM
- @param[in] HBW
- @param[in] Alist,Elist list of active wavelet pixels for A and E channel
- @param[in] waveA,waveE wavelet domain A and E channel response
+ @param[in] BW bandwidth in Hz
+ @param[in] list list of active wavelet pixels for A and E channel
+ @param[out] X,Y,Z,A,E wavelet domain TDI channels
+ @param[in] NI number of TDI channels
  */
-void galactic_binary_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int NM, double HBW, int *Alist, int *Elist, double *waveA, double *waveE);
+void galactic_binary_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int NM, double BW, int *list, double *X, double *Y, double *Z, double *A, double *E, int NI);
+
+
+void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, struct TDI *Amplitude, struct TDI *Phase);
+void ResponseWavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double *params, double *TF, struct TDI *Amp, struct TDI *Phase, struct TDI *freq);
+void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, double *FF, double *kdotx, struct TDI *Fplus, struct TDI *Fcross);
 
 #endif /* ucb_waveform_h */

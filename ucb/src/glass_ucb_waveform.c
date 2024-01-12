@@ -442,20 +442,19 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     int BW2   = BW*2;
     double invBW2 = 1./(double)BW2;
     
-    /*   Gravitational Wave basis vectors   */
-    double u[4],v[4],k[4];
+    /*   Gravitational Wave location vector   */
+    double k[4];
     /*   Polarization basis tensors   */
     double eplus[4][4], ecross[4][4];
     /*   Spacecraft position and separation vector   */
     double *x, *y, *z;
-    double r12[4]={0},r13[4]={0},r23[4]={0};
     /*   Dot products   */
     double kdotx[4]={0},kdotr[4][4];
     /*   Convenient quantities   */
     double dplus[4][4],dcross[4][4];
     /*   GW source parameters   */
     double phi, psi, amp, Aplus, Across, f0, dfdt, d2fdt2, phi0;
-    double costh, sinth, cosph, sinph, cosi, cosps, sinps;
+    double costh, cosi, cosps, sinps;
     /*   Time and distance variables   */
     double t, xi[4] = {0};
     /*   Gravitational wave frequency & ratio of f and transfer frequency f*  */
@@ -494,13 +493,6 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         for(j=0; j<4; j++)
         {
             	d[i][j] = calloc((BW2+1),sizeof(double));
-		dplus[i][j] = 0.0;
-		dcross[i][j] = 0.0;
-		eplus[i][j] = 0.0;
-		ecross[i][j] = 0.0;
-		kdotr[i][j] = 0.0;
-		TR[i][j] = 0.0;
-		TI[i][j] = 0.0;
         }
     }
     
@@ -524,9 +516,6 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     q = (long)(f0*T);
     
     //Calculate cos and sin of sky position, inclination, polarization
-    sinth	= sqrt(1.0 - costh*costh); //sin(theta) >= 0 (theta -> 0,pi)
-    cosph	= cos(phi);
-    sinph	= sin(phi);
     cosps	= cos(2.*psi);
     sinps	= sin(2.*psi);
     
@@ -542,26 +531,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     DCr = -Aplus*sinps;
     DCi = -Across*cosps;
     
-    /*   Tensor construction for building slowly evolving LISA response   */
-    //Gravitational Wave source basis vectors
-    u[1] =  costh*cosph;  u[2] =  costh*sinph;  u[3] = -sinth;
-    v[1] =  sinph;        v[2] = -cosph;        v[3] =  0.;
-    k[1] = -sinth*cosph;  k[2] = -sinth*sinph;  k[3] = -costh;
-    
-    //GW polarization basis tensors
-    /*
-     * LDC convention:
-     * https://gitlab.in2p3.fr/LISA/LDC/-/blob/develop/ldc/waveform/fastGB/GB.cc
-     */
-    for(i=1;i<=3;i++)
-    {
-        for(j=1;j<=3;j++)
-        {
-            eplus[i][j]  = v[i]*v[j] - u[i]*u[j];
-            ecross[i][j] = u[i]*v[j] + v[i]*u[j];
-        }
-    }
-    
+    LISA_polarization_tensor(costh, phi, eplus, ecross, k);
     
     /* Main loop over signal bandwidth */
     for(n=1; n<=BW; n++)
@@ -572,8 +542,13 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         //Calculate position of each spacecraft at time t
         (*orbit->orbit_function)(orbit, t, x, y, z);
         
+        //Form LISA detector tensor et al based on spacecraft and source location
+        LISA_detector_tensor(orbit->L,eplus,ecross,x,y,z,k,dplus,dcross,kdotr);
+        
+        //Calculating LISA Transfer function
         for(i=1; i<=3; i++)
         {
+            //Dot product of propogation vector with location of spacecrat i
             kdotx[i] = (x[i]*k[1]+y[i]*k[2]+z[i]*k[3])/CLIGHT;
             
             //Wave arrival time at spacecraft i
@@ -590,50 +565,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
             
             //Ratio of true frequency to transfer frequency
             fonfs[i] = f[i]/orbit->fstar;
-        }
-        
-        
-        //Unit separation vector from spacecrafts i to j
-        r12[1] = (x[2] - x[1])/orbit->L;   r13[1] = (x[3] - x[1])/orbit->L;   r23[1] = (x[3] - x[2])/orbit->L;
-        r12[2] = (y[2] - y[1])/orbit->L;   r13[2] = (y[3] - y[1])/orbit->L;   r23[2] = (y[3] - y[2])/orbit->L;
-        r12[3] = (z[2] - z[1])/orbit->L;   r13[3] = (z[3] - z[1])/orbit->L;   r23[3] = (z[3] - z[2])/orbit->L;
-        
-        
-        //Zero arrays to be summed
-        dplus[1][2]  = dplus[1][3]  = dplus[2][1]  = dplus[2][3]  = dplus[3][1]  = dplus[3][2]  = 0.;
-        dcross[1][2] = dcross[1][3] = dcross[2][1] = dcross[2][3] = dcross[3][1] = dcross[3][2] = 0.;
-        
-        //Convenient quantities d+ & dx
-        for(i=1; i<=3; i++)
-        {
-            for(j=1; j<=3; j++)
-            {
-                dplus[1][2]  += r12[i]*r12[j]*eplus[i][j];   dcross[1][2] += r12[i]*r12[j]*ecross[i][j];
-                dplus[2][3]  += r23[i]*r23[j]*eplus[i][j];   dcross[2][3] += r23[i]*r23[j]*ecross[i][j];
-                dplus[1][3]  += r13[i]*r13[j]*eplus[i][j];   dcross[1][3] += r13[i]*r13[j]*ecross[i][j];
-            }
-        }
-        
-        //Make use of symmetry
-        dplus[2][1] = dplus[1][2];  dcross[2][1] = dcross[1][2];
-        dplus[3][2] = dplus[2][3];  dcross[3][2] = dcross[2][3];
-        dplus[3][1] = dplus[1][3];  dcross[3][1] = dcross[1][3];
-        
-        //Zero arrays to be summed
-        kdotr[1][2] = kdotr[1][3] = kdotr[2][1] = kdotr[2][3] = kdotr[3][1] = kdotr[3][2] = 0.;
-        for(i=1; i<=3; i++)
-        {
-            kdotr[1][2] += k[i]*r12[i];   kdotr[1][3] += k[i]*r13[i];   kdotr[2][3] += k[i]*r23[i];
-        }
-        
-        //Make use of antisymmetry
-        kdotr[2][1] = -kdotr[1][2];
-        kdotr[3][1] = -kdotr[1][3];
-        kdotr[3][2] = -kdotr[2][3];
-        
-        //Calculating Transfer function
-        for(i=1; i<=3; i++)
-        {
+
             //Argument of complex exponentials
             /*
              * LDC phase parameter in key files is
@@ -680,7 +612,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
                      * Set to match Sangria LDC convention
                      * which defines the GW as e(-i Phi)
                     */
-                    //Real and imaginry components of complex exponential
+                    //Real and imaginary components of complex exponential
                     double tran2r = cos(arg1 - arg2);
                     double tran2i = sin(arg1 - arg2);
 
@@ -777,21 +709,19 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
 
 
 
-static void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, double *FF, double *kdotx, double *FpAR, double *FpAI, double *FcAR, double *FcAI, double *FpER, double *FpEI, double *FcER, double *FcEI)
+void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, double *FF, double *kdotx, struct TDI *Fplus, struct TDI *Fcross)
 {
-    
     /*   Indicies   */
     int i, j, k, n;
     
     /*   Gravitational Wave basis vectors   */
-    double u[4],v[4],kv[4];
+    double kv[4];
     
     /*   Polarization basis tensors   */
     double eplus[4][4], ecross[4][4];
     
     /*   Spacecraft position and separation vector   */
     double *x, *y, *z;
-    double r12[4]={0},r13[4]={0},r23[4]={0};
     double r10[4]={0},r20[4]={0},r30[4]={0};
     
     double q1, q2, q3, q4;
@@ -801,16 +731,14 @@ static void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, 
 
     /*   GW Source data   */
     double phi, psi;
-    double costh, sinth, cosph, sinph, cosps, sinps;
+    double costh, cosps, sinps;
     
     /*   Time and distance variables   */
     double t, xa, ya, za;
     
     /*   Miscellaneous  */
     double xi;
-    
-    double fpx, fcx, fpy, fcy, fpz, fcz;
-    
+        
     double TR[4][4], TI[4][4];
     double kdr[4][4];
     double kdg[4];
@@ -843,33 +771,20 @@ static void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, 
     fddot0 = params[8]/(Tobs*Tobs*Tobs);
     
     phi = params[2];   // EclipticLongitude
-    
+    costh = params[1]; // CosineEclipticCoLatitude
+
     // conventions are flipped relative to BH code
-    psi = -params[5];   // polarization
+    psi = -params[5];   // Polarization
     
     //Calculate cos and sin of sky position, inclination, polarization
-    costh = params[1];   sinth = sqrt(1.0-costh*costh);
-    cosph = cos(phi);     sinph = sin(phi);
-    cosps = cos(2.*psi);  sinps = sin(2.*psi);
-    
+    cosps = cos(2.*psi);
+    sinps = sin(2.*psi);
     
     /*   Tensor basis  */
     // Note that while this basis differs from the BH code, it amounts to a chain of sign for
     // eplus and ecross, which we correct for with an overall minus sign in the response
-    u[1] =  costh*cosph;  u[2] =  costh*sinph;  u[3] = -sinth;
-    v[1] =  sinph;        v[2] = -cosph;        v[3] =  0.;
-    kv[1] = -sinth*cosph;  kv[2] = -sinth*sinph; kv[3] = -costh;
-    
-    
-    for(i=1;i<=3;i++)
-    {
-        for(j=1;j<=3;j++)
-        {
-            eplus[i][j]  = u[i]*u[j] - v[i]*v[j];
-            ecross[i][j] = u[i]*v[j] + v[i]*u[j];
-        }
-    }
-    
+    LISA_polarization_tensor(costh,phi,eplus,ecross,kv);
+
     /*   Main Loop   */
     for(n=0; n< NF; n++)
     {
@@ -893,26 +808,14 @@ static void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, 
         FF[n] = f0+fdot0*xi+0.5*fddot0*xi*xi;
         
         fr = FF[n]/(2.0*orbit->fstar);
-        
-        //Unit separation vector from spacecraft i to j
-        r12[1] = (x[2] - x[1])/orbit->L;   r13[1] = (x[3] - x[1])/orbit->L;   r23[1] = (x[3] - x[2])/orbit->L;
-        r12[2] = (y[2] - y[1])/orbit->L;   r13[2] = (y[3] - y[1])/orbit->L;   r23[2] = (y[3] - y[2])/orbit->L;
-        r12[3] = (z[2] - z[1])/orbit->L;   r13[3] = (z[3] - z[1])/orbit->L;   r23[3] = (z[3] - z[2])/orbit->L;
+
+        LISA_detector_tensor(orbit->L,eplus,ecross,x,y,z,kv,dplus,dcross,kdr);
         
         // These are not unit vectors. Just pulling out the L scaling
         r10[1] = (xa-x[1])/orbit->L;   r10[2] = (ya-y[1])/orbit->L;  r10[3] = (za-z[1])/orbit->L;
         r20[1] = (xa-x[2])/orbit->L;   r20[2] = (ya-y[2])/orbit->L;  r20[3] = (za-z[2])/orbit->L;
         r30[1] = (xa-x[3])/orbit->L;   r30[2] = (ya-y[3])/orbit->L;  r30[3] = (za-z[3])/orbit->L;
-        
-        kdr[1][2] = 0.0;
-        for(k=1; k<=3; k++) kdr[1][2] += kv[k]*r12[k];
-        kdr[1][3] = 0.0;
-        for(k=1; k<=3; k++) kdr[1][3] += kv[k]*r13[k];
-        kdr[2][3] = 0.0;
-        for(k=1; k<=3; k++) kdr[2][3] += kv[k]*r23[k];
-        
-        kdr[2][1] = -kdr[1][2];  kdr[3][1] = -kdr[1][3];  kdr[3][2] = -kdr[2][3];
-        
+                
         kdg[1] = 0.0;
         for(k=1; k<=3; k++) kdg[1] += kv[k]*r10[k];
         kdg[2] = 0.0;
@@ -938,54 +841,33 @@ static void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, 
             }
         }
         
-        dplus[1][2] = dplus[1][3] = dplus[2][1] = dplus[2][3] = dplus[3][1] = dplus[3][2] = 0.;
-        dcross[1][2] = dcross[1][3] = dcross[2][1] = dcross[2][3] = dcross[3][1] = dcross[3][2] = 0.;
-        //Convenient quantities d+ & dx
-        for(i=1; i<=3; i++)
-        {
-            for(j=1; j<=3; j++)
-            {
-                dplus[1][2]  += r12[i]*r12[j]*eplus[i][j];   dcross[1][2] += r12[i]*r12[j]*ecross[i][j];
-                dplus[2][3]  += r23[i]*r23[j]*eplus[i][j];   dcross[2][3] += r23[i]*r23[j]*ecross[i][j];
-                dplus[1][3]  += r13[i]*r13[j]*eplus[i][j];   dcross[1][3] += r13[i]*r13[j]*ecross[i][j];
-            }
-        }
+        int re = 2*n;
+        int im = 2*n+1;
+                
+        Fplus->X[re]  = 0.5*( ( dplus[1][2]*cosps + dcross[1][2]*sinps) * TR[1][2] - ( dplus[1][3]*cosps + dcross[1][3]*sinps) * TR[1][3] );
+        Fcross->X[re] = 0.5*( (-dplus[1][2]*sinps + dcross[1][2]*cosps) * TR[1][2] - (-dplus[1][3]*sinps + dcross[1][3]*cosps) * TR[1][3] );
         
-        dplus[2][1] = dplus[1][2];  dcross[2][1] = dcross[1][2];
-        dplus[3][2] = dplus[2][3];  dcross[3][2] = dcross[2][3];
-        dplus[3][1] = dplus[1][3];  dcross[3][1] = dcross[1][3];
+        Fplus->Y[re]  = 0.5*( ( dplus[2][3]*cosps + dcross[2][3]*sinps) * TR[2][3] - ( dplus[2][1]*cosps + dcross[2][1]*sinps) * TR[2][1] );
+        Fcross->Y[re] = 0.5*( (-dplus[2][3]*sinps + dcross[2][3]*cosps) * TR[2][3] - (-dplus[2][1]*sinps + dcross[2][1]*cosps) * TR[2][1] );
         
-        fpx = 0.5*( (dplus[1][2]*cosps+dcross[1][2]*sinps)*TR[1][2] - (dplus[1][3]*cosps+dcross[1][3]*sinps)*TR[1][3] );
-        fcx = 0.5*( (-dplus[1][2]*sinps+dcross[1][2]*cosps)*TR[1][2] - (-dplus[1][3]*sinps + dcross[1][3]*cosps)*TR[1][3] );
+        Fplus->Z[re]  = 0.5*( ( dplus[3][1]*cosps + dcross[3][1]*sinps) * TR[3][1] - ( dplus[3][2]*cosps + dcross[3][2]*sinps) * TR[3][2] );
+        Fcross->Z[re] = 0.5*( (-dplus[3][1]*sinps + dcross[3][1]*cosps) * TR[3][1] - (-dplus[3][2]*sinps + dcross[3][2]*cosps) * TR[3][2] );
+                
+        Fplus->X[im]  = 0.5*( ( dplus[1][2]*cosps + dcross[1][2]*sinps) * TI[1][2] - ( dplus[1][3]*cosps + dcross[1][3]*sinps) * TI[1][3] );
+        Fcross->X[im] = 0.5*( (-dplus[1][2]*sinps + dcross[1][2]*cosps) * TI[1][2] - (-dplus[1][3]*sinps + dcross[1][3]*cosps) * TI[1][3] );
         
-        fpy = 0.5*( (dplus[2][3]*cosps+dcross[2][3]*sinps)*TR[2][3] - (dplus[2][1]*cosps+dcross[2][1]*sinps)*TR[2][1] );
-        fcy = 0.5*( (-dplus[2][3]*sinps+dcross[2][3]*cosps)*TR[2][3] - (-dplus[2][1]*sinps + dcross[2][1]*cosps)*TR[2][1] );
+        Fplus->Y[im]  = 0.5*( ( dplus[2][3]*cosps + dcross[2][3]*sinps) * TI[2][3] - ( dplus[2][1]*cosps + dcross[2][1]*sinps) * TI[2][1] );
+        Fcross->Y[im] = 0.5*( (-dplus[2][3]*sinps + dcross[2][3]*cosps) * TI[2][3] - (-dplus[2][1]*sinps + dcross[2][1]*cosps) * TI[2][1] );
         
-        fpz = 0.5*( (dplus[3][1]*cosps+dcross[3][1]*sinps)*TR[3][1] - (dplus[3][2]*cosps+dcross[3][2]*sinps)*TR[3][2] );
-        fcz = 0.5*( (-dplus[3][1]*sinps+dcross[3][1]*cosps)*TR[3][1] - (-dplus[3][2]*sinps + dcross[3][2]*cosps)*TR[3][2] );
+        Fplus->Z[im]  = 0.5*( ( dplus[3][1]*cosps + dcross[3][1]*sinps) * TI[3][1] - ( dplus[3][2]*cosps + dcross[3][2]*sinps) * TI[3][2] );
+        Fcross->Z[im] = 0.5*( (-dplus[3][1]*sinps + dcross[3][1]*cosps) * TI[3][1] - (-dplus[3][2]*sinps + dcross[3][2]*cosps) * TI[3][2] );
+                
+        XYZ2AE(Fplus->X[re],Fplus->Y[re],Fplus->Z[re],&Fplus->A[re],&Fplus->E[re]);
+        XYZ2AE(Fplus->X[im],Fplus->Y[im],Fplus->Z[im],&Fplus->A[im],&Fplus->E[im]);
         
-        FpAR[n] = (2.0*fpx-fpy-fpz)/3.0;
-        FcAR[n] = (2.0*fcx-fcy-fcz)/3.0;
-        
-        FpER[n] = (fpz-fpy)/SQ3;
-        FcER[n] = (fcz-fcy)/SQ3;
-        
-        fpx = 0.5*( (dplus[1][2]*cosps+dcross[1][2]*sinps)*TI[1][2] - (dplus[1][3]*cosps+dcross[1][3]*sinps)*TI[1][3] );
-        fcx = 0.5*( (-dplus[1][2]*sinps+dcross[1][2]*cosps)*TI[1][2] - (-dplus[1][3]*sinps + dcross[1][3]*cosps)*TI[1][3] );
-        
-        fpy = 0.5*( (dplus[2][3]*cosps+dcross[2][3]*sinps)*TI[2][3] - (dplus[2][1]*cosps+dcross[2][1]*sinps)*TI[2][1] );
-        fcy = 0.5*( (-dplus[2][3]*sinps+dcross[2][3]*cosps)*TI[2][3] - (-dplus[2][1]*sinps + dcross[2][1]*cosps)*TI[2][1] );
-        
-        fpz = 0.5*( (dplus[3][1]*cosps+dcross[3][1]*sinps)*TI[3][1] - (dplus[3][2]*cosps+dcross[3][2]*sinps)*TI[3][2] );
-        fcz = 0.5*( (-dplus[3][1]*sinps+dcross[3][1]*cosps)*TI[3][1] - (-dplus[3][2]*sinps + dcross[3][2]*cosps)*TI[3][2] );
-        
-        FpAI[n] = (2.0*fpx-fpy-fpz)/3.0;
-        FcAI[n] = (2.0*fcx-fcy-fcz)/3.0;
-        
-        FpEI[n] = (fpz-fpy)/SQ3;
-        FcEI[n] = (fcz-fcy)/SQ3;
-        
-        
+        XYZ2AE(Fcross->X[re],Fcross->Y[re],Fcross->Z[re],&Fcross->A[re],&Fcross->E[re]);
+        XYZ2AE(Fcross->X[im],Fcross->Y[im],Fcross->Z[im],&Fcross->A[im],&Fcross->E[im]);
+
     }
         
     
@@ -995,7 +877,25 @@ static void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, 
     
     return;
 }
-static void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, double *AAmp, double *EAmp, double *APhase, double *EPhase)
+
+static void tdi_amp_and_phase_shift(double *Fp, double *Fc, double Ap, double Ac, double *phase, double *cycle, double *dA)
+{
+    double RR = Fp[0]*Ap - Fc[1]*Ac;
+    double II = Fc[0]*Ac + Fp[1]*Ap;
+    
+    double old_phase = *phase;
+    *phase = atan2(II,RR);
+    
+    //wrap to [0,2pi]
+    if(*phase < 0.0) *phase += PI2;
+    
+    if(*phase - old_phase > 6.0) *cycle -= PI2;
+    if(old_phase - *phase > 6.0) *cycle += PI2;
+    
+    *dA = sqrt(RR*RR + II*II);
+}
+
+void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, struct TDI *Amplitude, struct TDI *Phase)
 {
     
     /*   Indicies   */
@@ -1007,15 +907,15 @@ static void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, 
     /*   Miscellaneous  */
     double xi;
     
-    double pa, pe;
-    double paold, peold;
-    double ja, je;
+    /*   Phase and amplitude shifts     */
+    /*   [0,1,2,3,4,5] -> [X,Y,Z,A,E,T] */
+    double dphase[6]={0.};
+    double cycle[6]={0.};
+    double dAmp[6]={1.};
     
     double *FF;
-    double *FpAR, *FcAR, *FpER, *FcER;
-    double *FpAI, *FcAI, *FpEI, *FcEI;
     
-    double t, Amp, Ampx, Phase, RR, II;
+    double t, A, Phi, Amp;
     
     double fonfs;
     
@@ -1027,24 +927,14 @@ static void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, 
     
     kdotx = (double*)malloc(sizeof(double)* (NF));
     FF = (double*)malloc(sizeof(double)* (NF));
-    FpAR = (double*)malloc(sizeof(double)* (NF));
-    FcAR = (double*)malloc(sizeof(double)* (NF));
-    FpER = (double*)malloc(sizeof(double)* (NF));
-    FcER = (double*)malloc(sizeof(double)* (NF));
-    FpAI = (double*)malloc(sizeof(double)* (NF));
-    FcAI = (double*)malloc(sizeof(double)* (NF));
-    FpEI = (double*)malloc(sizeof(double)* (NF));
-    FcEI = (double*)malloc(sizeof(double)* (NF));
+        
+    struct TDI *Fplus  = malloc(sizeof(struct TDI));
+    struct TDI *Fcross = malloc(sizeof(struct TDI));
     
-    RAantenna(orbit, params, Tobs, NF, TF, FF, kdotx, FpAR, FpAI, FcAR, FcAI, FpER, FpEI, FcER, FcEI);
-    
-    for(n=0; n< NF; n++)
-    {
-        AAmp[n] = 0.0;
-        EAmp[n] = 0.0;
-        APhase[n] = 0.0;
-        EPhase[n] = 0.0;
-    }
+    alloc_tdi(Fplus, NF, 3);
+    alloc_tdi(Fcross, NF, 3);
+
+    RAantenna(orbit, params, Tobs, NF, TF, FF, kdotx, Fplus, Fcross);
     
     /*
      params[0] // f*Tobs
@@ -1067,217 +957,228 @@ static void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, 
     fdot0 = params[7]/(Tobs*Tobs);
     fddot0 = params[8]/(Tobs*Tobs*Tobs);
     
-    Amp = exp(params[3]);
+    A = exp(params[3]);
     
     Aplus = 0.5*(1.+cosi*cosi);
     Across = -cosi;
     
-    n = 0;
-    RR = FpAR[n]*Aplus - FcAI[n]*Across;
-    II = FcAR[n]*Across + FpAI[n]*Aplus;
-    paold = atan2(II,RR);
-    if(paold < 0.0) paold += PI2;
-    RR = FpER[n]*Aplus - FcEI[n]*Across;
-    II = FcER[n]*Across + FpEI[n]*Aplus;
-    peold = atan2(II,RR);
-    if(peold < 0.0) peold += PI2;
-    
-    ja = 0.0;
-    je = 0.0;
-    
-    //out = fopen("map_fast.dat","w");
-    for(n=0; n< NF; n++)
+    tdi_amp_and_phase_shift(Fplus->X, Fcross->X, Aplus, Across, &dphase[0], &cycle[0], &dAmp[0]);
+    tdi_amp_and_phase_shift(Fplus->Y, Fcross->Y, Aplus, Across, &dphase[1], &cycle[1], &dAmp[1]);
+    tdi_amp_and_phase_shift(Fplus->Z, Fcross->Z, Aplus, Across, &dphase[2], &cycle[2], &dAmp[2]);
+    tdi_amp_and_phase_shift(Fplus->A, Fcross->A, Aplus, Across, &dphase[3], &cycle[3], &dAmp[3]);
+    tdi_amp_and_phase_shift(Fplus->E, Fcross->E, Aplus, Across, &dphase[4], &cycle[4], &dAmp[4]);
+
+    for(n=0; n<NF; n++)
     {
         // Barycenter time
         t = TF[n];
         
         // detector time (guiding center)
-        xi  = t - kdotx[n];
+        xi = t - kdotx[n];
         
         fonfs = FF[n]/orbit->fstar;
         
         // including leading order amplitude evolution and TDI + fractional frequency modifiers
-        Ampx = Amp*(1.0+0.66666666666666666666*fdot0/f0*xi)*(8.0*fonfs*sin(fonfs));
+        Amp = A*(1.0+0.66666666666666666666*fdot0/f0*xi)*(8.0*fonfs*sin(fonfs));
         
         //  - FF[n]/fstar  Derivation says this is needed in the phase. Doesn't seem to be.
         
         // This is the GW phase at the guiding center. The phase shifts at each spacecraft are
         // accounted for in the transfer function. We remove the carrier signal from the phase
-        //so as not to overwhelm the spline interpolation. It is restored in the response
-        Phase = PI2*(f0*xi - f0*t +0.5*fdot0*xi*xi + 0.1666666666666667*fddot0*xi*xi*xi) + phi0;
+        // so as not to overwhelm the spline interpolation. It is restored in the response
+        Phi = PI2*(f0*xi - f0*t + 0.5*fdot0*xi*xi + 0.1666666666666667*fddot0*xi*xi*xi) + phi0;
         
-        RR = FpAR[n]*Aplus - FcAI[n]*Across;
-        II = FcAR[n]*Across + FpAI[n]*Aplus;
-        
-        
-        pa = atan2(II,RR);
-        if(pa < 0.0) pa += PI2;
-        
-        if(pa-paold > 6.0) ja -= PI2;
-        if(paold-pa > 6.0) ja += PI2;
-        paold = pa;
-        
-        AAmp[n] = Ampx*sqrt(RR*RR+II*II);
-        APhase[n] = Phase+pa+ja;
-        
-        RR = FpER[n]*Aplus - FcEI[n]*Across;
-        II = FcER[n]*Across + FpEI[n]*Aplus;
-        
-        pe = atan2(II,RR);
-        if(pe < 0.0) pe += PI2;
-        
-        if(pe-peold > 6.0) je -= PI2;
-        if(peold-pe > 6.0) je += PI2;
-        peold = pe;
-        
-        EAmp[n] = Ampx*sqrt(RR*RR+II*II);
-        EPhase[n] = Phase+pe+je;
-                
+        tdi_amp_and_phase_shift(Fplus->X+2*n, Fcross->X+2*n, Aplus, Across, &dphase[0], &cycle[0], &dAmp[0]);
+        tdi_amp_and_phase_shift(Fplus->Y+2*n, Fcross->Y+2*n, Aplus, Across, &dphase[1], &cycle[1], &dAmp[1]);
+        tdi_amp_and_phase_shift(Fplus->Z+2*n, Fcross->Z+2*n, Aplus, Across, &dphase[2], &cycle[2], &dAmp[2]);
+        tdi_amp_and_phase_shift(Fplus->A+2*n, Fcross->A+2*n, Aplus, Across, &dphase[3], &cycle[3], &dAmp[3]);
+        tdi_amp_and_phase_shift(Fplus->E+2*n, Fcross->E+2*n, Aplus, Across, &dphase[4], &cycle[4], &dAmp[4]);
+
+        Amplitude->X[n] = A*dAmp[0];
+        Amplitude->Y[n] = A*dAmp[1];
+        Amplitude->Z[n] = A*dAmp[2];
+        Amplitude->A[n] = A*dAmp[3];
+        Amplitude->E[n] = A*dAmp[4];
+
+        Phase->X[n] = Phi + dphase[0] + cycle[0];
+        Phase->Y[n] = Phi + dphase[1] + cycle[1];
+        Phase->Z[n] = Phi + dphase[2] + cycle[2];
+        Phase->A[n] = Phi + dphase[3] + cycle[3];
+        Phase->E[n] = Phi + dphase[4] + cycle[4];
     }
-    
     
     /*   Free Arrays   */
     
     free(kdotx);
     free(FF);
-    
-    free(FcAR);
-    free(FpAR);
-    free(FcER);
-    free(FpER);
-    free(FcAI);
-    free(FpAI);
-    free(FcEI);
-    free(FpEI);
+        
+    free_tdi(Fplus);
+    free_tdi(Fcross);
     
     return;
 }
 
-static void ResponseWavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double *params, double *TF, double *AAmp, double *EAmp, double *APhase, double *EPhase, double *Af, double *Ef)
+void ResponseWavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double *params, double *TF, struct TDI *Amp, struct TDI *Phase, struct TDI *freq)
 {
     double t;
     int i;
     int Nts;
     double px;
     double f0;
-    double *TS;
-    double *AAS, *EAS, *APS, *EPS;
     
     f0 = params[0]/Tobs;
     
     // pad out past ends to avoid edge effects with the spline
     Nts = (int)(Tobs/DAY)+11;
+        
+    double *time_grid = malloc(Nts*sizeof(double));
+    struct TDI *amplitude_grid = malloc(sizeof(struct TDI));
+    struct TDI *phase_grid = malloc(sizeof(struct TDI));
+    alloc_tdi(amplitude_grid, Nts/2, 3);
+    alloc_tdi(phase_grid, Nts/2, 3);
     
-    TS = malloc(Nts*sizeof(double));
-    AAS = malloc(Nts*sizeof(double));
-    EAS = malloc(Nts*sizeof(double));
-    APS = malloc(Nts*sizeof(double));
-    EPS = malloc(Nts*sizeof(double));
-    
-    for (i=0; i< Nts; i++) TS[i] = (double)(i-5)*DAY;
+    for (i=0; i<Nts; i++) time_grid[i] = (double)(i-5)*DAY;
     
     // The Amplitude is returned with the antenna patterns.
-    Extrinsic(orbit, params, Tobs, Nts, TS, AAS, EAS, APS, EPS);
+    Extrinsic(orbit, params, Tobs, Nts, time_grid, amplitude_grid, phase_grid);
         
     gsl_interp_accel *acc = gsl_interp_accel_alloc();
     
-    gsl_spline *Aspline = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline_init(Aspline, TS, AAS, Nts);
+    gsl_spline *amplitude_spline_X = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *amplitude_spline_Y = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *amplitude_spline_Z = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *amplitude_spline_A = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *amplitude_spline_E = gsl_spline_alloc (gsl_interp_cspline, Nts);
+
+    gsl_spline_init(amplitude_spline_X, time_grid, amplitude_grid->A, Nts);
+    gsl_spline_init(amplitude_spline_Y, time_grid, amplitude_grid->A, Nts);
+    gsl_spline_init(amplitude_spline_Z, time_grid, amplitude_grid->A, Nts);
+    gsl_spline_init(amplitude_spline_A, time_grid, amplitude_grid->A, Nts);
+    gsl_spline_init(amplitude_spline_E, time_grid, amplitude_grid->E, Nts);
     
-    gsl_spline *Espline = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline_init(Espline, TS, EAS, Nts);
+    gsl_spline *phase_spline_X = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *phase_spline_Y = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *phase_spline_Z = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *phase_spline_A = gsl_spline_alloc (gsl_interp_cspline, Nts);
+    gsl_spline *phase_spline_E = gsl_spline_alloc (gsl_interp_cspline, Nts);
     
-    gsl_spline *PAspline = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline_init(PAspline, TS, APS, Nts);
+    gsl_spline_init(phase_spline_X, time_grid, phase_grid->A, Nts);
+    gsl_spline_init(phase_spline_Y, time_grid, phase_grid->A, Nts);
+    gsl_spline_init(phase_spline_Z, time_grid, phase_grid->A, Nts);
+    gsl_spline_init(phase_spline_A, time_grid, phase_grid->A, Nts);
+    gsl_spline_init(phase_spline_E, time_grid, phase_grid->E, Nts);
     
-    gsl_spline *PEspline = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline_init(PEspline, TS, EPS, Nts);
+    free(time_grid);
+    free_tdi(amplitude_grid);
+    free_tdi(phase_grid);
     
-    free(TS);
-    free(AAS);
-    free(EAS);
-    free(APS);
-    free(EPS);
-    
-    for (i=0; i< wdm->NT; i++)
+    for (i=0; i<wdm->NT; i++)
     {
         t = TF[i];
         
         // restore the Barycenter carrier phase
         px = PI2*f0*t;
         
-        APhase[i] = px + gsl_spline_eval(PAspline, t, acc);
-        EPhase[i] = px + gsl_spline_eval(PEspline, t, acc);
+        Phase->X[i] = px + gsl_spline_eval(phase_spline_X, t, acc);
+        Phase->Y[i] = px + gsl_spline_eval(phase_spline_Y, t, acc);
+        Phase->Z[i] = px + gsl_spline_eval(phase_spline_Z, t, acc);
+        Phase->A[i] = px + gsl_spline_eval(phase_spline_A, t, acc);
+        Phase->E[i] = px + gsl_spline_eval(phase_spline_E, t, acc);
         
-        AAmp[i] = gsl_spline_eval(Aspline, t, acc);
-        EAmp[i] = gsl_spline_eval(Espline, t, acc);
+        Amp->X[i] = gsl_spline_eval(amplitude_spline_X, t, acc);
+        Amp->Y[i] = gsl_spline_eval(amplitude_spline_Y, t, acc);
+        Amp->Z[i] = gsl_spline_eval(amplitude_spline_Z, t, acc);
+        Amp->A[i] = gsl_spline_eval(amplitude_spline_A, t, acc);
+        Amp->E[i] = gsl_spline_eval(amplitude_spline_E, t, acc);
         
-        // instaneous frequency of the A channel signal
-        Af[i] = f0 + gsl_spline_eval_deriv(PAspline, t, acc)/PI2;
-        
-        // instaneous frequency of the E channel signal
-        Ef[i] = f0 + gsl_spline_eval_deriv(PEspline, t, acc)/PI2;
+        freq->X[i] = f0 + gsl_spline_eval_deriv(phase_spline_X, t, acc)/PI2;
+        freq->Y[i] = f0 + gsl_spline_eval_deriv(phase_spline_Y, t, acc)/PI2;
+        freq->Z[i] = f0 + gsl_spline_eval_deriv(phase_spline_Z, t, acc)/PI2;
+        freq->A[i] = f0 + gsl_spline_eval_deriv(phase_spline_A, t, acc)/PI2;
+        freq->E[i] = f0 + gsl_spline_eval_deriv(phase_spline_E, t, acc)/PI2;
         
     }
     
     gsl_interp_accel_free(acc);
-    gsl_spline_free(Aspline);
-    gsl_spline_free(Espline);
-    gsl_spline_free(PAspline);
-    gsl_spline_free(PEspline);
+    gsl_spline_free(phase_spline_X);
+    gsl_spline_free(phase_spline_Y);
+    gsl_spline_free(phase_spline_Z);
+    gsl_spline_free(phase_spline_A);
+    gsl_spline_free(phase_spline_E);
+    gsl_spline_free(amplitude_spline_X);
+    gsl_spline_free(amplitude_spline_Y);
+    gsl_spline_free(amplitude_spline_Z);
+    gsl_spline_free(amplitude_spline_A);
+    gsl_spline_free(amplitude_spline_E);
     
     
     
 }
 
-void galactic_binary_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int NM, double HBW, int *Alist, int *Elist, double *waveA, double *waveE)
+void galactic_binary_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int NM, double BW, int *list, double *X, double *Y, double *Z, double *A, double *E, int NI)
 {
+        
+    int N = wdm->NT;
     
-    int i;
-    double DT;
+    double DT = Tobs/(double)(N);
     
-    double *AAmp, *EAmp, *APhase, *EPhase;
-    double *Af, *Ef;
-    double *TF;
-    
-    int Nt = wdm->NT;
-    
-    DT = Tobs/(double)(Nt);
-    
-    // indicates this pixel not used
-    for(i=0; i< NM; i++)
+    // clear contents of wavelet arrays
+    for(int i=0; i< NM; i++)
     {
-        Alist[i] = -1;
-        Elist[i] = -1;
-        waveA[i] = 0.0;
-        waveE[i] = 0.0;
+        X[i] = 0.0;
+        Y[i] = 0.0;
+        Z[i] = 0.0;
+        A[i] = 0.0;
+        E[i] = 0.0;
     }
     
-    AAmp = (double*)malloc(sizeof(double)* (Nt));
-    EAmp = (double*)malloc(sizeof(double)* (Nt));
-    APhase = (double*)malloc(sizeof(double)* (Nt));
-    EPhase = (double*)malloc(sizeof(double)* (Nt));
-    Af = (double*)malloc(sizeof(double)* (Nt));
-    Ef = (double*)malloc(sizeof(double)* (Nt));
-    TF = (double*)malloc(sizeof(double)* (Nt));
+    struct TDI *Amp   = malloc(sizeof(struct TDI));
+    struct TDI *freq  = malloc(sizeof(struct TDI));
+    struct TDI *Phase = malloc(sizeof(struct TDI));
     
-    for (i=0; i< Nt; i++)
+    alloc_tdi(Amp, N/2, NI);
+    alloc_tdi(freq, N/2, NI);
+    alloc_tdi(Phase, N/2, NI);
+
+    double *TF = calloc(N,sizeof(double));
+    for(int i=0; i<N; i++)
     {
-        TF[i] = t0+((double)(i))*DT;  // center of the pixel
+        TF[i] = t0 + (double)i * DT;  // center of the pixel
     }
     
-    ResponseWavelet(orbit, wdm, Tobs, params, TF, AAmp, EAmp, APhase, EPhase, Af, Ef);
+    ResponseWavelet(orbit, wdm, Tobs, params, TF, Amp, Phase, freq);
     
-    wavemake(wdm, HBW, APhase, Af, AAmp, Alist, waveA);
-    wavemake(wdm, HBW, EPhase, Ef, EAmp, Elist, waveE);
+    switch(NI)
+    {
+        case 1:
+            for(int i=0; i<NM; i++) list[i] = -1;
+            wavelet_transfrom_from_table(wdm, BW, Phase->X, freq->X, Amp->X, list, X);
+            break;
+            
+        case 2:
+            for(int i=0; i<NM; i++) list[i] = -1;
+            wavelet_transfrom_from_table(wdm, BW, Phase->A, freq->A, Amp->A, list, A);
+            
+            for(int i=0; i<NM; i++) list[i] = -1;
+            wavelet_transfrom_from_table(wdm, BW, Phase->E, freq->E, Amp->E, list, E);
+            break;
+            
+        case 3:
+            for(int i=0; i<NM; i++) list[i] = -1;
+            wavelet_transfrom_from_table(wdm, BW, Phase->X, freq->X, Amp->X, list, X);
+
+            for(int i=0; i<NM; i++) list[i] = -1;
+            wavelet_transfrom_from_table(wdm, BW, Phase->Y, freq->Y, Amp->Y, list, Y);
+            
+            for(int i=0; i<NM; i++) list[i] = -1;
+            wavelet_transfrom_from_table(wdm, BW, Phase->Z, freq->Z, Amp->Z, list, Z);
+            break;
+    }
     
-    free(AAmp);
-    free(EAmp);
-    free(APhase);
-    free(EPhase);
-    free(Af);
-    free(Ef);
+    free_tdi(Amp);
+    free_tdi(freq);
+    free_tdi(Phase);
+    
     free(TF);
-    
     
 }

@@ -68,7 +68,7 @@
 #define PC 3.0856775815e16
 
 //! Year [s]
-#define YEAR 31457280.0
+#define YEAR 3.15581497632e7
 
 //! Day [s]
 #define DAY 86400.0

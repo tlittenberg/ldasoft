@@ -313,7 +313,7 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
     free(wave);
 }
 
-void wavemake(struct Wavelets *wdm, double HBW, double *Phase, double *freq, double *Amp, int *list, double *wave)
+void wavelet_transfrom_from_table(struct Wavelets *wdm, double BW, double *Phase, double *freq, double *Amp, int *list, double *data)
 {
 
     int ii, jj, kk, mm;
@@ -321,6 +321,7 @@ void wavemake(struct Wavelets *wdm, double HBW, double *Phase, double *freq, dou
     double dx;
     double f, fmid, fsam;
     double c, s, x, y, z;
+    double BWon2 = BW/2.;
     
     mm = 0;
     
@@ -331,10 +332,10 @@ void wavemake(struct Wavelets *wdm, double HBW, double *Phase, double *freq, dou
         s = Amp[j]*sin(Phase[j]);
         
         // lowest frequency layer
-        kmin = (int)(ceil((f-HBW)/wdm->df));
+        kmin = (int)(ceil((f-BWon2)/wdm->df));
         
         // highest frequency layer
-        kmax = (int)(floor((f+HBW)/wdm->df));
+        kmax = (int)(floor((f+BWon2)/wdm->df));
         
         for(int k=kmin; k<=kmax; k++)
         {
@@ -357,11 +358,11 @@ void wavemake(struct Wavelets *wdm, double HBW, double *Phase, double *freq, dou
             
             if((j+k)%2 == 0)
             {
-                wave[mm] = (c*y-s*z);
+                data[mm] = (c*y-s*z);
             }
             else
             {
-                wave[mm] = -(c*z+s*y);
+                data[mm] = -(c*z+s*y);
             }
             list[mm] = j+k*wdm->NT;
             mm++;

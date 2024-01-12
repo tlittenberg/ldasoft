@@ -307,4 +307,41 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataNam
 
 void LISA_Read_HDF5_LDC_RADLER_TDI(struct TDI *tdi, char *fileName);
 
+/**
+ \brief Compute LISA detector tensor etc. based on spacecraft and source locations
+ 
+ See Eqs 40 and 41 of <a href="https://doi.org/10.1103/PhysRevD.76.083006">Cornish & Littenberg, Phys. Rev. D76, 083006</a>.
+ 
+ @param[in] L arm length
+ @param[in] eplus plus polarization tensor
+ @param[in] ecross cross polarization tensor
+ @param[in] x,y,z cartesian ecliptic coordinates of each spacecraft \f$\vec{r}_i=\vec{x}_i+\vec{y}_i+\vec{z}_i\f$
+ @param[in] k unit vector to source sky location to barycenter \f$\hat{k}\f$
+ @param[out] dplus plus polarization detector tensor before applying transfer function
+ @param[out] dcross cross polarization detector tensor before applying transfer function
+ @param[out] kdotr \f$\hat{k} \dot \vec{r}_i\f$
+ */
+void LISA_detector_tensor(double L, double eplus[4][4], double ecross[4][4], double x[4], double y[4], double z[4], double k[4], double dplus[4][4], double dcross[4][4], double kdotr[4][4]);
+
+
+/**
+ \brief Compute LISA polarization tensor etc. based on source locations
+ 
+ See Eq 30 <a href="https://doi.org/10.1103/PhysRevD.76.083006">Cornish & Littenberg, Phys. Rev. D76, 083006</a>.
+ 
+ @param[in] costheta cosine of ecliptic co-latitude
+ @param[in] phi ecliptic longitude
+ @param[out] eplus cross polarization tensor
+ @param[out] ecross cross polarization tensor
+ @param[out] k unit vector to source location \f$\hat{k}\f$
+ */
+void LISA_polarization_tensor(double costh, double phi, double eplus[4][4], double ecross[4][4], double k[4]);
+
+/**
+ \brief Convert noise-orthogonal AET channels from Michelson-like XYZ channels
+ 
+ */
+void XYZ2AE(double X, double Y, double Z, double *A, double *E);
+void XYZ2AET(double X, double Y, double Z, double *A, double *E, double *T);
+
 #endif /* lisa_h */
