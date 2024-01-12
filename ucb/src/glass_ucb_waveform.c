@@ -994,11 +994,11 @@ void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, double 
         tdi_amp_and_phase_shift(Fplus->A+2*n, Fcross->A+2*n, Aplus, Across, &dphase[3], &cycle[3], &dAmp[3]);
         tdi_amp_and_phase_shift(Fplus->E+2*n, Fcross->E+2*n, Aplus, Across, &dphase[4], &cycle[4], &dAmp[4]);
 
-        Amplitude->X[n] = A*dAmp[0];
-        Amplitude->Y[n] = A*dAmp[1];
-        Amplitude->Z[n] = A*dAmp[2];
-        Amplitude->A[n] = A*dAmp[3];
-        Amplitude->E[n] = A*dAmp[4];
+        Amplitude->X[n] = Amp*dAmp[0];
+        Amplitude->Y[n] = Amp*dAmp[1];
+        Amplitude->Z[n] = Amp*dAmp[2];
+        Amplitude->A[n] = Amp*dAmp[3];
+        Amplitude->E[n] = Amp*dAmp[4];
 
         Phase->X[n] = Phi + dphase[0] + cycle[0];
         Phase->Y[n] = Phi + dphase[1] + cycle[1];
