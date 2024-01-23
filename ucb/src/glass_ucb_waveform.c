@@ -768,7 +768,7 @@ void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, double 
     
     f0 = params[0]/Tobs;
     fdot0 = params[7]/(Tobs*Tobs);
-    fddot0 = params[8]/(Tobs*Tobs*Tobs);
+    fddot0 = 0.0;//params[8]/(Tobs*Tobs*Tobs);
     
     phi = params[2];   // EclipticLongitude
     costh = params[1]; // CosineEclipticCoLatitude
@@ -955,7 +955,7 @@ void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, double 
     
     f0 = params[0]/Tobs;
     fdot0 = params[7]/(Tobs*Tobs);
-    fddot0 = params[8]/(Tobs*Tobs*Tobs);
+    fddot0 = 0.0;//params[8]/(Tobs*Tobs*Tobs);
     
     A = exp(params[3]);
     

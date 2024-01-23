@@ -77,5 +77,6 @@ void wavelet_transform(struct Wavelets *wdm, double *data);
 void wavelet_index_to_pixel(struct Wavelets *wdm, int *i, int *j, int k);
 void wavelet_pixel_to_index(struct Wavelets *wdm, int i, int j, int *k);
 void wavelet_transfrom_from_table(struct Wavelets *wdm, double BW, double *Phase, double *freq, double *Amp, int *list, double *data);
+void wavelet_lookup_table(struct Wavelets *wdm);
 
 #endif /* glass_wavelet_h */

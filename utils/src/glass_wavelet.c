@@ -95,56 +95,6 @@ static void wavelet(struct Wavelets *wdm, int m, double *wave)
     
 }
 
-static void wavelet_lookup_table(struct Wavelets *wdm)
-{
-    double t,f,f0, phase;
-    
-    // it turns out that all the wavelet layers are the same modulo a
-    // shift in the reference frequency. Just have to do a single layer
-    // we pick one far from the boundaries to avoid edge effects
-    
-    double *wave = (double*)malloc(sizeof(double)*(wdm->N));
-    int ref_layer = wdm->NF/16;
-    wavelet(wdm, ref_layer, wave);
-    
-    // The odd wavelets coefficients can be obtained from the even.
-    // odd cosine = -even sine, odd sine = even cosine
-    // each wavelet covers a frequency band of width DW
-    // execept for the first and last wavelets
-    // there is some overlap. The wavelet pixels are of width
-    // DOM/PI, except for the first and last which have width
-    // half that
-    
-    f0 = (double)(ref_layer)*wdm->df;
-    
-    for(int j=0; j<wdm->fdot_steps; j++)  // loop over f-dot slices
-    {
-        int NT = wdm->table[j]->size/2;
-
-        for(int n=0; n<NT; n++)  // loop of frequency slices
-        {
-            f = f0 + ((double)(n-NT/2)+0.5)*wdm->deltaf;
-            
-            double real_coeff = 0.0;
-            double imag_coeff = 0.0;
-            
-            for(int i=0; i<wdm->N; i++)
-            {
-                t = ((double)(i-wdm->N/2))*wdm->dt;
-                phase = PI2*f*t + M_PI*wdm->fdot[j]*t*t;
-                real_coeff += wave[i]*cos(phase)*wdm->dt;
-                imag_coeff += wave[i]*sin(phase)*wdm->dt;
-            }
-            gsl_vector_set(wdm->table[j],2*n,real_coeff);
-            gsl_vector_set(wdm->table[j],2*n+1,imag_coeff);
-        }
-        
-    }
-    
-    free(wave);
-
-}
-
 void wavelet_window(struct Wavelets *wdm)
 {
     double *DX = (double*)malloc(sizeof(double)*(2*wdm->N));
@@ -372,4 +322,64 @@ void wavelet_transfrom_from_table(struct Wavelets *wdm, double BW, double *Phase
     }
     
 }
+
+void wavelet_lookup_table(struct Wavelets *wdm)
+{
+    double t,f,phase;
+    double f0;
+    char filename[128];
+    FILE *outstream;
+    
+    // it turns out that all the wavelet layers are the same modulo a
+    // shift in the reference frequency. Just have to do a single layer
+    // we pick one far from the boundaries to avoid edge effects
+    
+    double *wave = (double*)malloc(sizeof(double)*(wdm->N));
+    int ref_layer = wdm->NF/16;
+    wavelet(wdm, ref_layer, wave);
+    
+    // The odd wavelets coefficienst can be obtained from the even.
+    // odd cosine = -even sine, odd sine = even cosine
+    // each wavelet covers a frequency band of width DW
+    // execept for the first and last wasvelets
+    // there is some overlap. The wavelet pixels are of width
+    // DOM/PI, except for the first and last which have width
+    // half that
+    
+    f0 = (double)(ref_layer)*wdm->df;
+    
+
+    for(int j=0; j<wdm->fdot_steps; j++)  // loop over f-dot slices
+    {
+        sprintf(filename, "WDMcoeffs%d.bin", j);
+        outstream = fopen(filename,"wb");
+
+        int NT = wdm->table[j]->size/2;
+        
+        
+        for(int n=0; n<NT; n++)  // loop of frequency slices
+        {
+            f = f0 + ((double)(n-NT/2)+0.5)*wdm->deltaf;
+            
+            double real_coeff = 0.0;
+            double imag_coeff = 0.0;
+            
+            for(int i=0; i<wdm->N; i++)
+            {
+                t = ((double)(i-wdm->N/2))*wdm->dt;
+                phase = PI2*f*t + M_PI*wdm->fdot[j]*t*t;
+                real_coeff += wave[i]*cos(phase)*wdm->dt;
+                imag_coeff += wave[i]*sin(phase)*wdm->dt;
+            }
+            gsl_vector_set(wdm->table[j],2*n,real_coeff);
+            gsl_vector_set(wdm->table[j],2*n+1,imag_coeff);
+        }
+        
+        gsl_vector_fwrite(outstream, wdm->table[j]);
+        fclose(outstream);
+    }
+    
+    free(wave);
+}
+
 
