@@ -597,6 +597,117 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags)
     unpack_gsl_rft_output(tdi->E, E, N);
     unpack_gsl_rft_output(tdi->T, T, N);
     
+    
+    /* lets get rid of the high frequency ucbs */
+    if(flags->no_ucb_hi)
+    {
+        double *Xgal = calloc(N,sizeof(double));
+        double *Ygal = calloc(N,sizeof(double));
+        double *Zgal = calloc(N,sizeof(double));
+        double *Agal = calloc(N,sizeof(double));
+        double *Egal = calloc(N,sizeof(double));
+        double *Tgal = calloc(N,sizeof(double));
+
+        struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
+        LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
+        for(int n=0; n<N; n++)
+        {
+            int m = n_start+n;
+            Xgal[n] += tdi_td_dgb->X[m];
+            Ygal[n] += tdi_td_dgb->Y[m];
+            Zgal[n] += tdi_td_dgb->Z[m];
+            Agal[n] += tdi_td_dgb->A[m];
+            Egal[n] += tdi_td_dgb->E[m];
+            Tgal[n] += tdi_td_dgb->T[m];
+        }
+        free_tdi(tdi_td_dgb);
+        
+        struct TDI *tdi_td_igb = malloc(sizeof(struct TDI));
+        LISA_Read_HDF5_LDC_TDI(tdi_td_igb, data->fileName, "/sky/igb/tdi");
+        for(int n=0; n<N; n++)
+        {
+            int m = n_start+n;
+            Xgal[n] += tdi_td_igb->X[m];
+            Ygal[n] += tdi_td_igb->Y[m];
+            Zgal[n] += tdi_td_igb->Z[m];
+            Agal[n] += tdi_td_igb->A[m];
+            Egal[n] += tdi_td_igb->E[m];
+            Tgal[n] += tdi_td_igb->T[m];
+        }
+        free_tdi(tdi_td_igb);
+        
+        tukey(Xgal, alpha, N);
+        tukey(Ygal, alpha, N);
+        tukey(Zgal, alpha, N);
+        tukey(Agal, alpha, N);
+        tukey(Egal, alpha, N);
+        tukey(Tgal, alpha, N);
+
+        gsl_fft_real_transform (Xgal, 1, N, real, work);
+        gsl_fft_real_transform (Ygal, 1, N, real, work);
+        gsl_fft_real_transform (Zgal, 1, N, real, work);
+        gsl_fft_real_transform (Agal, 1, N, real, work);
+        gsl_fft_real_transform (Egal, 1, N, real, work);
+        gsl_fft_real_transform (Tgal, 1, N, real, work);
+        
+        for(int n=0; n<N; n++)
+        {
+            Xgal[n] *= rft_norm;
+            Ygal[n] *= rft_norm;
+            Zgal[n] *= rft_norm;
+            Agal[n] *= rft_norm;
+            Egal[n] *= rft_norm;
+            Tgal[n] *= rft_norm;
+        }
+        
+        /* Allocate data->tdi structure for Fourier transform output */
+        struct TDI *tdi_gal = malloc(sizeof(struct TDI));
+        alloc_tdi(tdi_gal, N/2, N_TDI_CHANNELS);
+        tdi_gal->delta = 1./Tobs;
+
+        /* unpack GSL-formatted arrays to the way GLASS expects them */
+        unpack_gsl_rft_output(tdi_gal->X, Xgal, N);
+        unpack_gsl_rft_output(tdi_gal->Y, Ygal, N);
+        unpack_gsl_rft_output(tdi_gal->Z, Zgal, N);
+        unpack_gsl_rft_output(tdi_gal->A, Agal, N);
+        unpack_gsl_rft_output(tdi_gal->E, Egal, N);
+        unpack_gsl_rft_output(tdi_gal->T, Tgal, N);
+
+        /* remove hi-f binaries */
+        for(int n=0; n<N/2; n++)
+        {
+            double f = (double)n/Tobs;
+            if(f>0.00504)
+            {
+                tdi->X[2*n]   -= tdi_gal->X[2*n];
+                tdi->X[2*n+1] -= tdi_gal->X[2*n+1];
+
+                tdi->Y[2*n]   -= tdi_gal->Y[2*n];
+                tdi->Y[2*n+1] -= tdi_gal->Y[2*n+1];
+
+                tdi->Z[2*n]   -= tdi_gal->Z[2*n];
+                tdi->Z[2*n+1] -= tdi_gal->Z[2*n+1];
+
+                tdi->A[2*n]   -= tdi_gal->A[2*n];
+                tdi->A[2*n+1] -= tdi_gal->A[2*n+1];
+
+                tdi->E[2*n]   -= tdi_gal->E[2*n];
+                tdi->E[2*n+1] -= tdi_gal->E[2*n+1];
+
+                tdi->T[2*n]   -= tdi_gal->T[2*n];
+                tdi->T[2*n+1] -= tdi_gal->T[2*n+1];
+            }
+        }
+        
+        free_tdi(tdi_gal);
+        free(Xgal);
+        free(Ygal);
+        free(Zgal);
+        free(Agal);
+        free(Egal);
+        free(Tgal);
+    }
+    
     /* Free memory */
     gsl_fft_real_wavetable_free (real);
     gsl_fft_real_workspace_free (work);
@@ -1022,6 +1133,7 @@ void print_glass_usage()
     fprintf(stdout,"       --h5-data     : strain data file (HDF5)             \n");
     fprintf(stdout,"       --h5-no-mbh   : remove mbhs from HDF5 data          \n");
     fprintf(stdout,"       --h5-no-ucb   : remove ucbs from HDF5 data          \n");
+    fprintf(stdout,"       --h5-no-ucb-hi: remove high f ucbs from HDF5 data   \n");
     fprintf(stdout,"       --h5-no-vgb   : remove vgbs from HDF5 data          \n");
     fprintf(stdout,"       --h5-no-noise : remove noise from HDF5 data (TODO)  \n");
     fprintf(stdout,"       --psd         : psd data file (ASCII)               \n");
@@ -1160,6 +1272,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
         {"calibration", no_argument, 0, 0 },
         {"h5-no-mbh",   no_argument, 0, 0 },
         {"h5-no-ucb",   no_argument, 0, 0 },
+        {"h5-no-ucb-hi",no_argument, 0, 0 },
         {"h5-no-vgb",   no_argument, 0, 0 },
         {"h5-no-noise", no_argument, 0, 0 },
         {0, 0, 0, 0}
@@ -1192,6 +1305,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
                 if(strcmp("h5-no-mbh",   long_options[long_index].name) == 0) flags->no_mbh     = 1;
                 if(strcmp("h5-no-ucb",   long_options[long_index].name) == 0) flags->no_ucb     = 1;
                 if(strcmp("h5-no-vgb",   long_options[long_index].name) == 0) flags->no_vgb     = 1;
+                if(strcmp("h5-no-ucb-hi",long_options[long_index].name) == 0) flags->no_ucb_hi  = 1;
                 if(strcmp("h5-no-noise", long_options[long_index].name) == 0) flags->no_noise   = 1;
                 if(strcmp("threads",     long_options[long_index].name) == 0) flags->threads    = atoi(optarg);
                 if(strcmp("rundir",      long_options[long_index].name) == 0) strcpy(flags->runDir,optarg);
