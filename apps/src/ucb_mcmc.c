@@ -225,6 +225,7 @@ int main(int argc, char *argv[])
                 flags->maximize = 0;//(mcmc<-flags->NBURN/2) ? 1 : 0;
             }
             
+            
             #pragma omp barrier
             // (parallel) loop over chains
             for(int ic=threadID; ic<NC; ic+=numThreads)
@@ -285,7 +286,7 @@ int main(int argc, char *argv[])
                     if(!flags->quiet)
                     {
                         print_chain_state(data, chain, model[chain->index[0]], flags, stdout, mcmc); //writing to file
-                        fprintf(stdout,"Sources: %i\n",model[chain->index[0]]->Nlive);
+                        fprintf(stdout,"Sources: %i/%i\n",model[chain->index[0]]->Nlive,model[chain->index[0]]->Neff-1);
                         print_acceptance_rates(proposal, UCB_PROPOSAL_NPROP, 0, stdout);
                     }
                     
@@ -305,6 +306,13 @@ int main(int argc, char *argv[])
                         chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
                     }
                 }
+                
+                if(mcmc>-flags->NBURN+flags->NBURN/10. && model[0]->Neff < model[0]->Nmax)
+                {
+                    for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
+                    mcmc = -flags->NBURN;
+                }
+                
                 mcmc++;
             }
             //Can't continue MCMC until single thread is finished

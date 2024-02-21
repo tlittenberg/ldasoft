@@ -64,8 +64,9 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
 {
     int n;
     
-    model->Nlive  = 1;
-    model->Nmax   = Nmax;
+    model->Nlive = 1;
+    model->Nmax  = Nmax;
+    model->Neff  = 2;
     model->t0 = 0.0;
 
     model->source = malloc(model->Nmax*sizeof(struct Source *));
@@ -94,8 +95,9 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
 void copy_model(struct Model *origin, struct Model *copy)
 {
     //Source parameters
-    copy->Nmax           = origin->Nmax;
-    copy->Nlive          = origin->Nlive;
+    copy->Nmax  = origin->Nmax;
+    copy->Neff  = origin->Neff;
+    copy->Nlive = origin->Nlive;
     for(int n=0; n<origin->Nlive; n++)
         copy_source(origin->source[n],copy->source[n]);
     

@@ -38,6 +38,7 @@ struct Model
     ///@name Source parameters
     ///@{
     int Nmax;   //!<maximum number of signals in model
+    int Neff;   //!<effective maximum number of signals during burn in
     int Nlive;  //!<current number of signals in model
     struct Source **source; //!<source structures for each signal in the model
     ///@}
