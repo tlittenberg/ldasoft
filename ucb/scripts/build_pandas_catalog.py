@@ -136,7 +136,7 @@ for key in keys:
                 chain_df.to_hdf(segOutFile, key=entryName + '_chain',mode='a')
     
                 # Build data frame for waveform for this particular source
-                wave_cols = ['Frequency','Waveform Real A','Waveform Imag A','Waveform Real E','Waveform Imag E']
+                wave_cols = ['Frequency','Waveform Real X','Waveform Imag X','Waveform Real Y','Waveform Imag Y','Waveform Real Z','Waveform Imag Z']
                 wave_df = pd.read_table(catDir+'/'+entryName +'_waveform.dat',delimiter = ' ',index_col = False, names=wave_cols)
                 # write chain for this entry to the HDF5 file
     
@@ -197,22 +197,27 @@ for key in keys:
     dataDir = 'data'
 
     # read the residual data 
-    dfr = pd.read_csv(dataDir+'/power_residual_t0.dat',
+    dfr = pd.read_csv(dataDir+'/power_residual.dat',
         sep= ' ',
         usecols=np.arange(0,11),
         index_col = False, 
         names=[
             'Frequency',
-            'Median A residual',
-            '25 A residual', 
-            '75 A residual',
-            '5 A residual',
-            '95 A residual',
-            'Median E residual',
-            '25 E residual', 
-            '75 E residual',
-            '5 E residual',
-            '95 E residual'])
+            'Median X residual',
+            '25 X residual',
+            '75 X residual',
+            '5 X residual',
+            '95 X residual',
+            'Median Y residual',
+            '25 Y residual',
+            '75 Y residual',
+            '5 Y residual',
+            '95 Y residual',
+            'Median Z residual',
+            '25 Z residual',
+            '75 Z residual',
+            '5 Z residual',
+            '95 Z residual'])
 
     # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
     N = len(dfr)
@@ -221,14 +226,15 @@ for key in keys:
     dfr.drop(np.arange(0,Npad),inplace=True)
 
     # read the residual variance data 
-    dfv = pd.read_csv(dataDir+'/variance_residual_t0.dat',
+    dfv = pd.read_csv(dataDir+'/variance_residual.dat',
         sep= ' ',
         usecols=np.arange(0,3),
         index_col = False, 
         names=[
             'Frequency',
-            'A residual variance',
-            'E residual variance'])
+            'X residual variance',
+            'Y residual variance',
+            'Z residual variance'])
 
     # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
     Npad = np.int(args.samples)
@@ -236,22 +242,27 @@ for key in keys:
     dfv.drop(np.arange(0,Npad),inplace=True)
     
     # read the power reconstruction data 
-    dfp = pd.read_csv(dataDir+'/power_reconstruction_t0.dat',
+    dfp = pd.read_csv(dataDir+'/power_reconstruction.dat',
         sep= ' ',
         usecols=np.arange(0,11),
         index_col = False, 
         names=[
             'Frequency',
-            'Median A power',
-            '25 A power', 
-            '75 A power',
-            '5 A power',
-            '95 A power',
-            'Median E power',
-            '25 E power', 
-            '75 E power',
-            '5 E power',
-            '95 E power'])
+            'Median X power',
+            '25 X power',
+            '75 X power',
+            '5 X power',
+            '95 X power',
+            'Median Y power',
+            '25 Y power',
+            '75 Y power',
+            '5 Y power',
+            '95 Y power',
+            'Median Z power',
+            '25 Z power',
+            '75 Z power',
+            '5 Z power',
+            '95 Z power'])
 
     # trim off the padding (pad length determined by length of file and specified number of samples. Keep the middle)
     dfp.drop(N-np.arange(Npad,0,-1),inplace=True)

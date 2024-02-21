@@ -122,5 +122,19 @@ void cholesky_decomp(double **A, double **L, int N);
  */
 void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint);
 
+/**
+\brief GLASS implementation of DBSCAN clustering algorithm
+ 
+ Density based clustering algorithm implemented here for 1D
+ data with simple Euclidean distance measure
+  
+ @param X set of data points to cluster
+ @param eps maximum distance between two samples to be considered neighbors
+ @param min minimum number of samples in a neighborhood to be considered a cluster
+ @param C cluster assignments mapping C[n] = M means X[n] is assigned to cluster M
+ @param K total number of clusters found
+ */
+void dbscan(gsl_vector *X, double eps, int min, int *C, int *K);
+
 
 #endif /* math_h */

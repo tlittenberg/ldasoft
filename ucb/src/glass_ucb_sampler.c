@@ -290,7 +290,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
         //slot new source in at end of live  source array
         int create = model_y->Nlive-1;
         
-        if(model_y->Nlive<model_x->Nmax)
+        if(model_y->Nlive < model_x->Neff)
         {
             //draw new parameters
             //TODO: insert draw from galaxy prior into draw_from_uniform_prior()
@@ -359,7 +359,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
         branch[0] = trunk;
         branch[1] = model_y->Nlive-1;
         
-        if(model_y->Nlive<model_x->Nmax)
+        if(model_y->Nlive<model_x->Neff)
         {
             //draw parameters for new sources (branches of trunk)
             for(int n=0; n<2; n++)
@@ -439,6 +439,88 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
 
 }
 
+static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal *proposal, int ic, double *logQxy, double *logQyx, double *logPy, double *penalty)
+{
+    
+    int N = model_x->Nlive;
+    gsl_vector * f = gsl_vector_alloc(N);
+    for(int n=0; n<N; n++) gsl_vector_set(f,n,model_x->source[n]->f0);
+    
+    //DBSCAN clustering of source frequencies
+    int K=0;                //number of clusters
+    //double eps = model_x->source[0]->BW/data->T; //use typical bandwidth as the max cluster spacing
+    double eps = 2/data->T; //use typical bandwidth as the max cluster spacing
+    int min = 2;          //minimum occupation number for cluster
+    int C[N];             //cluster assignments
+    if(N>=min) dbscan(f,eps,min,C,&K);
+    
+    model_y->Nlive=model_x->Nlive;
+    for(int n=0; n<N; n++)
+        copy_source(model_x->source[n],model_y->source[n]);
+
+    if(K>0) // if there are clusters to try killing
+    {
+        //pick a cluster to kill
+        int ckill = (int)(gsl_rng_uniform(chain->r[ic]) * (double)K);
+        double qmax = 0.0;
+        double qmin = data->T;
+        
+        //consolodate parameter structure
+        model_y->Nlive = 0;
+        for(int n=0; n<N; n++)
+        {
+            if(C[n]!=ckill)
+            {
+                copy_source(model_x->source[n],model_y->source[model_y->Nlive]);
+                model_y->Nlive++;
+            }
+            else
+            {
+                if(model_x->source[n]->params[0] < qmin) qmin = model_x->source[n]->params[0];
+                if(model_x->source[n]->params[0] > qmax) qmax = model_x->source[n]->params[0];
+            }
+        }
+        //restrict prior to cluster width
+        model_y->prior[0][0] = qmin-0.25;
+        model_y->prior[0][1] = qmax+0.25;
+
+        
+        //draw parameters and generate signal model for replacement
+        *logQyx += (*proposal->function)(data, model_y, model_y->source[model_y->Nlive], proposal, model_y->source[model_y->Nlive]->params, chain->r[ic]);
+        
+
+        if(flags->maximize)
+        {
+            maximize_signal_model(orbit, data, model_y, model_y->Nlive);
+            *penalty -= maximization_penalty(4,2*model_y->source[model_y->Nlive]->BW);
+        }
+        model_y->Nlive++;
+
+        generate_signal_model(orbit, data, model_y, -1);
+        for(int n=0; n<model_y->Nlive; n++)
+            model_y->source[n]->fisher_update_flag = 1;
+
+        //get reverse move (propose every source in cluster)
+        for(int n=0; n<N; n++)
+        {
+            if(C[n]==ckill)
+            {
+                *logQxy += (*proposal->density)(data, model_x, model_x->source[n], proposal, model_x->source[n]->params);
+                if(flags->maximize)
+                    *penalty += maximization_penalty(4,2*model_x->source[n]->BW);
+            }
+        }
+
+        //restore full prior range
+        model_y->prior[0][0] = model_x->prior[0][0];
+        model_y->prior[0][1] = model_x->prior[0][1];
+
+    }
+    else *logPy = -INFINITY;
+    
+    gsl_vector_free(f);
+}
+
 void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
@@ -475,9 +557,13 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     {
         rj_birth_death(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
     }
-    else /* split/merge move */
+    else /* split/merge moves */
     {
-        rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
+        if( gsl_rng_uniform(chain->r[ic]) < 0.5)
+            rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
+        
+        else
+            rj_cluster_bomb(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
     }
     
     
