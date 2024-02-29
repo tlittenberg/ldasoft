@@ -120,6 +120,8 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
 
  */
 double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double evaluate_uniform_prior(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, UNUSED gsl_rng *seed);
+
 
 /**
 \brief Fair draw from prior for location and orientation parameters

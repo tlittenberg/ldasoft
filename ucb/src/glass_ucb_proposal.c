@@ -338,6 +338,59 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     return logQ;
 }
 
+double evaluate_uniform_prior(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, UNUSED gsl_rng *seed)
+{
+    
+    double logQ = 0.0;
+    int n;
+    
+    //frequency
+    n = 0;
+    logQ -= model->logPriorVolume[n];
+    
+    //sky location
+    n = 1;
+    logQ -= model->logPriorVolume[n];
+    
+    n = 2;
+    logQ -= model->logPriorVolume[n];
+    
+    //amplitude
+    //n = 3;
+    logQ += evaluate_snr_prior(data, model, params);
+    
+    //inclination
+    n = 4;
+    logQ -= model->logPriorVolume[n];
+    
+    //polarization
+    n = 5;
+    logQ -= model->logPriorVolume[n];
+    
+    //phase
+    n = 6;
+    logQ -= model->logPriorVolume[n];
+    
+    //fdot
+    if(UCB_MODEL_NP>7)
+    {
+        n = 7;
+        logQ -= model->logPriorVolume[n];
+    }
+    
+    //f-double-dot
+    if(UCB_MODEL_NP>8)
+    {
+        n = 8;
+        params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+        logQ -= model->logPriorVolume[n];
+    }
+    
+    
+    return logQ;
+}
+
+
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
     double logP = 0.0;
@@ -764,7 +817,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
             case 0:
                 sprintf(proposal[i]->name,"prior");
                 proposal[i]->function = &draw_from_uniform_prior;
-                proposal[i]->density  = &prior_density;
+                proposal[i]->density  = &evaluate_uniform_prior;
                 proposal[i]->weight   = 0.1;
                 proposal[i]->rjweight = 0.2;
                 setup_prior_proposal(flags, prior, proposal[i]);
