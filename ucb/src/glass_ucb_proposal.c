@@ -338,7 +338,7 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     return logQ;
 }
 
-double evaluate_uniform_prior(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, UNUSED gsl_rng *seed)
+double uniform_prior_density(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params)
 {
     
     double logQ = 0.0;
@@ -382,7 +382,6 @@ double evaluate_uniform_prior(struct Data *data, struct Model *model, UNUSED str
     if(UCB_MODEL_NP>8)
     {
         n = 8;
-        params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
         logQ -= model->logPriorVolume[n];
     }
     
@@ -817,7 +816,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
             case 0:
                 sprintf(proposal[i]->name,"prior");
                 proposal[i]->function = &draw_from_uniform_prior;
-                proposal[i]->density  = &evaluate_uniform_prior;
+                proposal[i]->density  = &uniform_prior_density;
                 proposal[i]->weight   = 0.1;
                 proposal[i]->rjweight = 0.2;
                 setup_prior_proposal(flags, prior, proposal[i]);

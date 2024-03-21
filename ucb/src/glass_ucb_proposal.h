@@ -120,8 +120,6 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
 
  */
 double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
-double evaluate_uniform_prior(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, UNUSED gsl_rng *seed);
-
 
 /**
 \brief Fair draw from prior for location and orientation parameters
@@ -352,6 +350,14 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
  Find which cell of the \f${f_0,\cos\theta,\phi}\f$ histogram contains the intput parameter values (params).  Assembles joint proposal density from the 3D grid plus prior_density() for the remaining parameters.
  */
 double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *model, UNUSED struct Source * source, struct Proposal *proposal, double *params);
+
+/**
+ \brief Returns (log) uniform prior density
+ 
+ Returns \f$\sum \log\frac{1}{\Delta V}\f$ for each parameter except the SNR prior for \f$\mathcal{A}\f$.
+ */
+double uniform_prior_density(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params);
+
 
 /**
  \brief Returns (log) prior density
