@@ -39,12 +39,12 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
 /**
  \brief Fixed-dimension update of each parallel tempered instrument noise `model` state
  */
-void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct ForegroundModel *galaxy, struct Chain *chain, struct Flags *flags, int ic);
+void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct InstrumentModel *trial, struct ForegroundModel *galaxy, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic);
 
 /**
  \brief Fixed-dimension update of each parallel tempered galactic foreground noise `model` state
  */
-void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct Chain *chain, struct Flags *flags, int ic);
+void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic);
 
 /**
  \brief Set initial state of spline `model`

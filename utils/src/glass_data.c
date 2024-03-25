@@ -359,6 +359,7 @@ void copy_calibration(struct Calibration *origin, struct Calibration *copy)
 
 void free_noise(struct Noise *noise)
 {
+    free(noise->eta);
     free(noise->f);
     for(int i=0; i<noise->Nchannel; i++)
     {

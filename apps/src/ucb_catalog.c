@@ -929,7 +929,7 @@ int main(int argc, char *argv[])
         double BIC;
         
         counter = 0;
-        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, NMODE_start, 1, r, &BIC))
+        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, NMODE_start, NTHIN, r, &BIC))
         {
             counter++;
             if(counter>CMAX)

@@ -103,7 +103,9 @@ void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, st
     
     alloc_data(noise_data->data, noise_data->flags);
     
+    noise_data->psd = malloc(sizeof(struct Noise *)*ucb_data->chain->NC);
     noise_data->inst_model = malloc(sizeof(struct InstrumentModel*)*ucb_data->chain->NC);
+    noise_data->inst_trial = malloc(sizeof(struct InstrumentModel*)*ucb_data->chain->NC);
     noise_data->conf_model = malloc(sizeof(struct ForegroundModel*)*ucb_data->chain->NC);
 
     //get max and min samples
@@ -171,22 +173,32 @@ void initialize_noise_state(struct NoiseData *noise_data)
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
     struct Flags *flags = noise_data->flags;
+    struct Noise **psd = noise_data->psd;
     struct InstrumentModel **inst_model = noise_data->inst_model;
+    struct InstrumentModel **inst_trial = noise_data->inst_trial;
     struct ForegroundModel **conf_model = noise_data->conf_model;
+    struct ForegroundModel **conf_trial = noise_data->conf_trial;
 
     int NC = chain->NC;
     
     //populate spline model
     for(int ic=0; ic<NC; ic++)
     {
+        /* Initialize work space for assembling full Noise model */
+        psd[ic] = malloc(sizeof(struct Noise));
+        alloc_noise(psd[ic], data->N, data->Nchannel);
+
         /* Initialize Instrument Noise Model */
         inst_model[ic] = malloc(sizeof(struct InstrumentModel));
+        inst_trial[ic] = malloc(sizeof(struct InstrumentModel));
         initialize_instrument_model(orbit, data, inst_model[ic]);
-        
+        initialize_instrument_model(orbit, data, inst_trial[ic]);
+
         /* Initialize Galactic Foreground Model */
         if(flags->confNoise) 
         {
             conf_model[ic] = malloc(sizeof(struct ForegroundModel));
+            conf_trial[ic] = malloc(sizeof(struct ForegroundModel));
             initialize_foreground_model(orbit, data, conf_model[ic]);
         }
 
@@ -212,6 +224,7 @@ void resume_noise_state(struct NoiseData *noise_data)
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
     struct InstrumentModel **inst_model = noise_data->inst_model;
+    struct InstrumentModel **inst_trial = noise_data->inst_trial;
 
     int NC = chain->NC;    
     
@@ -236,7 +249,9 @@ void resume_noise_state(struct NoiseData *noise_data)
     for(int ic=0; ic<NC; ic++)
     {
         inst_model[ic] = malloc(sizeof(struct InstrumentModel));
+        inst_trial[ic] = malloc(sizeof(struct InstrumentModel));
         initialize_instrument_model(orbit, data, inst_model[ic]);
+        initialize_instrument_model(orbit, data, inst_trial[ic]);
     }
     
     //set instrument model to stored values
@@ -264,9 +279,12 @@ int update_noise_sampler(struct NoiseData *noise_data)
     struct Orbit *orbit = noise_data->orbit;
     struct Chain *chain = noise_data->chain;
     struct Data *data   = noise_data->data;
+    struct Noise **psd  = noise_data->psd;
     struct InstrumentModel **inst_model = noise_data->inst_model;
+    struct InstrumentModel **inst_trial = noise_data->inst_trial;
     struct ForegroundModel **conf_model = noise_data->conf_model;
-    
+    struct ForegroundModel **conf_trial = noise_data->conf_trial;
+
     int NC = chain->NC;
     
     //For saving the number of threads actually given
@@ -285,8 +303,11 @@ int update_noise_sampler(struct NoiseData *noise_data)
         {
             
             //loop over frequency segments
+            struct Noise *psd_ptr = psd[chain->index[ic]];
             struct InstrumentModel *inst_model_ptr = inst_model[chain->index[ic]];
+            struct InstrumentModel *inst_trial_ptr = inst_trial[chain->index[ic]];
             struct ForegroundModel *conf_model_ptr = conf_model[chain->index[ic]];
+            struct ForegroundModel *conf_trial_ptr = conf_trial[chain->index[ic]];
 
             //update log likelihood (data may have changed)
             inst_model_ptr->logL = noise_log_likelihood(data, inst_model_ptr->psd);
@@ -294,8 +315,8 @@ int update_noise_sampler(struct NoiseData *noise_data)
             //evolve fixed dimension sampler
             for(int steps=0; steps<10; steps++)
             {
-                noise_instrument_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, chain, flags, ic);
-                if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, chain, flags, ic);
+                noise_instrument_model_mcmc(orbit, data, inst_model_ptr, inst_trial_ptr, conf_model_ptr, psd_ptr, chain, flags, ic);
+                if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, conf_trial_ptr, psd, chain, flags, ic);
             }
             
             
