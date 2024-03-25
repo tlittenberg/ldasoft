@@ -723,7 +723,8 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
             noise->logL = model_x->logL;
         }
     }
-    
+ 
+    free(acc_jump_vec);   
     for(int n=0; n<model_x->Nparams; n++) free(prior[n]);
     free(prior);
     for(int n=0; n<model_x->Nparams; n++)

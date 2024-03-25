@@ -104,7 +104,11 @@ int main(int argc, char *argv[])
     {
         conf_model[ic] = malloc(sizeof(struct ForegroundModel));
         conf_trial[ic] = malloc(sizeof(struct ForegroundModel));
-        if(flags->confNoise) initialize_foreground_model(orbit, data, conf_model[ic]);
+        if(flags->confNoise) 
+        {
+           initialize_foreground_model(orbit, data, conf_model[ic]);
+           initialize_foreground_model(orbit, data, conf_trial[ic]);
+        }
     }
     if(flags->confNoise)
     {

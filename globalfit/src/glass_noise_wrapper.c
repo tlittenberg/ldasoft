@@ -107,6 +107,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, st
     noise_data->inst_model = malloc(sizeof(struct InstrumentModel*)*ucb_data->chain->NC);
     noise_data->inst_trial = malloc(sizeof(struct InstrumentModel*)*ucb_data->chain->NC);
     noise_data->conf_model = malloc(sizeof(struct ForegroundModel*)*ucb_data->chain->NC);
+    noise_data->conf_trial = malloc(sizeof(struct ForegroundModel*)*ucb_data->chain->NC);
 
     //get max and min samples
     noise_data->data->qmin = (int)(noise_data->data->fmin*noise_data->data->T);
@@ -200,6 +201,7 @@ void initialize_noise_state(struct NoiseData *noise_data)
             conf_model[ic] = malloc(sizeof(struct ForegroundModel));
             conf_trial[ic] = malloc(sizeof(struct ForegroundModel));
             initialize_foreground_model(orbit, data, conf_model[ic]);
+            initialize_foreground_model(orbit, data, conf_trial[ic]);
         }
 
     }
@@ -316,7 +318,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
             for(int steps=0; steps<10; steps++)
             {
                 noise_instrument_model_mcmc(orbit, data, inst_model_ptr, inst_trial_ptr, conf_model_ptr, psd_ptr, chain, flags, ic);
-                if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, conf_trial_ptr, psd, chain, flags, ic);
+                if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, conf_trial_ptr, psd_ptr, chain, flags, ic);
             }
             
             
