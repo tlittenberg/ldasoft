@@ -303,9 +303,6 @@ void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, str
         //absorb factor of -8 into tdi transfer function to cut down on multiplications
         tdi_transfer_function *= -8.0;
         
-        //absorb additional factor of 2 for overall PSD normalization
-        tdi_transfer_function *= 2.0;
-        
         switch(data->Nchannel)
         {
             case 1:
@@ -423,8 +420,7 @@ void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, 
         else
         {
             //absorb normalization factor of 2 and distribute
-            //Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * 0.5*( 1. + tanh( (model->fk - f)/model->f2 ) );
-            Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * ( 1. + tanh( (model->fk - f)/model->f2 ) );
+            Sgal = model->Amp*pow(f,5./3.) * exp(-pow(f/model->f1,model->alpha)) * 0.5*( 1. + tanh( (model->fk - f)/model->f2 ) );
         }
         
         switch(data->Nchannel)
@@ -442,12 +438,6 @@ void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, 
                 model->psd->C[1][0][n] = model->psd->C[2][0][n] = model->psd->C[2][1][n] = -0.5*Sgal;
                 break;
         }
-        
-        /*Normalization -- note absorbed into definition of Sgal
-        for(int i=0; i<data->Nchannel; i++)
-            for(int j=0; j<data->Nchannel; j++)
-                model->psd->C[i][j][n] *= 2.0;
-        */
     }
 }
 
@@ -492,7 +482,7 @@ double noise_log_likelihood(struct Data *data, struct Noise *noise)
             break;
     }
     for(int n=0; n<N; n++)
-        logL -= 0.5*log(noise->detC[n]);
+        logL -= log(noise->detC[n]);
     
     return logL;
 }

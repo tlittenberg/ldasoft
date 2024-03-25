@@ -391,7 +391,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
     free_spline_model(model_y);
 }
 
-void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct ForegroundModel *galaxy, struct Chain *chain, struct Flags *flags, int ic)
+void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model, struct InstrumentModel *trial, struct ForegroundModel *galaxy, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -401,14 +401,9 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     
     //shorthand pointers
     struct InstrumentModel *model_x = model;
-    struct InstrumentModel *model_y = malloc(sizeof(struct InstrumentModel));
-    alloc_instrument_model(model_y, data->N, data->Nchannel);
+    struct InstrumentModel *model_y = trial;
     copy_instrument_model(model_x,model_y);
-    
-    //structure for full noise covariance matrix
-    struct Noise *psd =  malloc(sizeof(struct Noise));
-    alloc_noise(psd, data->N, data->Nchannel);
-    
+        
     //initialize likelihood
     //TODO: this shouldn't be necessary
     generate_instrument_noise_model(data,orbit,model_x);
@@ -580,8 +575,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
             if(flags->confNoise) galaxy->logL = model_x->logL;
         }
     }
-    free_noise(psd);
-    free_instrument_model(model_y);
+
     free(acc_jump_vec);
     for(int n=0; n<model_x->Nlink; n++)
         free(correlation_matrix[n]);
@@ -589,7 +583,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
 
 }
 
-void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct Chain *chain, struct Flags *flags, int ic)
+void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -599,14 +593,9 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     
     //shorthand pointers
     struct ForegroundModel *model_x = model;
-    struct ForegroundModel *model_y = malloc(sizeof(struct ForegroundModel));
-    alloc_foreground_model(model_y, data->N, data->Nchannel);
+    struct ForegroundModel *model_y = trial;
     copy_foreground_model(model_x,model_y);
     
-    //structure for full noise covariance matrix
-    struct Noise *psd =  malloc(sizeof(struct Noise));
-    alloc_noise(psd, data->N, data->Nchannel);
-
     //initialize likelhood
     //TODO: this shouldn't be necessary!
     generate_galactic_foreground_model(data,orbit,model_x);
@@ -735,8 +724,6 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         }
     }
     
-    free_noise(psd);
-    free_foreground_model(model_y);
     for(int n=0; n<model_x->Nparams; n++) free(prior[n]);
     free(prior);
     for(int n=0; n<model_x->Nparams; n++)

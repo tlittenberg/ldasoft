@@ -22,8 +22,11 @@ struct NoiseData
     struct Orbit *orbit;
     struct Chain *chain;
     struct Data  *data;
+    struct Noise **psd;
     struct InstrumentModel **inst_model;
+    struct InstrumentModel **inst_trial;
     struct ForegroundModel **conf_model;
+    struct ForegroundModel **conf_trial;
 
     double cpu_time; //!<CPU time for single update
 };
