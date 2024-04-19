@@ -27,7 +27,7 @@
 #define constants_h
 
 #define FIXME 0
-#define SNRPEAK 5 ///< Peak of SNR prior
+#define SNRPEAK 10 ///< Peak of SNR prior
 
 /* --------------  MATHEMATICAL CONSTANTS  -------------- */
 /* Some square roots */

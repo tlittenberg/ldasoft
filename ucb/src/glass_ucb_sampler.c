@@ -245,6 +245,9 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
             //form master template
             generate_signal_model(orbit, data, model_y, n);
             
+            //rejection sample on SNR?
+            if(snr(model_y->source[n], model_y->noise) < 5.0) logPy = -INFINITY;
+            
             //update master template
             //update_signal_model(orbit, data, model_x, model_y, n);
             
@@ -306,6 +309,10 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             generate_signal_model(orbit, data, model_y, create);
+            
+            //rejection sample on SNR?
+            if(snr(model_y->source[create], model_y->noise) < 5.0) *logPy = -INFINITY;
+
             model_y->source[create]->fisher_update_flag = 1;
         }
         else *logPy = -INFINITY;
@@ -372,6 +379,10 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                     *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
                 }
                 generate_signal_model(orbit, data, model_y, branch[n]);
+
+                //rejection sample on SNR?
+                if(snr(model_y->source[branch[n]], model_y->noise) < 5.0) *logPy = -INFINITY;
+
                 model_y->source[branch[n]]->fisher_update_flag = 1;
             }
             
@@ -419,6 +430,10 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 *penalty -= maximization_penalty(4,2*model_y->source[trunk]->BW);
             }
             generate_signal_model(orbit, data, model_y, trunk);
+            
+            //rejection sample on SNR?
+            if(snr(model_y->source[trunk], model_y->noise) < 5.0) *logPy = -INFINITY;
+
             model_y->source[trunk]->fisher_update_flag = 1;
             
             //get reverse move (split trunk into branches)

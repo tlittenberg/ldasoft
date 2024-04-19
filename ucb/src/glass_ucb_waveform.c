@@ -25,7 +25,7 @@
 
 double analytic_snr(double A, double Sn, double Sf, double sqT)
 {
-    return 0.5*A*sqT*Sf/sqrt(Sn); //not exactly what's in paper--calibrated against (h|h)
+    return A*sqT*Sf/sqrt(Sn); 
 }
 
 double snr(struct Source *source, struct Noise *noise)
