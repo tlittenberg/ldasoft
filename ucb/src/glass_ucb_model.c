@@ -66,7 +66,7 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
     
     model->Nlive = 1;
     model->Nmax  = Nmax;
-    model->Neff  = Nmax;
+    model->Neff  = 2;
     model->t0 = 0.0;
 
     model->source = malloc(model->Nmax*sizeof(struct Source *));
