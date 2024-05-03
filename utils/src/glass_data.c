@@ -1300,7 +1300,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
                 if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
                 if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
                 if(strcmp("no-burnin",   long_options[long_index].name) == 0) flags->burnin     = 0;
-                if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
+                if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 1;
                 if(strcmp("calibration", long_options[long_index].name) == 0) flags->calibration= 1;
                 if(strcmp("resume",      long_options[long_index].name) == 0) flags->resume     = 1;
                 if(strcmp("h5-no-mbh",   long_options[long_index].name) == 0) flags->no_mbh     = 1;

@@ -267,5 +267,6 @@ void free_source(struct Source *source);
  */
 int compare_model(struct Model *a, struct Model *b);
 
-
+void remove_signal_model(struct Data *data, struct Model *model, struct Source *source);
+void add_signal_model(struct Data *data, struct Model *model, struct Source *source);
 #endif /* ucb_model_h */

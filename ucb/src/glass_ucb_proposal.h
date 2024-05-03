@@ -197,15 +197,6 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
 double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
 
 /**
- \brief Draw \f$\mathcal{A}\f$ from SNR-based amplitude prior
- 
- @param params (updates \f$\mathcal{A}\f$)
- @return logQ = evaluate_snr_prior()
-
- */
-double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
-
-/**
  \brief Draw \f$f_0\f$ weighted by power spectrum of data
  
  @param params (updates \f$\mathcal{A}\f$)

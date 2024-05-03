@@ -66,7 +66,7 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
     
     model->Nlive = 1;
     model->Nmax  = Nmax;
-    model->Neff  = 2;
+    model->Neff  = Nmax;
     model->t0 = 0.0;
 
     model->source = malloc(model->Nmax*sizeof(struct Source *));
@@ -403,7 +403,7 @@ void free_source(struct Source *source)
 
 void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
 {
-    int i,j,n;
+    int i,n;
     int N2=data->N*2;
     
     for(n=0; n<N2; n++)
@@ -424,7 +424,9 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         {
             for(i=0; i<N2; i++)
             {
-                //source->tdi->X[i]=0.0;
+                source->tdi->X[i]=0.0;
+                source->tdi->Y[i]=0.0;
+                source->tdi->Z[i]=0.0;
                 source->tdi->A[i]=0.0;
                 source->tdi->E[i]=0.0;
             }
@@ -440,58 +442,17 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0, source->params, UCB_MODEL_NP, source->tdi->X, source->tdi->Y, source->tdi->Z, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
         
         //Add waveform to model TDI channels
-        for(i=0; i<source->BW; i++)
-        {
-            j = i+source->imin;
-            
-            if(j>-1 && j<data->N)
-            {
-                int i_re = 2*i;
-                int i_im = i_re+1;
-                int j_re = 2*j;
-                int j_im = j_re+1;
-                
-                switch(data->Nchannel)
-                {
-                    case 1:
-                         model->tdi->X[j_re] += source->tdi->X[i_re];
-                         model->tdi->X[j_im] += source->tdi->X[i_im];
-                        break;
-                        
-                    case 2:
-                        model->tdi->A[j_re] += source->tdi->A[i_re];
-                        model->tdi->A[j_im] += source->tdi->A[i_im];
-                        
-                        model->tdi->E[j_re] += source->tdi->E[i_re];
-                        model->tdi->E[j_im] += source->tdi->E[i_im];
-                        break;
-                    case 3:
-                        model->tdi->X[j_re] += source->tdi->X[i_re];
-                        model->tdi->X[j_im] += source->tdi->X[i_im];
-                        
-                        model->tdi->Y[j_re] += source->tdi->Y[i_re];
-                        model->tdi->Y[j_im] += source->tdi->Y[i_im];
-                        
-                        model->tdi->Z[j_re] += source->tdi->Z[i_re];
-                        model->tdi->Z[j_im] += source->tdi->Z[i_im];
-                        break;
-                }
-            }//check that source_id is in range
-        }//loop over waveform bins
-}//loop over sources
+        add_signal_model(data,model,source);
+        
+    }//loop over sources
 }
 
-void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id)
+void remove_signal_model(struct Data *data, struct Model *model, struct Source *source)
 {
-    int i,j;
-    int N2=data->N*2;
-    struct Source *source_x = model_x->source[source_id];
-    struct Source *source_y = model_y->source[source_id];
-    
     //subtract current nth source from  model
-    for(i=0; i<source_x->BW; i++)
+    for(int i=0; i<source->BW; i++)
     {
-        j = i+source_x->imin;
+        int j = i+source->imin;
         
         if(j>-1 && j<data->N)
         {
@@ -503,29 +464,81 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
             switch(data->Nchannel)
             {
                 case 1:
-                    model_y->tdi->X[j_re] -= source_x->tdi->X[i_re];
-                    model_y->tdi->X[j_im] -= source_x->tdi->X[i_im];
+                    model->tdi->X[j_re] -= source->tdi->X[i_re];
+                    model->tdi->X[j_im] -= source->tdi->X[i_im];
                     break;
                 case 2:
-                    model_y->tdi->A[j_re] -= source_x->tdi->A[i_re];
-                    model_y->tdi->A[j_im] -= source_x->tdi->A[i_im];
+                    model->tdi->A[j_re] -= source->tdi->A[i_re];
+                    model->tdi->A[j_im] -= source->tdi->A[i_im];
                     
-                    model_y->tdi->E[j_re] -= source_x->tdi->E[i_re];
-                    model_y->tdi->E[j_im] -= source_x->tdi->E[i_im];
+                    model->tdi->E[j_re] -= source->tdi->E[i_re];
+                    model->tdi->E[j_im] -= source->tdi->E[i_im];
                     break;
                 case 3:
-                    model_y->tdi->X[j_re] -= source_x->tdi->X[i_re];
-                    model_y->tdi->X[j_im] -= source_x->tdi->X[i_im];
+                    model->tdi->X[j_re] -= source->tdi->X[i_re];
+                    model->tdi->X[j_im] -= source->tdi->X[i_im];
                     
-                    model_y->tdi->Y[j_re] -= source_x->tdi->Y[i_re];
-                    model_y->tdi->Y[j_im] -= source_x->tdi->Y[i_im];
+                    model->tdi->Y[j_re] -= source->tdi->Y[i_re];
+                    model->tdi->Y[j_im] -= source->tdi->Y[i_im];
 
-                    model_y->tdi->Z[j_re] -= source_x->tdi->Z[i_re];
-                    model_y->tdi->Z[j_im] -= source_x->tdi->Z[i_im];
+                    model->tdi->Z[j_re] -= source->tdi->Z[i_re];
+                    model->tdi->Z[j_im] -= source->tdi->Z[i_im];
                     break;
             }
         }//check that source_id is in range
     }//loop over waveform bins
+}
+void add_signal_model(struct Data *data, struct Model *model, struct Source *source)
+{
+    //subtract current nth source from  model
+    for(int i=0; i<source->BW; i++)
+    {
+        int j = i+source->imin;
+        
+        if(j>-1 && j<data->N)
+        {
+            int i_re = 2*i;
+            int i_im = i_re+1;
+            int j_re = 2*j;
+            int j_im = j_re+1;
+            
+            switch(data->Nchannel)
+            {
+                case 1:
+                    model->tdi->X[j_re] += source->tdi->X[i_re];
+                    model->tdi->X[j_im] += source->tdi->X[i_im];
+                    break;
+                case 2:
+                    model->tdi->A[j_re] += source->tdi->A[i_re];
+                    model->tdi->A[j_im] += source->tdi->A[i_im];
+                    
+                    model->tdi->E[j_re] += source->tdi->E[i_re];
+                    model->tdi->E[j_im] += source->tdi->E[i_im];
+                    break;
+                case 3:
+                    model->tdi->X[j_re] += source->tdi->X[i_re];
+                    model->tdi->X[j_im] += source->tdi->X[i_im];
+                    
+                    model->tdi->Y[j_re] += source->tdi->Y[i_re];
+                    model->tdi->Y[j_im] += source->tdi->Y[i_im];
+
+                    model->tdi->Z[j_re] += source->tdi->Z[i_re];
+                    model->tdi->Z[j_im] += source->tdi->Z[i_im];
+                    break;
+            }
+        }//check that source_id is in range
+    }//loop over waveform bins
+}
+
+void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id)
+{
+    int i;
+    int N2=data->N*2;
+    struct Source *source_x = model_x->source[source_id];
+    struct Source *source_y = model_y->source[source_id];
+    
+    //subtract current nth source from  model
+    remove_signal_model(data,model_y,source_x);
 
     //generate proposed signal model
     for(i=0; i<N2; i++)
@@ -552,44 +565,9 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
 
     galactic_binary(orbit, data->format, data->T, model_y->t0, source_y->params, UCB_MODEL_NP, source_y->tdi->X,source_y->tdi->Y,source_y->tdi->Z, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
 
-    //subtract proposed nth source to model
-    for(i=0; i<source_y->BW; i++)
-    {
-        j = i+source_y->imin;
-        
-        if(j>-1 && j<data->N)
-        {
-            int i_re = 2*i;
-            int i_im = i_re+1;
-            int j_re = 2*j;
-            int j_im = j_re+1;
-            
-            switch(data->Nchannel)
-            {
-                case 1:
-                    model_y->tdi->X[j_re] += source_y->tdi->X[i_re];
-                    model_y->tdi->X[j_im] += source_y->tdi->X[i_im];
-                    break;
-                case 2:
-                    model_y->tdi->A[j_re] += source_y->tdi->A[i_re];
-                    model_y->tdi->A[j_im] += source_y->tdi->A[i_im];
-                    
-                    model_y->tdi->E[j_re] += source_y->tdi->E[i_re];
-                    model_y->tdi->E[j_im] += source_y->tdi->E[i_im];
-                    break;
-                case 3:
-                    model_y->tdi->X[j_re] += source_y->tdi->X[i_re];
-                    model_y->tdi->X[j_im] += source_y->tdi->X[i_im];
-                    
-                    model_y->tdi->Y[j_re] += source_y->tdi->Y[i_re];
-                    model_y->tdi->Y[j_im] += source_y->tdi->Y[i_im];
-                    
-                    model_y->tdi->Z[j_re] += source_y->tdi->Z[i_re];
-                    model_y->tdi->Z[j_im] += source_y->tdi->Z[i_im];
-                    break;
-            }
-        }//check that source_id is in range
-    }//loop over waveform bins
+    //add proposed nth source to model
+    add_signal_model(data,model_y,source_y);
+    
 }
 
 void generate_noise_model(struct Data *data, struct Model *model)

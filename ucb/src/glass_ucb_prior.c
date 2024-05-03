@@ -463,6 +463,9 @@ int check_range(double *params, double **uniform_prior)
         if(params[2] < 0.0) params[2] += PI2;
     }
 
+    //amplitude
+    if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return 1;
+
     //cosine inclination
     if(params[4]<uniform_prior[4][0] || params[4]>uniform_prior[4][1]) return 1;
     
@@ -594,18 +597,7 @@ double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *mode
     {
         //sky location prior
         logP += evalaute_sky_location_prior(params, uniform_prior, model->logPriorVolume, flags->galaxyPrior, prior->skyhist, prior->dcostheta, prior->dphi, prior->nphi);
-        
-        //amplitude prior
-        if(flags->snrPrior)
-        {
-            logP += evaluate_snr_prior(data, model, params);
-        }
-        else
-        {
-            if(params[3]<uniform_prior[3][0] || params[3]>uniform_prior[3][1]) return -INFINITY;
-            logP -= model->logPriorVolume[3];
-        }
-        
+                
         //everything else uses simple uniform priors
         logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume);
     }
@@ -621,7 +613,10 @@ double evaluate_uniform_priors(double *params, double **uniform_prior, double *l
     //frequency bin (uniform)
     //TODO: is frequency logPriorVolume up to date?
     logP -= log(uniform_prior[0][1]-uniform_prior[0][0]);
-    
+
+    //amplitude
+    logP -= logPriorVolume[3];
+
     //cosine inclination
     logP -= logPriorVolume[4];
     
@@ -695,32 +690,6 @@ double evalaute_sky_location_prior(double *params, double **uniform_prior, doubl
     }
     return logP;
 }
-
-
-
-double evaluate_snr_prior(struct Data *data, struct Model *model, double *params)
-{
-    //check that frequency is in range
-    int n = (int)floor(params[0] - model->prior[0][0]);
-    if(n<0 || n>=data->N) return -INFINITY;
-    
-    //calculate noise model estimate
-    double sf = data->sine_f_on_fstar;
-    double sn = model->noise->C[0][0][n]*model->noise->eta[0];
-    
-    //extra factors from TDI convention used for fractional-frequency data
-    if(strcmp("frequency",data->format) == 0 || strcmp("sangria",data->format) == 0)
-        sf *= asin(data->sine_f_on_fstar);
-        
-    //get GW amplitude
-    double amp = exp(params[3]);
-    
-    double snr = analytic_snr(amp,sn,sf,data->sqT);
-    
-    return log(snr_prior(snr)) + log(snr/amp);
-}
-
-
 
 double evaluate_calibration_prior(struct Data *data, struct Model *model)
 {

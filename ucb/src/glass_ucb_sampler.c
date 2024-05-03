@@ -243,11 +243,14 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(!flags->prior)
         {
             //form master template
-            generate_signal_model(orbit, data, model_y, n);
-            
+            //generate_signal_model(orbit, data, model_y, n);
+                        
             //update master template
-            //update_signal_model(orbit, data, model_x, model_y, n);
+            update_signal_model(orbit, data, model_x, model_y, n);
             
+            //rejection sample on SNR?
+            if(snr(model_y->source[n], model_y->noise) < 5.0) logPy = -INFINITY;
+
             //add calibration error
             if(flags->calibration)
             {
@@ -260,7 +263,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
             
             //get delta log likelihood
             //model_y->logL = model_x->logL + delta_log_likelihood(data, model_x, model_y, n);
-
+            
             /*
              H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
              */
@@ -306,6 +309,10 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             generate_signal_model(orbit, data, model_y, create);
+            
+            //rejection sample on SNR?
+            if(snr(model_y->source[create], model_y->noise) < 5.0) *logPy = -INFINITY;
+
             model_y->source[create]->fisher_update_flag = 1;
         }
         else *logPy = -INFINITY;
@@ -317,7 +324,8 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
         
         //pick source to kill
         int kill = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
-        
+        remove_signal_model(data, model_y,  model_y->source[kill]);
+
         if(model_y->Nlive>-1)
         {
             *logQyx = 0;
@@ -334,7 +342,6 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
                 *penalty = maximization_penalty(4,2*model_x->source[kill]->BW);
             }
             
-            generate_signal_model(orbit, data, model_y, model_y->Nlive);
             model_y->source[model_y->Nlive]->fisher_update_flag = 1;
         }
         else *logPy = -INFINITY;
@@ -359,8 +366,22 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
         branch[0] = trunk;
         branch[1] = model_y->Nlive-1;
         
+        for(int n=0; n<2*data->N; n++)
+        {
+            for(int m=0; m<2; m++)
+            {
+                model_y->source[branch[m]]->tdi->X[n]=0.0;
+                model_y->source[branch[m]]->tdi->Y[n]=0.0;
+                model_y->source[branch[m]]->tdi->Z[n]=0.0;
+                model_y->source[branch[m]]->tdi->A[n]=0.0;
+                model_y->source[branch[m]]->tdi->E[n]=0.0;
+            }
+        }
+
+        
         if(model_y->Nlive<model_x->Neff)
         {
+            
             //draw parameters for new sources (branches of trunk)
             for(int n=0; n<2; n++)
             {
@@ -372,6 +393,10 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                     *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
                 }
                 generate_signal_model(orbit, data, model_y, branch[n]);
+                
+                //rejection sample on SNR?
+                if(snr(model_y->source[branch[n]], model_y->noise) < 5.0) *logPy = -INFINITY;
+                
                 model_y->source[branch[n]]->fisher_update_flag = 1;
             }
             
@@ -419,6 +444,10 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                 *penalty -= maximization_penalty(4,2*model_y->source[trunk]->BW);
             }
             generate_signal_model(orbit, data, model_y, trunk);
+            
+            //rejection sample on SNR?
+            if(snr(model_y->source[trunk], model_y->noise) < 5.0) *logPy = -INFINITY;
+
             model_y->source[trunk]->fisher_update_flag = 1;
             
             //get reverse move (split trunk into branches)
@@ -497,6 +526,10 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
         model_y->Nlive++;
 
         generate_signal_model(orbit, data, model_y, -1);
+        
+        //rejection sample on SNR?
+        if(snr(model_y->source[model_y->Nlive], model_y->noise) < 5.0) *logPy = -INFINITY;
+        
         for(int n=0; n<model_y->Nlive; n++)
             model_y->source[n]->fisher_update_flag = 1;
 
@@ -554,19 +587,15 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         
     /* Choose birth/death move, or split/merge move */
     if( gsl_rng_uniform(chain->r[ic]) < 0.5)/* birth/death move */
-    {
         rj_birth_death(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
-    }
-    else /* split/merge moves */
-    {
+    else
         rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
-        //rj_cluster_bomb(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
+
+    if(logPy > -INFINITY )
+    {
+        for(int n=0; n<model_x->Nlive; n++) logPx += evaluate_prior(flags, data, model_x, prior, model_x->source[n]->params);
+        for(int n=0; n<model_y->Nlive; n++) logPy += evaluate_prior(flags, data, model_y, prior, model_y->source[n]->params);
     }
-    
-    
-    for(int n=0; n<model_x->Nlive; n++) logPx += evaluate_prior(flags, data, model_x, prior, model_x->source[n]->params);
-    for(int n=0; n<model_y->Nlive; n++) logPy += evaluate_prior(flags, data, model_y, prior, model_y->source[n]->params);
-    
     
     /* Hasting's ratio */
     if(logPy > -INFINITY && !flags->prior)

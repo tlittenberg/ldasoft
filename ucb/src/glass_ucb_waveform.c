@@ -25,7 +25,7 @@
 
 double analytic_snr(double A, double Sn, double Sf, double sqT)
 {
-    return 0.5*A*sqT*Sf/sqrt(Sn); //not exactly what's in paper--calibrated against (h|h)
+    return A*sqT*Sf/sqrt(Sn); //not exactly what's in paper--calibrated against (h|h)
 }
 
 double snr(struct Source *source, struct Noise *noise)
@@ -292,6 +292,11 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             wave_p->tdi->Z[j]=0.0;
             wave_p->tdi->A[j]=0.0;
             wave_p->tdi->E[j]=0.0;
+//            wave_m->tdi->X[j]=0.0;
+//            wave_m->tdi->Y[j]=0.0;
+//            wave_m->tdi->Z[j]=0.0;
+//            wave_m->tdi->A[j]=0.0;
+//            wave_m->tdi->E[j]=0.0;
         }
         
         // align perturbed waveforms in data array
@@ -300,7 +305,8 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         
         // compute perturbed waveforms
         galactic_binary(orbit, data->format, data->T, data->t0, wave_p->params, UCB_MODEL_NP, wave_p->tdi->X, wave_p->tdi->Y, wave_p->tdi->Z, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-        
+        //galactic_binary(orbit, data->format, data->T, data->t0, wave_m->params, UCB_MODEL_NP, wave_m->tdi->X, wave_m->tdi->Y, wave_m->tdi->Z, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+
         // central differencing derivatives of waveforms w.r.t. parameters
         switch(source->tdi->Nchannel)
         {
@@ -320,15 +326,9 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             case 3:
                 for(n=0; n<wave_p->BW*2; n++)
                 {
-                    /* Use AE channels for Fisher matrix cuz it's just a proposal*/
-                    dhdx[i]->A[n] = (wave_p->tdi->A[n] - source->tdi->A[n])*invstep;
-                    dhdx[i]->E[n] = (wave_p->tdi->E[n] - source->tdi->E[n])*invstep;
-                     
-                    
-                    /*
                     dhdx[i]->X[n] = (wave_p->tdi->X[n] - source->tdi->X[n])*invstep;
                     dhdx[i]->Y[n] = (wave_p->tdi->Y[n] - source->tdi->Y[n])*invstep;
-                    dhdx[i]->Z[n] = (wave_p->tdi->Z[n] - source->tdi->Z[n])*invstep;*/
+                    dhdx[i]->Z[n] = (wave_p->tdi->Z[n] - source->tdi->Z[n])*invstep;
                 }
                 break;
 
@@ -340,7 +340,6 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     {
         for(j=i; j<UCB_MODEL_NP; j++)
         {
-            //source->fisher_matrix[i][j] = 10.0; //fisher gets a "DC" level to keep the inversion stable
             switch(source->tdi->Nchannel)
             {
                 case 1:
@@ -351,19 +350,16 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
                     source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->invC[1][1], wave_p->BW);
                     break;
                 case 3:
-                    source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->A, dhdx[j]->A, noise->invC[0][0], wave_p->BW);
-                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->E, dhdx[j]->E, noise->invC[1][1], wave_p->BW);
-                    break;
-
-                    /*
                     source->fisher_matrix[i][j] = fourier_nwip(dhdx[i]->X, dhdx[j]->X, noise->invC[0][0], wave_p->BW);
                     source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Y, dhdx[j]->Y, noise->invC[1][1], wave_p->BW);
                     source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Z, dhdx[j]->Z, noise->invC[2][2], wave_p->BW);
-
-                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->Y, noise->invC[0][1], wave_p->BW)*2.;
-                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->Z, noise->invC[0][2], wave_p->BW)*2.;
-                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Y, dhdx[j]->Z, noise->invC[1][2], wave_p->BW)*2.;
-                    break;*/
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->Y, noise->invC[0][1], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->X, dhdx[j]->Z, noise->invC[0][2], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Y, dhdx[j]->Z, noise->invC[1][2], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Y, dhdx[j]->X, noise->invC[1][0], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Z, dhdx[j]->X, noise->invC[2][0], wave_p->BW);
+                    source->fisher_matrix[i][j] += fourier_nwip(dhdx[i]->Z, dhdx[j]->Y, noise->invC[2][1], wave_p->BW);
+                    break;
             }
             if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
             {

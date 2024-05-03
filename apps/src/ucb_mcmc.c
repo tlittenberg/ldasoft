@@ -239,12 +239,14 @@ int main(int argc, char *argv[])
                 for(int steps=0; steps < 100; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(gsl_rng_uniform(chain->r[ic])<0.25 && flags->rj)
+                    if(gsl_rng_uniform(chain->r[ic])<0.9 && flags->rj)
+                    {
                         galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                    
+                    }
                     //fixed dimension parameter updates
                     else
-                        galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                        for(int n=0; n<model_ptr->Nlive; n++)
+                            galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                           
                 }//loop over MCMC steps
                                                 
@@ -252,13 +254,8 @@ int main(int argc, char *argv[])
                     noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
 
                 //update fisher matrix for each chain
-                if(mcmc%100==0)
-                {
-                    for(int n=0; n<model_ptr->Nlive; n++)
-                    {
-                        galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise);
-                    }
-                }
+                for(int n=0; n<model_ptr->Nlive; n++)
+                    galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise);
                 
             }// end (parallel) loop over chains
             
