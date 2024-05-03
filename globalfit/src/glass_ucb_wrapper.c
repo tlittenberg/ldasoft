@@ -327,7 +327,7 @@ int update_ucb_sampler(struct UCBData *ucb_data)
             print_sampler_state(ucb_data);
             
             //save chain state to resume sampler
-            save_chain_state(data, model, chain, flags, ucb_data->mcmc_step);
+            //save_chain_state(data, model, chain, flags, ucb_data->mcmc_step);
         }
         
         //dump waveforms to file, update avgLogL for thermodynamic integration

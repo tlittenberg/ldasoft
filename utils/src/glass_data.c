@@ -320,6 +320,8 @@ void copy_data(struct Data *origin, struct Data *copy)
 
 void copy_noise(struct Noise *origin, struct Noise *copy)
 {
+    copy->N = origin->N;
+    copy->Nchannel = origin->Nchannel;
     memcpy(copy->eta,origin->eta,origin->Nchannel*sizeof(double));
 
     memcpy(copy->f, origin->f, origin->N*sizeof(double));
@@ -1040,11 +1042,10 @@ void SimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 
 void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
 {
-    char filename[128];
     FILE *fptr;
-    
-    sprintf(filename,"%s/power_data.dat",data->dataDir);
-    fptr=fopen(filename,"w");
+    char power_filename[256];
+    sprintf(power_filename,"%s/power_data.dat",data->dataDir);
+    fptr=fopen(power_filename,"w");
     
     for(int i=0; i<data->N; i++)
     {
@@ -1064,8 +1065,9 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/data.dat",data->dataDir);
-    fptr=fopen(filename,"w");
+    char strain_filename[256];
+    sprintf(strain_filename,"%s/data.dat",data->dataDir);
+    fptr=fopen(strain_filename,"w");
     
     for(int i=0; i<data->N; i++)
     {
@@ -1085,26 +1087,27 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
     }
     fclose(fptr);
     
-    sprintf(filename,"%s/power_noise.dat",data->dataDir);
-    fptr=fopen(filename,"w");
-    
-    for(int i=0; i<data->N; i++)
-    {
-        double f = (double)(i+data->qmin)/data->T;
-        switch(data->Nchannel)
-        {
-            case 1:
-                fprintf(fptr,"%.12g %lg\n", f, data->noise->C[0][0][i]);
-                break;
-            case 2:
-                fprintf(fptr,"%.12g %lg %lg\n", f, data->noise->C[0][0][i], data->noise->C[1][1][i]);
-                break;
-            case 3:
-                fprintf(fptr,"%.12g %lg %lg %lg\n", f, data->noise->C[0][0][i], data->noise->C[1][1][i], data->noise->C[2][2][i]);
-                break;
-        }
-    }
-    fclose(fptr);
+//    char noise_filename[256];
+//    sprintf(noise_filename,"%s/power_noise.dat",data->dataDir);
+//    fptr=fopen(noise_filename,"w");
+//    
+//    for(int i=0; i<data->N; i++)
+//    {
+//        double f = (double)(i+data->qmin)/data->T;
+//        switch(data->Nchannel)
+//        {
+//            case 1:
+//                fprintf(fptr,"%.12g %lg\n", f, data->noise->C[0][0][i]);
+//                break;
+//            case 2:
+//                fprintf(fptr,"%.12g %lg %lg\n", f, data->noise->C[0][0][i], data->noise->C[1][1][i]);
+//                break;
+//            case 3:
+//                fprintf(fptr,"%.12g %lg %lg %lg\n", f, data->noise->C[0][0][i], data->noise->C[1][1][i], data->noise->C[2][2][i]);
+//                break;
+//        }
+//    }
+//    fclose(fptr);
 }
 
 void print_glass_usage()

@@ -393,10 +393,10 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
                     *penalty += maximization_penalty(4,2*model_y->source[branch[n]]->BW);
                 }
                 generate_signal_model(orbit, data, model_y, branch[n]);
-                
+
                 //rejection sample on SNR?
                 if(snr(model_y->source[branch[n]], model_y->noise) < 5.0) *logPy = -INFINITY;
-                
+
                 model_y->source[branch[n]]->fisher_update_flag = 1;
             }
             

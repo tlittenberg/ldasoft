@@ -478,7 +478,7 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
     if(Noise_Flag)
     {
         print_data(noise_data->data, noise_data->data->tdi, noise_data->flags);
-        char filename[128];
+        char filename[256];
         sprintf(filename,"%s/data/current_instrument_noise_model.dat",noise_data->flags->runDir);
         generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
         print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
@@ -496,7 +496,6 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
     }
     if(UCB_Flag)
     {
-        copy_noise(ucb_data->model[ucb_data->chain->index[0]]->noise, ucb_data->data->noise);
         print_data(ucb_data->data, ucb_data->data->tdi, ucb_data->flags);
     }
     if(MBH_Flag)
@@ -1000,7 +999,7 @@ int main(int argc, char *argv[])
         blocked_gibbs_load_balancing(global_fit, root, procID, Nproc);
 
         /* DEBUG */
-        print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
+        //print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
 
         /* save state of global model */
         print_globalfit_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag, global_fit->chainFile, global_fit_counter);
@@ -1045,6 +1044,8 @@ int main(int argc, char *argv[])
     }
     fclose(global_fit->chainFile);
     
+    print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
+
     //print total run time
     stop = time(NULL);
 
