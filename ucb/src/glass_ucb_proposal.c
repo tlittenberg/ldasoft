@@ -511,10 +511,12 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
     
     //safety check for cos(latitude) parameters
     //cosine co-latitude
-    if(params[1] >= 1.) params[1] = source->params[1] - jump[1];
+    if(params[1] >=  1.) params[1] = source->params[1] - jump[1];
+    if(params[1] <= -1.) params[1] = source->params[1] - jump[1];
     //cosine inclination
-    if(params[4] >= 1.) params[4] = source->params[4] - jump[4];
-    
+    if(params[4] >=  1.) params[4] = source->params[4] - jump[4];
+    if(params[4] <= -1.) params[4] = source->params[4] - jump[4];
+
     for(int j=0; j<UCB_MODEL_NP; j++)
     {
         if(params[j]!=params[j])
@@ -734,7 +736,9 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
     params[2] = (omega/omegaR)*sin(theta)*(phi + M_PI/2.) / ( (omega/omegaR)*sin(theta) - dOmega/omegaM ) - M_PI/2.;
     
     //perturb all parameters by Fisher Matrix (in liu of Jacaboian)
-    draw_from_fisher(data, model, source, proposal, params, seed);
+    //draw_from_fisher(data, model, source, proposal, params, seed);
+    params[0] += gsl_ran_gaussian(seed,0.1);
+    params[2] += gsl_ran_gaussian(seed,0.1);
     
     //fm shift is symmetric
     return 0.0;
