@@ -477,8 +477,8 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
     
     //DBSCAN clustering of source frequencies
     int K=0;                //number of clusters
-    //double eps = model_x->source[0]->BW/data->T; //use typical bandwidth as the max cluster spacing
-    double eps = 2/data->T; //use typical bandwidth as the max cluster spacing
+    double eps = model_x->source[0]->BW/data->T; //use typical bandwidth as the max cluster spacing
+    //double eps = 2/data->T; //use typical bandwidth as the max cluster spacing
     int min = 2;          //minimum occupation number for cluster
     int C[N];             //cluster assignments
     if(N>=min) dbscan(f,eps,min,C,&K);
@@ -588,8 +588,11 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     /* Choose birth/death move, or split/merge move */
     if( gsl_rng_uniform(chain->r[ic]) < 0.5)/* birth/death move */
         rj_birth_death(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
-    else
+    else if( gsl_rng_uniform(chain->r[ic]) < 0.5) /* birth/death move */
         rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
+    else
+        rj_cluster_bomb(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
+
 
     if(logPy > -INFINITY )
     {

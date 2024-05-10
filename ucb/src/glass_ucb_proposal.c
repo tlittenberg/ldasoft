@@ -721,24 +721,15 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
     
     //perturb frequency by 1 fm
     int scale;
-    do scale = (int)floor(-3. + 6.*gsl_rng_uniform(seed));
+    do scale = (int)floor(-3. + 7.*gsl_rng_uniform(seed));
     while (scale == 0);
     
-    /* Sean's mapping */
-    double dOmega = 2.0*M_PI*scale*fm/data->T;
-    double omegaR = CLIGHT/AU;
-    double omegaM = 2.0*M_PI/YEAR;
-    double omega = 2.0*M_PI*params[0]/data->T;
-    double theta = acos(params[1]);
-    double phi = params[2];
-
     params[0] += scale*fm;
-    params[2] = (omega/omegaR)*sin(theta)*(phi + M_PI/2.) / ( (omega/omegaR)*sin(theta) - dOmega/omegaM ) - M_PI/2.;
+    params[2] = params[2] + -0.2 + gsl_rng_uniform(seed)*0.4;
+    params[7] -= 2.*scale*fm*fm;
     
     //perturb all parameters by Fisher Matrix (in liu of Jacaboian)
-    //draw_from_fisher(data, model, source, proposal, params, seed);
-    params[0] += gsl_ran_gaussian(seed,0.1);
-    params[2] += gsl_ran_gaussian(seed,0.1);
+    draw_from_fisher(data, model, source, proposal, params, seed);
     
     //fm shift is symmetric
     return 0.0;
