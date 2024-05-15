@@ -999,7 +999,7 @@ int main(int argc, char *argv[])
         blocked_gibbs_load_balancing(global_fit, root, procID, Nproc);
 
         /* DEBUG */
-        //print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
+        print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
 
         /* save state of global model */
         print_globalfit_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag, global_fit->chainFile, global_fit_counter);

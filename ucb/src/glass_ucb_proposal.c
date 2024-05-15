@@ -1140,7 +1140,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     double norm = 0.0;
     double maxLogL = -1e60;
     double minLogL = +1e60;
-    double minp = 0.0;
+    double minp = +1e60;
     
     /* compute or restore fisher-based proposal */
     char filename[MAXSTRINGSIZE];
@@ -1195,7 +1195,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             
             
             //loop over colatitude bins
-#pragma omp parallel for num_threads(flags->threads) collapse(2)
+            #pragma omp parallel for num_threads(flags->threads) collapse(2)
             for (int j=0; j<n_theta; j++)
             {
                 //loop over longitude bins
@@ -1208,30 +1208,27 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                     {
                         get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
                         
-                        if(logL_AE > SNRCAP*SNRCAP/2)  logL_AE = SNRCAP*SNRCAP/2;//TODO: Test SNRCAP in fstatistic
-                        if(logL_AE > maxLogL) maxLogL = logL_AE;
-                        if(logL_AE < minLogL) minLogL = logL_AE;
-
-                        proposal->tensor[i][j][k] = logL_AE;//sqrt(2*logL_AE);
+                        if(logL_AE > SNRCAP*SNRCAP/2)      logL_AE = SNRCAP*SNRCAP/2;//TODO: Test SNRCAP in fstatistic
+                        proposal->tensor[i][j][k] = logL_AE;
                     }
                 }//end loop over longitude bins
             }//end loop over colatitude bins
         }//end loop over sub-bins
         
         
-        //detrend likelihood map
+        /*detrend likelihood map
         for(int i=0; i<n_f; i++)
             for(int j=0; j<n_theta; j++)
                 for(int k=0; k<n_phi; k++)
-                    proposal->tensor[i][j][k] = proposal->tensor[i][j][k] - maxLogL;
+                    proposal->tensor[i][j][k] = proposal->tensor[i][j][k] - SNRCAP*SNRCAP/2;*/
 
-        //exponentiate to get into likelhood (instead of log)
+        /*exponentiate to get into likelhood (instead of log)
         for(int i=0; i<n_f; i++)
             for(int j=0; j<n_theta; j++)
                 for(int k=0; k<n_phi; k++)
-                    proposal->tensor[i][j][k] = exp(proposal->tensor[i][j][k]);
+                    proposal->tensor[i][j][k] = proposal->tensor[i][j][k];*/
 
-        //normalize (I hope)
+        //get normalization
         for(int i=0; i<n_f; i++)
             for(int j=0; j<n_theta; j++)
                 for(int k=0; k<n_phi; k++)
@@ -1240,31 +1237,41 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         
         //normalize
         proposal->norm = (n_f*n_theta*n_phi)/norm;
-        proposal->maxp = exp(maxLogL-maxLogL)*proposal->norm;
-        minp = exp(minLogL-maxLogL)*proposal->norm;
         
-        
+        //normalize
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    proposal->tensor[i][j][k] *= proposal->norm;
+
+        //get max
+        proposal->maxp = -1.e60;
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    if(proposal->tensor[i][j][k]>proposal->maxp) proposal->maxp = proposal->tensor[i][j][k];
+
+                
         //store checkpointing files so we can skip this expensive step on resume
         propFile=fopen(filename,"wb");
         fwrite(&proposal->norm, sizeof proposal->norm, 1, propFile);
         fwrite(&proposal->maxp, sizeof proposal->norm, 1, propFile);
         for(int i=0; i<n_f; i++)
-        {
             for(int j=0; j<n_theta; j++)
-            {
                 for(int k=0; k<n_phi; k++)
-                {
-                    proposal->tensor[i][j][k] *= proposal->norm;
                     fwrite(&proposal->tensor[i][j][k],sizeof proposal->tensor[i][j][k], 1, propFile);
-                }
-            }
-        }
         fclose(propFile);
     }
 
     //print diagnostics
     if(flags->verbose)
     {
+        //get min
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    if(proposal->tensor[i][j][k]<minp) minp = proposal->tensor[i][j][k];
+
         char dirname[MAXSTRINGSIZE];
         sprintf(dirname,"%s/fstat",flags->runDir);
         mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
