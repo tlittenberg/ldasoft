@@ -107,7 +107,13 @@ int main(int argc, char* argv[])
             seg++;
         }
         n+=UCB_PER_SEGMENT;
-        if(n>count-UCB_PER_SEGMENT) break;
+        if(n>count-UCB_PER_SEGMENT) 
+        {
+            double fstart = (f[n]+f[n+1])/2.;
+            double fstop  = f[count-1]+SEGMENT_BANDWIDTH/2.;
+            fprintf(outfile,"%i %i %lg %lg\n",seg, (int)(segment_sub_bandwidth*YEAR), fstart, fstop);
+           return 0;
+        }
     }
     
     n++;
