@@ -858,6 +858,19 @@ int main(int argc, char *argv[])
     {
         UCB_Flag = 1;
         initialize_ucb_sampler(ucb_data);
+
+        /*test proposals
+        char filename[128];
+        sprintf(filename,"proposal_test_%i.dat",procID);
+        FILE *test=fopen(filename,"w");
+        for(int i=0; i<100000; i++)
+        {
+        struct Model **model = ucb_data->model;
+        double logP = draw_from_gmm_prior(data, model[0], model[0]->source[0], ucb_data->proposal[7], model[0]->source[0]->params, chain->r[0]);
+        print_source_params(data, model[0]->source[0], test);
+        fprintf(test,"%lg\n",logP);
+        }
+        fclose(test);*/
     }
 
     /* Assign processes to MBH model */

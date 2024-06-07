@@ -49,7 +49,12 @@ int main(int argc, char* argv[])
     if(f[0]<MAX_UCB_FREQUENCY)
     {
         double fstart = f[0]-(f[1]-f[0]);
-        double fstop = (f[n+UCB_PER_SEGMENT]+f[n+UCB_PER_SEGMENT+1])/2;
+        double fstop;
+        
+        if(n+UCB_PER_SEGMENT+1 < count)
+             fstop = (f[n+UCB_PER_SEGMENT]+f[n+UCB_PER_SEGMENT+1])/2;
+        else
+            fstop = f[count-1];
 
 
 	//check that the step isn't too large
@@ -83,8 +88,13 @@ int main(int argc, char* argv[])
     while(f[n]<MAX_UCB_FREQUENCY)
     {
         double fstart = (f[n]+f[n+1])/2.;
-        double fstop  = (f[n+UCB_PER_SEGMENT]+f[n+UCB_PER_SEGMENT+1])/2.;
+        double fstop;
         
+        if(n+UCB_PER_SEGMENT+1 < count)
+             fstop = (f[n+UCB_PER_SEGMENT]+f[n+UCB_PER_SEGMENT+1])/2;
+        else
+            fstop = f[count-1];
+
         //check that the step isn't too large
         double segment_sub_bandwidth = fstop - fstart;
         if(segment_sub_bandwidth > MAX_SEGMENT_BANDWIDTH)

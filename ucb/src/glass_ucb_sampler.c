@@ -243,10 +243,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         if(!flags->prior)
         {
             //form master template
-            //generate_signal_model(orbit, data, model_y, n);
+            generate_signal_model(orbit, data, model_y, n);
                         
             //update master template
-            update_signal_model(orbit, data, model_x, model_y, n);
+            //update_signal_model(orbit, data, model_x, model_y, n);
             
             //rejection sample on SNR?
             if(snr(model_y->source[n], model_y->noise) < 5.0) logPy = -INFINITY;
