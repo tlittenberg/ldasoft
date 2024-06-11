@@ -588,7 +588,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     /* Choose birth/death move, or split/merge move */
     if( gsl_rng_uniform(chain->r[ic]) < 0.5)/* birth/death move */
         rj_birth_death(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
-    else if( gsl_rng_uniform(chain->r[ic]) < 0.5) /* birth/death move */
+    else if( gsl_rng_uniform(chain->r[ic]) < 1.5) /* birth/death move */
         rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
     else
         rj_cluster_bomb(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
