@@ -1,6 +1,6 @@
-<mxfile modified="2024-06-14T12:38:27.992Z" host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" etag="wrQb00B886naznS7BMEV" version="24.5.4" type="github" pages="5">
+<mxfile modified="2024-06-14T12:40:40.710Z" host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36" etag="CK_wiVnSTHcqzKhQpMqz" version="24.5.4" type="github" pages="5">
   <diagram id="nEb7vlC1iJB3Md7GIFur" name="Overview">
-    <mxGraphModel dx="1538" dy="922" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+    <mxGraphModel dx="1089" dy="653" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -92,7 +92,7 @@
         <mxCell id="FSTufDoc9FlRJQP0JMla-50" value="L2:&amp;nbsp;Event Candidates" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#b3e2cd;strokeWidth=2;" parent="1" vertex="1">
           <mxGeometry x="716.7263683639075" y="252.29352226720647" width="61.929822406344094" height="81.75599865047235" as="geometry" />
         </mxCell>
-        <mxCell id="FSTufDoc9FlRJQP0JMla-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="FSTufDoc9FlRJQP0JMla-49" target="FSTufDoc9FlRJQP0JMla-50" edge="1">
+        <mxCell id="FSTufDoc9FlRJQP0JMla-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="FSTufDoc9FlRJQP0JMla-49" target="FSTufDoc9FlRJQP0JMla-50" edge="1">
           <mxGeometry x="113.50069558450612" y="310.44534412955466" as="geometry" />
         </mxCell>
         <mxCell id="FSTufDoc9FlRJQP0JMla-53" value="Catalog Production &amp;amp; Consolidation" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;rounded=1;" parent="1" vertex="1">
@@ -132,7 +132,7 @@
         <mxCell id="ByXIYSQWZ3scRLlWXXdl-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jumpStyle=arc;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;strokeWidth=2;strokeColor=#000000;" parent="1" source="Df4-ml29ZrFTZII1ApY7-2" target="FSTufDoc9FlRJQP0JMla-44" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Df4-ml29ZrFTZII1ApY7-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="FSTufDoc9FlRJQP0JMla-59" target="Df4-ml29ZrFTZII1ApY7-1">
+        <mxCell id="Df4-ml29ZrFTZII1ApY7-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="FSTufDoc9FlRJQP0JMla-59" target="Df4-ml29ZrFTZII1ApY7-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="FSTufDoc9FlRJQP0JMla-59" value="L0.5" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#b3e2cd;strokeWidth=2;" parent="1" vertex="1">
@@ -174,7 +174,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="ByXIYSQWZ3scRLlWXXdl-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="FSTufDoc9FlRJQP0JMla-50" target="ByXIYSQWZ3scRLlWXXdl-1" edge="1">
+        <mxCell id="ByXIYSQWZ3scRLlWXXdl-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="FSTufDoc9FlRJQP0JMla-50" target="ByXIYSQWZ3scRLlWXXdl-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="FSTufDoc9FlRJQP0JMla-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;strokeColor=#000000;jumpStyle=arc;strokeWidth=2;" parent="1" source="FSTufDoc9FlRJQP0JMla-55" target="FSTufDoc9FlRJQP0JMla-49" edge="1">
@@ -194,7 +194,7 @@
         <mxCell id="ByXIYSQWZ3scRLlWXXdl-46" value="Protected Periods" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" parent="1" vertex="1">
           <mxGeometry x="219.6641013716564" y="220.30769230769232" width="70.7697063825683" height="70.76923076923077" as="geometry" />
         </mxCell>
-        <mxCell id="Df4-ml29ZrFTZII1ApY7-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="Df4-ml29ZrFTZII1ApY7-1" target="Df4-ml29ZrFTZII1ApY7-2">
+        <mxCell id="Df4-ml29ZrFTZII1ApY7-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="Df4-ml29ZrFTZII1ApY7-1" target="Df4-ml29ZrFTZII1ApY7-2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="Df4-ml29ZrFTZII1ApY7-1" value="Initial Noise Reduction Pipeline &lt;br&gt;(INREP)" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fdcdac;strokeWidth=2;rounded=1;" vertex="1" parent="1">
