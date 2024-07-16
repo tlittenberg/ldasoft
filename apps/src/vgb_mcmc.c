@@ -19,8 +19,8 @@
  */
 
 /**
- @file glass_vgb_mcmc.c
- \brief Main function for dedicated verification binary sampler
+ @file vgb_mcmc.c
+ \brief Main function for targeted binary sampler app `vgb_mcmc`
  */
 
 /*  REQUIRED LIBRARIES  */

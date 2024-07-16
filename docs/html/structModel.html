@@ -98,34 +98,30 @@ $(document).ready(function(){initNavTree('structModel.html',''); initResizable()
 </div><!--header-->
 <div class="contents">
 
-<p>Hierarchical structure of GBMCMC model.  
+<p>Hierarchical structure of UCB model.  
  <a href="structModel.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="glass__ucb__model_8h_source.html">glass_ucb_model.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:adced92eeab92e42d27de208972882aab"><td class="memItemLeft" align="right" valign="top"><a id="adced92eeab92e42d27de208972882aab" name="adced92eeab92e42d27de208972882aab"></a>
-struct <a class="el" href="structNoise.html">Noise</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>noise</b></td></tr>
-<tr class="memdesc:adced92eeab92e42d27de208972882aab"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structNoise.html" title="Structure containing parameters and meta data for noise model in narrow-band analysis segment.">Noise</a> parameters. <br /></td></tr>
-<tr class="separator:adced92eeab92e42d27de208972882aab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ab3bf5c810c3309d3618a55f9ecf5f1"><td class="memItemLeft" align="right" valign="top"><a id="a9ab3bf5c810c3309d3618a55f9ecf5f1" name="a9ab3bf5c810c3309d3618a55f9ecf5f1"></a>
-struct <a class="el" href="structCalibration.html">Calibration</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>calibration</b></td></tr>
-<tr class="memdesc:a9ab3bf5c810c3309d3618a55f9ecf5f1"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structCalibration.html" title="Structure containing calibration parameters.">Calibration</a> parameters. <br /></td></tr>
-<tr class="separator:a9ab3bf5c810c3309d3618a55f9ecf5f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a573b322eb43a407b1a024e039daa7f6c"><td class="memItemLeft" align="right" valign="top"><a id="a573b322eb43a407b1a024e039daa7f6c" name="a573b322eb43a407b1a024e039daa7f6c"></a>
+struct <a class="el" href="structNoise.html">Noise</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>noise</b></td></tr>
+<tr class="memdesc:a573b322eb43a407b1a024e039daa7f6c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structNoise.html" title="Structure containing parameters and meta data for noise model in narrow-band analysis segment.">Noise</a> parameters. <br /></td></tr>
+<tr class="separator:a573b322eb43a407b1a024e039daa7f6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a911f6167f9b13b2b2ecac5ac47ec5a81"><td class="memItemLeft" align="right" valign="top"><a id="a911f6167f9b13b2b2ecac5ac47ec5a81" name="a911f6167f9b13b2b2ecac5ac47ec5a81"></a>
+struct <a class="el" href="structCalibration.html">Calibration</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>calibration</b></td></tr>
+<tr class="memdesc:a911f6167f9b13b2b2ecac5ac47ec5a81"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structCalibration.html" title="Structure containing calibration parameters.">Calibration</a> parameters. <br /></td></tr>
+<tr class="separator:a911f6167f9b13b2b2ecac5ac47ec5a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Source parameters</div></td></tr>
-<tr class="memitem:ac619e2d78a787aa102a15972d03a8337"><td class="memItemLeft" align="right" valign="top"><a id="ac619e2d78a787aa102a15972d03a8337" name="ac619e2d78a787aa102a15972d03a8337"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NT</b></td></tr>
-<tr class="memdesc:ac619e2d78a787aa102a15972d03a8337"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of time segments <br /></td></tr>
-<tr class="separator:ac619e2d78a787aa102a15972d03a8337"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0ebba1b58980637cb128e3c0b4709d8"><td class="memItemLeft" align="right" valign="top"><a id="aa0ebba1b58980637cb128e3c0b4709d8" name="aa0ebba1b58980637cb128e3c0b4709d8"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NP</b></td></tr>
-<tr class="memdesc:aa0ebba1b58980637cb128e3c0b4709d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">maximum number of signal parameters <br /></td></tr>
-<tr class="separator:aa0ebba1b58980637cb128e3c0b4709d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2da9aaae74e2162dda40d9c8fa2a1856"><td class="memItemLeft" align="right" valign="top"><a id="a2da9aaae74e2162dda40d9c8fa2a1856" name="a2da9aaae74e2162dda40d9c8fa2a1856"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>Nmax</b></td></tr>
 <tr class="memdesc:a2da9aaae74e2162dda40d9c8fa2a1856"><td class="mdescLeft">&#160;</td><td class="mdescRight">maximum number of signals in model <br /></td></tr>
 <tr class="separator:a2da9aaae74e2162dda40d9c8fa2a1856"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a84af614fc4655e11d0de9ce46b39ed"><td class="memItemLeft" align="right" valign="top"><a id="a4a84af614fc4655e11d0de9ce46b39ed" name="a4a84af614fc4655e11d0de9ce46b39ed"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>Neff</b></td></tr>
+<tr class="memdesc:a4a84af614fc4655e11d0de9ce46b39ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">effective maximum number of signals during burn in <br /></td></tr>
+<tr class="separator:a4a84af614fc4655e11d0de9ce46b39ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af43347a7d352e5d54d81dd978eb4ef4e"><td class="memItemLeft" align="right" valign="top"><a id="af43347a7d352e5d54d81dd978eb4ef4e" name="af43347a7d352e5d54d81dd978eb4ef4e"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>Nlive</b></td></tr>
 <tr class="memdesc:af43347a7d352e5d54d81dd978eb4ef4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">current number of signals in model <br /></td></tr>
@@ -135,27 +131,19 @@ struct <a class="el" href="structSource.html">Source</a> **&#160;</td><td class=
 <tr class="memdesc:a1498a4fc5574f28c6805293a3b31df25"><td class="mdescLeft">&#160;</td><td class="mdescRight">source structures for each signal in the model <br /></td></tr>
 <tr class="separator:a1498a4fc5574f28c6805293a3b31df25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">TDI structures</div></td></tr>
-<tr class="memitem:a80296d338501e362817c9c427eaa1e61"><td class="memItemLeft" align="right" valign="top"><a id="a80296d338501e362817c9c427eaa1e61" name="a80296d338501e362817c9c427eaa1e61"></a>
-struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>tdi</b></td></tr>
-<tr class="memdesc:a80296d338501e362817c9c427eaa1e61"><td class="mdescLeft">&#160;</td><td class="mdescRight">joint signal model <br /></td></tr>
-<tr class="separator:a80296d338501e362817c9c427eaa1e61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27a2365daa037da5089cca2ae0cd85eb"><td class="memItemLeft" align="right" valign="top"><a id="a27a2365daa037da5089cca2ae0cd85eb" name="a27a2365daa037da5089cca2ae0cd85eb"></a>
-struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>residual</b></td></tr>
-<tr class="memdesc:a27a2365daa037da5089cca2ae0cd85eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">joint residual <br /></td></tr>
-<tr class="separator:a27a2365daa037da5089cca2ae0cd85eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2459895bf7d8d29b95b939a68d7a7c52"><td class="memItemLeft" align="right" valign="top"><a id="a2459895bf7d8d29b95b939a68d7a7c52" name="a2459895bf7d8d29b95b939a68d7a7c52"></a>
+struct <a class="el" href="structTDI.html">TDI</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>tdi</b></td></tr>
+<tr class="memdesc:a2459895bf7d8d29b95b939a68d7a7c52"><td class="mdescLeft">&#160;</td><td class="mdescRight">joint signal model <br /></td></tr>
+<tr class="separator:a2459895bf7d8d29b95b939a68d7a7c52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a639e0382192f9c88ec760c86ab5d26c8"><td class="memItemLeft" align="right" valign="top"><a id="a639e0382192f9c88ec760c86ab5d26c8" name="a639e0382192f9c88ec760c86ab5d26c8"></a>
+struct <a class="el" href="structTDI.html">TDI</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>residual</b></td></tr>
+<tr class="memdesc:a639e0382192f9c88ec760c86ab5d26c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">joint residual <br /></td></tr>
+<tr class="separator:a639e0382192f9c88ec760c86ab5d26c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Segment start time</div></td></tr>
-<tr class="memitem:a188e25877cf465835bf67448f4cfd954"><td class="memItemLeft" align="right" valign="top"><a id="a188e25877cf465835bf67448f4cfd954" name="a188e25877cf465835bf67448f4cfd954"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>t0</b></td></tr>
-<tr class="memdesc:a188e25877cf465835bf67448f4cfd954"><td class="mdescLeft">&#160;</td><td class="mdescRight">start time <br /></td></tr>
-<tr class="separator:a188e25877cf465835bf67448f4cfd954"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabe6598c9debdc70f706113e1dcd5c75"><td class="memItemLeft" align="right" valign="top"><a id="aabe6598c9debdc70f706113e1dcd5c75" name="aabe6598c9debdc70f706113e1dcd5c75"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>t0_min</b></td></tr>
-<tr class="memdesc:aabe6598c9debdc70f706113e1dcd5c75"><td class="mdescLeft">&#160;</td><td class="mdescRight">lower prior bound on start time <br /></td></tr>
-<tr class="separator:aabe6598c9debdc70f706113e1dcd5c75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13a16e9be6560c1ed2c42a3002c68e13"><td class="memItemLeft" align="right" valign="top"><a id="a13a16e9be6560c1ed2c42a3002c68e13" name="a13a16e9be6560c1ed2c42a3002c68e13"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>t0_max</b></td></tr>
-<tr class="memdesc:a13a16e9be6560c1ed2c42a3002c68e13"><td class="mdescLeft">&#160;</td><td class="mdescRight">upper prior bound on start time <br /></td></tr>
-<tr class="separator:a13a16e9be6560c1ed2c42a3002c68e13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6eccafd1cf9860a5daf91a83a71e0bba"><td class="memItemLeft" align="right" valign="top"><a id="a6eccafd1cf9860a5daf91a83a71e0bba" name="a6eccafd1cf9860a5daf91a83a71e0bba"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>t0</b></td></tr>
+<tr class="memdesc:a6eccafd1cf9860a5daf91a83a71e0bba"><td class="mdescLeft">&#160;</td><td class="mdescRight">start time <br /></td></tr>
+<tr class="separator:a6eccafd1cf9860a5daf91a83a71e0bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Source parameter priors</div></td></tr>
 <tr class="memitem:aa1fc3b5e3c12cba547c4b6eeaddb7dcf"><td class="memItemLeft" align="right" valign="top"><a id="aa1fc3b5e3c12cba547c4b6eeaddb7dcf" name="aa1fc3b5e3c12cba547c4b6eeaddb7dcf"></a>
 double **&#160;</td><td class="memItemRight" valign="bottom"><b>prior</b></td></tr>
@@ -176,9 +164,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>logLnorm</b></td></
 <tr class="separator:ab8faeefe5487ef4ce6a25b6b597991ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >Hierarchical structure of GBMCMC model. </p>
+<div class="textblock"><p >Hierarchical structure of UCB model. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
+<li>ucb/src/<a class="el" href="glass__ucb__model_8h_source.html">glass_ucb_model.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

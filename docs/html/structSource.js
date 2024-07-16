@@ -17,7 +17,6 @@ var structSource =
     [ "m1", "structSource.html#aa7d7ef13a42ead0ab30c4eb5230c4413", null ],
     [ "m2", "structSource.html#aa10e2f1c847e24f0b46ffb7de338566d", null ],
     [ "Mc", "structSource.html#a5aebffc347ee9e54813ba9de123e9c17", null ],
-    [ "NP", "structSource.html#a64518fc0bb8e1ed531af5b80d8a3afe7", null ],
     [ "params", "structSource.html#a830e9cf1e671605a6ed2e0eb45a848b6", null ],
     [ "phi", "structSource.html#ad1bde2d34ae09b37ce41edf00cb3dc0c", null ],
     [ "phi0", "structSource.html#afd9eb823788fc8e1c59fd74b340ec97d", null ],

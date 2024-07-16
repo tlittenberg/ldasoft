@@ -18,7 +18,7 @@
  */
 
 /**
-@file lisa.h
+@file glass_lisa.h
 \brief Codes defining LISA instrument model
  
  Here are functions common to all parts of the LISA analysis including

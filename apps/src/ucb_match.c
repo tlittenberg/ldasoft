@@ -21,6 +21,11 @@
 
 /***************************  REQUIRED LIBRARIES  ***************************/
 
+/**
+ @file ucb_match.c
+ \brief App for computing matches between UCB catalogs
+ */
+
 #include <omp.h>
 
 #include <glass_utils.h>

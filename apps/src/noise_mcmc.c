@@ -1,9 +1,14 @@
 //
-//  glass_noise_mcmc.c
+//  noise_mcmc.c
 //
 //
 //  Created by Tyson Littenberg on 4/06/21.
 //
+
+/**
+ @file noise_mcmc.c
+ \brief Main function for stand-alone Noise parameterized model sampler 
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,9 +1,14 @@
 //
-//  GlobalFit.c
+//  globalfit.c
 //  
 //
 //  Created by Tyson Littenberg on 1/26/21.
 //
+
+/**
+ @file globalfit.c
+ \brief App for GLASS global fit sampler
+ */
 
 #include <mpi.h>
 

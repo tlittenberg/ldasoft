@@ -18,7 +18,7 @@
  */
 
 /**
- @file ucb_proposal.h
+ @file glass_ucb_proposal.h
  \brief Functions supporting proposal distributions.
  
  Includes functions for generating new samples, evaluting proposal densities, and setup of specialized proposals using input data.

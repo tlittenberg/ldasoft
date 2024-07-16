@@ -14,7 +14,7 @@ var searchData=
   ['dimension_11',['dimension',['../structChain.html#aa63851a8163ac41d4dcf3af2f6a1e3bf',1,'Chain']]],
   ['dimensionfile_12',['dimensionFile',['../structChain.html#a229f5af69a6a1417256f88a4c76d61f4',1,'Chain']]],
   ['distance_13',['distance',['../structEntry.html#aae3c93bb5444df359204fe1609074c1c',1,'Entry']]],
-  ['dmax_14',['DMAX',['../structData.html#ae2e953ef9275991dbefdb9a3b15034c7',1,'Data::DMAX()'],['../structFlags.html#a2a1af09cef9b51699937ca508c04fe80',1,'Flags::DMAX()']]],
+  ['dmax_14',['DMAX',['../structFlags.html#a2a1af09cef9b51699937ca508c04fe80',1,'Flags']]],
   ['downsample_15',['downsample',['../structData.html#abd3208e22c3348f0356e4c2f13f4ffc1',1,'Data']]],
   ['dphi_16',['dphi',['../structPrior.html#a438aed9a92f28b0dac656757dd329984',1,'Prior']]],
   ['dx_17',['dx',['../structOrbit.html#a9e5120fa027ceed1ae0d58bcbc63f13b',1,'Orbit']]],

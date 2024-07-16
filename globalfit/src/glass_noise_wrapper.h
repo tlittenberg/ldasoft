@@ -1,9 +1,16 @@
 //
-//  NoiseWrapper.h
+//  glass_noise_wrapper.h
 //  
 //
 //  Created by Tyson Littenberg on 2/5/21.
 //
+
+/**
+ @file glass_noise_wrapper.h
+ \brief Wrapper functions to noise sampler.
+
+ Functions for handling the memory, data sharing, and sampling of the NOISE block for the global fit analysis.
+ */
 
 #ifndef NoiseWrapper_h
 #define NoiseWrapper_h

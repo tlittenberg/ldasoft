@@ -18,7 +18,7 @@
  */
 
 /**
- @file Constants.h
+ @file glass_constants.h
  \brief Mathematical and physical constants
  */
 
@@ -75,11 +75,7 @@
 //! Astronomical unit [m]
 #define AU 1.49597870700e11
 
-/**
- \brief Orbital radius of the LISA guiding center [m]
- 
- \todo \c RGC belongs in \c LISA.h
-*/
+//! Orbital radius of the LISA guiding center [m]
 #define RGC (1.0*AU)
 
 #endif /* constants_h */

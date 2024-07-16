@@ -5,6 +5,17 @@
 //  Created by Tyson Littenberg on 11/29/23.
 //
 
+/** 
+ @file glass_utils.h
+ \brief Libary for GLASS package
+ 
+ Including
+ - GSL dependencies
+ - physical constants
+ - LISA constellation 
+ - common math functions
+ */
+
 #ifndef utils_h
 #define utils_h
 

@@ -18,7 +18,7 @@
  */
 
 /**
- @file ucb_prior.h
+ @file glass_ucb_prior.h
  \brief Functions supporting prior distributions.
  
  Includes functions for createing and evaluating model priors.

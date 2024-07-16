@@ -18,7 +18,7 @@
  */
 
 /**
- @file ucb_waveform.h
+ @file glass_ucb_waveform.h
  \brief Functions for UCB waveform generation. 
  */
 

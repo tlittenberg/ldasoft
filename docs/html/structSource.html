@@ -101,17 +101,13 @@ $(document).ready(function(){initNavTree('structSource.html',''); initResizable(
 <p>Structure containing parameters and meta data for a single galactic binary.  
  <a href="structSource.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="glass__ucb__model_8h_source.html">glass_ucb_model.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a64518fc0bb8e1ed531af5b80d8a3afe7"><td class="memItemLeft" align="right" valign="top"><a id="a64518fc0bb8e1ed531af5b80d8a3afe7" name="a64518fc0bb8e1ed531af5b80d8a3afe7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NP</b></td></tr>
-<tr class="memdesc:a64518fc0bb8e1ed531af5b80d8a3afe7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of parameters in signal model. <br /></td></tr>
-<tr class="separator:a64518fc0bb8e1ed531af5b80d8a3afe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a830e9cf1e671605a6ed2e0eb45a848b6"><td class="memItemLeft" align="right" valign="top"><a id="a830e9cf1e671605a6ed2e0eb45a848b6" name="a830e9cf1e671605a6ed2e0eb45a848b6"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>params</b></td></tr>
-<tr class="memdesc:a830e9cf1e671605a6ed2e0eb45a848b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array containing parameters to be passed to <a class="el" href="GalacticBinaryWaveform_8h.html#a9d069fe23ae3e4644200db917dd3ea3e" title="Galactic binary waveform generator using fast-slow decomposition first described in Cornish and Litte...">galactic_binary()</a> <br /></td></tr>
+<tr class="memdesc:a830e9cf1e671605a6ed2e0eb45a848b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array containing parameters to be passed to <a class="el" href="glass__ucb__waveform_8h.html#a8c97ed8e5e6214016cb624f27abc7377" title="Galactic binary waveform generator using fast-slow decomposition first described in Cornish and Litte...">galactic_binary()</a> <br /></td></tr>
 <tr class="separator:a830e9cf1e671605a6ed2e0eb45a848b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac74563913c9e6fca51c9120e54bcfeb0"><td class="memItemLeft" align="right" valign="top"><a id="ac74563913c9e6fca51c9120e54bcfeb0" name="ac74563913c9e6fca51c9120e54bcfeb0"></a>
 struct <a class="el" href="structTDI.html">TDI</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>tdi</b></td></tr>
@@ -124,7 +120,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>f0</b></td></tr>
 <tr class="separator:a6a6822a2e6bf26c9ed13e60c200d5eb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a313001075cc0808f9843185e77de7fa2"><td class="memItemLeft" align="right" valign="top"><a id="a313001075cc0808f9843185e77de7fa2" name="a313001075cc0808f9843185e77de7fa2"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>dfdt</b></td></tr>
-<tr class="memdesc:a313001075cc0808f9843185e77de7fa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">First time derivitive of GW frequemcy \( \frac{df}{dt}\), see <a class="el" href="GalacticBinaryWaveform_8h.html#a49e07d18b0a38ab1d1b3472056c6df60" title="Compute GR-driven frequency derivative from intrinsic parameters.">galactic_binary_fdot()</a> <br /></td></tr>
+<tr class="memdesc:a313001075cc0808f9843185e77de7fa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">First time derivitive of GW frequemcy \( \frac{df}{dt}\), see <a class="el" href="glass__ucb__waveform_8h.html#a49e07d18b0a38ab1d1b3472056c6df60" title="Compute GR-driven frequency derivative from intrinsic parameters.">galactic_binary_fdot()</a> <br /></td></tr>
 <tr class="separator:a313001075cc0808f9843185e77de7fa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afaace88d39505cd67763f4bca5254530"><td class="memItemLeft" align="right" valign="top"><a id="afaace88d39505cd67763f4bca5254530" name="afaace88d39505cd67763f4bca5254530"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>d2fdt2</b></td></tr>
@@ -132,7 +128,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>d2fdt2</b></td></tr
 <tr class="separator:afaace88d39505cd67763f4bca5254530"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87ed9737a328443783a26b9354faa762"><td class="memItemLeft" align="right" valign="top"><a id="a87ed9737a328443783a26b9354faa762" name="a87ed9737a328443783a26b9354faa762"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>amp</b></td></tr>
-<tr class="memdesc:a87ed9737a328443783a26b9354faa762"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gravitational wave amplitude \( \mathcal{A} = 2 \frac{\mathcal{M}^{5/3} (\pi f)^{2/3}}{D_L} \), see <a class="el" href="GalacticBinaryWaveform_8h.html#a5c0690180520fdee2364df46988d7485" title="Compute GW amplitude from intrinsic parameters.">galactic_binary_Amp()</a> <br /></td></tr>
+<tr class="memdesc:a87ed9737a328443783a26b9354faa762"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gravitational wave amplitude \( \mathcal{A} = 2 \frac{\mathcal{M}^{5/3} (\pi f)^{2/3}}{D_L} \), see <a class="el" href="glass__ucb__waveform_8h.html#a5c0690180520fdee2364df46988d7485" title="Compute GW amplitude from intrinsic parameters.">galactic_binary_Amp()</a> <br /></td></tr>
 <tr class="separator:a87ed9737a328443783a26b9354faa762"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Extrinsic Parameters</div></td></tr>
 <tr class="memitem:accca5b54fca0f86a3b230c06e06ab8d7"><td class="memItemLeft" align="right" valign="top"><a id="accca5b54fca0f86a3b230c06e06ab8d7" name="accca5b54fca0f86a3b230c06e06ab8d7"></a>
@@ -156,7 +152,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>costheta</b></td></
 <tr class="memdesc:a215d5274a04c6b7bc63910d5fe3fd338"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cosine of ecliptic co-latitude. <br /></td></tr>
 <tr class="separator:a215d5274a04c6b7bc63910d5fe3fd338"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Derived Parameters</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p >See GalacticBinary.c for functions to convert between intrinsic and derived parameters </p>
+<tr><td colspan="2"><div class="groupText"><p >See data.c for functions to convert between intrinsic and derived parameters </p>
 </div></td></tr>
 <tr class="memitem:aa7d7ef13a42ead0ab30c4eb5230c4413"><td class="memItemLeft" align="right" valign="top"><a id="aa7d7ef13a42ead0ab30c4eb5230c4413" name="aa7d7ef13a42ead0ab30c4eb5230c4413"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>m1</b></td></tr>
@@ -168,18 +164,18 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>m2</b></td></tr>
 <tr class="separator:aa10e2f1c847e24f0b46ffb7de338566d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5aebffc347ee9e54813ba9de123e9c17"><td class="memItemLeft" align="right" valign="top"><a id="a5aebffc347ee9e54813ba9de123e9c17" name="a5aebffc347ee9e54813ba9de123e9c17"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>Mc</b></td></tr>
-<tr class="memdesc:a5aebffc347ee9e54813ba9de123e9c17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chirp mass \(\mathcal{M}\), see <a class="el" href="GalacticBinaryWaveform_8h.html#a2a79df1bf60f0121a5c94ab48ba6ac74" title="Compute chirp mass from frequency parameters.">galactic_binary_Mc()</a> <br /></td></tr>
+<tr class="memdesc:a5aebffc347ee9e54813ba9de123e9c17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chirp mass \(\mathcal{M}\), see <a class="el" href="glass__ucb__waveform_8h.html#a2a79df1bf60f0121a5c94ab48ba6ac74" title="Compute chirp mass from frequency parameters.">galactic_binary_Mc()</a> <br /></td></tr>
 <tr class="separator:a5aebffc347ee9e54813ba9de123e9c17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8e7ce137aa53c7f1666a9947d4ab7f2"><td class="memItemLeft" align="right" valign="top"><a id="af8e7ce137aa53c7f1666a9947d4ab7f2" name="af8e7ce137aa53c7f1666a9947d4ab7f2"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>D</b></td></tr>
-<tr class="memdesc:af8e7ce137aa53c7f1666a9947d4ab7f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Luminosity Distance \(D_L\), see <a class="el" href="GalacticBinaryWaveform_8h.html#a606c6145ac36a717a77b3bcaae536531" title="Compute luminosity distance assuming GR-driven orbital evolution.">galactic_binary_dL()</a> <br /></td></tr>
+<tr class="memdesc:af8e7ce137aa53c7f1666a9947d4ab7f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Luminosity Distance \(D_L\), see <a class="el" href="glass__ucb__waveform_8h.html#a606c6145ac36a717a77b3bcaae536531" title="Compute luminosity distance assuming GR-driven orbital evolution.">galactic_binary_dL()</a> <br /></td></tr>
 <tr class="separator:af8e7ce137aa53c7f1666a9947d4ab7f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Template waveform alignment</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p >See <a class="el" href="GalacticBinaryWaveform_8h.html#a83dd310bc696e85059ce0a838d61e045" title="aligns generated UCB waveform with Data array">galactic_binary_alignment()</a> </p>
+<tr><td colspan="2"><div class="groupText"><p >See <a class="el" href="glass__ucb__waveform_8h.html#a83dd310bc696e85059ce0a838d61e045" title="aligns generated UCB waveform with Data array">galactic_binary_alignment()</a> </p>
 </div></td></tr>
 <tr class="memitem:afb20adbd6f0f29bdb4fd6c5763f84d61"><td class="memItemLeft" align="right" valign="top"><a id="afb20adbd6f0f29bdb4fd6c5763f84d61" name="afb20adbd6f0f29bdb4fd6c5763f84d61"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>BW</b></td></tr>
-<tr class="memdesc:afb20adbd6f0f29bdb4fd6c5763f84d61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal bandwidth in frequency bins, see <a class="el" href="GalacticBinaryWaveform_8h.html#a71eeb38f8dbebe3286e55de7ade6f4b6" title="computes frequency width of template based on SNR, Doppler spreading, sinc spreading from finite samp...">galactic_binary_bandwidth()</a> <br /></td></tr>
+<tr class="memdesc:afb20adbd6f0f29bdb4fd6c5763f84d61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal bandwidth in frequency bins, see <a class="el" href="glass__ucb__waveform_8h.html#a71eeb38f8dbebe3286e55de7ade6f4b6" title="computes frequency width of template based on SNR, Doppler spreading, sinc spreading from finite samp...">galactic_binary_bandwidth()</a> <br /></td></tr>
 <tr class="separator:afb20adbd6f0f29bdb4fd6c5763f84d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3bea88dc59c6a032e92bed8b67d36716"><td class="memItemLeft" align="right" valign="top"><a id="a3bea88dc59c6a032e92bed8b67d36716" name="a3bea88dc59c6a032e92bed8b67d36716"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>qmin</b></td></tr>
@@ -198,7 +194,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>imax</b></td></tr>
 <tr class="memdesc:a0c042cda651c7d4fef2820f2ae9901cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum frequency bin of signal relative to segment start. <br /></td></tr>
 <tr class="separator:a0c042cda651c7d4fef2820f2ae9901cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Fisher Information Matrix</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p >See <a class="el" href="GalacticBinaryWaveform_8h.html#ad303ca6118903bd563cb3bee4e8ac174" title="computes Fisher Information Matrix for UCB waveform parameters Source::params">galactic_binary_fisher()</a> </p>
+<tr><td colspan="2"><div class="groupText"><p >See <a class="el" href="glass__ucb__waveform_8h.html#ad303ca6118903bd563cb3bee4e8ac174" title="computes Fisher Information Matrix for UCB waveform parameters Source::params">galactic_binary_fisher()</a> </p>
 </div></td></tr>
 <tr class="memitem:a5df63e1051bf6e31a2d9d50b4ce03b53"><td class="memItemLeft" align="right" valign="top"><a id="a5df63e1051bf6e31a2d9d50b4ce03b53" name="a5df63e1051bf6e31a2d9d50b4ce03b53"></a>
 double **&#160;</td><td class="memItemRight" valign="bottom"><b>fisher_matrix</b></td></tr>
@@ -220,7 +216,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>fisher_update_flag</b>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Structure containing parameters and meta data for a single galactic binary. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
+<li>ucb/src/<a class="el" href="glass__ucb__model_8h_source.html">glass_ucb_model.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -17,14 +17,27 @@
  *  MA  02111-1307  USA
  */
 
+/**
+ @file glass_noise_sampler.h
+ \brief Sampling routines for NOISE module
+ 
+ Including
+ - Trans-dimension spline noise model sampler
+ - Fixed-dimension link-level instrument noise sampler
+ - Fixed-dimension phenomenological ucb foreground sampler
+ */
 #ifndef glass_noise_sampler_h
 #define glass_noise_sampler_h
 
 /**
- \brief In-place parallel tempering exchange of `model` states
+ \brief In-place parallel tempering exchange of instrument noise `model` states
+ */
+void noise_ptmcmc(struct InstrumentModel **model, struct Chain *chain, struct Flags *flags);
+
+/**
+ \brief In-place parallel tempering exchange of spline noise `model` states
  */
 void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags *flags);
-void noise_ptmcmc(struct InstrumentModel **model, struct Chain *chain, struct Flags *flags);
 
 /**
  \brief Fixed-dimension update of each parallel tempered spline `model` state

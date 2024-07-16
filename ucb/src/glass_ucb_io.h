@@ -18,8 +18,8 @@
  */
 
 /**
- @file ucb_io.h
- \brief Functions handling I/O for `gbmcmc`.
+ @file glass_ucb_io.h
+ \brief Functions handling I/O for `ucb_mcmc`.
  */
 
 

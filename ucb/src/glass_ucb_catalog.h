@@ -18,8 +18,8 @@
  */
 
 /**
- @file ucb_catalog.h
- \brief Codes for postprocessing GBMCMC results and formatting for catalog production
+ @file glass_ucb_catalog.h
+ \brief Codes for postprocessing `ucb_mcmc` results and formatting for catalog production
  
  */
 

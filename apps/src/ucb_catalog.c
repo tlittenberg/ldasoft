@@ -17,6 +17,11 @@
  *  MA  02111-1307  USA
  */
 
+/**
+ @file ucb_catalog.c
+ \brief App for post-processing UCB/VGB sampler output for catalog generation
+ */
+
 #include <glass_utils.h>
 #include <glass_ucb.h>
 

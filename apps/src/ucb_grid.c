@@ -1,3 +1,8 @@
+/**
+ @file ucb_grid.c
+ \brief App for setting up frequency grid based on UCB catalog
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

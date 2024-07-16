@@ -1,9 +1,14 @@
 //
-//  math.h
+//  glass_math.h
 //  utils
 //
 //  Created by Tyson Littenberg on 11/29/23.
 //
+
+/**
+@file glass_math.h
+\brief Common math functions used throughout GLASS library
+ */
 
 #ifndef math_h
 #define math_h
@@ -36,7 +41,24 @@ double chirpmass(double m1, double m2);
  */
 double ipow(double x, int n);
 
+/**
+\brief Tukey window time series data
+   
+ @param data[in,out] time series to be windowed
+ @param alpha[in] size of window filter in [s]
+ @param N[in] size of time series
+ */
 void tukey(double *data, double alpha, int N);
+
+/**
+\brief Rearrange output of GSL RFT 
+ 
+ Real and Imaginary components from GSL RFT functions are not ordered the way the rest of the package expects.
+  
+ @param x[out] array to be filled with ordered fourier coefficients
+ @param x_gsl[in] input array with gsl-formatted courier coefficients
+ @param N[in] size of arrays
+ */
 void unpack_gsl_rft_output(double *x, double *x_gsl, int N);
 
 /**
@@ -128,11 +150,11 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
  Density based clustering algorithm implemented here for 1D
  data with simple Euclidean distance measure
   
- @param X set of data points to cluster
- @param eps maximum distance between two samples to be considered neighbors
- @param min minimum number of samples in a neighborhood to be considered a cluster
- @param C cluster assignments mapping C[n] = M means X[n] is assigned to cluster M
- @param K total number of clusters found
+ @param[in] X set of data points to cluster
+ @param[in] eps maximum distance between two samples to be considered neighbors
+ @param[in] min minimum number of samples in a neighborhood to be considered a cluster
+ @param[out] C cluster assignments mapping C[n] = M means X[n] is assigned to cluster M
+ @param[out] K total number of clusters found
  */
 void dbscan(gsl_vector *X, double eps, int min, int *C, int *K);
 

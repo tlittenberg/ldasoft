@@ -17,6 +17,11 @@
  *  MA  02111-1307  USA
  */
 
+/**
+ @file glass_noise_io.h
+ \brief Functions handling input/output for noise sampler.
+
+ */
 #ifndef noise_io_h
 #define noise_io_h
 

@@ -18,8 +18,8 @@
  */
 
 /**
- @file ucb_model.h
- \brief Functions for defining, manipulating, and evaluating Galactic Binary model
+ @file glass_ucb_model.h
+ \brief Functions for defining, manipulating, and evaluating UCB model
  */
 
 

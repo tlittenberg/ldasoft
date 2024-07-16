@@ -5,6 +5,16 @@
 //  Created by Tyson Littenberg on 9/7/21.
 //
 
+/** 
+ @file glass_ucb.h
+ \brief Libary for UCB module
+ 
+ Including
+ - UCB data model
+ - UCB sampler functions
+ - UCB waveform generator
+ */
+
 #ifndef glass_ucb_h
 #define glass_ucb_h
 

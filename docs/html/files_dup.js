@@ -1,9 +1,8 @@
 var files_dup =
 [
-    [ "gbfisher", "dir_0d3394ef5f58662dc6bd954335876960.html", "dir_0d3394ef5f58662dc6bd954335876960" ],
-    [ "gbmcmc", "dir_f8b0faebf59e148704c9846d694299bd.html", "dir_f8b0faebf59e148704c9846d694299bd" ],
+    [ "apps", "dir_9654b8d08f4bba4e84b362c5fd320bee.html", "dir_9654b8d08f4bba4e84b362c5fd320bee" ],
     [ "globalfit", "dir_6f345ece8e376ca033dcc87d17ffcc55.html", "dir_6f345ece8e376ca033dcc87d17ffcc55" ],
-    [ "lisa", "dir_80fc33792ea43ff1db3097b733b75c6a.html", "dir_80fc33792ea43ff1db3097b733b75c6a" ],
     [ "noise", "dir_bbfc09447ef6cc373d67cb10e276e1cd.html", "dir_bbfc09447ef6cc373d67cb10e276e1cd" ],
-    [ "tools", "dir_4eeb864c4eec08c7d6b9d3b0352cfdde.html", "dir_4eeb864c4eec08c7d6b9d3b0352cfdde" ]
+    [ "ucb", "dir_85dbb6b122093deb312ddf7aa05a3747.html", "dir_85dbb6b122093deb312ddf7aa05a3747" ],
+    [ "utils", "dir_cbdb8362360e11eafe2fa3bc74cf0ffd.html", "dir_cbdb8362360e11eafe2fa3bc74cf0ffd" ]
 ];

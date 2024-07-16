@@ -1,9 +1,16 @@
 //
-//  MBHWrapper.h
+//  glass_mbh_wrapper.h
 //  global_fit
 //
 //  Created by Tyson Littenberg on 9/7/21.
 //
+
+/**
+ @file glass_mbh_wrapper.h
+ \brief Wrapper functions to MBH sampler.
+
+ Functions for handling the memory, data sharing, and sampling of the MBH block for the global fit analysis.
+ */
 
 #ifndef MBHWrapper_h
 #define MBHWrapper_h

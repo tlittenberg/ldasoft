@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('structData.html',''); initResizable();
 <p>Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.  
  <a href="structData.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="glass__data_8h_source.html">glass_data.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -109,22 +109,10 @@ Public Attributes</h2></td></tr>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>N</b></td></tr>
 <tr class="memdesc:a3be03de44986fc55905076acc5cdae2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of frequency bins <br /></td></tr>
 <tr class="separator:a3be03de44986fc55905076acc5cdae2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01b4f47e67697ca6678e6f0b84dc60a3"><td class="memItemLeft" align="right" valign="top"><a id="a01b4f47e67697ca6678e6f0b84dc60a3" name="a01b4f47e67697ca6678e6f0b84dc60a3"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>Nmax</b></td></tr>
-<tr class="memdesc:a01b4f47e67697ca6678e6f0b84dc60a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">max size of frequency segment (for global fit) <br /></td></tr>
-<tr class="separator:a01b4f47e67697ca6678e6f0b84dc60a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a913af45a251a07eb589171c23afa4f34"><td class="memItemLeft" align="right" valign="top"><a id="a913af45a251a07eb589171c23afa4f34" name="a913af45a251a07eb589171c23afa4f34"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NT</b></td></tr>
-<tr class="memdesc:a913af45a251a07eb589171c23afa4f34"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of time segments <br /></td></tr>
-<tr class="separator:a913af45a251a07eb589171c23afa4f34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40984ec8faee6f66f294f19efdffc748"><td class="memItemLeft" align="right" valign="top"><a id="a40984ec8faee6f66f294f19efdffc748" name="a40984ec8faee6f66f294f19efdffc748"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>Nchannel</b></td></tr>
 <tr class="memdesc:a40984ec8faee6f66f294f19efdffc748"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of data channels <br /></td></tr>
 <tr class="separator:a40984ec8faee6f66f294f19efdffc748"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2e953ef9275991dbefdb9a3b15034c7"><td class="memItemLeft" align="right" valign="top"><a id="ae2e953ef9275991dbefdb9a3b15034c7" name="ae2e953ef9275991dbefdb9a3b15034c7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>DMAX</b></td></tr>
-<tr class="memdesc:ae2e953ef9275991dbefdb9a3b15034c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">max dimension of signal model <br /></td></tr>
-<tr class="separator:ae2e953ef9275991dbefdb9a3b15034c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab634a9fe8447ceeb5175886e5bc8d6fa"><td class="memItemLeft" align="right" valign="top"><a id="ab634a9fe8447ceeb5175886e5bc8d6fa" name="ab634a9fe8447ceeb5175886e5bc8d6fa"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>logN</b></td></tr>
 <tr class="memdesc:ab634a9fe8447ceeb5175886e5bc8d6fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">log total number of data points \( \log ( 2 \times N \times N_{\rm channel} \times N_{\rm T} )\) <br /></td></tr>
@@ -151,14 +139,10 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>T</b></td></tr>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>sqT</b></td></tr>
 <tr class="memdesc:ad44b894b08062090b76441d16570bca3"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(\sqrt{T}\) <br /></td></tr>
 <tr class="separator:ad44b894b08062090b76441d16570bca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea49bff932eaf931689edccaa155b333"><td class="memItemLeft" align="right" valign="top"><a id="aea49bff932eaf931689edccaa155b333" name="aea49bff932eaf931689edccaa155b333"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>t0</b></td></tr>
-<tr class="memdesc:aea49bff932eaf931689edccaa155b333"><td class="mdescLeft">&#160;</td><td class="mdescRight">start times of segments <br /></td></tr>
-<tr class="separator:aea49bff932eaf931689edccaa155b333"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73c788cfea88195d14c53f9e52a8ada1"><td class="memItemLeft" align="right" valign="top"><a id="a73c788cfea88195d14c53f9e52a8ada1" name="a73c788cfea88195d14c53f9e52a8ada1"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>tgap</b></td></tr>
-<tr class="memdesc:a73c788cfea88195d14c53f9e52a8ada1"><td class="mdescLeft">&#160;</td><td class="mdescRight">time between segments <br /></td></tr>
-<tr class="separator:a73c788cfea88195d14c53f9e52a8ada1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bca9f778266aa455156ba1ced78f06c"><td class="memItemLeft" align="right" valign="top"><a id="a0bca9f778266aa455156ba1ced78f06c" name="a0bca9f778266aa455156ba1ced78f06c"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>t0</b></td></tr>
+<tr class="memdesc:a0bca9f778266aa455156ba1ced78f06c"><td class="mdescLeft">&#160;</td><td class="mdescRight">start times of segments <br /></td></tr>
+<tr class="separator:a0bca9f778266aa455156ba1ced78f06c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Analysis Frequency Segment</div></td></tr>
 <tr class="memitem:afc6d1d4930961006b7d3593230ce07b7"><td class="memItemLeft" align="right" valign="top"><a id="afc6d1d4930961006b7d3593230ce07b7" name="afc6d1d4930961006b7d3593230ce07b7"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>qmin</b></td></tr>
@@ -197,23 +181,23 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>logfmax</b></td></t
 <tr class="memdesc:a7f8568f5d6137c250793cc1fa456a5ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">\(\log(f_{\rm max})\) appears spline setup for bayesline <br /></td></tr>
 <tr class="separator:a7f8568f5d6137c250793cc1fa456a5ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">TDI Data and Noise</div></td></tr>
-<tr class="memitem:a98432cd2a586429f74d696da622446d1"><td class="memItemLeft" align="right" valign="top"><a id="a98432cd2a586429f74d696da622446d1" name="a98432cd2a586429f74d696da622446d1"></a>
-struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>tdi</b></td></tr>
-<tr class="memdesc:a98432cd2a586429f74d696da622446d1"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data channels as seen by sampler. <br /></td></tr>
-<tr class="separator:a98432cd2a586429f74d696da622446d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95a114acc26b62ac61915fc086bfb9d9"><td class="memItemLeft" align="right" valign="top"><a id="a95a114acc26b62ac61915fc086bfb9d9" name="a95a114acc26b62ac61915fc086bfb9d9"></a>
-struct <a class="el" href="structTDI.html">TDI</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>raw</b></td></tr>
-<tr class="memdesc:a95a114acc26b62ac61915fc086bfb9d9"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data channels unaltered from input. <br /></td></tr>
-<tr class="separator:a95a114acc26b62ac61915fc086bfb9d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5646530b83cfb236488c75567a94317d"><td class="memItemLeft" align="right" valign="top"><a id="a5646530b83cfb236488c75567a94317d" name="a5646530b83cfb236488c75567a94317d"></a>
-struct <a class="el" href="structNoise.html">Noise</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>noise</b></td></tr>
-<tr class="memdesc:a5646530b83cfb236488c75567a94317d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference noise model. <br /></td></tr>
-<tr class="separator:a5646530b83cfb236488c75567a94317d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a993080bd85164be88e11fef7a122fd92"><td class="memItemLeft" align="right" valign="top"><a id="a993080bd85164be88e11fef7a122fd92" name="a993080bd85164be88e11fef7a122fd92"></a>
+struct <a class="el" href="structTDI.html">TDI</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>tdi</b></td></tr>
+<tr class="memdesc:a993080bd85164be88e11fef7a122fd92"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data channels as seen by sampler. <br /></td></tr>
+<tr class="separator:a993080bd85164be88e11fef7a122fd92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04f15600ca081dd0ef6caed362ee6aad"><td class="memItemLeft" align="right" valign="top"><a id="a04f15600ca081dd0ef6caed362ee6aad" name="a04f15600ca081dd0ef6caed362ee6aad"></a>
+struct <a class="el" href="structTDI.html">TDI</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>raw</b></td></tr>
+<tr class="memdesc:a04f15600ca081dd0ef6caed362ee6aad"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structTDI.html" title="Structure for Time Delay Interferometry data and metadata.">TDI</a> data channels unaltered from input. <br /></td></tr>
+<tr class="separator:a04f15600ca081dd0ef6caed362ee6aad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c9485ea0e9eec51b6e6b1c357665a65"><td class="memItemLeft" align="right" valign="top"><a id="a4c9485ea0e9eec51b6e6b1c357665a65" name="a4c9485ea0e9eec51b6e6b1c357665a65"></a>
+struct <a class="el" href="structNoise.html">Noise</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>noise</b></td></tr>
+<tr class="memdesc:a4c9485ea0e9eec51b6e6b1c357665a65"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference noise model. <br /></td></tr>
+<tr class="separator:a4c9485ea0e9eec51b6e6b1c357665a65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">format</a> [16]</td></tr>
 <tr class="memdesc:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convention for data format.  <a href="structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e">More...</a><br /></td></tr>
 <tr class="separator:ad89c9b316266fa46dfd5b5b3897fcf6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a8c0ca83849d99330b5ea7958cee815"><td class="memItemLeft" align="right" valign="top"><a id="a0a8c0ca83849d99330b5ea7958cee815" name="a0a8c0ca83849d99330b5ea7958cee815"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>dataDir</b> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+char&#160;</td><td class="memItemRight" valign="bottom"><b>dataDir</b> [<a class="el" href="glass__data_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
 <tr class="memdesc:a0a8c0ca83849d99330b5ea7958cee815"><td class="mdescLeft">&#160;</td><td class="mdescRight">Directory for storing data files. <br /></td></tr>
 <tr class="separator:a0a8c0ca83849d99330b5ea7958cee815"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30f6e2b62b5480035d01a19b13b23269"><td class="memItemLeft" align="right" valign="top"><a id="a30f6e2b62b5480035d01a19b13b23269" name="a30f6e2b62b5480035d01a19b13b23269"></a>
@@ -237,52 +221,30 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>Nwave</b></td></tr>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>downsample</b></td></tr>
 <tr class="memdesc:abd3208e22c3348f0356e4c2f13f4ffc1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Downsample factor for getting the desired number of samples. <br /></td></tr>
 <tr class="separator:abd3208e22c3348f0356e4c2f13f4ffc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8200a4f7f4a97f94dc7500299da945db"><td class="memItemLeft" align="right" valign="top"><a id="a8200a4f7f4a97f94dc7500299da945db" name="a8200a4f7f4a97f94dc7500299da945db"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>h_rec</b></td></tr>
-<tr class="memdesc:a8200a4f7f4a97f94dc7500299da945db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store waveform reconstruction samples \( 2N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
-<tr class="separator:a8200a4f7f4a97f94dc7500299da945db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad801eb68f47932db30ec701694b72cee"><td class="memItemLeft" align="right" valign="top"><a id="ad801eb68f47932db30ec701694b72cee" name="ad801eb68f47932db30ec701694b72cee"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>h_res</b></td></tr>
-<tr class="memdesc:ad801eb68f47932db30ec701694b72cee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store data residual samples \( 2N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
-<tr class="separator:ad801eb68f47932db30ec701694b72cee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7261769b2611a460f8a6ccc5ce70992f"><td class="memItemLeft" align="right" valign="top"><a id="a7261769b2611a460f8a6ccc5ce70992f" name="a7261769b2611a460f8a6ccc5ce70992f"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>r_pow</b></td></tr>
-<tr class="memdesc:a7261769b2611a460f8a6ccc5ce70992f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store residual power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
-<tr class="separator:a7261769b2611a460f8a6ccc5ce70992f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00d4717e62c1120636b7f5b07b71d121"><td class="memItemLeft" align="right" valign="top"><a id="a00d4717e62c1120636b7f5b07b71d121" name="a00d4717e62c1120636b7f5b07b71d121"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>h_pow</b></td></tr>
-<tr class="memdesc:a00d4717e62c1120636b7f5b07b71d121"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store waveform power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
-<tr class="separator:a00d4717e62c1120636b7f5b07b71d121"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="memItemLeft" align="right" valign="top"><a id="a4a466b0d0d1d0e685ca3ba3230f331d6" name="a4a466b0d0d1d0e685ca3ba3230f331d6"></a>
-double ****&#160;</td><td class="memItemRight" valign="bottom"><b>S_pow</b></td></tr>
-<tr class="memdesc:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store noise power samples \( N \times N_\rm{channel} \times NT \times NMCMC \). <br /></td></tr>
-<tr class="separator:a4a466b0d0d1d0e685ca3ba3230f331d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9365036f5fa0b67e99fea7038bda85c"><td class="memItemLeft" align="right" valign="top"><a id="ae9365036f5fa0b67e99fea7038bda85c" name="ae9365036f5fa0b67e99fea7038bda85c"></a>
+double ***&#160;</td><td class="memItemRight" valign="bottom"><b>h_rec</b></td></tr>
+<tr class="memdesc:ae9365036f5fa0b67e99fea7038bda85c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store waveform reconstruction samples \( 2N \times N_\rm{channel} \times NMCMC \). <br /></td></tr>
+<tr class="separator:ae9365036f5fa0b67e99fea7038bda85c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ae923dd9729fc051117d6a7ae5836ea"><td class="memItemLeft" align="right" valign="top"><a id="a7ae923dd9729fc051117d6a7ae5836ea" name="a7ae923dd9729fc051117d6a7ae5836ea"></a>
+double ***&#160;</td><td class="memItemRight" valign="bottom"><b>h_res</b></td></tr>
+<tr class="memdesc:a7ae923dd9729fc051117d6a7ae5836ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store data residual samples \( 2N \times N_\rm{channel} \times NMCMC \). <br /></td></tr>
+<tr class="separator:a7ae923dd9729fc051117d6a7ae5836ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a243de15af17304d03ca7d4325f83e9f9"><td class="memItemLeft" align="right" valign="top"><a id="a243de15af17304d03ca7d4325f83e9f9" name="a243de15af17304d03ca7d4325f83e9f9"></a>
+double ***&#160;</td><td class="memItemRight" valign="bottom"><b>r_pow</b></td></tr>
+<tr class="memdesc:a243de15af17304d03ca7d4325f83e9f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store residual power samples \( N \times N_\rm{channel} \times NMCMC \). <br /></td></tr>
+<tr class="separator:a243de15af17304d03ca7d4325f83e9f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af02bc1fc8ca18bf60b474e8c905ef59e"><td class="memItemLeft" align="right" valign="top"><a id="af02bc1fc8ca18bf60b474e8c905ef59e" name="af02bc1fc8ca18bf60b474e8c905ef59e"></a>
+double ***&#160;</td><td class="memItemRight" valign="bottom"><b>h_pow</b></td></tr>
+<tr class="memdesc:af02bc1fc8ca18bf60b474e8c905ef59e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store waveform power samples \( N \times N_\rm{channel} \times NMCMC \). <br /></td></tr>
+<tr class="separator:af02bc1fc8ca18bf60b474e8c905ef59e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3d0769680658f8358958bd6c3d58a54"><td class="memItemLeft" align="right" valign="top"><a id="ad3d0769680658f8358958bd6c3d58a54" name="ad3d0769680658f8358958bd6c3d58a54"></a>
+double ***&#160;</td><td class="memItemRight" valign="bottom"><b>S_pow</b></td></tr>
+<tr class="memdesc:ad3d0769680658f8358958bd6c3d58a54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store noise power samples \( N \times N_\rm{channel} \times NMCMC \). <br /></td></tr>
+<tr class="separator:ad3d0769680658f8358958bd6c3d58a54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7cac617e5908a1e07237defd69eebdc4"><td class="memItemLeft" align="right" valign="top"><a id="a7cac617e5908a1e07237defd69eebdc4" name="a7cac617e5908a1e07237defd69eebdc4"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>fileName</b> [<a class="el" href="GalacticBinary_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
+char&#160;</td><td class="memItemRight" valign="bottom"><b>fileName</b> [<a class="el" href="glass__data_8h.html#a7d43f1bb16e6c80b96fd9183920a8d18">MAXSTRINGSIZE</a>]</td></tr>
 <tr class="memdesc:a7cac617e5908a1e07237defd69eebdc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">place holder for filnames <br /></td></tr>
 <tr class="separator:a7cac617e5908a1e07237defd69eebdc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Signal Injections</div></td></tr>
-<tr class="memitem:ab456e86e4cf30a20af41383cff94e535"><td class="memItemLeft" align="right" valign="top"><a id="ab456e86e4cf30a20af41383cff94e535" name="ab456e86e4cf30a20af41383cff94e535"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>NP</b></td></tr>
-<tr class="memdesc:ab456e86e4cf30a20af41383cff94e535"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of parameters of injection <br /></td></tr>
-<tr class="separator:ab456e86e4cf30a20af41383cff94e535"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac136349d39219fa435ca7cbd43c46444"><td class="memItemLeft" align="right" valign="top"><a id="ac136349d39219fa435ca7cbd43c46444" name="ac136349d39219fa435ca7cbd43c46444"></a>
-struct <a class="el" href="structSource.html">Source</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>inj</b></td></tr>
-<tr class="memdesc:ac136349d39219fa435ca7cbd43c46444"><td class="mdescLeft">&#160;</td><td class="mdescRight">injected source structure <br /></td></tr>
-<tr class="separator:ac136349d39219fa435ca7cbd43c46444"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Already known sources</div></td></tr>
-<tr class="memitem:aba071f495515063b39189865ea5516ed"><td class="memItemLeft" align="right" valign="top"><a id="aba071f495515063b39189865ea5516ed" name="aba071f495515063b39189865ea5516ed"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>Ncache</b></td></tr>
-<tr class="memdesc:aba071f495515063b39189865ea5516ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of sources in the cache file <br /></td></tr>
-<tr class="separator:aba071f495515063b39189865ea5516ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19aaf9e0c4c84ac528228d2c5d12198e"><td class="memItemLeft" align="right" valign="top"><a id="a19aaf9e0c4c84ac528228d2c5d12198e" name="a19aaf9e0c4c84ac528228d2c5d12198e"></a>
-char **&#160;</td><td class="memItemRight" valign="bottom"><b>cache</b></td></tr>
-<tr class="memdesc:a19aaf9e0c4c84ac528228d2c5d12198e"><td class="mdescLeft">&#160;</td><td class="mdescRight">contents of cache file <br /></td></tr>
-<tr class="separator:a19aaf9e0c4c84ac528228d2c5d12198e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abed85a6931aef1878aa9a5e1492a4677"><td class="memItemLeft" align="right" valign="top"><a id="abed85a6931aef1878aa9a5e1492a4677" name="abed85a6931aef1878aa9a5e1492a4677"></a>
-struct <a class="el" href="structCatalog.html">Catalog</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>catalog</b></td></tr>
-<tr class="memdesc:abed85a6931aef1878aa9a5e1492a4677"><td class="mdescLeft">&#160;</td><td class="mdescRight">data and metadata for known sources <br /></td></tr>
-<tr class="separator:abed85a6931aef1878aa9a5e1492a4677"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters. </p>
@@ -307,7 +269,7 @@ struct <a class="el" href="structCatalog.html">Catalog</a> *&#160;</td><td class
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>gbmcmc/src/<a class="el" href="GalacticBinary_8h_source.html">GalacticBinary.h</a></li>
+<li>utils/src/<a class="el" href="glass__data_8h_source.html">glass_data.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
