@@ -1,9 +1,16 @@
 //
-//  VerificationBinaryWrapper.h
+//  glass_vgb_wrapper.h
 //  ldasoft
 //
 //  Created by Tyson Littenberg on 8/11/21.
 //
+
+/**
+ @file glass_vgb_wrapper.h
+ \brief Wrapper functions to VGB sampler.
+
+ Functions for handling the memory, data sharing, and sampling of the VGB block for the global fit analysis.
+ */
 
 #ifndef VerificationBinaryWrapper_h
 #define VerificationBinaryWrapper_h

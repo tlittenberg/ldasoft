@@ -20,7 +20,7 @@
 
 /**
  @file ucb_mcmc.c
- \brief Main function for stand-alone ucb_mcmc sampler
+ \brief Main function for UCB sampler app `ucb_mcmc` 
  */
 
 /*  REQUIRED LIBRARIES  */
@@ -225,6 +225,7 @@ int main(int argc, char *argv[])
                 flags->maximize = 0;//(mcmc<-flags->NBURN/2) ? 1 : 0;
             }
             
+            
             #pragma omp barrier
             // (parallel) loop over chains
             for(int ic=threadID; ic<NC; ic+=numThreads)
@@ -238,12 +239,14 @@ int main(int argc, char *argv[])
                 for(int steps=0; steps < 100; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(gsl_rng_uniform(chain->r[ic])<0.25 && flags->rj)
+                    if(gsl_rng_uniform(chain->r[ic])<0.9 && flags->rj)
+                    {
                         galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                    
+                    }
                     //fixed dimension parameter updates
                     else
-                        galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                        for(int n=0; n<model_ptr->Nlive; n++)
+                            galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                           
                 }//loop over MCMC steps
                                                 
@@ -251,13 +254,8 @@ int main(int argc, char *argv[])
                     noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
 
                 //update fisher matrix for each chain
-                if(mcmc%100==0)
-                {
-                    for(int n=0; n<model_ptr->Nlive; n++)
-                    {
-                        galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise);
-                    }
-                }
+                for(int n=0; n<model_ptr->Nlive; n++)
+                    galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise);
                 
             }// end (parallel) loop over chains
             
@@ -285,7 +283,7 @@ int main(int argc, char *argv[])
                     if(!flags->quiet)
                     {
                         print_chain_state(data, chain, model[chain->index[0]], flags, stdout, mcmc); //writing to file
-                        fprintf(stdout,"Sources: %i\n",model[chain->index[0]]->Nlive);
+                        fprintf(stdout,"Sources: %i/%i\n",model[chain->index[0]]->Nlive,model[chain->index[0]]->Neff-1);
                         print_acceptance_rates(proposal, UCB_PROPOSAL_NPROP, 0, stdout);
                     }
                     
@@ -305,6 +303,13 @@ int main(int argc, char *argv[])
                         chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
                     }
                 }
+                
+                if(mcmc>-flags->NBURN+flags->NBURN/10. && model[0]->Neff < model[0]->Nmax)
+                {
+                    for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
+                    mcmc = -flags->NBURN;
+                }
+                
                 mcmc++;
             }
             //Can't continue MCMC until single thread is finished

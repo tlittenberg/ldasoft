@@ -1,9 +1,14 @@
 //
-//  glass_noise_mcmc.c
+//  noise_mcmc.c
 //
 //
 //  Created by Tyson Littenberg on 4/06/21.
 //
+
+/**
+ @file noise_mcmc.c
+ \brief Main function for stand-alone Noise parameterized model sampler 
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,43 +84,56 @@ int main(int argc, char *argv[])
     
     /* Initialize Instrument Noise Model */
     printf("   ...initialize instrument noise model\n");
-    struct InstrumentModel **model = malloc(chain->NC*sizeof(struct InstrumentModel *));
+    struct Noise **psd = malloc(chain->NC*sizeof(struct Noise *));
+    struct InstrumentModel **inst_model = malloc(chain->NC*sizeof(struct InstrumentModel *));
+    struct InstrumentModel **inst_trial = malloc(chain->NC*sizeof(struct InstrumentModel *));
     for(int ic=0; ic<chain->NC; ic++)
     {
-        model[ic] = malloc(sizeof(struct InstrumentModel));
-        initialize_instrument_model(orbit, data, model[ic]);
+        psd[ic] = malloc(sizeof(struct Noise));
+        alloc_noise(psd[ic], data->N, data->Nchannel);
+
+        inst_model[ic] = malloc(sizeof(struct InstrumentModel));
+        inst_trial[ic] = malloc(sizeof(struct InstrumentModel));
+        initialize_instrument_model(orbit, data, inst_model[ic]);
+        initialize_instrument_model(orbit, data, inst_trial[ic]);
     }
     sprintf(filename,"%s/instrument_noise_model.dat",data->dataDir);
-    print_noise_model(model[0]->psd, filename);
+    print_noise_model(inst_model[0]->psd, filename);
 
 
     /* Initialize Galactic Foreground Model */
     if(flags->confNoise)printf("   ...initialize foreground noise model\n");
-    struct ForegroundModel **galaxy = malloc(chain->NC*sizeof(struct ForegroundModel *));
+    struct ForegroundModel **conf_model = malloc(chain->NC*sizeof(struct ForegroundModel *));
+    struct ForegroundModel **conf_trial = malloc(chain->NC*sizeof(struct ForegroundModel *));
     for(int ic=0; ic<chain->NC; ic++)
     {
-        galaxy[ic] = malloc(sizeof(struct ForegroundModel));
-        if(flags->confNoise) initialize_foreground_model(orbit, data, galaxy[ic]);
+        conf_model[ic] = malloc(sizeof(struct ForegroundModel));
+        conf_trial[ic] = malloc(sizeof(struct ForegroundModel));
+        if(flags->confNoise) 
+        {
+           initialize_foreground_model(orbit, data, conf_model[ic]);
+           initialize_foreground_model(orbit, data, conf_trial[ic]);
+        }
     }
     if(flags->confNoise)
     {
         sprintf(filename,"%s/foreground_noise_model.dat",data->dataDir);
-        print_noise_model(galaxy[0]->psd, filename);
+        print_noise_model(conf_model[0]->psd, filename);
     }
 
     /* Combine noise components to form covariance matrix */
     for(int ic=0; ic<chain->NC; ic++)
-        if(flags->confNoise) generate_full_covariance_matrix(model[ic]->psd, galaxy[ic]->psd, data->Nchannel);
+        if(flags->confNoise) generate_full_covariance_matrix(inst_model[ic]->psd, conf_model[ic]->psd, data->Nchannel);
 
     /* get initial likelihood */
     for(int ic=0; ic<chain->NC; ic++)
     {
-        invert_noise_covariance_matrix(model[ic]->psd);
-        model[ic]->logL = noise_log_likelihood(data, model[ic]->psd);
+        invert_noise_covariance_matrix(inst_model[ic]->psd);
+        inst_model[ic]->logL = noise_log_likelihood(data, inst_model[ic]->psd);
     }
 
     sprintf(filename,"%s/full_noise_model.dat",data->dataDir);
-    print_noise_model(model[0]->psd, filename);
+    print_noise_model(inst_model[0]->psd, filename);
 
     
     
@@ -156,12 +174,16 @@ int main(int argc, char *argv[])
             // (parallel) loop over chains
             for(int ic=threadID; ic<NC; ic+=numThreads)
             {
-                struct InstrumentModel *model_ptr = model[chain->index[ic]];
-                struct ForegroundModel *galaxy_ptr = galaxy[chain->index[ic]];
+                struct Noise *psd_ptr = psd[chain->index[ic]];
+                struct InstrumentModel *inst_model_ptr = inst_model[chain->index[ic]];
+                struct InstrumentModel *inst_trial_ptr = inst_trial[chain->index[ic]];
+                struct ForegroundModel *conf_model_ptr = conf_model[chain->index[ic]];
+                struct ForegroundModel *conf_trial_ptr = conf_trial[chain->index[ic]];
+
                 for(int mc=0; mc<10; mc++)
                 {
-                    noise_instrument_model_mcmc(orbit, data, model_ptr, galaxy_ptr, chain, flags, ic);
-                    if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, model_ptr, galaxy_ptr, chain, flags, ic);
+                    noise_instrument_model_mcmc(orbit, data, inst_model_ptr, inst_trial_ptr, conf_model_ptr, psd_ptr, chain, flags, ic);
+                    if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, conf_trial_ptr, psd_ptr, chain, flags, ic);
                 }
             }// end (parallel) loop over chains
             
@@ -171,48 +193,48 @@ int main(int argc, char *argv[])
             
             if(threadID==0)
             {
-                noise_ptmcmc(model, chain, flags);
+                noise_ptmcmc(inst_model, chain, flags);
                 
                 if(step%(flags->NMCMC/10)==0)printf("noise_mcmc at step %i\n",step);
                 
                 // print chain files
-                fprintf(noiseChainFile,"%i %.12g ",step,model[chain->index[0]]->logL);
-                print_instrument_state(model[chain->index[0]], noiseChainFile);
+                fprintf(noiseChainFile,"%i %.12g ",step,inst_model[chain->index[0]]->logL);
+                print_instrument_state(inst_model[chain->index[0]], noiseChainFile);
                 fprintf(noiseChainFile,"\n");
 
                 if(flags->confNoise) 
                 {
-                    fprintf(foregroundChainFile,"%i %.12g ",step,galaxy[chain->index[0]]->logL);
-                    print_foreground_state(galaxy[chain->index[0]], foregroundChainFile);
+                    fprintf(foregroundChainFile,"%i %.12g ",step,conf_model[chain->index[0]]->logL);
+                    print_foreground_state(conf_model[chain->index[0]], foregroundChainFile);
                     fprintf(foregroundChainFile,"\n");
                 }
 
                 if(step%(flags->NMCMC/10)==0)
                 {
-                    generate_instrument_noise_model(data,orbit,model[chain->index[0]]);
+                    generate_instrument_noise_model(data,orbit,inst_model[chain->index[0]]);
                     sprintf(filename,"%s/current_instrument_noise_model.dat",data->dataDir);
-                    print_noise_model(model[chain->index[0]]->psd, filename);
+                    print_noise_model(inst_model[chain->index[0]]->psd, filename);
 
                     if(flags->confNoise)
                     {
-                        generate_galactic_foreground_model(data,orbit,galaxy[chain->index[0]]);
+                        generate_galactic_foreground_model(data,orbit,conf_model[chain->index[0]]);
                         sprintf(filename,"%s/current_foreground_noise_model.dat",data->dataDir);
-                        print_noise_model(galaxy[chain->index[0]]->psd, filename);
+                        print_noise_model(conf_model[chain->index[0]]->psd, filename);
                     }
                 }
                 
                 if(step%data->downsample==0 && step/data->downsample < data->Nwave)
                 {
-                    generate_instrument_noise_model(data,orbit,model[chain->index[0]]);
+                    generate_instrument_noise_model(data,orbit,inst_model[chain->index[0]]);
                     if(flags->confNoise)
                     {
-                        generate_galactic_foreground_model(data,orbit,galaxy[chain->index[0]]);
-                        generate_full_covariance_matrix(model[chain->index[0]]->psd,galaxy[chain->index[0]]->psd, data->Nchannel);
+                        generate_galactic_foreground_model(data,orbit,conf_model[chain->index[0]]);
+                        generate_full_covariance_matrix(inst_model[chain->index[0]]->psd,conf_model[chain->index[0]]->psd, data->Nchannel);
                     }
                     
                     for(int n=0; n<data->N; n++)
                         for(int i=0; i<data->Nchannel; i++)
-                            data->S_pow[n][i][step/data->downsample] = model[chain->index[0]]->psd->C[i][i][n];
+                            data->S_pow[n][i][step/data->downsample] = inst_model[chain->index[0]]->psd->C[i][i][n];
                 }
 
                 step++;
@@ -229,29 +251,27 @@ int main(int argc, char *argv[])
     fclose(noiseChainFile);
     if(flags->confNoise)fclose(foregroundChainFile);
 
-    generate_instrument_noise_model(data,orbit,model[chain->index[0]]);
+    generate_instrument_noise_model(data,orbit,inst_model[chain->index[0]]);
     sprintf(filename,"%s/final_instrument_noise_model.dat",data->dataDir);
-    print_noise_model(model[chain->index[0]]->psd, filename);
+    print_noise_model(inst_model[chain->index[0]]->psd, filename);
 
     if(flags->confNoise)
     {
-        generate_galactic_foreground_model(data,orbit,galaxy[chain->index[0]]);
+        generate_galactic_foreground_model(data,orbit,conf_model[chain->index[0]]);
         sprintf(filename,"%s/final_foreground_noise_model.dat",data->dataDir);
-        print_noise_model(galaxy[chain->index[0]]->psd, filename);
+        print_noise_model(conf_model[chain->index[0]]->psd, filename);
         
-        generate_full_covariance_matrix(model[chain->index[0]]->psd, galaxy[chain->index[0]]->psd, data->Nchannel);
+        generate_full_covariance_matrix(inst_model[chain->index[0]]->psd, conf_model[chain->index[0]]->psd, data->Nchannel);
         sprintf(filename,"%s/final_full_noise_model.dat",data->dataDir);
-        print_noise_model(model[chain->index[0]]->psd, filename);
+        print_noise_model(inst_model[chain->index[0]]->psd, filename);
     }
     
     print_noise_reconstruction(data, flags);
 
     sprintf(filename,"%s/whitened_data.dat",data->dataDir);
-    if(flags->confNoise)generate_full_covariance_matrix(model[chain->index[0]]->psd,galaxy[chain->index[0]]->psd, data->Nchannel);
-    print_whitened_data(data, model[chain->index[0]]->psd, filename);
+    if(flags->confNoise)generate_full_covariance_matrix(inst_model[chain->index[0]]->psd,conf_model[chain->index[0]]->psd, data->Nchannel);
+    print_whitened_data(data, inst_model[chain->index[0]]->psd, filename);
 
-    for(int ic=0; ic<chain->NC; ic++) free_instrument_model(model[ic]);
-    free(model);
     
     //print total run time
     stop = time(NULL);

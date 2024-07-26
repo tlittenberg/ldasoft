@@ -9,11 +9,9 @@ var annotated_dup =
     [ "Flags", "structFlags.html", "structFlags" ],
     [ "ForegroundModel", "structForegroundModel.html", "structForegroundModel" ],
     [ "freq_data", "structfreq__data.html", null ],
-    [ "GBMCMCData", "structGBMCMCData.html", "structGBMCMCData" ],
     [ "GlobalFitData", "structGlobalFitData.html", null ],
     [ "GMM", "structGMM.html", null ],
     [ "InstrumentModel", "structInstrumentModel.html", "structInstrumentModel" ],
-    [ "lisa_orbit", "structlisa__orbit.html", null ],
     [ "MBHData", "structMBHData.html", "structMBHData" ],
     [ "Model", "structModel.html", "structModel" ],
     [ "MVG", "structMVG.html", "structMVG" ],
@@ -26,5 +24,6 @@ var annotated_dup =
     [ "Source", "structSource.html", "structSource" ],
     [ "SplineModel", "structSplineModel.html", "structSplineModel" ],
     [ "TDI", "structTDI.html", "structTDI" ],
-    [ "VBMCMCData", "structVBMCMCData.html", "structVBMCMCData" ]
+    [ "UCBData", "structUCBData.html", "structUCBData" ],
+    [ "VGBData", "structVGBData.html", "structVGBData" ]
 ];

@@ -48,40 +48,43 @@ export PATH=${LDASOFT_PREFIX}/bin:${PATH}
 Directory tree for the ldasoft installation:
 ```
 ├── bin
-│   ├── Bright_Remove
-│   ├── Confusion_Fit
-│   ├── Fisher_Galaxy
-│   ├── Full_Residual
-│   ├── Galaxy
-│   ├── OrbitFile
-│   ├── Setup
-│   ├── gaussian_mixture_model
-│   ├── gb_catalog
-│   ├── gb_match
-│   ├── gb_mcmc
-│   ├── gb_mcmc_brans_dicke
-│   ├── gb_mcmc_chirpmass
-│   ├── gb_residual
-│   └── global_fit
+│   ├── gaussian_mixture_model
+│   ├── global_fit
+│   ├── noise_mcmc
+│   ├── noise_spline_mcmc
+│   ├── ucb_catalog
+│   ├── ucb_chirpmass
+│   ├── ucb_grid
+│   ├── ucb_match
+│   ├── ucb_mcmc
+│   └── vgb_mcmc
 ├── include
-│   ├── Constants.h
-│   ├── GalacticBinary.h
-│   ├── GalacticBinaryCatalog.h
-│   ├── GalacticBinaryData.h
-│   ├── GalacticBinaryFStatistic.h
-│   ├── GalacticBinaryIO.h
-│   ├── GalacticBinaryMCMC.h
-│   ├── GalacticBinaryMath.h
-│   ├── GalacticBinaryModel.h
-│   ├── GalacticBinaryPrior.h
-│   ├── GalacticBinaryProposal.h
-│   ├── GalacticBinaryWaveform.h
-│   ├── LISA.h
-│   └── gitversion.h
+│   ├── gitversion.h
+│   ├── glass_constants.h
+│   ├── glass_data.h
+│   ├── glass_gmm.h
+│   ├── glass_lisa.h
+│   ├── glass_math.h
+│   ├── glass_noise.h
+│   ├── glass_noise_io.h
+│   ├── glass_noise_model.h
+│   ├── glass_noise_sampler.h
+│   ├── glass_ucb.h
+│   ├── glass_ucb_catalog.h
+│   ├── glass_ucb_data.h
+│   ├── glass_ucb_fstatistic.h
+│   ├── glass_ucb_io.h
+│   ├── glass_ucb_model.h
+│   ├── glass_ucb_prior.h
+│   ├── glass_ucb_proposal.h
+│   ├── glass_ucb_sampler.h
+│   ├── glass_ucb_waveform.h
+│   └── glass_utils.h
 └── lib
-    ├── libgbmcmc.a
-    ├── liblisa.a
-    └── libtools.a
+    ├── libglass_noise.a
+    ├── libglass_ucb.a
+    └── libglass_utils.a
+
 ```
 
 

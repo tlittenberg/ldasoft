@@ -18,7 +18,7 @@
  */
 
 /**
- @file ucb_prior.h
+ @file glass_ucb_prior.h
  \brief Functions supporting prior distributions.
  
  Includes functions for createing and evaluating model priors.
@@ -114,18 +114,6 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
  @returns \f$ \log p(\vec x)\f$
  */
 double evaluate_prior(struct Flags *flags, struct Data *data, struct Model *model, struct Prior *prior, double *params);
-
-
-/**
- \brief Computes prior amplitude parameter `params`
- 
- Uses analytic approximation to signal to noise ratio
- and computes prior via snr_prior().
- 
- @param UCB parameters `params` \f$ \vec x\f$
- @returns \f$ \log p({\rm SNR})\f$
- */
-double evaluate_snr_prior(struct Data *data, struct Model *model, double *params);
 
 /**
  \brief Computes prior for sky location parameters \f$\vec\Omega\f$

@@ -95,11 +95,11 @@ $(document).ready(function(){initNavTree('md_globalfit_README.html',''); initRes
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p ><a class="anchor" id="intro"></a> </p>
-<h1><a class="anchor" id="autotoc_md53"></a>
+<h1><a class="anchor" id="autotoc_md42"></a>
 Introduction</h1>
-<p >The <code>global_fit</code> application is a wrapper that uses a blocked Gibbs algorithm cycling through the <code>gb_mcmc</code>, <code>noise_mcmc</code>, and <code>vb_mcmc</code> modules to sample the joint posterior. Communication between modules is handled with <code>MPI</code>. A schematic block diagram showing how the processes are divided, and how the communication between processes is managed, is found <a href="https://app.diagrams.net/#Htlittenberg%2Fldasoft%2Fmaster%2FGlobalFit.drawio">here</a>.</p>
+<p >The <code>global_fit</code> application is a wrapper that uses a blocked Gibbs algorithm cycling through the <code>ucb_mcmc</code>, <code>noise_mcmc</code>, and <code>vgb_mcmc</code> modules to sample the joint posterior. Communication between modules is handled with <code>MPI</code>. A schematic block diagram showing how the processes are divided, and how the communication between processes is managed, is found <a href="https://app.diagrams.net/#Htlittenberg%2Fldasoft%2Fmaster%2FGlobalFit.drawio">here</a>.</p>
 <p ><a class="anchor" id="dependencies"></a> </p>
-<h2><a class="anchor" id="autotoc_md54"></a>
+<h2><a class="anchor" id="autotoc_md43"></a>
 C Dependencies</h2>
 <div class="fragment"><div class="line">gsl</div>
 <div class="line">gslcblas</div>
@@ -108,23 +108,23 @@ C Dependencies</h2>
 <div class="line">hdf5</div>
 </div><!-- fragment --><p> Note: For OpenMP on OSX, use <code>sudo port install libomp +top_level</code></p>
 <p ><a class="anchor" id="installation"></a> </p>
-<h2><a class="anchor" id="autotoc_md55"></a>
+<h2><a class="anchor" id="autotoc_md44"></a>
 Installation</h2>
 <p >Build and install as part of the full <code>ldasoft</code> package. Example for install location <code>${HOME}/ldasoft/master/bin/</code> with <code>cmake</code>. </p><div class="fragment"><div class="line">./install.sh ${HOME}/ldasoft/master</div>
 </div><!-- fragment --><p ><a class="anchor" id="examples"></a> </p>
-<h1><a class="anchor" id="autotoc_md56"></a>
+<h1><a class="anchor" id="autotoc_md45"></a>
 Example use cases for GlobalFit</h1>
 <p >See run options with <code>global_fit --help</code>. <br  />
 </p>
-<p >The CLI is identical to <code>gb_mcmc</code> (and is actually just calling the <code>gb_mcmc</code> parsing functions which are wrapped around <code>getopt</code>). A detailed description of tge command line options is found here</p>
+<p >The CLI is identical to <code>ucb_mcmc</code> (and is actually just calling the <code>ucb_mcmc</code> parsing functions which are wrapped around <code>getopt</code>). A detailed description of the command line options is found here</p>
 <p >The <code>global_fit</code> app requires at least three <code>MPI</code> processes (one for each supported module in the model, <code>noise</code>, <code>ucb</code>, and <code>vgb</code>).</p>
 <p ><b>NOTE:</b> There is currently only support for running on data with the same format as the LISA <a class="el" href="structData.html" title="Analaysis segment and meta data about size of segment, location in full data stream,...">Data</a> Challenge's <a href="https://lisa-ldc.lal.in2p3.fr/challenge2"><em>Sangria</em> dataset</a>.</p>
 <p >To analyze two adjacent frequency bands of a 3-month segment from the LDC <em>Sangria</em> training data, using a common spline noise model across the segments, starting at a frequency of 6 mHz, use </p><div class="fragment"><div class="line">mpirun -np 4 global_fit \</div>
-<div class="line">  --h5-data /path/to/LDC2_sangria_training_v1.h5 --sangria \</div>
+<div class="line">  --h5-data /path/to/LDC2_sangria_training_v2.h5 --sangria \</div>
 <div class="line">  --fmin 0.006 \</div>
 <div class="line">  --duration 7864320 \</div>
 <div class="line">  --samples 128 --padding 16</div>
-</div><!-- fragment --><p> In this example the verification binary module <code>vb_mcmc</code> is not activated, so process 1 will be idle. Process 0 will contain the noise model, and processes 2 and 3 are each responsible for the UCB analysis of a narrow-band segment. The <code>padding</code> argument is the size (in frequency bins) of the overlap between the two UCB segments to prevent artifacts in the analysis from edge-effects.</p>
+</div><!-- fragment --><p> In this example the verification binary module <code>vgb_mcmc</code> is not activated. Process 0 will contain the noise model, and processes 1, 2 and 3 are each responsible for the UCB analysis of a narrow-band segment. The <code>padding</code> argument is the size (in frequency bins) of the overlap between the two UCB segments to prevent artifacts in the analysis from edge-effects.</p>
 <p >The application sets up the following tree in the run directory for storing the output data </p><div class="fragment"><div class="line">.</div>
 <div class="line">├── mbh</div>
 <div class="line">│   ├── src0000</div>
@@ -142,12 +142,11 @@ Example use cases for GlobalFit</h1>
 <div class="line">│       ├── chains</div>
 <div class="line">│       ├── checkpoint</div>
 <div class="line">│       └── data</div>
-<div class="line">└── vgb</div>
-<div class="line">    └── seg_0000</div>
-<div class="line">        ├── chains</div>
-<div class="line">        ├── checkpoint</div>
-<div class="line">        └── data</div>
-</div><!-- fragment --><p >Because <code>global_fit</code> is just a wrapper around the separately developed (and documented) sampelers, the output data is of the same format as described in the documentation for <code>gb_mcmc</code>, <code>noise_mcmc</code>, and <code>vb_mcmc</code>. Similarly, the post-processing is all handled on a segment-by-segment basis using the same tools as for the stand-alone applications of the different samplers. </p>
+<div class="line">│   └── seg_0002</div>
+<div class="line">│       ├── chains</div>
+<div class="line">│       ├── checkpoint</div>
+<div class="line">│       └── data</div>
+</div><!-- fragment --><p >Because <code>global_fit</code> is just a wrapper around the separately developed (and documented) sampelers, the output data is of the same format as described in the documentation for <code>ucb_mcmc</code>, <code>noise_mcmc</code>, and <code>vgb_mcmc</code>. Similarly, the post-processing is all handled on a segment-by-segment basis using the same tools as for the stand-alone applications of the different samplers. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

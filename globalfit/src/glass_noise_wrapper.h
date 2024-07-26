@@ -1,9 +1,16 @@
 //
-//  NoiseWrapper.h
+//  glass_noise_wrapper.h
 //  
 //
 //  Created by Tyson Littenberg on 2/5/21.
 //
+
+/**
+ @file glass_noise_wrapper.h
+ \brief Wrapper functions to noise sampler.
+
+ Functions for handling the memory, data sharing, and sampling of the NOISE block for the global fit analysis.
+ */
 
 #ifndef NoiseWrapper_h
 #define NoiseWrapper_h
@@ -22,8 +29,11 @@ struct NoiseData
     struct Orbit *orbit;
     struct Chain *chain;
     struct Data  *data;
+    struct Noise **psd;
     struct InstrumentModel **inst_model;
+    struct InstrumentModel **inst_trial;
     struct ForegroundModel **conf_model;
+    struct ForegroundModel **conf_trial;
 
     double cpu_time; //!<CPU time for single update
 };

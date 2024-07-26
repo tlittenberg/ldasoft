@@ -1,9 +1,15 @@
 //
-//  glass_noise_spline_mcmc.c
+//  noise_spline_mcmc.c
 //
 //
 //  Created by Tyson Littenberg on 4/06/21.
 //
+
+/**
+ @file noise_spline_mcmc.c
+ \brief Main function for stand-alone Noise spline model sampler 
+ */
+
 
 #include <stdio.h>
 #include <stdlib.h>

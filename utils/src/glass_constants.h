@@ -18,7 +18,7 @@
  */
 
 /**
- @file Constants.h
+ @file glass_constants.h
  \brief Mathematical and physical constants
  */
 
@@ -27,7 +27,7 @@
 #define constants_h
 
 #define FIXME 0
-#define SNRPEAK 5 ///< Peak of SNR prior
+#define SNRPEAK 10 ///< Peak of SNR prior
 
 /* --------------  MATHEMATICAL CONSTANTS  -------------- */
 /* Some square roots */
@@ -76,11 +76,7 @@
 //! Astronomical unit [m]
 #define AU 1.49597870700e11
 
-/**
- \brief Orbital radius of the LISA guiding center [m]
- 
- \todo \c RGC belongs in \c LISA.h
-*/
+//! Orbital radius of the LISA guiding center [m]
 #define RGC (1.0*AU)
 
 #endif /* constants_h */

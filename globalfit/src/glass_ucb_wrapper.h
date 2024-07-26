@@ -1,12 +1,12 @@
 //
-//  ucb_wrapper.h
+//  glass_ucb_wrapper.h
 //
 //
 //  Created by Tyson Littenberg on 1/28/21.
 //
 
 /**
- @file GalacticBinaryWrapper.h
+ @file glass_ucb_wrapper.h
  \brief Wrapper functions to UCB sampler.
 
  Functions for handling the memory, data sharing, and sampling of the UCB block for the global fit analysis.

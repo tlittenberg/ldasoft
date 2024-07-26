@@ -17,6 +17,11 @@
  *  MA  02111-1307  USA
  */
 
+/**
+ @file glass_noise_model.h
+ \brief Functions and structures defining noise models.
+
+ */
 #ifndef noise_model_h
 #define noise_model_h
 

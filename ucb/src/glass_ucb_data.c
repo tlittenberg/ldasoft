@@ -389,7 +389,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             
             //Simulate gravitational wave signal
             printf("   ...t0        : %g\n",data->t0);
-            galactic_binary(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+            galactic_binary(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, data->Nchannel);
             
             //Add waveform to data TDI channels
             for(int n=0; n<inj->BW; n++)

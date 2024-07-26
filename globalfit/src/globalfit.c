@@ -1,9 +1,14 @@
 //
-//  GlobalFit.c
+//  globalfit.c
 //  
 //
 //  Created by Tyson Littenberg on 1/26/21.
 //
+
+/**
+ @file globalfit.c
+ \brief App for GLASS global fit sampler
+ */
 
 #include <mpi.h>
 
@@ -478,7 +483,7 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
     if(Noise_Flag)
     {
         print_data(noise_data->data, noise_data->data->tdi, noise_data->flags);
-        char filename[128];
+        char filename[256];
         sprintf(filename,"%s/data/current_instrument_noise_model.dat",noise_data->flags->runDir);
         generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
         print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
@@ -496,7 +501,6 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
     }
     if(UCB_Flag)
     {
-        copy_noise(ucb_data->model[ucb_data->chain->index[0]]->noise, ucb_data->data->noise);
         print_data(ucb_data->data, ucb_data->data->tdi, ucb_data->flags);
     }
     if(MBH_Flag)
@@ -859,6 +863,19 @@ int main(int argc, char *argv[])
     {
         UCB_Flag = 1;
         initialize_ucb_sampler(ucb_data);
+
+        /*test proposals
+        char filename[128];
+        sprintf(filename,"proposal_test_%i.dat",procID);
+        FILE *test=fopen(filename,"w");
+        for(int i=0; i<100000; i++)
+        {
+        struct Model **model = ucb_data->model;
+        double logP = draw_from_gmm_prior(data, model[0], model[0]->source[0], ucb_data->proposal[7], model[0]->source[0]->params, chain->r[0]);
+        print_source_params(data, model[0]->source[0], test);
+        fprintf(test,"%lg\n",logP);
+        }
+        fclose(test);*/
     }
 
     /* Assign processes to MBH model */
@@ -1045,6 +1062,8 @@ int main(int argc, char *argv[])
     }
     fclose(global_fit->chainFile);
     
+    print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
+
     //print total run time
     stop = time(NULL);
 

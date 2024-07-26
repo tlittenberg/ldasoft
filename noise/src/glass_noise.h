@@ -19,7 +19,7 @@
 
 
 /**
- @file noise.h
+ @file glass_noise.h
  \brief Libary for Noise module
  
  Including

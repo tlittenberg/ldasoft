@@ -424,3 +424,163 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
     gsl_interp_accel_free (acc);
     
 }
+
+static gsl_vector* gsl_vector_union(gsl_vector *N, gsl_vector *Np)
+{
+    // allocate memory for work space
+    double *N_temp = malloc(N->size*sizeof(double));
+    double *Np_temp = malloc(Np->size*sizeof(double));
+    
+    int Nsize = N->size;
+    int Nmax = N->size+Np->size;
+    
+    //printf("N.size=%i, Np.size=%i, Nmax=%i\n",N->size, Np->size, Nmax);
+    
+    double *N_union = malloc(Nmax*sizeof(double));
+    
+    // store contents of vectors in work space
+    for(int n=0; n<N->size; n++)
+    {
+        N_temp[n]  = gsl_vector_get(N,n);
+        N_union[n] = N_temp[n];
+    }
+    for(int n=0; n<Np->size; n++) Np_temp[n] = gsl_vector_get(Np,n);
+    
+    // get union of work space arrays
+    for(int i=0; i<Np->size; i++)
+    {
+        //traverse N to make sure it is a new point
+        int flag=0;
+        for(int l=0; l<N->size; l++)
+        {
+            if(N_temp[l]==Np_temp[i]) flag=1;
+        }
+        if(!flag)
+        {
+            N_union[Nsize]=Np_temp[i];
+            Nsize++;
+        }
+    }
+    
+
+    // resize N to and copy work space union into GSL vector    
+    gsl_vector_free(N);
+    gsl_vector *Nnew = gsl_vector_alloc(Nsize);
+    for(int n=0; n<Nsize; n++) gsl_vector_set(Nnew,n,N_union[n]);
+    
+    // clean up
+    free(N_temp);
+    free(Np_temp);
+    free(N_union);
+    
+    return Nnew;
+            
+}
+
+static gsl_vector * find_neighbors(gsl_vector *X, double P, double epsilon)
+{
+    /*
+     return all points in X w/in epsilon of P, including P
+     */
+    int N[X->size];
+    int Nsize=0;
+
+    // check all points in X
+    for(int n=0; n<X->size; n++)
+    {
+        // distance measure
+        double D = fabs(gsl_vector_get(X,n) - P);
+        
+        // store points closer than epsilon
+        if(D < epsilon)
+        {
+            N[Nsize] = n;
+            Nsize++;
+        }
+    }
+    
+    //create GSL vector with list of points within epsilon of P
+    gsl_vector *Neighbors = gsl_vector_alloc(Nsize);
+    for(int n=0; n<Nsize; n++) gsl_vector_set(Neighbors,n,N[n]);
+    
+    return Neighbors;
+}
+
+void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
+{
+            
+    //Step 1: initialize cluster index and mark all points as unvisited
+    int visited[X->size];
+    int cluster_index=0;
+    for(int n=0; n<X->size; n++)
+    {
+        visited[n] = 0;
+        C[n] = 0;
+    }
+    
+    //loop through all data points
+    for(int n=0; n<X->size; n++)
+    {
+        //skip visited points
+        if(visited[n]) continue;
+
+        //Step 2: Choose a random unvisited data point p and mark it as visited
+        double P = gsl_vector_get(X,n);
+        visited[n] = 1;
+        
+        //Step 3: Find neighbors of P within epsilon and store them in N
+        gsl_vector *N = find_neighbors(X,P,eps);
+                
+        /*
+         Step 4: If N has at least min_samples elements,
+         then P is a core point and a new cluster C is formed with P and N.
+         Otherwise, X[n] is a noise point and no cluster is formed.
+         */
+        if(N->size>=min)
+        {
+            
+            //assign current data point to current cluster
+            C[n] = cluster_index;
+            
+            //loop through all neighbors of current data point
+            for(int m=0; m<N->size; m++)
+            {
+                int j = (int)gsl_vector_get(N,m);
+                
+                //skip visited neighbors
+                if(visited[j]) continue;
+                
+                //mark neighbor as visited
+                visited[j] = 1;
+                
+                //find neighbors of P's neighbors
+                gsl_vector *Np = find_neighbors(X,gsl_vector_get(X,j),eps);
+
+                //add neighbors' of P's neighbors to cluster
+                if(Np->size>=min)
+                {
+                    // N = N U N'
+                    N = gsl_vector_union(N,Np);
+                }
+                
+                
+                //double check that neighbor is not already assigned to any cluster
+                if(C[j]==0) C[j] = cluster_index;
+                
+                //free memory holding Np for point P
+                gsl_vector_free(Np);
+            }
+
+            //advance index to be ready for next cluster
+            cluster_index++;
+
+        }else C[n]=-1;
+        
+        //free memory holding list of neighbors for next point
+        gsl_vector_free(N);
+
+    }//end loop over data points
+    
+    //assign number of clusters
+    *K = cluster_index;
+}

@@ -3,7 +3,7 @@
 <a name="intro"></a>
 # Introduction
 
-The `global_fit` application is a wrapper that uses a blocked Gibbs algorithm cycling through the `gb_mcmc`, `noise_mcmc`, and `vb_mcmc` modules to sample the joint posterior. 
+The `global_fit` application is a wrapper that uses a blocked Gibbs algorithm cycling through the `ucb_mcmc`, `noise_mcmc`, and `vgb_mcmc` modules to sample the joint posterior. 
 Communication between modules is handled with `MPI`. 
 A schematic block diagram showing how the processes are divided, and how the communication between processes is managed, is found [here](https://app.diagrams.net/#Htlittenberg%2Fldasoft%2Fmaster%2FGlobalFit.drawio).
 
@@ -29,8 +29,8 @@ Build and install as part of the full `ldasoft` package.  Example for install lo
 # Example use cases for GlobalFit
 See run options with `global_fit --help`.  
 
-The CLI is identical to `gb_mcmc` (and is actually just calling the `gb_mcmc` parsing functions which are wrapped around `getopt`). 
-A detailed description of tge command line options is found [here](../gbmcmc/doc/running.md)
+The CLI is identical to `ucb_mcmc` (and is actually just calling the `ucb_mcmc` parsing functions which are wrapped around `getopt`). 
+A detailed description of the command line options is found [here](../ucb/doc/running.md)
 
 The `global_fit` app requires at least three `MPI` processes (one for each supported module in the model, `noise`, `ucb`, and `vgb`).
 
@@ -39,12 +39,12 @@ The `global_fit` app requires at least three `MPI` processes (one for each suppo
 To analyze two adjacent frequency bands of a 3-month segment from the LDC *Sangria* training data, using a common spline noise model across the segments, starting at a frequency of 6 mHz, use
 ```bash
 mpirun -np 4 global_fit \
-  --h5-data /path/to/LDC2_sangria_training_v1.h5 --sangria \
+  --h5-data /path/to/LDC2_sangria_training_v2.h5 --sangria \
   --fmin 0.006 \
   --duration 7864320 \
   --samples 128 --padding 16
 ```
-In this example the verification binary module `vb_mcmc` is not activated, so process 1 will be idle. Process 0 will contain the noise model, and processes 2 and 3 are each responsible for the UCB analysis of a narrow-band segment.
+In this example the verification binary module `vgb_mcmc` is not activated. Process 0 will contain the noise model, and processes 1, 2 and 3 are each responsible for the UCB analysis of a narrow-band segment.
 The `padding` argument is the size (in frequency bins) of the overlap between the two UCB segments to prevent artifacts in the analysis from edge-effects.
 
 The application sets up the following tree in the run directory for storing the output data
@@ -66,12 +66,11 @@ The application sets up the following tree in the run directory for storing the 
 │       ├── chains
 │       ├── checkpoint
 │       └── data
-└── vgb
-    └── seg_0000
-        ├── chains
-        ├── checkpoint
-        └── data
+│   └── seg_0002
+│       ├── chains
+│       ├── checkpoint
+│       └── data
 ```
 
-Because `global_fit` is just a wrapper around the separately developed (and documented) sampelers, the output data is of the same format as described in the documentation for `gb_mcmc`, `noise_mcmc`, and `vb_mcmc`.
+Because `global_fit` is just a wrapper around the separately developed (and documented) sampelers, the output data is of the same format as described in the documentation for `ucb_mcmc`, `noise_mcmc`, and `vgb_mcmc`.
 Similarly, the post-processing is all handled on a segment-by-segment basis using the same tools as for the stand-alone applications of the different samplers.

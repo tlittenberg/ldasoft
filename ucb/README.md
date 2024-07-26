@@ -1,4 +1,4 @@
-# GBMCMC Manual
+# UCBMCMC Manual
 
 # Table of contents
 1. [Introduction](#intro)
@@ -53,14 +53,14 @@ Build and install binaries in `${HOME}/ldasoft/master/bin/` with `cmake`.
 ./install.sh ${HOME}/ldasoft/master
 ```
 <a name="examples"></a>
-# Example use cases for GBMCMC
-See run options with `gb_mcmc --help`.  Detailed description of command line options found [here](doc/running.md)
+# Example use cases for UCBMCMC
+See run options with `ucb_mcmc --help`.  Detailed description of command line options found [here](doc/running.md)
 
 <a name="highsnr"></a>
 ## Analyze single high SNR injection
 ```bash
-gb_mcmc \
-  --inj /path/to/ldasoft/gbmcmc/etc/sources/precision/PrecisionSource_0.txt
+ucb_mcmc \
+  --inj /path/to/ldasoft/ucb/etc/sources/precision/PrecisionSource_0.txt
 ```
 <a name="ldc"></a>
 ## Analyze LDC data
@@ -68,14 +68,14 @@ See [Running on LDC Documentation](`README_LDC.md`)
 
 <a name="verification_binaries"></a>
 ## Analyze verification binary with EM priors
-Files containing verification binary parameters and priors are located in `ldasoft/gbmcmc/etc/sources/verification`.
+Files containing verification binary parameters and priors are located in `ldasoft/ucb/etc/sources/verification`.
 Current best estimates of known binaries and their parameters, with references to source material, are found [here](https://docs.google.com/spreadsheets/d/1PfwgaPjOpcEz_8RIcf87doyhErnT0cYTYJ9b6fC0yfA/edit)
 
 ### Examples for AM CVn
 Run with sky-location fixed
 ```bash
-gb_mcmc \
-  --inj /path/to/ldasoft/gbmcmc/etc/sources/verification/AMCVn.dat \
+ucb_mcmc \
+  --inj /path/to/ldasoft/ucb/etc/sources/verification/AMCVn.dat \
   --known-source \
   --no-rj \
   --cheat \
@@ -84,7 +84,7 @@ gb_mcmc \
 
 To run with sky-location and EM-constrained priors (currently just U[cosi]) add
 ```bash
-  --em-prior /path/to/ldasoft/gbmcmc/etc/sources/verification/AMCVn_prior.dat 
+  --em-prior /path/to/ldasoft/ucb/etc/sources/verification/AMCVn_prior.dat 
 ```
 
 To run with orbital period P and dP/dt fixed add
@@ -97,8 +97,8 @@ To run with orbital period P and dP/dt fixed add
 
 ### Use UCBs as calibration sources
 ```bash
-gb_mcmc \
-  --inj /path/to/ldasoft/gbmcmc/etc/sources/calibration/CalibrationSource_0.txt \
+ucb_mcmc \
+  --inj /path/to/ldasoft/ucb/etc/sources/calibration/CalibrationSource_0.txt \
   --duration 604948 \
   --segments 2 \
   --fit-gap \
@@ -107,7 +107,7 @@ gb_mcmc \
 ```
 
 <a name="output"></a>
-# GBMCMC output format
+# UCBMCMC output format
 
 <a name="parameters"></a>
 ## Parameterization
@@ -131,11 +131,11 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 #AM CVn as example
-gbmcmc_phi = 2.9737          
-gbmcmc_costheta = 0.6080   
+ucbmcmc_phi = 2.9737          
+ucbmcmc_costheta = 0.6080   
 
 # source = SkyCoord(lon, lat, frame)
-source = SkyCoord(gbmcmc_phi*u.rad,(np.pi/2 - np.arccos(gbmcmc_costheta))*u.rad,frame='barycentrictrueecliptic')
+source = SkyCoord(ucbmcmc_phi*u.rad,(np.pi/2 - np.arccos(ucbmcmc_costheta))*u.rad,frame='barycentrictrueecliptic')
 
 #convert to galactic coordiantes
 print("\n Galactic coordinates:")
@@ -203,7 +203,7 @@ posterior sample, etc).
 ### Noise parameters
 `noise_chain.dat.0`: Full set of chain samples for noise model parameters. The columns are
 
-    step | logL | logL_norm | etaA | eta E
+    step | logL | logL_norm | etaX | etaY | etaZ
     
 where `etaY` is the PSD parameter for channel `Y`, which is a constant multiplyer to the predicted noise PSD: `Sn_model(f) = eta * Sn_theory(f)`.
 
@@ -231,39 +231,34 @@ Useful for monitoring the adaptive temperature spacing.
 
 <a name="data"></a>
 ## data directory
-`data_0_0.dat`: Fourier series of input data. For 6-link data columns are 
+`data.dat`: Fourier series of input data. For 6-link data columns are 
 
     f [Hz] | Re{A(f)} | Im{A(f)} | Re{E(f)} | Im{E(f)} 
     
 For 4-link data there are two columns with the X channel replacing A.
 
-The `0_0` in the filename indicate that the data is for the first (0th) time and frequency segment. If the analysis involves multiple time or frequency segments, different `data_i_j.dat` files will be filled.
+`waveform_injection_i.dat`: Fourier series of the `i`th injected signal. For 6-link data columns are 
 
-`waveform_injection_0_0.dat`: Fourier series of the injected signals. For 6-link data columns are 
-
-    f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
+    f [Hz] | Re{h_X(f)} | Im{h_X(f)} | Re{h_Y(f)} | Im{h_Y(f)} | Re{h_Z(f)} | Im{h_Z(f)} 
     
-For 4-link data there are two columns with the X channel replacing A.
+For 4-link data there are two columns with only the X channel.
 
-The same `i_j.dat` naming convention as the `data_i_j.dat` files is used here.
 In the absence of an injection for the analysis, the file contains a copy of the data.
 
-`power_data_0_0.dat`: Power spectrum of input data. For 6-link data columns are 
+`power_data.dat`: Power spectrum of input data. For 6-link data columns are 
 
-    f [Hz] | A^2(f) | E^2(f) 
+    f [Hz] | X^2(f) | Y^2(f) | Z^2(f) 
     
-For 4-link data there are two columns with the X channel replacing A.
+For 4-link data there are two columns with only the X channel.
 
-The same `i_j.dat` naming convention as the `data_i_j.dat` files is used here.
 
-`power_injection_0_0.dat`: Power spectrum of injected signals. For 6-link data columns are 
+`power_injection_i.dat`: Power spectrum of `i`th injected signal. For 6-link data columns are 
 
-    f [Hz] | h_A^2(f) | h_E^2(f) 
+    f [Hz] | h_X^2(f) | h_Y^2(f) | h_Z^2(f) 
     
-For 4-link data there are two columns with the X channel replacing A.
+For 4-link data there are two columns with only the X channel
 
-The same `i_j.dat` naming convention as the `data_i_j.dat` files is used here.
-If no injection is being done, the file contains the power spectrum of the data and is identical to `power_data_0_0.dat`.
+If no injection is being done, the file contains the power spectrum of the data and is identical to `power_data.dat`.
 
 
 `frequency_proposal.dat`: Smoothed and normalized power spectrum of data used for frequency proposal. Columns are 
@@ -272,44 +267,32 @@ If no injection is being done, the file contains the power spectrum of the data 
     
 **THIS FILE COULD BE REMOVED FROM OUTPUT OR PUT IN `--verbose` OUTPUT**
 
-`power_noise_t0_f0.dat`: Quantiles of the posterior distribution for the reconstructed noise model. For 6-link data the columns are
+`power_reconstruction.dat`: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are
 
-    f | SnA_50 | SnA_25 | SnA_75 | SnA_05 | SnA_95 | SnE_50 | SnE_25 | SnE_75 | SnE_05 | SnE_95
+    f | hX^2_50 | hX^2_25 | hX^2_75 | hX^2_05 | hX^2_95 | hY^2_50 | hY^2_25 | hY^2_75 | hY^2_05 | hY^2_95 | hZ^2_50 | hZ^2_25 | hZ^2_75 | hZ^2_05 | hZ^2_95
 
-Where `SnY` is the noise power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[SnA_25--SnA_75]` encompasses the 50% credible interval for `SnA`. For 4-link data there are 6 columns and X replaces A.
+Where `hY^2` is the signal power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[hX^2_25--hX^2_75]` encompasses the 50% credible interval for `hX`. For 4-link data there are 6 columns with only the X channel.
 
-If multiple time/frequency segments are being analyzed there will be `power_noise_t[i]_f[j].dat` files for each time-frequency segment.
+`power_residual.dat`: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are
 
-`power_reconstruction_t0_f0.dat`: Quantiles of the posterior distribution for the reconstructed signal model. For 6-link data the columns are
+    f | hX^2_50 | hX^2_25 | hX^2_75 | hX^2_05 | hX^2_95 | hY^2_50 | hY^2_25 | hY^2_75 | hY^2_05 | hY^2_95 | hZ^2_50 | hZ^2_25 | hZ^2_75 | hZ^2_05 | hZ^2_95
 
-    f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
+Where `rY^2` is the residual power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[rX^2_25--rX^2_75]` encompasses the 50% credible interval for `rX^2`. For 4-link data there are 6 columns with only the X channel.
 
-Where `hY^2` is the signal power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[hA^2_25--hA^2_75]` encompasses the 50% credible interval for `hY`. For 4-link data there are 6 columns and X replaces A.
+`variance_residual.dat`: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are
 
-If multiple time/frequency segments are being analyzed there will be `power_reconstruction_t[i]_f[j].dat` files for each time-frequency segment.
-
-`power_residual_t0_f0.dat`: Quantiles of the posterior distribution for the data residual. For 6-link data the columns are
-
-    f | rA^2_50 | rA^2_25 | rA^2_75 | rA^2_05 | rA^2_95 | rE^2_50 | rE^2_25 | rE^2_75 | rE^2_05 | rE^2_95
-
-Where `rY^2` is the residual power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[rA^2_25--rA^2_75]` encompasses the 50% credible interval for `rA^2`. For 4-link data there are 6 columns and X replaces A.
-
-If multiple time/frequency segments are being analyzed there will be `power_residual_t[i]_f[j].dat` files for each time-frequency segment.
-
-`variance_residual_t0_f0.dat`: Variance of the signal model amplitude (and therefore residual) computed by summing the variance of the real and imaginary amplitudes of the joint signal model, i.e. Var(h) = Var(Re h) + Var(Im h). For 6-link data the columns are
-
-    f | Var(hA) | Var(hE)
+    f | Var(hX) | Var(hY) | Var(hZ)
     
-For 4-link data there are only two columns and X replaces A. 
+For 4-link data there are only two columns with only the X channel.
 
 The intent here is that this variance can be added to the noise PSD for a follow-on analysis of the residuals to take into account the uncertainty in the signal model used in the subtraction. **This needs to be tested**
 
-`waveform_draw_0.dat`: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are 
+`waveform_draw.dat`: Fair draw of the data, signal model, and residual printed periodically throughout MCMC analysis to check on health of the fit. For 6-link data the columns are 
 
-    f | dA^2 | dE^2 | hA^2 | hE^2 | rA^2 | rE^2
+    f | dX^2 | dY^2 | dZ^2| hX^2 | hY^2 | hZ^2| rX^2 | rY^2 | rZ^2
     
 where `dY`,`hY`, and `rY` is the data, waveform, and residual of channel `Y`. 
-For 4-link data there are four columns and X replaces A.
+For 4-link data there are four columns and only the X channel.
 
 <a name="run"></a>
 ## main run directory
@@ -319,7 +302,7 @@ For 4-link data there are four columns and X replaces A.
     
 Where `M` is the model "dimension", i.e. the number of templates in the model, and `NN` signifies that the sampler spent NN% of iterations in that model.
 
-`gb_mcmc.log`: Run information including git version number, command line, summary of data settings and run flags, and  total run time.
+`ucb_mcmc.log`: Run information including git version number, command line, summary of data settings and run flags, and  total run time.
 
 `run.sh`: Bash script which echos command line used for analysis.
 
@@ -329,17 +312,17 @@ Where `M` is the model "dimension", i.e. the number of templates in the model, a
 
 The first row is the target distribution with `T=1`
 
-`example_gb_catalog.sh`: Example `bash` script for post-processing with `gb_catalog`. Takes as argument the size of the model you want to post-process (e.g., maximum from `evidence.dat`).
+`example_ucb_catalog.sh`: Example `bash` script for post-processing with `ucb_catalog`. Takes as argument the size of the model you want to post-process (e.g., maximum from `evidence.dat`).
 <a name="post"></a>
-# Post processing GBMCMC
+# Post processing UCBMCMC
 
-Post production of Markov chain output from `gb_mcmc` is done with `gb_catalog`.  
+Post production of Markov chain output from `ucb_mcmc` is done with `ucb_catalog`.  
 The post processing is done on a single model from the RJMCMC analysis, identified by the number of sources `N` used in the fit, which the user specifies.
-Results from `gb_catalog` are found in the a subdirectory of the main run directory called `catalog_N/`.  The catalog step can be run several times for different choices of `N`, creating different directories for each run.
+Results from `ucb_catalog` are found in the a subdirectory of the main run directory called `catalog_N/`.  The catalog step can be run several times for different choices of `N`, creating different directories for each run.
 
-For run options with `gb_catalog --help`.  Detailed description of command line options (will eventually be) found [here](doc/running.md).
+For run options with `ucb_catalog --help`.  Detailed description of command line options (will eventually be) found [here](doc/running.md).
 
-An example `gb_catalog` run script is created by `gb_mcmc` in the run directory.  See `example_gb_catalog.sh`.
+An example `ucb_catalog` run script is created by `ucb_mcmc` in the run directory.  See `example_ucb_catalog.sh`.
 
 <a name="catalog_output"></a>
 ## GB Catalog output format
@@ -353,7 +336,7 @@ For example, a binary at `f_0 = 3 mHz` would be named  `LDC0030000000`.
 
 Contents of each indidvidual file are as follows:
 
-`catalog_N/LDCFFFFFFFFFF_chain.dat`: The Markov chain samples for parameters consistent with `LDCFFFFFFFFFF`. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from `gb_mcmc` with **three** additional columns appended
+`catalog_N/LDCFFFFFFFFFF_chain.dat`: The Markov chain samples for parameters consistent with `LDCFFFFFFFFFF`. From these samples the marginalized posteriors for the source are computed. If correlations between sources are of interest the user has to go back to the full chains. Columns are the same as the raw chain files from `ucb_mcmc` with **three** additional columns appended
 
     f | fdot | A | long | cos_colat | cos_inc | psi | phi | SNR | Waveform Match | Waveform Distance
     
@@ -366,15 +349,15 @@ Where `SNR` is computed relative to the noise level input using `--noise-file` o
 `catalog_N/LDCFFFFFFFFFF_power_reconstruction.dat`: Reconstructed waveform represented by quantiles of the posterior distribution of the signal's power spectrum. For 6-link data the columns are
 
 
-    f | hA^2_50 | hA^2_25 | hA^2_75 | hA^2_05 | hA^2_95 | hE^2_50 | hE^2_25 | hE^2_75 | hE^2_05 | hE^2_95
+    f | hX^2_50 | hX^2_25 | hX^2_75 | hX^2_05 | hX^2_95 | hY^2_50 | hY^2_25 | hY^2_75 | hY^2_05 | hY^2_95 | hZ^2_50 | hZ^2_25 | hZ^2_75 | hZ^2_05 | hZ^2_95
     
-Where `hY^2` is the signal power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[hA^2_25--hA^2_75]` encompasses the 50% credible interval for `hY`. For 4-link data there are 6 columns and X replaces A.
+Where `hY^2` is the signal power spectral density for channel `Y`, `X_NN` is the NN% quantile of `X`, e.g. `[hX^2_25--hX^2_75]` encompasses the 50% credible interval for `hX`. For 4-link data there are 6 columns and only the X channel.
 
 `catalog_N/LDCFFFFFFFFFF_waveform.dat`: Point estimate of the reconstructed waveform corresponding  to the chain sample containing the **median** of the 1D marginalized distriubtion for the GW frequency. Columns for 6-link data are
 
-    f [Hz] | Re{h_A(f)} | Im{h_A(f)} | Re{h_E(f)} | Im{h_E(f)} 
+    f [Hz] | Re{h_X(f)} | Im{h_X(f)} | Re{h_Y(f)} | Im{h_Y(f)} | Re{h_Z(f)} | Im{h_Z(f)} 
     
-For 4-link data there are two columns with the X channel replacing A.
+For 4-link data there are two columns with only the X channel.
 
 `catalog_N/entries.dat`: Summary of sources found in catalog.  Columns are
 
@@ -382,7 +365,7 @@ For 4-link data there are two columns with the X channel replacing A.
     
 Where `SNR` is computed relative to the noise level input using `--noise-file` or the analytic noise functions if not specified.  The evidence, with values from [0,1], is the probability that the candidate source is a member of the catalog, computed by the fraction of chain samples that include a set of parameters consistent with `LDCFFFFFFFFFF`.
 
-`catalog_N/history.dat`: File associating current candidate sources to previous catalog input using `--catalog` and `--Tcatalog` arguments for `gb_catalog`.  The columns are
+`catalog_N/history.dat`: File associating current candidate sources to previous catalog input using `--catalog` and `--Tcatalog` arguments for `ucb_catalog`.  The columns are
 
     LDCMMMMMMMMMM from input catalog | LDCNNNNNNNNNN from current catalog
     

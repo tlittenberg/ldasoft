@@ -1,4 +1,4 @@
-/*
+*
  *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -94,7 +94,14 @@ void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double
     x[3] = AUca + orbit->R*(saca*sb - (1. + sa2)*cb);
     y[3] = AUsa + orbit->R*(saca*cb - (1. + ca2)*sb);
     z[3] = -SQ3*orbit->R*(ca*cb + sa*sb);
-    
+
+    // next order corrections (no longer equal arm)
+     
+    /*
+    x[i] += 0.125*ec*ec*AU*(-10.*ca - 5.*ca*cb*cb + 3.*ca*ca*ca*cb*cb - 9.*ca*cb*cb*sa*sa - 10.*cb*sa*sb + 18.*ca*ca*cb*sa*sb - 6.*cb*sa*sa*sa*sb + 5.*ca*sb*sb - 3.*ca*ca*ca*sb*sb + 9.*ca*sa*sa*sb*sb);
+    y[i] += 0.125*ec*ec*AU*(-10.*sa + 5.*cb*cb*sa + 9.*ca*ca*cb*cb*sa - 3.*cb*cb*sa*sa*sa - 10.*ca*cb*sb - 6.*ca*ca*ca*cb*sb + 18.*ca*cb*sa*sa*sb - 5.*sa*sb*sb - 9.*ca*ca*sa*sb*sb + 3.*sa*sa*sa*sb*sb);
+    z[i] += sq3*AU*ec*ec*(1. + (sa*cb - sb*ca)*(sa*cb - sb*ca));
+    */
 }
 void initialize_analytic_orbit(struct Orbit *orbit)
 {

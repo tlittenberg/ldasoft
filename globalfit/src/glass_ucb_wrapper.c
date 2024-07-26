@@ -327,7 +327,7 @@ int update_ucb_sampler(struct UCBData *ucb_data)
             print_sampler_state(ucb_data);
             
             //save chain state to resume sampler
-            save_chain_state(data, model, chain, flags, ucb_data->mcmc_step);
+            //save_chain_state(data, model, chain, flags, ucb_data->mcmc_step);
         }
         
         //dump waveforms to file, update avgLogL for thermodynamic integration
@@ -342,6 +342,16 @@ int update_ucb_sampler(struct UCBData *ucb_data)
             }
         }
     }
+    
+    if(ucb_data->mcmc_step<0 &&
+       ucb_data->mcmc_step>-flags->NBURN+flags->NBURN/10 &&
+       model[0]->Neff < model[chain->index[0]]->Nmax &&
+       model[chain->index[0]]->Nlive==model[0]->Neff-1 )
+    {
+        for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
+        ucb_data->mcmc_step = -flags->NBURN;
+    }
+
     ucb_data->mcmc_step+=numSteps;
     
     clock_t stop = clock();

@@ -10,7 +10,7 @@ var searchData=
   ['maximize_7',['maximize',['../structFlags.html#a56dfe39c6db42f388d182255cd85d1ed',1,'Flags']]],
   ['maxp_8',['maxp',['../structProposal.html#ab7c7b47c87acc31027fc19fb3a33ef15',1,'Proposal']]],
   ['mc_9',['Mc',['../structSource.html#a5aebffc347ee9e54813ba9de123e9c17',1,'Source']]],
-  ['mcmc_5fstep_10',['mcmc_step',['../structGBMCMCData.html#a900cb51268d907ad464d4f72233a88da',1,'GBMCMCData']]],
+  ['mcmc_5fstep_10',['mcmc_step',['../structUCBData.html#a94d21e8969e498368d91ddfcf1e5ebe1',1,'UCBData']]],
   ['min_11',['min',['../structMBHData.html#a16f434727ffc361a26269d63d694b0a9',1,'MBHData']]],
   ['minmax_12',['minmax',['../structMVG.html#a6445d39364ad7e363131211f8aa24641',1,'MVG']]],
   ['mu_13',['mu',['../structMVG.html#a62a49261ad36d33bdd9413a7705a1db5',1,'MVG']]]

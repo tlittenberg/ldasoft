@@ -29,10 +29,10 @@
 
 
 #define FIXME 0
-#define SNRCAP 10000.0 /* SNR cap on logL */
+#define SNRCAP 20.0 /* SNR cap on logL */
 
 
-static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal, char runDir[])
+static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal, char runDir[], double minp)
 {
     char filename[MAXSTRINGSIZE];
     sprintf(filename,"%s/fstat/Fstat.gpi",runDir);
@@ -81,14 +81,14 @@ static void write_Fstat_animation(double fmin, double T, struct Proposal *propos
     fprintf(fptr,"\n");
     
     fprintf(fptr,"  set origin 0,0\n");
-    fprintf(fptr,"  set cbrange [0.001:%lg]\n",proposal->maxp);
+    fprintf(fptr,"  set cbrange [%lg:%lg]\n",minp,proposal->maxp);
     fprintf(fptr,"  input = sprintf('skymap_%%05.0f.dat',ii)\n");
     fprintf(fptr,"  splot [0:2*pi] [-1:1] input u ($2+dph):($1+dth):3\n");
     
     fprintf(fptr,"\n");
     
     fprintf(fptr,"  set origin 0.5,0\n");
-    fprintf(fptr,"  set cbrange [log(0.001):log(%lg)]\n",proposal->maxp);
+    fprintf(fptr,"  set cbrange [%lg:%lg]\n",log(minp),log(proposal->maxp));
     fprintf(fptr,"  input = sprintf('skymap_%%05.0f.dat',ii)\n");
     fprintf(fptr,"  splot [0:2*pi] [-1:1] input u ($2+dph):($1+dth):(log($3))\n");
     
@@ -300,9 +300,10 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     logQ -= model->logPriorVolume[n];
     
     //amplitude
-    //n = 3;
-    logQ += draw_signal_amplitude(data, model, source, proposal, params, seed);
-    
+    n = 3;
+    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    logQ -= model->logPriorVolume[n];
+
     //inclination
     n = 4;
     params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
@@ -337,6 +338,58 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     
     return logQ;
 }
+
+double uniform_prior_density(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params)
+{
+    
+    double logQ = 0.0;
+    int n;
+    
+    //frequency
+    n = 0;
+    logQ -= model->logPriorVolume[n];
+    
+    //sky location
+    n = 1;
+    logQ -= model->logPriorVolume[n];
+    
+    n = 2;
+    logQ -= model->logPriorVolume[n];
+    
+    //amplitude
+    n = 3;
+    logQ -= model->logPriorVolume[n];
+    
+    //inclination
+    n = 4;
+    logQ -= model->logPriorVolume[n];
+    
+    //polarization
+    n = 5;
+    logQ -= model->logPriorVolume[n];
+    
+    //phase
+    n = 6;
+    logQ -= model->logPriorVolume[n];
+    
+    //fdot
+    if(UCB_MODEL_NP>7)
+    {
+        n = 7;
+        logQ -= model->logPriorVolume[n];
+    }
+    
+    //f-double-dot
+    if(UCB_MODEL_NP>8)
+    {
+        n = 8;
+        logQ -= model->logPriorVolume[n];
+    }
+    
+    
+    return logQ;
+}
+
 
 double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
@@ -431,44 +484,6 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
     return logP;
 }
 
-double draw_signal_amplitude(struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
-{
-    int n = (int)floor(params[0] - model->prior[0][0]);
-    double sf = data->sine_f_on_fstar;
-    double sn = model->noise->C[0][0][n]*model->noise->eta[0];
-    double SNR1  = analytic_snr(1, sn, sf, data->sqT);
-    double iSNR1 = 1./SNR1;
-    
-    //Get bounds on SNR
-    double SNR = 1.0;
-    double SNRmax = exp(model->prior[3][1])*SNR1;
-    
-    //Get max of prior density for rejection sampling
-    double maxP = snr_prior(SNRPEAK);
-    
-    //Rejection sample on uniform draws in SNR
-    double alpha = 1;
-    double P = 0;
-    int counter=0;
-    do
-    {
-        SNR   = SNRmax*gsl_rng_uniform(seed);
-        P     = snr_prior(SNR);
-        alpha = maxP*gsl_rng_uniform(seed);
-        
-        counter++;
-        
-        //you had your chance
-        if(counter>10000)
-        {
-            params[3] = log(SNR*iSNR1);
-            return -INFINITY;
-        }
-    }while(alpha > P);
-    params[3] = log(SNR*iSNR1);
-    return evaluate_snr_prior(data, model, params);
-}
-
 double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
 {
     int i,j;
@@ -496,10 +511,12 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
     
     //safety check for cos(latitude) parameters
     //cosine co-latitude
-    if(params[1] >= 1.) params[1] = source->params[1] - jump[1];
+    if(params[1] >=  1.) params[1] = source->params[1] - jump[1];
+    if(params[1] <= -1.) params[1] = source->params[1] - jump[1];
     //cosine inclination
-    if(params[4] >= 1.) params[4] = source->params[4] - jump[4];
-    
+    if(params[4] >=  1.) params[4] = source->params[4] - jump[4];
+    if(params[4] <= -1.) params[4] = source->params[4] - jump[4];
+
     for(int j=0; j<UCB_MODEL_NP; j++)
     {
         if(params[j]!=params[j])
@@ -702,18 +719,17 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
     //doppler modulation frequency (in bins)
     double fm = data->T/YEAR;
     
-    //update all parameters with a draw from the fisher
-    draw_from_fisher(data, model, source, proposal, params, seed);
-    
-    //try total reset of extrinsic parameters
-    if(gsl_rng_uniform(seed)<0.5) draw_from_extrinsic_prior(data, model, source, proposal, params, seed);
-    
     //perturb frequency by 1 fm
-    double scale = 1.0;//floor(6*gsl_ran_gaussian(seed,1));
-    if(gsl_rng_uniform(seed)<0.5) scale*=-1.0;
+    int scale;
+    do scale = (int)floor(-3. + 7.*gsl_rng_uniform(seed));
+    while (scale == 0);
     
     params[0] += scale*fm;
-    //params[7] += scale*fm*fm;
+    params[2] = params[2] + -0.2 + gsl_rng_uniform(seed)*0.4;
+    params[7] -= 2.*scale*fm*fm;
+    
+    //perturb all parameters by Fisher Matrix (in liu of Jacaboian)
+    draw_from_fisher(data, model, source, proposal, params, seed);
     
     //fm shift is symmetric
     return 0.0;
@@ -764,7 +780,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
             case 0:
                 sprintf(proposal[i]->name,"prior");
                 proposal[i]->function = &draw_from_uniform_prior;
-                proposal[i]->density  = &prior_density;
+                proposal[i]->density  = &uniform_prior_density;
                 proposal[i]->weight   = 0.1;
                 proposal[i]->rjweight = 0.2;
                 setup_prior_proposal(flags, prior, proposal[i]);
@@ -1123,6 +1139,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     
     double norm = 0.0;
     double maxLogL = -1e60;
+    double minLogL = +1e60;
+    double minp = +1e60;
     
     /* compute or restore fisher-based proposal */
     char filename[MAXSTRINGSIZE];
@@ -1177,7 +1195,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             
             
             //loop over colatitude bins
-#pragma omp parallel for num_threads(flags->threads) collapse(2)
+            #pragma omp parallel for num_threads(flags->threads) collapse(2)
             for (int j=0; j<n_theta; j++)
             {
                 //loop over longitude bins
@@ -1190,15 +1208,27 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                     {
                         get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
                         
-                        if(logL_AE > maxLogL) maxLogL = logL_AE;
-                        //if(logL_AE > SNRCAP)  logL_AE = SNRCAP;//TODO: Test SNRCAP in fstatistic
-                        
-                        proposal->tensor[i][j][k] = logL_AE;//sqrt(2*logL_AE);
+                        if(logL_AE > SNRCAP*SNRCAP/2)      logL_AE = SNRCAP*SNRCAP/2;//TODO: Test SNRCAP in fstatistic
+                        proposal->tensor[i][j][k] = logL_AE;
                     }
                 }//end loop over longitude bins
             }//end loop over colatitude bins
         }//end loop over sub-bins
         
+        
+        /*detrend likelihood map
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    proposal->tensor[i][j][k] = proposal->tensor[i][j][k] - SNRCAP*SNRCAP/2;*/
+
+        /*exponentiate to get into likelhood (instead of log)
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    proposal->tensor[i][j][k] = proposal->tensor[i][j][k];*/
+
+        //get normalization
         for(int i=0; i<n_f; i++)
             for(int j=0; j<n_theta; j++)
                 for(int k=0; k<n_phi; k++)
@@ -1207,29 +1237,41 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         
         //normalize
         proposal->norm = (n_f*n_theta*n_phi)/norm;
-        proposal->maxp = maxLogL*proposal->norm;//sqrt(2.*maxLogL)*proposal->norm;
         
+        //normalize
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    proposal->tensor[i][j][k] *= proposal->norm;
+
+        //get max
+        proposal->maxp = -1.e60;
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    if(proposal->tensor[i][j][k]>proposal->maxp) proposal->maxp = proposal->tensor[i][j][k];
+
+                
         //store checkpointing files so we can skip this expensive step on resume
         propFile=fopen(filename,"wb");
         fwrite(&proposal->norm, sizeof proposal->norm, 1, propFile);
         fwrite(&proposal->maxp, sizeof proposal->norm, 1, propFile);
         for(int i=0; i<n_f; i++)
-        {
             for(int j=0; j<n_theta; j++)
-            {
                 for(int k=0; k<n_phi; k++)
-                {
-                    proposal->tensor[i][j][k] *= proposal->norm;
                     fwrite(&proposal->tensor[i][j][k],sizeof proposal->tensor[i][j][k], 1, propFile);
-                }
-            }
-        }
         fclose(propFile);
     }
 
     //print diagnostics
     if(flags->verbose)
     {
+        //get min
+        for(int i=0; i<n_f; i++)
+            for(int j=0; j<n_theta; j++)
+                for(int k=0; k<n_phi; k++)
+                    if(proposal->tensor[i][j][k]<minp) minp = proposal->tensor[i][j][k];
+
         char dirname[MAXSTRINGSIZE];
         sprintf(dirname,"%s/fstat",flags->runDir);
         mkdir(dirname,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -1253,7 +1295,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             }
             fclose(fptr);
         }
-        write_Fstat_animation(data->qmin/data->T, data->T,proposal,flags->runDir);
+        write_Fstat_animation(data->qmin/data->T, data->T,proposal,flags->runDir, minp);
     }
     
     free(Fparams);
@@ -1678,9 +1720,6 @@ double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *mode
     //sky location prior
     logP += evalaute_sky_location_prior(params, model->prior, model->logPriorVolume, 0, skyhist, 1, 1, 1);
     
-    //amplitude prior
-    logP += evaluate_snr_prior(data, model, params);
-    
     //everything else uses simple uniform priors
     logP += evaluate_uniform_priors(params, model->prior, model->logPriorVolume);
     
@@ -1728,10 +1767,7 @@ double prior_density(struct Data *data, struct Model *model, UNUSED struct Sourc
     
     //sky location prior
     logP += evalaute_sky_location_prior(params, uniform_prior, model->logPriorVolume, galaxyPriorFlag , skyhist, dcostheta, dphi, nphi);
-    
-    //amplitude prior
-    logP += evaluate_snr_prior(data, model, params);
-    
+        
     //everything else uses simple uniform priors
     logP += evaluate_uniform_priors(params, uniform_prior, model->logPriorVolume);
     

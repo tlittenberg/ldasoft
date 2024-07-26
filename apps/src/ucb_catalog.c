@@ -17,6 +17,11 @@
  *  MA  02111-1307  USA
  */
 
+/**
+ @file ucb_catalog.c
+ \brief App for post-processing UCB/VGB sampler output for catalog generation
+ */
+
 #include <glass_utils.h>
 #include <glass_ucb.h>
 
@@ -929,7 +934,7 @@ int main(int argc, char *argv[])
         double BIC;
         
         counter = 0;
-        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, NMODE_start, 1, r, &BIC))
+        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, NMODE_start, NTHIN, r, &BIC))
         {
             counter++;
             if(counter>CMAX)

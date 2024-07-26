@@ -64,7 +64,6 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags)
     opterr=0; //suppress warnings about unknown arguments
 
     //Set defaults
-    flags->rj          = 1;
     flags->NINJ        = 0;
     flags->fixSky      = 0;
     flags->fixFreq     = 0;

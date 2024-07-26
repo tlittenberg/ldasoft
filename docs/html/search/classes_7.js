@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['mbhdata_0',['MBHData',['../structMBHData.html',1,'']]],
-  ['model_1',['Model',['../structModel.html',1,'']]],
-  ['mvg_2',['MVG',['../structMVG.html',1,'']]]
+  ['noise_0',['Noise',['../structNoise.html',1,'']]],
+  ['noisedata_1',['NoiseData',['../structNoiseData.html',1,'']]]
 ];
