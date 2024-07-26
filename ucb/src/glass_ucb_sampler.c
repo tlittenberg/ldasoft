@@ -311,7 +311,8 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             generate_signal_model(orbit, data, model_y, create);
             
             //rejection sample on SNR?
-            if(snr(model_y->source[create], model_y->noise) < 5.0) *logPy = -INFINITY;
+            if(!flags->prior)
+                if(snr(model_y->source[create], model_y->noise) < 5.0) *logPy = -INFINITY;
 
             model_y->source[create]->fisher_update_flag = 1;
         }
@@ -586,7 +587,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     proposal[nprop]->trial[ic]++;
         
     /* Choose birth/death move, or split/merge move */
-    if( gsl_rng_uniform(chain->r[ic]) < 0.5)/* birth/death move */
+    if( gsl_rng_uniform(chain->r[ic]) < 1.5)/* birth/death move */
         rj_birth_death(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
     else if( gsl_rng_uniform(chain->r[ic]) < 1.5) /* birth/death move */
         rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);

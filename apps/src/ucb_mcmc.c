@@ -20,7 +20,7 @@
 
 /**
  @file ucb_mcmc.c
- \brief Main function for UCB sampler app `ucb_mcmc`
+ \brief Main function for UCB sampler app `ucb_mcmc` 
  */
 
 /*  REQUIRED LIBRARIES  */
