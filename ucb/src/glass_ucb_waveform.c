@@ -34,24 +34,37 @@ double snr(struct Source *source, struct Noise *noise)
     switch(source->tdi->Nchannel)
     {
         case 1: //Michelson
-            snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->invC[0][0],source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->invC[0][0],source->tdi->N/2);
             break;
         case 2: //A&E
-            snr2 += fourier_nwip(source->tdi->A,source->tdi->A,noise->invC[0][0],source->tdi->N);
-            snr2 += fourier_nwip(source->tdi->E,source->tdi->E,noise->invC[1][1],source->tdi->N);
+            snr2 += fourier_nwip(source->tdi->A,source->tdi->A,noise->invC[0][0],source->tdi->N/2);
+            snr2 += fourier_nwip(source->tdi->E,source->tdi->E,noise->invC[1][1],source->tdi->N/2);
             break;
         case 3: //XYZ
-            snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->invC[0][0],source->tdi->N);
-            snr2 += fourier_nwip(source->tdi->Y,source->tdi->Y,noise->invC[1][1],source->tdi->N);
-            snr2 += fourier_nwip(source->tdi->Z,source->tdi->Z,noise->invC[2][2],source->tdi->N);
-            snr2 += fourier_nwip(source->tdi->X,source->tdi->Y,noise->invC[0][1],source->tdi->N)*2.;
-            snr2 += fourier_nwip(source->tdi->X,source->tdi->Z,noise->invC[0][2],source->tdi->N)*2.;
-            snr2 += fourier_nwip(source->tdi->Y,source->tdi->Z,noise->invC[1][2],source->tdi->N)*2.;
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->X,noise->invC[0][0],source->tdi->N/2);
+            snr2 += fourier_nwip(source->tdi->Y,source->tdi->Y,noise->invC[1][1],source->tdi->N/2);
+            snr2 += fourier_nwip(source->tdi->Z,source->tdi->Z,noise->invC[2][2],source->tdi->N/2);
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->Y,noise->invC[0][1],source->tdi->N/2)*2.;
+            snr2 += fourier_nwip(source->tdi->X,source->tdi->Z,noise->invC[0][2],source->tdi->N/2)*2.;
+            snr2 += fourier_nwip(source->tdi->Y,source->tdi->Z,noise->invC[1][2],source->tdi->N/2)*2.;
             break;
     }
     
     return(sqrt(snr2));
 }
+
+double snr_wavelet(struct Source *source, struct Noise *noise)
+{
+    double snr2 = 0.0;
+    snr2 += wavelet_nwip(source->tdi->X, source->tdi->X, noise->invC[0][0], source->list, source->Nlist);
+    snr2 += wavelet_nwip(source->tdi->Y, source->tdi->Y, noise->invC[1][1], source->list, source->Nlist);
+    snr2 += wavelet_nwip(source->tdi->Z, source->tdi->Z, noise->invC[2][2], source->list, source->Nlist);
+    snr2 += wavelet_nwip(source->tdi->X, source->tdi->Y, noise->invC[0][1], source->list, source->Nlist)*2;
+    snr2 += wavelet_nwip(source->tdi->X, source->tdi->Z, noise->invC[0][2], source->list, source->Nlist)*2;
+    snr2 += wavelet_nwip(source->tdi->Y, source->tdi->Z, noise->invC[1][2], source->list, source->Nlist)*2;
+    return sqrt(snr2);
+}
+
 
 double snr_prior(double SNR)
 {
@@ -79,7 +92,6 @@ double waveform_match(struct Source *a, struct Source *b, struct Noise *noise)
     for(int i=0; i<a->BW; i++)
     {
         int j = i+a->qmin-qmin;
-        // printf("data->qmin=%i,i=%i, imin=%i, qmin=%i, j=%i\n",qmin,i,a->imin,a->qmin,j);
         
         if(j>-1 && j<N)
         {
@@ -194,15 +206,8 @@ double waveform_distance(struct Source *a, struct Source *b, struct Noise *noise
   
   return distance;
 }
-double galactic_binary_Amp(double Mc, double f0, double D)
-{
-    double f = f0;//T;
-    double M = Mc*TSUN;
-    double dL= D*PC/CLIGHT;
-    
-    return 2.*pow(pow(M,5)*pow(M_PI*f,2),1./3.)/dL;
-}
-double galactic_binary_fdot(double Mc, double f0)
+
+double ucb_fdot(double Mc, double f0)
 {
     double f = f0;
     double M = Mc*TSUN;
@@ -210,7 +215,7 @@ double galactic_binary_fdot(double Mc, double f0)
     
     return Q*pow(pow(M_PI,8)*pow(M,5)*pow(f,11),1./3.);  
 }
-double galactic_binary_Mc(double f0, double dfdt)
+double ucb_chirpmass(double f0, double dfdt)
 {
     double f = f0;
     double fd = dfdt;
@@ -219,7 +224,7 @@ double galactic_binary_Mc(double f0, double dfdt)
     return pow(fd/(96./5.)/pi83/pow(f,11./3.), 3./5.)/TSUN;
 }
 
-double galactic_binary_dL(double f0, double dfdt, double A)
+double ucb_distance(double f0, double dfdt, double A)
 {
     double f    = f0;
     double fd = dfdt;
@@ -227,9 +232,37 @@ double galactic_binary_dL(double f0, double dfdt, double A)
     return ((5./48.)*(fd/(M_PI*M_PI*f*f*f*amp))*CLIGHT/PC); //seconds  !check notes on 02/28!
 }
 
-void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise)
+double ucb_phase(double t, double *params)
+{    
+    double f0    = params[0];
+    double phi0  = params[6];
+    double fdot  = params[7];
+    double fddot = 0.0;
+    
+    return phi0 + PI2*( f0*t + 0.5*fdot*t*t + 1.0/6.0*fddot*t*t*t );   
+}
+
+double ucb_amplitude(double t, double *params)
 {
-    //TODO:  galactic_binary_fisher should compute joint Fisher
+    double f0    = params[0];
+    double A0    = params[3];
+    double fdot  = params[7];
+
+    return A0 * ( 1.0 + 2.0/3.0*fdot/f0*t );
+}
+
+void ucb_barycenter_waveform(double *params, int N, double *times, double *phase, double *amp)
+{    
+    for(int n=0; n<N; n++)
+    {
+        phase[n] = ucb_phase(times[n],params);
+        amp[n]   = ucb_amplitude(times[n],params);
+    }
+}
+
+void ucb_fisher(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise)
+{
+    //TODO:  ucb_fisher should compute joint Fisher
     int i,j,n;
         
     double epsilon    = 1.0e-7;
@@ -245,6 +278,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     struct Source *wave_p = malloc(sizeof(struct Source));
     //struct Source *wave_m = malloc(sizeof(struct Source));
     alloc_source(wave_p, data->N, data->Nchannel);
+
     //alloc_source(wave_m, data->N, data->Nchannel, NP);
     
     // TDI variables to hold derivatives of h
@@ -256,7 +290,6 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     }
     
     /* assumes all the parameters are log or angle */
-    int N2 = data->N*2;
     for(i=0; i<UCB_MODEL_NP; i++)
     {
         //step size for derivatives
@@ -285,7 +318,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         //map_array_to_params(wave_m, wave_m->params, data->T);
         
         // clean up TDI arrays, just in case
-        for(j=0; j<N2; j++)
+        for(j=0; j<data->N; j++)
         {
             wave_p->tdi->X[j]=0.0;
             wave_p->tdi->Y[j]=0.0;
@@ -300,12 +333,12 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
         }
         
         // align perturbed waveforms in data array
-        galactic_binary_alignment(orbit, data, wave_p);
-        //galactic_binary_alignment(orbit, data, wave_m);
+        ucb_alignment(orbit, data, wave_p);
+        //ucb_alignment(orbit, data, wave_m);
         
         // compute perturbed waveforms
-        galactic_binary(orbit, data->format, data->T, data->t0, wave_p->params, UCB_MODEL_NP, wave_p->tdi->X, wave_p->tdi->Y, wave_p->tdi->Z, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
-        //galactic_binary(orbit, data->format, data->T, data->t0, wave_m->params, UCB_MODEL_NP, wave_m->tdi->X, wave_m->tdi->Y, wave_m->tdi->Z, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
+        ucb_waveform(orbit, data->format, data->T, data->t0, wave_p->params, UCB_MODEL_NP, wave_p->tdi->X, wave_p->tdi->Y, wave_p->tdi->Z, wave_p->tdi->A, wave_p->tdi->E, wave_p->BW, wave_p->tdi->Nchannel);
+        //ucb_waveform(orbit, data->format, data->T, data->t0, wave_m->params, UCB_MODEL_NP, wave_m->tdi->X, wave_m->tdi->Y, wave_m->tdi->Z, wave_m->tdi->A, wave_m->tdi->E, wave_m->BW, wave_m->tdi->Nchannel);
 
         // central differencing derivatives of waveforms w.r.t. parameters
         switch(source->tdi->Nchannel)
@@ -364,7 +397,7 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
             if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
             {
                 fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,__FILE__);
-                fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->C[0][0][data->N/2],noise->C[1][1][data->N/2]);
+                fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->C[0][0][data->NFFT/2],noise->C[1][1][data->NFFT/2]);
                 for(int k=0; k<UCB_MODEL_NP; k++)
                 {
                     fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
@@ -387,8 +420,119 @@ void galactic_binary_fisher(struct Orbit *orbit, struct Data *data, struct Sourc
     free(dhdx);
 }
 
+void ucb_fisher_wavelet(struct Orbit *orbit, struct Data *data, struct Source *source, struct Noise *noise)
+{
+    //TODO:  ucb_fisher should compute joint Fisher
+    int i,j,n;
+        
+    double epsilon    = 1.0e-7;
+    double invepsilon2= 1./(epsilon);
+    double invstep;
+    
+    // Plus and minus parameters:
+    double *params_p = calloc(UCB_MODEL_NP,sizeof(double));
+    
+    // Plus and minus templates for each detector:
+    struct Source *wave_p = malloc(sizeof(struct Source));
+    alloc_source(wave_p, data->N, data->Nchannel);
+    
+    // TDI variables to hold derivatives of h
+    struct TDI **dhdx = malloc(UCB_MODEL_NP*sizeof(struct TDI *));
+    for(n=0; n<UCB_MODEL_NP; n++)
+    {
+        dhdx[n] = malloc(sizeof(struct TDI));
+        alloc_tdi(dhdx[n], data->N, data->Nchannel);
+    }
+    
+    /* assumes all the parameters are log or angle */
+    for(i=0; i<UCB_MODEL_NP; i++)
+    {
+        //step size for derivatives
+        invstep = invepsilon2;
+        
+        // copy parameters
+        for(j=0; j<UCB_MODEL_NP; j++)
+        {
+            wave_p->params[j] = source->params[j];
+        }
+        
+        // perturb parameters
+        wave_p->params[i] += epsilon;
+        
+	    // catch when cosine parameters get pushed out of bounds
+        if(i==1 || i==4)
+        {
+            if(wave_p->params[i] > 1.0) wave_p->params[i] = 1.0;
+        }
 
-int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, double costheta, double A, double T, int N)
+        // complete info in source structure
+        map_array_to_params(wave_p, wave_p->params, data->T);
+        
+        // clean up TDI arrays, just in case
+        for(j=0; j<data->N; j++)
+        {
+            wave_p->tdi->X[j]=0.0;
+            wave_p->tdi->Y[j]=0.0;
+            wave_p->tdi->Z[j]=0.0;
+            wave_p->tdi->A[j]=0.0;
+            wave_p->tdi->E[j]=0.0;
+        }
+        
+        
+        // compute perturbed waveforms
+        ucb_waveform_wavelet(orbit,data->wdm,data->T, data->t0, wave_p->params, wave_p->list, &wave_p->Nlist, wave_p->tdi->X, wave_p->tdi->Y, wave_p->tdi->Z);
+
+        // central differencing derivatives of waveforms w.r.t. parameters
+        for(n=0; n<wave_p->Nlist; n++)
+        {
+            int k = wave_p->list[n];
+            dhdx[i]->X[k] = (wave_p->tdi->X[k] - source->tdi->X[k])*invstep;
+            dhdx[i]->Y[k] = (wave_p->tdi->Y[k] - source->tdi->Y[k])*invstep;
+            dhdx[i]->Z[k] = (wave_p->tdi->Z[k] - source->tdi->Z[k])*invstep;
+        }
+
+    }
+    
+    // Calculate fisher matrix
+    for(i=0; i<UCB_MODEL_NP; i++)
+    {
+        for(j=i; j<UCB_MODEL_NP; j++)
+        {
+            source->fisher_matrix[i][j]  = wavelet_nwip(dhdx[i]->X, dhdx[j]->X, noise->invC[0][0], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->Y, dhdx[j]->Y, noise->invC[1][1], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->Z, dhdx[j]->Z, noise->invC[2][2], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->X, dhdx[j]->Y, noise->invC[0][1], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->X, dhdx[j]->Z, noise->invC[0][2], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->Y, dhdx[j]->Z, noise->invC[1][2], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->Y, dhdx[j]->X, noise->invC[1][0], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->Z, dhdx[j]->X, noise->invC[2][0], wave_p->list, wave_p->Nlist);
+            source->fisher_matrix[i][j] += wavelet_nwip(dhdx[i]->Z, dhdx[j]->Y, noise->invC[2][1], wave_p->list, wave_p->Nlist);
+
+            if(source->fisher_matrix[i][j]!=source->fisher_matrix[i][j])
+            {
+                fprintf(stderr,"WARNING: nan matrix element (line %d of file %s)\n",__LINE__,__FILE__);
+                fprintf(stderr, "fisher_matrix[%i][%i], Snf=[%g,%g]\n",i,j,noise->C[0][0][data->N/2],noise->C[1][1][data->N/2]);
+                for(int k=0; k<UCB_MODEL_NP; k++)
+                {
+                    fprintf(stderr,"source->params[%i]=%g\n",k,source->params[k]);
+                }
+                source->fisher_matrix[i][j] = 10.0;
+            }
+            source->fisher_matrix[j][i] = source->fisher_matrix[i][j];
+        }
+    }
+    
+    // Calculate eigenvalues and eigenvectors of fisher matrix
+    matrix_eigenstuff(source->fisher_matrix, source->fisher_evectr, source->fisher_evalue, UCB_MODEL_NP);
+    
+    free(params_p);
+    free_source(wave_p);
+    
+    for(n=0; n<UCB_MODEL_NP; n++) free_tdi(dhdx[n]);
+    free(dhdx);
+}
+
+int ucb_bandwidth(double L, double fstar, double f, double fdot, double costheta, double A, double T, int N)
 {
     int Nmin = 16;
     int Nmax = (int)pow(2,(int)log2((double)(N/2)));
@@ -417,18 +561,18 @@ int galactic_binary_bandwidth(double L, double fstar, double f, double fdot, dou
     return (DS > SS) ? DS : SS; //return largest spread as bandwidth
 }
 
-void galactic_binary_alignment(struct Orbit *orbit, struct Data *data, struct Source *source)
+void ucb_alignment(struct Orbit *orbit, struct Data *data, struct Source *source)
 {
     map_array_to_params(source, source->params, data->T);
     
-    source->BW   = 2*galactic_binary_bandwidth(orbit->L, orbit->fstar, source->f0, source->dfdt, source->costheta, source->amp, data->T, data->N);
+    source->BW   = 2*ucb_bandwidth(orbit->L, orbit->fstar, source->f0, source->dfdt, source->costheta, source->amp, data->T, data->NFFT);
     source->qmin = (int)(source->f0*data->T) - source->BW/2;
     source->qmax = source->qmin+source->BW;
     source->imin = source->qmin - data->qmin;
     source->imax = source->imin + source->BW;  
 }
 
-void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, double *params, int NParams, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI)
+void ucb_waveform(struct Orbit *orbit, char *format, double T, double t0, double *params, int NParams, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI)
 {
     /*   Indicies   */
     int i,j,n;
@@ -666,7 +810,7 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
         fprintf(stderr,"Unsupported data format %s",format);
         exit(1);
     }
-    
+
     /*   Free Arrays   */
     free(x);
     free(y);
@@ -693,488 +837,223 @@ void galactic_binary(struct Orbit *orbit, char *format, double T, double t0, dou
     return;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-void RAantenna(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, double *FF, double *kdotx, struct TDI *Fplus, struct TDI *Fcross)
+static void extract_amplitude_and_phase(int Ns, double *As, double *Dphi, double *M, double *Mf, double *phiR)
 {
-    /*   Indicies   */
-    int i, j, k, n;
-    
-    /*   Gravitational Wave basis vectors   */
-    double kv[4];
-    
-    /*   Polarization basis tensors   */
-    double eplus[4][4], ecross[4][4];
-    
-    /*   Spacecraft position and separation vector   */
-    double *x, *y, *z;
-    double r10[4]={0},r20[4]={0},r30[4]={0};
-    
-    double q1, q2, q3, q4;
-    
-    /*   Convenient quantities   */
-    double dplus[4][4],dcross[4][4];
-
-    /*   GW Source data   */
-    double phi, psi;
-    double costh, cosps, sinps;
-    
-    /*   Time and distance variables   */
-    double t, xa, ya, za;
-    
-    /*   Miscellaneous  */
-    double xi;
-        
-    double TR[4][4], TI[4][4];
-    double kdr[4][4];
-    double kdg[4];
-    
-    double fr;
-    
-    double f0, fdot0, fddot0;
-    
-    /*   Allocating Arrays   */
-    x = calloc(4,sizeof(double));
-    y = calloc(4,sizeof(double));
-    z = calloc(4,sizeof(double));
-
-    
-    /*
-     params[0] // f*Tobs
-     params[1]   // costh
-     params[2] // phi
-     params[3]  // log Amp
-     params[4]  // cosi
-     params[5]  // psi
-     params[6]  // phi0
-     params[7] // fdot
-     params[8]   // fddot
-     */
-    
-    
-    f0 = params[0]/Tobs;
-    fdot0 = params[7]/(Tobs*Tobs);
-    fddot0 = 0.0;//params[8]/(Tobs*Tobs*Tobs);
-    
-    phi = params[2];   // EclipticLongitude
-    costh = params[1]; // CosineEclipticCoLatitude
-
-    // conventions are flipped relative to BH code
-    psi = -params[5];   // Polarization
-    
-    //Calculate cos and sin of sky position, inclination, polarization
-    cosps = cos(2.*psi);
-    sinps = sin(2.*psi);
-    
-    /*   Tensor basis  */
-    // Note that while this basis differs from the BH code, it amounts to a chain of sign for
-    // eplus and ecross, which we correct for with an overall minus sign in the response
-    LISA_polarization_tensor(costh,phi,eplus,ecross,kv);
-
-    /*   Main Loop   */
-    for(n=0; n< NF; n++)
-    {
-        // Barycenter time
-        t = TF[n];
-        
-        //Calculate position of each spacecraft at time t
-        (*orbit->orbit_function)(orbit, t, x, y, z);
-
-        // guiding center
-        xa = (x[1]+x[2]+x[3])/3.0;
-        ya = (y[1]+y[2]+y[3])/3.0;
-        za = (z[1]+z[2]+z[3])/3.0;
-        
-        kdotx[n] = (xa*kv[1]+ya*kv[2]+za*kv[3])/CLIGHT;
-        
-        // detector time and frequency
-        xi  = t - kdotx[n];
-        
-        // frequency at the guiding center
-        FF[n] = f0+fdot0*xi+0.5*fddot0*xi*xi;
-        
-        fr = FF[n]/(2.0*orbit->fstar);
-
-        LISA_detector_tensor(orbit->L,eplus,ecross,x,y,z,kv,dplus,dcross,kdr);
-        
-        // These are not unit vectors. Just pulling out the L scaling
-        r10[1] = (xa-x[1])/orbit->L;   r10[2] = (ya-y[1])/orbit->L;  r10[3] = (za-z[1])/orbit->L;
-        r20[1] = (xa-x[2])/orbit->L;   r20[2] = (ya-y[2])/orbit->L;  r20[3] = (za-z[2])/orbit->L;
-        r30[1] = (xa-x[3])/orbit->L;   r30[2] = (ya-y[3])/orbit->L;  r30[3] = (za-z[3])/orbit->L;
-                
-        kdg[1] = 0.0;
-        for(k=1; k<=3; k++) kdg[1] += kv[k]*r10[k];
-        kdg[2] = 0.0;
-        for(k=1; k<=3; k++) kdg[2] += kv[k]*r20[k];
-        kdg[3] = 0.0;
-        for(k=1; k<=3; k++) kdg[3] += kv[k]*r30[k];
-        
-        for(i=1; i<=3; i++)
-        {
-            for(j=1; j<=3; j++)
-            {
-                if(i != j)
-                {
-                    q1 = fr*(1.0-kdr[i][j]);
-                    q2 = fr*(1.0+kdr[i][j]);
-                    q3 = -fr*(3.0+kdr[i][j]-2.0*kdg[i]);
-                    q4 = -fr*(1.0+kdr[i][j]-2.0*kdg[i]);
-                    q1 = (sin(q1)/q1);
-                    q2 = (sin(q2)/q2);
-                    TR[i][j] = 0.5*(q1*cos(q3)+q2*cos(q4));   // goes to 1 when f/fstar small
-                    TI[i][j] = 0.5*(q1*sin(q3)+q2*sin(q4));   // goes to 0 when f/fstar small
-                }
-            }
-        }
-        
-        int re = 2*n;
-        int im = 2*n+1;
-                
-        Fplus->X[re]  = 0.5*( ( dplus[1][2]*cosps + dcross[1][2]*sinps) * TR[1][2] - ( dplus[1][3]*cosps + dcross[1][3]*sinps) * TR[1][3] );
-        Fcross->X[re] = 0.5*( (-dplus[1][2]*sinps + dcross[1][2]*cosps) * TR[1][2] - (-dplus[1][3]*sinps + dcross[1][3]*cosps) * TR[1][3] );
-        
-        Fplus->Y[re]  = 0.5*( ( dplus[2][3]*cosps + dcross[2][3]*sinps) * TR[2][3] - ( dplus[2][1]*cosps + dcross[2][1]*sinps) * TR[2][1] );
-        Fcross->Y[re] = 0.5*( (-dplus[2][3]*sinps + dcross[2][3]*cosps) * TR[2][3] - (-dplus[2][1]*sinps + dcross[2][1]*cosps) * TR[2][1] );
-        
-        Fplus->Z[re]  = 0.5*( ( dplus[3][1]*cosps + dcross[3][1]*sinps) * TR[3][1] - ( dplus[3][2]*cosps + dcross[3][2]*sinps) * TR[3][2] );
-        Fcross->Z[re] = 0.5*( (-dplus[3][1]*sinps + dcross[3][1]*cosps) * TR[3][1] - (-dplus[3][2]*sinps + dcross[3][2]*cosps) * TR[3][2] );
-                
-        Fplus->X[im]  = 0.5*( ( dplus[1][2]*cosps + dcross[1][2]*sinps) * TI[1][2] - ( dplus[1][3]*cosps + dcross[1][3]*sinps) * TI[1][3] );
-        Fcross->X[im] = 0.5*( (-dplus[1][2]*sinps + dcross[1][2]*cosps) * TI[1][2] - (-dplus[1][3]*sinps + dcross[1][3]*cosps) * TI[1][3] );
-        
-        Fplus->Y[im]  = 0.5*( ( dplus[2][3]*cosps + dcross[2][3]*sinps) * TI[2][3] - ( dplus[2][1]*cosps + dcross[2][1]*sinps) * TI[2][1] );
-        Fcross->Y[im] = 0.5*( (-dplus[2][3]*sinps + dcross[2][3]*cosps) * TI[2][3] - (-dplus[2][1]*sinps + dcross[2][1]*cosps) * TI[2][1] );
-        
-        Fplus->Z[im]  = 0.5*( ( dplus[3][1]*cosps + dcross[3][1]*sinps) * TI[3][1] - ( dplus[3][2]*cosps + dcross[3][2]*sinps) * TI[3][2] );
-        Fcross->Z[im] = 0.5*( (-dplus[3][1]*sinps + dcross[3][1]*cosps) * TI[3][1] - (-dplus[3][2]*sinps + dcross[3][2]*cosps) * TI[3][2] );
-                
-        XYZ2AE(Fplus->X[re],Fplus->Y[re],Fplus->Z[re],&Fplus->A[re],&Fplus->E[re]);
-        XYZ2AE(Fplus->X[im],Fplus->Y[im],Fplus->Z[im],&Fplus->A[im],&Fplus->E[im]);
-        
-        XYZ2AE(Fcross->X[re],Fcross->Y[re],Fcross->Z[re],&Fcross->A[re],&Fcross->E[re]);
-        XYZ2AE(Fcross->X[im],Fcross->Y[im],Fcross->Z[im],&Fcross->A[im],&Fcross->E[im]);
-
-    }
-        
-    
-    free(x);
-    free(y);
-    free(z);
-    
-    return;
-}
-
-static void tdi_amp_and_phase_shift(double *Fp, double *Fc, double Ap, double Ac, double *phase, double *cycle, double *dA)
-{
-    double RR = Fp[0]*Ap - Fc[1]*Ac;
-    double II = Fc[0]*Ac + Fp[1]*Ap;
-    
-    double old_phase = *phase;
-    *phase = atan2(II,RR);
-    
-    //wrap to [0,2pi]
-    if(*phase < 0.0) *phase += PI2;
-    
-    if(*phase - old_phase > 6.0) *cycle -= PI2;
-    if(old_phase - *phase > 6.0) *cycle += PI2;
-    
-    *dA = sqrt(RR*RR + II*II);
-}
-
-void Extrinsic(struct Orbit *orbit, double *params, double Tobs, int NF, double *TF, struct TDI *Amplitude, struct TDI *Phase)
-{
-    
-    /*   Indicies   */
-    int n;
-    
-    /*   Time and distance variables   */
-    double *kdotx;
-    
-    /*   Miscellaneous  */
-    double xi;
-    
-    /*   Phase and amplitude shifts     */
-    /*   [0,1,2,3,4,5] -> [X,Y,Z,A,E,T] */
-    double dphase[6]={0.};
-    double cycle[6]={0.};
-    double dAmp[6]={1.};
-    
-    double *FF;
-    
-    double t, A, Phi, Amp;
-    
-    double fonfs;
-    
-    double cosi;
-    double Aplus, Across;
-    
-    double phi0, f0, fdot0, fddot0;
-    
-    
-    kdotx = (double*)malloc(sizeof(double)* (NF));
-    FF = (double*)malloc(sizeof(double)* (NF));
-        
-    struct TDI *Fplus  = malloc(sizeof(struct TDI));
-    struct TDI *Fcross = malloc(sizeof(struct TDI));
-    
-    alloc_tdi(Fplus, NF, 3);
-    alloc_tdi(Fcross, NF, 3);
-
-    RAantenna(orbit, params, Tobs, NF, TF, FF, kdotx, Fplus, Fcross);
-    
-    /*
-     params[0] // f*Tobs
-     params[1]   // costh
-     params[2] // phi
-     params[3]  // log Amp
-     params[4]  // cosi
-     params[5]  // psi
-     params[6]  // phi0
-     params[7] // fdot
-     params[8]   // fddot
-     */
-    
-    // conventions are flipped relative to BH code
-    cosi = -params[4];  // cos of inclination
-    
-    phi0 = params[6];
-    
-    f0 = params[0]/Tobs;
-    fdot0 = params[7]/(Tobs*Tobs);
-    fddot0 = 0.0;//params[8]/(Tobs*Tobs*Tobs);
-    
-    A = exp(params[3]);
-    
-    Aplus = 0.5*(1.+cosi*cosi);
-    Across = -cosi;
-    
-    tdi_amp_and_phase_shift(Fplus->X, Fcross->X, Aplus, Across, &dphase[0], &cycle[0], &dAmp[0]);
-    tdi_amp_and_phase_shift(Fplus->Y, Fcross->Y, Aplus, Across, &dphase[1], &cycle[1], &dAmp[1]);
-    tdi_amp_and_phase_shift(Fplus->Z, Fcross->Z, Aplus, Across, &dphase[2], &cycle[2], &dAmp[2]);
-    tdi_amp_and_phase_shift(Fplus->A, Fcross->A, Aplus, Across, &dphase[3], &cycle[3], &dAmp[3]);
-    tdi_amp_and_phase_shift(Fplus->E, Fcross->E, Aplus, Across, &dphase[4], &cycle[4], &dAmp[4]);
-
-    for(n=0; n<NF; n++)
-    {
-        // Barycenter time
-        t = TF[n];
-        
-        // detector time (guiding center)
-        xi = t - kdotx[n];
-        
-        fonfs = FF[n]/orbit->fstar;
-        
-        // including leading order amplitude evolution and TDI + fractional frequency modifiers
-        Amp = A*(1.0+0.66666666666666666666*fdot0/f0*xi)*(8.0*fonfs*sin(fonfs));
-        
-        //  - FF[n]/fstar  Derivation says this is needed in the phase. Doesn't seem to be.
-        
-        // This is the GW phase at the guiding center. The phase shifts at each spacecraft are
-        // accounted for in the transfer function. We remove the carrier signal from the phase
-        // so as not to overwhelm the spline interpolation. It is restored in the response
-        Phi = PI2*(f0*xi - f0*t + 0.5*fdot0*xi*xi + 0.1666666666666667*fddot0*xi*xi*xi) + phi0;
-        
-        tdi_amp_and_phase_shift(Fplus->X+2*n, Fcross->X+2*n, Aplus, Across, &dphase[0], &cycle[0], &dAmp[0]);
-        tdi_amp_and_phase_shift(Fplus->Y+2*n, Fcross->Y+2*n, Aplus, Across, &dphase[1], &cycle[1], &dAmp[1]);
-        tdi_amp_and_phase_shift(Fplus->Z+2*n, Fcross->Z+2*n, Aplus, Across, &dphase[2], &cycle[2], &dAmp[2]);
-        tdi_amp_and_phase_shift(Fplus->A+2*n, Fcross->A+2*n, Aplus, Across, &dphase[3], &cycle[3], &dAmp[3]);
-        tdi_amp_and_phase_shift(Fplus->E+2*n, Fcross->E+2*n, Aplus, Across, &dphase[4], &cycle[4], &dAmp[4]);
-
-        Amplitude->X[n] = Amp*dAmp[0];
-        Amplitude->Y[n] = Amp*dAmp[1];
-        Amplitude->Z[n] = Amp*dAmp[2];
-        Amplitude->A[n] = Amp*dAmp[3];
-        Amplitude->E[n] = Amp*dAmp[4];
-
-        Phase->X[n] = Phi + dphase[0] + cycle[0];
-        Phase->Y[n] = Phi + dphase[1] + cycle[1];
-        Phase->Z[n] = Phi + dphase[2] + cycle[2];
-        Phase->A[n] = Phi + dphase[3] + cycle[3];
-        Phase->E[n] = Phi + dphase[4] + cycle[4];
-    }
-    
-    /*   Free Arrays   */
-    
-    free(kdotx);
-    free(FF);
-        
-    free_tdi(Fplus);
-    free_tdi(Fcross);
-    
-    return;
-}
-
-void ResponseWavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double *params, double *TF, struct TDI *Amp, struct TDI *Phase, struct TDI *freq)
-{
-    double t;
     int i;
-    int Nts;
-    double px;
-    double f0;
+    double u, v;
     
-    f0 = params[0]/Tobs;
-    
-    // pad out past ends to avoid edge effects with the spline
-    Nts = (int)(Tobs/DAY)+11;
-        
-    double *time_grid = malloc(Nts*sizeof(double));
-    struct TDI *amplitude_grid = malloc(sizeof(struct TDI));
-    struct TDI *phase_grid = malloc(sizeof(struct TDI));
-    alloc_tdi(amplitude_grid, Nts/2, 3);
-    alloc_tdi(phase_grid, Nts/2, 3);
-    
-    for (i=0; i<Nts; i++) time_grid[i] = (double)(i-5)*DAY;
-    
-    // The Amplitude is returned with the antenna patterns.
-    Extrinsic(orbit, params, Tobs, Nts, time_grid, amplitude_grid, phase_grid);
-        
-    gsl_interp_accel *acc = gsl_interp_accel_alloc();
-    
-    gsl_spline *amplitude_spline_X = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *amplitude_spline_Y = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *amplitude_spline_Z = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *amplitude_spline_A = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *amplitude_spline_E = gsl_spline_alloc (gsl_interp_cspline, Nts);
-
-    gsl_spline_init(amplitude_spline_X, time_grid, amplitude_grid->A, Nts);
-    gsl_spline_init(amplitude_spline_Y, time_grid, amplitude_grid->A, Nts);
-    gsl_spline_init(amplitude_spline_Z, time_grid, amplitude_grid->A, Nts);
-    gsl_spline_init(amplitude_spline_A, time_grid, amplitude_grid->A, Nts);
-    gsl_spline_init(amplitude_spline_E, time_grid, amplitude_grid->E, Nts);
-    
-    gsl_spline *phase_spline_X = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *phase_spline_Y = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *phase_spline_Z = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *phase_spline_A = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    gsl_spline *phase_spline_E = gsl_spline_alloc (gsl_interp_cspline, Nts);
-    
-    gsl_spline_init(phase_spline_X, time_grid, phase_grid->A, Nts);
-    gsl_spline_init(phase_spline_Y, time_grid, phase_grid->A, Nts);
-    gsl_spline_init(phase_spline_Z, time_grid, phase_grid->A, Nts);
-    gsl_spline_init(phase_spline_A, time_grid, phase_grid->A, Nts);
-    gsl_spline_init(phase_spline_E, time_grid, phase_grid->E, Nts);
-    
-    free(time_grid);
-    free_tdi(amplitude_grid);
-    free_tdi(phase_grid);
-    
-    for (i=0; i<wdm->NT; i++)
+    for(i=0; i<Ns ;i++)
     {
-        t = TF[i];
-        
-        // restore the Barycenter carrier phase
-        px = PI2*f0*t;
-        
-        Phase->X[i] = px + gsl_spline_eval(phase_spline_X, t, acc);
-        Phase->Y[i] = px + gsl_spline_eval(phase_spline_Y, t, acc);
-        Phase->Z[i] = px + gsl_spline_eval(phase_spline_Z, t, acc);
-        Phase->A[i] = px + gsl_spline_eval(phase_spline_A, t, acc);
-        Phase->E[i] = px + gsl_spline_eval(phase_spline_E, t, acc);
-        
-        Amp->X[i] = gsl_spline_eval(amplitude_spline_X, t, acc);
-        Amp->Y[i] = gsl_spline_eval(amplitude_spline_Y, t, acc);
-        Amp->Z[i] = gsl_spline_eval(amplitude_spline_Z, t, acc);
-        Amp->A[i] = gsl_spline_eval(amplitude_spline_A, t, acc);
-        Amp->E[i] = gsl_spline_eval(amplitude_spline_E, t, acc);
-        
-        freq->X[i] = f0 + gsl_spline_eval_deriv(phase_spline_X, t, acc)/PI2;
-        freq->Y[i] = f0 + gsl_spline_eval_deriv(phase_spline_Y, t, acc)/PI2;
-        freq->Z[i] = f0 + gsl_spline_eval_deriv(phase_spline_Z, t, acc)/PI2;
-        freq->A[i] = f0 + gsl_spline_eval_deriv(phase_spline_A, t, acc)/PI2;
-        freq->E[i] = f0 + gsl_spline_eval_deriv(phase_spline_E, t, acc)/PI2;
-        
+        As[i] = sqrt(M[i]*M[i]+Mf[i]*Mf[i]);
+        u = floor(phiR[i]/(PI2));
+        v = phiR[i]-u*PI2;  // reference phase mod 2pi
+        Dphi[i] = -atan2(Mf[i],M[i])-v;
     }
-    
-    gsl_interp_accel_free(acc);
-    gsl_spline_free(phase_spline_X);
-    gsl_spline_free(phase_spline_Y);
-    gsl_spline_free(phase_spline_Z);
-    gsl_spline_free(phase_spline_A);
-    gsl_spline_free(phase_spline_E);
-    gsl_spline_free(amplitude_spline_X);
-    gsl_spline_free(amplitude_spline_Y);
-    gsl_spline_free(amplitude_spline_Z);
-    gsl_spline_free(amplitude_spline_A);
-    gsl_spline_free(amplitude_spline_E);
-    
-    
     
 }
 
-void galactic_binary_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int NM, double BW, int *list, double *X, double *Y, double *Z, double *A, double *E, int NI)
+void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z)
 {
-        
-    int N = wdm->NT;
+    /*
+    Get waveform at solar system barycenter (SSB)
+    */
+    // each waveform type will want its own time spacing. For galactic binaries uniform spacing is fine
+    // This section will need a flag to tell it what waveform type we are computing. For MBHMs the parameters
+    // of the signal will impact the time spacing
     
-    double DT = Tobs/(double)(N);
+    int Nspline = orbit->Norb;
+    double dt = Tobs/(double)(Nspline-1);
+            
+    // get amplitude and phase at Barycenter on the orbit interpolation grid (with margin)...
+    double *t         = malloc(sizeof(double)*Nspline);
+    double *amp_ssb   = malloc(sizeof(double)*Nspline);
+    double *phase_ssb = malloc(sizeof(double)*Nspline);
     
-    // clear contents of wavelet arrays
-    for(int i=0; i< NM; i++)
+    // convert parameters
+    params[0] = params[0]/Tobs;
+    params[3] = exp(params[3]);
+    params[7] = params[7]/(Tobs*Tobs);
+    //params[8] = params[8]/(Tobs*Tobs*Tobs);
+
+    ucb_barycenter_waveform(params, Nspline, orbit->t, phase_ssb, amp_ssb);
+    
+    // convert back
+    params[0] = params[0]*Tobs;
+    params[3] = log(params[3]);
+    params[7] = params[7]*(Tobs*Tobs);
+    //params[8] = params[8]*(Tobs*Tobs*Tobs);
+    
+    /* 
+    Get spline interpolant for SSB phase and amplitude 
+    */
+    gsl_spline *amp_ssb_spline = gsl_spline_alloc (gsl_interp_cspline, Nspline);
+    gsl_spline *phase_ssb_spline = gsl_spline_alloc (gsl_interp_cspline, Nspline);
+    gsl_interp_accel *interp_accel = gsl_interp_accel_alloc();
+    gsl_spline_init(amp_ssb_spline, orbit->t, amp_ssb, Nspline);
+    gsl_spline_init(phase_ssb_spline, orbit->t, phase_ssb, Nspline);
+    
+
+    /*
+    Interpolate phase at SSB now on the data's time grid.  
+    */
+    for(int i=0; i< Nspline; i++)
     {
-        X[i] = 0.0;
-        Y[i] = 0.0;
-        Z[i] = 0.0;
-        A[i] = 0.0;
-        E[i] = 0.0;
+        t[i] = t0+(double)(i)*dt;
+        phase_ssb[i] = gsl_spline_eval(phase_ssb_spline, t[i], interp_accel);
     }
+
+    /*
+    Interpolate SSB phase, frequency, and frequency derivative on wdm time grid
+    */
+    double *time_wavelet_grid  = malloc(sizeof(double)*wdm->NT);
+    double *phase_wavelet_grid = malloc(sizeof(double)*wdm->NT);
+    double *freq_wavelet_grid  = malloc(sizeof(double)*wdm->NT);
+    double *fdot_wavelet_grid  = malloc(sizeof(double)*wdm->NT);
     
-    struct TDI *Amp   = malloc(sizeof(struct TDI));
+    for(int i=0; i<wdm->NT; i++)
+    {
+        time_wavelet_grid[i]  = ((double)(i))*wdm->dt;  // time center of the wavelet pixels
+        phase_wavelet_grid[i] = gsl_spline_eval(phase_ssb_spline, time_wavelet_grid[i], interp_accel);
+        freq_wavelet_grid[i]  = gsl_spline_eval_deriv(phase_ssb_spline, time_wavelet_grid[i], interp_accel)/PI2;
+        fdot_wavelet_grid[i]  = gsl_spline_eval_deriv2(phase_ssb_spline, time_wavelet_grid[i], interp_accel)/PI2;
+    }
+
+    /*
+    Get TDI response for signal's SSB phase and amplitude on spline grid
+    */
+    struct TDI *response = malloc(sizeof(struct TDI)); 
+    struct TDI *response_f = malloc(sizeof(struct TDI)); //_f has a phase flip for building up the full response later?
+    alloc_tdi(response,Nspline,3);
+    alloc_tdi(response_f,Nspline,3);
+    LISA_spline_response(orbit, t, Nspline, params, amp_ssb_spline, phase_ssb_spline, interp_accel, response, response_f);
+
+    /*
+    Separate TDi responses back into terms of phase and amplitude
+    */
+    struct TDI *tdi_phase = malloc(sizeof(struct TDI));
+    struct TDI *tdi_amp = malloc(sizeof(struct TDI));
+    alloc_tdi(tdi_phase,Nspline,3);
+    alloc_tdi(tdi_amp,Nspline,3);
+
+    extract_amplitude_and_phase(Nspline, tdi_amp->X, tdi_phase->X, response->X, response_f->X, phase_ssb);
+    extract_amplitude_and_phase(Nspline, tdi_amp->Y, tdi_phase->Y, response->Y, response_f->Y, phase_ssb);
+    extract_amplitude_and_phase(Nspline, tdi_amp->Z, tdi_phase->Z, response->Z, response_f->Z, phase_ssb);
+
+    // remove any phase wraps
+    unwrap_phase(Nspline, tdi_phase->X);
+    unwrap_phase(Nspline, tdi_phase->Y);
+    unwrap_phase(Nspline, tdi_phase->Z);
+
+
+    /*
+    Interpolate amplitude and phase for instrument response of each TDI channel onto wavelet grid
+    */
+    struct TDI *phase = malloc(sizeof(struct TDI));
     struct TDI *freq  = malloc(sizeof(struct TDI));
-    struct TDI *Phase = malloc(sizeof(struct TDI));
-    
-    alloc_tdi(Amp, N/2, NI);
-    alloc_tdi(freq, N/2, NI);
-    alloc_tdi(Phase, N/2, NI);
+    struct TDI *fdot  = malloc(sizeof(struct TDI));
+    struct TDI *amp   = malloc(sizeof(struct TDI));
 
-    double *TF = calloc(N,sizeof(double));
-    for(int i=0; i<N; i++)
+    alloc_tdi(phase,wdm->NT,3);
+    alloc_tdi(freq, wdm->NT,3); 
+    alloc_tdi(fdot, wdm->NT,3);
+    alloc_tdi(amp,  wdm->NT,3);
+
+    gsl_spline *amp_interpolant = gsl_spline_alloc (gsl_interp_cspline, Nspline); //work space for interpolation
+    gsl_spline *phase_interpolant = gsl_spline_alloc (gsl_interp_cspline, Nspline);
+
+    gsl_spline_init(amp_interpolant, t, tdi_amp->X, Nspline);
+    gsl_spline_init(phase_interpolant, t, tdi_phase->X, Nspline);
+
+    for(int i=0; i< wdm->NT; i++)
     {
-        TF[i] = t0 + (double)i * DT;  // center of the pixel
+        amp->X[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
+        phase->X[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel) + phase_wavelet_grid[i];
+        freq->X[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
+        fdot->X[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
     
-    ResponseWavelet(orbit, wdm, Tobs, params, TF, Amp, Phase, freq);
-    
-    switch(NI)
+    gsl_spline_init(amp_interpolant, t, tdi_amp->Y, Nspline);
+    gsl_spline_init(phase_interpolant, t, tdi_phase->Y, Nspline);
+    for(int i=0; i< wdm->NT; i++)
     {
-        case 1:
-            for(int i=0; i<NM; i++) list[i] = -1;
-            wavelet_transfrom_from_table(wdm, BW, Phase->X, freq->X, Amp->X, list, X);
-            break;
-            
-        case 2:
-            for(int i=0; i<NM; i++) list[i] = -1;
-            wavelet_transfrom_from_table(wdm, BW, Phase->A, freq->A, Amp->A, list, A);
-            
-            for(int i=0; i<NM; i++) list[i] = -1;
-            wavelet_transfrom_from_table(wdm, BW, Phase->E, freq->E, Amp->E, list, E);
-            break;
-            
-        case 3:
-            for(int i=0; i<NM; i++) list[i] = -1;
-            wavelet_transfrom_from_table(wdm, BW, Phase->X, freq->X, Amp->X, list, X);
-
-            for(int i=0; i<NM; i++) list[i] = -1;
-            wavelet_transfrom_from_table(wdm, BW, Phase->Y, freq->Y, Amp->Y, list, Y);
-            
-            for(int i=0; i<NM; i++) list[i] = -1;
-            wavelet_transfrom_from_table(wdm, BW, Phase->Z, freq->Z, Amp->Z, list, Z);
-            break;
+        amp->Y[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
+        phase->Y[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel)+phase_wavelet_grid[i];
+        freq->Y[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
+        fdot->Y[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
     
-    free_tdi(Amp);
-    free_tdi(freq);
-    free_tdi(Phase);
+    gsl_spline_init(amp_interpolant, t, tdi_amp->Z, Nspline);
+    gsl_spline_init(phase_interpolant, t, tdi_phase->Z, Nspline);
+    for(int i=0; i< wdm->NT; i++)
+    {
+        amp->Z[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
+        phase->Z[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel)+phase_wavelet_grid[i];
+        freq->Z[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
+        fdot->Z[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
+    }
+
+    /*
+    Wavelet transform of interpolated TDI channels
+    */
     
-    free(TF);
-    
+    //minimum and maximum frequency layers for each TDI response
+    int *min_layer = malloc(sizeof(int)*(wdm->NT));
+    int *max_layer = malloc(sizeof(int)*(wdm->NT));
+
+    //get list of non-zero wavelet amplitudes for this signal
+    active_wavelet_list(wdm, freq->X, freq->Y, freq->Z, fdot->X, fdot->Y, fdot->Z, wavelet_list, Nwavelet, min_layer, max_layer);
+
+    //finally compute wavelet coefficients for signal's TDI response
+    double *Xtemp = double_vector(*Nwavelet);
+    double *Ytemp = double_vector(*Nwavelet);
+    double *Ztemp = double_vector(*Nwavelet);
+
+    wavelet_transform_from_table(wdm, phase->X, freq->X, fdot->X, amp->X, min_layer, max_layer, Xtemp, *Nwavelet);
+    wavelet_transform_from_table(wdm, phase->Y, freq->Y, fdot->Y, amp->Y, min_layer, max_layer, Ytemp, *Nwavelet);
+    wavelet_transform_from_table(wdm, phase->Z, freq->Z, fdot->Z, amp->Z, min_layer, max_layer, Ztemp, *Nwavelet);
+
+    //insert non-zero wavelet pixels into correct indicies
+    for(int n=0; n<*Nwavelet; n++)
+    {
+        X[wavelet_list[n]] = Xtemp[n];
+        Y[wavelet_list[n]] = Ytemp[n];
+        Z[wavelet_list[n]] = Ztemp[n];
+    }
+
+    free_double_vector(Xtemp);
+    free_double_vector(Ytemp);
+    free_double_vector(Ztemp);
+
+
+    free(t);
+    free(amp_ssb);
+    free(phase_ssb);
+
+    gsl_spline_free(amp_ssb_spline);
+    gsl_spline_free(phase_ssb_spline);
+
+    free(time_wavelet_grid);
+    free(phase_wavelet_grid);
+    free(freq_wavelet_grid);
+    free(fdot_wavelet_grid);
+
+    free_tdi(response);
+    free_tdi(response_f);
+
+    free_tdi(tdi_phase);
+    free_tdi(tdi_amp);
+
+    free_tdi(phase);
+    free_tdi(freq); 
+    free_tdi(fdot);
+    free_tdi(amp);
+
+    gsl_spline_free(amp_interpolant);
+    gsl_spline_free(phase_interpolant);
+    gsl_interp_accel_free(interp_accel);
+
+    free(min_layer);
+    free(max_layer);
+
+
 }

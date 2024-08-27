@@ -40,7 +40,7 @@
 #define LARM 2.5e9
 
 /// Sample cadence for LISA (s)
-#define LISA_CADENCE 5.0
+#define LISA_CADENCE 7.5
 
 /** @name Component Noise Levels For Phase Data */
 ///@{
@@ -73,10 +73,12 @@ struct Orbit
     
     /** @name Constellation Parameters */
     ///@{
-    double L;     //!< Average armlength of constellation
-    double fstar; //!< Transfer frequency \f$f_* = 1/(L/c)\f$.
-    double ecc;   //!< Eccentricity of spacecraft orbits
-    double R;     //!< Distance to constellation guiding center from Sun (1 AU)
+    double L;        //!< Average armlength of constellation
+    double fstar;    //!< Transfer frequency \f$f_* = 1/(L/c)\f$.
+    double ecc;      //!< Eccentricity of spacecraft orbits
+    double R;        //!< Distance to constellation guiding center from Sun (1 AU)
+    double lambda_0; //!< Initial phase of constellation w.r.t. ecliptic
+    double kappa_0;  //!< Initial phae of constellation guiding center   
     ///@}
     
     double *t;  //!<time step relative to start of mission (seconds)
@@ -97,15 +99,16 @@ struct Orbit
     gsl_spline **dx; //!<spline derivatives in x-coordinate
     gsl_spline **dy; //!<spline derivatives in y-coordinate
     gsl_spline **dz; //!<spline derivatives in z-coordinate
-    gsl_interp_accel *acc; //!<gsl interpolation work space
+    gsl_interp_accel *dx_acc; //!<gsl interpolation work space for x-coordinate
+    gsl_interp_accel *dy_acc; //!<gsl interpolation work space for y-coordinate
+    gsl_interp_accel *dz_acc; //!<gsl interpolation work space for z-coordinate
     ///@}
-    
     
     /**
      \brief Function prototyp for retreiving spacecraft locations.
      \param[in] time (double)
      \param[in] orbit data (Orbit*)
-     \param[out] eccliptic carteisian location of each spacecraft
+     \param[out] eccliptic cartesian location of each spacecraft
      
      If an orbit file is input this points to interpolate_orbits() which uses `GSL` cubic splines to interpolate the ephemerides at the needed time steps
      
@@ -191,7 +194,7 @@ void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double
 void initialize_analytic_orbit(struct Orbit *orbit);
 
 /**
- \brief store meta data and prepapre ephemerides interpolation
+ \brief store meta data and prepare ephemerides interpolation
  
  - parse spacecraft ephemeris file in Orbit::OrbitFileName
  - compute cubic spline derivatives at data points
@@ -199,6 +202,18 @@ void initialize_analytic_orbit(struct Orbit *orbit);
  - store metadata
  */
 void initialize_numeric_orbit(struct Orbit *orbit);
+
+/**
+ \brief store meta data and interpolant of analytic orbit ephemerides
+ 
+ - pre-compute spacecraft ephemerides on time grid from analytic orbit model
+ - set up interpolants for spacecraft ephemerides
+
+ @param[in] Orbit structure
+ @param[in] Tobs total observation time \f$[{\rm s}]\f$
+ @param[in] t0 initial time of orbit grid \f$[{\rm s}]\f$
+ */
+void initialize_interpolated_analytic_orbits(struct Orbit *orbit, double Tobs, double t0);
 
 /**
  \brief free memory allocated for Orbit
@@ -231,7 +246,26 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
 void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
 /// LISA TDI (LDC Sangria data)
 void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
+void LISA_TDI_spline(double *M, double *Mf, int a, int b, int c, double* tarray, int n, gsl_spline *amp_spline, gsl_spline *phase_spline, gsl_interp_accel *acc, double Aplus, double Across, double cos2psi, double sin2psi, double *App, double *Apm, double *Acp, double *Acm, double *kr, double *Larm);
 ///@}
+void LISA_polarization_tensor_njc(double costh, double phi, double eplus[4][4], double ecross[4][4], double k[4]);
+
+
+/**
+ \brief Generic LISA response using interpolated signal phase and amplitude
+ 
+ @param[in] Orbit structure
+ @param[in] tarray time array for response
+ @param[in] N size of tarray
+ @param[in] params signal parameters (need extrinsic for response)
+ @param[in] amp_spline signal amplitude interpolant
+ @param[in] phase_spline signal phase interpolant
+ @param[in] acc interpolation acceleration
+ @param[out] R TDI structure of Response
+ @param[out] Rf TDI structure of Response with phase flipped
+ */
+void LISA_spline_response(struct Orbit *orbit, double *tarray, int N, double *params,  gsl_spline *amp_spline, gsl_spline *phase_spline, gsl_interp_accel *acc, struct TDI *R, struct TDI *Rf);
+
 
 /** @name  LISA Noise Model for equal arm, TDI1.5 configuration */
 ///@{
@@ -281,7 +315,7 @@ void test_noise_model(struct Orbit *orbit);
  */
 ///@{
 /// allocate memory and initializ TDI structure
-void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel);
+void alloc_tdi(struct TDI *tdi, int N, int Nchannel);
 /// deep copy contents from origin into copy
 void copy_tdi(struct TDI *origin, struct TDI *copy);
 /// deep copy of segment of size `N` starting at `index`

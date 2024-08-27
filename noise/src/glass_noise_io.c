@@ -78,7 +78,7 @@ void print_noise_reconstruction(struct Data *data, struct Flags *flags)
     sprintf(filename,"%s/power_noise_reconstruction.dat",data->dataDir);
     fptr_Snf=fopen(filename,"w");
     
-    for(int i=0; i<data->N; i++)
+    for(int i=0; i<data->NFFT; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
         fprintf(fptr_Snf,"%.12g ",f);

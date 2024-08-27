@@ -40,6 +40,7 @@
 #include <omp.h>
 
 #include <glass_utils.h>
+#include <glass_noise.h>
 #include <glass_ucb.h>
 
 static void print_usage()
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
     data=data_vec[0];
     chain=chain_vec[0];
     parse_ucb_args(argc,argv,flags);
-    parse_data_args(argc,argv,data,orbit,flags,chain);
+    parse_data_args(argc,argv,data,orbit,flags,chain,"fourier");
     if(flags->help) print_usage();
     
     int NC = chain->NC;
@@ -308,7 +309,7 @@ int main(int argc, char *argv[])
                     
                     for(int steps=0; steps < 100; steps++)
                     {
-                        galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
+                        ucb_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
                     }//loop over MCMC steps
                     
                     //update fisher matrix for each chain
@@ -316,7 +317,7 @@ int main(int argc, char *argv[])
                     {
                         for(int i=0; i<model_ptr->Nlive; i++)
                         {
-                            galactic_binary_fisher(orbit, data_vec[n], model_ptr->source[i], data_vec[n]->noise);
+                            ucb_fisher(orbit, data_vec[n], model_ptr->source[i], data_vec[n]->noise);
                         }
                     }
                 }

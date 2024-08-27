@@ -295,7 +295,7 @@ void print_ucb_catalog_script(struct Flags *flags, struct Data *data, struct Orb
 {
     
     //back out original input f & N
-    int samples = data->N - 2*data->qpad;
+    int samples = data->NFFT - 2*data->qpad;
     double fmin = data->fmin + data->qpad/data->T;
     
     char filename[MAXSTRINGSIZE];
@@ -477,7 +477,7 @@ void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **
         for(int i=0; i<D; i++)
         {
             scan_source_params(data,model[n]->source[i], stateFile);
-            galactic_binary_fisher(orbit, data, model[n]->source[i], data->noise);
+            ucb_fisher(orbit, data, model[n]->source[i], data->noise);
         }
         
         generate_noise_model(data, model[n]);
@@ -541,7 +541,9 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
         if(flags->verbose)
         {
             //numerical SNR
-            double snr_n = snr(model[n]->source[i], data->noise);
+            double snr_n;
+            if(!strcmp("fourier",data->basis)) snr_n = snr(model[n]->source[i], data->noise);
+            if(!strcmp("wavelet",data->basis)) snr_n = snr_wavelet(model[n]->source[i], data->noise);
             //analytic SNR
             double snr_a = analytic_snr(exp(model[n]->source[i]->params[3]), data->noise->C[0][0][0], data->sine_f_on_fstar, data->sqT);
             
@@ -741,7 +743,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
     switch(data->Nchannel)
     {
         case 1:
-            for(int n=0; n<data->N; n++)
+            for(int n=0; n<data->NFFT; n++)
             {
                 n_re = 2*n;
                 n_im = n_re++;
@@ -765,7 +767,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
             }
             break;
         case 2:
-            for(int n=0; n<data->N; n++)
+            for(int n=0; n<data->NFFT; n++)
             {
                 n_re = 2*n;
                 n_im = n_re++;
@@ -804,7 +806,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
             }
             break;
         case 3:
-            for(int n=0; n<data->N; n++)
+            for(int n=0; n<data->NFFT; n++)
             {
                 n_re = 2*n;
                 n_im = n_re++;
@@ -863,7 +865,7 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
 
 void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
 {
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         int re = 2*n;
         int im = re+1;
@@ -905,7 +907,7 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
 
 void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr)
 {
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         int re = 2*n;
         int im = re+1;
@@ -952,11 +954,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     FILE *fptr_var;
     
     //get variance of residual
-    double **res_var = malloc(data->N*sizeof(double *));
-    for(int n=0; n<data->N; n++)
+    double **res_var = malloc(data->NFFT*sizeof(double *));
+    for(int n=0; n<data->NFFT; n++)
         res_var[n] = calloc(data->Nchannel,sizeof(double));
     
-    for(int n=0; n<data->N*2; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
@@ -964,7 +966,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
         }
     }
     
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
@@ -984,7 +986,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     
     double med,lo_50,hi_50,lo_90,hi_90;
     
-    for(int i=0; i<data->N; i++)
+    for(int i=0; i<data->NFFT; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
         fprintf(fptr_var,"%.12g ",f);
@@ -1029,7 +1031,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     fclose(fptr_res);
     fclose(fptr_rec);
     
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         free(res_var[n]);
     }

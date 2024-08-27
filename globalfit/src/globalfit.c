@@ -811,7 +811,7 @@ int main(int argc, char *argv[])
     setup_noise_data(noise_data, ucb_data, vgb_data, mbh_data, tdi_full, procID);
 
     /* allocate global fit noise model for all processes */
-    alloc_noise(global_fit->psd, noise_data->data->N, noise_data->data->Nchannel);
+    alloc_noise(global_fit->psd, noise_data->data->NFFT, noise_data->data->Nchannel);
     
     /* print ASCII copy of raw data for visualizations */
     if(procID == 0) dump_data(noise_data->data, flags);

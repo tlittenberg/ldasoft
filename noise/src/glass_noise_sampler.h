@@ -57,22 +57,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
 /**
  \brief Fixed-dimension update of each parallel tempered galactic foreground noise `model` state
  */
-void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic);
-
-/**
- \brief Set initial state of spline `model`
- */
-void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct SplineModel *model, int Nspline);
-
-/**
- \brief Set initial state of instrument noise `model`
- */
-void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model);
-
-/**
- \brief Set initial state of instrument noise `model`
- */
-void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model);
+void noise_foreground_model_mcmc(struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic);
 
 
 #endif /* glass_noise_sampler_h */

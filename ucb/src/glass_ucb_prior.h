@@ -28,14 +28,6 @@
 #ifndef ucb_prior_h
 #define ucb_prior_h
 
-///@name Galaxy Prior
-///@{
-#define GALAXY_RGC 7.2 //!<distance from solar BC to GC (kpc)
-#define GALAXY_A  0.25 //!<bulge fraction
-#define GALAXY_Rb 0.8  //!< bulge radius (kpc)
-#define GALAXY_Rd 2.5  //!< disk radius (kpc)
-#define GALAXY_Zd 0.4  //!< disk height (kpc)
-///@}
 
 ///@name Calibration prior
 ///@{

@@ -62,6 +62,15 @@ double chirpmass(double m1, double m2)
     return pow(m1*m2,3./5.)/pow(m1+m2,1./5.);
 }
 
+double amplitude(double Mc, double f0, double D)
+{
+    double f = f0;;
+    double M = Mc*TSUN;
+    double dL= D*PC/CLIGHT;
+    
+    return 2.*pow(pow(M,5)*pow(M_PI*f,2),1./3.)/dL;
+}
+
 double power_spectrum(double *data, int n)
 {
     int i,j;
@@ -75,24 +84,39 @@ double power_spectrum(double *data, int n)
     return (Re*Re + Im*Im);
 }
 
-double fourier_nwip(double *a, double *b, double *invC, int n)
+double fourier_nwip(double *a, double *b, double *invC, int N)
 {
-    int i, j, k;
+    int j,k;
     double arg, product;
     double ReA, ReB, ImA, ImB;
     
     arg = 0.0;
-    for(i=0; i<n; i++)
+    for(int n=0; n<N; n++)
     {
-        j = i * 2;
+        j = n * 2;
         k = j + 1;
         ReA = a[j]; ImA = a[k];
         ReB = b[j]; ImB = b[k];
         product = ReA*ReB + ImA*ImB;
-        arg += product*invC[i];
+        arg += product*invC[n];
     }
     
     return(2.0*arg);
+}
+
+double wavelet_nwip(double *a, double *b, double *invC, int *list, int N)
+{
+    double arg = 0.0;
+    for(int n=0; n<N; n++)
+    {
+        if(list[n] > 0)
+        {
+            int k = list[n];
+            arg += a[k]*b[k]*invC[k];
+        }
+        
+    }
+    return arg;
 }
 
 
@@ -583,4 +607,91 @@ void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
     
     //assign number of clusters
     *K = cluster_index;
+}
+
+void unwrap_phase(int N, double *phase)
+{
+    double u, v, q;
+    int i;
+    
+    v = phase[0];
+    for(i=0; i<N ;i++)
+    {
+        u = phase[i];
+        q = rint(fabs(u-v)/(PI2));
+        if(q > 0.0)
+        {
+           if(v > u) u += q*PI2;
+           else      u -= q*PI2;
+        }
+        v = u;
+        phase[i] = u;
+    }
+}
+
+double simpson_integration_3(double f0, double f1, double f2, double h)
+{
+    return h*(f0 + 4.0*f1 + f2)/6.0;
+}
+
+double simpson_integration_5(double f0, double f1, double f2, double f3, double f4, double h)
+{
+    return h*(f0 + 4.0*f1 + 2.0*f2 + 4.0*f3 + f4)/12.0;
+}
+
+static int int_compare(const void* a, const void* b) 
+{
+   return (*(int*)a - *(int*)b);
+}
+
+void integer_sort(int *x, int N)
+{
+    qsort(x, N, sizeof(int), int_compare);
+}
+
+void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
+{
+    int i,j;
+    int Ntemp = NA+NB;
+    //first list
+    j=0;
+    for(i=0; i<NA; i++)
+    {
+        AUB[j]=A[i];
+        j++;
+    }
+    //second list
+    for(i=0; i<NB; i++)
+    {
+        AUB[j]=B[i];
+        j++;
+    }
+    //sort master list
+    integer_sort(AUB,Ntemp);
+    
+    //find and remeove repeats
+    j=0;
+    int *temp = int_vector(Ntemp);
+    for(i=0; i<Ntemp-1;i++)
+    {
+        if (AUB[i] != AUB[i + 1])
+        {
+            temp[j] = AUB[i];
+            j++;
+        }
+    }
+    
+    // Store the last element as whether 
+    // it is unique or repeated, it hasn't 
+    // stored previously
+    temp[j] = AUB[Ntemp - 1];
+    j++;
+
+    // Modify original array
+    for (i=0; i<j; i++)
+        AUB[i] = temp[i];
+
+    *NAUB = j;
+
+    free_int_vector(temp);
 }

@@ -39,7 +39,7 @@ double beta(double f, double fdot, double fddot)
   return (11.*(-3*sqrt(f*fddot)+sqrt(33.)*fdot)*pow((sqrt(fddot)*fdot)/(-30.*sqrt(f*fddot) + 11.*sqrt(33.)*fdot),2./5.)*pow(5./M_PI,2./5.))/(12.*pow(f,11./10.)*sqrt(fddot));
 }
 
-double galactic_binary_dL(double f0, double dfdt, double A)
+double distance(double f0, double dfdt, double A)
 {
   double f    = f0;//T;
   double fd = dfdt;//(T*T);
@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     {
       Mc = M_fdot_fddot(f,fdot,fddot);
       B = beta(f,fdot,fddot);
-      fprintf(ofile3,"%.12g %.12g %.12g %.12g %.12g\n",phi*RAD2ARCMIN,theta*RAD2ARCMIN,galactic_binary_dL(f,fdot,A)/(1.+alpha),acos(cosi)*RAD2DEGREE,M_fdot(f,fdot));
+      fprintf(ofile3,"%.12g %.12g %.12g %.12g %.12g\n",phi*RAD2ARCMIN,theta*RAD2ARCMIN,distance(f,fdot,A)/(1.+alpha),acos(cosi)*RAD2DEGREE,M_fdot(f,fdot));
       fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
       if(Mc==Mc && B==B) fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
     }

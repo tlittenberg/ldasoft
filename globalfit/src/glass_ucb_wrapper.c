@@ -289,18 +289,18 @@ int update_ucb_sampler(struct UCBData *ucb_data)
                 {
                     //reverse jump birth/death or split/merge moves
                     if(gsl_rng_uniform(chain->r[ic])<0.25 && flags->rj)
-                        galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                        ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     
                     //fixed dimension parameter updates
                     else
-                        galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                        ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 }
             }
             
             //update fisher matrix for each chain
             for(int n=0; n<model_ptr->Nlive; n++)
             {
-                galactic_binary_fisher(orbit, data, model_ptr->source[n], model_ptr->noise);
+                ucb_fisher(orbit, data, model_ptr->source[n], model_ptr->noise);
             }
 
             
@@ -458,7 +458,7 @@ void exchange_ucb_source_params(struct UCBData *ucb_data)
     if(Nlive_new > 0)
     {
         struct Model *new_model = malloc(sizeof(struct Model));
-        alloc_model(new_model,Nlive_new,data->N,data->Nchannel);
+        alloc_model(data,new_model,Nlive_new);
         new_model->Nlive = Nlive_new;
         //set noise model
         copy_noise(data->noise, new_model->noise);

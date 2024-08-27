@@ -27,30 +27,7 @@
 
 static double loglike(double *x, int D)
 {
-    double u, rsq, z, s, ll;
-    
-    z = x[2];
-    rsq = x[0]*x[0]+x[1]*x[1]+x[2]*x[2];
-    u = sqrt(x[0]*x[0]+x[1]*x[1]);
-    
-    s = 1.0/cosh(z/GALAXY_Zd);
-    
-    // Note that overall rho0 in density is irrelevant since we are working with ratios of likelihoods in the MCMC
-    
-    ll = log(GALAXY_A*exp(-rsq/(GALAXY_Rb*GALAXY_Rb))+(1.0-GALAXY_A)*exp(-u/GALAXY_Rd)*s*s);
-    
-    return(ll);
-    
-}
-
-
-static void rotate_galtoeclip(double *xg, double *xe)
-{
-    xe[0] = -0.05487556043*xg[0] + 0.4941094278*xg[1] - 0.8676661492*xg[2];
-    
-    xe[1] = -0.99382137890*xg[0] - 0.1109907351*xg[1] - 0.00035159077*xg[2];
-    
-    xe[2] = -0.09647662818*xg[0] + 0.8622858751*xg[1] + 0.4971471918*xg[2];
+    return log(galaxy_distribution(x,GALAXY_A,GALAXY_Rb, GALAXY_Rd, GALAXY_Zd));    
 }
 
 void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
@@ -280,8 +257,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
     
     //frequency bin
-    model->prior[0][0] = data->qmin;
-    model->prior[0][1] = data->qmax;
+    model->prior[0][0] = data->fmin*data->T;//data->qmin;
+    model->prior[0][1] = data->fmax*data->T;//data->qmax;
     
     //colatitude
     model->prior[1][0] = -1.0;
@@ -328,8 +305,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
         double Mcmin = 0.15;
         double Mcmax = 1.00;
         
-        fdotmin = galactic_binary_fdot(Mcmin, fmin);
-        fdotmax = galactic_binary_fdot(Mcmax, fmax);
+        fdotmin = ucb_fdot(Mcmin, fmin);
+        fdotmax = ucb_fdot(Mcmax, fmax);
     }
     
     double fddotmin = 11.0/3.0*fdotmin*fdotmin/fmax;
@@ -343,6 +320,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     {
         fprintf(stdout,"\n============== PRIORS ==============\n");
         if(flags->detached)fprintf(stdout,"  Assuming detached binary, Mchirp = [0.15,1]\n");
+        fprintf(stdout,"  p(f)     = U[%g,%g]\n",fmin,fmax);
         fprintf(stdout,"  p(fdot)  = U[%g,%g]\n",fdotmin,fdotmax);
         fprintf(stdout,"  p(fddot) = U[%g,%g]\n",fddotmin,fddotmax);
         fprintf(stdout,"  p(lnA)   = U[%g,%g]\n",model->prior[3][0],model->prior[3][1]);

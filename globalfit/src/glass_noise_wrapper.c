@@ -187,7 +187,7 @@ void initialize_noise_state(struct NoiseData *noise_data)
     {
         /* Initialize work space for assembling full Noise model */
         psd[ic] = malloc(sizeof(struct Noise));
-        alloc_noise(psd[ic], data->N, data->Nchannel);
+        alloc_noise(psd[ic], data->NFFT, data->Nchannel);
 
         /* Initialize Instrument Noise Model */
         inst_model[ic] = malloc(sizeof(struct InstrumentModel));

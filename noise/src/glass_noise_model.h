@@ -86,6 +86,8 @@ struct ForegroundModel
     double fk;
     double f2;    //!< some other frequency parameter? (~0.53 mHz)
      ///@}
+
+    struct GalaxyModulation *modulation; //!< time-series of modulation
 };
 
 /**
@@ -163,17 +165,20 @@ void generate_spline_noise_model(struct SplineModel *model);
 /**
  \brief Compute instrument model contribution to noise covariance matrix based on current state of `model`
  */
-void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, struct InstrumentModel *model);
+void generate_instrument_noise_model(struct Orbit *orbit, struct InstrumentModel *model);
+void generate_instrument_noise_model_wavelet(struct Wavelets *wdm, struct Orbit *orbit, struct InstrumentModel *model);
 
 /**
  \brief Compute galactic foreground contribution to covariance matrix based on current state of `model`
  */
-void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, struct ForegroundModel *model);
+void generate_galactic_foreground_model(struct ForegroundModel *model);
+void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct ForegroundModel *model);
 
 /**
  \brief Add components to `full` noise covariance matrix `C`
  */
 void generate_full_covariance_matrix(struct Noise *full, struct Noise *component, int Nchannel);
+void generate_full_dynamic_covariance_matrix(struct Wavelets *wdm, struct InstrumentModel *inst, struct ForegroundModel *conf, struct Noise *full);
 
 /**
 \brief Compute spline model only where interpolant changes
@@ -201,5 +206,22 @@ double noise_log_likelihood(struct Data *data, struct Noise *noise);
  */
 double noise_delta_log_likelihood(struct Data *data, struct SplineModel *model_x, struct SplineModel *model_y, double fmin, double fmax, int ic);
 
+/**
+ \brief Set initial state of spline `model`
+ */
+void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct SplineModel *model, int Nspline);
+
+/**
+ \brief Set initial state of instrument noise `model`
+ */
+void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model);
+void initialize_instrument_model_wavelet(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model);
+/**
+ \brief Set initial state of instrument noise `model`
+ */
+void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model);
+void initialize_foreground_model_wavelet(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model);
+
+void GetDynamicNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
 #endif /* noise_model_h */

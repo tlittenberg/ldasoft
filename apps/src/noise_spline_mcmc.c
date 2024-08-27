@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     struct Orbit *orbit = malloc(sizeof(struct Orbit));
     struct Chain *chain = malloc(sizeof(struct Chain));
     
-    parse_data_args(argc,argv,data,orbit,flags,chain);
+    parse_data_args(argc,argv,data,orbit,flags,chain,"fourier");
     if(flags->help)print_usage();
     
     /*

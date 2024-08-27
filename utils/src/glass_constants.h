@@ -41,6 +41,7 @@
  M_PI_4 for PI/4
  */
 #define PI2   6.283185307179586      ///< \f$2\pi\f$
+#define RTPI  1.77245385090552       ///< \f$\sqrt{\pi}\f$
 #define RT2PI 2.5066282746310005024  ///< \f$\sqrt{2\pi}\f$
 
 /* Convert between angles*/
@@ -75,8 +76,5 @@
 
 //! Astronomical unit [m]
 #define AU 1.49597870700e11
-
-//! Orbital radius of the LISA guiding center [m]
-#define RGC (1.0*AU)
 
 #endif /* constants_h */

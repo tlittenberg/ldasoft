@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     
     
     //   Parse command line and set defaults/flags
-    parse_data_args(argc,argv,data,orbit,flags,chain);
+    parse_data_args(argc,argv,data,orbit,flags,chain,"fourier");
     parse_ucb_args(argc,argv,flags);
     if(flags->help)print_usage();
     alloc_data(data, flags);
@@ -103,10 +103,10 @@ int main(int argc, char *argv[])
     alloc_source(src2, data->N, 2);
     
     struct Noise *noise = malloc(sizeof(struct Noise));
-    alloc_noise(noise, data->N, 2);
+    alloc_noise(noise, data->NFFT, 2);
     
     
-    for(int n=0; n<2*data->N; n++)
+    for(int n=0; n<data->N; n++)
     {
         src1->tdi->A[n] = 0.0;
         src1->tdi->E[n] = 0.0;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     }
     
     //Get noise spectrum for data segment
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         double Spm, Sop;
         double f = data->fmin + (double)(n)/data->T;
@@ -151,15 +151,15 @@ int main(int argc, char *argv[])
     
     while(!feof(chain_file2))
     {
-        for(int n=0; n<2*data->N; n++)
+        for(int n=0; n<data->N; n++)
         {
             src2->tdi->A[n] = 0.0;
             src2->tdi->E[n] = 0.0;
         }
         
         scan_source_params(data, src2, chain_file2);
-        galactic_binary_alignment(orbit, data, src2);
-        galactic_binary(orbit, data->format, data->T, data->t0, src2->params, UCB_MODEL_NP, src2->tdi->X, src2->tdi->Y, src2->tdi->Z, src2->tdi->A, src2->tdi->E, src2->BW, 2);
+        ucb_alignment(orbit, data, src2);
+        ucb_waveform(orbit, data->format, data->T, data->t0, src2->params, UCB_MODEL_NP, src2->tdi->X, src2->tdi->Y, src2->tdi->Z, src2->tdi->A, src2->tdi->E, src2->BW, 2);
 
         max_match=-INFINITY;
         while(!feof(chain_file1))
@@ -169,15 +169,15 @@ int main(int argc, char *argv[])
             
             if( fabs(src1->params[0] - src2->params[0]) < 20.)
             {
-                for(int n=0; n<2*data->N; n++)
+                for(int n=0; n<data->N; n++)
                 {
                     src1->tdi->A[n] = 0.0;
                     src1->tdi->E[n] = 0.0;
                 }
                 
                 //Book-keeping of injection time-frequency volume
-                galactic_binary_alignment(orbit, data, src1);
-                galactic_binary(orbit, data->format, data->T, data->t0, src1->params, UCB_MODEL_NP, src1->tdi->X, src1->tdi->Y,src1->tdi->Z, src1->tdi->A, src1->tdi->E, src1->BW, 2);
+                ucb_alignment(orbit, data, src1);
+                ucb_waveform(orbit, data->format, data->T, data->t0, src1->params, UCB_MODEL_NP, src1->tdi->X, src1->tdi->Y,src1->tdi->Z, src1->tdi->A, src1->tdi->E, src1->BW, 2);
                                 
                 match = waveform_match(src1, src2, noise);
                 if(match>max_match) max_match=match;

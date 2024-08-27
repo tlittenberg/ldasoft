@@ -403,15 +403,17 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     struct InstrumentModel *model_x = model;
     struct InstrumentModel *model_y = trial;
     copy_instrument_model(model_x,model_y);
-        
+
     //initialize likelihood
     //TODO: this shouldn't be necessary
-    generate_instrument_noise_model(data,orbit,model_x);
+    generate_instrument_noise_model(orbit,model_x);
     copy_Cij(model_x->psd->C, psd->C, psd->Nchannel, psd->N);
-    if(flags->confNoise) generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
+    if(flags->confNoise) 
+        generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
     invert_noise_covariance_matrix(psd);
+    
     model_x->logL = noise_log_likelihood(data, psd);
-
+    
     
     //set priors
     double Sacc = 9.00e-30;
@@ -449,10 +451,8 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     correlation_matrix[3][4] = correlation_matrix[4][3] = +1.0;
     correlation_matrix[3][5] = correlation_matrix[5][3] = -1.0;
 
-
     for(int mc=0; mc<10; mc++)
     {
-        
         //get jump sizes
         double acc_jump,oms_jump;
         double scale;
@@ -553,7 +553,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         //get noise covariance matrix for initial parameters
         if(logPy > -INFINITY && !flags->prior)
         {
-            generate_instrument_noise_model(data,orbit,model_y);
+            generate_instrument_noise_model(orbit,model_y);
             copy_Cij(model_y->psd->C, psd->C, psd->Nchannel, psd->N);
             
             //add foreground noise contribution
@@ -583,7 +583,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
 
 }
 
-void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic)
+void noise_foreground_model_mcmc(struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -598,7 +598,7 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     
     //initialize likelhood
     //TODO: this shouldn't be necessary!
-    generate_galactic_foreground_model(data,orbit,model_x);
+    generate_galactic_foreground_model(model_x);
     copy_Cij(model_x->psd->C, psd->C, psd->Nchannel, psd->N);
     generate_full_covariance_matrix(psd, noise->psd, data->Nchannel);
     invert_noise_covariance_matrix(psd);
@@ -702,7 +702,7 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         //get noise covariance matrix for initial parameters
         if(logPy > -INFINITY && !flags->prior)
         {
-            generate_galactic_foreground_model(data,orbit,model_y);
+            generate_galactic_foreground_model(model_y);
             copy_Cij(model_y->psd->C, psd->C, psd->Nchannel, psd->N);
             
             //add instrument noise contribution

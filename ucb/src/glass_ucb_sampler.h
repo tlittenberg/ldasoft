@@ -52,7 +52,7 @@ void adapt_temperature_ladder(struct Chain *chain, int mcmc);
  The sampler chooses a source at random from the full model to update.
  @param[in] ic index for which chain is being updated
  */
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
+void ucb_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
 
 /**
  \brief Trans-dimension galactic binary RJMCMC
@@ -61,7 +61,7 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
  The sampler chooses to either add or remove a galactic binary signal to the model.
  @param[in] ic index for which chain is being updated
  */
-void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
+void ucb_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic);
 
 /**
  \brief Noise model MCMC

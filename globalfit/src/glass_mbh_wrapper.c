@@ -183,7 +183,7 @@ void select_mbh_noise(struct MBHData *mbh_data, struct Noise *psd)
 void setup_mbh_data(struct MBHData *mbh_data, struct UCBData *ucb_data, struct TDI *tdi_full, int procID)
 {
 
-    mbh_data->data->N = 2*tdi_full->N; //tdi->N is # of bins, mbh->N is # of time samples
+    mbh_data->data->N = tdi_full->N;
     mbh_data->data->Nch = 2;
     mbh_data->data->Tobs = ucb_data->data->T;
     mbh_data->data->dt = mbh_data->data->Tobs/(double)mbh_data->data->N;
@@ -598,7 +598,7 @@ void get_mbh_waveform(struct MBHData *mbh_data)
     fullphaseamp(mbh_data->data, 2, NF, mbh_data->paramx[who[0]], f, A_amp, E_amp, A_phi, E_phi);
 
     /* insert TDI(f) into correct section of TDI structure */
-    for(int n=0; n<2*mbh_data->tdi->N; n++)
+    for(int n=0; n<mbh_data->tdi->N; n++)
     {
         mbh_data->tdi->A[n] = 0.0;
         mbh_data->tdi->E[n] = 0.0;

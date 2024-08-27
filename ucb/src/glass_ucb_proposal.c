@@ -116,7 +116,7 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
     char filename[MAXSTRINGSIZE];
     sprintf(filename,"%s/data/frequency_proposal.dat",flags->runDir);
     FILE *temp = fopen(filename,"w");
-    for(int i=0; i<data->N-BW; i++)
+    for(int i=0; i<data->NFFT-BW; i++)
     {
         power[i]=0.0;
         for(int n=i; n<i+BW; n++)
@@ -131,14 +131,14 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
             total += power[i];
         }
     }
-    for(int i=data->N-BW; i<data->N; i++)
+    for(int i=data->NFFT-BW; i<data->NFFT; i++)
     {
-        power[i] = power[data->N-BW-1];
+        power[i] = power[data->NFFT-BW-1];
         total += power[i];
     }
     
     data->pmax = 0.0;
-    for(int i=0; i<data->N; i++)
+    for(int i=0; i<data->NFFT; i++)
     {
         fprintf(temp,"%i %lg\n",i,power[i]);
         if(power[i]>data->pmax) data->pmax = power[i];
@@ -148,7 +148,7 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
     
     //also get SNR^2 of data
     total = 0.0;
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         double SnA = data->noise->C[0][0][n];
         double SnE = data->noise->C[1][1][n];
@@ -159,8 +159,8 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
         total += AA/SnA + EE/SnE;
     }
     
-    data->SNR2 = total - data->N;
-    printf("total=%g, N=%i\n",total, data->N);
+    data->SNR2 = total - data->NFFT;
+    printf("total=%g, N=%i\n",total, data->NFFT);
     if(data->SNR2<0.0)data->SNR2=0.0;
     data->SNR2*=4.0;//why the factor of 4?
     printf("data-based SNR^2:  %g (%g)\n", data->SNR2, sqrt(data->SNR2));
@@ -789,10 +789,11 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 break;
             case 1:
                 sprintf(proposal[i]->name,"fstat draw");
-                setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
+                //TODO: fstat needs to get wavelet support
+                //setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
                 proposal[i]->function = &draw_from_fstatistic;
                 proposal[i]->density  = &evaluate_fstatistic_proposal;
-                proposal[i]->weight   = 0.2;
+                proposal[i]->weight   = 0.0;
                 proposal[i]->rjweight = 1.0; //that's a 1 all right.  don't panic
                 check += proposal[i]->weight;
                 break;
@@ -1072,7 +1073,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     double *Fparams = calloc(4,sizeof(double));
     
     //grid sizes
-    int n_f     = 4*data->N;
+    int n_f     = 4*data->NFFT;
     int n_theta = 30;
     int n_phi   = 30;
     if(flags->debug)
@@ -1082,7 +1083,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         n_phi/=3;
     }
     
-    double d_f     = (double)data->N/(double)n_f;
+    double d_f     = (double)data->NFFT/(double)n_f;
     double d_theta = 2./(double)n_theta;
     double d_phi   = PI2/(double)n_phi;
     
@@ -1371,7 +1372,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     for(int j=0; j<UCB_MODEL_NP; j++) proposal->matrix[j] = calloc(proposal->size , sizeof(double));
     
     struct Model *temp = malloc(sizeof(struct Model));
-    alloc_model(temp,NMAX,data->N,data->Nchannel);
+    alloc_model(data,temp,NMAX);
     
     for(int n=0; n<proposal->size; n++)
     {

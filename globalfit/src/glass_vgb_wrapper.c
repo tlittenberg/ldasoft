@@ -221,7 +221,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
                 copy_model(model_ptr,trial_ptr);
 
                 for(int steps=0; steps<numSteps; steps++)
-                        galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
+                    ucb_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
             }
         }// end (parallel) loop over chains
     }//end parallel section
@@ -237,7 +237,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
         //update fisher matrix for each chain
         for(int ic=0; ic<NC; ic++)
         {
-            galactic_binary_fisher(orbit, data, model[chain->index[ic]]->source[0], model[chain->index[ic]]->noise);
+            ucb_fisher(orbit, data, model[chain->index[ic]]->source[0], model[chain->index[ic]]->noise);
         }
 
         ptmcmc(model_vec[n],chain_vec[n],flags);

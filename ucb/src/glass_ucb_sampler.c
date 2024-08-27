@@ -155,7 +155,7 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     
 }
 
-void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
+void ucb_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -170,14 +170,13 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     struct Model *model_y = trial;
     
     copy_model(model_x,model_y);
-    
+
     //pick a source to update
     int n = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
     
     //more shorthand pointers
     struct Source *source_x = model_x->source[n];
     struct Source *source_y = model_y->source[n];
-    
     
     //choose proposal distribution
     double draw;
@@ -189,10 +188,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     }while(proposal[nprop]->weight <= draw);
     
     proposal[nprop]->trial[ic]++;
-    
+
     //call proposal function to update source parameters
     (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
-    
+
     //hold sky position fixed to injected value
     if(flags->fixSky)
     {
@@ -207,49 +206,30 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
     //call associated proposal density functions
     logQyx = (*proposal[nprop]->density)(data, model_x, source_y, proposal[nprop], source_y->params);
     logQxy = (*proposal[nprop]->density)(data, model_x, source_x, proposal[nprop], source_x->params);
-        
+
     map_array_to_params(source_y, source_y->params, data->T);
 
-    /*
-     if(flags->maximize &&
-       !check_range(source_y->params, model->prior, model->NP) )
-        maximize_signal_model(orbit, data, model_y, n);
-     */
-
-    
-    //update calibration parameters
-    if(flags->calibration) draw_calibration_parameters(data, model_y, chain->r[ic]);
-    /*
-     no proposal density for calibration parameters
-     because we are always drawing from prior...for now
-     */
-    
-    //TODO:copy params for segment 0 into higher segments
-    //copy_source(model_y->source[n],model_y->source[n]);
-    //map_params_to_array(model_y->source[n], model_y->source[n]->params, data->T);
-    
     //get priors for x and y
     logPx = evaluate_prior(flags, data, model_x, prior, source_x->params);
     logPy = evaluate_prior(flags, data, model_y, prior, source_y->params);
-    
-    //add calibration source parameters
-    /*
-     no prior density for calibration parameters
-     because we are always drawing from prior...for now
-     */
-    
+
+   
     if(logPy > -INFINITY)
     {
         if(!flags->prior)
         {
             //form master template
-            generate_signal_model(orbit, data, model_y, n);
-                        
+            if(!strcmp("fourier",data->basis)) generate_signal_model(orbit, data, model_y, n);
+            if(!strcmp("wavelet",data->basis)) generate_signal_model_wavelet(orbit, data, model_y, n);  
             //update master template
             //update_signal_model(orbit, data, model_x, model_y, n);
             
+
             //rejection sample on SNR?
-            if(snr(model_y->source[n], model_y->noise) < 5.0) logPy = -INFINITY;
+            double sn;
+            if(!strcmp("fourier",data->basis)) sn = snr(model_y->source[n], model_y->noise);
+            if(!strcmp("wavelet",data->basis)) sn = snr_wavelet(model_y->source[n], model_y->noise);
+            if(sn<5.0) logPy = -INFINITY;
 
             //add calibration error
             if(flags->calibration)
@@ -258,9 +238,11 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
                 apply_calibration_model(data, model_y);
             }
             
+
             //get likelihood for y
-            model_y->logL = gaussian_log_likelihood(data, model_y);
-            
+            if(!strcmp("fourier",data->basis)) model_y->logL = gaussian_log_likelihood(data, model_y);
+            if(!strcmp("wavelet",data->basis)) model_y->logL = gaussian_log_likelhood_wavelet(data, model_y);
+
             //get delta log likelihood
             //model_y->logL = model_x->logL + delta_log_likelihood(data, model_x, model_y, n);
             
@@ -276,8 +258,10 @@ void galactic_binary_mcmc(struct Orbit *orbit, struct Data *data, struct Model *
         
         if(isfinite(logH) && logH > loga)
         {
+
             proposal[nprop]->accept[ic]++;
             copy_model_lite(model_y,model_x);
+
         }
     }
 }
@@ -299,7 +283,6 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             //TODO: insert draw from galaxy prior into draw_from_uniform_prior()
             *logQyx = (*proposal->function)(data, model_y, model_y->source[create], proposal, model_y->source[create]->params, chain->r[ic]);
             *logQxy = 0;
-            
             map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
             
             if(flags->maximize)
@@ -309,7 +292,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             generate_signal_model(orbit, data, model_y, create);
-            
+
             //rejection sample on SNR?
             if(!flags->prior)
                 if(snr(model_y->source[create], model_y->noise) < 5.0) *logPy = -INFINITY;
@@ -367,7 +350,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
         branch[0] = trunk;
         branch[1] = model_y->Nlive-1;
         
-        for(int n=0; n<2*data->N; n++)
+        for(int n=0; n<data->N; n++)
         {
             for(int m=0; m<2; m++)
             {
@@ -555,7 +538,7 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
     gsl_vector_free(f);
 }
 
-void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
+void ucb_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -600,7 +583,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         for(int n=0; n<model_x->Nlive; n++) logPx += evaluate_prior(flags, data, model_x, prior, model_x->source[n]->params);
         for(int n=0; n<model_y->Nlive; n++) logPy += evaluate_prior(flags, data, model_y, prior, model_y->source[n]->params);
     }
-    
+
     /* Hasting's ratio */
     if(logPy > -INFINITY && !flags->prior)
     {
@@ -619,7 +602,7 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         
         //get likelihood for y
         model_y->logL = gaussian_log_likelihood(data, model_y);
-        
+
         //get likelihood difference
         dlogL = model_y->logL - model_x->logL;
         
@@ -651,15 +634,14 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(isfinite(logH) && logH > loga)
     {
-        
         //update FIMs for sources that have changed in the proposed state
         for(int n=0; n<model_y->Nlive; n++)
         {
             //only compute FIM for sources that need it
             if(model_y->source[n]->fisher_update_flag)
             {
-                galactic_binary_fisher(orbit, data, model_y->source[n], data->noise);
-                
+                ucb_fisher(orbit, data, model_y->source[n], data->noise);
+
                 //reset flag indicating FIM is up-to-date
                 model_y->source[n]->fisher_update_flag = 0;
             }
@@ -667,7 +649,6 @@ void galactic_binary_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model
         proposal[nprop]->accept[ic]++;
         copy_model(model_y,model_x);
     }
-    
 }
 
 void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, struct Proposal **proposal, struct Model **model, struct Model **trial, struct Source *inj)
@@ -676,13 +657,12 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
     int DMAX = flags->DMAX;
     for(int ic=0; ic<NC; ic++)
     {
-        
         trial[ic] = malloc(sizeof(struct Model));
         model[ic] = malloc(sizeof(struct Model));
         
-        alloc_model(trial[ic],DMAX,data->N,data->Nchannel);
-        alloc_model(model[ic],DMAX,data->N,data->Nchannel);
-                
+        alloc_model(data,trial[ic],DMAX);
+        alloc_model(data,model[ic],DMAX);
+
         if(ic==0)set_uniform_prior(flags, model[ic], data, 1);
         else     set_uniform_prior(flags, model[ic], data, 0);
         
@@ -712,14 +692,23 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
                 draw_from_uniform_prior(data, model[ic], model[ic]->source[n], proposal[0], model[ic]->source[n]->params , chain->r[ic]);
             }
             map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
-            galactic_binary_fisher(orbit, data, model[ic]->source[n], data->noise);
+            if(!strcmp("fourier",data->basis)) ucb_fisher(orbit, data, model[ic]->source[n], data->noise);
+            if(!strcmp("wavelet",data->basis)) ucb_fisher_wavelet(orbit, data, model[ic]->source[n], data->noise);
             model[ic]->source[n]->fisher_update_flag=0;
         }
         
         // Form master model & compute likelihood of starting position
-        generate_noise_model(data, model[ic]);
-        generate_signal_model(orbit, data, model[ic], -1);
-        
+        if(!strcmp("fourier",data->basis)) 
+        {
+            generate_noise_model(data, model[ic]);
+            generate_signal_model(orbit, data, model[ic], -1);
+        }
+        if(!strcmp("wavelet",data->basis)) 
+        {
+            generate_noise_model_wavelet(data, model[ic]);
+            generate_signal_model_wavelet(orbit, data, model[ic], -1);
+        }
+
         //calibration error
         if(flags->calibration)
         {
@@ -729,7 +718,8 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
         }
         if(!flags->prior)
         {
-            model[ic]->logL     = gaussian_log_likelihood(data, model[ic]);
+            if(!strcmp("fourier",data->basis))model[ic]->logL = gaussian_log_likelihood(data, model[ic]);
+            if(!strcmp("wavelet",data->basis))model[ic]->logL = gaussian_log_likelhood_wavelet(data, model[ic]);
             model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[ic]);
         }
         else model[ic]->logL = model[ic]->logLnorm = 0.0;

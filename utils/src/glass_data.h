@@ -29,6 +29,9 @@
 #define FILTER_LENGTH 5e4 //seconds
 #define MAXSTRINGSIZE 1024 //!<maximum number of characters for `path+filename` strings
 
+#define WAVELET_DURATION 7680 //!<duration of wavelet pixels [s]
+#define WAVELET_BANDWIDTH 6.51041666666667e-05 //!<bandwidth of wavelet pixels [Hz]
+
 /*!
  * \brief Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.
  *
@@ -43,8 +46,9 @@
 struct Data
 {
     /** @name Size of Data and Model */
-     ///@{
-    int N;        //!<number of frequency bins
+    ///@{
+    int N;        //!<number of data points bins
+    int NFFT;     //!<number of frequency bins
     int Nchannel; //!<number of data channels
     double logN;  //!<log total number of data points \f$ \log ( 2 \times N \times N_{\rm channel} \times N_{\rm T} )\f$
     ///@}
@@ -63,13 +67,15 @@ struct Data
     double t0;   //!<start times of segments
     ///@}
 
-    
+    /** @name Wavelet Basis */
+    struct Wavelets *wdm;
+
     /** @name Analysis Frequency Segment */
      ///@{
     int qmin; //!<minimum frequency bin of segment
     int qmax; //!<maximum frequency bin of segment
     int qpad; //!<number of frequency bins padding ends of segment
-    
+
     double fmin; //!<minimum frequency of segment
     double fmax; //!<maximum frequency of segment
     double sine_f_on_fstar; //!<\f$sin(f * 2\pi L/c)\f$
@@ -85,6 +91,7 @@ struct Data
     struct TDI *tdi; //!<TDI data channels as seen by sampler
     struct TDI *raw; //!<TDI data channels unaltered from input
     struct Noise *noise; //!<Reference noise model
+
     /**
      \brief Convention for data format
      
@@ -94,6 +101,14 @@ struct Data
      */
     char format[16];
     char dataDir[MAXSTRINGSIZE]; //!<Directory for storing data files
+
+    /** 
+     \brief Basis for analysis
+
+     basis = "fourier" for frequency-domain analysis
+     basis = "wavelet" for WDM wavelet-domain analysis
+    */
+    char basis[16];
 
     //Spectrum proposal
     double *p; //!<power spectral density of data
@@ -319,7 +334,10 @@ struct Noise
 {
     /// Number of data samples fit by noise model
     int N;
-    
+
+    /// Minimum index of wavelet pixels  
+    int kmin; 
+
     /// Number of TDI channels
     int Nchannel;
     
@@ -414,7 +432,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
 /** @name Allocate memory for structures */
 ///@{
 void alloc_data(struct Data *data, struct Flags *flags);
-void alloc_noise(struct Noise *noise, int NFFT, int Nchannel);
+void alloc_noise(struct Noise *noise, int N, int Nchannel);
 void alloc_calibration(struct Calibration *calibration);
 ///@}
 
@@ -461,6 +479,7 @@ void GetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags);
  \brief Add simulated Gaussian noise realization to data
  */
 void AddNoise(struct Data *data, struct TDI *tdi);
+void AddNoiseWavelet(struct Data *data, struct TDI *tdi);
 
 /**
  \brief Generate noise-only simulated data
@@ -475,7 +494,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags);
 /**
  \brief Parse command line
  */
-void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain);
+void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, char basis[]);
 
 /**
  \brief copy `argv` string because `parse()` does not preserve order

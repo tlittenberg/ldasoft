@@ -42,12 +42,13 @@ struct Wavelets
 {
     /** @name define time-frequency-fdot grid */
      ///@{
-    int NF;    //!<frequency layers
-    int NT;    //!<time layers
-    double dt; //!<time cadence
-    double df; //!<pixel bandwidth>
+    int NF;    //!<total number of frequency layers
+    int NT;    //!<total number of time layers
+    double cadence; //!<data sample cadence
+    double dt; //!<wavelet pixel duration
+    double df; //!<wavelet pixel bandwidth
     
-    int frequency_steps; //!<frequency steps
+    int frequency_steps; //!<frequency steps for wavelet filters
     int fdot_steps;      //!<fdot steps
     double d_fdot;       //!<fractional fdot increment
     ///@}
@@ -69,14 +70,18 @@ struct Wavelets
     int N;
     double T;
 
+    int kmin; //!<minimum wavelet index
+    int kmax; //!<maximum wavelet index
+    
+    int *n_table; //!< number of terms in the lookup table at each frequency
     gsl_vector **table; //!< lookup table of wavelet coefficients
 };
 
-void initialize_wavelet(struct Wavelets *wdm, int N, int NF, double dt);
+void initialize_wavelet(struct Wavelets *wdm, double T);
 void wavelet_transform(struct Wavelets *wdm, double *data);
 void wavelet_index_to_pixel(struct Wavelets *wdm, int *i, int *j, int k);
 void wavelet_pixel_to_index(struct Wavelets *wdm, int i, int j, int *k);
-void wavelet_transfrom_from_table(struct Wavelets *wdm, double BW, double *Phase, double *freq, double *Amp, int *list, double *data);
-void wavelet_lookup_table(struct Wavelets *wdm);
+void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int Nmax);
+void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, double *freqZ, double *fdotX, double *fdotY, double *fdotZ, int *wavelet_list, int *Nwavelet, int *jmin, int *jmax);
 
 #endif /* glass_wavelet_h */

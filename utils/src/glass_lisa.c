@@ -1,4 +1,4 @@
-*
+/*
  *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -45,9 +45,9 @@ void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, dou
     
     for(i=0; i<3; i++)
     {
-        x[i+1] = gsl_spline_eval(orbit->dx[i], t, orbit->acc);
-        y[i+1] = gsl_spline_eval(orbit->dy[i], t, orbit->acc);
-        z[i+1] = gsl_spline_eval(orbit->dz[i], t, orbit->acc);
+        x[i+1] = gsl_spline_eval(orbit->dx[i], t, orbit->dx_acc);
+        y[i+1] = gsl_spline_eval(orbit->dy[i], t, orbit->dy_acc);
+        z[i+1] = gsl_spline_eval(orbit->dz[i], t, orbit->dz_acc);
     }
 }
 
@@ -57,13 +57,12 @@ void interpolate_orbits(struct Orbit *orbit, double t, double *x, double *y, dou
 void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double *z)
 {
     
-    //double alpha = PI2*t/YEAR;
-    double alpha = PI2*t*3.168753575e-8;
+    double alpha = PI2*t/YEAR; // + kappa_0
     
     /*
-     double beta1 = 0.;
-     double beta2 = 2.0943951023932; //2.*pi/3.;
-     double beta3 = 4.18879020478639;//4.*pi/3.;
+     double beta1 = 0.;              //lambda_0
+     double beta2 = 2.0943951023932; //2.*pi/3. + lambda_0;
+     double beta3 = 4.18879020478639;//4.*pi/3. + lambda_0;
      */
     
     double sa = sin(alpha);
@@ -106,10 +105,12 @@ void analytic_orbits(struct Orbit *orbit, double t, double *x, double *y, double
 void initialize_analytic_orbit(struct Orbit *orbit)
 {
     //store armlenght & transfer frequency in orbit structure.
-    orbit->L     = LARM;
-    orbit->fstar = CLIGHT/(2.0*M_PI*LARM);
-    orbit->ecc   = LARM/(2.0*SQ3*AU);
-    orbit->R     = AU*orbit->ecc;
+    orbit->L        = LARM;
+    orbit->fstar    = CLIGHT/(2.0*M_PI*LARM);
+    orbit->ecc      = LARM/(2.0*SQ3*AU);
+    orbit->R        = AU*orbit->ecc;
+    orbit->kappa_0  = 0.0;
+    orbit->lambda_0 = 0.0;
     orbit->orbit_function = &analytic_orbits;
     
 }
@@ -162,7 +163,9 @@ void initialize_numeric_orbit(struct Orbit *orbit)
     orbit->dx = malloc(sizeof(gsl_spline *)*3);
     orbit->dy = malloc(sizeof(gsl_spline *)*3);
     orbit->dz = malloc(sizeof(gsl_spline *)*3);
-    orbit->acc= gsl_interp_accel_alloc();
+    orbit->dx_acc= gsl_interp_accel_alloc();
+    orbit->dy_acc= gsl_interp_accel_alloc();
+    orbit->dz_acc= gsl_interp_accel_alloc();
     
     for(i=0; i<3; i++)
     {
@@ -270,6 +273,136 @@ void initialize_numeric_orbit(struct Orbit *orbit)
         free(z[i]);
     }
     free(t);
+    free(x);
+    free(y);
+    free(z);
+    fprintf(stdout,"=========================================\n\n");
+    
+}
+
+void initialize_interpolated_analytic_orbits(struct Orbit *orbit, double Tobs, double t0)
+{
+    fprintf(stdout,"==== Initialize LISA Orbit Structure ====\n\n");
+    
+    //store armlength & transfer frequency in orbit structure.
+    orbit->L     = LARM;
+    orbit->fstar = CLIGHT/(2.0*M_PI*LARM);
+    orbit->ecc   = LARM/(2.0*SQ3*AU);
+    orbit->R     = AU*orbit->ecc;
+    orbit->orbit_function = &analytic_orbits;
+    
+    /*
+    Setup coarse time sampling of slowly-evolving orbits 
+    */
+    int N = (int)(200.0*Tobs/YEAR); //200 samples per year
+    if (N < 20) N = 20;        //but at least 20 samples
+
+    double buffer = (Tobs)/(double)(N-1); // buffer for time sampling to keep interpolation away from edges of data
+    double cadence = (Tobs + 2.0*buffer)/(double)(N-1);  // coarse sample cadence
+    
+    //allocate memory for local workspace
+    orbit->Norb = N;
+    double t   = 0.0;
+    double *x  = malloc(sizeof(double)*4);
+    double *y  = malloc(sizeof(double)*4);
+    double *z  = malloc(sizeof(double)*4);
+    
+    //allocate memory for orbit structure
+    orbit->t  = calloc(orbit->Norb,sizeof(double));
+    orbit->x  = malloc(sizeof(double *)*3);
+    orbit->y  = malloc(sizeof(double *)*3);
+    orbit->z  = malloc(sizeof(double *)*3);
+    orbit->dx = malloc(sizeof(gsl_spline *)*3);
+    orbit->dy = malloc(sizeof(gsl_spline *)*3);
+    orbit->dz = malloc(sizeof(gsl_spline *)*3);
+    orbit->dx_acc= gsl_interp_accel_alloc();
+    orbit->dy_acc= gsl_interp_accel_alloc();
+    orbit->dz_acc= gsl_interp_accel_alloc();
+    
+    for(int i=0; i<3; i++)
+    {
+        orbit->x[i]  = calloc(orbit->Norb,sizeof(double));
+        orbit->y[i]  = calloc(orbit->Norb,sizeof(double));
+        orbit->z[i]  = calloc(orbit->Norb,sizeof(double));
+        orbit->dx[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
+        orbit->dy[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
+        orbit->dz[i] = gsl_spline_alloc(gsl_interp_cspline, orbit->Norb);
+    }
+    
+    //compute orbits
+    for(int n=0; n<orbit->Norb; n++)
+    {
+        t = t0 + n*cadence - buffer;
+        (orbit->orbit_function)(orbit,t,x,y,z);
+
+        //Repackage orbit positions into arrays for interpolation
+        orbit->t[n] = t;
+        for(int i=0; i<3; i++)
+        {
+            orbit->x[i][n] = x[i+1];
+            orbit->y[i][n] = y[i+1];
+            orbit->z[i][n] = z[i+1];
+        }
+    }
+    
+    //calculate derivatives for cubic spline
+    for(int i=0; i<3; i++)
+    {
+        gsl_spline_init(orbit->dx[i],orbit->t,orbit->x[i],orbit->Norb);
+        gsl_spline_init(orbit->dy[i],orbit->t,orbit->y[i],orbit->Norb);
+        gsl_spline_init(orbit->dz[i],orbit->t,orbit->z[i],orbit->Norb);
+    }
+    
+    //calculate average arm length
+    printf("Estimating average armlengths -- assumes evenly sampled orbits\n\n");
+    double L12=0.0;
+    double L23=0.0;
+    double L31=0.0;
+    double x1,x2,x3,y1,y2,y3,z1,z2,z3;
+    for(int n=0; n<orbit->Norb; n++)
+    {
+        x1 = orbit->x[0][n];
+        x2 = orbit->x[1][n];
+        x3 = orbit->x[2][n];
+        
+        y1 = orbit->y[0][n];
+        y2 = orbit->y[1][n];
+        y3 = orbit->y[2][n];
+        
+        z1 = orbit->z[0][n];
+        z2 = orbit->z[1][n];
+        z3 = orbit->z[2][n];
+        
+        
+        //L12
+        L12 += sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
+        
+        //L23
+        L23 += sqrt( (x3-x2)*(x3-x2) + (y3-y2)*(y3-y2) + (z3-z2)*(z3-z2) );
+        
+        //L31
+        L31 += sqrt( (x1-x3)*(x1-x3) + (y1-y3)*(y1-y3) + (z1-z3)*(z1-z3) );
+    }
+    L12 /= (double)orbit->Norb;
+    L31 /= (double)orbit->Norb;
+    L23 /= (double)orbit->Norb;
+    
+    printf("Average arm lengths for the constellation:\n");
+    printf("  L12 = %g\n",L12);
+    printf("  L31 = %g\n",L31);
+    printf("  L23 = %g\n",L23);
+    printf("\n");
+    
+    //are the armlenghts consistent?
+    double L = (L12+L31+L23)/3.;
+    printf("Fractional deviation from average armlength for each side:\n");
+    printf("  L12 = %g\n",fabs(L12-L)/L);
+    printf("  L31 = %g\n",fabs(L31-L)/L);
+    printf("  L23 = %g\n",fabs(L23-L)/L);
+    printf("\n");
+    
+    
+    //free local memory
     free(x);
     free(y);
     free(z);
@@ -608,6 +741,272 @@ void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, 
     }
 }
 
+
+static void interpolated_amplitude_phase(double t,  gsl_spline *amp_spline, gsl_spline *phase_spline, gsl_interp_accel *acc, double Aplus, double Across, double cos2psi, double sin2psi,  double *hp, double *hc, double *hpf, double *hcf)
+{
+    double phase = gsl_spline_eval(phase_spline, t, acc);
+    double amp   = gsl_spline_eval(amp_spline, t, acc);
+    
+    double cp = cos(phase);
+    double sp = sin(phase);
+
+    *hp  = amp * ( Aplus*cos2psi*cp  + Across*sin2psi*sp );
+    *hc  = amp * ( Across*cos2psi*sp - Aplus*sin2psi*cp  );
+    
+    *hpf = amp * (-Aplus*cos2psi*sp  + Across*sin2psi*cp );
+    *hcf = amp * ( Across*cos2psi*cp + Aplus*sin2psi*sp  );              
+}
+
+void LISA_TDI_spline(double *M, double *Mf, int a, int b, int c, double* tarray, int n, gsl_spline *amp_spline, gsl_spline *phase_spline, gsl_interp_accel *acc, double Aplus, double Across, double cos2psi, double sin2psi, double *App, double *Apm, double *Acp, double *Acm, double *kr, double *Larm)
+{
+    double t, hp, hc, hpf, hcf;
+
+    M[n] = 0.0;
+    Mf[n] = 0.0;
+    
+    t = tarray[n] - kr[a]-2.0*Larm[c]-2.0*Larm[b];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] += hp*App[c]+hc*Acp[c];
+    M[n] -= hp*Apm[b]+hc*Acm[b];
+    Mf[n] += hpf*App[c]+hcf*Acp[c];
+    Mf[n] -= hpf*Apm[b]+hcf*Acm[b];
+    
+    t = tarray[n] - kr[b]-Larm[c]-2.0*Larm[b];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] -= hp*App[c]+hc*Acp[c];
+    M[n] += hp*Apm[c]+hc*Acm[c];
+    Mf[n] -= hpf*App[c]+hcf*Acp[c];
+    Mf[n] += hpf*Apm[c]+hcf*Acm[c];
+    
+    t = tarray[n] - kr[c]-Larm[b]-2.0*Larm[c];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] += hp*Apm[b]+hc*Acm[b];
+    M[n] -= hp*App[b]+hc*Acp[b];
+    Mf[n] += hpf*Apm[b]+hcf*Acm[b];
+    Mf[n] -= hpf*App[b]+hcf*Acp[b];
+    
+    t = tarray[n] - kr[a]-2.0*Larm[b];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] -= hp*Apm[c]+hc*Acm[c];
+    M[n] += hp*Apm[b]+hc*Acm[b];
+    Mf[n] -= hpf*Apm[c]+hcf*Acm[c];
+    Mf[n] += hpf*Apm[b]+hcf*Acm[b];
+    
+    t = tarray[n] - kr[a]-2.0*Larm[c];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] += hp*App[b]+hc*Acp[b];
+    M[n] -= hp*App[c]+hc*Acp[c];
+    Mf[n] += hpf*App[b]+hcf*Acp[b];
+    Mf[n] -= hpf*App[c]+hcf*Acp[c];
+    
+    t = tarray[n] - kr[c]- Larm[b];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] -= hp*Apm[b]+hc*Acm[b];
+    M[n] += hp*App[b]+hc*Acp[b];
+    Mf[n] -= hpf*Apm[b]+hcf*Acm[b];
+    Mf[n] += hpf*App[b]+hcf*Acp[b];
+    
+    t = tarray[n] - kr[b]- Larm[c];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] += hp*App[c]+hc*Acp[c];
+    M[n] -= hp*Apm[c]+hc*Acm[c];
+    Mf[n] += hpf*App[c]+hcf*Acp[c];
+    Mf[n] -= hpf*Apm[c]+hcf*Acm[c];
+    
+    t = tarray[n] - kr[a];
+    interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
+    M[n] -= hp*App[b]+hc*Acp[b];
+    M[n] += hp*Apm[c]+hc*Acm[c];
+    Mf[n] -= hpf*App[b]+hcf*Acp[b];
+    Mf[n] += hpf*Apm[c]+hcf*Acm[c];
+    
+}
+
+void LISA_polarization_tensor_njc(double costh, double phi, double eplus[4][4], double ecross[4][4], double k[4])
+{
+    /*   Gravitational Wave basis vectors   */
+    double u[4],v[4];
+
+    /*   Sky location angles   */
+    double sinth = sqrt(1.0 - costh*costh);
+    double cosph = cos(phi);
+    double sinph = sin(phi);
+
+    /*   Tensor construction for building slowly evolving LISA response   */
+    //Gravitational Wave source basis vectors
+    u[1] =  costh*cosph;  u[2] =  costh*sinph;  u[3] = -sinth;
+    v[1] =  sinph;        v[2] = -cosph;        v[3] =  0.;
+    k[1] = -sinth*cosph;  k[2] = -sinth*sinph;  k[3] = -costh;
+    
+    //GW polarization basis tensors
+    /*
+     * NJC convention:
+     */
+    for(int i=1;i<=3;i++)
+    {
+        for(int j=1;j<=3;j++)
+        {
+            eplus[i][j]  = u[i]*u[j] - v[i]*v[j];
+            ecross[i][j] = u[i]*v[j] + v[i]*u[j];
+        }
+    }
+
+}
+
+void LISA_spline_response(struct Orbit *orbit, double *tarray, int N, double *params,  gsl_spline *amp_spline, gsl_spline *phase_spline, gsl_interp_accel *acc, struct TDI *R, struct TDI *Rf)
+{
+    /* Unpack structures */
+    double *X = R->X;
+    double *Y = R->Y;
+    double *Z = R->Z;
+    double *Xf = Rf->X;
+    double *Yf = Rf->Y;
+    double *Zf = Rf->Z;
+
+    /*   Indicies    */
+    int i,j;
+
+    double k[4]; 
+    double kdotr[3], kdotn[3];
+    double dplus[3], dcross[3];
+    
+    /*   Polarization basis tensors   */
+    double eplus[4][4], ecross[4][4];
+    
+    double phi, cosi, psi;
+    double costh;
+    double cos2psi, sin2psi;
+    double t;
+    double Aplus, Across;
+    double *App, *Apm, *Acp, *Acm;
+    
+    /*   Allocating Arrays   */
+            
+    App = malloc(sizeof(double)*3); 
+    Apm = malloc(sizeof(double)*3);
+    Acp = malloc(sizeof(double)*3);
+    Acm = malloc(sizeof(double)*3);
+
+    costh = params[1]; // costh
+    phi   = params[2]; // phi
+    cosi  = params[4]; // cosi
+    psi   = params[5]; // psi
+    
+    cos2psi = cos(2.*psi);  
+    sin2psi = sin(2.*psi);
+    
+    Aplus = 0.5*(1.+cosi*cosi);
+    Across = -cosi;
+
+    LISA_polarization_tensor(costh, phi, eplus, ecross, k);
+
+
+    /* phase fudge for Neil's code */
+    // conventions are flipped relative to BH code
+    cosi *= -1.0; // cosi
+    psi  *= -1.0; // psi
+    cos2psi = cos(2.*psi);  
+    sin2psi = sin(2.*psi);    
+    Aplus = 0.5*(1.+cosi*cosi);
+    Across = -cosi;
+    LISA_polarization_tensor_njc(costh, phi, eplus, ecross, k);
+
+    double x[3][3];
+    double n[3][3];
+    double L[3];
+
+    for(int m=0; m<N; m++)
+    {
+        
+        t = tarray[m];
+
+        // position vectors for each spacecraft (converted to seconds)
+        for(i=0; i<3; i++)
+        {
+            x[i][0] = gsl_spline_eval(orbit->dx[i],t,orbit->dx_acc)/CLIGHT;
+            x[i][1] = gsl_spline_eval(orbit->dy[i],t,orbit->dy_acc)/CLIGHT;
+            x[i][2] = gsl_spline_eval(orbit->dz[i],t,orbit->dz_acc)/CLIGHT;
+        }
+
+        // arm vectors
+        for(i=0; i<3; i++)
+        {
+            n[0][i] = x[1][i] - x[2][i];
+            n[1][i] = x[2][i] - x[0][i];
+            n[2][i] = x[0][i] - x[1][i];
+        }
+
+        //arm lengths
+        for(i=0; i<3; i++) 
+        {
+            L[i]=0.0;
+            for(j=0; j<3; j++)  L[i] += n[i][j]*n[i][j];
+            L[i] = sqrt(L[i]);
+        }
+
+        //normalize arm vectors        
+        for(i=0; i<3; i++)
+            for(j=0;j<3;j++)
+                n[i][j] /= L[i];
+        
+
+
+        // k dot r_i (source direction spacecraft locations)
+        for(i=0; i<3; i++)
+        {
+            kdotr[i] = 0.0;
+            for(j=0; j<3; j++)
+                kdotr[i] += k[j+1] * x[i][j];
+        }
+        
+        // k dot n_i (source direction w/ arm vectors)
+        for(i=0; i<3; i++)
+        {
+            kdotn[i] = 0.0;
+            for(j=0; j<3; j++)
+                kdotn[i] += k[j+1] * n[i][j];
+        }        
+        
+        //Antenna primitives
+        for(i=0; i<3; i++)
+        {
+            dplus[i] = 0.0;
+            dcross[i] = 0.0;
+            for(j=0; j<3; j++)
+            {
+                for(int l=0; l<3; l++)
+                {
+                    dplus[i]  += (n[i][j] * n[i][l]) * eplus[j+1][l+1];
+                    dcross[i] += (n[i][j] * n[i][l]) * ecross[j+1][l+1];
+                }
+            }
+        }
+        
+        //Full Antenna patterns
+        for(i=0; i<3; i++)
+        {
+            App[i] = 0.5 * dplus[i]  / (1.0 + kdotn[i]);
+            Apm[i] = 0.5 * dplus[i]  / (1.0 - kdotn[i]);
+            Acp[i] = 0.5 * dcross[i] / (1.0 + kdotn[i]);
+            Acm[i] = 0.5 * dcross[i] / (1.0 - kdotn[i]);
+        }
+        
+        // build X, Y, Z responses
+        LISA_TDI_spline(X, Xf, 0, 1, 2, tarray, m, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, App, Apm, Acp, Acm, kdotr, L);
+        LISA_TDI_spline(Y, Yf, 1, 2, 0, tarray, m, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, App, Apm, Acp, Acm, kdotr, L);
+        LISA_TDI_spline(Z, Zf, 2, 0, 1, tarray, m, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, App, Apm, Acp, Acm, kdotr, L);
+
+        
+    }
+    
+    free(App); 
+    free(Apm);
+    free(Acp); 
+    free(Acm);
+
+    return;
+}
+
 /*
  adapted from LDC git
  https://gitlab.in2p3.fr/LISA/LDC/-/blob/master/ldc/lisa/noise/noise.py
@@ -812,20 +1211,20 @@ void test_noise_model(struct Orbit *orbit)
     fclose(psdfile);
 }
 
-void alloc_tdi(struct TDI *tdi, int NFFT, int Nchannel)
+void alloc_tdi(struct TDI *tdi, int N, int Nchannel)
 {
     //Number of frequency bins (2*N samples)
-    tdi->N = NFFT;
+    tdi->N = N;
     
     //Michelson
-    tdi->X = calloc(2*tdi->N,sizeof(double));
-    tdi->Y = calloc(2*tdi->N,sizeof(double));
-    tdi->Z = calloc(2*tdi->N,sizeof(double));
+    tdi->X = calloc(tdi->N,sizeof(double));
+    tdi->Y = calloc(tdi->N,sizeof(double));
+    tdi->Z = calloc(tdi->N,sizeof(double));
     
     //Noise-orthogonal
-    tdi->A = calloc(2*tdi->N,sizeof(double));
-    tdi->E = calloc(2*tdi->N,sizeof(double));
-    tdi->T = calloc(2*tdi->N,sizeof(double));
+    tdi->A = calloc(tdi->N,sizeof(double));
+    tdi->E = calloc(tdi->N,sizeof(double));
+    tdi->T = calloc(tdi->N,sizeof(double));
         
     //Number of TDI channels (X or A&E or maybe one day A,E,&T)
     tdi->Nchannel = Nchannel;
@@ -836,12 +1235,12 @@ void copy_tdi(struct TDI *origin, struct TDI *copy)
     copy->N        = origin->N;
     copy->Nchannel = origin->Nchannel;
     
-    memcpy(copy->A, origin->A, 2*origin->N*sizeof(double));
-    memcpy(copy->E, origin->E, 2*origin->N*sizeof(double));
-    memcpy(copy->T, origin->T, 2*origin->N*sizeof(double));
-    memcpy(copy->X, origin->X, 2*origin->N*sizeof(double));
-    memcpy(copy->Y, origin->Y, 2*origin->N*sizeof(double));
-    memcpy(copy->Z, origin->Z, 2*origin->N*sizeof(double));
+    memcpy(copy->A, origin->A, origin->N*sizeof(double));
+    memcpy(copy->E, origin->E, origin->N*sizeof(double));
+    memcpy(copy->T, origin->T, origin->N*sizeof(double));
+    memcpy(copy->X, origin->X, origin->N*sizeof(double));
+    memcpy(copy->Y, origin->Y, origin->N*sizeof(double));
+    memcpy(copy->Z, origin->Z, origin->N*sizeof(double));
 }
 
 void copy_tdi_segment(struct TDI *origin, struct TDI *copy, int index, int N)
@@ -849,12 +1248,12 @@ void copy_tdi_segment(struct TDI *origin, struct TDI *copy, int index, int N)
     copy->N        = origin->N;
     copy->Nchannel = origin->Nchannel;
     index*=2;
-    memcpy(copy->A+index, origin->A+index, 2*N*sizeof(double));
-    memcpy(copy->E+index, origin->E+index, 2*N*sizeof(double));
-    memcpy(copy->T+index, origin->T+index, 2*N*sizeof(double));
-    memcpy(copy->X+index, origin->X+index, 2*N*sizeof(double));
-    memcpy(copy->Y+index, origin->Y+index, 2*N*sizeof(double));
-    memcpy(copy->Z+index, origin->Z+index, 2*N*sizeof(double));
+    memcpy(copy->A+index, origin->A+index, N*sizeof(double));
+    memcpy(copy->E+index, origin->E+index, N*sizeof(double));
+    memcpy(copy->T+index, origin->T+index, N*sizeof(double));
+    memcpy(copy->X+index, origin->X+index, N*sizeof(double));
+    memcpy(copy->Y+index, origin->Y+index, N*sizeof(double));
+    memcpy(copy->Z+index, origin->Z+index, N*sizeof(double));
 }
 
 void free_tdi(struct TDI *tdi)
@@ -1075,3 +1474,5 @@ void LISA_polarization_tensor(double costh, double phi, double eplus[4][4], doub
     }
 
 }
+
+

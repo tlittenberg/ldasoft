@@ -31,6 +31,16 @@ void invert_noise_covariance_matrix(struct Noise *noise);
 double chirpmass(double m1, double m2);
 
 /**
+ \brief Compute GW amplitude from intrinsic parameters
+ 
+ @param Mc chirp mass: \f$\mathcal{M}\ [{\rm M}_\odot]\f$
+ @param f0 initial GW frequency: \f$ f_0\ [{\rm Hz}]\f$
+ @param D luminosity distance: \f$ D_L [{\rm pc}]\f$
+ @return \f$ \mathcal{A} = 2 \frac{ \mathcal{M}^{5/3} (\pi f_0)^{2/3} }{D_L} \f$
+ */
+double amplitude(double Mc, double f0, double D);
+
+/**
 \brief Compute integer powers of by brute force multiplication
  
  Faster than pow() for small integers
@@ -78,10 +88,11 @@ double power_spectrum(double *data, int n);
  @param a complex amplitude array
  @param b complex amplitude array
  @param invC inverse covariance matrix
- @param n number of frequency bins in sum
+ @param N number of frequency bins in sum
  @return \f$(a|b) =  4 \sum_n a^*_n b_n C^-1_n \f$
  */
-double fourier_nwip(double *a, double *b, double *invC, int n);
+double fourier_nwip(double *a, double *b, double *invC, int N);
+double wavelet_nwip(double *a, double *b, double *invC, int *list, int N);
 
 /**
 \brief Our implementation of the recursive binary search algorithm
@@ -158,5 +169,23 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
  */
 void dbscan(gsl_vector *X, double eps, int min, int *C, int *K);
 
+/** 
+\brief Transform periodic to linear phase
+
+ @param[in] N size of phase array
+ @param[in,out] phase input from [0,2pi] replaced with unwrapped version
+*/
+void unwrap_phase(int N, double *phase);
+
+
+double simpson_integration_3(double f0, double f1, double f2, double h);
+double simpson_integration_5(double f0, double f1, double f2, double f3, double f4, double h);
+
+/**
+\brief wrapper for qsort() specific to integer arrays
+*/
+void integer_sort(int *x, int N);
+
+void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB);
 
 #endif /* math_h */

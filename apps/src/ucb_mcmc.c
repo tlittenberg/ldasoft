@@ -39,6 +39,7 @@
 #include <omp.h>
 
 #include <glass_utils.h>
+#include <glass_noise.h>
 #include <glass_ucb.h>
 
 static void print_usage()
@@ -78,8 +79,10 @@ int main(int argc, char *argv[])
     struct Source *inj   = malloc(sizeof(struct Source));
     
     /* Parse command line and set defaults/flags */
-    parse_data_args(argc,argv,data,orbit,flags,chain);
+    sprintf(data->basis,"fourier");
+    parse_data_args(argc,argv,data,orbit,flags,chain,"fourier");
     parse_ucb_args(argc,argv,flags);
+
     if(flags->help) print_usage();
 
     int NC = chain->NC;
@@ -98,7 +101,7 @@ int main(int argc, char *argv[])
 
     /* Initialize data structures */
     alloc_data(data, flags);
-    
+
     /* Initialize LISA orbit model */
     initialize_orbit(data, orbit, flags);
 
@@ -235,27 +238,32 @@ int main(int argc, char *argv[])
                 struct Model *model_ptr = model[chain->index[ic]];
                 struct Model *trial_ptr = trial[chain->index[ic]];
                 copy_model(model_ptr,trial_ptr);
-                
+
                 for(int steps=0; steps < 100; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
                     if(gsl_rng_uniform(chain->r[ic])<0.9 && flags->rj)
                     {
-                        galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                        ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     }
                     //fixed dimension parameter updates
                     else
+                    {
                         for(int n=0; n<model_ptr->Nlive; n++)
-                            galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                          
+                            ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    }     
                 }//loop over MCMC steps
-                                                
+
+
                 if( (flags->strainData || flags->simNoise) && !flags->psd)
                     noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
 
+
                 //update fisher matrix for each chain
                 for(int n=0; n<model_ptr->Nlive; n++)
-                    galactic_binary_fisher(orbit, data, model_ptr->source[n], data->noise);
+                    ucb_fisher(orbit, data, model_ptr->source[n], data->noise);
+
+
                 
             }// end (parallel) loop over chains
             
@@ -316,7 +324,6 @@ int main(int argc, char *argv[])
             #pragma omp barrier
             
         }// end MCMC loop
-        
     }// End of parallelization
     
     //store final state of sampler

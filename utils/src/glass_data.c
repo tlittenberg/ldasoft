@@ -183,10 +183,7 @@ void alloc_data(struct Data *data, struct Flags *flags)
 {
     int NMCMC = flags->NMCMC;
         
-    data->logN = log((double)(2*data->N*data->Nchannel));
-    
-    //data->inj = malloc(sizeof(struct Source));
-    //alloc_source(data->inj,data->N,data->Nchannel,data->NP);
+    data->logN = log((double)(data->N*data->Nchannel));
     
     data->tdi   = malloc(sizeof(struct TDI));
     data->raw   = malloc(sizeof(struct TDI));
@@ -194,15 +191,25 @@ void alloc_data(struct Data *data, struct Flags *flags)
             
     alloc_tdi(data->tdi, data->N, data->Nchannel);
     alloc_tdi(data->raw, data->N, data->Nchannel);
-    alloc_noise(data->noise, data->N, data->Nchannel);
+    if(!strcmp(data->basis,"fourier")) alloc_noise(data->noise, data->NFFT, data->Nchannel);
+    if(!strcmp(data->basis,"wavelet")) alloc_noise(data->noise, data->N, data->Nchannel);
     
     //reconstructed signal model
     int i_re,i_im;
-    data->h_rec = malloc(data->N*2*sizeof(double **));
-    data->h_res = malloc(data->N*2*sizeof(double **));
-    data->r_pow = malloc(data->N*sizeof(double **));
-    data->h_pow = malloc(data->N*sizeof(double **));
-    data->S_pow = malloc(data->N*sizeof(double **));
+    data->h_rec = malloc(data->N*sizeof(double **));
+    data->h_res = malloc(data->N*sizeof(double **));
+    if(!strcmp(data->basis,"fourier"))
+    {
+        data->r_pow = malloc(data->NFFT*sizeof(double **));
+        data->h_pow = malloc(data->NFFT*sizeof(double **));
+        data->S_pow = malloc(data->NFFT*sizeof(double **));
+    }
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        data->r_pow = malloc(data->N*sizeof(double **));
+        data->h_pow = malloc(data->N*sizeof(double **));
+        data->S_pow = malloc(data->N*sizeof(double **));
+    }    
     
     //number of waveform samples to save
     data->Nwave=100;
@@ -210,46 +217,70 @@ void alloc_data(struct Data *data, struct Flags *flags)
     //downsampling rate of post-burn-in samples
     data->downsample = NMCMC/data->Nwave;
     
-    for(int i=0; i<data->N; i++)
+    if(!strcmp(data->basis,"fourier"))
     {
-        i_re = i*2;
-        i_im = i_re+1;
-        
-        data->S_pow[i]    = malloc(data->Nchannel*sizeof(double *));
-        data->h_pow[i]    = malloc(data->Nchannel*sizeof(double *));
-        data->r_pow[i]    = malloc(data->Nchannel*sizeof(double *));
-        data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double *));
-        data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double *));
-        data->h_res[i_re] = malloc(data->Nchannel*sizeof(double *));
-        data->h_res[i_im] = malloc(data->Nchannel*sizeof(double *));
-        for(int n=0; n<data->Nchannel; n++)
+        for(int i=0; i<data->NFFT; i++)
         {
-            data->S_pow[i][n]    = calloc(data->Nwave,sizeof(double));
-            data->h_pow[i][n]    = calloc(data->Nwave,sizeof(double));
-            data->r_pow[i][n]    = calloc(data->Nwave,sizeof(double));
-            data->h_rec[i_re][n] = calloc(data->Nwave,sizeof(double));
-            data->h_rec[i_im][n] = calloc(data->Nwave,sizeof(double));
-            data->h_res[i_re][n] = calloc(data->Nwave,sizeof(double));
-            data->h_res[i_im][n] = calloc(data->Nwave,sizeof(double));
+            i_re = i*2;
+            i_im = i_re+1;
+            
+            data->S_pow[i]    = malloc(data->Nchannel*sizeof(double *));
+            data->h_pow[i]    = malloc(data->Nchannel*sizeof(double *));
+            data->r_pow[i]    = malloc(data->Nchannel*sizeof(double *));
+            data->h_rec[i_re] = malloc(data->Nchannel*sizeof(double *));
+            data->h_rec[i_im] = malloc(data->Nchannel*sizeof(double *));
+            data->h_res[i_re] = malloc(data->Nchannel*sizeof(double *));
+            data->h_res[i_im] = malloc(data->Nchannel*sizeof(double *));
+            for(int n=0; n<data->Nchannel; n++)
+            {
+                data->S_pow[i][n]    = calloc(data->Nwave,sizeof(double));
+                data->h_pow[i][n]    = calloc(data->Nwave,sizeof(double));
+                data->r_pow[i][n]    = calloc(data->Nwave,sizeof(double));
+                data->h_rec[i_re][n] = calloc(data->Nwave,sizeof(double));
+                data->h_rec[i_im][n] = calloc(data->Nwave,sizeof(double));
+                data->h_res[i_re][n] = calloc(data->Nwave,sizeof(double));
+                data->h_res[i_im][n] = calloc(data->Nwave,sizeof(double));
+            }
+        }
+    }
+
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        for(int i=0; i<data->N; i++)
+        {
+            
+            data->S_pow[i] = malloc(data->Nchannel*sizeof(double *));
+            data->h_pow[i] = malloc(data->Nchannel*sizeof(double *));
+            data->r_pow[i] = malloc(data->Nchannel*sizeof(double *));
+            data->h_rec[i] = malloc(data->Nchannel*sizeof(double *));
+            data->h_res[i] = malloc(data->Nchannel*sizeof(double *));
+            for(int n=0; n<data->Nchannel; n++)
+            {
+                data->S_pow[i][n] = calloc(data->Nwave,sizeof(double));
+                data->h_pow[i][n] = calloc(data->Nwave,sizeof(double));
+                data->r_pow[i][n] = calloc(data->Nwave,sizeof(double));
+                data->h_rec[i][n] = calloc(data->Nwave,sizeof(double));
+                data->h_res[i][n] = calloc(data->Nwave,sizeof(double));
+            }
         }
     }
     
     //Spectrum proposal
     data->p = calloc(data->N,sizeof(double));
 
-    //catalog of previously detected sources
-    //data->catalog = malloc(sizeof(struct Catalog));
-
+    // Setup wavelet basis
+    data->wdm = malloc(sizeof(struct Wavelets));
+    initialize_wavelet(data->wdm, data->T);
 }
 
-void alloc_noise(struct Noise *noise, int NFFT, int Nchannel)
+void alloc_noise(struct Noise *noise, int N, int Nchannel)
 {
-    noise->N = NFFT;
+    noise->N = N;
     noise->Nchannel = Nchannel;
     
     noise->eta = calloc(Nchannel,sizeof(double));
 
-    noise->f   = calloc(NFFT,sizeof(double));
+    noise->f = calloc(N,sizeof(double));
 
     noise->C    = malloc(Nchannel*sizeof(double **));
     noise->invC = malloc(Nchannel*sizeof(double **));
@@ -262,16 +293,16 @@ void alloc_noise(struct Noise *noise, int NFFT, int Nchannel)
         
         for(int j=0; j<Nchannel; j++)
         {
-            noise->C[i][j]    = calloc(NFFT,sizeof(double));
-            noise->invC[i][j] = calloc(NFFT,sizeof(double));
+            noise->C[i][j]    = calloc(N,sizeof(double));
+            noise->invC[i][j] = calloc(N,sizeof(double));
         }
     }
 
-    noise->detC = calloc(NFFT,sizeof(double));
-    noise->transfer = calloc(NFFT,sizeof(double));
+    noise->detC     = calloc(N,sizeof(double));
+    noise->transfer = calloc(N,sizeof(double));
     
     int n;
-    for(n=0; n<NFFT; n++)
+    for(n=0; n<N; n++)
     {
         for(int i=0; i<Nchannel; i++) noise->C[i][i][n] = 1.0;
         for(int i=0; i<Nchannel; i++)
@@ -306,16 +337,19 @@ void alloc_calibration(struct Calibration *calibration)
 void copy_data(struct Data *origin, struct Data *copy)
 {
     memcpy(copy->format, origin->format, sizeof(origin->format));
+    memcpy(copy->basis, origin->basis, sizeof(origin->basis));
     memcpy(copy->fileName, origin->fileName, sizeof(origin->fileName));
     copy->T=origin->T;
     copy->sqT=origin->sqT;
     copy->N=origin->N;
+    copy->NFFT=origin->NFFT;
     copy->Nchannel=origin->Nchannel;
     copy->qpad=origin->qpad;
     copy->cseed=origin->cseed;
     copy->nseed=origin->nseed;
     copy->iseed=origin->iseed;
-    copy->t0   = origin->t0;
+    copy->t0=origin->t0;
+    //TODO: need copy_wavelet
 }
 
 void copy_noise(struct Noise *origin, struct Noise *copy)
@@ -467,7 +501,7 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags)
     double *T = malloc(N*sizeof(double));
 
     /* Allocate data->tdi structure for Fourier transform output */
-    alloc_tdi(tdi, N/2, N_TDI_CHANNELS);
+    alloc_tdi(tdi, N, N_TDI_CHANNELS);
     tdi->delta = 1./Tobs;
 
     /* Select requested time segment */
@@ -665,7 +699,7 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags)
         
         /* Allocate data->tdi structure for Fourier transform output */
         struct TDI *tdi_gal = malloc(sizeof(struct TDI));
-        alloc_tdi(tdi_gal, N/2, N_TDI_CHANNELS);
+        alloc_tdi(tdi_gal, N, N_TDI_CHANNELS);
         tdi_gal->delta = 1./Tobs;
 
         /* unpack GSL-formatted arrays to the way GLASS expects them */
@@ -747,7 +781,7 @@ void ReadASCII(struct Data *data, struct TDI *tdi)
     Nsamples--;
     
     //load full dataset into TDI structure
-    alloc_tdi(tdi, Nsamples, 3);
+    alloc_tdi(tdi, 2*Nsamples, 3);
     
     for(int n=0; n<Nsamples; n++)
     {
@@ -780,12 +814,12 @@ void ReadData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
     /* select frequency segment */
     
     //get max and min samples
-    data->fmax = data->fmin + data->N/data->T;
+    data->fmax = data->fmin + data->NFFT/data->T;
     data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
+    data->qmax = data->qmin+data->NFFT;
     
     //store frequency segment in TDI structure
-    for(int n=0; n<2*data->N; n++)
+    for(int n=0; n<data->N; n++)
     {
         int m = data->qmin*2+n;
         tdi->X[n] = tdi_full->X[m];
@@ -816,7 +850,7 @@ void GetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags)
     //if you are simulating/fitting the noise
     if(!flags->psd)
     {
-        for(int n=0; n<data->N; n++)
+        for(int n=0; n<data->NFFT; n++)
         {
             double f = data->fmin + (double)(n)/data->T;
             data->noise->f[n] = f;
@@ -920,11 +954,11 @@ void GetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags)
         for(int l=0; l<lines; l++) fscanf(psdFile,"%lg %lg %lg",&f[l],&SnA[l],&SnE[l]);
         
         //interpolate input psd onto segment grid
-        double *fint = malloc(data->N*sizeof(double));
-        for(int n=0; n<data->N; n++) fint[n] = data->fmin + (double)(n)/data->T;
+        double *fint = malloc(data->NFFT*sizeof(double));
+        for(int n=0; n<data->NFFT; n++) fint[n] = data->fmin + (double)(n)/data->T;
 
-        CubicSplineGSL(lines, f, SnA, data->N, fint, data->noise->C[0][0]);
-        CubicSplineGSL(lines, f, SnE, data->N, fint, data->noise->C[1][1]);
+        CubicSplineGSL(lines, f, SnA, data->NFFT, fint, data->noise->C[0][0]);
+        CubicSplineGSL(lines, f, SnE, data->NFFT, fint, data->noise->C[1][1]);
         
         free(f);
         free(SnA);
@@ -960,7 +994,7 @@ void AddNoise(struct Data *data, struct TDI *tdi)
     
     
     
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         for(int i=0; i<data->Nchannel; i++)
         {
@@ -1019,15 +1053,99 @@ void AddNoise(struct Data *data, struct TDI *tdi)
     free(C);
 }
 
+void AddNoiseWavelet(struct Data *data, struct TDI *tdi)
+{
+    
+    printf("   ...adding Gaussian noise realization\n");
+    
+    //set RNG for noise
+    const gsl_rng_type *T = gsl_rng_default;
+    gsl_rng *r = gsl_rng_alloc(T);
+    gsl_rng_env_setup();
+    gsl_rng_set (r, data->nseed);
+    
+    double n[data->Nchannel];
+    double u[data->Nchannel];
+    
+    //get LU decomposition of covariance matrix
+    double **L = malloc(data->Nchannel*sizeof(double*));
+    double **C = malloc(data->Nchannel*sizeof(double*));
+    for(int i=0; i<data->Nchannel; i++)
+    {
+        L[i] = malloc(data->Nchannel*sizeof(double));
+        C[i] = malloc(data->Nchannel*sizeof(double));
+    }
+    
+    
+    int k;
+    struct Wavelets *wdm = data->wdm;
+    for(int i=0; i<wdm->NT; i++)
+    {
+        for(int j=data->qmin; j<data->qmax; j++)
+        {
+            wavelet_pixel_to_index(wdm,i,j,&k);
+            k-=data->wdm->kmin;
+
+            for(int a=0; a<data->Nchannel; a++)
+            {
+                u[a] = gsl_ran_gaussian (r,1);
+                n[a] = 0.0;
+            }
+    
+            // make sure both diagonals of the covariance matrix are filled
+            for(int a=0; a<data->Nchannel; a++)
+                for(int b=a; b<data->Nchannel; b++)
+                    C[a][b] = C[b][a] = data->noise->C[a][b][k];
+
+
+            cholesky_decomp(C, L, data->Nchannel);
+
+            // n = Lu
+            for(int a=0; a<data->Nchannel; a++)
+            {
+                for(int b=0; b<data->Nchannel; b++)
+                {
+                    n[a] += L[a][b]*u[b];
+                }
+            }
+            
+            switch(data->Nchannel)
+            {
+                case 1:
+                    tdi->X[k] += n[0];
+                    break;
+                case 2:
+                    tdi->A[k] += n[0];
+                    tdi->E[k] += n[1];
+                    break;
+                case 3:
+                    tdi->X[k] += n[0];
+                    tdi->Y[k] += n[1];
+                    tdi->Z[k] += n[2];
+                    break;
+            }
+        }
+    }
+
+    gsl_rng_free(r);
+    for(int i=0; i<data->Nchannel; i++)
+    {
+        free(L[i]);
+        free(C[i]);
+    }
+    free(L);
+    free(C);
+}
+
 void SimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 {
     if(!flags->quiet) fprintf(stdout,"\n==== SimulateData ====\n");
     struct TDI *tdi = data->tdi;
 
     //get max and min samples
-    data->fmax = data->fmin + data->N/data->T;
+    data->fmax = data->fmin + data->NFFT/data->T;
     data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
+    data->qmax = data->qmin+data->NFFT;
 
     //Get noise spectrum for data segment
     GetNoiseModel(data,orbit,flags);
@@ -1042,25 +1160,42 @@ void SimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
 
 void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
 {
+    int k;
     FILE *fptr;
     char power_filename[256];
     sprintf(power_filename,"%s/power_data.dat",data->dataDir);
     fptr=fopen(power_filename,"w");
     
-    for(int i=0; i<data->N; i++)
+    if(!strcmp("fourier",data->basis))
     {
-        double f = (double)(i+data->qmin)/data->T;
-        switch(data->Nchannel)
+        for(int i=0; i<data->NFFT; i++)
         {
-            case 1:
-                fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
-                break;
-            case 2:
-                fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-                break;
-            case 3:
-                fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1], tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
-                break;
+            double f = (double)(i+data->qmin)/data->T;
+            switch(data->Nchannel)
+            {
+                case 1:
+                    fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                    break;
+                case 2:
+                    fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                    break;
+                case 3:
+                    fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1], tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                    break;
+            }
+        }
+    }
+    if(!strcmp("wavelet",data->basis))
+    {
+        for(int j=data->qmin; j<data->qmax; j++)
+        {
+            for(int i=0; i<data->wdm->NT; i++)
+            {
+                wavelet_pixel_to_index(data->wdm,i,j,&k);
+                k-=data->wdm->kmin;
+                fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", i*data->wdm->dt, j*data->wdm->df,tdi->X[k]*tdi->X[k], tdi->Y[k]*tdi->Y[k], tdi->Z[k]*tdi->Z[k]);   
+            }
+            fprintf(fptr,"\n");
         }
     }
     fclose(fptr);
@@ -1068,46 +1203,41 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
     char strain_filename[256];
     sprintf(strain_filename,"%s/data.dat",data->dataDir);
     fptr=fopen(strain_filename,"w");
-    
-    for(int i=0; i<data->N; i++)
+
+    if(!strcmp("fourier",data->basis))
     {
-        double f = (double)(i+data->qmin)/data->T;
-        switch(data->Nchannel)
+        for(int i=0; i<data->NFFT; i++)
         {
-            case 1:
-                fprintf(fptr,"%.12g %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
-                break;
-            case 2:
-                fprintf(fptr,"%.12g %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
-                break;
-            case 3:
-                fprintf(fptr,"%.12g %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
-                break;
+            double f = (double)(i+data->qmin)/data->T;
+            switch(data->Nchannel)
+            {
+                case 1:
+                    fprintf(fptr,"%.12g %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                    break;
+                case 2:
+                    fprintf(fptr,"%.12g %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                    break;
+                case 3:
+                    fprintf(fptr,"%.12g %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                    break;
+            }
         }
     }
+    if(!strcmp("wavelet",data->basis))
+    {
+        for(int j=data->qmin; j<data->qmax; j++)
+        {
+            for(int i=0; i<data->wdm->NT; i++)
+            {
+                wavelet_pixel_to_index(data->wdm,i,j,&k);
+                k-=data->wdm->kmin;
+                fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", i*data->wdm->dt, j*data->wdm->df,tdi->X[k], tdi->Y[k], tdi->Z[k]);   
+            }
+            fprintf(fptr,"\n");
+        }
+    }
+
     fclose(fptr);
-    
-//    char noise_filename[256];
-//    sprintf(noise_filename,"%s/power_noise.dat",data->dataDir);
-//    fptr=fopen(noise_filename,"w");
-//    
-//    for(int i=0; i<data->N; i++)
-//    {
-//        double f = (double)(i+data->qmin)/data->T;
-//        switch(data->Nchannel)
-//        {
-//            case 1:
-//                fprintf(fptr,"%.12g %lg\n", f, data->noise->C[0][0][i]);
-//                break;
-//            case 2:
-//                fprintf(fptr,"%.12g %lg %lg\n", f, data->noise->C[0][0][i], data->noise->C[1][1][i]);
-//                break;
-//            case 3:
-//                fprintf(fptr,"%.12g %lg %lg %lg\n", f, data->noise->C[0][0][i], data->noise->C[1][1][i], data->noise->C[2][2][i]);
-//                break;
-//        }
-//    }
-//    fclose(fptr);
 }
 
 void print_glass_usage()
@@ -1184,7 +1314,7 @@ void print_glass_usage()
     fprintf(stdout,"\n");
 }
 
-void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain)
+void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, char basis[])
 {
     //copy argv since getopt permutes order
     char **argv_copy=malloc((argc+1) * sizeof *argv_copy);
@@ -1225,11 +1355,12 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
      optional support for 'frequency' a la LDCs
      */
     sprintf(data->format,"sangria");
-        
+    sprintf(data->basis,"%s",basis);
+
     data->T        = 31457280; /* one "mldc years" at 15s sampling */
     data->t0       = 0.0; /* start time of data segment in seconds */
     data->sqT      = sqrt(data->T);
-    data->N        = 512;
+    data->NFFT     = 512;
     data->Nchannel = 3; //1=X, 2=AE, 3=XYZ
     data->qpad     = 0;
     data->fmin     = 1e-4; //Hz
@@ -1237,7 +1368,11 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     data->cseed = 150914;
     data->nseed = 151226;
     data->iseed = 151012;
-        
+
+    if(!strcmp(data->basis,"fourier")) data->N = data->NFFT*2;
+    if(!strcmp(data->basis,"wavelet")) data->N = (int)ceil(data->T/WAVELET_DURATION);
+
+
     //Specifying the expected options
     static struct option long_options[] =
     {
@@ -1293,9 +1428,9 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
         {
                 
             case 0:
-                if(strcmp("samples",     long_options[long_index].name) == 0) data->N           = atoi(optarg);
+                if(strcmp("samples",     long_options[long_index].name) == 0) data->NFFT        = atoi(optarg);
                 if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad        = atoi(optarg);
-                if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0       = (double)atof(optarg);
+                if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0          = (double)atof(optarg);
                 if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
                 if(strcmp("chainseed",   long_options[long_index].name) == 0) data->cseed       = (long)atoi(optarg);
                 if(strcmp("noiseseed",   long_options[long_index].name) == 0) data->nseed       = (long)atoi(optarg);
@@ -1396,24 +1531,48 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     }
     
     //override size of data if fmax was requested
-    if(set_fmax_flag) data->N = (int)floor((data->fmax - data->fmin)*data->T);
+    if(set_fmax_flag) data->NFFT = (int)floor((data->fmax - data->fmin)*data->T);
     
     //pad data
-    data->N += 2*data->qpad;
+    data->NFFT += 2*data->qpad;
     data->fmin -= data->qpad/data->T;
         
     //map fmin to nearest bin
-    data->fmin = floor(data->fmin*data->T)/data->T;
-    data->fmax = data->fmin + (double)data->N/data->T;
+    if(!strcmp(data->basis,"fourier"))
+    {
+        data->fmin = floor(data->fmin*data->T)/data->T;
+        data->fmax = data->fmin + (double)data->NFFT/data->T;
+    }
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        data->fmin = floor(data->fmin/WAVELET_BANDWIDTH)*WAVELET_BANDWIDTH;
+        if(!set_fmax_flag) data->fmax = data->fmin + WAVELET_BANDWIDTH;            
+    }
 
     //calculate helper quantities for likelihood normalizations
     data->logfmin   = log(data->fmin);
     data->sum_log_f = 0.0;
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         data->sum_log_f += log(data->fmin + (double)n/data->T);
     }
+
+    data->N = data->NFFT*2;
     
+    //data size for wavelets
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        int NT = (int)ceil(data->T / WAVELET_DURATION);
+        int min_layer = (int)floor(data->fmin / WAVELET_BANDWIDTH);
+        int max_layer = (int)ceil(data->fmax / WAVELET_BANDWIDTH);
+        int NF = max_layer - min_layer + 1;
+        data->N = NT*NF;
+
+        data->fmin = min_layer*WAVELET_BANDWIDTH;
+        data->fmax = (max_layer+1)*WAVELET_BANDWIDTH;
+    }   
+
+
     //Print version control
 //    sprintf(filename,"glass.log");
 //    FILE *runlog = fopen(filename,"w");
@@ -1424,7 +1583,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
 //    print_run_settings(argc, argv, data, orbit, flags, runlog);
     
 //    fclose(runlog);
-    
+
     //reset opt counter
     optind = 0;
 

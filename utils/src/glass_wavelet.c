@@ -17,7 +17,7 @@
  *  MA  02111-1307  USA
  */
 
-#include "glass_wavelet.h"
+#include "glass_utils.h"
 
 static double phitilde(double om, double insDOM, double A, double B)
 {
@@ -95,7 +95,7 @@ static void wavelet(struct Wavelets *wdm, int m, double *wave)
     
 }
 
-void wavelet_window(struct Wavelets *wdm)
+static void wavelet_window(struct Wavelets *wdm)
 {
     double *DX = (double*)malloc(sizeof(double)*(2*wdm->N));
     
@@ -128,202 +128,13 @@ void wavelet_window(struct Wavelets *wdm)
     }
     
     wdm->norm = 0.0;
-    for(int i=0; i < wdm->N; i++) wdm->norm += wdm->window[i]*wdm->window[i]*wdm->dt;
+    for(int i=0; i < wdm->N; i++) wdm->norm += wdm->window[i]*wdm->window[i]*wdm->cadence;
     wdm->norm = sqrt(wdm->norm);
 
     free(DX);
 }
 
-void initialize_wavelet(struct Wavelets *wdm, int N, int NF, double dt)
-{
-    //N = total number of data samples
-    //NF = number of frequency layers
-    //dt = sampling cadence
-    
-    wdm->NF = NF;//1024;
-    wdm->NT = N/NF;//16384;
-    wdm->dt = dt;//7.5;
-    wdm->df = 1.0/(2.0*wdm->dt*(double)(wdm->NF));
-
-    wdm->frequency_steps = 400;
-    wdm->fdot_steps = 1;
-    wdm->d_fdot = 0.1;
-    wdm->oversample = 16.0;
-
-    wdm->N = wdm->oversample * 2 * wdm->NF;
-    wdm->T = wdm->N*wdm->dt;
-
-    wdm->Omega = M_PI/wdm->dt;
-    wdm->dOmega = wdm->Omega/(double)wdm->NF;
-    wdm->domega = PI2/wdm->T;
-    wdm->inv_root_dOmega = 1.0/sqrt(wdm->dOmega);
-    wdm->B = wdm->Omega/(double)(2*wdm->NF);
-    wdm->A = (wdm->dOmega-wdm->B)/2.0;
-    wdm->BW = (wdm->A+wdm->B)/M_PI;
-    wdm->deltaf = wdm->BW/(double)(wdm->frequency_steps);
-
-    wdm->fdot = malloc(wdm->fdot_steps*sizeof(double));
-
-    wdm->table = malloc(wdm->fdot_steps*sizeof(gsl_vector *));
-
-    double fdot_step = wdm->df/wdm->T*wdm->d_fdot; // sets the f-dot increment
-            
-    for(int n=0; n<wdm->fdot_steps; n++)
-    {
-        wdm->fdot[n] = (double)(n) * fdot_step;
-        
-        size_t N = (int)((wdm->BW+wdm->fdot[n]*wdm->T)/wdm->deltaf);
-        if(N%2 != 0) N++; // makes sure it is an even number
-        wdm->table[n] =  gsl_vector_alloc(2*N);
-    }
-    
-    //stores window function and normalization
-    wavelet_window(wdm);
-    
-    //stores lookup table of wavelet basis functions
-    wavelet_lookup_table(wdm);
-}
-
-void wavelet_index_to_pixel(struct Wavelets *wdm, int *i, int *j, int k)
-{
-    int NT = wdm->NT;
-    
-    //which frequency
-    *j = k/NT; //scary integer math
-    
-    //which time
-    *i = k - (*j)*NT;
-}
-
-void wavelet_pixel_to_index(struct Wavelets *wdm, int i, int j, int *k)
-{
-    int NT = wdm->NT;
-    
-    *k = j*NT + i;
-}
-
-void wavelet_transform(struct Wavelets *wdm, double *data)
-{
-    //array index for tf pixel
-    int k;
-    
-    //total data size
-    int ND = wdm->NT*wdm->NF;
-    
-    //windowed data packets
-    double *wdata = (double*)malloc(sizeof(double)*(wdm->N));
-    
-    //wavelet wavepacket transform of the signal
-    double **wave = malloc(wdm->NT*sizeof(double *));
-    for(int n=0; n<wdm->NT; n++) wave[n] = malloc(wdm->NF*sizeof(double));
-    
-    //normalization factor
-    double fac = M_SQRT2*wdm->dt/wdm->norm;
-    
-    //do the wavelet transform by convolving data w/ window and iFFT
-    for(int i=0; i<wdm->NT; i++)
-    {
-        
-        for(int j=0; j<wdm->N; j++)
-        {
-            int n = i*wdm->NF - wdm->N/2 + j;
-            if(n < 0)   n += ND;  // periodically wrap the data
-            if(n >= ND) n -= ND;  // periodically wrap the data
-            wdata[j] = data[n] * wdm->window[j];  // apply the window
-        }
-        
-        gsl_fft_real_radix2_transform(wdata, 1, wdm->N);
-        
-        //unpack Fourier transform
-        wave[i][0] = M_SQRT2*fac*wdata[0];
-        for(int j=1; j<wdm->NF; j++)
-        {
-            if((i+j)%2 ==0)
-                wave[i][j] = fac*wdata[j*wdm->oversample];
-            else
-                wave[i][j] = -fac*wdata[wdm->N-j*wdm->oversample];
-        }
-    }
-    
-    //replace data vector with wavelet transform mapped from pixel to index
-    for(int i=0; i<wdm->NT; i++)
-    {
-        for(int j=0; j<wdm->NF; j++)
-        {
-            //get index number k for tf pixel {i,j}
-            wavelet_pixel_to_index(wdm,i,j,&k);
-            
-            //replace data array
-            data[k] = wave[i][j];
-        }
-    }
-    
-    free(wdata);
-    for(int n=0; n<wdm->NT; n++) free(wave[n]);
-    free(wave);
-}
-
-void wavelet_transfrom_from_table(struct Wavelets *wdm, double BW, double *Phase, double *freq, double *Amp, int *list, double *data)
-{
-
-    int ii, jj, kk, mm;
-    int kmin, kmax;
-    double dx;
-    double f, fmid, fsam;
-    double c, s, x, y, z;
-    double BWon2 = BW/2.;
-    
-    mm = 0;
-    
-    for(int j=0; j< wdm->NT; j++)
-    {
-        f = freq[j];
-        c = Amp[j]*cos(Phase[j]);
-        s = Amp[j]*sin(Phase[j]);
-        
-        // lowest frequency layer
-        kmin = (int)(ceil((f-BWon2)/wdm->df));
-        
-        // highest frequency layer
-        kmax = (int)(floor((f+BWon2)/wdm->df));
-        
-        for(int k=kmin; k<=kmax; k++)
-        {
-            
-            // central frequency
-            fmid = (double)(k)*wdm->df;
-            
-            x = (f-(fmid+0.5*wdm->deltaf))/wdm->deltaf;
-            ii = 1;
-            if(x < 0.0)  ii = -1;
-            kk = ii*(int)(floor(fabs(x)));
-            fsam = fmid+((double)(kk)+0.5)*wdm->deltaf;
-            dx = (f-fsam)/wdm->deltaf; // used for linear interpolation
-            
-            // interpolate over frequency
-            jj = kk+wdm->frequency_steps/2;
-            
-            y = (1.0-dx)*gsl_vector_get(wdm->table[0],2*jj)   + dx*gsl_vector_get(wdm->table[0],2*(jj+1));
-            z = (1.0-dx)*gsl_vector_get(wdm->table[0],2*jj+1) + dx*gsl_vector_get(wdm->table[0],2*(jj+1)+1);
-            
-            if((j+k)%2 == 0)
-            {
-                data[mm] = (c*y-s*z);
-            }
-            else
-            {
-                data[mm] = -(c*z+s*y);
-            }
-            list[mm] = j+k*wdm->NT;
-            mm++;
-            
-        }  // end loop over frequency layers
-        
-    }
-    
-}
-
-void wavelet_lookup_table(struct Wavelets *wdm)
+static void wavelet_lookup_table(struct Wavelets *wdm)
 {
     double t,f,phase;
     double f0;
@@ -366,10 +177,10 @@ void wavelet_lookup_table(struct Wavelets *wdm)
             
             for(int i=0; i<wdm->N; i++)
             {
-                t = ((double)(i-wdm->N/2))*wdm->dt;
+                t = ((double)(i-wdm->N/2))*wdm->cadence;
                 phase = PI2*f*t + M_PI*wdm->fdot[j]*t*t;
-                real_coeff += wave[i]*cos(phase)*wdm->dt;
-                imag_coeff += wave[i]*sin(phase)*wdm->dt;
+                real_coeff += wave[i]*cos(phase)*wdm->cadence;
+                imag_coeff += wave[i]*sin(phase)*wdm->cadence;
             }
             gsl_vector_set(wdm->table[j],2*n,real_coeff);
             gsl_vector_set(wdm->table[j],2*n+1,imag_coeff);
@@ -381,5 +192,309 @@ void wavelet_lookup_table(struct Wavelets *wdm)
     
     free(wave);
 }
+void initialize_wavelet(struct Wavelets *wdm, double T)
+{
+    fprintf(stdout,"\n======= Initialize Wavelet Basis =======\n");
+    //N = total number of data samples
+    //NF = number of frequency layers
+    //dt = sampling cadence
+    
+    wdm->NT = (int)ceil(T/WAVELET_DURATION);
+    wdm->NF = WAVELET_DURATION/LISA_CADENCE;
+    wdm->cadence = LISA_CADENCE;//7.5;
+    wdm->df = WAVELET_BANDWIDTH;
+    wdm->dt = WAVELET_DURATION;
+
+    wdm->frequency_steps = 400;
+    wdm->fdot_steps = 4;
+    wdm->d_fdot = 0.1;
+    wdm->oversample = 16.0;
+
+    wdm->N = wdm->oversample * 2 * wdm->NF;
+    wdm->T = wdm->N*wdm->cadence;
+
+    wdm->Omega = M_PI/wdm->cadence;
+    wdm->dOmega = wdm->Omega/(double)wdm->NF;
+    wdm->domega = PI2/wdm->T;
+    wdm->inv_root_dOmega = 1.0/sqrt(wdm->dOmega);
+    wdm->B = wdm->Omega/(double)(2*wdm->NF);
+    wdm->A = (wdm->dOmega-wdm->B)/2.0;
+    wdm->BW = (wdm->A+wdm->B)/M_PI;
+    wdm->deltaf = wdm->BW/(double)(wdm->frequency_steps);
+
+    wdm->fdot = malloc(wdm->fdot_steps*sizeof(double));
+
+    wdm->table   = malloc(wdm->fdot_steps*sizeof(gsl_vector *));
+    wdm->n_table = malloc(wdm->fdot_steps*sizeof(int));
+
+    double fdot_step = wdm->df/wdm->T*wdm->d_fdot; // sets the f-dot increment
+            
+    for(int n=0; n<wdm->fdot_steps; n++)
+    {
+        wdm->fdot[n] = (double)(n) * fdot_step;
+        
+        size_t N = (int)((wdm->BW+wdm->fdot[n]*wdm->T)/wdm->deltaf);
+        if(N%2 != 0) N++; // makes sure it is an even number
+        wdm->n_table[n] = N;
+        wdm->table[n] =  gsl_vector_alloc(2*N);
+    }
+    
+    //stores window function and normalization
+    wavelet_window(wdm);
+    
+    //stores lookup table of wavelet basis functions
+    wavelet_lookup_table(wdm);
+
+    //set defaults for min and maximum pixels
+    wavelet_pixel_to_index(wdm,0,1,&wdm->kmin);         //first pixel of second layer
+    wavelet_pixel_to_index(wdm,0,wdm->NF-1,&wdm->kmax); //first pixel of last layer
+
+    fprintf(stdout,"Number of time pixels:        %i\n", wdm->NT);
+    fprintf(stdout,"Duration of time pixels:      %g [hr]\n", wdm->dt/3600);
+    fprintf(stdout,"Number of frequency layers:   %i\n", wdm->NF);
+    fprintf(stdout,"Bandwidth of frequency layer: %g [uHz]\n", wdm->df*1e6);
+    fprintf(stdout,"\n========================================\n");
+}
+
+void wavelet_index_to_pixel(struct Wavelets *wdm, int *i, int *j, int k)
+{
+    int NT = wdm->NT;
+    
+    //which time
+    *i = k%NT; 
+    
+    //which frequency
+    *j = (k - (*i))/NT; //scary integer math
+}
+
+void wavelet_pixel_to_index(struct Wavelets *wdm, int i, int j, int *k)
+{
+    int NT = wdm->NT;
+    
+    *k = i + j*NT;
+}
+
+void wavelet_transform(struct Wavelets *wdm, double *data)
+{
+    //array index for tf pixel
+    int k;
+    
+    //total data size
+    int ND = wdm->NT*wdm->NF;
+    
+    //windowed data packets
+    double *wdata = double_vector(wdm->N);
+
+    //wavelet wavepacket transform of the signal
+    double **wave = double_matrix(wdm->NT,wdm->NF);
+    
+    //normalization factor
+    double fac = M_SQRT2*wdm->cadence/wdm->norm;
+    
+    //do the wavelet transform by convolving data w/ window and iFFT
+    for(int i=0; i<wdm->NT; i++)
+    {
+        
+        for(int j=0; j<wdm->N; j++)
+        {
+            int n = i*wdm->NF - wdm->N/2 + j;
+            if(n < 0)   n += ND;  // periodically wrap the data
+            if(n >= ND) n -= ND;  // periodically wrap the data
+            wdata[j] = data[n] * wdm->window[j];  // apply the window
+        }
+        
+        gsl_fft_real_radix2_transform(wdata, 1, wdm->N);
+        
+        //unpack Fourier transform
+        wave[i][0] = M_SQRT2*fac*wdata[0];
+        for(int j=1; j<wdm->NF; j++)
+        {
+            if((i+j)%2 ==0)
+                wave[i][j] = fac*wdata[j*wdm->oversample];
+            else
+                wave[i][j] = -fac*wdata[wdm->N-j*wdm->oversample];
+        }
+    }
+    
+    //replace data vector with wavelet transform mapped from pixel to index
+    for(int i=0; i<wdm->NT; i++)
+    {
+        for(int j=0; j<wdm->NF; j++)
+        {
+            //get index number k for tf pixel {i,j}
+            wavelet_pixel_to_index(wdm,i,j,&k);
+            
+            //replace data array
+            data[k] = wave[i][j];
+        }
+    }
+    
+    free_double_vector(wdata);
+    free_double_matrix(wave,wdm->NT);
+}
+
+void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int Nmax)
+{
+    
+    int n, k, jj, kk;
+    double dx, dy;
+    double f, fdot;
+    double fmid,fsam;
+    double cos_phase, sin_phase, y, z, yy, zz;
+
+    double df = wdm->deltaf;
+
+    // maximum frequency and frequency derivative
+    double f_max    = wdm->df*(wdm->NF-1);
+    double fdot_max = wdm->fdot[wdm->fdot_steps-1];
+    double d_fdot   = wdm->fdot[1]; // f-dot increment
+    
+    int wave_index = 0;
+
+    for(int i=0; i<wdm->NT; i++)
+    {
+        f     = freq[i];
+        fdot  = freqd[i];
+        if(fdot < 0.0) fdot = 0.0;
+        
+        //skip this step if f or fdot violate bounds
+        if(f>=f_max || fdot>=fdot_max) continue;
+        
+        cos_phase = amp[i]*cos(phase[i]);
+        sin_phase = amp[i]*sin(phase[i]);
+        
+        n = (int)floor(fdot/d_fdot);  // lower f-dot layer
+        dy = fdot/d_fdot - n;         // where in the layer
+                                    
+        for(int j=jmin[i]; j<=jmax[i]; j++)
+        {
+        
+            // central frequency
+            fmid = j*wdm->df;
+                
+            kk = (int)floor( ( f - (fmid + 0.5*df) )/df );
+            fsam = fmid + (kk + 0.5)*df;
+            dx = (f - fsam)/df; // used for linear interpolation
+                
+            // interpolate over frequency
+            y = 0.0;
+            z = 0.0;
+            yy = 0.0;
+            zz = 0.0;
+
+            jj = kk + wdm->n_table[n]/2;
+            if(jj>=0 && jj< wdm->n_table[n]-1)
+            {
+                y = (1.0-dx)*gsl_vector_get(wdm->table[n],2*jj)   + dx*gsl_vector_get(wdm->table[n],2*(jj+1));
+                z = (1.0-dx)*gsl_vector_get(wdm->table[n],2*jj+1) + dx*gsl_vector_get(wdm->table[n],2*(jj+1)+1);
+            }
+
+            jj = kk + wdm->n_table[n+1]/2;
+            if(jj >=0 && jj < wdm->n_table[n]-1)
+            {
+                yy = (1.0-dx)*gsl_vector_get(wdm->table[n+1],2*jj)   + dx*gsl_vector_get(wdm->table[n+1],2*(jj+1));
+                zz = (1.0-dx)*gsl_vector_get(wdm->table[n+1],2*jj+1) + dx*gsl_vector_get(wdm->table[n+1],2*(jj+1)+1);
+            }
+                
+            // interpolate over fdot
+            y = (1.0-dy)*y + dy*yy;
+            z = (1.0-dy)*z + dy*zz;
+
+            // make sure pixel is in range
+            wavelet_pixel_to_index(wdm,i,j,&k);
+            if(k>=wdm->kmin && k<wdm->kmax)
+            {  
+                if(wave_index<Nmax-1)
+                {
+                    if((i+j)%2 == 0) wave[wave_index] =  (cos_phase*y - sin_phase*z);
+                    else             wave[wave_index] = -(cos_phase*z + sin_phase*y);
+                    wave_index++;
+                }
+                else
+                {
+                    //fprintf(stderr,"Warning, wavelet_transform_from_table tried accessing array out of bounds\n");
+                    //fflush(stderr);
+                }
+            }
+            
+        } //loop over frequency layers
+        
+    } //loop over time steps
+}
+
+void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, double *freqZ, double *fdotX, double *fdotY, double *fdotZ, int *wavelet_list, int *Nwavelet, int *jmin, int *jmax)
+{
+    
+    int n;
+    int k;
+    int N;
+    double fdot;
+    double fmx, fdmx, dfd, HBW;
+    double fx, fy, fz;
+    double fmax, fmin;
+    
+    double df = wdm->deltaf;
+    double DF = wdm->df;
+    double *fd = wdm->fdot;
+
+    // maximum frequency and frequency derivative
+    fmx  = (double)(wdm->NF-1)*DF;
+    fdmx = fd[wdm->fdot_steps-1];
+    dfd  = fd[1]; // f-dot increment
+    
+    N = 0;
+    for(int i=0; i<wdm->NT; i++)
+    {
+
+        // find smallest fdot
+        fdot = fdotX[i];
+        if(fdotY[i] < fdot) fdot = fdotY[i];
+        if(fdotZ[i] < fdot) fdot = fdotZ[i];
+        if(fdot < 0.0) fdot = 0.0;
+        
+        fx = freqX[i];
+        fy = freqY[i];
+        fz = freqZ[i];
+        
+        // find the largest and smallest frequencies
+        fmin = fx;
+        fmax = fx;
+        if(fy < fmin) fmin = fy;
+        if(fy > fmax) fmax = fy;
+        if(fz < fmin) fmin = fz;
+        if(fz > fmax) fmax = fz;
+        
+        if(fmax < fmx && fdot < fdmx)
+        {
+            // lower f-dot layer
+            n = (int)(floor(fdot/dfd));
+
+            // half bandwidth of layer        
+            HBW = 0.5*(double)(wdm->n_table[n]-1)*df;
+            
+            // lowest frequency layer
+            jmin[i] = (int)ceil((fmin-HBW)/DF);
+            
+            // highest frequency layer
+            jmax[i] = (int)floor((fmax+HBW)/DF);            
+            
+            for(int j=jmin[i]; j<=jmax[i]; j++)
+            {
+                
+                wavelet_pixel_to_index(wdm,i,j,&k);
+                
+                //check that the pixel is in range
+                if(k>=wdm->kmin && k<wdm->kmax)
+                {
+                    wavelet_list[N]=k-wdm->kmin;
+                    N++;
+                }
+            }  // end loop over frequency layers 
+        }  
+    }
+    *Nwavelet = N;
+}
+
+
 
 

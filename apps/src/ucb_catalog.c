@@ -88,7 +88,8 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
             
     data->T        = 31457280; /* two "mldc years" at 15s sampling */
     data->t0       = 0.0;
-    data->N        = 512;
+    data->NFFT     = 512;
+    data->N        = data->NFFT*2;
     data->Nchannel = 2; //1=X, 2=AE
     
     data->cseed = 150914;
@@ -138,7 +139,7 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
         {
                 
             case 0:
-                if(strcmp("samples",     long_options[long_index].name) == 0) data->N        = atoi(optarg);
+                if(strcmp("samples",     long_options[long_index].name) == 0) data->NFFT = atoi(optarg);
                 if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad     = atoi(optarg);
                 if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0       = (double)atof(optarg);
                 if(strcmp("duration",    long_options[long_index].name) == 0) data->T        = (double)atof(optarg);
@@ -198,7 +199,8 @@ void parse_catalog(int argc, char **argv, struct Data *data, struct Orbit *orbit
     }
     
     //pad data
-    data->N += 2*data->qpad;
+    data->NFFT += 2*data->qpad;
+    data->N = data->NFFT*2;
     data->fmin -= data->qpad/data->T;
     
     //map fmin to nearest bin
@@ -251,8 +253,8 @@ static void source_waveform_wrapper(struct Source *source, struct Data *data, st
 {
     source->tdi = malloc(sizeof(struct TDI));
     alloc_tdi(source->tdi,data->N, data->Nchannel);
-    galactic_binary_alignment(orbit, data, source);
-    galactic_binary(orbit, data->format, data->T, data->t0, source->params, UCB_MODEL_NP, source->tdi->X, source->tdi->Y, source->tdi->Z ,source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
+    ucb_alignment(orbit, data, source);
+    ucb_waveform(orbit, data->format, data->T, data->t0, source->params, UCB_MODEL_NP, source->tdi->X, source->tdi->Y, source->tdi->Z ,source->tdi->A, source->tdi->E, source->BW, data->Nchannel);
 }
 
 int main(int argc, char *argv[])
@@ -280,11 +282,11 @@ int main(int argc, char *argv[])
     parse_catalog(argc,argv,data,orbit,flags,NTEMP,&Tcatalog,&NMODE,&NTHIN);
     alloc_data(data, flags);
     data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin + data->N;
+    data->qmax = data->qmin + data->NFFT;
     
     data_old->T    = Tcatalog;
     data_old->qmin = (int)(data->fmin*data_old->T);
-    data_old->qmax = data_old->qmin + data->N;
+    data_old->qmax = data_old->qmin + data->NFFT;
     
     //File containing chain samples
     FILE *chain_file = fopen(data->fileName,"r");
@@ -309,7 +311,7 @@ int main(int argc, char *argv[])
     // Get priors
     /* Load priors as used in MCMC */
     struct Model *model = malloc(sizeof(struct Model));
-    alloc_model(model,flags->DMAX,data->N,data->Nchannel);
+    alloc_model(data,model,flags->DMAX);
     set_uniform_prior(flags, model, data, 1);
     
     /* Reformat for catalog */
@@ -371,7 +373,7 @@ int main(int argc, char *argv[])
     
     struct Noise *noise = NULL;
     noise = malloc(sizeof(struct Noise));
-    alloc_noise(noise, data->N, data->Nchannel);
+    alloc_noise(noise, data->NFFT, data->Nchannel);
     
     //Noise model
     //Get noise spectrum for data segment
@@ -436,10 +438,10 @@ int main(int argc, char *argv[])
         if(!check)
         {
             //Book-keeping of waveform in time-frequency volume
-            galactic_binary_alignment(orbit, data, sample);
+            ucb_alignment(orbit, data, sample);
             
             //calculate waveform model of sample
-            galactic_binary(orbit, data->format, data->T, data->t0, sample->params, UCB_MODEL_NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+            ucb_waveform(orbit, data->format, data->T, data->t0, sample->params, UCB_MODEL_NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
             
             //check frequencies
             int q_sample = (int)floor(sample->f0 * data->T);
@@ -475,10 +477,10 @@ int main(int argc, char *argv[])
             if(!check)
             {
                 //find where the source fits in the measurement band
-                galactic_binary_alignment(orbit, data, sample);
+                ucb_alignment(orbit, data, sample);
                 
                 //calculate waveform model of sample
-                galactic_binary(orbit, data->format, data->T, data->t0, sample->params, UCB_MODEL_NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
+                ucb_waveform(orbit, data->format, data->T, data->t0, sample->params, UCB_MODEL_NP, sample->tdi->X, sample->tdi->Y, sample->tdi->Z, sample->tdi->A, sample->tdi->E, sample->BW, data->Nchannel);
                 
                 double q_sample = sample->f0 * data->T;
                 
@@ -623,10 +625,9 @@ int main(int argc, char *argv[])
         
         struct Source *b=entry->source[0];
         int N = b->tdi->N;
-        int NFFT = 2*N;
-        double *b_A = malloc(NFFT*sizeof(double));
-        double *b_E = malloc(NFFT*sizeof(double));
-        for(int i=0; i<NFFT; i++)
+        double *b_A = malloc(N*sizeof(double));
+        double *b_E = malloc(N*sizeof(double));
+        for(int i=0; i<N; i++)
         {
             b_A[i] = 0.0;
             b_E[i] = 0.0;
@@ -636,7 +637,7 @@ int main(int argc, char *argv[])
         for(int i=0; i<b->BW; i++)
         {
             int j = i+b->qmin-qmin;
-            if(j>-1 && j<N)
+            if(j>-1 && j<N/2)
             {
                 int i_re = 2*i;
                 int i_im = i_re+1;
@@ -723,7 +724,7 @@ int main(int argc, char *argv[])
             scan_source_params(data_old, old_catalog_entry, old_catalog_file);
             
             //find where the source fits in the measurement band
-            galactic_binary_alignment(orbit, data_old, old_catalog_entry);
+            ucb_alignment(orbit, data_old, old_catalog_entry);
             
             //find central bin of catalog event for current data
             double q_old_catalog_entry = old_catalog_entry->f0 * data_old->T;
@@ -732,7 +733,7 @@ int main(int argc, char *argv[])
             if(q_old_catalog_entry < data_old->qmin || q_old_catalog_entry > data_old->qmax) continue;
             
             //calculate waveform model of sample at Tcatalog
-            galactic_binary(orbit, data->format, data_old->T, data->t0, old_catalog_entry->params, UCB_MODEL_NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->Y,old_catalog_entry->tdi->Z,old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
+            ucb_waveform(orbit, data->format, data_old->T, data->t0, old_catalog_entry->params, UCB_MODEL_NP, old_catalog_entry->tdi->X, old_catalog_entry->tdi->Y,old_catalog_entry->tdi->Z,old_catalog_entry->tdi->A, old_catalog_entry->tdi->E, old_catalog_entry->BW, data->Nchannel);
             
             //check against new catalog
             for(int d=0; d<detections; d++)
@@ -755,10 +756,10 @@ int main(int argc, char *argv[])
                 new_catalog_entry->params[7] = entry->source[entry->i]->dfdt * data_old->T* data_old->T;
 
                 //re-align where the source fits in the (old) measurement band
-                galactic_binary_alignment(orbit, data_old, new_catalog_entry);
+                ucb_alignment(orbit, data_old, new_catalog_entry);
                 
                 //calculate waveform of entry at Tcatalog
-                galactic_binary(orbit, data->format, data_old->T, data->t0, new_catalog_entry->params, UCB_MODEL_NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->Y, new_catalog_entry->tdi->Z, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
+                ucb_waveform(orbit, data->format, data_old->T, data->t0, new_catalog_entry->params, UCB_MODEL_NP, new_catalog_entry->tdi->X, new_catalog_entry->tdi->Y, new_catalog_entry->tdi->Z, new_catalog_entry->tdi->A, new_catalog_entry->tdi->E, new_catalog_entry->BW, data->Nchannel);
                 
                 
                 Match = waveform_match(old_catalog_entry,new_catalog_entry,noise);
