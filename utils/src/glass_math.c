@@ -653,30 +653,32 @@ void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
 {
     int i,j;
     int Ntemp = NA+NB;
+    int *Utemp = int_vector(Ntemp);
+    int *temp = int_vector(Ntemp);
+
     //first list
     j=0;
     for(i=0; i<NA; i++)
     {
-        AUB[j]=A[i];
+        Utemp[j]=A[i];
         j++;
     }
     //second list
     for(i=0; i<NB; i++)
     {
-        AUB[j]=B[i];
+        Utemp[j]=B[i];
         j++;
     }
     //sort master list
-    integer_sort(AUB,Ntemp);
+    integer_sort(Utemp,Ntemp);
     
     //find and remeove repeats
     j=0;
-    int *temp = int_vector(Ntemp);
     for(i=0; i<Ntemp-1;i++)
     {
-        if (AUB[i] != AUB[i + 1])
+        if (Utemp[i] != Utemp[i + 1])
         {
-            temp[j] = AUB[i];
+            temp[j] = Utemp[i];
             j++;
         }
     }
@@ -684,7 +686,7 @@ void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
     // Store the last element as whether 
     // it is unique or repeated, it hasn't 
     // stored previously
-    temp[j] = AUB[Ntemp - 1];
+    temp[j] = Utemp[Ntemp - 1];
     j++;
 
     // Modify original array
@@ -692,6 +694,6 @@ void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
         AUB[i] = temp[i];
 
     *NAUB = j;
-
+    free_int_vector(Utemp);
     free_int_vector(temp);
 }

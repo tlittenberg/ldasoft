@@ -18,6 +18,7 @@
  */
 
 #include <glass_utils.h>
+#include <glass_noise.h>
 
 #include "glass_ucb_model.h"
 #include "glass_ucb_catalog.h"
@@ -669,6 +670,10 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
         //set noise model
         copy_noise(data->noise, model[ic]->noise);
         
+        //override nosie model w/ stationary version
+        if(!strcmp("wavelet",data->basis) && flags->stationary)GetStationaryNoiseModel(data, orbit, flags, model[ic]->noise);
+
+        
         //draw signal model
         for(int n=0; n<DMAX; n++)
         {
@@ -685,7 +690,8 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
                 model[ic]->source[n]->psi      = inj->psi;
                 model[ic]->source[n]->d2fdt2   = inj->d2fdt2;
                 map_params_to_array(model[ic]->source[n], model[ic]->source[n]->params, data->T);
-                
+                if(!strcmp("wavelet",data->basis) && ic==0 && n==0 && flags->stationary)
+                    fprintf(stdout,"   ...stationary SNR=%g\n",snr_wavelet(inj,model[ic]->noise));
             }
             else
             {
@@ -705,7 +711,7 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
         }
         if(!strcmp("wavelet",data->basis)) 
         {
-            generate_noise_model_wavelet(data, model[ic]);
+            //generate_noise_model_wavelet(data, model[ic]);
             generate_signal_model_wavelet(orbit, data, model[ic], -1);
         }
 

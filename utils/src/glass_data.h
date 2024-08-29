@@ -29,8 +29,10 @@
 #define FILTER_LENGTH 5e4 //seconds
 #define MAXSTRINGSIZE 1024 //!<maximum number of characters for `path+filename` strings
 
-#define WAVELET_DURATION 7680 //!<duration of wavelet pixels [s]
-#define WAVELET_BANDWIDTH 6.51041666666667e-05 //!<bandwidth of wavelet pixels [Hz]
+//#define WAVELET_DURATION 7680 //!<duration of wavelet pixels [s]
+//#define WAVELET_BANDWIDTH 6.51041666666667e-05 //!<bandwidth of wavelet pixels [Hz]
+#define WAVELET_DURATION 15360 //!<duration of wavelet pixels [s]
+#define WAVELET_BANDWIDTH 3.25520833333333e-05 //!<bandwidth of wavelet pixels [Hz]
 
 /*!
  * \brief Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.
@@ -164,6 +166,7 @@ struct Flags
     int NVB;        //!<number of known binaries for `vb_mcmc`
     int DMAX;       //!<`[--sources=INT; default=10]`: max number of sources
     int simNoise;   //!<`[--sim-noise; default=FALSE]`: simulate random noise realization and add to data
+    int stationary; //!<`[--stationary; default=FALSE]`: use stationary noise model in wavelet domain
     int fixSky;     //!<`[--fix-sky; default=FALSE]`: hold sky location fixed to injection parameters.  Set to `TRUE` if Flags::knownSource=`TRUE`.
     int fixFdot;
     int fixFreq;    //!<`[--fix-freq; default=FALSE]`: hold GW frequency fixed to injection parameters

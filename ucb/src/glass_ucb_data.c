@@ -348,6 +348,10 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                     data->qmin = (int)floor(data->fmin/WAVELET_BANDWIDTH); //mimimum frequency layer
                     data->qmax = (int)ceil(data->fmax/WAVELET_BANDWIDTH);  //maximum frequency layer
 
+                    //pad by one layer above and below
+                    data->qmin--;
+                    data->qmax++;
+                    
                     //reset wavelet basis max and min ranges
                     wavelet_pixel_to_index(data->wdm,0,data->qmin,&data->wdm->kmin); 
                     wavelet_pixel_to_index(data->wdm,0,data->qmax,&data->wdm->kmax); 

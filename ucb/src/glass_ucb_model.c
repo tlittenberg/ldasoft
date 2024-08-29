@@ -1147,24 +1147,37 @@ double gaussian_log_likelhood_wavelet(struct Data *data, struct Model *model)
 
     struct TDI *residual = model->residual;
 
+    
+    for(int n=0; n<data->N; n++)
+    {
+        residual->X[n] = data->tdi->X[n];
+        residual->Y[n] = data->tdi->Y[n];
+        residual->Z[n] = data->tdi->Z[n];
+    }
+    
     for(int n=0; n<model->Nlist; n++)
     {
         int k = model->list[n];
         if(k>=0 && k<data->N)
         {
-            residual->X[k] = data->tdi->X[k] - model->tdi->X[k];
-            residual->Y[k] = data->tdi->Y[k] - model->tdi->Y[k];
-            residual->Z[k] = data->tdi->Z[k] - model->tdi->Z[k];
-        }   
+            residual->X[k] -= model->tdi->X[k];
+            residual->Y[k] -= model->tdi->Y[k];
+            residual->Z[k] -= model->tdi->Z[k];
+        }
     }
+    
+    int *list = int_vector(data->N);
+    for(int n=0; n<data->N; n++) list[n]=n;
 
-    chi2 += wavelet_nwip(residual->X, residual->X, model->noise->invC[0][0], model->list, model->Nlist);
-    chi2 += wavelet_nwip(residual->Y, residual->Y, model->noise->invC[1][1], model->list, model->Nlist);
-    chi2 += wavelet_nwip(residual->Z, residual->Z, model->noise->invC[2][2], model->list, model->Nlist);
-    chi2 += wavelet_nwip(residual->X, residual->Y, model->noise->invC[0][1], model->list, model->Nlist)*2;
-    chi2 += wavelet_nwip(residual->X, residual->Z, model->noise->invC[0][2], model->list, model->Nlist)*2;
-    chi2 += wavelet_nwip(residual->Y, residual->Z, model->noise->invC[1][2], model->list, model->Nlist)*2;
+    chi2 += wavelet_nwip(residual->X, residual->X, model->noise->invC[0][0], list, data->N);
+    chi2 += wavelet_nwip(residual->Y, residual->Y, model->noise->invC[1][1], list, data->N);
+    chi2 += wavelet_nwip(residual->Z, residual->Z, model->noise->invC[2][2], list, data->N);
+    chi2 += wavelet_nwip(residual->X, residual->Y, model->noise->invC[0][1], list, data->N)*2;
+    chi2 += wavelet_nwip(residual->X, residual->Z, model->noise->invC[0][2], list, data->N)*2;
+    chi2 += wavelet_nwip(residual->Y, residual->Z, model->noise->invC[1][2], list, data->N)*2;
 
+    free_int_vector(list);
+    
     return -0.5*chi2;
 
 }

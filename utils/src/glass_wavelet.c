@@ -146,7 +146,7 @@ static void wavelet_lookup_table(struct Wavelets *wdm)
     // we pick one far from the boundaries to avoid edge effects
     
     double *wave = (double*)malloc(sizeof(double)*(wdm->N));
-    int ref_layer = wdm->NF/16;
+    int ref_layer = wdm->NF/2;
     wavelet(wdm, ref_layer, wave);
     
     // The odd wavelets coefficienst can be obtained from the even.
@@ -404,7 +404,7 @@ void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *f
             wavelet_pixel_to_index(wdm,i,j,&k);
             if(k>=wdm->kmin && k<wdm->kmax)
             {  
-                if(wave_index<Nmax-1)
+                if(wave_index<Nmax)
                 {
                     if((i+j)%2 == 0) wave[wave_index] =  (cos_phase*y - sin_phase*z);
                     else             wave[wave_index] = -(cos_phase*z + sin_phase*y);

@@ -1139,8 +1139,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     }
     
     double norm = 0.0;
-    double maxLogL = -1e60;
-    double minLogL = +1e60;
+    //double maxLogL = -1e60;
+    //double minLogL = +1e60;
     double minp = +1e60;
     
     /* compute or restore fisher-based proposal */

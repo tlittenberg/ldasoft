@@ -1329,6 +1329,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     flags->quiet       = 0;
     flags->simNoise    = 0;
     flags->confNoise   = 0;
+    flags->stationary  = 0;
     flags->burnin      = 1;
     flags->debug       = 0;
     flags->strainData  = 0;
@@ -1404,6 +1405,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
         {"resume",      no_argument, 0, 0 },
         {"sim-noise",   no_argument, 0, 0 },
         {"conf-noise",  no_argument, 0, 0 },
+        {"stationary",  no_argument, 0, 0 },
         {"phase",       no_argument, 0, 0 },
         {"sangria",     no_argument, 0, 0 },
         {"prior",       no_argument, 0, 0 },
@@ -1437,6 +1439,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
                 if(strcmp("injseed",     long_options[long_index].name) == 0) data->iseed       = (long)atoi(optarg);
                 if(strcmp("sim-noise",   long_options[long_index].name) == 0) flags->simNoise   = 1;
                 if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
+                if(strcmp("stationary",  long_options[long_index].name) == 0) flags->stationary = 1;
                 if(strcmp("prior",       long_options[long_index].name) == 0) flags->prior      = 1;
                 if(strcmp("no-burnin",   long_options[long_index].name) == 0) flags->burnin     = 0;
                 if(strcmp("no-rj",       long_options[long_index].name) == 0) flags->rj         = 0;
@@ -1566,6 +1569,10 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
         int min_layer = (int)floor(data->fmin / WAVELET_BANDWIDTH);
         int max_layer = (int)ceil(data->fmax / WAVELET_BANDWIDTH);
         int NF = max_layer - min_layer + 1;
+        
+        //add memory for buffer layers (one above, one below)
+        NF+=2;
+        
         data->N = NT*NF;
 
         data->fmin = min_layer*WAVELET_BANDWIDTH;

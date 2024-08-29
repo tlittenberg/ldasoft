@@ -432,7 +432,7 @@ void generate_instrument_noise_model_wavelet(struct Wavelets *wdm, struct Orbit 
     double ***C     = model->psd->C;
     double ***Cgrid = grid->psd->C;
     int imin = (int)(model->psd->f[0]/wdm->df);
-    int imax = (int)(model->psd->f[model->psd->N-1]/wdm->df)+2;
+    int imax = (int)(model->psd->f[model->psd->N-1]/wdm->df)+1;
     for(int i=imin; i<imax; i++)
     {
         int j = 2*i-2;
@@ -519,7 +519,7 @@ void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct For
     double ***C     = model->psd->C;
     double ***Cgrid = grid->psd->C;
     int imin = (int)(model->psd->f[0]/wdm->df);
-    int imax = (int)(model->psd->f[model->psd->N-1]/wdm->df)+2;
+    int imax = (int)(model->psd->f[model->psd->N-1]/wdm->df)+1;
 
     for(int i=imin; i<imax; i++)
     {
@@ -530,7 +530,7 @@ void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct For
     }
 
     //NOTE: undo isotropc -1/2 on covariance hardcoded in generate_galactic_foreground_model()
-    for(int i=1; i<model->psd->N; i++)
+    for(int i=0; i<model->psd->N; i++)
         for(int n=0; n<3; n++)
             for(int m=n; m<3; m++)
                 if(n!=m) C[n][m][i]*=-2.;
@@ -555,11 +555,10 @@ void generate_full_covariance_matrix(struct Noise *full, struct Noise *component
 
 void generate_full_dynamic_covariance_matrix(struct Wavelets *wdm, struct InstrumentModel *inst, struct ForegroundModel *conf, struct Noise *full)
 {
-    int k,kmin;
-    int jmin=(int)(inst->psd->f[0]/wdm->df);
-    int jmax=(int)(inst->psd->f[inst->psd->N-1]/wdm->df)+2;
-
-    wavelet_pixel_to_index(wdm,0,jmin,&kmin);
+    int k;
+    int jmin=(int)round(inst->psd->f[0]/wdm->df);
+    int jmax=(int)round(inst->psd->f[inst->psd->N-1]/wdm->df)+1;    
+    
     for(int i=0; i<wdm->NT; i++)
     {
         double t = i*wdm->dt;
@@ -567,7 +566,7 @@ void generate_full_dynamic_covariance_matrix(struct Wavelets *wdm, struct Instru
         {
             wavelet_pixel_to_index(wdm,i,j,&k);
 
-            k-=kmin;
+            k-=wdm->kmin;
 
             //stationary instrument noise 
             full->C[0][0][k] = inst->psd->C[0][0][j-jmin];
@@ -589,23 +588,46 @@ void generate_full_dynamic_covariance_matrix(struct Wavelets *wdm, struct Instru
             full->C[1][0][k] = full->C[0][1][k]; 
             full->C[2][0][k] = full->C[0][2][k]; 
             full->C[2][1][k] = full->C[1][2][k]; 
+        } //loop over frequency layers
+    } //loop over time slices
+}
 
-        }
-        
-    }
+static void generate_full_stationary_covariance_matrix(struct Wavelets *wdm, struct InstrumentModel *inst, struct ForegroundModel *conf, struct Noise *full)
+{
+    int k;
+    int jmin=(int)round(inst->psd->f[0]/wdm->df);
+    int jmax=(int)round(inst->psd->f[inst->psd->N-1]/wdm->df)+1;
 
-    //horrible hack to deal w/ empty layers
-    // int kprime;
-    // for(int i=0; i<wdm->NT; i++)
-    // {
-    //     wavelet_pixel_to_index(wdm,i,0,&k);
-    //     wavelet_pixel_to_index(wdm,i,1,&kprime);
-    //     for(int n=0; n<3; n++) for(int m=0; m<3; m++) full->C[n][m][k] = full->C[n][m][kprime];
+    for(int i=0; i<wdm->NT; i++)
+    {
+        for(int j=jmin; j<jmax; j++)
+        {
+            wavelet_pixel_to_index(wdm,i,j,&k);
 
-    //     wavelet_pixel_to_index(wdm,i,wdm->NF-2,&kprime);
-    //     wavelet_pixel_to_index(wdm,i,wdm->NF-1,&k);
-    //     for(int n=0; n<3; n++) for(int m=0; m<3; m++) full->C[n][m][k] = full->C[n][m][kprime];
-    // }    
+            k-=wdm->kmin;
+
+            //stationary instrument noise
+            full->C[0][0][k] = inst->psd->C[0][0][j-jmin];
+            full->C[1][1][k] = inst->psd->C[1][1][j-jmin];
+            full->C[2][2][k] = inst->psd->C[2][2][j-jmin];
+            full->C[0][1][k] = inst->psd->C[0][1][j-jmin];
+            full->C[0][2][k] = inst->psd->C[0][2][j-jmin];
+            full->C[1][2][k] = inst->psd->C[1][2][j-jmin];
+
+            //modulated galactic foreground
+            full->C[0][0][k] += conf->psd->C[0][0][j-jmin];
+            full->C[1][1][k] += conf->psd->C[1][1][j-jmin];
+            full->C[2][2][k] += conf->psd->C[2][2][j-jmin];
+            full->C[0][1][k] -= conf->psd->C[0][1][j-jmin]/2.;
+            full->C[0][2][k] -= conf->psd->C[0][2][j-jmin]/2.;
+            full->C[1][2][k] -= conf->psd->C[1][2][j-jmin]/2.;
+
+            //noise covariance matrix is symmetric
+            full->C[1][0][k] = full->C[0][1][k];
+            full->C[2][0][k] = full->C[0][2][k];
+            full->C[2][1][k] = full->C[1][2][k];
+        }// loop over frequency layers
+    }// loop over time slices
 }
 
 double noise_log_likelihood(struct Data *data, struct Noise *noise)
@@ -843,8 +865,7 @@ void GetDynamicNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *
     char filename[128];
     sprintf(filename,"%s/power_noise.dat",data->dataDir);
     FILE *fptr=fopen(filename,"w");
-    int k,kmin;
-    wavelet_pixel_to_index(data->wdm,0,data->qmin,&kmin);
+    int k;
     for(int j=data->qmin; j<data->qmax; j++)
     {
         double f = j*data->wdm->df;
@@ -852,7 +873,50 @@ void GetDynamicNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *
         {
             double t = i*data->wdm->dt;
             wavelet_pixel_to_index(data->wdm,i,j,&k);
-            fprintf(fptr,"%lg %lg %.14e\n", t, f, data->noise->C[0][0][k-kmin]); 
+            k-=data->wdm->kmin;
+            fprintf(fptr,"%lg %lg %.14e\n", t, f, data->noise->C[0][0][k]);
+        }
+        fprintf(fptr,"\n");
+    }
+    fclose(fptr);
+
+    free_instrument_model(inst_noise);
+    free_foreground_model(conf_noise);
+}
+
+void GetStationaryNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Noise *noise)
+{
+    /**************************************************
+     * Compute instrument noise levels
+    **************************************************/
+    struct InstrumentModel *inst_noise = malloc(sizeof(struct InstrumentModel));
+    initialize_instrument_model_wavelet(orbit, data, inst_noise);
+
+    /**************************************************
+     * Compute galactic foreground noise levels
+    **************************************************/
+    struct ForegroundModel *conf_noise = malloc(sizeof(struct ForegroundModel));
+    initialize_foreground_model_wavelet(orbit, data, conf_noise);
+
+    /**************************************************
+     * Combine noise components
+    **************************************************/
+    generate_full_stationary_covariance_matrix(data->wdm, inst_noise, conf_noise, noise);
+    invert_noise_covariance_matrix(noise);
+
+    char filename[128];
+    sprintf(filename,"%s/power_stationary_noise.dat",data->dataDir);
+    FILE *fptr=fopen(filename,"w");
+    int k;
+    for(int j=data->qmin; j<data->qmax; j++)
+    {
+        double f = j*data->wdm->df;
+        for(int i=0; i<data->wdm->NT; i++)
+        {
+            double t = i*data->wdm->dt;
+            wavelet_pixel_to_index(data->wdm,i,j,&k);
+            k-=data->wdm->kmin;
+            fprintf(fptr,"%lg %lg %.14e\n", t, f,noise->C[0][0][k]);
         }
         fprintf(fptr,"\n");
     }

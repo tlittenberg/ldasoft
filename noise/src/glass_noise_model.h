@@ -223,5 +223,6 @@ void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct 
 void initialize_foreground_model_wavelet(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model);
 
 void GetDynamicNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags);
+void GetStationaryNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Noise *noise);
 
 #endif /* noise_model_h */
