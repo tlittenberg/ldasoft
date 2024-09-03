@@ -260,6 +260,12 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     model->prior[0][0] = data->fmin*data->T;//data->qmin;
     model->prior[0][1] = data->fmax*data->T;//data->qmax;
     
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        model->prior[0][0] = (data->fmin + data->wdm->df/2)*data->T;//data->qmin;
+        model->prior[0][1] = (data->fmax - data->wdm->df/2)*data->T;//data->qmax;
+    }
+
     //colatitude
     model->prior[1][0] = -1.0;
     model->prior[1][1] =  1.0;
@@ -294,6 +300,9 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     double fdotmin = -0.000005*pow(fmin,(13./3.));
     double fdotmax = 0.0000008*pow(fmax,(11./3.));
     
+    printf("maximum frequency layer = %i\n", (int)floor( (fmax + fdotmax*data->T) / WAVELET_BANDWIDTH ));
+    printf("minimum frequency layer = %i\n", (int)floor( (fmin + fdotmin*data->T) / WAVELET_BANDWIDTH ));
+    exit(1);
     /* unphysically broad priors
     double fdotmin = -pow(fmin,(13./3.));
     double fdotmax = pow(fmax,(13./3.)); */

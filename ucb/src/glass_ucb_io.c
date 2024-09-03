@@ -133,7 +133,7 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags)
                 if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
-                    flags->DMAX = atoi(optarg)+1;
+                    flags->DMAX = atoi(optarg);
                 }
                 if(strcmp("em-prior",    long_options[long_index].name) == 0)
                 {

@@ -1567,11 +1567,8 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     {
         int NT = (int)ceil(data->T / WAVELET_DURATION);
         int min_layer = (int)floor(data->fmin / WAVELET_BANDWIDTH);
-        int max_layer = (int)ceil(data->fmax / WAVELET_BANDWIDTH);
+        int max_layer = min_layer + 2;
         int NF = max_layer - min_layer + 1;
-        
-        //add memory for buffer layers (one above, one below)
-        NF+=2;
         
         data->N = NT*NF;
 

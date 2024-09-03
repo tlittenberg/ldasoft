@@ -33,6 +33,10 @@
 //#define WAVELET_BANDWIDTH 6.51041666666667e-05 //!<bandwidth of wavelet pixels [Hz]
 #define WAVELET_DURATION 15360 //!<duration of wavelet pixels [s]
 #define WAVELET_BANDWIDTH 3.25520833333333e-05 //!<bandwidth of wavelet pixels [Hz]
+//#define WAVELET_DURATION 30720 //!<duration of wavelet pixels [s]
+//#define WAVELET_BANDWIDTH 1.62760416666667e-05 //!<bandwidth of wavelet pixels [Hz]
+//#define WAVELET_DURATION 61440 //!<duration of wavelet pixels [s]
+//#define WAVELET_BANDWIDTH 8.13802083333333e-06 //!<bandwidth of wavelet pixels [Hz]
 
 /*!
  * \brief Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.

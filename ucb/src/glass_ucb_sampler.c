@@ -698,6 +698,9 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
                 draw_from_uniform_prior(data, model[ic], model[ic]->source[n], proposal[0], model[ic]->source[n]->params , chain->r[ic]);
             }
             map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
+            printf("n=%i, DMAX=%i: ",n,DMAX);
+            print_source_params(data,model[ic]->source[0],stdout);
+            printf("\n");
             if(!strcmp("fourier",data->basis)) ucb_fisher(orbit, data, model[ic]->source[n], data->noise);
             if(!strcmp("wavelet",data->basis)) ucb_fisher_wavelet(orbit, data, model[ic]->source[n], data->noise);
             model[ic]->source[n]->fisher_update_flag=0;
@@ -727,6 +730,8 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
             if(!strcmp("fourier",data->basis))model[ic]->logL = gaussian_log_likelihood(data, model[ic]);
             if(!strcmp("wavelet",data->basis))model[ic]->logL = gaussian_log_likelhood_wavelet(data, model[ic]);
             model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[ic]);
+            printf("model[%i]->logL=%lg, snr=%lg\n",ic,model[ic]->logL,snr_wavelet(model[ic]->source[0],model[ic]->noise));
+        
         }
         else model[ic]->logL = model[ic]->logLnorm = 0.0;
         
