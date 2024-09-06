@@ -52,7 +52,7 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
  
  Unlike verification sources, this code expects the polarization angle \f$\psi\f$ or (currently) initial phase \f$\varphi_0\f$ to be included in the parameter files.
  */
-void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj);
+void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source **inj_vec);
 
 /**
  \brief parse VB parameter files and convert got GBMCMC parameters

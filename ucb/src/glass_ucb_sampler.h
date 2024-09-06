@@ -77,6 +77,6 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
  
  Get all UCB structures into their initial state.
  */
-void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, struct Proposal **proposal, struct Model **model, struct Model **trial, struct Source *inj);
+void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, struct Proposal **proposal, struct Model **model, struct Model **trial, struct Source **inj_vec);
 
 #endif /* ucb_sampler_h */

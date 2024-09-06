@@ -505,6 +505,7 @@ void generate_signal_model_wavelet(struct Orbit *orbit, struct Data *data, struc
                 source->tdi->Z[i]=0.0;
                 source->tdi->A[i]=0.0;
                 source->tdi->E[i]=0.0;
+                source->list[i]=0;
             }
             
             map_array_to_params(source, source->params, data->T);            

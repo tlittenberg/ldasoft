@@ -269,8 +269,11 @@ void alloc_data(struct Data *data, struct Flags *flags)
     data->p = calloc(data->N,sizeof(double));
 
     // Setup wavelet basis
-    data->wdm = malloc(sizeof(struct Wavelets));
-    initialize_wavelet(data->wdm, data->T);
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        data->wdm = malloc(sizeof(struct Wavelets));
+        initialize_wavelet(data->wdm, data->T);
+    }
 }
 
 void alloc_noise(struct Noise *noise, int N, int Nchannel)

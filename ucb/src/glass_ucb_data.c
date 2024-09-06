@@ -269,11 +269,10 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
     
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
-void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
+void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source **inj_vec)
 {
     int k;
     FILE *fptr;
-    alloc_source(inj, data->N, data->Nchannel);
     
     /* Get injection parameters */
     double f0,dfdt,theta,phi,amp,iota,phi0,psi;//read from injection file
@@ -283,10 +282,11 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
     char filename[1024];
         
     struct TDI *tdi = data->tdi;
-
+    struct Source *inj = NULL;
+    
+    int n_inj = 0; // keep track of number of injections
     for(int ii = 0; ii<flags->NINJ; ii++)
     {
-        
         injectionFile = fopen(flags->injFile[ii],"r");
         if(!injectionFile)
             fprintf(stderr,"Missing injection file %s\n",flags->injFile[ii]);
@@ -317,6 +317,18 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
         
         for(int nn=0; nn<N; nn++)
         {
+            if(n_inj<flags->DMAX)
+            {
+                alloc_source(inj_vec[n_inj], data->N, data->Nchannel);
+                inj = inj_vec[n_inj];
+            }
+            else
+            {
+                printf("WARNING: number of injections (%i) exceeds size of model (%i)\n",n_inj,flags->DMAX);
+                inj = inj_vec[flags->DMAX-1];
+            }
+            
+
             int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
             if(!check)
             {
@@ -590,10 +602,14 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                 for(int j=0; j<UCB_MODEL_NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
             }
             
+            n_inj++;
+            
         }//end nn loop over sources in file
+        
         fclose(injectionFile);
         gsl_rng_free(r);
-    }
+        
+    }//end ii loop over injection files
     
     print_data(data,tdi,flags);
 

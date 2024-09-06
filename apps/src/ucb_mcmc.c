@@ -76,7 +76,6 @@ int main(int argc, char *argv[])
     struct Orbit  *orbit = malloc(sizeof(struct Orbit));
     struct Chain  *chain = malloc(sizeof(struct Chain));
     struct Data   *data  = malloc(sizeof(struct Data));
-    struct Source *inj   = malloc(sizeof(struct Source));
     
     /* Parse command line and set defaults/flags */
     sprintf(data->basis,"fourier");
@@ -109,12 +108,16 @@ int main(int argc, char *argv[])
     if(flags->strainData)
         ReadData(data,orbit,flags);
     
+    struct Source **inj=NULL;
     if(flags->NINJ>0)
     {
+        /* storage for injection parameters */
+        inj = malloc(DMAX*sizeof(struct Source*));
+        for(int n=0; n<DMAX; n++) inj[n] = malloc(sizeof(struct Source));
         
         /* Inject gravitational wave signal */
         if(flags->knownSource)
-            UCBInjectVerificationSource(data,orbit,flags,inj);
+            UCBInjectVerificationSource(data,orbit,flags,inj[0]);
         else
             UCBInjectSimulatedSource(data,orbit,flags,inj);
         
@@ -312,7 +315,7 @@ int main(int argc, char *argv[])
                     }
                 }
                 
-                if(mcmc>-flags->NBURN+flags->NBURN/10. && model[0]->Neff < model[0]->Nmax)
+                if(mcmc>-flags->NBURN+flags->NBURN/10. && model[0]->Neff < model[0]->Nmax && flags->rj)
                 {
                     for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
                     mcmc = -flags->NBURN;

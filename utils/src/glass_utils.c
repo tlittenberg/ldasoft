@@ -31,7 +31,7 @@ void free_int_matrix(int **m, int N)
 
 double *double_vector(int N)
 {
-    double *v = malloc( N * sizeof(double) );
+    double *v = calloc( N , sizeof(double) );
     return v;
 }
 

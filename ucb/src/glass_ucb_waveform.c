@@ -840,13 +840,12 @@ void ucb_waveform(struct Orbit *orbit, char *format, double T, double t0, double
 static void extract_amplitude_and_phase(int Ns, double *As, double *Dphi, double *M, double *Mf, double *phiR)
 {
     int i;
-    double u, v;
+    double v;
     
     for(i=0; i<Ns ;i++)
     {
         As[i] = sqrt(M[i]*M[i]+Mf[i]*Mf[i]);
-        u = floor(phiR[i]/(PI2));
-        v = phiR[i]-u*PI2;  // reference phase mod 2pi
+        v = remainder(phiR[i],PI2);
         Dphi[i] = -atan2(Mf[i],M[i])-v;
     }
     
@@ -874,7 +873,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
     params[3] = exp(params[3]);
     params[7] = params[7]/(Tobs*Tobs);
     //params[8] = params[8]/(Tobs*Tobs*Tobs);
-
+    
     ucb_barycenter_waveform(params, Nspline, orbit->t, phase_ssb, amp_ssb);
     
     // convert back
@@ -938,7 +937,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
     extract_amplitude_and_phase(Nspline, tdi_amp->X, tdi_phase->X, response->X, response_f->X, phase_ssb);
     extract_amplitude_and_phase(Nspline, tdi_amp->Y, tdi_phase->Y, response->Y, response_f->Y, phase_ssb);
     extract_amplitude_and_phase(Nspline, tdi_amp->Z, tdi_phase->Z, response->Z, response_f->Z, phase_ssb);
-
+    
     // remove any phase wraps
     unwrap_phase(Nspline, tdi_phase->X);
     unwrap_phase(Nspline, tdi_phase->Y);

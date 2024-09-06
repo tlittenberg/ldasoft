@@ -300,9 +300,6 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     double fdotmin = -0.000005*pow(fmin,(13./3.));
     double fdotmax = 0.0000008*pow(fmax,(11./3.));
     
-    printf("maximum frequency layer = %i\n", (int)floor( (fmax + fdotmax*data->T) / WAVELET_BANDWIDTH ));
-    printf("minimum frequency layer = %i\n", (int)floor( (fmin + fdotmin*data->T) / WAVELET_BANDWIDTH ));
-    exit(1);
     /* unphysically broad priors
     double fdotmin = -pow(fmin,(13./3.));
     double fdotmax = pow(fmax,(13./3.)); */

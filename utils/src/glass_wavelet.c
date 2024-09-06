@@ -358,7 +358,7 @@ void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *f
         if(fdot < 0.0) fdot = 0.0;
         
         //skip this step if f or fdot violate bounds
-        if(f>=f_max || fdot>=fdot_max) continue;
+        if(f>=f_max || fdot>=fdot_max)  continue;
         
         cos_phase = amp[i]*cos(phase[i]);
         sin_phase = amp[i]*sin(phase[i]);
