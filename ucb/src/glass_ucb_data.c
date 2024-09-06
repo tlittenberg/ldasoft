@@ -483,7 +483,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                 }
             }
             
-            sprintf(filename,"%s/data/waveform_injection_%i.dat",flags->runDir,ii);
+            sprintf(filename,"%s/data/waveform_injection_%i.dat",flags->runDir,n_inj);
             fptr=fopen(filename,"w");
             if(!strcmp("fourier",data->basis))
             {
@@ -521,7 +521,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             }
             fclose(fptr);
             
-            sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,ii);
+            sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,n_inj);
             fptr=fopen(filename,"w");
             if(!strcmp("fourier",data->basis))
             {
