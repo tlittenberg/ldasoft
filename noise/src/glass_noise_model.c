@@ -431,8 +431,8 @@ void generate_instrument_noise_model_wavelet(struct Wavelets *wdm, struct Orbit 
     */
     double ***C     = model->psd->C;
     double ***Cgrid = grid->psd->C;
-    int imin = (int)(model->psd->f[0]/wdm->df);
-    int imax = (int)(model->psd->f[model->psd->N-1]/wdm->df)+1;
+    int imin = (int)round(model->psd->f[0]/wdm->df);
+    int imax = (int)round(model->psd->f[model->psd->N-1]/wdm->df)+1;
     for(int i=imin; i<imax; i++)
     {
         int j = 2*i-2;
@@ -518,8 +518,8 @@ void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct For
     */
     double ***C     = model->psd->C;
     double ***Cgrid = grid->psd->C;
-    int imin = (int)(model->psd->f[0]/wdm->df);
-    int imax = (int)(model->psd->f[model->psd->N-1]/wdm->df)+1;
+    int imin = (int)round(model->psd->f[0]/wdm->df);
+    int imax = (int)round(model->psd->f[model->psd->N-1]/wdm->df)+1;
 
     for(int i=imin; i<imax; i++)
     {
@@ -557,8 +557,8 @@ void generate_full_dynamic_covariance_matrix(struct Wavelets *wdm, struct Instru
 {
     int k;
     int jmin=(int)round(inst->psd->f[0]/wdm->df);
-    int jmax=(int)round(inst->psd->f[inst->psd->N-1]/wdm->df)+1;    
-    
+    int jmax=(int)round(inst->psd->f[inst->psd->N-1]/wdm->df)+1; 
+
     for(int i=0; i<wdm->NT; i++)
     {
         double t = i*wdm->dt;

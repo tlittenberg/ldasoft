@@ -65,6 +65,61 @@ double snr_wavelet(struct Source *source, struct Noise *noise)
     return sqrt(snr2);
 }
 
+double waveform_match_wavelet(struct Source *a, struct Source *b, struct Noise *noise)
+{
+    double aa = pow(snr_wavelet(a,noise),2);
+    double bb = pow(snr_wavelet(b,noise),2);
+
+    struct TDI *a_full = malloc(sizeof(struct TDI));
+    struct TDI *b_full = malloc(sizeof(struct TDI));
+    alloc_tdi(a_full,a->tdi->N,a->tdi->Nchannel);
+    alloc_tdi(b_full,b->tdi->N,b->tdi->Nchannel);
+
+    for(int n=0; n<a->Nlist; n++)
+    {
+        if(a->list[n]>0)
+        {
+            int k = a->list[n];
+            a_full->X[k] = a->tdi->X[k];
+            a_full->Y[k] = a->tdi->Y[k];
+            a_full->Z[k] = a->tdi->Z[k];
+        }
+    }
+    for(int n=0; n<b->Nlist; n++)
+    {
+        if(b->list[n]>0)
+        {
+            int k = b->list[n];
+            b_full->X[k] = b->tdi->X[k];
+            b_full->Y[k] = b->tdi->Y[k];
+            b_full->Z[k] = b->tdi->Z[k];
+        }
+    }
+
+    int *list = int_vector(a->Nlist+b->Nlist);
+    int N;
+    list_union(a->list,b->list,a->Nlist,b->Nlist,list,&N);
+
+    double ab = 0.0;
+    ab += wavelet_nwip(a_full->X, b_full->X, noise->invC[0][0], list, N);
+    ab += wavelet_nwip(a_full->Y, b_full->Y, noise->invC[1][1], list, N);
+    ab += wavelet_nwip(a_full->Z, b_full->Z, noise->invC[2][2], list, N);
+    ab += wavelet_nwip(a_full->X, b_full->Y, noise->invC[0][1], list, N);
+    ab += wavelet_nwip(a_full->X, b_full->Z, noise->invC[0][2], list, N);
+    ab += wavelet_nwip(a_full->Y, b_full->Z, noise->invC[1][2], list, N);
+    ab += wavelet_nwip(a_full->Y, b_full->X, noise->invC[1][0], list, N);
+    ab += wavelet_nwip(a_full->Z, b_full->X, noise->invC[2][0], list, N);
+    ab += wavelet_nwip(a_full->Z, b_full->Y, noise->invC[2][1], list, N);
+
+    double match = ab/sqrt(aa*bb);
+
+    free(list);
+    free_tdi(a_full);
+    free_tdi(b_full);
+
+    return match;
+}
+
 
 double snr_prior(double SNR)
 {
@@ -968,7 +1023,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
         amp->X[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
         phase->X[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel) + phase_wavelet_grid[i];
         freq->X[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
-        fdot->X[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
+        fdot->X[i]  = 0.0;//gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
     
     gsl_spline_init(amp_interpolant, t, tdi_amp->Y, Nspline);
@@ -978,7 +1033,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
         amp->Y[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
         phase->Y[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel)+phase_wavelet_grid[i];
         freq->Y[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
-        fdot->Y[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
+        fdot->Y[i]  = 0.0;//gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
     
     gsl_spline_init(amp_interpolant, t, tdi_amp->Z, Nspline);
@@ -988,7 +1043,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
         amp->Z[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
         phase->Z[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel)+phase_wavelet_grid[i];
         freq->Z[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
-        fdot->Z[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
+        fdot->Z[i]  = 0.0;//gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
 
     /*
@@ -999,17 +1054,20 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
     int *min_layer = malloc(sizeof(int)*(wdm->NT));
     int *max_layer = malloc(sizeof(int)*(wdm->NT));
 
+    int *reverse_list = malloc(sizeof(int)*(wdm->NF*wdm->NT));
+
     //get list of non-zero wavelet amplitudes for this signal
-    active_wavelet_list(wdm, freq->X, freq->Y, freq->Z, fdot->X, fdot->Y, fdot->Z, wavelet_list, Nwavelet, min_layer, max_layer);
+    active_wavelet_list(wdm, freq->X, freq->Y, freq->Z, fdot->X, fdot->Y, fdot->Z, wavelet_list, reverse_list, Nwavelet, min_layer, max_layer);
 
     //finally compute wavelet coefficients for signal's TDI response
     double *Xtemp = double_vector(*Nwavelet);
     double *Ytemp = double_vector(*Nwavelet);
     double *Ztemp = double_vector(*Nwavelet);
 
-    wavelet_transform_from_table(wdm, phase->X, freq->X, fdot->X, amp->X, min_layer, max_layer, Xtemp, *Nwavelet);
-    wavelet_transform_from_table(wdm, phase->Y, freq->Y, fdot->Y, amp->Y, min_layer, max_layer, Ytemp, *Nwavelet);
-    wavelet_transform_from_table(wdm, phase->Z, freq->Z, fdot->Z, amp->Z, min_layer, max_layer, Ztemp, *Nwavelet);
+    wavelet_transform_from_table(wdm, phase->X, freq->X, fdot->X, amp->X, min_layer, max_layer, Xtemp, wavelet_list, reverse_list, *Nwavelet);
+    wavelet_transform_from_table(wdm, phase->Y, freq->Y, fdot->Y, amp->Y, min_layer, max_layer, Ytemp, wavelet_list, reverse_list, *Nwavelet);
+    wavelet_transform_from_table(wdm, phase->Z, freq->Z, fdot->Z, amp->Z, min_layer, max_layer, Ztemp, wavelet_list, reverse_list, *Nwavelet);
+
 
     //insert non-zero wavelet pixels into correct indicies
     for(int n=0; n<*Nwavelet; n++)
@@ -1054,5 +1112,6 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
     free(min_layer);
     free(max_layer);
 
+    free(reverse_list);
 
 }

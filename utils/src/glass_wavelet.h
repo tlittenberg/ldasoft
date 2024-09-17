@@ -79,9 +79,10 @@ struct Wavelets
 
 void initialize_wavelet(struct Wavelets *wdm, double T);
 void wavelet_transform(struct Wavelets *wdm, double *data);
+void wavelet_transform_inverse(struct Wavelets *wdm, double *data);
 void wavelet_index_to_pixel(struct Wavelets *wdm, int *i, int *j, int k);
 void wavelet_pixel_to_index(struct Wavelets *wdm, int i, int j, int *k);
-void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int Nmax);
-void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, double *freqZ, double *fdotX, double *fdotY, double *fdotZ, int *wavelet_list, int *Nwavelet, int *jmin, int *jmax);
+void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int *list, int *rlist, int Nmax);
+void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, double *freqZ, double *fdotX, double *fdotY, double *fdotZ, int *wavelet_list, int *reverse_list, int *Nwavelet, int *jmin, int *jmax);
 
 #endif /* glass_wavelet_h */

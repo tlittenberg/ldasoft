@@ -493,10 +493,10 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                     switch(data->Nchannel)
                     {
                         case 1:
-                            fprintf(fptr,"%lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
+                            fprintf(fptr,"%lg %lg %lg\n", f, inj->tdi->X[2*i],tdi->X[2*i+1]);
                             break;
                         case 2:
-                            fprintf(fptr,"%lg %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                            fprintf(fptr,"%lg %lg %lg %lg %lg\n", f, inj->tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
                             break;
                         case 3:
                             fprintf(fptr,"%lg %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
@@ -514,7 +514,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                         double t = i*data->wdm->dt;
                         wavelet_pixel_to_index(data->wdm,i,j,&k);
                         k-=data->wdm->kmin;
-                        fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", t, f, tdi->X[k], tdi->Y[k], tdi->Z[k]);   
+                        fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", t, f, inj->tdi->X[k], inj->tdi->Y[k], inj->tdi->Z[k]);   
                     }
                     fprintf(fptr,"\n");
                 }
@@ -552,7 +552,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                         double t = i*data->wdm->dt;
                         wavelet_pixel_to_index(data->wdm,i,j,&k);
                         k-=data->wdm->kmin;
-                        fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", t, f, tdi->X[k]*tdi->X[k], tdi->Y[k]*tdi->Y[k], tdi->Z[k]*tdi->Z[k]); 
+                        fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", t, f, inj->tdi->X[k]*inj->tdi->X[k], inj->tdi->Y[k]*inj->tdi->Y[k], inj->tdi->Z[k]*inj->tdi->Z[k]); 
                     }
                     fprintf(fptr,"\n");
                 }
@@ -591,15 +591,14 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                     fprintf(stdout," ");
                     for(int j=0; j<UCB_MODEL_NP; j++)
                     {
-                        if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
-                        else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
+                        fprintf(stdout,"%+.2e ", inj->fisher_matrix[i][j]);
                     }
                     fprintf(stdout,"\n");
                 }
                 
                 
                 printf("\n Fisher std. errors:\n");
-                for(int j=0; j<UCB_MODEL_NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
+                for(int j=0; j<UCB_MODEL_NP; j++)  fprintf(stdout," %.2e\n", sqrt(inj->fisher_matrix[j][j]));
             }
             
             n_inj++;
@@ -612,6 +611,22 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
     }//end ii loop over injection files
     
     print_data(data,tdi,flags);
+
+    /* compute overlaps between injections */
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        double hh;
+        printf("\n Match Matrix:\n");
+        for(int i=0; i<n_inj; i++)
+        {
+            for(int j=0; j<n_inj; j++)
+            {
+                if(i==j) printf(" %+.2e",snr_wavelet(inj_vec[i],data->noise));
+                else printf(" %+.2e",waveform_match_wavelet(inj_vec[i], inj_vec[j], data->noise));
+            }
+            printf("\n");
+        }
+    }
 
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }

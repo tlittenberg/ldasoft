@@ -135,12 +135,7 @@ static void wavelet_window(struct Wavelets *wdm)
 }
 
 static void wavelet_lookup_table(struct Wavelets *wdm)
-{
-    double t,f,phase;
-    double f0;
-    char filename[128];
-    FILE *outstream;
-    
+{    
     // it turns out that all the wavelet layers are the same modulo a
     // shift in the reference frequency. Just have to do a single layer
     // we pick one far from the boundaries to avoid edge effects
@@ -157,28 +152,29 @@ static void wavelet_lookup_table(struct Wavelets *wdm)
     // DOM/PI, except for the first and last which have width
     // half that
     
-    f0 = (double)(ref_layer)*wdm->df;
+    double f0 = ref_layer*wdm->df;
     
-
+    #pragma omp parallel for
     for(int j=0; j<wdm->fdot_steps; j++)  // loop over f-dot slices
     {
-        sprintf(filename, "WDMcoeffs%d.bin", j);
-        outstream = fopen(filename,"wb");
+        //char filename[128];
+        //sprintf(filename, "WDMcoeffs%d.bin", j);
+        //FILE *outstream = fopen(filename,"wb");
 
         int NT = wdm->table[j]->size/2;
         
         
         for(int n=0; n<NT; n++)  // loop of frequency slices
         {
-            f = f0 + ((double)(n-NT/2)+0.5)*wdm->deltaf;
+            double f = f0 + ((double)(n-NT/2)+0.5)*wdm->deltaf;
             
             double real_coeff = 0.0;
             double imag_coeff = 0.0;
             
             for(int i=0; i<wdm->N; i++)
             {
-                t = ((double)(i-wdm->N/2))*wdm->cadence;
-                phase = PI2*f*t + M_PI*wdm->fdot[j]*t*t;
+                double t = ((double)(i-wdm->N/2))*wdm->cadence;
+                double phase = PI2*f*t + M_PI*wdm->fdot[j]*t*t;
                 real_coeff += wave[i]*cos(phase)*wdm->cadence;
                 imag_coeff += wave[i]*sin(phase)*wdm->cadence;
             }
@@ -186,8 +182,8 @@ static void wavelet_lookup_table(struct Wavelets *wdm)
             gsl_vector_set(wdm->table[j],2*n+1,imag_coeff);
         }
         
-        gsl_vector_fwrite(outstream, wdm->table[j]);
-        fclose(outstream);
+        //gsl_vector_fwrite(outstream, wdm->table[j]);
+        //fclose(outstream);
     }
     
     free(wave);
@@ -206,7 +202,7 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
     wdm->dt = WAVELET_DURATION;
 
     wdm->frequency_steps = 400;
-    wdm->fdot_steps = 4;
+    wdm->fdot_steps = 50;
     wdm->d_fdot = 0.1;
     wdm->oversample = 16.0;
 
@@ -228,12 +224,11 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
     wdm->n_table = malloc(wdm->fdot_steps*sizeof(int));
 
     double fdot_step = wdm->df/wdm->T*wdm->d_fdot; // sets the f-dot increment
-            
+        
     for(int n=0; n<wdm->fdot_steps; n++)
     {
-        wdm->fdot[n] = (double)(n) * fdot_step;
-        
-        size_t N = (int)((wdm->BW+wdm->fdot[n]*wdm->T)/wdm->deltaf);
+        wdm->fdot[n] = -fdot_step*wdm->fdot_steps/2 + n*fdot_step;
+        size_t N = (int)((wdm->BW+fabs(wdm->fdot[n])*wdm->T)/wdm->deltaf);
         if(N%2 != 0) N++; // makes sure it is an even number
         wdm->n_table[n] = N;
         wdm->table[n] =  gsl_vector_alloc(2*N);
@@ -333,7 +328,87 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
     free_double_matrix(wave,wdm->NT);
 }
 
-void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int Nmax)
+void wavelet_transform_inverse(struct Wavelets *wdm, double *data)
+{
+    int k;
+    int N = wdm->NT*wdm->NF;
+    double *phit  = double_vector(wdm->NT/2+1);
+    double *row   = double_vector(wdm->NT*2);
+    double *dataf = double_vector(N); 
+    double *datat = double_vector(N);
+    double scale  = sqrt(M_PI)/wdm->cadence;
+    double sign;
+    
+    for(int i=0; i<=wdm->NT/2; i++)
+    {
+        phit[i] = phitilde(i*wdm->domega, wdm->inv_root_dOmega, wdm->A, wdm->B);
+    }
+
+    for(int j=1; j<wdm->NF-1; j++)
+    {
+        if(j%2==0) sign =  1.0;
+        else       sign = -1.0;
+
+        for(int i=0; i<wdm->NT; i++)
+        {
+            wavelet_pixel_to_index(wdm,i,j,&k);
+            k-=wdm->kmin;
+            
+            if((i+j)%2==0)
+            {
+                REAL(row,i) = data[k];
+            }
+            else
+            {
+                if(j%2==0) IMAG(row,i) = -data[k];
+                else       IMAG(row,i) =  data[k];
+            }
+        }
+
+        gsl_fft_complex_radix2_forward (row, 1, wdm->NT);
+        int jj = j*(wdm->NT/2);
+
+        // negative frequencies
+        for(int i=wdm->NT/2-1; i>0; i--)
+        {
+            int kk = jj-i;
+            dataf[kk]   += sign*scale*phit[i]*REAL(row,wdm->NT-i);
+            dataf[N-kk] += sign*scale*phit[i]*IMAG(row,wdm->NT-i);
+        }
+        
+        // positive frequencies
+        for(int i=0; i<wdm->NT/2; i++)
+        {
+            int kk = jj+1;
+            dataf[kk]   += sign*scale*phit[i]*REAL(row,i);
+            dataf[N-kk] += sign*scale*phit[i]*IMAG(row,i);
+        }
+
+    }
+
+    //print Fourier domain data
+    FILE *out = fopen("dataf.dat","w");
+    for(int n=1; n<N/2; n++) fprintf(out,"%e %e %e\n", n/wdm->T, dataf[n], dataf[N-n]);
+    fclose(out);
+
+    //print Time domain data
+    memcpy(datat,dataf,N*sizeof(double));
+    gsl_fft_halfcomplex_radix2_inverse(datat, 1, N);
+    
+    out = fopen("datat.dat","w");
+    for(int n=0; n<N; n++)
+    {
+        fprintf(out,"%e %e\n", n*wdm->cadence, datat[n]);
+    }
+    fclose(out);
+
+    free_double_vector(datat);
+    free_double_vector(dataf);
+    free_double_vector(row);
+    free_double_vector(phit);
+}
+
+void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int *list, int *rlist, int Nmax)
 {
     
     int n, k, jj, kk;
@@ -347,24 +422,22 @@ void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *f
     // maximum frequency and frequency derivative
     double f_max    = wdm->df*(wdm->NF-1);
     double fdot_max = wdm->fdot[wdm->fdot_steps-1];
-    double d_fdot   = wdm->fdot[1]; // f-dot increment
+    double fdot_min = wdm->fdot[0];
+    double d_fdot   = wdm->fdot[1]-wdm->fdot[0]; // f-dot increment
     
-    int wave_index = 0;
-
     for(int i=0; i<wdm->NT; i++)
     {
         f     = freq[i];
         fdot  = freqd[i];
-        if(fdot < 0.0) fdot = 0.0;
         
         //skip this step if f or fdot violate bounds
-        if(f>=f_max || fdot>=fdot_max)  continue;
+        if(f>=f_max || fdot>=fdot_max || fdot<=fdot_min)  continue;
         
         cos_phase = amp[i]*cos(phase[i]);
         sin_phase = amp[i]*sin(phase[i]);
         
-        n = (int)floor(fdot/d_fdot);  // lower f-dot layer
-        dy = fdot/d_fdot - n;         // where in the layer
+        n = (int)floor((fdot-fdot_min)/d_fdot);  // lower f-dot layer
+        dy = (fdot-fdot_min)/d_fdot - n;         // where in the layer
                                     
         for(int j=jmin[i]; j<=jmax[i]; j++)
         {
@@ -404,11 +477,11 @@ void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *f
             wavelet_pixel_to_index(wdm,i,j,&k);
             if(k>=wdm->kmin && k<wdm->kmax)
             {  
-                if(wave_index<Nmax)
+                int n = rlist[k - wdm->kmin];
+                if(n<Nmax)
                 {
-                    if((i+j)%2 == 0) wave[wave_index] =  (cos_phase*y - sin_phase*z);
-                    else             wave[wave_index] = -(cos_phase*z + sin_phase*y);
-                    wave_index++;
+                    if((i+j)%2 == 0) wave[n] =  (cos_phase*y - sin_phase*z);
+                    else             wave[n] = -(cos_phase*z + sin_phase*y);
                 }
                 else
                 {
@@ -422,16 +495,16 @@ void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *f
     } //loop over time steps
 }
 
-void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, double *freqZ, double *fdotX, double *fdotY, double *fdotZ, int *wavelet_list, int *Nwavelet, int *jmin, int *jmax)
+void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, double *freqZ, double *fdotX, double *fdotY, double *fdotZ, int *wavelet_list, int *reverse_list, int *Nwavelet, int *jmin, int *jmax)
 {
     
     int n;
     int k;
     int N;
-    double fdot;
-    double fmx, fdmx, dfd, HBW;
-    double fx, fy, fz;
+    double fmx, fdmx, fdmn, dfd, HBW;
     double fmax, fmin;
+    double fdotmax, fdotmin;
+    int Xflag, Yflag, Zflag;
     
     double df = wdm->deltaf;
     double DF = wdm->df;
@@ -440,56 +513,95 @@ void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, dou
     // maximum frequency and frequency derivative
     fmx  = (double)(wdm->NF-1)*DF;
     fdmx = fd[wdm->fdot_steps-1];
-    dfd  = fd[1]; // f-dot increment
+    fdmn = fd[0];
+    dfd  = fd[1]-fd[0]; // f-dot increment
     
     N = 0;
     for(int i=0; i<wdm->NT; i++)
     {
+        // check to see if any of the channels are ok
+        Xflag = Yflag = Zflag = 0;
+        if(freqX[i] < fmx) Xflag = 1;
+        if(freqY[i] < fmx) Yflag = 1;
+        if(freqZ[i] < fmx) Zflag = 1;
 
-        // find smallest fdot
-        fdot = fdotX[i];
-        if(fdotY[i] < fdot) fdot = fdotY[i];
-        if(fdotZ[i] < fdot) fdot = fdotZ[i];
-        if(fdot < 0.0) fdot = 0.0;
-        
-        fx = freqX[i];
-        fy = freqY[i];
-        fz = freqZ[i];
-        
-        // find the largest and smallest frequencies
-        fmin = fx;
-        fmax = fx;
-        if(fy < fmin) fmin = fy;
-        if(fy > fmax) fmax = fy;
-        if(fz < fmin) fmin = fz;
-        if(fz > fmax) fmax = fz;
-        
-        if(fmax < fmx && fdot < fdmx)
+        // shut off any channel that does not have valid fdots
+        if(fdotX[i] < fdmn || fdotX[i] > fdmx) Xflag = 0;
+        if(fdotY[i] < fdmn || fdotY[i] > fdmx) Yflag = 0;
+        if(fdotZ[i] < fdmn || fdotZ[i] > fdmx) Zflag = 0;
+
+        // skip if no channels have valid values
+        if(!Xflag && !Yflag && !Zflag) continue;
+
+        /*  find the largest and smallest frequencies and frequency derivatives
+        but only using the valid channels */
+        fmin = 1;
+        fmax = 0;
+        fdotmin =  1;
+        fdotmax = -1;
+
+        if(Xflag)
         {
-            // lower f-dot layer
-            n = (int)(floor(fdot/dfd));
+            if(freqX[i]>fmax) fmax=freqX[i];
+            if(freqX[i]<fmin) fmin=freqX[i];
+            if(fdotX[i]>fdotmax) fdotmax=fdotX[i];
+            if(fdotX[i]<fdotmin) fdotmin=fdotX[i];
+        }
+        
+        if(Yflag)
+        {
+            if(freqY[i]>fmax) fmax=freqY[i];
+            if(freqY[i]<fmin) fmin=freqY[i];
+            if(fdotY[i]>fdotmax) fdotmax=fdotY[i];
+            if(fdotY[i]<fdotmin) fdotmin=fdotY[i];
+        }
+        
+        if(Zflag)
+        {
+            if(freqZ[i]>fmax) fmax=freqZ[i];
+            if(freqZ[i]<fmin) fmin=freqZ[i];
+            if(fdotZ[i]>fdotmax) fdotmax=fdotZ[i];
+            if(fdotZ[i]<fdotmin) fdotmin=fdotZ[i];
+        }
+       
+        //skip if max/min fdot go out of bounds 
+        if(fdotmax >= fdmx || fdotmin <= fdmn) continue;
 
-            // half bandwidth of layer        
-            HBW = 0.5*(double)(wdm->n_table[n]-1)*df;
+        // lowest f-dot layer
+        n = (int)(floor(fdotmin-fdmn/dfd));
+        int NL = wdm->n_table[n];
+
+        // highest f-dot layer
+        n = (int)(floor(fdotmax-fdmn/dfd));
+        int NH = wdm->n_table[n];
+
+        // find which has the largest number of samples
+        if(NL > NH) NH = NL;
+
+        // half bandwidth of layer        
+        HBW = 0.5*(NH-1)*df;
+        
+        // lowest frequency layer
+        jmin[i] = (int)ceil((fmin-HBW)/DF);
+        
+        // highest frequency layer
+        jmax[i] = (int)floor((fmax+HBW)/DF);   
+
+        // skip any out-of-bounds layers
+        if(jmin[i] < 0) jmin[i] = 0;
+        if(jmax[i] > wdm->NF-1) jmax[i] = wdm->NF-1;
+        
+        for(int j=jmin[i]; j<=jmax[i]; j++)
+        {
+            wavelet_pixel_to_index(wdm,i,j,&k);
             
-            // lowest frequency layer
-            jmin[i] = (int)ceil((fmin-HBW)/DF);
-            
-            // highest frequency layer
-            jmax[i] = (int)floor((fmax+HBW)/DF);            
-            
-            for(int j=jmin[i]; j<=jmax[i]; j++)
+            //check that the pixel is in range
+            if(k>=wdm->kmin && k<wdm->kmax)
             {
-                
-                wavelet_pixel_to_index(wdm,i,j,&k);
-                
-                //check that the pixel is in range
-                if(k>=wdm->kmin && k<wdm->kmax)
-                {
-                    wavelet_list[N]=k-wdm->kmin;
-                    N++;
-                }
-            }  // end loop over frequency layers 
+                wavelet_list[N]=k-wdm->kmin;
+                reverse_list[k-wdm->kmin]=N;
+                N++;
+            }
         }  
     }
     *Nwavelet = N;

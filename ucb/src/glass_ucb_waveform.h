@@ -72,6 +72,7 @@ double snr_prior(double SNR);
  @return \f$  M = \frac{(h_a|h_b)}{\sqrt{(h_a|h_a)+(h_b|h_b)}} \f$
  */
 double waveform_match(struct Source *a, struct Source *b, struct Noise *noise);
+double waveform_match_wavelet(struct Source *a, struct Source *b, struct Noise *noise);
 
 /**
 \brief Compute distance between waveforms
