@@ -176,6 +176,8 @@ int main(int argc, char *argv[])
                 
                 for(int steps=0; steps < 100; steps++)
                     ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                
+                ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                                                 
                 //update fisher matrix for each chain
                 for(int n=0; n<model_ptr->Nlive; n++)

@@ -24,6 +24,7 @@
 #include "glass_ucb_io.h"
 #include "glass_ucb_catalog.h"
 #include "glass_ucb_waveform.h"
+#include "glass_ucb_fstatistic.h"
 #include "glass_ucb_data.h"
 
 
@@ -450,6 +451,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             //Add waveform to data TDI channels
             if(!strcmp("fourier",data->basis))
             {
+                printf("add fourier waveform to data\n");
                 for(int n=0; n<inj->BW; n++)
                 {
                     int i = n+inj->imin;
@@ -493,13 +495,13 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                     switch(data->Nchannel)
                     {
                         case 1:
-                            fprintf(fptr,"%lg %lg %lg\n", f, inj->tdi->X[2*i],tdi->X[2*i+1]);
+                            fprintf(fptr,"%.14e %.14e %.14e\n", f, inj->tdi->X[2*i],tdi->X[2*i+1]);
                             break;
                         case 2:
-                            fprintf(fptr,"%lg %lg %lg %lg %lg\n", f, inj->tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                            fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e\n", f, inj->tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
                             break;
                         case 3:
-                            fprintf(fptr,"%lg %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
+                            fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e %.14e %.14e\n", f, inj->tdi->X[2*i],inj->tdi->X[2*i+1], inj->tdi->Y[2*i],inj->tdi->Y[2*i+1],inj->tdi->Z[2*i],inj->tdi->Z[2*i+1]);
                             break;
                     }
                 }
@@ -514,30 +516,40 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                         double t = i*data->wdm->dt;
                         wavelet_pixel_to_index(data->wdm,i,j,&k);
                         k-=data->wdm->kmin;
-                        fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", t, f, inj->tdi->X[k], inj->tdi->Y[k], inj->tdi->Z[k]);   
+                        fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e\n", t, f, inj->tdi->X[k], inj->tdi->Y[k], inj->tdi->Z[k]);
                     }
                     fprintf(fptr,"\n");
                 }
             }
             fclose(fptr);
+
+            if(!strcmp("wavelet",data->basis))
+            {
+                sprintf(filename,"%s/waveform_injection_fourier_%i.dat",data->dataDir,n_inj);
+                print_wavelet_fourier_spectra(data->wdm, inj->tdi, filename);
+            }
+
             
             sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,n_inj);
             fptr=fopen(filename,"w");
             if(!strcmp("fourier",data->basis))
             {
-                for(int i=0; i<data->NFFT; i++)
+                for(int i=0; i<inj->BW; i++)
                 {
-                    double f = (double)(i+data->qmin)/data->T;
+                    double f = (double)(i+inj->qmin)/data->T;
                     switch(data->Nchannel)
                     {
                         case 1:
-                            fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
+                            fprintf(fptr,"%.14e %.14e\n", f, inj->tdi->X[2*i]*inj->tdi->X[2*i]+inj->tdi->X[2*i+1]*inj->tdi->X[2*i+1]);
                             break;
                         case 2:
-                            fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
+                            fprintf(fptr,"%.14e %.14e %.14e\n", f, inj->tdi->A[2*i]*inj->tdi->A[2*i]+inj->tdi->A[2*i+1]*inj->tdi->A[2*i+1], inj->tdi->E[2*i]*inj->tdi->E[2*i]+inj->tdi->E[2*i+1]*inj->tdi->E[2*i+1]);
                             break;
                         case 3:
-                            fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1],tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
+                            fprintf(fptr,"%.14e %.14e %.14e %.14e\n", f, 
+                                inj->tdi->X[2*i]*inj->tdi->X[2*i]+inj->tdi->X[2*i+1]*inj->tdi->X[2*i+1], 
+                                inj->tdi->Y[2*i]*inj->tdi->Y[2*i]+inj->tdi->Y[2*i+1]*inj->tdi->Y[2*i+1],
+                                inj->tdi->Z[2*i]*inj->tdi->Z[2*i]+inj->tdi->Z[2*i+1]*inj->tdi->Z[2*i+1]);
                             break;
                     }
                 }
@@ -552,7 +564,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                         double t = i*data->wdm->dt;
                         wavelet_pixel_to_index(data->wdm,i,j,&k);
                         k-=data->wdm->kmin;
-                        fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", t, f, inj->tdi->X[k]*inj->tdi->X[k], inj->tdi->Y[k]*inj->tdi->Y[k], inj->tdi->Z[k]*inj->tdi->Z[k]); 
+                        fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e\n", t, f, inj->tdi->X[k]*inj->tdi->X[k], inj->tdi->Y[k]*inj->tdi->Y[k], inj->tdi->Z[k]*inj->tdi->Z[k]);
                     }
                     fprintf(fptr,"\n");
                 }
@@ -615,7 +627,6 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
     /* compute overlaps between injections */
     if(!strcmp(data->basis,"wavelet"))
     {
-        double hh;
         printf("\n Match Matrix:\n");
         for(int i=0; i<n_inj; i++)
         {
@@ -626,6 +637,9 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             }
             printf("\n");
         }
+        
+        sprintf(filename,"%s/data/waveform_injection_fourier.dat",flags->runDir);
+        print_wavelet_fourier_spectra(data->wdm, inj_vec[0]->tdi, filename);
     }
 
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");

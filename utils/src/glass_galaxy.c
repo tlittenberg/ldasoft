@@ -23,7 +23,7 @@ double galaxy_distribution(double *x, double bulge_to_disk, double bulge_radius,
 
 double galaxy_foreground(double f, double A, double f1, double alpha, double fk, double f2)
 {
-    double Sf = A*pow(f,5./3.) * exp(-pow(f/f1,alpha)) * 0.5*( 1. + tanh( (fk - f)/f2 ) );
+    double Sf = A*pow(f,-7./3.) * exp(-pow(f/f1,alpha)) * 0.5*( 1. + tanh( (fk - f)/f2 ) );
     return Sf;
 }
 
@@ -389,23 +389,14 @@ static double galaxy_integrand(double *params, double r, double sintheta, double
     double Rgc = params[4];
     double *x = malloc(3*sizeof(double));
     
-    //conert from spherical SSB galactic coordinates to cartesian galacto-centric coordinates
+    //convert from spherical SSB galactic coordinates to cartesian galacto-centric coordinates
     double sinphi = sqrt(1.0-cosphi*cosphi);
     x[0] = r*cosphi*sintheta-Rgc;
     x[1] = r*sinphi*sintheta;
     x[2] = r*costheta;
 
-    /* 
-    volume element for integrand 
-    -- no sin(theta) dtheta dphi factor since Healpix uses equal area pixels
-    */
-    double r2 = x[0]*x[0] +x[1]*x[1] + x[2]*x[2];
-
     // unnomralized galactic mass density
     double rho = galaxy_distribution(x, A, Rb, Rd, Zd);
-
-    // volume element
-    rho /= sqrt(r2);
     
     free(x);
     return(rho);
@@ -419,23 +410,21 @@ static double galaxy_integration(double *params, double theta, double phi)
     double s5, s3;
     int i;
     double err, ferr, tol, min;
-    double Rd;
     
     double sintheta = sin(theta);
     double costheta = sqrt(1.0-sintheta*sintheta);
     double cosphi   = cos(phi);
     
     tol = 1.0e-6;
-    min = 1.0e-20;
+    min = 1.0e-10;
     
     double I5[5];
     double I3[3];
     
-    Rd = params[3];
+    rmax = 200.0;
+    h = rmax/10000.0;
 
-    rmax = 100.0*Rd;
-    h = Rd/100.0;
-    r = 0.0;
+    r = params[5]; //integration starts at Rcut (everything closer is resolved)
     
     IG = 0.0;
     

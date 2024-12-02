@@ -294,7 +294,11 @@ double ucb_phase(double t, double *params)
     double fdot  = params[7];
     double fddot = 0.0;
     
-    return phi0 + PI2*( f0*t + 0.5*fdot*t*t + 1.0/6.0*fddot*t*t*t );   
+    /*
+     * LDC phase parameter in key files is
+     * -phi0
+     */
+    return -phi0 + PI2*( f0*t + 0.5*fdot*t*t + 1.0/6.0*fddot*t*t*t );
 }
 
 double ucb_amplitude(double t, double *params)
@@ -1023,7 +1027,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
         amp->X[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
         phase->X[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel) + phase_wavelet_grid[i];
         freq->X[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
-        fdot->X[i]  = 0.0;//gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
+        fdot->X[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
     
     gsl_spline_init(amp_interpolant, t, tdi_amp->Y, Nspline);
@@ -1033,7 +1037,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
         amp->Y[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
         phase->Y[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel)+phase_wavelet_grid[i];
         freq->Y[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
-        fdot->Y[i]  = 0.0;//gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
+        fdot->Y[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
     
     gsl_spline_init(amp_interpolant, t, tdi_amp->Z, Nspline);
@@ -1043,7 +1047,7 @@ void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs
         amp->Z[i]   = gsl_spline_eval(amp_interpolant, time_wavelet_grid[i], interp_accel);
         phase->Z[i] = gsl_spline_eval(phase_interpolant, time_wavelet_grid[i], interp_accel)+phase_wavelet_grid[i];
         freq->Z[i]  = gsl_spline_eval_deriv(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + freq_wavelet_grid[i];
-        fdot->Z[i]  = 0.0;//gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
+        fdot->Z[i]  = gsl_spline_eval_deriv2(phase_interpolant, time_wavelet_grid[i], interp_accel)/PI2 + fdot_wavelet_grid[i];
     }
 
     /*

@@ -70,6 +70,8 @@ void tukey(double *data, double alpha, int N);
  @param N[in] size of arrays
  */
 void unpack_gsl_rft_output(double *x, double *x_gsl, int N);
+void unpack_gsl_fft_output(double *x, double *x_gsl, int N);
+void pack_gsl_fft_input(double *x, double *x_gsl, int N);
 
 /**
 \brief Compute power of complex amplitude in single element of data

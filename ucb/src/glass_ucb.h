@@ -22,6 +22,7 @@
 #include "glass_ucb_catalog.h"
 #include "glass_ucb_io.h"
 #include "glass_ucb_data.h"
+#include "glass_ucb_fstatistic.h"
 #include "glass_ucb_prior.h"
 #include "glass_ucb_proposal.h"
 #include "glass_ucb_waveform.h"

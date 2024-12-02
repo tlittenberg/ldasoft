@@ -29,8 +29,7 @@
 
 
 #define FIXME 0
-#define SNRCAP 20.0 /* SNR cap on logL */
-
+#define SNRCAP 100.0 /* SNR cap on logL */
 
 static void write_Fstat_animation(double fmin, double T, struct Proposal *proposal, char runDir[], double minp)
 {
@@ -789,11 +788,10 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 break;
             case 1:
                 sprintf(proposal[i]->name,"fstat draw");
-                //TODO: fstat needs to get wavelet support
-                //setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
+                setup_fstatistic_proposal(orbit, data, flags, proposal[i]);
                 proposal[i]->function = &draw_from_fstatistic;
                 proposal[i]->density  = &evaluate_fstatistic_proposal;
-                proposal[i]->weight   = 0.0;
+                proposal[i]->weight   = 0.2;
                 proposal[i]->rjweight = 1.0; //that's a 1 all right.  don't panic
                 check += proposal[i]->weight;
                 break;
@@ -810,7 +808,7 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
                 
                 proposal[i]->function = &jump_from_fstatistic;
                 proposal[i]->density  = &evaluate_fstatistic_proposal;
-                proposal[i]->weight   = 0.0;
+                proposal[i]->weight   = 0.2;
                 proposal[i]->rjweight = 0.0;
                 check   += proposal[i]->weight;
                 rjcheck += proposal[i]->rjweight;
@@ -1071,11 +1069,12 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     
     //matrix to hold maximized extrinsic parameters
     double *Fparams = calloc(4,sizeof(double));
-    
+
     //grid sizes
-    int n_f     = 4*data->NFFT;
-    int n_theta = 30;
-    int n_phi   = 30;
+    int n_f     = data->NFFT;
+    int n_theta = 20;
+    int n_phi   = 20;
+    int n_fdot  = 10;
     if(flags->debug)
     {
         n_f/=4;
@@ -1083,9 +1082,13 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         n_phi/=3;
     }
     
-    double d_f     = (double)data->NFFT/(double)n_f;
+    double d_f;
+    if(!strcmp(data->basis,"fourier")) d_f = (double)data->NFFT/(double)n_f/data->T;
+    if(!strcmp(data->basis,"wavelet")) d_f = (data->fmax - data->fmin - data->wdm->df)/n_f;
+
     double d_theta = 2./(double)n_theta;
     double d_phi   = PI2/(double)n_phi;
+    double d_fdot = (1.1 - 0.1)/n_fdot; //scan over chirp mass range [0.1:1.1] Msolar
     
     if(!flags->quiet)
     {
@@ -1095,12 +1098,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         fprintf(stdout,"   n_phi   = %i\n",n_phi);
         fprintf(stdout,"   cap     = %g\n",SNRCAP);
     }
-    
-    double fdot = 0.0; //TODO: what to do about fdot...
-    
-    //F-statistic for TDI variabls
-    double logL_X,logL_AE;
-    
+            
     //allocate memory in proposal structure and pack up metadata
     /*
      proposal->matrix is 3x2 matrix.
@@ -1139,9 +1137,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     }
     
     double norm = 0.0;
-    //double maxLogL = -1e60;
-    //double minLogL = +1e60;
     double minp = +1e60;
+    proposal->maxp = -1e60;
     
     /* compute or restore fisher-based proposal */
     char filename[MAXSTRINGSIZE];
@@ -1191,43 +1188,56 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                 if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
             }
             
-            double q = (double)(data->qmin) + (double)(i)*d_f;
-            double f = q/data->T;
-            
+            double q;
+            double f;
+            if(!strcmp(data->basis,"fourier"))
+            {
+                q = (double)(data->qmin) + (double)(i)*d_f*data->T;
+                f = q/data->T;
+            }
+            if(!strcmp(data->basis,"wavelet"))
+                f = data->fmin + data->wdm->df/2 + i*d_f;
+
+            f += d_f/2; //evaluate logL in center of cell
             
             //loop over colatitude bins
             #pragma omp parallel for num_threads(flags->threads) collapse(2)
             for (int j=0; j<n_theta; j++)
             {
+                //F-statistic for TDI variabls
+                double logL_X,logL_AE, logLmax;
+
                 //loop over longitude bins
                 for(int k=0; k<n_phi; k++)
                 {
-                    double theta = acos((-1. + (double)j*d_theta));
-                    double phi = (double)k*d_phi;
+                    double theta = acos((-1. + (double)j*d_theta + d_theta/2)); //evaluate logL in center of cell
+                    double phi = (double)k*d_phi + d_phi/2; //evaluate logL in center of cell
                     
-                    if(i>0 && i<n_f-1)
-                    {
-                        get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
+
+                    if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, 0, theta, phi, &logL_X, &logL_AE, Fparams);
+                    if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, 0, theta, phi);
+
+                    logLmax = logL_AE;
                         
-                        if(logL_AE > SNRCAP*SNRCAP/2)      logL_AE = SNRCAP*SNRCAP/2;//TODO: Test SNRCAP in fstatistic
-                        proposal->tensor[i][j][k] = logL_AE;
+                    if(logL_AE>1)
+                    {
+                        for(int n=0; n<n_fdot; n++)
+                        {
+                            double fdot = ucb_fdot(0.1+n*d_fdot, f); //get fdot by scanning over chirpmass
+                            
+                            if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
+                            if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, fdot, theta, phi);
+                            
+                            if(logL_AE>logLmax) logLmax = logL_AE;
+
+                            if(logL_AE<1) break;
+                        }
                     }
+                    proposal->tensor[i][j][k] = logLmax*logLmax;
+
                 }//end loop over longitude bins
             }//end loop over colatitude bins
         }//end loop over sub-bins
-        
-        
-        /*detrend likelihood map
-        for(int i=0; i<n_f; i++)
-            for(int j=0; j<n_theta; j++)
-                for(int k=0; k<n_phi; k++)
-                    proposal->tensor[i][j][k] = proposal->tensor[i][j][k] - SNRCAP*SNRCAP/2;*/
-
-        /*exponentiate to get into likelhood (instead of log)
-        for(int i=0; i<n_f; i++)
-            for(int j=0; j<n_theta; j++)
-                for(int k=0; k<n_phi; k++)
-                    proposal->tensor[i][j][k] = proposal->tensor[i][j][k];*/
 
         //get normalization
         for(int i=0; i<n_f; i++)
@@ -1235,8 +1245,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                 for(int k=0; k<n_phi; k++)
                     norm += proposal->tensor[i][j][k];
         
-        
-        //normalize
+        //include correction for cell volume
         proposal->norm = (n_f*n_theta*n_phi)/norm;
         
         //normalize
@@ -1251,7 +1260,6 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             for(int j=0; j<n_theta; j++)
                 for(int k=0; k<n_phi; k++)
                     if(proposal->tensor[i][j][k]>proposal->maxp) proposal->maxp = proposal->tensor[i][j][k];
-
                 
         //store checkpointing files so we can skip this expensive step on resume
         propFile=fopen(filename,"wb");
@@ -1296,7 +1304,9 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             }
             fclose(fptr);
         }
-        write_Fstat_animation(data->qmin/data->T, data->T,proposal,flags->runDir, minp);
+        if(!strcmp(data->basis,"fourier")) write_Fstat_animation(data->qmin/data->T, data->T,proposal,flags->runDir, minp);
+        if(!strcmp(data->basis,"wavelet")) write_Fstat_animation(data->fmin + data->wdm->df/2, data->T,proposal,flags->runDir, minp);
+           
     }
     
     free(Fparams);
@@ -1625,7 +1635,9 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
         j = gsl_rng_uniform(seed)*n_theta;
         k = gsl_rng_uniform(seed)*n_phi;
         
-        q        = (double)(data->qmin) + i*d_f;
+        if(!strcmp(data->basis,"fourier")) q = (double)(data->qmin) + i*d_f*data->T;
+        if(!strcmp(data->basis,"wavelet")) q = (data->fmin + data->wdm->df/2 + i*d_f)*data->T;
+
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
                 
@@ -1668,7 +1680,9 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         fm_shift(data, model, source, proposal, params, seed);
         
         q = params[0];
-        i = floor((q-data->qmin)/d_f);
+        if(!strcmp(data->basis,"fourier")) i = (int)floor((q - data->qmin)/(d_f*data->T));
+        if(!strcmp(data->basis,"wavelet")) i = (int)floor((q/data->T - (data->fmin + data->wdm->df/2))/d_f);
+
         
         if(i<0.0 || i>n_f-1) return -INFINITY;
     }
@@ -1680,7 +1694,9 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         j = gsl_rng_uniform(seed)*n_theta;
         k = gsl_rng_uniform(seed)*n_phi;
         
-        q        = (double)(data->qmin) + i*d_f;
+        if(!strcmp(data->basis,"fourier")) q = (double)(data->qmin) + i*d_f*data->T;
+        if(!strcmp(data->basis,"wavelet")) q = (data->fmin + data->wdm->df/2 + i*d_f)*data->T;
+
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
         
@@ -1732,7 +1748,10 @@ double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *mode
     int n_theta = (int)proposal->matrix[1][0];
     int n_phi   = (int)proposal->matrix[2][0];
     
-    int i = (int)floor((params[0] - data->qmin)/d_f);
+    int i;
+    if(!strcmp(data->basis,"fourier")) i = (int)floor((params[0] - data->qmin)/(d_f*data->T));
+    if(!strcmp(data->basis,"wavelet")) i = (int)floor((params[0]/data->T - (data->fmin + data->wdm->df/2))/d_f);
+
     int j = (int)floor((params[1] - -1)/d_theta);
     int k = (int)floor((params[2])/d_phi);
     

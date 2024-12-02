@@ -461,7 +461,10 @@ void generate_galactic_foreground_model(struct ForegroundModel *model)
     for(int n=0; n<model->psd->N; n++)
     {
         f = model->psd->f[n];
-        
+        double fstar=CLIGHT/(PI2*LARM);
+        double x = f/fstar;
+        double t = 4.*x*x*sin(x)*sin(x); //transfer function
+
         //skip confusion noise calculation at high frequencies where contribution is negligible
         int high_f_check = 0;
         if(f>model->f1*10) high_f_check = 1;
@@ -475,13 +478,13 @@ void generate_galactic_foreground_model(struct ForegroundModel *model)
                 model->psd->C[0][0][n] = Sgal;
                 break;
             case 2:
-                model->psd->C[0][0][n] = model->psd->C[1][1][n] = 1.5*Sgal;
+                model->psd->C[0][0][n] = model->psd->C[1][1][n] = 1.5*t*Sgal;
                 model->psd->C[0][1][n] = model->psd->C[1][0][n] = 0;
                 break;
             case 3:
-                model->psd->C[0][0][n] = model->psd->C[1][1][n] = model->psd->C[2][2][n] = Sgal;
-                model->psd->C[0][1][n] = model->psd->C[0][2][n] = model->psd->C[1][2][n] = -0.5*Sgal;
-                model->psd->C[1][0][n] = model->psd->C[2][0][n] = model->psd->C[2][1][n] = -0.5*Sgal;
+                model->psd->C[0][0][n] = model->psd->C[1][1][n] = model->psd->C[2][2][n] = t*Sgal;
+                model->psd->C[0][1][n] = model->psd->C[0][2][n] = model->psd->C[1][2][n] = -0.5*t*Sgal;
+                model->psd->C[1][0][n] = model->psd->C[2][0][n] = model->psd->C[2][1][n] = -0.5*t*Sgal;
                 break;
         }
     }
@@ -534,6 +537,14 @@ void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct For
         for(int n=0; n<3; n++)
             for(int m=n; m<3; m++)
                 if(n!=m) C[n][m][i]*=-2.;
+
+
+    //NOTE: normalization fudge factor
+    for(int i=0; i<model->psd->N; i++)
+        for(int n=0; n<3; n++)
+            for(int m=n; m<3; m++)
+                C[n][m][i]/=4.;
+
 
 
     free_foreground_model(grid);
@@ -784,13 +795,21 @@ void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct 
     for(int n=0; n<model->psd->N; n++)
         model->psd->f[n] = data->fmin + (double)n/data->T;
 
-    // initialize foreground parameters levels
+    // initialize constant foreground parameters levels 
     model->Tobs  =  data->T;
-    model->Amp   =  2.27e-37;
-    model->f1    =  1.951343e-03;
-    model->alpha =  1.52;
-    model->fk    =  3.633222e-03;
-    model->f2    =  5.100000e-04;
+    model->Amp   =  1.2826e-44;
+    model->alpha =  1.629667;
+    model->f2    =  4.810781e-4;
+
+    // initialize time dependent foreground parameter elves
+    double af1 = -2.235e-1;
+    double bf1 = -2.7040844;
+    double afk = -3.60976122e-1;
+    double bfk = -2.37822436;
+
+    model->f1  =  pow(10., af1*log10(model->Tobs/YEAR) + bf1);
+    model->fk  =  pow(10., afk*log10(model->Tobs/YEAR) + bfk);
+
     map_foreground_params_to_array(model);
     
     // get noise covariance matrix for initial parameters
@@ -810,13 +829,20 @@ void initialize_foreground_model_wavelet(struct Orbit *orbit, struct Data *data,
     for(int n=0; n<model->psd->N; n++)
         model->psd->f[n] = (data->qmin+n)*wdm->df;
 
-    // initialize foreground parameters levels
+    // initialize constant foreground parameters levels 
     model->Tobs  =  data->T;
-    model->Amp   =  2.27e-37;
-    model->f1    =  1.951343e-03;
-    model->alpha =  1.52;
-    model->fk    =  3.633222e-03;
-    model->f2    =  5.100000e-04;
+    model->Amp   =  1.2826e-44;
+    model->alpha =  1.629667;
+    model->f2    =  4.810781e-4;
+
+    // initialize time dependent foreground parameter elves
+    double af1 = -2.235e-1;
+    double bf1 = -2.7040844;
+    double afk = -3.60976122e-1;
+    double bfk = -2.37822436;
+
+    model->f1  =  pow(10., af1*log10(model->Tobs/YEAR) + bf1);
+    model->fk  =  pow(10., afk*log10(model->Tobs/YEAR) + bfk);
     map_foreground_params_to_array(model);
     
     // get noise covariance matrix for initial parameters
@@ -830,12 +856,13 @@ void initialize_foreground_model_wavelet(struct Orbit *orbit, struct Data *data,
      * Compute galaxy modulation
     **************************************************/
     
-    double *galaxy_params = double_vector(5); // defines galaxy shape
-    galaxy_params[0] = 0.25; // A 0.25  bulge fraction
-    galaxy_params[1] = 0.8;  // Rb 0.8  bulge radius (kpc)
-    galaxy_params[2] = 2.5;  // Rd 2.5  disk radius (kpc)
-    galaxy_params[3] = 0.4;  // Zd 0.4  disk height (kpc)
-    galaxy_params[4] = 7.2;  // RGC 7.2 distance from solar BC to GC (kpc)
+    double *galaxy_params = double_vector(6); // defines galaxy shape
+    galaxy_params[0] = 0.25; // A 0.25    bulge fraction
+    galaxy_params[1] = 0.8;  // Rb 0.8    bulge radius (kpc)
+    galaxy_params[2] = 2.5;  // Rd 2.5    disk radius (kpc)
+    galaxy_params[3] = 0.4;  // Zd 0.4    disk height (kpc)
+    galaxy_params[4] = 7.2;  // RGC 7.2   distance from solar BC to GC (kpc)
+    galaxy_params[5] = 3.5;  // Rcut 3.5  radius out to which all sources are found (kpc)
 
     //computes the modulation of the confusion noise
     galaxy_modulation(model->modulation, galaxy_params);

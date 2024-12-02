@@ -1202,7 +1202,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
         }
     }
     fclose(fptr);
-    
+
     char strain_filename[256];
     sprintf(strain_filename,"%s/data.dat",data->dataDir);
     fptr=fopen(strain_filename,"w");
@@ -1239,8 +1239,72 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
             fprintf(fptr,"\n");
         }
     }
-
     fclose(fptr);
+
+
+    if(!strcmp("wavelet",data->basis))
+    {
+        sprintf(strain_filename,"%s/data_fourier.dat",data->dataDir);
+        print_wavelet_fourier_spectra(data->wdm, tdi, strain_filename);
+    }
+
+}
+
+void print_wavelet_fourier_spectra(struct Wavelets *wdm, struct TDI *tdi, char filename[])
+{
+    int k;
+    int N = wdm->NF*wdm->NT;
+    double T = N*LISA_CADENCE;
+
+    double **freqData = double_matrix(3,N);
+    //double **timeData = double_matrix(3,N);
+    double **waveData = double_matrix(3,N);
+
+    //get TDI data into context
+    for(int i=0; i<wdm->NT; i++)
+    {
+        for(int j=0; j<wdm->NF; j++)
+        {
+            wavelet_pixel_to_index(wdm,i,j,&k);
+            if(k>=wdm->kmin && k<wdm->kmax)
+            {
+                waveData[0][k] = tdi->X[k-wdm->kmin];
+                waveData[1][k] = tdi->Y[k-wdm->kmin];
+                waveData[2][k] = tdi->Z[k-wdm->kmin];
+            }
+        }
+    }
+
+    //wavelet to frequency
+    memcpy(freqData[0],waveData[0],sizeof(double)*N);
+    memcpy(freqData[1],waveData[1],sizeof(double)*N);
+    memcpy(freqData[2],waveData[2],sizeof(double)*N);
+    wavelet_to_fourier_transform(wdm, freqData[0]);
+    wavelet_to_fourier_transform(wdm, freqData[1]);
+    wavelet_to_fourier_transform(wdm, freqData[2]);
+
+    FILE *fptr=fopen(filename,"w");
+    for(int n=0; n<N/2; n++) fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e %.14e %.14e\n", n/T, freqData[0][2*n],freqData[0][2*n+1],freqData[1][2*n],freqData[1][2*n+1], freqData[2][2*n],freqData[2][2*n+1]);
+    fclose(fptr);
+
+    //wavelet to time
+    /*
+    memcpy(timeData[0],waveData[0],sizeof(double)*N);
+    memcpy(timeData[1],waveData[1],sizeof(double)*N);
+    memcpy(timeData[2],waveData[2],sizeof(double)*N);
+    wavelet_transform_inverse(wdm, timeData[0]);
+    wavelet_transform_inverse(wdm, timeData[1]);
+    wavelet_transform_inverse(wdm, timeData[2]);
+
+    sprintf(filename,"%s/data/waveform_injection_time.dat",flags->runDir);
+    fptr=fopen(filename,"w");
+    for(int n=0; n<N; n++) fprintf(fptr,"%.14e %.14e %.14e %.14e\n", n*T/N, timeData[0][n], timeData[1][n], timeData[2][n]);
+    fclose(fptr);
+    */
+
+    free_double_matrix(freqData,3);
+    //free_double_matrix(timeData,3);
+    free_double_matrix(waveData,3);
 }
 
 void print_glass_usage()

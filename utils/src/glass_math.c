@@ -268,8 +268,9 @@ void invert_matrix(double **matrix, int N)
     
     if(err>0)
     {
-        fprintf(stderr,"data.c:647: WARNING: singluar matrix\n");
+        fprintf(stderr,"WARNING: singluar matrix at line %d in file %s\n", __LINE__, __FILE__);
         fflush(stderr);
+        exit(1);
     }
     else
     {
@@ -400,6 +401,28 @@ void unpack_gsl_rft_output(double *x, double *x_gsl, int N)
     {
         x[2*n]   = x_gsl[2*n-1];
         x[2*n+1] = x_gsl[2*n];
+    }
+}
+
+void unpack_gsl_fft_output(double *x, double *x_gsl, int N)
+{
+    x[0] = x_gsl[0];
+    x[1] = 0.0;
+    for(int n=1; n<N/2; n++)
+    {
+        x[2*n]   = x_gsl[n];
+        x[2*n+1] = x_gsl[N-n];
+    }
+}
+
+void pack_gsl_fft_input(double *x, double *x_gsl, int N)
+{
+    x_gsl[0]  = x[0];
+    x_gsl[N/2] = 0.0;
+    for(int n=1; n<N/2; n++)
+    {
+        x_gsl[n] = x[2*n];
+        x_gsl[N-n] = x[2*n+1];
     }
 }
 

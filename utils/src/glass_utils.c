@@ -14,12 +14,7 @@ void free_int_vector(int *v)
 int **int_matrix(int N, int M)
 {
     int **m = malloc( N * sizeof(int *));
-    
-    for(int i=0; i<N; i++)
-    {
-        m[i] = malloc( M * sizeof(int));
-    }
-    
+    for(int i=0; i<N; i++) m[i] = int_vector(M);
     return m;
 }
 
@@ -43,12 +38,7 @@ void free_double_vector(double *v)
 double **double_matrix(int N, int M)
 {
     double **m = malloc( N * sizeof(double *));
-    
-    for(int i=0; i<N; i++)
-    {
-        m[i] = malloc( M * sizeof(double));
-    }
-    
+    for(int i=0; i<N; i++) m[i] = double_vector(M);
     return m;
 }
 
@@ -60,17 +50,8 @@ void free_double_matrix(double **m, int N)
 
 double ***double_tensor(int N, int M, int L)
 {
-    
     double ***t = malloc( N * sizeof(double **));
-    for(int i=0; i<N; i++)
-    {
-        t[i] = malloc( M * sizeof(double *));
-        for(int j=0; j<M; j++)
-        {
-            t[i][j] = malloc( L * sizeof(double));
-        }
-    }
-    
+    for(int i=0; i<N; i++) t[i] = double_matrix(M,L);
     return t;
 }
 

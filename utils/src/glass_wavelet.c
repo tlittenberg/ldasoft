@@ -328,20 +328,20 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
     free_double_matrix(wave,wdm->NT);
 }
 
-void wavelet_transform_inverse(struct Wavelets *wdm, double *data)
+void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
 {
     int k;
     int N = wdm->NT*wdm->NF;
     double *phit  = double_vector(wdm->NT/2+1);
     double *row   = double_vector(wdm->NT*2);
-    double *dataf = double_vector(N); 
-    double *datat = double_vector(N);
+    double *work  = double_vector(N);
     double scale  = sqrt(M_PI)/wdm->cadence;
+    double Tobs   = N*wdm->cadence;
     double sign;
     
     for(int i=0; i<=wdm->NT/2; i++)
     {
-        phit[i] = phitilde(i*wdm->domega, wdm->inv_root_dOmega, wdm->A, wdm->B);
+        phit[i] = phitilde(i*PI2/Tobs, wdm->inv_root_dOmega, wdm->A, wdm->B);
     }
 
     for(int j=1; j<wdm->NF-1; j++)
@@ -351,9 +351,11 @@ void wavelet_transform_inverse(struct Wavelets *wdm, double *data)
 
         for(int i=0; i<wdm->NT; i++)
         {
-            wavelet_pixel_to_index(wdm,i,j,&k);
-            k-=wdm->kmin;
+            REAL(row,i) = 0.0;
+            IMAG(row,i) = 0.0;
             
+            wavelet_pixel_to_index(wdm,i,j,&k);
+                        
             if((i+j)%2==0)
             {
                 REAL(row,i) = data[k];
@@ -366,46 +368,53 @@ void wavelet_transform_inverse(struct Wavelets *wdm, double *data)
         }
 
         gsl_fft_complex_radix2_forward (row, 1, wdm->NT);
-        int jj = j*(wdm->NT/2);
 
         // negative frequencies
         for(int i=wdm->NT/2-1; i>0; i--)
         {
-            int kk = jj-i;
-            dataf[kk]   += sign*scale*phit[i]*REAL(row,wdm->NT-i);
-            dataf[N-kk] += sign*scale*phit[i]*IMAG(row,wdm->NT-i);
+            int n = j*(wdm->NT/2)-i;
+            work[n]   += sign*scale*phit[i]*REAL(row,wdm->NT-i);
+            work[N-n] += sign*scale*phit[i]*IMAG(row,wdm->NT-i);
         }
         
         // positive frequencies
         for(int i=0; i<wdm->NT/2; i++)
         {
-            int kk = jj+1;
-            dataf[kk]   += sign*scale*phit[i]*REAL(row,i);
-            dataf[N-kk] += sign*scale*phit[i]*IMAG(row,i);
+            int n = j*(wdm->NT/2)+i;
+            work[n]   += sign*scale*phit[i]*REAL(row,i);
+            work[N-n] += sign*scale*phit[i]*IMAG(row,i);
         }
-
     }
-
-    //print Fourier domain data
-    FILE *out = fopen("dataf.dat","w");
-    for(int n=1; n<N/2; n++) fprintf(out,"%e %e %e\n", n/wdm->T, dataf[n], dataf[N-n]);
-    fclose(out);
-
-    //print Time domain data
-    memcpy(datat,dataf,N*sizeof(double));
-    gsl_fft_halfcomplex_radix2_inverse(datat, 1, N);
     
-    out = fopen("datat.dat","w");
-    for(int n=0; n<N; n++)
-    {
-        fprintf(out,"%e %e\n", n*wdm->cadence, datat[n]);
-    }
-    fclose(out);
+    //unpack work vector into real and imaginary parts consistent w/ GLASS conventions
+    unpack_gsl_fft_output(data,work,N);
 
-    free_double_vector(datat);
-    free_double_vector(dataf);
-    free_double_vector(row);
+    //normalize
+    double fft_norm = 2.*sqrt(Tobs)/N;
+    for(int n=0; n<N; n++) data[n] *= fft_norm;
+
+
     free_double_vector(phit);
+    free_double_vector(work);
+    free_double_vector(row);
+}
+
+void wavelet_transform_inverse(struct Wavelets *wdm, double *data)
+{
+    int N = wdm->NT*wdm->NF;
+    double *work  = double_vector(N);
+    
+    wavelet_to_fourier_transform(wdm,data);
+    
+    pack_gsl_fft_input(data,work,N);
+    
+    //transform to domain data
+    gsl_fft_halfcomplex_radix2_inverse(work, 1, N);
+    
+    //unpack work vector into time series
+    for(int n=0; n<N; n++) data[n] = work[n];
+
+    free_double_vector(work);
 }
 
 void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int *list, int *rlist, int Nmax)
@@ -463,7 +472,7 @@ void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *f
             }
 
             jj = kk + wdm->n_table[n+1]/2;
-            if(jj >=0 && jj < wdm->n_table[n]-1)
+            if(jj >=0 && jj < wdm->n_table[n+1]-1)
             {
                 yy = (1.0-dx)*gsl_vector_get(wdm->table[n+1],2*jj)   + dx*gsl_vector_get(wdm->table[n+1],2*(jj+1));
                 zz = (1.0-dx)*gsl_vector_get(wdm->table[n+1],2*jj+1) + dx*gsl_vector_get(wdm->table[n+1],2*(jj+1)+1);

@@ -766,60 +766,59 @@ void LISA_TDI_spline(double *M, double *Mf, int a, int b, int c, double* tarray,
     
     t = tarray[n] - kr[a]-2.0*Larm[c]-2.0*Larm[b];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] += hp*App[c]+hc*Acp[c];
-    M[n] -= hp*Apm[b]+hc*Acm[b];
-    Mf[n] += hpf*App[c]+hcf*Acp[c];
-    Mf[n] -= hpf*Apm[b]+hcf*Acm[b];
+    M[n] += hp*Apm[b]+hc*Acm[b];
+    M[n] -= hp*App[c]+hc*Acp[c];
+    Mf[n] += hpf*Apm[b]+hcf*Acm[b];
+    Mf[n] -= hpf*App[c]+hcf*Acp[c];
     
     t = tarray[n] - kr[b]-Larm[c]-2.0*Larm[b];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] -= hp*App[c]+hc*Acp[c];
-    M[n] += hp*Apm[c]+hc*Acm[c];
-    Mf[n] -= hpf*App[c]+hcf*Acp[c];
-    Mf[n] += hpf*Apm[c]+hcf*Acm[c];
+    M[n] -= hp*Apm[c]+hc*Acm[c];
+    M[n] += hp*App[c]+hc*Acp[c];
+    Mf[n] -= hpf*Apm[c]+hcf*Acm[c];
+    Mf[n] += hpf*App[c]+hcf*Acp[c];
     
     t = tarray[n] - kr[c]-Larm[b]-2.0*Larm[c];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] += hp*Apm[b]+hc*Acm[b];
-    M[n] -= hp*App[b]+hc*Acp[b];
-    Mf[n] += hpf*Apm[b]+hcf*Acm[b];
-    Mf[n] -= hpf*App[b]+hcf*Acp[b];
+    M[n] += hp*App[b]+hc*Acp[b];
+    M[n] -= hp*Apm[b]+hc*Acm[b];
+    Mf[n] += hpf*App[b]+hcf*Acp[b];
+    Mf[n] -= hpf*Apm[b]+hcf*Acm[b];
     
     t = tarray[n] - kr[a]-2.0*Larm[b];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] -= hp*Apm[c]+hc*Acm[c];
-    M[n] += hp*Apm[b]+hc*Acm[b];
-    Mf[n] -= hpf*Apm[c]+hcf*Acm[c];
-    Mf[n] += hpf*Apm[b]+hcf*Acm[b];
+    M[n] -= hp*Apm[b]+hc*Acm[b];
+    M[n] += hp*Apm[c]+hc*Acm[c];
+    Mf[n] -= hpf*Apm[b]+hcf*Acm[b];
+    Mf[n] += hpf*Apm[c]+hcf*Acm[c];
     
     t = tarray[n] - kr[a]-2.0*Larm[c];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] += hp*App[b]+hc*Acp[b];
-    M[n] -= hp*App[c]+hc*Acp[c];
-    Mf[n] += hpf*App[b]+hcf*Acp[b];
-    Mf[n] -= hpf*App[c]+hcf*Acp[c];
+    M[n] += hp*App[c]+hc*Acp[c];
+    M[n] -= hp*App[b]+hc*Acp[b];
+    Mf[n] += hpf*App[c]+hcf*Acp[c];
+    Mf[n] -= hpf*App[b]+hcf*Acp[b];
     
     t = tarray[n] - kr[c]- Larm[b];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] -= hp*Apm[b]+hc*Acm[b];
-    M[n] += hp*App[b]+hc*Acp[b];
-    Mf[n] -= hpf*Apm[b]+hcf*Acm[b];
-    Mf[n] += hpf*App[b]+hcf*Acp[b];
+    M[n] -= hp*App[b]+hc*Acp[b];
+    M[n] += hp*Apm[b]+hc*Acm[b];
+    Mf[n] -= hpf*App[b]+hcf*Acp[b];
+    Mf[n] += hpf*Apm[b]+hcf*Acm[b];
     
     t = tarray[n] - kr[b]- Larm[c];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] += hp*App[c]+hc*Acp[c];
-    M[n] -= hp*Apm[c]+hc*Acm[c];
-    Mf[n] += hpf*App[c]+hcf*Acp[c];
-    Mf[n] -= hpf*Apm[c]+hcf*Acm[c];
+    M[n] += hp*Apm[c]+hc*Acm[c];
+    M[n] -= hp*App[c]+hc*Acp[c];
+    Mf[n] += hpf*Apm[c]+hcf*Acm[c];
+    Mf[n] -= hpf*App[c]+hcf*Acp[c];
     
     t = tarray[n] - kr[a];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
-    M[n] -= hp*App[b]+hc*Acp[b];
-    M[n] += hp*Apm[c]+hc*Acm[c];
-    Mf[n] -= hpf*App[b]+hcf*Acp[b];
-    Mf[n] += hpf*Apm[c]+hcf*Acm[c];
-    
+    M[n] -= hp*Apm[c]+hc*Acm[c];
+    M[n] += hp*App[b]+hc*Acp[b];
+    Mf[n] -= hpf*Apm[c]+hcf*Acm[c];
+    Mf[n] += hpf*App[b]+hcf*Acp[b];    
 }
 
 void LISA_polarization_tensor_njc(double costh, double phi, double eplus[4][4], double ecross[4][4], double k[4])
@@ -900,16 +899,6 @@ void LISA_spline_response(struct Orbit *orbit, double *tarray, int N, double *pa
 
     LISA_polarization_tensor(costh, phi, eplus, ecross, k);
 
-
-    /* phase fudge for Neil's code */
-    // conventions are flipped relative to BH code
-    cosi *= -1.0; // cosi
-    psi  *= -1.0; // psi
-    cos2psi = cos(2.*psi);  
-    sin2psi = sin(2.*psi);    
-    Aplus = 0.5*(1.+cosi*cosi);
-    Across = -cosi;
-    LISA_polarization_tensor_njc(costh, phi, eplus, ecross, k);
 
     double x[3][3];
     double n[3][3];

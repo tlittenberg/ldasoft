@@ -498,6 +498,8 @@ void SimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
  */
 void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags);
 
+void print_wavelet_fourier_spectra(struct Wavelets *wdm, struct TDI *tdi, char filename[]);
+
 /**
  \brief Parse command line
  */
