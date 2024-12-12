@@ -294,7 +294,7 @@ void initialize_interpolated_analytic_orbits(struct Orbit *orbit, double Tobs, d
     /*
     Setup coarse time sampling of slowly-evolving orbits 
     */
-    int N = (int)(200.0*Tobs/YEAR); //200 samples per year
+    int N = (int)(LISA_ORBIT_SAMPLES_PER_YEAR*Tobs/YEAR); //200 samples per year
     if (N < 20) N = 20;        //but at least 20 samples
 
     double buffer = (Tobs)/(double)(N-1); // buffer for time sampling to keep interpolation away from edges of data
@@ -1289,7 +1289,7 @@ void LISA_Read_HDF5_LDC_TDI(struct TDI *tdi, char *fileName, const char *dataNam
     int Nsamples = (int)dims[0];
     
     s1 = malloc(Nsamples*sizeof(struct tdi_dataset));
-    alloc_tdi(tdi, Nsamples/2, 3);
+    alloc_tdi(tdi, Nsamples, 3);
     
     hid_t s1_tid; /* Memory datatype handle */
     
