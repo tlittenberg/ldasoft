@@ -357,19 +357,10 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                 {
                     
                     int q0 = (int)floor(f0/WAVELET_BANDWIDTH);
-                    printf("source central frequency layer=%i\n",q0);
 
                     //pad by one layer above and below
-                    data->qmin = q0-1; //mimimum frequency layer
-                    data->qmax = q0+2;  //maximum frequency layer
-
-                    printf("minimum layer=%i, maximum layer=%i\n",data->qmin,data->qmax);
-
-                    //pad by one layer above and below
-                    //data->qmin--;
-                    //data->qmax++;
-
-                    printf("new minimum layer=%i, maximum layer=%i\n",data->qmin,data->qmax);
+                    data->qmin = q0-((data->NFFT-1)/2);   //mimimum frequency layer
+                    data->qmax = data->qmin + data->NFFT; //maximum frequency layer
                     
                     //reset wavelet basis max and min ranges
                     wavelet_pixel_to_index(data->wdm,0,data->qmin,&data->wdm->kmin); 
@@ -379,9 +370,9 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                     data->fmin = data->qmin*WAVELET_BANDWIDTH;
                     data->fmax = data->qmax*WAVELET_BANDWIDTH;
 
-                    if(!flags->quiet)fprintf(stdout,"Frequency layers [%i,%i]\n",data->qmin,data->qmax);
+                    if(!flags->quiet)fprintf(stdout,"  Frequency layers [%i,%i]\n",data->qmin,data->qmax);
                     
-                    printf("new fmin=%lg, fmax=%lg\n",data->fmin,data->fmax);
+                    printf("  fmin=%lg, fmax=%lg\n",data->fmin,data->fmax);
                 }
                 
                 
@@ -526,7 +517,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             if(!strcmp("wavelet",data->basis))
             {
                 sprintf(filename,"%s/waveform_injection_fourier_%i.dat",data->dataDir,n_inj);
-                print_wavelet_fourier_spectra(data->wdm, inj->tdi, filename);
+                print_wavelet_fourier_spectra(data, inj->tdi, filename);
             }
 
             
@@ -639,7 +630,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
         }
         
         sprintf(filename,"%s/data/waveform_injection_fourier.dat",flags->runDir);
-        print_wavelet_fourier_spectra(data->wdm, inj_vec[0]->tdi, filename);
+        print_wavelet_fourier_spectra(data, inj_vec[0]->tdi, filename);
     }
 
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");

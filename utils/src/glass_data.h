@@ -29,14 +29,8 @@
 #define FILTER_LENGTH 5e4 //seconds
 #define MAXSTRINGSIZE 1024 //!<maximum number of characters for `path+filename` strings
 
-//#define WAVELET_DURATION 7680 //!<duration of wavelet pixels [s]
-//#define WAVELET_BANDWIDTH 6.51041666666667e-05 //!<bandwidth of wavelet pixels [Hz]
-//#define WAVELET_DURATION 15360 //!<duration of wavelet pixels [s]
-//#define WAVELET_BANDWIDTH 3.25520833333333e-05 //!<bandwidth of wavelet pixels [Hz]
-//#define WAVELET_DURATION 30720 //!<duration of wavelet pixels [s]
-//#define WAVELET_BANDWIDTH 1.62760416666667e-05 //!<bandwidth of wavelet pixels [Hz]
-#define WAVELET_DURATION 61440 //!<duration of wavelet pixels [s]
-#define WAVELET_BANDWIDTH 8.13802083333333e-06 //!<bandwidth of wavelet pixels [Hz]
+#define WAVELET_DURATION 40960.0 //!<duration of wavelet pixels [s]
+#define WAVELET_BANDWIDTH 1.220703125e-05 //!<bandwidth of wavelet pixels [Hz]
 
 /*!
  * \brief Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.
@@ -482,24 +476,22 @@ void ReadASCII(struct Data *data, struct TDI *tdi);
  */
 void GetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
-/**
- \brief Add simulated Gaussian noise realization to data
- */
+/** @name Add simulated Gaussian noise realization to data */
+///@{
 void AddNoise(struct Data *data, struct TDI *tdi);
 void AddNoiseWavelet(struct Data *data, struct TDI *tdi);
+///@}
 
 /**
  \brief Generate noise-only simulated data
  */
 void SimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
-/**
- \brief Wrapper function that calls data print functions
- */
+/** @name Wrapper functions that call data print functions */
+///@{
 void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags);
-
-void print_wavelet_fourier_spectra(struct Wavelets *wdm, struct TDI *tdi, char filename[]);
-
+void print_wavelet_fourier_spectra(struct Data *data, struct TDI *tdi, char filename[]);
+///@}
 /**
  \brief Parse command line
  */

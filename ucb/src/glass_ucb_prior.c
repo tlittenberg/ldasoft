@@ -262,8 +262,8 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     
     if(!strcmp(data->basis,"wavelet"))
     {
-        model->prior[0][0] = (data->fmin + data->wdm->df/2)*data->T;//data->qmin;
-        model->prior[0][1] = (data->fmax - data->wdm->df/2)*data->T;//data->qmax;
+        model->prior[0][0] = data->fmin*data->T;//data->qmin;
+        model->prior[0][1] = data->fmax*data->T;//data->qmax;
     }
 
     //colatitude
@@ -299,12 +299,7 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     /* emprical envelope functions from Gijs' MLDC catalog */
     double fdotmin = -0.000005*pow(fmin,(13./3.));
     double fdotmax = 0.0000008*pow(fmax,(11./3.));
-    
-    /* unphysically broad priors
-    double fdotmin = -pow(fmin,(13./3.));
-    double fdotmax = pow(fmax,(13./3.)); */
-     
-    
+        
     /* use prior on chirp mass to convert to priors on frequency evolution */
     if(flags->detached)
     {

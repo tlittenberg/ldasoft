@@ -104,13 +104,32 @@ int main(int argc, char *argv[])
     initialize_orbit(data, orbit, flags);
     initialize_interpolated_analytic_orbits(orbit, data->T, data->t0);
 
-    /*
-    Only supporting software injections r/n
-    */
-    struct Source **inj=malloc(DMAX*sizeof(struct Source*));
-    for(int n=0; n<DMAX; n++) inj[n] = malloc(sizeof(struct Source));
+    /* read data */
+    if(flags->strainData)
+        ReadData(data,orbit,flags);
     
-    UCBInjectSimulatedSource(data,orbit,flags,inj);
+    /* noise model */
+    GetDynamicNoiseModel(data,orbit,flags);
+
+    /*
+    Software injections 
+    */
+    struct Source **inj=NULL;
+    if(flags->NINJ>0)
+    {
+        /* storage for injection parameters */
+        inj=malloc(DMAX*sizeof(struct Source*));
+        for(int n=0; n<DMAX; n++) inj[n] = malloc(sizeof(struct Source));
+    
+        /* Inject gravitational wave signal */
+        UCBInjectSimulatedSource(data,orbit,flags,inj);
+    }
+
+    /* Add Gaussian noise realization */
+    if(flags->simNoise) AddNoiseWavelet(data,data->tdi);
+
+    /* print various data products for plotting */
+    print_data(data, data->tdi, flags);
 
     /* Load catalog cache file for proposals/priors */
     struct Catalog *catalog=malloc(sizeof(struct Catalog));
@@ -177,8 +196,12 @@ int main(int argc, char *argv[])
                 for(int steps=0; steps < 100; steps++)
                     ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 
-                ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                                                
+                if(flags->rj)
+                    ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+
+                if( (flags->strainData || flags->simNoise) && !flags->psd)
+                    noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
+
                 //update fisher matrix for each chain
                 for(int n=0; n<model_ptr->Nlive; n++)
                     ucb_fisher_wavelet(orbit, data, model_ptr->source[n], data->noise);
@@ -216,6 +239,18 @@ int main(int argc, char *argv[])
                     
                 }
                 
+                
+                //store info for evidence calculations
+                if(mcmc>0 && mcmc%data->downsample==0)
+                {
+                    for(int ic=0; ic<NC; ic++)
+                    {
+                        chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
+                        chain->avgLogL[ic] += model[chain->index[ic]]->logL + model[chain->index[ic]]->logLnorm;
+                    }
+                }
+                
+                
                 if(mcmc>-flags->NBURN+flags->NBURN/10. && model[0]->Neff < model[0]->Nmax && flags->rj)
                 {
                     for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
@@ -235,20 +270,20 @@ int main(int argc, char *argv[])
     save_chain_state(data, model, chain, flags, mcmc);
 
     //print aggregate run files/results
-    print_waveforms_reconstruction(data,flags);
+    //print_waveforms_reconstruction(data,flags);
     print_evidence(chain,flags);
     
-    sprintf(filename,"%s/data/waveform_strain.dat",flags->runDir);
-    FILE *waveFile = fopen(filename,"w");
-    print_waveform_strain(data,model[chain->index[0]],waveFile);
-    fclose(waveFile);
+//    sprintf(filename,"%s/data/waveform_strain.dat",flags->runDir);
+//    FILE *waveFile = fopen(filename,"w");
+//    print_waveform_strain(data,model[chain->index[0]],waveFile);
+//    fclose(waveFile);
 
 
-    sprintf(filename,"%s/avg_log_likelihood.dat",flags->runDir);
-    FILE *chainFile = fopen(filename,"w");
-    for(int ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data->downsample));
-    fclose(chainFile);
-    
+//    sprintf(filename,"%s/avg_log_likelihood.dat",flags->runDir);
+//    FILE *chainFile = fopen(filename,"w");
+//    for(int ic=0; ic<NC; ic++) fprintf(chainFile,"%lg %lg\n",1./chain->temperature[ic],chain->avgLogL[ic]/(double)(flags->NMCMC/data->downsample));
+//    fclose(chainFile);
+//    
     //print total run time
     stop = time(NULL);
     

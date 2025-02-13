@@ -138,18 +138,22 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     if(!flags->prior)
     {
         //  Form master template
-        generate_noise_model(data, model_y);
+        if(!strcmp("fourier",data->basis)) generate_noise_model(data, model_y);
+        if(!strcmp("wavelet",data->basis)) generate_noise_model_wavelet(data, model_y);
         
         //get likelihood for y
-        model_y->logL     = gaussian_log_likelihood(data, model_y);
-        model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
-        
+        if(!strcmp("fourier",data->basis)) model_y->logL = gaussian_log_likelihood(data, model_y);
+        if(!strcmp("wavelet",data->basis)) model_y->logL = gaussian_log_likelhood_wavelet(data, model_y);
+
+        //model_y->logLnorm = gaussian_log_likelihood_constant_norm(data, model_y);
+        model_y->logLnorm = gaussian_log_likelihood_model_norm(data, model_y);
+
         /*
          H = [p(d|y)/p(d|x)]/T x p(y)/p(x) x q(x|y)/q(y|x)
          */
         logH += ( (model_y->logL+model_y->logLnorm) - (model_x->logL+model_x->logLnorm) )/chain->temperature[ic]; //delta logL
     }
-    logH += logPy  - logPx;                                         //priors
+    logH += logPy  - logPx; //priors
     
     loga = log(gsl_rng_uniform(chain->r[ic]));
     if(logH > loga) copy_model(model_y,model_x);
@@ -292,11 +296,18 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
                 *penalty = maximization_penalty(4,2*model_y->source[create]->BW);
             }
             
-            generate_signal_model(orbit, data, model_y, create);
+            if(!strcmp("fourier",data->basis)) generate_signal_model(orbit, data, model_y, create);
+            if(!strcmp("wavelet",data->basis)) generate_signal_model_wavelet(orbit, data, model_y, create);
 
             //rejection sample on SNR?
             if(!flags->prior)
-                if(snr(model_y->source[create], model_y->noise) < 5.0) *logPy = -INFINITY;
+            {
+                double sn;
+                if(!strcmp("fourier",data->basis)) sn = snr(model_y->source[create], model_y->noise);
+                if(!strcmp("wavelet",data->basis)) sn = snr_wavelet(model_y->source[create], model_y->noise);
+                if(sn<5.0) *logPy = -INFINITY;
+            }
+                
 
             model_y->source[create]->fisher_update_flag = 1;
         }
@@ -309,8 +320,9 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
         
         //pick source to kill
         int kill = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
-        remove_signal_model(data, model_y,  model_y->source[kill]);
-
+        if(!strcmp("fourier",data->basis)) remove_signal_model(data, model_y,  model_y->source[kill]);
+        if(!strcmp("wavelet",data->basis)) remove_signal_model_wavelet(data, model_y, model_y->source[kill]);
+        
         if(model_y->Nlive>-1)
         {
             *logQyx = 0;
@@ -602,7 +614,8 @@ void ucb_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, str
         }
         
         //get likelihood for y
-        model_y->logL = gaussian_log_likelihood(data, model_y);
+        if(!strcmp("fourier",data->basis)) model_y->logL = gaussian_log_likelihood(data, model_y);
+        if(!strcmp("wavelet",data->basis)) model_y->logL = gaussian_log_likelhood_wavelet(data, model_y);
 
         //get likelihood difference
         dlogL = model_y->logL - model_x->logL;
@@ -671,13 +684,12 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
 
         if(ic==0)set_uniform_prior(flags, model[ic], data, 1);
         else     set_uniform_prior(flags, model[ic], data, 0);
-        
+                
+        //override nosie model w/ stationary version
+        if(!strcmp("wavelet",data->basis) && flags->stationary) GetStationaryNoiseModel(data, orbit, flags, data->noise);
+
         //set noise model
         copy_noise(data->noise, model[ic]->noise);
-        
-        //override nosie model w/ stationary version
-        if(!strcmp("wavelet",data->basis) && flags->stationary)GetStationaryNoiseModel(data, orbit, flags, model[ic]->noise);
-
         
         //draw signal model
         for(int n=0; n<DMAX; n++)
@@ -707,11 +719,10 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
                 draw_from_uniform_prior(data, model[ic], model[ic]->source[n], proposal[0], model[ic]->source[n]->params , chain->r[ic]);
             }
             map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
-//            printf("n=%i, DMAX=%i: ",n,DMAX);
-//            print_source_params(data,model[ic]->source[0],stdout);
-//            printf("\n");
+
             if(!strcmp("fourier",data->basis)) ucb_fisher(orbit, data, model[ic]->source[n], data->noise);
             if(!strcmp("wavelet",data->basis)) ucb_fisher_wavelet(orbit, data, model[ic]->source[n], data->noise);
+
             model[ic]->source[n]->fisher_update_flag=0;
         }
         
@@ -730,7 +741,7 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
         }
         if(!strcmp("wavelet",data->basis)) 
         {
-            //generate_noise_model_wavelet(data, model[ic]);
+            generate_noise_model_wavelet(data, model[ic]);
             generate_signal_model_wavelet(orbit, data, model[ic], -1);
         }
 
@@ -745,7 +756,7 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
         {
             if(!strcmp("fourier",data->basis))model[ic]->logL = gaussian_log_likelihood(data, model[ic]);
             if(!strcmp("wavelet",data->basis))model[ic]->logL = gaussian_log_likelhood_wavelet(data, model[ic]);
-            model[ic]->logLnorm = gaussian_log_likelihood_constant_norm(data, model[ic]);
+            model[ic]->logLnorm = gaussian_log_likelihood_model_norm(data,model[ic]);
         
         }
         else model[ic]->logL = model[ic]->logLnorm = 0.0;

@@ -189,6 +189,12 @@ int main(int argc, char *argv[])
         else
             UCBInjectVerificationSet(data, orbit, flags, inj);
         
+        /* Get noise model */
+        GetNoiseModel(data,orbit,flags);
+
+        /* Add Gaussian noise realization */
+        if(flags->simNoise) AddNoise(data,data->tdi);
+
         /* set approximate f/fstar for segment */
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
 
@@ -232,7 +238,7 @@ int main(int argc, char *argv[])
         /* Initialize data models */
         trial_vec[n] = malloc(sizeof(struct Model*)*NC);
         model_vec[n] = malloc(sizeof(struct Model*)*NC);
-        initialize_ucb_state(data_vec[n], orbit, flags, chain_vec[n], proposal_vec[n], model_vec[n], trial_vec[n], inj_vec[n]);
+        initialize_ucb_state(data_vec[n], orbit, flags, chain_vec[n], proposal_vec[n], model_vec[n], trial_vec[n], inj_vec);
     }
     
     /* Start analysis from saved chain state */

@@ -1071,7 +1071,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     double *Fparams = calloc(4,sizeof(double));
 
     //grid sizes
-    int n_f     = data->NFFT;
+    int n_f     = data->N/2;
     int n_theta = 20;
     int n_phi   = 20;
     int n_fdot  = 10;
@@ -1201,7 +1201,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             f += d_f/2; //evaluate logL in center of cell
             
             //loop over colatitude bins
-            #pragma omp parallel for num_threads(flags->threads) collapse(2)
+            #pragma omp parallel for num_threads(flags->threads)
             for (int j=0; j<n_theta; j++)
             {
                 //F-statistic for TDI variabls

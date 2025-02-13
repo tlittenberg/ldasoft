@@ -108,6 +108,9 @@ int main(int argc, char *argv[])
     if(flags->strainData)
         ReadData(data,orbit,flags);
     
+    /* noise model */
+    GetNoiseModel(data,orbit,flags);
+
     struct Source **inj=NULL;
     if(flags->NINJ>0)
     {
@@ -125,7 +128,12 @@ int main(int argc, char *argv[])
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
 
     }
+
+    /* Add Gaussian noise realization */
+    if(flags->simNoise) AddNoise(data,data->tdi);
     
+    /* print various data products for plotting */
+    print_data(data, data->tdi, flags);
     
     /* Load catalog cache file for proposals/priors */
     struct Catalog *catalog=malloc(sizeof(struct Catalog));

@@ -40,10 +40,10 @@
 #define LARM 2.5e9
 
 /// Sample cadence for LISA (s)
-#define LISA_CADENCE 7.5
+#define LISA_CADENCE 5
 
 /// Number of orbit ephemerides samples per year
-#define LISA_ORBIT_SAMPLES_PER_YEAR 50
+#define LISA_ORBIT_SAMPLES_PER_YEAR 200
 
 /** @name Component Noise Levels For Phase Data */
 ///@{

@@ -601,156 +601,180 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags)
     
     
     /* Fourier transform time-domain TDI channels */
-    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (N);
-    gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (N);
-
-    gsl_fft_real_transform (X, 1, N, real, work);
-    gsl_fft_real_transform (Y, 1, N, real, work);
-    gsl_fft_real_transform (Z, 1, N, real, work);
-    gsl_fft_real_transform (A, 1, N, real, work);
-    gsl_fft_real_transform (E, 1, N, real, work);
-    gsl_fft_real_transform (T, 1, N, real, work);
-
-    /* Normalize FD data */
-    double rft_norm = sqrt(Tobs)/(double)N;
-    
-    /* Account for losses from windowing
-    double tukey_norm = tukey_scale(alpha, N);
-    rft_norm /= tukey_norm;
-    */
-    
-    for(int n=0; n<N; n++)
+    if(!strcmp(data->basis,"fourier"))
     {
-        X[n] *= rft_norm;
-        Y[n] *= rft_norm;
-        Z[n] *= rft_norm;
-        A[n] *= rft_norm;
-        E[n] *= rft_norm;
-        T[n] *= rft_norm;
-    }
-        
-    /* unpack GSL-formatted arrays to the way GLASS expects them */
-    unpack_gsl_rft_output(tdi->X, X, N);
-    unpack_gsl_rft_output(tdi->Y, Y, N);
-    unpack_gsl_rft_output(tdi->Z, Z, N);
-    unpack_gsl_rft_output(tdi->A, A, N);
-    unpack_gsl_rft_output(tdi->E, E, N);
-    unpack_gsl_rft_output(tdi->T, T, N);
-    
-    
-    /* lets get rid of the high frequency ucbs */
-    if(flags->no_ucb_hi)
-    {
-        double *Xgal = calloc(N,sizeof(double));
-        double *Ygal = calloc(N,sizeof(double));
-        double *Zgal = calloc(N,sizeof(double));
-        double *Agal = calloc(N,sizeof(double));
-        double *Egal = calloc(N,sizeof(double));
-        double *Tgal = calloc(N,sizeof(double));
+        gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (N);
+        gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (N);
 
-        struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
-        LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
-        for(int n=0; n<N; n++)
-        {
-            int m = n_start+n;
-            Xgal[n] += tdi_td_dgb->X[m];
-            Ygal[n] += tdi_td_dgb->Y[m];
-            Zgal[n] += tdi_td_dgb->Z[m];
-            Agal[n] += tdi_td_dgb->A[m];
-            Egal[n] += tdi_td_dgb->E[m];
-            Tgal[n] += tdi_td_dgb->T[m];
-        }
-        free_tdi(tdi_td_dgb);
-        
-        struct TDI *tdi_td_igb = malloc(sizeof(struct TDI));
-        LISA_Read_HDF5_LDC_TDI(tdi_td_igb, data->fileName, "/sky/igb/tdi");
-        for(int n=0; n<N; n++)
-        {
-            int m = n_start+n;
-            Xgal[n] += tdi_td_igb->X[m];
-            Ygal[n] += tdi_td_igb->Y[m];
-            Zgal[n] += tdi_td_igb->Z[m];
-            Agal[n] += tdi_td_igb->A[m];
-            Egal[n] += tdi_td_igb->E[m];
-            Tgal[n] += tdi_td_igb->T[m];
-        }
-        free_tdi(tdi_td_igb);
-        
-        tukey(Xgal, alpha, N);
-        tukey(Ygal, alpha, N);
-        tukey(Zgal, alpha, N);
-        tukey(Agal, alpha, N);
-        tukey(Egal, alpha, N);
-        tukey(Tgal, alpha, N);
+        gsl_fft_real_transform (X, 1, N, real, work);
+        gsl_fft_real_transform (Y, 1, N, real, work);
+        gsl_fft_real_transform (Z, 1, N, real, work);
+        gsl_fft_real_transform (A, 1, N, real, work);
+        gsl_fft_real_transform (E, 1, N, real, work);
+        gsl_fft_real_transform (T, 1, N, real, work);
 
-        gsl_fft_real_transform (Xgal, 1, N, real, work);
-        gsl_fft_real_transform (Ygal, 1, N, real, work);
-        gsl_fft_real_transform (Zgal, 1, N, real, work);
-        gsl_fft_real_transform (Agal, 1, N, real, work);
-        gsl_fft_real_transform (Egal, 1, N, real, work);
-        gsl_fft_real_transform (Tgal, 1, N, real, work);
+        /* Normalize FD data */
+        double rft_norm = sqrt(Tobs)/(double)N;
+        
+        /* Account for losses from windowing
+        double tukey_norm = tukey_scale(alpha, N);
+        rft_norm /= tukey_norm;
+        */
         
         for(int n=0; n<N; n++)
         {
-            Xgal[n] *= rft_norm;
-            Ygal[n] *= rft_norm;
-            Zgal[n] *= rft_norm;
-            Agal[n] *= rft_norm;
-            Egal[n] *= rft_norm;
-            Tgal[n] *= rft_norm;
+            X[n] *= rft_norm;
+            Y[n] *= rft_norm;
+            Z[n] *= rft_norm;
+            A[n] *= rft_norm;
+            E[n] *= rft_norm;
+            T[n] *= rft_norm;
         }
-        
-        /* Allocate data->tdi structure for Fourier transform output */
-        struct TDI *tdi_gal = malloc(sizeof(struct TDI));
-        alloc_tdi(tdi_gal, N, N_TDI_CHANNELS);
-        tdi_gal->delta = 1./Tobs;
-
+            
         /* unpack GSL-formatted arrays to the way GLASS expects them */
-        unpack_gsl_rft_output(tdi_gal->X, Xgal, N);
-        unpack_gsl_rft_output(tdi_gal->Y, Ygal, N);
-        unpack_gsl_rft_output(tdi_gal->Z, Zgal, N);
-        unpack_gsl_rft_output(tdi_gal->A, Agal, N);
-        unpack_gsl_rft_output(tdi_gal->E, Egal, N);
-        unpack_gsl_rft_output(tdi_gal->T, Tgal, N);
-
-        /* remove hi-f binaries */
-        for(int n=0; n<N/2; n++)
-        {
-            double f = (double)n/Tobs;
-            if(f>0.00504)
-            {
-                tdi->X[2*n]   -= tdi_gal->X[2*n];
-                tdi->X[2*n+1] -= tdi_gal->X[2*n+1];
-
-                tdi->Y[2*n]   -= tdi_gal->Y[2*n];
-                tdi->Y[2*n+1] -= tdi_gal->Y[2*n+1];
-
-                tdi->Z[2*n]   -= tdi_gal->Z[2*n];
-                tdi->Z[2*n+1] -= tdi_gal->Z[2*n+1];
-
-                tdi->A[2*n]   -= tdi_gal->A[2*n];
-                tdi->A[2*n+1] -= tdi_gal->A[2*n+1];
-
-                tdi->E[2*n]   -= tdi_gal->E[2*n];
-                tdi->E[2*n+1] -= tdi_gal->E[2*n+1];
-
-                tdi->T[2*n]   -= tdi_gal->T[2*n];
-                tdi->T[2*n+1] -= tdi_gal->T[2*n+1];
-            }
-        }
+        unpack_gsl_rft_output(tdi->X, X, N);
+        unpack_gsl_rft_output(tdi->Y, Y, N);
+        unpack_gsl_rft_output(tdi->Z, Z, N);
+        unpack_gsl_rft_output(tdi->A, A, N);
+        unpack_gsl_rft_output(tdi->E, E, N);
+        unpack_gsl_rft_output(tdi->T, T, N);
         
-        free_tdi(tdi_gal);
-        free(Xgal);
-        free(Ygal);
-        free(Zgal);
-        free(Agal);
-        free(Egal);
-        free(Tgal);
+        
+        /* lets get rid of the high frequency ucbs */
+        if(flags->no_ucb_hi)
+        {
+            double *Xgal = calloc(N,sizeof(double));
+            double *Ygal = calloc(N,sizeof(double));
+            double *Zgal = calloc(N,sizeof(double));
+            double *Agal = calloc(N,sizeof(double));
+            double *Egal = calloc(N,sizeof(double));
+            double *Tgal = calloc(N,sizeof(double));
+
+            struct TDI *tdi_td_dgb = malloc(sizeof(struct TDI));
+            LISA_Read_HDF5_LDC_TDI(tdi_td_dgb, data->fileName, "/sky/dgb/tdi");
+            for(int n=0; n<N; n++)
+            {
+                int m = n_start+n;
+                Xgal[n] += tdi_td_dgb->X[m];
+                Ygal[n] += tdi_td_dgb->Y[m];
+                Zgal[n] += tdi_td_dgb->Z[m];
+                Agal[n] += tdi_td_dgb->A[m];
+                Egal[n] += tdi_td_dgb->E[m];
+                Tgal[n] += tdi_td_dgb->T[m];
+            }
+            free_tdi(tdi_td_dgb);
+            
+            struct TDI *tdi_td_igb = malloc(sizeof(struct TDI));
+            LISA_Read_HDF5_LDC_TDI(tdi_td_igb, data->fileName, "/sky/igb/tdi");
+            for(int n=0; n<N; n++)
+            {
+                int m = n_start+n;
+                Xgal[n] += tdi_td_igb->X[m];
+                Ygal[n] += tdi_td_igb->Y[m];
+                Zgal[n] += tdi_td_igb->Z[m];
+                Agal[n] += tdi_td_igb->A[m];
+                Egal[n] += tdi_td_igb->E[m];
+                Tgal[n] += tdi_td_igb->T[m];
+            }
+            free_tdi(tdi_td_igb);
+            
+            tukey(Xgal, alpha, N);
+            tukey(Ygal, alpha, N);
+            tukey(Zgal, alpha, N);
+            tukey(Agal, alpha, N);
+            tukey(Egal, alpha, N);
+            tukey(Tgal, alpha, N);
+
+            gsl_fft_real_transform (Xgal, 1, N, real, work);
+            gsl_fft_real_transform (Ygal, 1, N, real, work);
+            gsl_fft_real_transform (Zgal, 1, N, real, work);
+            gsl_fft_real_transform (Agal, 1, N, real, work);
+            gsl_fft_real_transform (Egal, 1, N, real, work);
+            gsl_fft_real_transform (Tgal, 1, N, real, work);
+            
+            for(int n=0; n<N; n++)
+            {
+                Xgal[n] *= rft_norm;
+                Ygal[n] *= rft_norm;
+                Zgal[n] *= rft_norm;
+                Agal[n] *= rft_norm;
+                Egal[n] *= rft_norm;
+                Tgal[n] *= rft_norm;
+            }
+            
+            /* Allocate data->tdi structure for Fourier transform output */
+            struct TDI *tdi_gal = malloc(sizeof(struct TDI));
+            alloc_tdi(tdi_gal, N, N_TDI_CHANNELS);
+            tdi_gal->delta = 1./Tobs;
+
+            /* unpack GSL-formatted arrays to the way GLASS expects them */
+            unpack_gsl_rft_output(tdi_gal->X, Xgal, N);
+            unpack_gsl_rft_output(tdi_gal->Y, Ygal, N);
+            unpack_gsl_rft_output(tdi_gal->Z, Zgal, N);
+            unpack_gsl_rft_output(tdi_gal->A, Agal, N);
+            unpack_gsl_rft_output(tdi_gal->E, Egal, N);
+            unpack_gsl_rft_output(tdi_gal->T, Tgal, N);
+
+            /* remove hi-f binaries */
+            for(int n=0; n<N/2; n++)
+            {
+                double f = (double)n/Tobs;
+                if(f>0.00504)
+                {
+                    tdi->X[2*n]   -= tdi_gal->X[2*n];
+                    tdi->X[2*n+1] -= tdi_gal->X[2*n+1];
+
+                    tdi->Y[2*n]   -= tdi_gal->Y[2*n];
+                    tdi->Y[2*n+1] -= tdi_gal->Y[2*n+1];
+
+                    tdi->Z[2*n]   -= tdi_gal->Z[2*n];
+                    tdi->Z[2*n+1] -= tdi_gal->Z[2*n+1];
+
+                    tdi->A[2*n]   -= tdi_gal->A[2*n];
+                    tdi->A[2*n+1] -= tdi_gal->A[2*n+1];
+
+                    tdi->E[2*n]   -= tdi_gal->E[2*n];
+                    tdi->E[2*n+1] -= tdi_gal->E[2*n+1];
+
+                    tdi->T[2*n]   -= tdi_gal->T[2*n];
+                    tdi->T[2*n+1] -= tdi_gal->T[2*n+1];
+                }
+            }
+            
+            free_tdi(tdi_gal);
+            free(Xgal);
+            free(Ygal);
+            free(Zgal);
+            free(Agal);
+            free(Egal);
+            free(Tgal);
+        }
+    
+        gsl_fft_real_wavetable_free (real);
+        gsl_fft_real_workspace_free (work);
+    }
+    /* Wavelet transform time-domain TDI channels */
+    else if(!strcmp(data->basis,"wavelet"))
+    {
+        wavelet_transform(data->wdm, X);
+        wavelet_transform(data->wdm, Y);
+        wavelet_transform(data->wdm, Z);
+        wavelet_transform(data->wdm, A);
+        wavelet_transform(data->wdm, E);
+        wavelet_transform(data->wdm, T);
+
+        for(int n=0; n<N; n++)
+        {
+            tdi->X[n] = X[n];
+            tdi->Y[n] = Y[n];
+            tdi->Z[n] = Z[n];
+            tdi->A[n] = A[n];
+            tdi->E[n] = E[n];
+            tdi->T[n] = T[n];
+        }
     }
     
     /* Free memory */
-    gsl_fft_real_wavetable_free (real);
-    gsl_fft_real_workspace_free (work);
     free_tdi(tdi_td);
     free(X);
     free(Y);
@@ -815,33 +839,51 @@ void ReadData(struct Data *data, struct Orbit *orbit, struct Flags *flags)
     
     
     /* select frequency segment */
-    
-    //get max and min samples
-    data->fmax = data->fmin + data->NFFT/data->T;
-    data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->NFFT;
-    
-    //store frequency segment in TDI structure
-    for(int n=0; n<data->N; n++)
+    if(!strcmp(data->basis,"fourier"))
     {
-        int m = data->qmin*2+n;
-        tdi->X[n] = tdi_full->X[m];
-        tdi->Y[n] = tdi_full->Y[m];
-        tdi->Z[n] = tdi_full->Z[m];
-        tdi->A[n] = tdi_full->A[m];
-        tdi->E[n] = tdi_full->E[m];
-        tdi->T[n] = tdi_full->T[m];
+        //get max and min samples
+        data->fmax = data->fmin + data->NFFT/data->T;
+        data->qmin = (int)(data->fmin*data->T);
+        data->qmax = data->qmin+data->NFFT;
+        
+        //store frequency segment in TDI structure
+        for(int n=0; n<data->N; n++)
+        {
+            int m = data->qmin*2+n;
+            tdi->X[n] = tdi_full->X[m];
+            tdi->Y[n] = tdi_full->Y[m];
+            tdi->Z[n] = tdi_full->Z[m];
+            tdi->A[n] = tdi_full->A[m];
+            tdi->E[n] = tdi_full->E[m];
+            tdi->T[n] = tdi_full->T[m];
+        }
     }
-    
-    //Get noise spectrum for data segment
-    GetNoiseModel(data,orbit,flags);
-    
-    //Add Gaussian noise to injection
-    if(flags->simNoise) AddNoise(data,tdi);
-    
-    //print various data products for plotting
-    print_data(data, tdi, flags);
-    
+    /* select wavelet layers */
+    else if(!strcmp(data->basis,"wavelet"))
+    {
+        data->qmin = (int)floor(data->fmin/WAVELET_BANDWIDTH);
+        data->qmax = data->qmin + data->NFFT;//(int)ceil(data->fmax/WAVELET_BANDWIDTH);
+
+        printf("  Minimum frequency layer=%i, maximum layer=%i\n",data->qmin,data->qmax-1);
+        printf("  fmin=%lg, fmax=%lg\n",data->fmin,data->fmax);
+
+        //reset wavelet basis max and min ranges
+        wavelet_pixel_to_index(data->wdm,0,data->qmin,&data->wdm->kmin); 
+        wavelet_pixel_to_index(data->wdm,0,data->qmax,&data->wdm->kmax); 
+
+        //store frequency segment in TDI structure
+        for(int n=0; n<data->N; n++)
+        {
+            int m = data->wdm->kmin+n;
+            tdi->X[n] = tdi_full->X[m];
+            tdi->Y[n] = tdi_full->Y[m];
+            tdi->Z[n] = tdi_full->Z[m];
+            tdi->A[n] = tdi_full->A[m];
+            tdi->E[n] = tdi_full->E[m];
+            tdi->T[n] = tdi_full->T[m];
+        }
+    }
+     
     //free memory
     free_tdi(tdi_full);
 }
@@ -1196,7 +1238,7 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
             {
                 wavelet_pixel_to_index(data->wdm,i,j,&k);
                 k-=data->wdm->kmin;
-                fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", i*data->wdm->dt, j*data->wdm->df,tdi->X[k]*tdi->X[k], tdi->Y[k]*tdi->Y[k], tdi->Z[k]*tdi->Z[k]);   
+                fprintf(fptr,"%lg %lg %.14e %.14e %.14e\n", i*data->wdm->dt, j*data->wdm->df + WAVELET_BANDWIDTH/2,tdi->X[k]*tdi->X[k], tdi->Y[k]*tdi->Y[k], tdi->Z[k]*tdi->Z[k]);
             }
             fprintf(fptr,"\n");
         }
@@ -1245,19 +1287,19 @@ void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags)
     if(!strcmp("wavelet",data->basis))
     {
         sprintf(strain_filename,"%s/data_fourier.dat",data->dataDir);
-        print_wavelet_fourier_spectra(data->wdm, tdi, strain_filename);
+        print_wavelet_fourier_spectra(data, tdi, strain_filename);
     }
 
 }
 
-void print_wavelet_fourier_spectra(struct Wavelets *wdm, struct TDI *tdi, char filename[])
+void print_wavelet_fourier_spectra(struct Data *data, struct TDI *tdi, char filename[])
 {
     int k;
+    struct Wavelets *wdm = data->wdm;
     int N = wdm->NF*wdm->NT;
     double T = N*LISA_CADENCE;
 
     double **freqData = double_matrix(3,N);
-    //double **timeData = double_matrix(3,N);
     double **waveData = double_matrix(3,N);
 
     //get TDI data into context
@@ -1284,26 +1326,17 @@ void print_wavelet_fourier_spectra(struct Wavelets *wdm, struct TDI *tdi, char f
     wavelet_to_fourier_transform(wdm, freqData[2]);
 
     FILE *fptr=fopen(filename,"w");
-    for(int n=0; n<N/2; n++) fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e %.14e %.14e\n", n/T, freqData[0][2*n],freqData[0][2*n+1],freqData[1][2*n],freqData[1][2*n+1], freqData[2][2*n],freqData[2][2*n+1]);
+    for(int n=0; n<N/2; n++) 
+    {
+        double f = (double)n/T;
+        if(f>data->fmin && f < data->fmax)
+        {
+            fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e %.14e %.14e\n", n/T, freqData[0][2*n],freqData[0][2*n+1],freqData[1][2*n],freqData[1][2*n+1], freqData[2][2*n],freqData[2][2*n+1]);
+        }
+    }
     fclose(fptr);
-
-    //wavelet to time
-    /*
-    memcpy(timeData[0],waveData[0],sizeof(double)*N);
-    memcpy(timeData[1],waveData[1],sizeof(double)*N);
-    memcpy(timeData[2],waveData[2],sizeof(double)*N);
-    wavelet_transform_inverse(wdm, timeData[0]);
-    wavelet_transform_inverse(wdm, timeData[1]);
-    wavelet_transform_inverse(wdm, timeData[2]);
-
-    sprintf(filename,"%s/data/waveform_injection_time.dat",flags->runDir);
-    fptr=fopen(filename,"w");
-    for(int n=0; n<N; n++) fprintf(fptr,"%.14e %.14e %.14e %.14e\n", n*T/N, timeData[0][n], timeData[1][n], timeData[2][n]);
-    fclose(fptr);
-    */
 
     free_double_matrix(freqData,3);
-    //free_double_matrix(timeData,3);
     free_double_matrix(waveData,3);
 }
 
@@ -1338,7 +1371,8 @@ void print_glass_usage()
     fprintf(stdout,"       --h5-no-vgb   : remove vgbs from HDF5 data          \n");
     fprintf(stdout,"       --h5-no-noise : remove noise from HDF5 data (TODO)  \n");
     fprintf(stdout,"       --psd         : psd data file (ASCII)               \n");
-    fprintf(stdout,"       --samples     : number of frequency bins (512)      \n");
+    fprintf(stdout,"       --samples     : number of DFT frequency bins (512)  \n");
+    fprintf(stdout,"       --layers      : number of DWT frequency layers (1)  \n");
     fprintf(stdout,"       --padding     : number of bins padded on segment (0)\n");
     fprintf(stdout,"       --start-time  : initial time of epoch  (0)          \n");
     fprintf(stdout,"       --fmin        : minimum frequency                   \n");
@@ -1440,12 +1474,27 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     if(!strcmp(data->basis,"fourier")) data->N = data->NFFT*2;
     if(!strcmp(data->basis,"wavelet")) data->N = (int)ceil(data->T/WAVELET_DURATION);
 
+    
+    if(!strcmp(data->basis,"fourier")) 
+    {
+        data->NFFT = 512;
+        data->N = data->NFFT*2;
+    }
+    if(!strcmp(data->basis,"wavelet")) 
+    {
+        data->T = floor(data->T/WAVELET_DURATION)*WAVELET_DURATION;
+        data->sqT = sqrt(data->T);
+        data->NFFT = 1;
+        data->N = (int)floor(data->T/WAVELET_DURATION)*data->NFFT;
+    }
+
 
     //Specifying the expected options
     static struct option long_options[] =
     {
         /* These options set a flag. */
         {"samples",    required_argument, 0, 0},
+        {"layers",     required_argument, 0, 0},
         {"padding",    required_argument, 0, 0},
         {"duration",   required_argument, 0, 0},
         {"start-time", required_argument, 0, 0},
@@ -1498,6 +1547,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
                 
             case 0:
                 if(strcmp("samples",     long_options[long_index].name) == 0) data->NFFT        = atoi(optarg);
+                if(strcmp("layers",      long_options[long_index].name) == 0) data->NFFT        = atoi(optarg);
                 if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad        = atoi(optarg);
                 if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0          = (double)atof(optarg);
                 if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
@@ -1530,6 +1580,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
                 if(strcmp("duration",    long_options[long_index].name) == 0)
                 {   
                     data->T   = (double)atof(optarg);
+                    if(!strcmp(data->basis,"wavelet")) data->T = floor(data->T/WAVELET_DURATION)*WAVELET_DURATION;
                     data->sqT = sqrt(data->T);
                 }
                 if(strcmp("steps",       long_options[long_index].name) == 0)
@@ -1601,12 +1652,26 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     }
     
     //override size of data if fmax was requested
-    if(set_fmax_flag) data->NFFT = (int)floor((data->fmax - data->fmin)*data->T);
-    
+    if(set_fmax_flag)
+    {
+        if(!strcmp(data->basis,"fourier")) data->NFFT = (int)floor((data->fmax - data->fmin)*data->T); //number of frequency bins
+        if(!strcmp(data->basis,"wavelet")) data->NFFT = (int)( (ceil(data->fmax/WAVELET_BANDWIDTH) - floor(data->fmin/WAVELET_BANDWIDTH)) ); //number of frequency layers
+    }
+
     //pad data
-    data->NFFT += 2*data->qpad;
-    data->fmin -= data->qpad/data->T;
-        
+    if(!strcmp(data->basis,"fourier"))
+    {
+        data->NFFT += 2*data->qpad;
+        data->fmin -= data->qpad/data->T;
+    }
+    if(!strcmp(data->basis,"wavelet")) 
+    {
+        data->NFFT += 2; // pad with layers above and below
+        data->fmin -= WAVELET_BANDWIDTH;
+    }
+
+    
+    
     //map fmin to nearest bin
     if(!strcmp(data->basis,"fourier"))
     {
@@ -1616,7 +1681,8 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     if(!strcmp(data->basis,"wavelet"))
     {
         data->fmin = floor(data->fmin/WAVELET_BANDWIDTH)*WAVELET_BANDWIDTH;
-        if(!set_fmax_flag) data->fmax = data->fmin + WAVELET_BANDWIDTH;            
+        data->fmax = data->fmin + (double)(data->NFFT)*WAVELET_BANDWIDTH;
+
     }
 
     //calculate helper quantities for likelihood normalizations
@@ -1627,22 +1693,9 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
         data->sum_log_f += log(data->fmin + (double)n/data->T);
     }
 
-    data->N = data->NFFT*2;
-    
-    //data size for wavelets
-    if(!strcmp(data->basis,"wavelet"))
-    {
-        int NT = (int)ceil(data->T / WAVELET_DURATION);
-        int min_layer = (int)floor(data->fmin / WAVELET_BANDWIDTH);
-        int max_layer = min_layer + 2;
-        int NF = max_layer - min_layer + 1;
-        
-        data->N = NT*NF;
-
-        data->fmin = min_layer*WAVELET_BANDWIDTH;
-        data->fmax = (max_layer+1)*WAVELET_BANDWIDTH;
-    }   
-
+    //after all of that resize data
+    if(!strcmp(data->basis,"fourier")) data->N = data->NFFT*2;
+    if(!strcmp(data->basis,"wavelet")) data->N = data->NFFT*(int)floor(data->T / WAVELET_DURATION);
 
     //Print version control
 //    sprintf(filename,"glass.log");

@@ -813,6 +813,7 @@ double get_Fstat_logL_wavelet(struct Orbit *orbit, struct Data *data, double f0,
         A[i]->params[7] = fdot*data->T*data->T;
         if(UCB_MODEL_NP>8) A[i]->params[8] = 0.0;
 
+        map_array_to_params(A[i], A[i]->params, data->T);
         ucb_waveform_wavelet(orbit,data->wdm,data->T, data->t0, A[i]->params, A[i]->list, &A[i]->Nlist, A[i]->tdi->X, A[i]->tdi->Y, A[i]->tdi->Z);
 
         //catch waveforms that are out of band

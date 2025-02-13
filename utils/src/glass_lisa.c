@@ -294,8 +294,8 @@ void initialize_interpolated_analytic_orbits(struct Orbit *orbit, double Tobs, d
     /*
     Setup coarse time sampling of slowly-evolving orbits 
     */
-    int N = (int)(LISA_ORBIT_SAMPLES_PER_YEAR*Tobs/YEAR); //200 samples per year
-    if (N < 20) N = 20;        //but at least 20 samples
+    int N = (int)(LISA_ORBIT_SAMPLES_PER_YEAR*Tobs/YEAR); 
+    if (N < 20) N = 20; //but at least 20 samples
 
     double buffer = (Tobs)/(double)(N-1); // buffer for time sampling to keep interpolation away from edges of data
     double cadence = (Tobs + 2.0*buffer)/(double)(N-1);  // coarse sample cadence

@@ -970,7 +970,7 @@ double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *mo
     
     //loop over time segments
     if(!strcmp(data->basis,"fourier")) logLnorm -= (double)data->NFFT*log(model->noise->detC[0]);
-    if(!strcmp(data->basis,"wavelet")) logLnorm -= (double)data->N*log(model->noise->detC[0]);
+    if(!strcmp(data->basis,"wavelet")) logLnorm -= 0.5*(double)data->N*log(model->noise->detC[0]);
     
     return logLnorm;
 }
@@ -987,6 +987,8 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
     for(int n=0; n<N; n++)
         logLnorm -= log(model->noise->detC[n]);
 
+    if(!strcmp(data->basis,"wavelet")) logLnorm *= 0.5;  //normalization of 1/2 for wavelet domain (sum over N, not N/2)
+    
     return logLnorm;
 }
 

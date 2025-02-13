@@ -740,126 +740,155 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
     int n_re,n_im;
     double A_re,A_im,E_re,E_im,X_re,X_im,Y_re,Y_im,Z_re,Z_im,R_re,R_im;
     
-    switch(data->Nchannel)
+    if(!strcmp(data->format,"fourier"))
     {
-        case 1:
-            for(int n=0; n<data->NFFT; n++)
-            {
-                n_re = 2*n;
-                n_im = n_re++;
-                
-                X_re = model->tdi->X[n_re];
-                X_im = model->tdi->X[n_im];
-                
-                data->h_rec[n_re][0][mcmc] = X_re;
-                data->h_rec[n_im][0][mcmc] = X_im;
-                
-                R_re = data->tdi->X[n_re] - X_re;
-                R_im = data->tdi->X[n_im] - X_im;
-                
-                data->h_res[n_re][0][mcmc] = R_re;
-                data->h_res[n_im][0][mcmc] = R_im;
-                
-                data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
-                data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
-                
-                data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
-            }
-            break;
-        case 2:
-            for(int n=0; n<data->NFFT; n++)
-            {
-                n_re = 2*n;
-                n_im = n_re++;
-                
-                A_re = model->tdi->A[n_re];
-                A_im = model->tdi->A[n_im];
-                E_re = model->tdi->E[n_re];
-                E_im = model->tdi->E[n_im];
-                
-                data->h_rec[n_re][0][mcmc] = A_re;
-                data->h_rec[n_im][0][mcmc] = A_im;
-                data->h_rec[n_re][1][mcmc] = E_re;
-                data->h_rec[n_im][1][mcmc] = E_im;
-                
-                R_re = data->tdi->A[n_re] - A_re;
-                R_im = data->tdi->A[n_im] - A_im;
-                
-                data->h_res[n_re][0][mcmc] = R_re;
-                data->h_res[n_im][0][mcmc] = R_im;
-                
-                data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
-                
-                R_re = data->tdi->E[n_re] - E_re;
-                R_im = data->tdi->E[n_im] - E_im;
-                
-                data->h_res[n_re][1][mcmc] = R_re;
-                data->h_res[n_im][1][mcmc] = R_im;
-                
-                data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
-                
-                data->h_pow[n][0][mcmc] = A_re*A_re + A_im*A_im;
-                data->h_pow[n][1][mcmc] = E_re*E_re + E_im*E_im;
-                
-                data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
-                data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
-            }
-            break;
-        case 3:
-            for(int n=0; n<data->NFFT; n++)
-            {
-                n_re = 2*n;
-                n_im = n_re++;
-                
-                X_re = model->tdi->X[n_re];
-                X_im = model->tdi->X[n_im];
-                Y_re = model->tdi->Y[n_re];
-                Y_im = model->tdi->Y[n_im];
-                Z_re = model->tdi->Z[n_re];
-                Z_im = model->tdi->Z[n_im];
-                
-                data->h_rec[n_re][0][mcmc] = X_re;
-                data->h_rec[n_im][0][mcmc] = X_im;
-                data->h_rec[n_re][1][mcmc] = Y_re;
-                data->h_rec[n_im][1][mcmc] = Y_im;
-                data->h_rec[n_re][2][mcmc] = Z_re;
-                data->h_rec[n_im][2][mcmc] = Z_im;
-                
-                R_re = data->tdi->X[n_re] - X_re;
-                R_im = data->tdi->X[n_im] - X_im;
-                
-                data->h_res[n_re][0][mcmc] = R_re;
-                data->h_res[n_im][0][mcmc] = R_im;
-                
-                data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
-                
-                R_re = data->tdi->Y[n_re] - Y_re;
-                R_im = data->tdi->Y[n_im] - Y_im;
-                
-                data->h_res[n_re][1][mcmc] = R_re;
-                data->h_res[n_im][1][mcmc] = R_im;
-                
-                data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
-                
-                R_re = data->tdi->Z[n_re] - Z_re;
-                R_im = data->tdi->Z[n_im] - Z_im;
-                
-                data->h_res[n_re][2][mcmc] = R_re;
-                data->h_res[n_im][2][mcmc] = R_im;
-                
-                data->r_pow[n][2][mcmc] = R_re*R_re + R_im*R_im;
-                
-                
-                data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
-                data->h_pow[n][1][mcmc] = Y_re*Y_re + Y_im*Y_im;
-                data->h_pow[n][2][mcmc] = Z_re*Z_re + Z_im*Z_im;
-                
-                data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
-                data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
-                data->S_pow[n][2][mcmc] = 1./model->noise->invC[2][2][n];
-                
-            }
-            break;
+        switch(data->Nchannel)
+        {
+            case 1:
+                for(int n=0; n<data->NFFT; n++)
+                {
+                    n_re = 2*n;
+                    n_im = n_re++;
+                    
+                    X_re = model->tdi->X[n_re];
+                    X_im = model->tdi->X[n_im];
+                    
+                    data->h_rec[n_re][0][mcmc] = X_re;
+                    data->h_rec[n_im][0][mcmc] = X_im;
+                    
+                    R_re = data->tdi->X[n_re] - X_re;
+                    R_im = data->tdi->X[n_im] - X_im;
+                    
+                    data->h_res[n_re][0][mcmc] = R_re;
+                    data->h_res[n_im][0][mcmc] = R_im;
+                    
+                    data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
+                    data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
+                    
+                    data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+                }
+                break;
+            case 2:
+                for(int n=0; n<data->NFFT; n++)
+                {
+                    n_re = 2*n;
+                    n_im = n_re++;
+                    
+                    A_re = model->tdi->A[n_re];
+                    A_im = model->tdi->A[n_im];
+                    E_re = model->tdi->E[n_re];
+                    E_im = model->tdi->E[n_im];
+                    
+                    data->h_rec[n_re][0][mcmc] = A_re;
+                    data->h_rec[n_im][0][mcmc] = A_im;
+                    data->h_rec[n_re][1][mcmc] = E_re;
+                    data->h_rec[n_im][1][mcmc] = E_im;
+                    
+                    R_re = data->tdi->A[n_re] - A_re;
+                    R_im = data->tdi->A[n_im] - A_im;
+                    
+                    data->h_res[n_re][0][mcmc] = R_re;
+                    data->h_res[n_im][0][mcmc] = R_im;
+                    
+                    data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    R_re = data->tdi->E[n_re] - E_re;
+                    R_im = data->tdi->E[n_im] - E_im;
+                    
+                    data->h_res[n_re][1][mcmc] = R_re;
+                    data->h_res[n_im][1][mcmc] = R_im;
+                    
+                    data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    data->h_pow[n][0][mcmc] = A_re*A_re + A_im*A_im;
+                    data->h_pow[n][1][mcmc] = E_re*E_re + E_im*E_im;
+                    
+                    data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+                    data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
+                }
+                break;
+            case 3:
+                for(int n=0; n<data->NFFT; n++)
+                {
+                    n_re = 2*n;
+                    n_im = n_re++;
+                    
+                    X_re = model->tdi->X[n_re];
+                    X_im = model->tdi->X[n_im];
+                    Y_re = model->tdi->Y[n_re];
+                    Y_im = model->tdi->Y[n_im];
+                    Z_re = model->tdi->Z[n_re];
+                    Z_im = model->tdi->Z[n_im];
+                    
+                    data->h_rec[n_re][0][mcmc] = X_re;
+                    data->h_rec[n_im][0][mcmc] = X_im;
+                    data->h_rec[n_re][1][mcmc] = Y_re;
+                    data->h_rec[n_im][1][mcmc] = Y_im;
+                    data->h_rec[n_re][2][mcmc] = Z_re;
+                    data->h_rec[n_im][2][mcmc] = Z_im;
+                    
+                    R_re = data->tdi->X[n_re] - X_re;
+                    R_im = data->tdi->X[n_im] - X_im;
+                    
+                    data->h_res[n_re][0][mcmc] = R_re;
+                    data->h_res[n_im][0][mcmc] = R_im;
+                    
+                    data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    R_re = data->tdi->Y[n_re] - Y_re;
+                    R_im = data->tdi->Y[n_im] - Y_im;
+                    
+                    data->h_res[n_re][1][mcmc] = R_re;
+                    data->h_res[n_im][1][mcmc] = R_im;
+                    
+                    data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    R_re = data->tdi->Z[n_re] - Z_re;
+                    R_im = data->tdi->Z[n_im] - Z_im;
+                    
+                    data->h_res[n_re][2][mcmc] = R_re;
+                    data->h_res[n_im][2][mcmc] = R_im;
+                    
+                    data->r_pow[n][2][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    
+                    data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
+                    data->h_pow[n][1][mcmc] = Y_re*Y_re + Y_im*Y_im;
+                    data->h_pow[n][2][mcmc] = Z_re*Z_re + Z_im*Z_im;
+                    
+                    data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+                    data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
+                    data->S_pow[n][2][mcmc] = 1./model->noise->invC[2][2][n];
+                    
+                }
+                break;
+        }
+    }//end if Fourier
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        for(int n=0; n<data->N; n++)
+        {
+            data->h_rec[n][0][mcmc] = model->tdi->X[n];
+            data->h_rec[n][1][mcmc] = model->tdi->Y[n];
+            data->h_rec[n][2][mcmc] = model->tdi->Z[n];
+            
+            data->h_res[n][0][mcmc] = data->tdi->X[n] - model->tdi->X[n];
+            data->h_res[n][1][mcmc] = data->tdi->Y[n] - model->tdi->Y[n];
+            data->h_res[n][2][mcmc] = data->tdi->Z[n] - model->tdi->Z[n];
+            
+            data->r_pow[n][0][mcmc] = data->h_res[n][0][mcmc]*data->h_res[n][0][mcmc];
+            data->r_pow[n][1][mcmc] = data->h_res[n][1][mcmc]*data->h_res[n][1][mcmc];
+            data->r_pow[n][2][mcmc] = data->h_res[n][2][mcmc]*data->h_res[n][2][mcmc];
+            
+            
+            data->h_rec[n][0][mcmc] = model->tdi->X[n]*model->tdi->X[n];
+            data->h_rec[n][1][mcmc] = model->tdi->Y[n]*model->tdi->Y[n];
+            data->h_rec[n][2][mcmc] = model->tdi->Z[n]*model->tdi->Z[n];
+            
+            data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+            data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
+            data->S_pow[n][2][mcmc] = 1./model->noise->invC[2][2][n];
+        }
     }
 }
 
@@ -907,30 +936,50 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
 
 void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr)
 {
-    for(int n=0; n<data->NFFT; n++)
+    if(!strcmp(data->basis,"fourier"))
     {
-        int re = 2*n;
-        int im = re+1;
-        double f = data->fmin + (double)n/data->T;
-
-        fprintf(fptr,"%.12g ",f);
-        switch(data->Nchannel)
+        for(int n=0; n<data->NFFT; n++)
         {
-            case 2:
-                fprintf(fptr,"%.12g ",model->tdi->A[re]);
-                fprintf(fptr,"%.12g ",model->tdi->A[im]);
-                fprintf(fptr,"%.12g ",model->tdi->E[re]);
-                fprintf(fptr,"%.12g\n",model->tdi->E[im]);
-                break;
-            case 3:
-                fprintf(fptr,"%.12g ",model->tdi->X[re]);
-                fprintf(fptr,"%.12g ",model->tdi->X[im]);
-                fprintf(fptr,"%.12g ",model->tdi->Y[re]);
-                fprintf(fptr,"%.12g ",model->tdi->Y[im]);
-                fprintf(fptr,"%.12g ",model->tdi->Z[re]);
-                fprintf(fptr,"%.12g\n",model->tdi->Z[im]);
-                break;
-
+            int re = 2*n;
+            int im = re+1;
+            double f = data->fmin + (double)n/data->T;
+            
+            fprintf(fptr,"%.12g ",f);
+            switch(data->Nchannel)
+            {
+                case 2:
+                    fprintf(fptr,"%.12g ",model->tdi->A[re]);
+                    fprintf(fptr,"%.12g ",model->tdi->A[im]);
+                    fprintf(fptr,"%.12g ",model->tdi->E[re]);
+                    fprintf(fptr,"%.12g\n",model->tdi->E[im]);
+                    break;
+                case 3:
+                    fprintf(fptr,"%.12g ",model->tdi->X[re]);
+                    fprintf(fptr,"%.12g ",model->tdi->X[im]);
+                    fprintf(fptr,"%.12g ",model->tdi->Y[re]);
+                    fprintf(fptr,"%.12g ",model->tdi->Y[im]);
+                    fprintf(fptr,"%.12g ",model->tdi->Z[re]);
+                    fprintf(fptr,"%.12g\n",model->tdi->Z[im]);
+                    break;
+                    
+            }
+        }
+    }
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        for(int j=0; j<data->wdm->NF; j++)
+        {
+            for(int i=0; i<data->wdm->NT; i++)
+            {
+                int k;
+                wavelet_pixel_to_index(data->wdm, i, j, &k);
+                fprintf(fptr,"%.12g %.12g ",i*WAVELET_DURATION,j*WAVELET_BANDWIDTH + WAVELET_BANDWIDTH/2);
+                fprintf(fptr,"%.12g ",model->tdi->X[k]);
+                fprintf(fptr,"%.12g ",model->tdi->Y[k]);
+                fprintf(fptr,"%.12g ",model->tdi->Z[k]);
+                fprintf(fptr,"\n");
+            }
+            fprintf(fptr,"\n");
         }
     }
 }
@@ -953,12 +1002,16 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     FILE *fptr_res;
     FILE *fptr_var;
     
+    int Nsamples;
+    if(!strcmp(data->basis,"fourier")) Nsamples = data->NFFT;
+    if(!strcmp(data->basis,"wavelet")) Nsamples = data->N;
+    
     //get variance of residual
-    double **res_var = malloc(data->NFFT*sizeof(double *));
-    for(int n=0; n<data->NFFT; n++)
+    double **res_var = malloc(Nsamples*sizeof(double *));
+    for(int n=0; n<Nsamples; n++)
         res_var[n] = calloc(data->Nchannel,sizeof(double));
     
-    for(int n=0; n<data->NFFT; n++)
+    for(int n=0; n<Nsamples; n++)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
@@ -966,7 +1019,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
         }
     }
     
-    for(int n=0; n<data->NFFT; n++)
+    for(int n=0; n<Nsamples; n++)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
@@ -986,7 +1039,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     
     double med,lo_50,hi_50,lo_90,hi_90;
     
-    for(int i=0; i<data->NFFT; i++)
+    for(int i=0; i<Nsamples; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
         fprintf(fptr_var,"%.12g ",f);
@@ -1031,7 +1084,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     fclose(fptr_res);
     fclose(fptr_rec);
     
-    for(int n=0; n<data->NFFT; n++)
+    for(int n=0; n<Nsamples; n++)
     {
         free(res_var[n]);
     }
