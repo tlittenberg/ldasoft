@@ -573,12 +573,12 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                 if(!strcmp("wavelet",data->basis))fprintf(stdout,"   ...injected SNR=%g\n",snr_wavelet(inj,data->noise));
             }
             
-            //Add Gaussian noise to injection
+            /*Add Gaussian noise to injection
             if(flags->simNoise && nn==0)
             {
                 if(!strcmp("fourier",data->basis)) AddNoise(data,tdi);
                 if(!strcmp("wavelet",data->basis)) AddNoiseWavelet(data,tdi);
-            }
+            }*/
 
             //Compute fisher information matrix of injection
             if(!flags->quiet)fprintf(stdout,"   ...computing Fisher Information Matrix of injection\n");
@@ -613,7 +613,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
         
     }//end ii loop over injection files
     
-    print_data(data,tdi,flags);
+    //print_data(data,tdi,flags);
 
     /* compute overlaps between injections */
     if(!strcmp(data->basis,"wavelet"))

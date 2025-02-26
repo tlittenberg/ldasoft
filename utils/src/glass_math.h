@@ -59,6 +59,9 @@ double ipow(double x, int n);
  @param N[in] size of time series
  */
 void tukey(double *data, double alpha, int N);
+double tukey_scale(double alpha, int N);
+
+void detrend(double *data, int N, int Navg);
 
 /**
 \brief Rearrange output of GSL RFT 

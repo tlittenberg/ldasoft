@@ -367,8 +367,8 @@ void tukey(double *data, double alpha, int N)
     }
 }
 
-/*
-static double tukey_scale(double alpha, int N)
+
+double tukey_scale(double alpha, int N)
 {
     int i, imin, imax;
     double scale = 0.0;
@@ -390,7 +390,26 @@ static double tukey_scale(double alpha, int N)
     
     return scale;
 }
-*/
+
+void detrend(double *data, int N, int Navg)
+{
+    double *trend = malloc(N*sizeof(double));
+    double X0=0;
+    double XN=0;
+    for(int n=0; n<Navg; n++)
+    {
+        X0+=data[n];
+        XN+=data[N-1-n];
+    }
+    X0/=(double)Navg;
+    XN/=(double)Navg;
+    
+    for(int n=0; n<N; n++) trend[n] = X0 + ((XN-X0)/(N-1))*n;
+    
+    for(int n=0; n<N; n++) data[n] -= trend[n];
+    
+    free(trend);
+}
 
 void unpack_gsl_rft_output(double *x, double *x_gsl, int N)
 {

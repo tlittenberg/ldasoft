@@ -161,7 +161,6 @@ void setup_frequency_proposal(struct Data *data, struct Flags *flags)
     data->SNR2 = total - data->NFFT;
     printf("total=%g, N=%i\n",total, data->NFFT);
     if(data->SNR2<0.0)data->SNR2=0.0;
-    data->SNR2*=4.0;//why the factor of 4?
     printf("data-based SNR^2:  %g (%g)\n", data->SNR2, sqrt(data->SNR2));
     
 }

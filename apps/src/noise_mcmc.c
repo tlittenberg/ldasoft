@@ -82,6 +82,9 @@ int main(int argc, char *argv[])
     else if (flags->simNoise)
         SimulateData(data, orbit, flags);
     
+    /* print various data products for plotting */
+    print_data(data, data->tdi, flags);
+    
     /* Initialize Instrument Noise Model */
     printf("   ...initialize instrument noise model\n");
     struct Noise **psd = malloc(chain->NC*sizeof(struct Noise *));

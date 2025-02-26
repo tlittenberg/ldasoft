@@ -588,6 +588,15 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags)
         }
         free_tdi(tdi_td_vgb);
     }
+
+    /* Detrend data */
+    detrend(X, N, (int)(FILTER_LENGTH/LISA_CADENCE));
+    detrend(Y, N, (int)(FILTER_LENGTH/LISA_CADENCE));
+    detrend(Z, N, (int)(FILTER_LENGTH/LISA_CADENCE));
+    detrend(A, N, (int)(FILTER_LENGTH/LISA_CADENCE));
+    detrend(E, N, (int)(FILTER_LENGTH/LISA_CADENCE));
+    detrend(T, N, (int)(FILTER_LENGTH/LISA_CADENCE));
+
     
     /* Tukey window time-domain TDI channels tdi_td */
     double alpha = (2.0*FILTER_LENGTH/Tobs);
@@ -969,7 +978,17 @@ void GetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags)
                     data->noise->C[2][0][n] += -0.5*GBnoise;
                     data->noise->C[2][1][n] += -0.5*GBnoise;
                 }
-
+                
+                /*normalize*/
+                data->noise->C[0][0][n] /= 4.;
+                data->noise->C[0][1][n] /= 4.;
+                data->noise->C[0][2][n] /= 4.;
+                data->noise->C[1][0][n] /= 4.;
+                data->noise->C[1][1][n] /= 4.;
+                data->noise->C[1][2][n] /= 4.;
+                data->noise->C[2][0][n] /= 4.;
+                data->noise->C[2][1][n] /= 4.;
+                data->noise->C[2][2][n] /= 4.;
             }
         }
         
@@ -1060,8 +1079,8 @@ void AddNoise(struct Data *data, struct TDI *tdi)
         {
             for(int j=0; j<data->Nchannel; j++)
             {
-                    n_re[i] += L[i][j]*u_re[j]/sqrt(2.);
-                    n_im[i] += L[i][j]*u_im[j]/sqrt(2.);
+                n_re[i] += L[i][j]*u_re[j]/sqrt(2.);
+                n_im[i] += L[i][j]*u_im[j]/sqrt(2.);
             }
         }
         
@@ -1150,7 +1169,7 @@ void AddNoiseWavelet(struct Data *data, struct TDI *tdi)
             {
                 for(int b=0; b<data->Nchannel; b++)
                 {
-                    n[a] += L[a][b]*u[b];
+                    n[a] += L[a][b]*u[b]; //factor of 2 :shrug:?
                 }
             }
             

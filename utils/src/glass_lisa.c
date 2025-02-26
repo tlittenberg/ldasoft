@@ -1029,8 +1029,9 @@ void get_noise_levels(char model[], double f, double *Spm, double *Sop)
     }
     else if (strcmp(model, "sangria") == 0)
     {
-        *Spm = 9.00e-30 / (PI2*f*CLIGHT)/(PI2*f*CLIGHT) * (1.0 + pow(0.4e-3/f,2)) * (1.0 + pow(f/8.0e-3,4));
-        *Sop = 2.25e-22 * (PI2*f/CLIGHT)*(PI2*f/CLIGHT) * (1.0 + pow(2.0e-3/f,4));
+        //https://gitlab.in2p3.fr/LISA/LDC/-/blob/2f2d54b8b5c2d23d6251850f443e786dd9f7780a/data_generation/sangria/config.yml
+        *Spm = 5.76e-30 / (PI2*f*CLIGHT)/(PI2*f*CLIGHT) * (1.0 + pow(0.4e-3/f,2)) * (1.0 + pow(f/8.0e-3,4));
+        *Sop = 1.28e-22 * (PI2*f/CLIGHT)*(PI2*f/CLIGHT) * (1.0 + pow(2.0e-3/f,4));
     }
     /* more else if clauses */
     else /* default: */

@@ -395,9 +395,9 @@ void generate_instrument_noise_model(struct Orbit *orbit, struct InstrumentModel
         }
         
         //Normalization
-//        for(int i=0; i<data->Nchannel; i++)
-//            for(int j=0; j<data->Nchannel; j++)
-//                model->psd->C[i][j][n] *= 2.0;
+        for(int i=0; i<model->psd->Nchannel; i++)
+            for(int j=0; j<model->psd->Nchannel; j++)
+                model->psd->C[i][j][n] /= 2.0;
     }
 }
 
@@ -445,7 +445,7 @@ void generate_instrument_noise_model_wavelet(struct Wavelets *wdm, struct Orbit 
     for(int i=0; i<model->psd->N; i++)
         for(int n=0; n<3; n++)
             for(int m=n; m<3; m++)
-                C[n][m][i]/=4.;
+                C[n][m][i]/=8.;
 
     free_instrument_model(grid);
 
@@ -778,8 +778,8 @@ void initialize_instrument_model_wavelet(struct Orbit *orbit, struct Data *data,
     // initialize noise levels
     for(int i=0; i<model->Nlink; i++)
     {
-        model->soms[i] = 2.25e-22;
-        model->sacc[i] = 9.00e-30;
+        model->soms[i] = 1.28e-22;
+        model->sacc[i] = 5.76e-30;
     }
     
     // get noise covariance matrix for initial parameters
