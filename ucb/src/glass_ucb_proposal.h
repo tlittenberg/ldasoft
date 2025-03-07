@@ -286,18 +286,28 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
 void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 
 /**
- \brief Create 3D histogram for F-statistics proposal
- 
-  - discretize \f${f_0,\cos\theta,\phi}\f$ space.
-    - frequency resolution is hard-coded to 1/4 of a bin
-    - sky location resolution is hard-coded to 30x30 bins
-  - compute F-statistic in each cell of the grid
-  - cap F-statistic at SNRmax=20
-  - normalize to make it a proper proposal (this part is a pain to get right...)
-
- TODO: adaptive grid spacing based on Fisher sub-matrix
+ \brief Sets up memory for and builds 3D histogram for F-statistics proposal
  */
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
+
+/**
+\brief Create 3D histogram for F-statistics proposal
+
+ - discretize \f${f_0,\cos\theta,\phi}\f$ space.
+   - frequency resolution is hard-coded to 1/4 of a bin
+   - sky location resolution is hard-coded to 30x30 bins
+ - compute F-statistic in each cell of the grid
+ - cap F-statistic at SNRmax=20
+ - normalize to make it a proper proposal (this part is a pain to get right...)
+
+TODO: adaptive grid spacing based on Fisher sub-matrix
+*/
+void build_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
+
+/**
+ \brief Rebuilds F-statistic proposal using current residual
+ */
+void rebuild_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Model *model, struct Flags *flags, struct Proposal *proposal);
 
 /**
  \brief package priors into Proposal structures

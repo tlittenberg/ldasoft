@@ -140,7 +140,7 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     //shorthand pointers
     struct SplineModel *model_x = model;
     struct SplineModel *model_y = malloc(sizeof(struct SplineModel));
-    alloc_spline_model(model_y, model_x->psd->N, data->Nchannel, model_x->spline->N);
+    alloc_spline_model(model_y, model_x->psd->N, data->Nlayer, data->Nchannel, model_x->spline->N);
 
     //alisases for pointers to frequency vectors
     double *fx = model_x->spline->f;
@@ -253,7 +253,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
         Nspline = model_x->spline->N - 1; //death move
         move = 'D';
     }
-    alloc_spline_model(model_y, model_x->psd->N, data->Nchannel, Nspline);
+    alloc_spline_model(model_y, model_x->psd->N, data->Nlayer, data->Nchannel, Nspline);
     model_y->Nmin = model_x->Nmin;
     model_y->Nmax = model_x->Nmax;
 
@@ -382,7 +382,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
         
         free_noise(model_x->spline);
         model_x->spline = malloc(sizeof(struct Noise));
-        alloc_noise(model_x->spline,model_y->spline->N, data->Nchannel);
+        alloc_noise(model_x->spline,model_y->spline->N, data->Nlayer, data->Nchannel);
          
         
         copy_spline_model(model_y, model_x);

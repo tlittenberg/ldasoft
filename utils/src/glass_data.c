@@ -191,8 +191,8 @@ void alloc_data(struct Data *data, struct Flags *flags)
             
     alloc_tdi(data->tdi, data->N, data->Nchannel);
     alloc_tdi(data->raw, data->N, data->Nchannel);
-    if(!strcmp(data->basis,"fourier")) alloc_noise(data->noise, data->NFFT, data->Nchannel);
-    if(!strcmp(data->basis,"wavelet")) alloc_noise(data->noise, data->N, data->Nchannel);
+    if(!strcmp(data->basis,"fourier")) alloc_noise(data->noise, data->NFFT, data->Nlayer, data->Nchannel);
+    if(!strcmp(data->basis,"wavelet")) alloc_noise(data->noise, data->N, data->Nlayer, data->Nchannel);
     
     //reconstructed signal model
     int i_re,i_im;
@@ -276,12 +276,13 @@ void alloc_data(struct Data *data, struct Flags *flags)
     }
 }
 
-void alloc_noise(struct Noise *noise, int N, int Nchannel)
+void alloc_noise(struct Noise *noise, int N, int Nlayer, int Nchannel)
 {
     noise->N = N;
+    noise->Nlayer = Nlayer;
     noise->Nchannel = Nchannel;
     
-    noise->eta = calloc(Nchannel,sizeof(double));
+    noise->eta = calloc(Nchannel*Nlayer,sizeof(double));
 
     noise->f = calloc(N,sizeof(double));
 
@@ -290,7 +291,7 @@ void alloc_noise(struct Noise *noise, int N, int Nchannel)
     
     for(int i=0; i<Nchannel; i++)
     {
-        noise->eta[i] = 1.0;
+        for(int j=0; j<Nlayer; j++) noise->eta[i*Nlayer+j] = 1.0;
         noise->C[i]    = malloc(Nchannel*sizeof(double *));
         noise->invC[i] = malloc(Nchannel*sizeof(double *));
         
@@ -358,8 +359,9 @@ void copy_data(struct Data *origin, struct Data *copy)
 void copy_noise(struct Noise *origin, struct Noise *copy)
 {
     copy->N = origin->N;
+    copy->Nlayer = origin->Nlayer;
     copy->Nchannel = origin->Nchannel;
-    memcpy(copy->eta,origin->eta,origin->Nchannel*sizeof(double));
+    memcpy(copy->eta,origin->eta,origin->Nchannel*origin->Nlayer*sizeof(double));
 
     memcpy(copy->f, origin->f, origin->N*sizeof(double));
 
@@ -1482,6 +1484,7 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     data->t0       = 0.0; /* start time of data segment in seconds */
     data->sqT      = sqrt(data->T);
     data->NFFT     = 512;
+    data->Nlayer   = 1;
     data->Nchannel = 3; //1=X, 2=AE, 3=XYZ
     data->qpad     = 0;
     data->fmin     = 1e-4; //Hz
@@ -1714,7 +1717,11 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
 
     //after all of that resize data
     if(!strcmp(data->basis,"fourier")) data->N = data->NFFT*2;
-    if(!strcmp(data->basis,"wavelet")) data->N = data->NFFT*(int)floor(data->T / WAVELET_DURATION);
+    if(!strcmp(data->basis,"wavelet")) 
+    {
+        data->Nlayer = data->NFFT;
+        data->N = data->NFFT*(int)floor(data->T / WAVELET_DURATION);
+    }
 
     //Print version control
 //    sprintf(filename,"glass.log");

@@ -687,7 +687,7 @@ void print_psd_state(struct Data *data, struct Model *model, FILE *fptr, int ste
     fprintf(fptr, "%i ",step);
     fprintf(fptr, "%lg %lg ",model->logL, model->logLnorm);
     
-    for(int n=0; n<data->Nchannel; n++)
+    for(int n=0; n<data->Nchannel*data->Nlayer; n++)
         fprintf(fptr, "%lg ", model->noise->eta[n]);
 
     fprintf(fptr, "\n");

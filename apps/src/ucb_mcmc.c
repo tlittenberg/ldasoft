@@ -327,6 +327,8 @@ int main(int argc, char *argv[])
                 {
                     for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
                     mcmc = -flags->NBURN;
+                    
+                    //rebuild_fstatistic_proposal(orbit, data, model[chain->index[0]], flags, proposal[1]);
                 }
                 
                 mcmc++;

@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     alloc_source(src2, data->N, 2);
     
     struct Noise *noise = malloc(sizeof(struct Noise));
-    alloc_noise(noise, data->NFFT, 2);
+    alloc_noise(noise, data->NFFT, 1, 2);
     
     
     for(int n=0; n<data->N; n++)

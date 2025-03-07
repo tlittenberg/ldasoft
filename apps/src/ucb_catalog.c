@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
     
     struct Noise *noise = NULL;
     noise = malloc(sizeof(struct Noise));
-    alloc_noise(noise, data->NFFT, data->Nchannel);
+    alloc_noise(noise, data->NFFT, data->Nlayer, data->Nchannel);
     
     //Noise model
     //Get noise spectrum for data segment

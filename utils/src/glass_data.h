@@ -29,6 +29,8 @@
 #define FILTER_LENGTH 5e3 //seconds
 #define MAXSTRINGSIZE 1024 //!<maximum number of characters for `path+filename` strings
 
+//#define WAVELET_DURATION 20480.0 //!<duration of wavelet pixels [s]
+//#define WAVELET_BANDWIDTH 2.44140625e-05 //!<bandwidth of wavelet pixels [Hz]
 //#define WAVELET_DURATION 40960.0 //!<duration of wavelet pixels [s]
 //#define WAVELET_BANDWIDTH 1.220703125e-05 //!<bandwidth of wavelet pixels [Hz]
 #define WAVELET_DURATION 81920.0 //!<duration of wavelet pixels [s]
@@ -52,6 +54,7 @@ struct Data
     int N;        //!<number of data points bins
     int NFFT;     //!<number of frequency bins
     int Nchannel; //!<number of data channels
+    int Nlayer;   //!<number of frequency layers
     double logN;  //!<log total number of data points \f$ \log ( 2 \times N \times N_{\rm channel} \times N_{\rm T} )\f$
     ///@}
 
@@ -344,6 +347,9 @@ struct Noise
     /// Number of TDI channels
     int Nchannel;
     
+    /// Number of frequency layers (for DWT data)
+    int Nlayer;
+    
     ///@name Constant Noise Parameters
     ///Each \f$\eta\f$ is a multiplier to the assumed noise level \f$S_n\f$ stored in Data structure. One per channel (`X` for 4-link, `A`,`E` or `X`,`Y`,`Z` for 6-link)
     ///@{
@@ -435,7 +441,7 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
 /** @name Allocate memory for structures */
 ///@{
 void alloc_data(struct Data *data, struct Flags *flags);
-void alloc_noise(struct Noise *noise, int N, int Nchannel);
+void alloc_noise(struct Noise *noise, int N, int Nlayer, int Nchannel);
 void alloc_calibration(struct Calibration *calibration);
 ///@}
 

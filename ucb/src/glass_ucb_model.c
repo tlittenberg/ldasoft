@@ -80,8 +80,8 @@ void alloc_model(struct Data *data, struct Model *model, int Nmax)
     model->tdi         = malloc(sizeof(struct TDI)         );
     model->residual    = malloc(sizeof(struct TDI)         );
     
-    if(!strcmp(data->basis,"fourier")) alloc_noise(model->noise,data->NFFT, data->Nchannel);
-    if(!strcmp(data->basis,"wavelet")) alloc_noise(model->noise,data->N, data->Nchannel);
+    if(!strcmp(data->basis,"fourier")) alloc_noise(model->noise,data->NFFT, data->Nlayer, data->Nchannel);
+    if(!strcmp(data->basis,"wavelet")) alloc_noise(model->noise,data->N, data->Nlayer, data->Nchannel);
 
     alloc_tdi(model->tdi, data->N, data->Nchannel);
     alloc_tdi(model->residual, data->N, data->Nchannel);
@@ -722,11 +722,21 @@ void generate_noise_model(struct Data *data, struct Model *model)
 
 void generate_noise_model_wavelet(struct Data *data, struct Model *model)
 {
-    for(int n=0; n<data->N; n++)
+    int Nlayers = data->Nlayer;         //number of frequency layers
+    int Nslices = data->N/data->Nlayer; //number of time slices
+    for(int n=0; n<Nlayers; n++)
     {
-        for(int i=0; i<data->Nchannel; i++)
-            for(int j=i; j<data->Nchannel; j++)
-                model->noise->C[i][j][n] = model->noise->C[j][i][n] = data->noise->C[i][j][n]*sqrt(model->noise->eta[i]*model->noise->eta[j]);
+        for(int m=0; m<Nslices; m++)
+        {
+            int k = n*Nslices+m;
+            for(int i=0; i<data->Nchannel; i++)
+            {
+                for(int j=i; j<data->Nchannel; j++)
+                {
+                    model->noise->C[i][j][k] = model->noise->C[j][i][k] = data->noise->C[i][j][k]*sqrt(model->noise->eta[i*Nlayers+n]*model->noise->eta[j*Nlayers+n]);
+                }
+            }
+        }
 
     }
     invert_noise_covariance_matrix(model->noise);

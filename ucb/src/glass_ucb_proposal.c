@@ -1066,14 +1066,12 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
      - normalize to make it a proper proposal (this part is a pain to get right...)
      */
     
-    //matrix to hold maximized extrinsic parameters
-    double *Fparams = calloc(4,sizeof(double));
 
     //grid sizes
     int n_f     = data->N/2;
     int n_theta = 20;
     int n_phi   = 20;
-    int n_fdot  = 10;
+    
     if(flags->debug)
     {
         n_f/=4;
@@ -1087,7 +1085,6 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
 
     double d_theta = 2./(double)n_theta;
     double d_phi   = PI2/(double)n_phi;
-    double d_fdot = (1.1 - 0.1)/n_fdot; //scan over chirp mass range [0.1:1.1] Msolar
     
     if(!flags->quiet)
     {
@@ -1135,7 +1132,6 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         }
     }
     
-    double norm = 0.0;
     double minp = +1e60;
     proposal->maxp = -1e60;
     
@@ -1176,90 +1172,8 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
     //if no resume flag or no checkpoint file build the proposal
     else
     {
-        for(int i=0; i<n_f; i++)
-        {
-            if(n_f<100)
-            {
-                if(!flags->quiet) printProgress((double)i/(double)n_f);
-            }
-            else
-            {
-                if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
-            }
-            
-            double q;
-            double f;
-            if(!strcmp(data->basis,"fourier"))
-            {
-                q = (double)(data->qmin) + (double)(i)*d_f*data->T;
-                f = q/data->T;
-            }
-            if(!strcmp(data->basis,"wavelet"))
-                f = data->fmin + data->wdm->df/2 + i*d_f;
-
-            f += d_f/2; //evaluate logL in center of cell
-            
-            //loop over colatitude bins
-            #pragma omp parallel for num_threads(flags->threads)
-            for (int j=0; j<n_theta; j++)
-            {
-                //F-statistic for TDI variabls
-                double logL_X,logL_AE, logLmax;
-
-                //loop over longitude bins
-                for(int k=0; k<n_phi; k++)
-                {
-                    double theta = acos((-1. + (double)j*d_theta + d_theta/2)); //evaluate logL in center of cell
-                    double phi = (double)k*d_phi + d_phi/2; //evaluate logL in center of cell
-                    
-
-                    if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, 0, theta, phi, &logL_X, &logL_AE, Fparams);
-                    if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, 0, theta, phi);
-
-                    logLmax = logL_AE;
-                        
-                    if(logL_AE>1)
-                    {
-                        for(int n=0; n<n_fdot; n++)
-                        {
-                            double fdot = ucb_fdot(0.1+n*d_fdot, f); //get fdot by scanning over chirpmass
-                            
-                            if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
-                            if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, fdot, theta, phi);
-                            
-                            if(logL_AE>logLmax) logLmax = logL_AE;
-
-                            if(logL_AE<1) break;
-                        }
-                    }
-                    proposal->tensor[i][j][k] = logLmax*logLmax;
-
-                }//end loop over longitude bins
-            }//end loop over colatitude bins
-        }//end loop over sub-bins
-
-        //get normalization
-        for(int i=0; i<n_f; i++)
-            for(int j=0; j<n_theta; j++)
-                for(int k=0; k<n_phi; k++)
-                    norm += proposal->tensor[i][j][k];
+        build_fstatistic_proposal(orbit, data, flags, proposal);
         
-        //include correction for cell volume
-        proposal->norm = (n_f*n_theta*n_phi)/norm;
-        
-        //normalize
-        for(int i=0; i<n_f; i++)
-            for(int j=0; j<n_theta; j++)
-                for(int k=0; k<n_phi; k++)
-                    proposal->tensor[i][j][k] *= proposal->norm;
-
-        //get max
-        proposal->maxp = -1.e60;
-        for(int i=0; i<n_f; i++)
-            for(int j=0; j<n_theta; j++)
-                for(int k=0; k<n_phi; k++)
-                    if(proposal->tensor[i][j][k]>proposal->maxp) proposal->maxp = proposal->tensor[i][j][k];
-                
         //store checkpointing files so we can skip this expensive step on resume
         propFile=fopen(filename,"wb");
         fwrite(&proposal->norm, sizeof proposal->norm, 1, propFile);
@@ -1269,7 +1183,9 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                 for(int k=0; k<n_phi; k++)
                     fwrite(&proposal->tensor[i][j][k],sizeof proposal->tensor[i][j][k], 1, propFile);
         fclose(propFile);
-    }
+
+
+    }//end resume if/else
 
     //print diagnostics
     if(flags->verbose)
@@ -1308,10 +1224,166 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
            
     }
     
-    free(Fparams);
     if(!flags->quiet)fprintf(stdout,"\n==============================================\n\n");
     fflush(stdout);
 }
+
+void build_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal)
+{
+    //matrix to hold maximized extrinsic parameters
+    double *Fparams = calloc(4,sizeof(double));
+
+    int n_f     = (int)proposal->matrix[0][0];
+    int n_theta = (int)proposal->matrix[1][0];
+    int n_phi   = (int)proposal->matrix[2][0];
+    
+    double d_f     = proposal->matrix[0][1];
+    double d_theta = proposal->matrix[1][1];
+    double d_phi   = proposal->matrix[2][1];
+    
+    int n_fdot  = 10;
+    double d_fdot = (1.1 - 0.1)/n_fdot; //scan over chirp mass range [0.1:1.1] Msolar
+
+    double norm = 0.0;
+
+    for(int i=0; i<n_f; i++)
+    {
+        if(n_f<100)
+        {
+            if(!flags->quiet) printProgress((double)i/(double)n_f);
+        }
+        else
+        {
+            if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
+        }
+        
+        double q;
+        double f;
+        if(!strcmp(data->basis,"fourier"))
+        {
+            q = (double)(data->qmin) + (double)(i)*d_f*data->T;
+            f = q/data->T;
+        }
+        if(!strcmp(data->basis,"wavelet"))
+            f = data->fmin + data->wdm->df/2 + i*d_f;
+
+        f += d_f/2; //evaluate logL in center of cell
+        
+        //loop over colatitude bins
+        #pragma omp parallel for num_threads(flags->threads)
+        for (int j=0; j<n_theta; j++)
+        {
+            //F-statistic for TDI variabls
+            double logL_X,logL_AE, logLmax;
+
+            //loop over longitude bins
+            for(int k=0; k<n_phi; k++)
+            {
+                double theta = acos((-1. + (double)j*d_theta + d_theta/2)); //evaluate logL in center of cell
+                double phi = (double)k*d_phi + d_phi/2; //evaluate logL in center of cell
+                
+
+                if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, 0, theta, phi, &logL_X, &logL_AE, Fparams);
+                if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, 0, theta, phi);
+
+                logLmax = logL_AE;
+                    
+                if(logL_AE>1)
+                {
+                    for(int n=0; n<n_fdot; n++)
+                    {
+                        double fdot = ucb_fdot(0.1+n*d_fdot, f); //get fdot by scanning over chirpmass
+                        
+                        if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
+                        if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, fdot, theta, phi);
+                        
+                        if(logL_AE>logLmax) logLmax = logL_AE;
+
+                        if(logL_AE<1) break;
+                    }
+                }
+                proposal->tensor[i][j][k] = logLmax*logLmax;
+
+            }//end loop over longitude bins
+        }//end loop over colatitude bins
+    }//end loop over sub-bins
+
+    //get normalization
+    for(int i=0; i<n_f; i++)
+        for(int j=0; j<n_theta; j++)
+            for(int k=0; k<n_phi; k++)
+                norm += proposal->tensor[i][j][k];
+    
+    //include correction for cell volume
+    proposal->norm = (n_f*n_theta*n_phi)/norm;
+    
+    //normalize
+    for(int i=0; i<n_f; i++)
+        for(int j=0; j<n_theta; j++)
+            for(int k=0; k<n_phi; k++)
+                proposal->tensor[i][j][k] *= proposal->norm;
+
+    //get max
+    proposal->maxp = -1.e60;
+    for(int i=0; i<n_f; i++)
+        for(int j=0; j<n_theta; j++)
+            for(int k=0; k<n_phi; k++)
+                if(proposal->tensor[i][j][k]>proposal->maxp) proposal->maxp = proposal->tensor[i][j][k];
+    
+    free(Fparams);
+}
+
+void rebuild_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Model *model, struct Flags *flags, struct Proposal *proposal)
+{
+    //store data
+    double *Xsave = malloc(data->N*sizeof(double));
+    double *Ysave = malloc(data->N*sizeof(double));
+    double *Zsave = malloc(data->N*sizeof(double));
+    double *Asave = malloc(data->N*sizeof(double));
+    double *Esave = malloc(data->N*sizeof(double));
+
+    memcpy(Xsave, data->tdi->X, data->N*sizeof(double));
+    memcpy(Ysave, data->tdi->Y, data->N*sizeof(double));
+    memcpy(Zsave, data->tdi->Z, data->N*sizeof(double));
+    memcpy(Asave, data->tdi->A, data->N*sizeof(double));
+    memcpy(Esave, data->tdi->E, data->N*sizeof(double));
+
+    // send residual to fstat builder
+    for(int n=0; n<data->N; n++)
+    {
+        if(data->Nchannel==2)
+        {
+            data->tdi->A[n] -= model->tdi->X[n];
+            data->tdi->E[n] -= model->tdi->Y[n];
+        }
+        
+        if(data->Nchannel==3)
+        {
+            data->tdi->X[n] -= model->tdi->X[n];
+            data->tdi->Y[n] -= model->tdi->Y[n];
+            data->tdi->Z[n] -= model->tdi->Z[n];
+            
+            //DFT F-stat uses A&E channels only
+            XYZ2AE(data->tdi->X[n], data->tdi->Y[n], data->tdi->Z[n], &data->tdi->A[n], &data->tdi->E[n]);
+        }
+    }
+    build_fstatistic_proposal(orbit, data, flags, proposal);
+    
+    //restore data
+    memcpy(data->tdi->X, Xsave, data->N*sizeof(double));
+    memcpy(data->tdi->Y, Ysave, data->N*sizeof(double));
+    memcpy(data->tdi->Z, Zsave, data->N*sizeof(double));
+    memcpy(data->tdi->A, Asave, data->N*sizeof(double));
+    memcpy(data->tdi->E, Esave, data->N*sizeof(double));
+
+    free(Xsave);
+    free(Ysave);
+    free(Zsave);
+    free(Asave);
+    free(Esave);
+
+}
+
 
 void setup_gmm_proposal(struct Data *data, struct Catalog *catalog, struct Proposal *proposal)
 {

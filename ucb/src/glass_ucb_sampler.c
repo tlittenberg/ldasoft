@@ -128,9 +128,9 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     copy_model(model_x,model_y);
     
     //choose proposal distribution
-    for(int n=0; n<data->Nchannel; n++)
+    for(int n=0; n<data->Nchannel*data->Nlayer; n++)
     {
-        model_y->noise->eta[n] = model_x->noise->eta[n] + 0.1*gsl_ran_gaussian(chain->r[ic],1);
+        model_y->noise->eta[n] = model_x->noise->eta[n] + 0.05*gsl_ran_gaussian(chain->r[ic],1);
         if(model_y->noise->eta[n] < 0.01 || model_y->noise->eta[n]>100) logPy=-INFINITY;
     }
     

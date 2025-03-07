@@ -83,32 +83,32 @@ void map_foreground_params_to_array(struct ForegroundModel *model)
     model->sgal[4] = log(model->f2);
 }
 
-void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int Nspline)
+void alloc_spline_model(struct SplineModel *model, int Ndata, int Nlayer, int Nchannel, int Nspline)
 {
     model->Nchannel = Nchannel;
     
     model->psd = malloc(sizeof(struct Noise));
     model->spline=malloc(sizeof(struct Noise));
     
-    alloc_noise(model->psd, Ndata, Nchannel);
-    alloc_noise(model->spline, Nspline, Nchannel);
+    alloc_noise(model->psd, Ndata, Nlayer, Nchannel);
+    alloc_noise(model->spline, Nspline, Nlayer, Nchannel);
 }
 
-void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel)
+void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nlayer, int Nchannel)
 {
     model->Nlink=6;
     model->soms = malloc(model->Nlink*sizeof(double));
     model->sacc = malloc(model->Nlink*sizeof(double));
     model->psd = malloc(sizeof(struct Noise));
-    alloc_noise(model->psd, Ndata, Nchannel);
+    alloc_noise(model->psd, Ndata, Nlayer, Nchannel);
 }
 
-void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nchannel)
+void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nlayer, int Nchannel)
 {
     model->Nparams=5;
     model->sgal = malloc(model->Nparams*sizeof(double));
     model->psd = malloc(sizeof(struct Noise));
-    alloc_noise(model->psd, Ndata, Nchannel);
+    alloc_noise(model->psd, Ndata, Nlayer, Nchannel);
 }
 
 void free_spline_model(struct SplineModel *model)
@@ -409,8 +409,12 @@ void generate_instrument_noise_model_wavelet(struct Wavelets *wdm, struct Orbit 
     */
     struct InstrumentModel *grid = malloc(sizeof(struct InstrumentModel));
 
+    // active layers
+    int imin = (int)round(model->psd->f[0]/wdm->df);
+    int imax = (int)round(model->psd->f[model->psd->N-1]/wdm->df)+1;
+
     // initialize data models
-    alloc_instrument_model(grid, 2*wdm->NF, 3);
+    alloc_instrument_model(grid, 2*wdm->NF, imax-imin, 3);
 
     // set up psd frequency grid
     for(int n=0; n<grid->psd->N; n++)
@@ -431,8 +435,6 @@ void generate_instrument_noise_model_wavelet(struct Wavelets *wdm, struct Orbit 
     */
     double ***C     = model->psd->C;
     double ***Cgrid = grid->psd->C;
-    int imin = (int)round(model->psd->f[0]/wdm->df);
-    int imax = (int)round(model->psd->f[model->psd->N-1]/wdm->df)+1;
     for(int i=imin; i<imax; i++)
     {
         int j = 2*i-2;
@@ -497,8 +499,12 @@ void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct For
     */
     struct ForegroundModel *grid = malloc(sizeof(struct ForegroundModel));
 
+    // active layers
+    int imin = (int)round(model->psd->f[0]/wdm->df);
+    int imax = (int)round(model->psd->f[model->psd->N-1]/wdm->df)+1;
+
     // initialize data models
-    alloc_foreground_model(grid, 2*wdm->NF, 3);
+    alloc_foreground_model(grid, 2*wdm->NF, imax-imin, 3);
 
     // set up psd frequency grid
     for(int n=0; n<grid->psd->N; n++)
@@ -521,8 +527,6 @@ void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct For
     */
     double ***C     = model->psd->C;
     double ***Cgrid = grid->psd->C;
-    int imin = (int)round(model->psd->f[0]/wdm->df);
-    int imax = (int)round(model->psd->f[model->psd->N-1]/wdm->df)+1;
 
     for(int i=imin; i<imax; i++)
     {
@@ -543,7 +547,7 @@ void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct For
     for(int i=0; i<model->psd->N; i++)
         for(int n=0; n<3; n++)
             for(int m=n; m<3; m++)
-                C[n][m][i]/=4.;
+                C[n][m][i]/=8.;
 
 
 
@@ -704,7 +708,7 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
 {
     
     // Initialize data models
-    alloc_spline_model(model, data->NFFT, data->Nchannel, Nspline);
+    alloc_spline_model(model, data->NFFT, data->Nlayer, data->Nchannel, Nspline);
     
     //set max and min spline points
     model->Nmin = MIN_SPLINE_STENCIL;
@@ -746,7 +750,7 @@ void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct Spli
 void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model)
 {
     // initialize data models
-    alloc_instrument_model(model, data->NFFT, data->Nchannel);
+    alloc_instrument_model(model, data->NFFT, data->Nlayer, data->Nchannel);
     
     // set up psd frequency grid
     for(int n=0; n<model->psd->N; n++)
@@ -769,7 +773,7 @@ void initialize_instrument_model_wavelet(struct Orbit *orbit, struct Data *data,
     struct Wavelets *wdm = data->wdm;
 
     // initialize data models
-    alloc_instrument_model(model, data->qmax-data->qmin, data->Nchannel);
+    alloc_instrument_model(model, data->qmax-data->qmin, data->Nlayer, data->Nchannel);
     
     // set up psd frequency grid
     for(int n=0; n<model->psd->N; n++)
@@ -789,7 +793,7 @@ void initialize_instrument_model_wavelet(struct Orbit *orbit, struct Data *data,
 void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model)
 {
     // initialize data models
-    alloc_foreground_model(model, data->NFFT, data->Nchannel);
+    alloc_foreground_model(model, data->NFFT, data->Nlayer, data->Nchannel);
     
     // set up psd frequency grid
     for(int n=0; n<model->psd->N; n++)
@@ -823,7 +827,7 @@ void initialize_foreground_model_wavelet(struct Orbit *orbit, struct Data *data,
     struct Wavelets *wdm = data->wdm;
 
     // initialize data models
-    alloc_foreground_model(model, data->qmax-data->qmin, data->Nchannel);
+    alloc_foreground_model(model, data->qmax-data->qmin, data->Nlayer, data->Nchannel);
     
     // set up psd frequency grid
     for(int n=0; n<model->psd->N; n++)

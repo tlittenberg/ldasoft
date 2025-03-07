@@ -764,6 +764,8 @@ void LISA_TDI_spline(double *M, double *Mf, int a, int b, int c, double* tarray,
     M[n] = 0.0;
     Mf[n] = 0.0;
     
+    //Larm[a] = Larm[b] = Larm[c] = LARM/CLIGHT;
+    
     t = tarray[n] - kr[a]-2.0*Larm[c]-2.0*Larm[b];
     interpolated_amplitude_phase(t, amp_spline, phase_spline, acc, Aplus, Across, cos2psi, sin2psi, &hp, &hc, &hpf, &hcf);
     M[n] += hp*Apm[b]+hc*Acm[b];

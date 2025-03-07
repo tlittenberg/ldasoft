@@ -115,17 +115,17 @@ void map_array_to_foreground_params(struct ForegroundModel *model);
 /**
  \brief Allocates spline model structure and contents.
  */
-void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int Nspline);
+void alloc_spline_model(struct SplineModel *model, int Ndata, int Nlayer, int Nchannel, int Nspline);
 
 /**
  \brief Allocates instrument model structure and contents.
  */
-void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel);
+void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nlayer, int Nchannel);
 
 /**
  \brief Allocates galactic foreground model structure and contents.
  */
-void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nchannel);
+void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nlayer, int Nchannel);
 
 /**
  \brief Free allocated spline model.

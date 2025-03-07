@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     for(int ic=0; ic<chain->NC; ic++)
     {
         psd[ic] = malloc(sizeof(struct Noise));
-        alloc_noise(psd[ic], data->NFFT, data->Nchannel);
+        alloc_noise(psd[ic], data->NFFT, data->Nlayer, data->Nchannel);
 
         inst_model[ic] = malloc(sizeof(struct InstrumentModel));
         inst_trial[ic] = malloc(sizeof(struct InstrumentModel));
