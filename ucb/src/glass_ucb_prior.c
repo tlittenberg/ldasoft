@@ -257,15 +257,9 @@ void set_uniform_prior(struct Flags *flags, struct Model *model, struct Data *da
     //TODO: assign priors by parameter name, use mapper to get into vector (more robust to changes)
     
     //frequency bin
-    model->prior[0][0] = data->fmin*data->T;//data->qmin;
-    model->prior[0][1] = data->fmax*data->T;//data->qmax;
+    model->prior[0][0] = data->fmin*data->T;
+    model->prior[0][1] = data->fmax*data->T;
     
-    if(!strcmp(data->basis,"wavelet"))
-    {
-        model->prior[0][0] = data->fmin*data->T;//data->qmin;
-        model->prior[0][1] = data->fmax*data->T;//data->qmax;
-    }
-
     //colatitude
     model->prior[1][0] = -1.0;
     model->prior[1][1] =  1.0;

@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         SimulateData(data, orbit, flags);
     
     /* print various data products for plotting */
-    print_data(data, data->tdi, flags);
+    print_data(data, flags);
     
     /* Initialize Instrument Noise Model */
     printf("   ...initialize instrument noise model\n");

@@ -1091,6 +1091,58 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     free(res_var);
 }
 
+
+void print_psd_draw(struct Data *data, struct Model *model, struct Flags *flags)
+{
+    FILE *fptr;
+    char filename[128];
+    
+    sprintf(filename,"%s/psd_draw.dat",data->dataDir);
+    fptr=fopen(filename,"w");
+
+    if(!strcmp(data->basis,"fourier"))
+    {
+        for(int n=0; n<data->NFFT; n++)
+        {
+            double f = data->fmin + n/data->T;
+            
+            fprintf(fptr,"%lg ",f);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[0][0][n]);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[1][1][n]);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[2][2][n]);
+            fprintf(fptr,"\n");
+        }
+    }
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        for(int n=0; n<data->Nlayer; n++)
+        {
+            int k;
+            double fmin = (data->lmin + n)*WAVELET_BANDWIDTH;
+            double fmax = fmin + WAVELET_BANDWIDTH;
+            
+            wavelet_pixel_to_index(data->wdm, 0, data->lmin + n, &k);
+            k-=data->wdm->kmin;
+            
+            fprintf(fptr,"%lg ",fmin);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[0][0][k]);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[1][1][k]);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[2][2][k]);
+            fprintf(fptr,"\n");
+            
+            fprintf(fptr,"%lg ",fmax);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[0][0][k]);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[1][1][k]);
+            fprintf(fptr,"%lg ", 1./model->noise->invC[2][2][k]);
+            
+            fprintf(fptr,"\n");
+        }
+    }
+    fclose(fptr);
+}
+
+
+
 void print_evidence(struct Chain *chain,struct Flags *flags)
 {
     char filename[MAXSTRINGSIZE];

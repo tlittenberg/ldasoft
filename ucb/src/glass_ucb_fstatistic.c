@@ -365,11 +365,11 @@ void get_N(struct Data *data, struct Filter *F_filter)
     // N^{i} = (s|A^{i})
     //
     /////////
-    XfLS = data->tdi->X;
-    AALS = data->tdi->A;
-    EELS = data->tdi->E;
+    XfLS = data->dft->X;
+    AALS = data->dft->A;
+    EELS = data->dft->E;
     
-    q  = F_filter->q - data->qmin;
+    q  = F_filter->q - (int)(data->fmin*data->T);
     
     M_filter = F_filter->M_filter;
     
@@ -420,7 +420,7 @@ void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct 
     long q, M_filter;
     
     M = F_filter->M_filter;
-    q = F_filter->q-data->qmin;
+    q = F_filter->q-(int)(data->fmin*data->T);
     M_filter = F_filter->M_filter;
     
     for (i=0; i<M; i++)

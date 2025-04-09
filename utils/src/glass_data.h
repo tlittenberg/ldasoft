@@ -77,24 +77,25 @@ struct Data
 
     /** @name Analysis Frequency Segment */
      ///@{
-    int qmin; //!<minimum frequency bin of segment
-    int qmax; //!<maximum frequency bin of segment
-    int qpad; //!<number of frequency bins padding ends of segment
+    int qmin; //!<minimum DFT frequency bin of segment
+    int qmax; //!<maximum DFT frequency bin of segment
+    int qpad; //!<number of DFT frequency bins padding ends of segment
+    
+    int lmin; //!<minimum DWT frequency layer
+    int lmax; //!<maximum DWT frequency layer
 
     double fmin; //!<minimum frequency of segment
     double fmax; //!<maximum frequency of segment
     double sine_f_on_fstar; //!<\f$sin(f * 2\pi L/c)\f$
 
-    //some manipulations of f,fmin for likelihood calculation
-    double sum_log_f; //!<\f$\sum \log(f)\f$ appears in some normalizations
-    double logfmin; //!<\f$\log(f_{\rm min})\f$ appears in some normalizations
-    double logfmax; //!<\f$\log(f_{\rm max})\f$ appears spline setup for bayesline
     ///@}
 
     /** @name TDI Data and Noise */
      ///@{
     struct TDI *tdi; //!<TDI data channels as seen by sampler
     struct TDI *raw; //!<TDI data channels unaltered from input
+    struct TDI *dft; //!<Fourier transform of TDI data channels
+    struct TDI *dwt; //!<Wavelet transform of TDI data channels
     struct Noise *noise; //!<Reference noise model
 
     /**
@@ -472,7 +473,7 @@ void ReadData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 /**
  \brief Reads LDC-formatted HDF5 data using `--h5-data` flag
  */
-void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags);
+void ReadHDF5(struct Data *data, struct TDI *tdi, struct TDI *tdi_dwt, struct Flags *flags);
 
 /**
  \brief Reads ASCII data using `--data` flag
@@ -497,9 +498,15 @@ void SimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
 /** @name Wrapper functions that call data print functions */
 ///@{
-void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags);
+void print_data(struct Data *data, struct Flags *flags);
 void print_wavelet_fourier_spectra(struct Data *data, struct TDI *tdi, char filename[]);
 ///@}
+
+/**
+ \brief convert DWT of TDI data to DFT
+ */
+void wavelet_layer_to_fourier_transform(struct Data *data);
+
 /**
  \brief Parse command line
  */

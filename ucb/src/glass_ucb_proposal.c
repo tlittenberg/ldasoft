@@ -1079,9 +1079,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
         n_phi/=3;
     }
     
-    double d_f;
-    if(!strcmp(data->basis,"fourier")) d_f = (double)data->NFFT/(double)n_f/data->T;
-    if(!strcmp(data->basis,"wavelet")) d_f = (data->fmax - data->fmin - data->wdm->df)/n_f;
+    double d_f = (double)data->NFFT/(double)n_f/data->T;
 
     double d_theta = 2./(double)n_theta;
     double d_phi   = PI2/(double)n_phi;
@@ -1219,9 +1217,7 @@ void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             }
             fclose(fptr);
         }
-        if(!strcmp(data->basis,"fourier")) write_Fstat_animation(data->qmin/data->T, data->T,proposal,flags->runDir, minp);
-        if(!strcmp(data->basis,"wavelet")) write_Fstat_animation(data->fmin + data->wdm->df/2, data->T,proposal,flags->runDir, minp);
-           
+        write_Fstat_animation(data->fmin, data->T,proposal,flags->runDir, minp);
     }
     
     if(!flags->quiet)fprintf(stdout,"\n==============================================\n\n");
@@ -1257,15 +1253,9 @@ void build_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
             if(i%(n_f/100)==0 && !flags->quiet)printProgress((double)i/(double)n_f);
         }
         
-        double q;
         double f;
-        if(!strcmp(data->basis,"fourier"))
-        {
-            q = (double)(data->qmin) + (double)(i)*d_f*data->T;
-            f = q/data->T;
-        }
-        if(!strcmp(data->basis,"wavelet"))
-            f = data->fmin + data->wdm->df/2 + i*d_f;
+        
+        f = data->fmin + i*d_f;
 
         f += d_f/2; //evaluate logL in center of cell
         
@@ -1283,8 +1273,7 @@ void build_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                 double phi = (double)k*d_phi + d_phi/2; //evaluate logL in center of cell
                 
 
-                if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, 0, theta, phi, &logL_X, &logL_AE, Fparams);
-                if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, 0, theta, phi);
+                get_Fstat_logL(orbit, data, f, 0, theta, phi, &logL_X, &logL_AE, Fparams);
 
                 logLmax = logL_AE;
                     
@@ -1294,8 +1283,7 @@ void build_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Fl
                     {
                         double fdot = ucb_fdot(0.1+n*d_fdot, f); //get fdot by scanning over chirpmass
                         
-                        if(!strcmp(data->basis,"fourier")) get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
-                        if(!strcmp(data->basis,"wavelet")) logL_AE = get_Fstat_logL_wavelet(orbit, data, f, fdot, theta, phi);
+                        get_Fstat_logL(orbit, data, f, fdot, theta, phi, &logL_X, &logL_AE, Fparams);
                         
                         if(logL_AE>logLmax) logLmax = logL_AE;
 
@@ -1367,6 +1355,10 @@ void rebuild_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct 
             XYZ2AE(data->tdi->X[n], data->tdi->Y[n], data->tdi->Z[n], &data->tdi->A[n], &data->tdi->E[n]);
         }
     }
+    
+    // convert DWT to DFT
+    if(!strcmp(data->basis,"wavelet")) wavelet_layer_to_fourier_transform(data);
+    
     build_fstatistic_proposal(orbit, data, flags, proposal);
     
     //restore data
@@ -1706,8 +1698,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
         j = gsl_rng_uniform(seed)*n_theta;
         k = gsl_rng_uniform(seed)*n_phi;
         
-        if(!strcmp(data->basis,"fourier")) q = (double)(data->qmin) + i*d_f*data->T;
-        if(!strcmp(data->basis,"wavelet")) q = (data->fmin + data->wdm->df/2 + i*d_f)*data->T;
+        q = (double)(data->qmin) + i*d_f*data->T;
 
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
@@ -1751,9 +1742,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         fm_shift(data, model, source, proposal, params, seed);
         
         q = params[0];
-        if(!strcmp(data->basis,"fourier")) i = (int)floor((q - data->qmin)/(d_f*data->T));
-        if(!strcmp(data->basis,"wavelet")) i = (int)floor((q/data->T - (data->fmin + data->wdm->df/2))/d_f);
-
+        i = (int)floor((q - data->qmin)/(d_f*data->T));
         
         if(i<0.0 || i>n_f-1) return -INFINITY;
     }
@@ -1765,8 +1754,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         j = gsl_rng_uniform(seed)*n_theta;
         k = gsl_rng_uniform(seed)*n_phi;
         
-        if(!strcmp(data->basis,"fourier")) q = (double)(data->qmin) + i*d_f*data->T;
-        if(!strcmp(data->basis,"wavelet")) q = (data->fmin + data->wdm->df/2 + i*d_f)*data->T;
+        q = (double)(data->qmin) + i*d_f*data->T;
 
         costheta = -1. + j*d_theta;
         phi      = k*d_phi;
@@ -1820,8 +1808,7 @@ double evaluate_fstatistic_proposal(struct Data *data, UNUSED struct Model *mode
     int n_phi   = (int)proposal->matrix[2][0];
     
     int i;
-    if(!strcmp(data->basis,"fourier")) i = (int)floor((params[0] - data->qmin)/(d_f*data->T));
-    if(!strcmp(data->basis,"wavelet")) i = (int)floor((params[0]/data->T - (data->fmin + data->wdm->df/2))/d_f);
+    i = (int)floor((params[0] - data->qmin)/(d_f*data->T));
 
     int j = (int)floor((params[1] - -1)/d_theta);
     int k = (int)floor((params[2])/d_phi);

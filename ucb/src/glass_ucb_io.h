@@ -110,8 +110,9 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags);
 
 /// Print current state of waveform and residuals during run for diagnostics. Disabled when Flags::quiet=`TRUE`.
 void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags);
+void print_psd_draw(struct Data *data, struct Model *model, struct Flags *flags);
 ///@}
-///
+
 /**
  \brief Print evidence for each dimension model
  */

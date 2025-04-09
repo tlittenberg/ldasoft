@@ -128,8 +128,11 @@ int main(int argc, char *argv[])
     /* Add Gaussian noise realization */
     if(flags->simNoise) AddNoiseWavelet(data,data->tdi);
 
+    /* Store DFT copy of simulated data */
+    if(!flags->strainData) wavelet_layer_to_fourier_transform(data);
+    
     /* print various data products for plotting */
-    print_data(data, data->tdi, flags);
+    print_data(data, flags);
 
     /* Load catalog cache file for proposals/priors */
     struct Catalog *catalog=malloc(sizeof(struct Catalog));
@@ -194,15 +197,24 @@ int main(int argc, char *argv[])
                 copy_model(model_ptr,trial_ptr);
                 
                 for(int steps=0; steps < 100; steps++)
-                    ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                
-                if(flags->rj)
-                    ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                {
+                    //reverse jump birth/death or split/merge moves
+                    if(gsl_rng_uniform(chain->r[ic])<0.1 && flags->rj)
+                    {
+                        ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    }
+                    //fixed dimension parameter updates
+                    else
+                    {
+                        for(int n=0; n<model_ptr->Nlive; n++)
+                            ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    }
+                }//loop over MCMC steps
 
                 if( (flags->strainData || flags->simNoise) && !flags->psd)
-                    noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
+                    for(int steps=0; steps < 10; steps++) noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
 
-                //update fisher matrix for each chain
+                //update information matrix for each chain
                 for(int n=0; n<model_ptr->Nlive; n++)
                     ucb_fisher_wavelet(orbit, data, model_ptr->source[n], data->noise);
                 
@@ -222,7 +234,14 @@ int main(int argc, char *argv[])
                 {
                     if(update_max_log_likelihood(model, chain, flags)) mcmc = -flags->NBURN;
                 }
-                                
+                          
+                //store reconstructed waveform
+                if(!flags->quiet) 
+                {
+                    print_waveform_draw(data, model[chain->index[0]], flags);
+                    print_psd_draw(data, model[chain->index[0]], flags);
+                }
+
                 //update run status
                 if(mcmc%data->downsample==0)
                 {
@@ -243,6 +262,9 @@ int main(int argc, char *argv[])
                 //store info for evidence calculations
                 if(mcmc>0 && mcmc%data->downsample==0)
                 {
+                    
+                    save_waveforms(data, model[chain->index[0]], mcmc/data->downsample);
+
                     for(int ic=0; ic<NC; ic++)
                     {
                         chain->dimension[ic][model[chain->index[ic]]->Nlive]++;
@@ -250,11 +272,13 @@ int main(int argc, char *argv[])
                     }
                 }
                 
-                
+                //annealing allowed model size
                 if(mcmc>-flags->NBURN+flags->NBURN/10. && model[0]->Neff < model[0]->Nmax && flags->rj)
                 {
                     for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
                     mcmc = -flags->NBURN;
+                    
+                    rebuild_fstatistic_proposal(orbit, data, model[chain->index[0]], flags, proposal[1]);
                 }
                 
                 mcmc++;

@@ -685,7 +685,7 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
         if(ic==0)set_uniform_prior(flags, model[ic], data, 1);
         else     set_uniform_prior(flags, model[ic], data, 0);
                 
-        //override nosie model w/ stationary version
+        //override noise model w/ stationary version
         if(!strcmp("wavelet",data->basis) && flags->stationary) GetStationaryNoiseModel(data, orbit, flags, data->noise);
 
         //set noise model

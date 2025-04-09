@@ -773,11 +773,11 @@ void initialize_instrument_model_wavelet(struct Orbit *orbit, struct Data *data,
     struct Wavelets *wdm = data->wdm;
 
     // initialize data models
-    alloc_instrument_model(model, data->qmax-data->qmin, data->Nlayer, data->Nchannel);
+    alloc_instrument_model(model, data->lmax-data->lmin, data->Nlayer, data->Nchannel);
     
     // set up psd frequency grid
     for(int n=0; n<model->psd->N; n++)
-        model->psd->f[n] = (data->qmin+n)*wdm->df;
+        model->psd->f[n] = (data->lmin+n)*wdm->df;
 
     // initialize noise levels
     for(int i=0; i<model->Nlink; i++)
@@ -827,11 +827,11 @@ void initialize_foreground_model_wavelet(struct Orbit *orbit, struct Data *data,
     struct Wavelets *wdm = data->wdm;
 
     // initialize data models
-    alloc_foreground_model(model, data->qmax-data->qmin, data->Nlayer, data->Nchannel);
+    alloc_foreground_model(model, data->lmax-data->lmin, data->Nlayer, data->Nchannel);
     
     // set up psd frequency grid
     for(int n=0; n<model->psd->N; n++)
-        model->psd->f[n] = (data->qmin+n)*wdm->df;
+        model->psd->f[n] = (data->lmin+n)*wdm->df;
 
     // initialize constant foreground parameters levels 
     model->Tobs  =  data->T;
@@ -897,7 +897,7 @@ void GetDynamicNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *
     sprintf(filename,"%s/power_noise.dat",data->dataDir);
     FILE *fptr=fopen(filename,"w");
     int k;
-    for(int j=data->qmin; j<data->qmax; j++)
+    for(int j=data->lmin; j<data->lmax; j++)
     {
         double f = j*data->wdm->df;
         for(int i=0; i<data->wdm->NT; i++)

@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
 
         //print various data products for plotting
-        print_data(data, data->tdi, flags);
+        print_data(data, flags);
         
         //save parameters to file
         sprintf(filename,"%s/data/injection_parameters.dat",subDir);

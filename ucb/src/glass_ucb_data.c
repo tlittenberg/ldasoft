@@ -266,7 +266,7 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         gsl_rng_free(r);
     }
     
-    print_data(data,tdi,flags);
+    print_data(data,flags);
     
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
@@ -359,18 +359,20 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                     int q0 = (int)floor(f0/WAVELET_BANDWIDTH);
 
                     //pad by one layer above and below
-                    data->qmin = q0-((data->NFFT-1)/2);   //mimimum frequency layer
-                    data->qmax = data->qmin + data->NFFT; //maximum frequency layer
+                    data->lmin = q0-((data->Nlayer-1)/2);   //mimimum frequency layer
+                    data->lmax = data->lmin + data->Nlayer; //maximum frequency layer
                     
                     //reset wavelet basis max and min ranges
-                    wavelet_pixel_to_index(data->wdm,0,data->qmin,&data->wdm->kmin); 
-                    wavelet_pixel_to_index(data->wdm,0,data->qmax,&data->wdm->kmax); 
+                    wavelet_pixel_to_index(data->wdm,0,data->lmin,&data->wdm->kmin);
+                    wavelet_pixel_to_index(data->wdm,0,data->lmax,&data->wdm->kmax);
                     
                     //recompute fmin and fmax so they align with a bin
-                    data->fmin = data->qmin*WAVELET_BANDWIDTH;
-                    data->fmax = data->qmax*WAVELET_BANDWIDTH;
+                    data->fmin = data->lmin*WAVELET_BANDWIDTH;
+                    data->fmax = data->lmax*WAVELET_BANDWIDTH;
+                    data->qmin = (int)(data->fmin*data->T);
+                    data->qmax = data->qmin+data->NFFT;
 
-                    if(!flags->quiet)fprintf(stdout,"  Frequency layers [%i,%i]\n",data->qmin,data->qmax);
+                    if(!flags->quiet)fprintf(stdout,"  Frequency layers [%i,%i]\n",data->lmin,data->lmax);
                     
                     printf("  fmin=%lg, fmax=%lg\n",data->fmin,data->fmax);
                 }
@@ -499,7 +501,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             }
             if(!strcmp("wavelet",data->basis))
             {
-                for(int j=data->qmin; j<data->qmax; j++)
+                for(int j=data->lmin; j<data->lmax; j++)
                 {
                     double f = j*data->wdm->df;
                     for(int i=0; i<data->wdm->NT; i++)
@@ -547,7 +549,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             }
             if(!strcmp("wavelet",data->basis))
             {
-                for(int j=data->qmin; j<data->qmax; j++)
+                for(int j=data->lmin; j<data->lmax; j++)
                 {
                     double f = j*data->wdm->df;
                     for(int i=0; i<data->wdm->NT; i++)
@@ -613,7 +615,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
         
     }//end ii loop over injection files
     
-    //print_data(data,tdi,flags);
+    //print_data(data,flags);
 
     /* compute overlaps between injections */
     if(!strcmp(data->basis,"wavelet"))

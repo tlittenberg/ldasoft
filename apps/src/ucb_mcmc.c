@@ -126,14 +126,13 @@ int main(int argc, char *argv[])
         
         /* set approximate f/fstar for segment */
         data->sine_f_on_fstar = sin((data->fmin + (data->fmax-data->fmin)/2.)/orbit->fstar);
-
     }
 
     /* Add Gaussian noise realization */
     if(flags->simNoise) AddNoise(data,data->tdi);
     
     /* print various data products for plotting */
-    print_data(data, data->tdi, flags);
+    print_data(data, flags);
     
     /* Load catalog cache file for proposals/priors */
     struct Catalog *catalog=malloc(sizeof(struct Catalog));
@@ -328,7 +327,7 @@ int main(int argc, char *argv[])
                     for(int ic=0; ic<NC; ic++) model[ic]->Neff++;
                     mcmc = -flags->NBURN;
                     
-                    //rebuild_fstatistic_proposal(orbit, data, model[chain->index[0]], flags, proposal[1]);
+                    rebuild_fstatistic_proposal(orbit, data, model[chain->index[0]], flags, proposal[1]);
                 }
                 
                 mcmc++;
