@@ -29,7 +29,6 @@
 #include <gsl/gsl_fft_halfcomplex.h>
 #include <gsl/gsl_fft_complex.h>
 #include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_randist.h>
 #include <gsl/gsl_spline.h>
 
 #include "glass_constants.h"

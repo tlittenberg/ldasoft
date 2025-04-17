@@ -85,7 +85,7 @@ void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flag
 }
 
 //TODO: Move file pointers to Model instead of Chain structs
-void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode)
+void initialize_chain(struct Chain *chain, struct Flags *flags, unsigned int *seed, const char *mode)
 {
     int ic;
     int NC = chain->NC;
@@ -109,16 +109,15 @@ void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, cons
     if(NC>1) chain->temperature[NC-1] = 1e12;
     chain->logLmax = 0.0;
     
-    chain->r = malloc(NC*sizeof(gsl_rng *));
-    chain->T = malloc(NC*sizeof(const gsl_rng_type *));
+    chain->r = malloc(NC*sizeof(unsigned int *));
     
     for(ic=0; ic<NC; ic++)
     {
-        chain->T[ic] = gsl_rng_default;
-        chain->r[ic] = gsl_rng_alloc(chain->T[ic]);
-        gsl_rng_env_setup();
-        gsl_rng_set (chain->r[ic], *seed);
-        *seed = (long)gsl_rng_get(chain->r[ic]);
+        //set seed
+        chain->r[ic] = *seed;
+        
+        //evolve seed
+        rand_r_U_0_1(seed);
     }
     
     if(!flags->quiet)
@@ -430,14 +429,8 @@ void free_chain(struct Chain *chain, struct Flags *flags)
     free(chain->acceptance);
     free(chain->temperature);
     free(chain->avgLogL);
-    for(int ic=0; ic<chain->NC; ic++)
-    {
-        gsl_rng_free(chain->r[ic]);
-        free(chain->dimension[ic]);
-    }
     free(chain->dimension);
     free(chain->r);
-    free(chain->T);
     
     if(!flags->quiet)
     {
@@ -1017,10 +1010,7 @@ void AddNoise(struct Data *data, struct TDI *tdi)
     printf("   ...adding Gaussian noise realization\n");
     
     //set RNG for noise
-    const gsl_rng_type *T = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, data->nseed);
+    unsigned int r = data->nseed;
     
     double n_re[data->Nchannel];
     double n_im[data->Nchannel];
@@ -1042,8 +1032,8 @@ void AddNoise(struct Data *data, struct TDI *tdi)
     {
         for(int i=0; i<data->Nchannel; i++)
         {
-            u_re[i] = gsl_ran_gaussian (r,1);
-            u_im[i] = gsl_ran_gaussian (r,1);
+            u_re[i] = rand_r_N_0_1(&r);
+            u_im[i] = rand_r_N_0_1(&r);
             n_re[i] = n_im[i] = 0.0;
         }
  
@@ -1087,7 +1077,6 @@ void AddNoise(struct Data *data, struct TDI *tdi)
         }
     }
 
-    gsl_rng_free(r);
     for(int i=0; i<data->Nchannel; i++)
     {
         free(L[i]);
@@ -1103,10 +1092,7 @@ void AddNoiseWavelet(struct Data *data, struct TDI *tdi)
     printf("   ...adding Gaussian noise realization\n");
     
     //set RNG for noise
-    const gsl_rng_type *T = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, data->nseed);
+    unsigned int r = data->nseed;
     
     double n[data->Nchannel];
     double u[data->Nchannel];
@@ -1132,7 +1118,7 @@ void AddNoiseWavelet(struct Data *data, struct TDI *tdi)
 
             for(int a=0; a<data->Nchannel; a++)
             {
-                u[a] = gsl_ran_gaussian (r,1);
+                u[a] = rand_r_N_0_1(&r);
                 n[a] = 0.0;
             }
     
@@ -1171,7 +1157,6 @@ void AddNoiseWavelet(struct Data *data, struct TDI *tdi)
         }
     }
 
-    gsl_rng_free(r);
     for(int i=0; i<data->Nchannel; i++)
     {
         free(L[i]);
@@ -1345,7 +1330,6 @@ void wavelet_layer_to_fourier_transform(struct Data *data)
     int k;
     struct Wavelets *wdm = data->wdm;
     int N = wdm->NF*wdm->NT;
-    double T = N*LISA_CADENCE;
 
     double **freqData = double_matrix(3,N);
     double **waveData = double_matrix(3,N);
@@ -1604,9 +1588,9 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
                 if(strcmp("padding",     long_options[long_index].name) == 0) data->qpad        = atoi(optarg);
                 if(strcmp("start-time",  long_options[long_index].name) == 0) data->t0          = (double)atof(optarg);
                 if(strcmp("chains",      long_options[long_index].name) == 0) chain->NC         = atoi(optarg);
-                if(strcmp("chainseed",   long_options[long_index].name) == 0) data->cseed       = (long)atoi(optarg);
-                if(strcmp("noiseseed",   long_options[long_index].name) == 0) data->nseed       = (long)atoi(optarg);
-                if(strcmp("injseed",     long_options[long_index].name) == 0) data->iseed       = (long)atoi(optarg);
+                if(strcmp("chainseed",   long_options[long_index].name) == 0) data->cseed       = (unsigned int)atoi(optarg);
+                if(strcmp("noiseseed",   long_options[long_index].name) == 0) data->nseed       = (unsigned int)atoi(optarg);
+                if(strcmp("injseed",     long_options[long_index].name) == 0) data->iseed       = (unsigned int)atoi(optarg);
                 if(strcmp("sim-noise",   long_options[long_index].name) == 0) flags->simNoise   = 1;
                 if(strcmp("conf-noise",  long_options[long_index].name) == 0) flags->confNoise  = 1;
                 if(strcmp("stationary",  long_options[long_index].name) == 0) flags->stationary = 1;

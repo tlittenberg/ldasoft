@@ -210,7 +210,7 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
  * \param[out] BIC Bayesian Information Criteria (BIC) for input model
  * \return `0` if successfule, `1` if singular due to zero weight in one of the modes
 */
-int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC);
+int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, unsigned int *r, double *logL, double *BIC);
 
 
 double logit(double x,double xmin,double xmax);

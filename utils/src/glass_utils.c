@@ -1,5 +1,23 @@
 #include "glass_utils.h"
 
+double rand_r_U_0_1(unsigned int *seed)
+{
+   return (double)rand_r(seed) / (double)RAND_MAX;
+}
+
+double rand_r_N_0_1(unsigned int *seed)
+{
+    double u,v,s;
+    do {
+        u = 2*rand_r_U_0_1(seed)-1;
+        v = 2*rand_r_U_0_1(seed)-1;
+        s = u * u + v * v;
+    } while (s>=1 || s==0);
+    double z0 = u * sqrt(-2*log(s)/s);
+    
+    return z0;
+}
+
 int *int_vector(int N)
 {
     int *v = malloc( N * sizeof(int) );

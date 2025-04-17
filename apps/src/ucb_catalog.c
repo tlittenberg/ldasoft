@@ -924,10 +924,7 @@ int main(int argc, char *argv[])
 
         /* Gaussian mixture model fit to posterior */
         //fprintf(stdout,"\nGaussian Mixture Model fit:\n");
-        const gsl_rng_type *T = gsl_rng_default;
-        gsl_rng *r = gsl_rng_alloc(T);
-        gsl_rng_env_setup();
-        gsl_rng_set (r, 190521);
+        unsigned int r = 190521;
 
         int counter;
         int CMAX = 10;
@@ -935,7 +932,7 @@ int main(int argc, char *argv[])
         double BIC;
         
         counter = 0;
-        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, NMODE_start, NTHIN, r, &BIC))
+        while(gaussian_mixture_model_wrapper(model->prior, flags, entry, outdir, NMODE_start, NTHIN, &r, &BIC))
         {
             counter++;
             if(counter>CMAX)
@@ -947,7 +944,6 @@ int main(int argc, char *argv[])
             }
         }
         
-        gsl_rng_free(r);
     }//end loop over catalog entries
     
     

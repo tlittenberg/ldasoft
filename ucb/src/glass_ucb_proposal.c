@@ -180,7 +180,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NProp, int ic, FILE 
     }
 }
 
-double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed)
 {
     //TODO: Work in amplitude
     
@@ -189,28 +189,28 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
     int q;
     do
     {
-        params[0] = (double)model->prior[0][0] + gsl_rng_uniform(seed)*(double)(model->prior[0][1]-model->prior[0][0]);
-        alpha     = gsl_rng_uniform(seed)*data->pmax;
+        params[0] = (double)model->prior[0][0] + rand_r_U_0_1(seed)*(double)(model->prior[0][1]-model->prior[0][0]);
+        alpha     = rand_r_U_0_1(seed)*data->pmax;
         q = (int)(params[0]-data->qmin);
     }while(data->p[q]<alpha);
 
     //random draws for other parameters
-    for(int n=1; n<UCB_MODEL_NP; n++) params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    for(int n=1; n<UCB_MODEL_NP; n++) params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     
     return 0;
 }
 
-double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed)
 {
     return draw_from_uniform_prior(data,model,source,proposal,params,seed);
 }
 
-double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed)
 {
     double ran_no[UCB_MODEL_NP];
     
     //choose which entry
-    int ngmm = (int)floor(gsl_rng_uniform(seed)*proposal->Ngmm);
+    int ngmm = (int)floor(rand_r_U_0_1(seed)*proposal->Ngmm);
     int NMODES = (int)proposal->gmm[ngmm]->NMODE;
     
     struct MVG **modes = proposal->gmm[ngmm]->modes;
@@ -220,16 +220,16 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     int k;
     double p = 1.;
     do {
-        k = (int)floor(gsl_rng_uniform(seed)*NMODES);
+        k = (int)floor(rand_r_U_0_1(seed)*NMODES);
         mode = modes[k];
-        p = gsl_rng_uniform(seed);
+        p = rand_r_U_0_1(seed);
     } while (p>mode->p);
     
 
     //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
     for(int n=0; n<UCB_MODEL_NP; n++)
     {
-        ran_no[n] = gsl_ran_gaussian(seed,1.0);
+        ran_no[n] = rand_r_N_0_1(seed);
     }
     
     double x[UCB_MODEL_NP];
@@ -277,7 +277,7 @@ double gmm_prior_density(struct Data *data, struct Model *model, struct Source *
     return log(p/(double)proposal->Ngmm);
 }
 
-double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed)
 {
     
     double logQ = 0.0;
@@ -285,43 +285,43 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     
     //frequency
     n = 0;
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     logQ -= model->logPriorVolume[n];
     
     //sky location
     n = 1;
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     logQ -= model->logPriorVolume[n];
     
     n = 2;
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     logQ -= model->logPriorVolume[n];
     
     //amplitude
     n = 3;
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     logQ -= model->logPriorVolume[n];
 
     //inclination
     n = 4;
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     logQ -= model->logPriorVolume[n];
     
     //polarization
     n = 5;
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     logQ -= model->logPriorVolume[n];
     
     //phase
     n = 6;
-    params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+    params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
     logQ -= model->logPriorVolume[n];
     
     //fdot
     if(UCB_MODEL_NP>7)
     {
         n = 7;
-        params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+        params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
         logQ -= model->logPriorVolume[n];
     }
     
@@ -329,7 +329,7 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
     if(UCB_MODEL_NP>8)
     {
         n = 8;
-        params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+        params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
         logQ -= model->logPriorVolume[n];
     }
     
@@ -389,25 +389,25 @@ double uniform_prior_density(struct Data *data, struct Model *model, UNUSED stru
 }
 
 
-double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed)
 {
     double logP = 0.0;
     
     for(int n=1; n<3; n++)
     {
-        params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+        params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
         logP -= model->logPriorVolume[n];
     }
     for(int n=4; n<7; n++)
     {
-        params[n] = model->prior[n][0] + gsl_rng_uniform(seed)*(model->prior[n][1]-model->prior[n][0]);
+        params[n] = model->prior[n][0] + rand_r_U_0_1(seed)*(model->prior[n][1]-model->prior[n][0]);
         logP -= model->logPriorVolume[n];
     }
     
     return logP;
 }
 
-double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed)
+double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, unsigned int *seed)
 {
     double **uniform_prior = model->prior;
     double logP=-INFINITY;
@@ -416,8 +416,8 @@ double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *
     do
     {
         //sky location
-        params[1] = model->prior[1][0] + gsl_rng_uniform(seed)*(model->prior[1][1]-model->prior[1][0]);
-        params[2] = model->prior[2][0] + gsl_rng_uniform(seed)*(model->prior[2][1]-model->prior[2][0]);
+        params[1] = model->prior[1][0] + rand_r_U_0_1(seed)*(model->prior[1][1]-model->prior[1][0]);
+        params[2] = model->prior[2][0] + rand_r_U_0_1(seed)*(model->prior[2][1]-model->prior[2][0]);
         
         //map costheta and phi to index of skyhist array
         int i = (int)floor((params[1]-uniform_prior[1][0])/prior->dcostheta);
@@ -426,17 +426,17 @@ double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *
         int k = i*prior->nphi + j;
         
         logP = prior->skyhist[k];
-        alpha = log(gsl_rng_uniform(seed)*exp(prior->skymaxp));
+        alpha = log(rand_r_U_0_1(seed)*exp(prior->skymaxp));
     }while(alpha>logP);
     return logP;
 }
 
-double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed)
+double draw_calibration_parameters(struct Data *data, struct Model *model, unsigned int *seed)
 {
-    double dA,dphi;
     double logP = 0.0;
     
-    //apply calibration error to full signal model
+    /*apply calibration error to full signal model
+    double dA,dphi;
     switch(data->Nchannel)
     {
         case 1:
@@ -477,12 +477,12 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_r
             break;
         default:
             break;
-    }//end switch
+    }end switch*/
 
     return logP;
 }
 
-double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed)
 {
     int i,j;
     //double sqNP = sqrt((double)source->NP);
@@ -492,13 +492,12 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
     //draw the eigen-jump amplitudes from N[0,1] scaled by evalue & dimension
     for(i=0; i<UCB_MODEL_NP; i++)
     {
-        //Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i])/sqNP;
-        Amps[i] = gsl_ran_gaussian(seed,1)/sqrt(source->fisher_evalue[i]);
+        Amps[i] = rand_r_N_0_1(seed)/sqrt(source->fisher_evalue[i]);
         jump[i] = 0.0;
     }
     
     //choose one eigenvector to jump along
-    i = (int)(gsl_rng_uniform(seed)*(double)UCB_MODEL_NP);
+    i = (int)(rand_r_U_0_1(seed)*(double)UCB_MODEL_NP);
     for (j=0; j<UCB_MODEL_NP; j++) jump[j] += Amps[i]*source->fisher_evectr[j][i];
     
     //check jump value, set to small value if singular
@@ -528,7 +527,7 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
     return 0.0;
 }
 
-double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed)
 {
     int N = proposal->size;
     double **cdf = proposal->matrix;
@@ -537,7 +536,7 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
     {
         
         //draw n from U[0,N]
-        double c_prime = gsl_rng_uniform(seed)*(double)(N-1);
+        double c_prime = rand_r_U_0_1(seed)*(double)(N-1);
         
         //map to nearest sample
         int c_minus = (int)floor(c_prime);
@@ -579,15 +578,15 @@ double cdf_density(UNUSED struct Data *data, struct Model *model, struct Source 
     return logP;
 }
 
-double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed)
 {
     double ran_no[UCB_MODEL_NP];
 
-    int ns=(int)floor(gsl_rng_uniform(seed)*proposal->size);
+    int ns=(int)floor(rand_r_U_0_1(seed)*proposal->size);
 
     //pick which mode to propose to
     int mode;
-    if (gsl_rng_uniform(seed) > (1.0-proposal->vector[4*ns])) mode = 2*ns;
+    if (rand_r_U_0_1(seed) > (1.0-proposal->vector[4*ns])) mode = 2*ns;
     else mode = 2*ns+1;
     
     //define some helper pointers for ease of reading
@@ -600,7 +599,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
     //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
     for(int n=0; n<UCB_MODEL_NP; n++)
     {
-        ran_no[n] = gsl_ran_gaussian(seed,scale);
+        ran_no[n] = rand_r_N_0_1(seed)*scale;
     }
     
     //the matrix multiplication...
@@ -712,18 +711,18 @@ double cov_density(UNUSED struct Data *data, struct Model *model, struct Source 
     return log(p);
 }
 
-double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed)
 {
     //doppler modulation frequency (in bins)
     double fm = data->T/YEAR;
     
     //perturb frequency by 1 fm
     int scale;
-    do scale = (int)floor(-3. + 7.*gsl_rng_uniform(seed));
+    do scale = (int)floor(-3. + 7.*rand_r_U_0_1(seed));
     while (scale == 0);
     
     params[0] += scale*fm;
-    params[2] = params[2] + -0.2 + gsl_rng_uniform(seed)*0.4;
+    params[2] = params[2] + -0.2 + rand_r_U_0_1(seed)*0.4;
     params[7] -= 2.*scale*fm*fm;
     
     //perturb all parameters by Fisher Matrix (in liu of Jacaboian)
@@ -733,15 +732,15 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
     return 0.0;
 }
 
-double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed)
+double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed)
 {
     //proposal taking advantage of degeneracy between {psi,phi_0} -> {psi+/-pi/2,phi_0+/-pi}
-    double scale = gsl_rng_uniform(seed)*PI2;
+    double scale = rand_r_U_0_1(seed)*PI2;
     double d_phi = scale;
     double d_psi = 0.5*scale;
     
-    if(gsl_rng_uniform(seed) < 0.5 ) d_phi *= -1.;
-    if(gsl_rng_uniform(seed) < 0.5 ) d_psi *= -1.;
+    if(rand_r_U_0_1(seed) < 0.5 ) d_phi *= -1.;
+    if(rand_r_U_0_1(seed) < 0.5 ) d_psi *= -1.;
     
     //jump from current position
     for(int i=0; i<UCB_MODEL_NP; i++) params[i] = source->params[i];
@@ -1476,7 +1475,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
     if(!flags->quiet)fprintf(stdout,"\n================================================\n");
 }
 
-void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed)
+void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, unsigned int *seed)
 {
     fprintf(stdout,"\n======== Test Covariance matrix proposal =======\n");
 
@@ -1515,7 +1514,7 @@ void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Mod
                 //get vector of gaussian draws n;  y_i = x_mean_i + sum_j Lij^-1 * n_j
                 for(int m=0; m<UCB_MODEL_NP; m++)
                 {
-                    ran_no[m] = gsl_ran_gaussian(seed,scale);
+                    ran_no[m] = rand_r_N_0_1(seed)*scale;
                 }
                 
                 //the matrix multiplication...
@@ -1672,7 +1671,7 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
     if(!flags->quiet)fprintf(stdout,"\n================================================\n");
 }
 
-double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed)
 {
     double logP = 0.0;
     
@@ -1694,9 +1693,9 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
     //now rejection sample on f,theta,phi
     do
     {
-        i = gsl_rng_uniform(seed)*n_f;
-        j = gsl_rng_uniform(seed)*n_theta;
-        k = gsl_rng_uniform(seed)*n_phi;
+        i = rand_r_U_0_1(seed)*n_f;
+        j = rand_r_U_0_1(seed)*n_theta;
+        k = rand_r_U_0_1(seed)*n_phi;
         
         q = (double)(data->qmin) + i*d_f*data->T;
 
@@ -1704,7 +1703,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
         phi      = k*d_phi;
                 
         p = proposal->tensor[(int)i][(int)j][(int)k];
-        alpha = gsl_rng_uniform(seed)*proposal->maxp;
+        alpha = rand_r_U_0_1(seed)*proposal->maxp;
                 
     }while(p<alpha);
     
@@ -1717,7 +1716,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
     return logP;
 }
 
-double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed)
+double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed)
 {
     double logP = 0.0;
     
@@ -1735,7 +1734,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
     
     /* half the time do an fm shift, half the time completely reboot frequency */
     int fmFlag = 0;
-    if(gsl_rng_uniform(seed)<-0.5) fmFlag=1;
+    if(rand_r_U_0_1(seed)<-0.5) fmFlag=1;
     
     if(fmFlag)
     {
@@ -1750,9 +1749,9 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
     //now rejection sample on f,theta,phi
     do
     {
-        if(!fmFlag)i = gsl_rng_uniform(seed)*n_f;
-        j = gsl_rng_uniform(seed)*n_theta;
-        k = gsl_rng_uniform(seed)*n_phi;
+        if(!fmFlag)i = rand_r_U_0_1(seed)*n_f;
+        j = rand_r_U_0_1(seed)*n_theta;
+        k = rand_r_U_0_1(seed)*n_phi;
         
         q = (double)(data->qmin) + i*d_f*data->T;
 
@@ -1771,7 +1770,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
         }
         else
             p = proposal->tensor[(int)i][(int)j][(int)k];
-        alpha = gsl_rng_uniform(seed)*proposal->maxp;
+        alpha = rand_r_U_0_1(seed)*proposal->maxp;
                 
     }while(p<alpha);
     

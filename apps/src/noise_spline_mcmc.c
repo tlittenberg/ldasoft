@@ -19,9 +19,6 @@
 
 #include <sys/stat.h>
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
 #include <omp.h>
 
 #include <glass_utils.h>
@@ -137,7 +134,7 @@ int main(int argc, char *argv[])
                 for(int mc=0; mc<10; mc++)
                 {
                     
-                    if(gsl_rng_uniform(chain->r[ic])<0.9)
+                    if(rand_r_U_0_1(&chain->r[ic])<0.9)
                         noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
                     else
                         noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);

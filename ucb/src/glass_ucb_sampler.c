@@ -66,13 +66,13 @@ void ptmcmc(struct Model **model, struct Chain *chain, struct Flags *flags)
         logL2 = model[oldb]->logL + model[oldb]->logLnorm;
         
         //Hot chains jump more rarely
-        if(gsl_rng_uniform(chain->r[a])<1.0)
+        if(rand_r_U_0_1(&chain->r[a])<1.0)
         {
             dlogL = logL2 - logL1;
             H  = (heat2 - heat1)/(heat2*heat1);
             
             alpha = exp(dlogL*H);
-            beta  = gsl_rng_uniform(chain->r[a]);
+            beta  = rand_r_U_0_1(&chain->r[a]);
             
             if(alpha >= beta)
             {
@@ -130,7 +130,7 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     //choose proposal distribution
     for(int n=0; n<data->Nchannel*data->Nlayer; n++)
     {
-        model_y->noise->eta[n] = model_x->noise->eta[n] + 0.05*gsl_ran_gaussian(chain->r[ic],1);
+        model_y->noise->eta[n] = model_x->noise->eta[n] + 0.05*rand_r_N_0_1(&chain->r[ic]);
         if(model_y->noise->eta[n] < 0.01 || model_y->noise->eta[n]>100) logPy=-INFINITY;
     }
     
@@ -155,7 +155,7 @@ void noise_model_mcmc(struct Orbit *orbit, struct Data *data, struct Model *mode
     }
     logH += logPy  - logPx; //priors
     
-    loga = log(gsl_rng_uniform(chain->r[ic]));
+    loga = log(rand_r_U_0_1(&chain->r[ic]));
     if(logH > loga) copy_model(model_y,model_x);
     
 }
@@ -177,7 +177,7 @@ void ucb_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struc
     copy_model(model_x,model_y);
 
     //pick a source to update
-    int n = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+    int n = (int)(rand_r_U_0_1(&chain->r[ic])*(double)model_x->Nlive);
     
     //more shorthand pointers
     struct Source *source_x = model_x->source[n];
@@ -188,14 +188,14 @@ void ucb_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struc
     int nprop;
     do
     {
-        nprop = (int)floor((UCB_PROPOSAL_NPROP)*gsl_rng_uniform(chain->r[ic]));
-        draw = gsl_rng_uniform(chain->r[ic]);
+        nprop = (int)floor((UCB_PROPOSAL_NPROP)*rand_r_U_0_1(&chain->r[ic]));
+        draw = rand_r_U_0_1(&chain->r[ic]);
     }while(proposal[nprop]->weight <= draw);
     
     proposal[nprop]->trial[ic]++;
 
     //call proposal function to update source parameters
-    (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, chain->r[ic]);
+    (*proposal[nprop]->function)(data, model_x, source_y, proposal[nprop], source_y->params, &chain->r[ic]);
 
     //hold sky position fixed to injected value
     if(flags->fixSky)
@@ -259,7 +259,7 @@ void ucb_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struc
         logH += logPy  - logPx;  //priors
         logH += logQxy - logQyx; //proposals
         
-        loga = log(gsl_rng_uniform(chain->r[ic]));
+        loga = log(rand_r_U_0_1(&chain->r[ic]));
         
         if(isfinite(logH) && logH > loga)
         {
@@ -274,7 +274,7 @@ void ucb_mcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struc
 static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal *proposal, int ic, double *logQxy, double *logQyx, double *logPy, double *penalty)
 {
     /* pick birth or death move */
-    if(gsl_rng_uniform(chain->r[ic])<0.5)/* birth move */
+    if(rand_r_U_0_1(&chain->r[ic])<0.5)/* birth move */
     {
         //ny=nx+1
         model_y->Nlive++;
@@ -286,7 +286,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
         {
             //draw new parameters
             //TODO: insert draw from galaxy prior into draw_from_uniform_prior()
-            *logQyx = (*proposal->function)(data, model_y, model_y->source[create], proposal, model_y->source[create]->params, chain->r[ic]);
+            *logQyx = (*proposal->function)(data, model_y, model_y->source[create], proposal, model_y->source[create]->params, &chain->r[ic]);
             *logQxy = 0;
             map_array_to_params(model_y->source[create], model_y->source[create]->params, data->T);
             
@@ -319,7 +319,7 @@ static void rj_birth_death(struct Orbit *orbit, struct Data *data, struct Model 
         model_y->Nlive--;
         
         //pick source to kill
-        int kill = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+        int kill = (int)(rand_r_U_0_1(&chain->r[ic])*(double)model_x->Nlive);
         if(!strcmp("fourier",data->basis)) remove_signal_model(data, model_y,  model_y->source[kill]);
         if(!strcmp("wavelet",data->basis)) remove_signal_model_wavelet(data, model_y, model_y->source[kill]);
         
@@ -351,13 +351,13 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
     int branch[2];
     int trunk;
     
-    if(gsl_rng_uniform(chain->r[ic])<0.5)/* split move */
+    if(rand_r_U_0_1(&chain->r[ic])<0.5)/* split move */
     {
         //ny=nx+1
         model_y->Nlive++;
         
         //pick source to split
-        trunk = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+        trunk = (int)(rand_r_U_0_1(&chain->r[ic])*(double)model_x->Nlive);
         
         //slot new sources in place and at end of live source array
         branch[0] = trunk;
@@ -382,7 +382,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
             //draw parameters for new sources (branches of trunk)
             for(int n=0; n<2; n++)
             {
-                *logQyx += (*proposal->function)(data, model_y, model_y->source[branch[n]], proposal, model_y->source[branch[n]]->params, chain->r[ic]);
+                *logQyx += (*proposal->function)(data, model_y, model_y->source[branch[n]], proposal, model_y->source[branch[n]]->params, &chain->r[ic]);
                 map_array_to_params(model_y->source[branch[n]], model_y->source[branch[n]]->params, data->T);
                 if(flags->maximize)
                 {
@@ -418,8 +418,8 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
             //pick sources to merge
             do
             {
-                branch[0] = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
-                branch[1] = (int)(gsl_rng_uniform(chain->r[ic])*(double)model_x->Nlive);
+                branch[0] = (int)(rand_r_U_0_1(&chain->r[ic])*(double)model_x->Nlive);
+                branch[1] = (int)(rand_r_U_0_1(&chain->r[ic])*(double)model_x->Nlive);
             }while(branch[0]==branch[1]);
             
             
@@ -433,7 +433,7 @@ static void rj_split_merge(struct Orbit *orbit, struct Data *data, struct Model 
             }
             
             //draw parameters of trunk
-            *logQyx += (*proposal->function)(data, model_y, model_y->source[trunk], proposal, model_y->source[trunk]->params, chain->r[ic]);
+            *logQyx += (*proposal->function)(data, model_y, model_y->source[trunk], proposal, model_y->source[trunk]->params, &chain->r[ic]);
             map_array_to_params(model_y->source[trunk], model_y->source[trunk]->params, data->T);
             if(flags->maximize)
             {
@@ -487,7 +487,7 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
     if(K>0) // if there are clusters to try killing
     {
         //pick a cluster to kill
-        int ckill = (int)(gsl_rng_uniform(chain->r[ic]) * (double)K);
+        int ckill = (int)(rand_r_U_0_1(&chain->r[ic]) * (double)K);
         double qmax = 0.0;
         double qmin = data->T;
         
@@ -512,7 +512,7 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
 
         
         //draw parameters and generate signal model for replacement
-        *logQyx += (*proposal->function)(data, model_y, model_y->source[model_y->Nlive], proposal, model_y->source[model_y->Nlive]->params, chain->r[ic]);
+        *logQyx += (*proposal->function)(data, model_y, model_y->source[model_y->Nlive], proposal, model_y->source[model_y->Nlive]->params, &chain->r[ic]);
         
 
         if(flags->maximize)
@@ -577,15 +577,15 @@ void ucb_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, str
     copy_model(model_x,model_y);
     
     int nprop;
-    do nprop = (int)floor((UCB_PROPOSAL_NPROP)*gsl_rng_uniform(chain->r[ic]));
-    while(proposal[nprop]->rjweight <= gsl_rng_uniform(chain->r[ic]));
+    do nprop = (int)floor((UCB_PROPOSAL_NPROP)*rand_r_U_0_1(&chain->r[ic]));
+    while(proposal[nprop]->rjweight <= rand_r_U_0_1(&chain->r[ic]));
     
     proposal[nprop]->trial[ic]++;
         
     /* Choose birth/death move, or split/merge move */
-    if( gsl_rng_uniform(chain->r[ic]) < 1.5)/* birth/death move */
+    if( rand_r_U_0_1(&chain->r[ic]) < 1.5)/* birth/death move */
         rj_birth_death(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
-    else if( gsl_rng_uniform(chain->r[ic]) < 1.5) /* birth/death move */
+    else if( rand_r_U_0_1(&chain->r[ic]) < 1.5) /* birth/death move */
         rj_split_merge(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
     else
         rj_cluster_bomb(orbit, data, model_x, model_y, chain, flags, prior, proposal[nprop], ic, &logQxy, &logQyx, &logPy, &penalty);
@@ -645,7 +645,7 @@ void ucb_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, str
 ////          fclose(fptr);
 //        }
     
-    loga = log(gsl_rng_uniform(chain->r[ic]));
+    loga = log(rand_r_U_0_1(&chain->r[ic]));
     if(isfinite(logH) && logH > loga)
     {
         //update FIMs for sources that have changed in the proposed state
@@ -716,7 +716,7 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
             }
             else
             {
-                draw_from_uniform_prior(data, model[ic], model[ic]->source[n], proposal[0], model[ic]->source[n]->params , chain->r[ic]);
+                draw_from_uniform_prior(data, model[ic], model[ic]->source[n], proposal[0], model[ic]->source[n]->params, &chain->r[ic]);
             }
             map_array_to_params(model[ic]->source[n], model[ic]->source[n]->params, data->T);
 
@@ -748,7 +748,7 @@ void initialize_ucb_state(struct Data *data, struct Orbit *orbit, struct Flags *
         //calibration error
         if(flags->calibration)
         {
-            draw_calibration_parameters(data, model[ic], chain->r[ic]);
+            draw_calibration_parameters(data, model[ic], &chain->r[ic]);
             generate_calibration_model(data, model[ic]);
             apply_calibration_model(data, model[ic]);
         }

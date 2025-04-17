@@ -123,14 +123,11 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         //draw extrinsic parameters
         
         //set RNG for injection
-        const gsl_rng_type *T = gsl_rng_default;
-        gsl_rng *r = gsl_rng_alloc(T);
-        gsl_rng_env_setup();
-        gsl_rng_set (r, data->iseed);
+        unsigned int r = data->iseed;
         
         //TODO: support for verification binary priors
-        phi0 = gsl_rng_uniform(r)*M_PI*2.;
-        psi  = gsl_rng_uniform(r)*M_PI/4.;
+        phi0 = rand_r_U_0_1(&r)*M_PI*2.;
+        psi  = rand_r_U_0_1(&r)*M_PI/4.;
         
         
         //compute derived parameters
@@ -262,8 +259,6 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         ucb_fisher(orbit, data, inj, data->noise);
         
         fclose(injectionFile);
-                
-        gsl_rng_free(r);
     }
     
     print_data(data,flags);
@@ -309,12 +304,6 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
         }
         rewind(injectionFile);
         N--;
-        
-        //set RNG for injection
-        const gsl_rng_type *T = gsl_rng_default;
-        gsl_rng *r = gsl_rng_alloc(T);
-        gsl_rng_env_setup();
-        gsl_rng_set (r, data->iseed);
         
         for(int nn=0; nn<N; nn++)
         {
@@ -610,9 +599,7 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             
         }//end nn loop over sources in file
         
-        fclose(injectionFile);
-        gsl_rng_free(r);
-        
+        fclose(injectionFile);        
     }//end ii loop over injection files
     
     //print_data(data,flags);

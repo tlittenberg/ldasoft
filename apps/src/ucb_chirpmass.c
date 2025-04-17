@@ -8,7 +8,6 @@
 #include <string.h>
 
 #include <gsl/gsl_sort.h>
-#include <gsl/gsl_randist.h>
 
 #include <glass_utils.h>
 
@@ -76,12 +75,7 @@ int main(int argc, char* argv[])
   }
   
   //set up RNG in case tidal params are used
-  const gsl_rng_type * T;
-  gsl_rng * r;
-  gsl_rng_env_setup();
-  T = gsl_rng_default;
-  r = gsl_rng_alloc (T);
-  
+  unsigned int r = 150914;
   
   
   char filename[128];
@@ -146,7 +140,7 @@ int main(int argc, char* argv[])
     {
       do
       {
-        alpha = alpha0+dalpha0*gsl_ran_gaussian(r,1.0);
+        alpha = alpha0+dalpha0*rand_r_N_0_1(&r);
       }while(alpha < 0.0);
     }
     else alpha = 0.0;

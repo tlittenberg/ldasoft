@@ -376,7 +376,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX-1);
     fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
-    fprintf(fptr,"  MCMC chain seed ..... %li  \n",data->cseed);
+    fprintf(fptr,"  MCMC chain seed ..... %i   \n",data->cseed);
     fprintf(fptr,"  Number of threads ... %i   \n",flags->threads);
     fprintf(fptr,"  Run Directory is .... %s\n",flags->runDir);
     fprintf(fptr,"\n");
@@ -388,7 +388,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     if(flags->NINJ>0)
     {
         fprintf(fptr,"  Injected sources..... %i\n",flags->NINJ);
-        fprintf(fptr,"     seed ............. %li\n",data->iseed);
+        fprintf(fptr,"     seed ............. %i\n",data->iseed);
         for(int i=0; i<flags->NINJ; i++)
         {
             fprintf(fptr,"     source ........... %s\n",flags->injFile[i]);
@@ -409,7 +409,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     if(flags->simNoise)
     {
         fprintf(fptr,"  Noise simulation is.. ENABLED\n");
-        fprintf(fptr,"  Noise seed .......... %li  \n",data->nseed);
+        fprintf(fptr,"  Noise seed .......... %i  \n",data->nseed);
     }
     else                fprintf(fptr,"  Noise simulation is.. DISABLED\n");
     if(flags->rj)       fprintf(fptr,"  RJMCMC is ........... ENABLED\n");

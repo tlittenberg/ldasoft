@@ -32,9 +32,6 @@
 
 #include <sys/stat.h>
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
 #include <omp.h>
 
 #include <glass_utils.h>
@@ -199,7 +196,7 @@ int main(int argc, char *argv[])
                 for(int steps=0; steps < 100; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(gsl_rng_uniform(chain->r[ic])<0.1 && flags->rj)
+                    if(rand_r_U_0_1(&chain->r[ic])<0.1 && flags->rj)
                     {
                         ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     }

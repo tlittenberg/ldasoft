@@ -33,9 +33,6 @@
 
 #include <sys/stat.h>
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
 #include <omp.h>
 
 #include <glass_utils.h>
@@ -131,6 +128,9 @@ int main(int argc, char *argv[])
     /* Add Gaussian noise realization */
     if(flags->simNoise) AddNoise(data,data->tdi);
     
+    /* Store DFT copy of simulated data */
+    copy_tdi(data->tdi, data->dft);
+
     /* print various data products for plotting */
     print_data(data, flags);
     
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
     //exit(1);
     
     //test covariance proposal
-    if(flags->updateCov) test_covariance_proposal(data, flags, model[0], prior, proposal[8], chain->r[0]);
+    if(flags->updateCov) test_covariance_proposal(data, flags, model[0], prior, proposal[8], &chain->r[0]);
     
     
     /* Write example gb_catalog bash script in run directory */
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
                 for(int steps=0; steps < 100; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(gsl_rng_uniform(chain->r[ic])<0.9 && flags->rj)
+                    if(rand_r_U_0_1(&chain->r[ic])<0.9 && flags->rj)
                     {
                         ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     }
@@ -292,7 +292,11 @@ int main(int argc, char *argv[])
                 }
                 
                 //store reconstructed waveform
-                if(!flags->quiet) print_waveform_draw(data, model[chain->index[0]], flags);
+                if(!flags->quiet) 
+                {
+                    print_waveform_draw(data, model[chain->index[0]], flags);
+                    print_psd_draw(data, model[chain->index[0]], flags);
+                }
                 
                 //update run status
                 if(mcmc%data->downsample==0)

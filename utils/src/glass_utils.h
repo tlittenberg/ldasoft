@@ -31,10 +31,7 @@
 #include <sys/stat.h>
 
 #include <gsl/gsl_blas.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
 #include <gsl/gsl_sort.h>
-#include <gsl/gsl_randist.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_vector.h>
@@ -54,6 +51,16 @@
 #include "glass_gmm.h"
 #include "glass_healpix.h"
 #include "glass_galaxy.h"
+
+/**
+\brief wrapper for rand\_r() -- threadsafe RNG for U[0,1]
+*/
+double rand_r_U_0_1(unsigned int *seed);
+
+/**
+\brief Threadsafe RNG for N[0,1] using Marsaglia polar method
+*/
+double rand_r_N_0_1(unsigned int *seed);
 
 int *int_vector(int N);
 void free_int_vector(int *v);

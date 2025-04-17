@@ -54,7 +54,7 @@ struct Proposal
      @param  params parameter vector
      @return logQ proposal density
      */
-    double (*function)(struct Data*,struct Model*,struct Source*,struct Proposal*,double*,gsl_rng*);
+    double (*function)(struct Data*,struct Model*,struct Source*,struct Proposal*,double*,unsigned int*);
 
     /**
      \brief Compute proposal density given parameters.
@@ -101,7 +101,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NProp, int ic, FILE 
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
 \brief Fair draw from gaussian mixture model prior for each parameter
@@ -110,7 +110,7 @@ double draw_from_prior(struct Data *data, struct Model *model, struct Source *so
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
 \brief Fair draw from uniform ranges for each parameter
@@ -119,7 +119,7 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
 \brief Fair draw from prior for location and orientation parameters
@@ -128,7 +128,7 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Jump from current location along eigenvectors of Fisher information matrix
@@ -152,7 +152,7 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
  
 
  */
-double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw each parameter from 1D marginalized CDF
@@ -163,7 +163,7 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
 @return logQ = cdf_density()
  
  */
-double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw from multivariate Gaussian characterized by chain covariance
@@ -183,7 +183,7 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
  @return logQ = cov_density()
 
  */
-double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw from 3D F-statistic distribution
@@ -194,7 +194,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
  @return logQ = evaluate_fstatistic_proposal()
 
  */
-double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw \f$f_0\f$ weighted by power spectrum of data
@@ -203,7 +203,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
  @return logQ = 0
 
  */
-double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Shift \f$f_0\f$ by orbital modulation frequency
@@ -216,7 +216,7 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
  @return logQ = 0 (symmetric proposal)
 
  */
-double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Jumps between modes in \f$\psi\f$--\f$\varphi_0\f$ plane.
@@ -230,7 +230,7 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
  @return logQ = 0 (symmetric proposal)
 
  */
-double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Same as draw_from_fstatistic() with fm_shift()
@@ -241,7 +241,7 @@ double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct
  @return logQ = evaluate_fstatistic_proposal()
 
  */
-double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw sky location from galaxy prior defined in set_galaxy_prior()
@@ -252,7 +252,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
  @return logQ = prior->skyhist[]
 
  */
-double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
+double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, unsigned int *seed);
 
 
 /**
@@ -262,7 +262,7 @@ double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *
  @return logQ = 
 
  */
-double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed);
+double draw_calibration_parameters(struct Data *data, struct Model *model, unsigned int *seed);
 
 /**
  \brief Evaluate probability density from CDF
@@ -323,7 +323,7 @@ void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Propo
  
  Monte Carlo integration of the covariance proposal rejection sampling on the prior boundaries.  The matrices \f$C_{ij}\f$ and \f$L_{ij}\f$ are re-wighted to keep most of the proposal mass within the prior.
  */
-void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed);
+void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, unsigned int *seed);
 
 /**
  \brief Stores CDF of chain file input with --update flag

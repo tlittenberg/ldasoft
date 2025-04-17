@@ -224,7 +224,7 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
     }
 }
 
-int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct Entry *entry, char *outdir, size_t NMODE, size_t NTHIN, gsl_rng *seed, double *BIC)
+int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct Entry *entry, char *outdir, size_t NMODE, size_t NTHIN, unsigned int *seed, double *BIC)
 {
     if(flags->verbose)fprintf(stdout,"Event %s, NMODE=%i\n",entry->name,(int)NMODE);
     

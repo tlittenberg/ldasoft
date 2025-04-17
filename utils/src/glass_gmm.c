@@ -37,7 +37,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include "glass_gmm.h"
+#include "glass_utils.h"
 
 /*
 static void printProgress (double percentage)
@@ -662,7 +662,7 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
     return 0;
 }
 
-int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC)
+int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, unsigned int *r, double *logL, double *BIC)
 {
     size_t NP    = samples[0]->x->size;
     size_t NMODE = samples[0]->p->size;
@@ -686,7 +686,7 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
     for(size_t k=0; k<NMODE; k++)
     {
         //pick a sample from the chain to anchor each covariance matrix
-        int fair_draw = (int)gsl_ran_flat(r,0,NMCMC);
+        int fair_draw = (int)(rand_r_U_0_1(r)*NMCMC);
         for(size_t n=0; n<NP; n++) gsl_vector_set(modes[k]->mu,n,gsl_vector_get(samples[fair_draw]->x,n));
         
         //set priors for each model

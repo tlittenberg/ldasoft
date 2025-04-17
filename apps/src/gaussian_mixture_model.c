@@ -81,10 +81,7 @@ int main(int argc, char* argv[])
     size_t *LFLAG = calloc(100,sizeof(size_t));
     
     // rng
-    const gsl_rng_type *T = gsl_rng_default;
-    gsl_rng *r = gsl_rng_alloc(T);
-    gsl_rng_env_setup();
-    gsl_rng_set (r, 190521);
+    unsigned int r = 150914;
     
     
     /* parse command line */
@@ -135,7 +132,7 @@ int main(int argc, char* argv[])
                 NP = (size_t)atoi(optarg);
                 break;
             case 's':
-                gsl_rng_set(r,(long)atoi(optarg));
+                r = (unsigned int)atoi(optarg);
                 break;
             case 't':
                 NTHIN = (size_t)atoi(optarg);
@@ -253,7 +250,7 @@ int main(int argc, char* argv[])
 
     /* The main Gaussian Mixture Model with Expectation Maximization function */
     double logL, BIC;
-    if(GMM_with_EM(modes,samples,NMCMC,NSTEP,r,&logL,&BIC)) return 1;
+    if(GMM_with_EM(modes,samples,NMCMC,NSTEP,&r,&logL,&BIC)) return 1;
     
 
     /* Write GMM results to binary for pick up by other processes */

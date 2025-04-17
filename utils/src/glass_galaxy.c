@@ -601,7 +601,7 @@ void sphharm(double ***Plm, double **almR, double **almI, double *sky)
     Npix = 12*NSIDE*NSIDE;
     
     // reconstructed map from the initial alms
-    skyrecon = double_vector(Npix);
+    skyrecon = double_vector((int)Npix);
     
     // initialize the alms
     for(l=0; l <= LMAX; l++)
@@ -646,7 +646,7 @@ void galaxy_modulation(struct GalaxyModulation *gm, double *params)
     double av;
     
     // galaxy in ecliptic coordinates
-    double *skyeclip = double_vector(gm->Npix);
+    double *skyeclip = double_vector((int)gm->Npix);
     for(int i=0; i<gm->Npix; i++)
         skyeclip[i] = galaxy_integration(params,gm->skytheta[i],gm->skyphi[i]);
 

@@ -64,12 +64,7 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         MCMC/=10;
     }
     
-    const gsl_rng_type * T;
-    gsl_rng * r;
-    gsl_rng_env_setup();
-    
-    T = gsl_rng_default;
-    r = gsl_rng_alloc (T);
+    unsigned int r = 150914;
     
     x =  (double*)calloc(D,sizeof(double));
     xe = (double*)calloc(D,sizeof(double));
@@ -107,20 +102,20 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
     {
         if(mc%(MCMC/100)==0)printProgress((double)mc/(double)MCMC);
         
-        alpha = gsl_rng_uniform(r);
+        alpha = rand_r_U_0_1(&r);
         
         if(alpha > 0.7)  // uniform draw from a big box
         {
             
-            y[0] = 20.0*GALAXY_Rd*(-1.0+2.0*gsl_rng_uniform(r));
-            y[1] = 20.0*GALAXY_Rd*(-1.0+2.0*gsl_rng_uniform(r));
-            y[2] = 40.0*GALAXY_Zd*(-1.0+2.0*gsl_rng_uniform(r));
+            y[0] = 20.0*GALAXY_Rd*(-1.0+2.0*rand_r_U_0_1(&r));
+            y[1] = 20.0*GALAXY_Rd*(-1.0+2.0*rand_r_U_0_1(&r));
+            y[2] = 40.0*GALAXY_Zd*(-1.0+2.0*rand_r_U_0_1(&r));
             
         }
         else
         {
             
-            beta = gsl_rng_uniform(r);
+            beta = rand_r_U_0_1(&r);
             
             if(beta > 0.8)
             {
@@ -134,8 +129,8 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
             {
                 xx = 0.001;
             }
-            for(j=0; j< 2; j++) y[j] = x[j] + gsl_ran_gaussian(r,xx);
-            y[2] = x[2] + 0.1*gsl_ran_gaussian(r,xx);
+            for(j=0; j< 2; j++) y[j] = x[j] + rand_r_N_0_1(&r)*xx;
+            y[2] = x[2] + 0.1*rand_r_N_0_1(&r)*xx;
             
         }
         
@@ -143,7 +138,7 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
         logLy = loglike(y, D);
         
         H = logLy - logLx;
-        beta = gsl_rng_uniform(r);
+        beta = rand_r_U_0_1(&r);
         beta = log(beta);
         
         if(H > beta)
@@ -232,7 +227,6 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
     free(y);
     free(xe);
     free(xg);
-    gsl_rng_free (r);
     if(!flags->quiet)fprintf(stdout,"\n================================================\n\n");
     fflush(stdout);
     
@@ -664,13 +658,14 @@ double evalaute_sky_location_prior(double *params, double **uniform_prior, doubl
     return logP;
 }
 
+
 double evaluate_calibration_prior(struct Data *data, struct Model *model)
 {
     
-    double dA,dphi;
     double logP = 0.0;
     
-    //apply calibration error to full signal model
+    /*apply calibration error to full signal model
+    double dA,dphi;
     switch(data->Nchannel)
     {
         case 1:
@@ -732,7 +727,7 @@ double evaluate_calibration_prior(struct Data *data, struct Model *model)
         default:
             break;
     }//end switch
-    
+    */
     return logP;
 }
 

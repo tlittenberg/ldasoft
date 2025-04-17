@@ -60,9 +60,9 @@ struct Data
 
     /** @name Random Number Generator Seeds */
      ///@{
-    long cseed; //!<seed for MCMC set by `[--chainseed=INT; default=150914]`
-    long nseed; //!<seed for noise realization set by `[--noiseseed=INT; default=151226]`
-    long iseed; //!<seed for injection parameters set by `[--injseed=INT; default=151012]`
+    unsigned int cseed; //!<seed for MCMC set by `[--chainseed=INT; default=150914]`
+    unsigned int nseed; //!<seed for noise realization set by `[--noiseseed=INT; default=151226]`
+    unsigned int iseed; //!<seed for injection parameters set by `[--injseed=INT; default=151012]`
     ///@}
 
     /** @name Time of Observations */
@@ -259,16 +259,8 @@ struct Chain
     /// Store the maximum value of \f$\log p(d|\vec\theta)\f$ encountered by the chain.  Used for determining when burn-in is complete.
     double logLmax;
     
-    /** @name Random Number Generator (RNG) Data Types
-     Thread-safe random number generator data types used by `GSL`
-     */
-     ///@{
-    /// Needed for initializing RNG
-    const gsl_rng_type **T;
-    
-    /// Seed for RNGs for each parallel chain.
-    gsl_rng **r;
-    ///@}
+    /// Random Number Generator (RNG) seed
+    unsigned int *r;
     
     /** @name Chain File Pointers
      By default only the cold chain `M=0` is saved.  When Flags::verbose = `TRUE` files for each of the parallel chain are written.
@@ -437,7 +429,7 @@ void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flag
 /**
  \brief Allocates and initializes Chain structure and prepares output files.
  */
-void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode);
+void initialize_chain(struct Chain *chain, struct Flags *flags, unsigned int *seed, const char *mode);
 
 /** @name Allocate memory for structures */
 ///@{
