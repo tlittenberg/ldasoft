@@ -85,13 +85,13 @@ void print_noise_reconstruction(struct Data *data, struct Flags *flags)
         
         for(int j=0; j<data->Nchannel; j++)
         {
-            gsl_sort(data->S_pow[i][j],1,data->Nwave);
+            double_sort(data->S_pow[i][j],data->Nwave);
 
-            double S_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][j], 1, data->Nwave);
-            double S_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.25);
-            double S_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.75);
-            double S_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.05);
-            double S_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.95);
+            double S_med   = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.50);
+            double S_lo_50 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.25);
+            double S_hi_50 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.75);
+            double S_lo_90 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.05);
+            double S_hi_90 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.95);
             
             fprintf(fptr_Snf,"%lg ",S_med);
             fprintf(fptr_Snf,"%lg ",S_lo_50);

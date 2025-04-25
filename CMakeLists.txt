@@ -21,10 +21,13 @@ set(CMAKE_C_COMPILER mpicc)
 project(ldasoft VERSION 1.0.0 LANGUAGES C)
 
 # External packages
+find_package(LAPACK REQUIRED)
+find_package(OpenBLAS REQUIRED)
 find_package(GSL REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(MPI REQUIRED)
+find_package(kissfft REQUIRED)
 #find_package(MBH)
 
 

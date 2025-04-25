@@ -118,7 +118,7 @@ int binary_search(double *array, int nmin, int nmax, double x);
  @param[out] evector 2D array of eigenvector components
  @param[out] evalue 1D array of eigenvalues, corresponding with columns of evector
  */
-void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N);
+void matrix_eigenstuff(double **matrix, double **evectors, double *evalues, int N);
 /**
 \brief Matrix inversion with replacement
    
@@ -126,6 +126,17 @@ void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
  @param[in,out] matrix the input \f$N\times N\f$ matrix, replaced with inverse
  */
 void invert_matrix(double **matrix, int N);
+
+/**
+ \brief Matrix inversion preserving original and returning L and det
+
+ @param[in] matrix input NxN matrix
+ @param[out] inverse inverse of input matrix
+ @param[out] L LU decomposition of input matrix
+ @param[out] det deteriment of input matrix
+ @param[in] N size of input matrxi
+ */
+void decompose_matrix(double **matrix, double **inverse, double **L, double *det, int N);
 
 /**
 \brief Matrix multiplication
@@ -171,8 +182,9 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
  @param[in] min minimum number of samples in a neighborhood to be considered a cluster
  @param[out] C cluster assignments mapping C[n] = M means X[n] is assigned to cluster M
  @param[out] K total number of clusters found
+ @param[in] size size of X
  */
-void dbscan(gsl_vector *X, double eps, int min, int *C, int *K);
+void dbscan(double *X, double eps, int min, int C[], int *K, int size);
 
 /** 
 \brief Transform periodic to linear phase
@@ -191,6 +203,56 @@ double simpson_integration_5(double f0, double f1, double f2, double f3, double 
 */
 void integer_sort(int *x, int N);
 
+/**
+\brief wrapper for qsort() specific to double arrays
+*/
+void double_sort(double *x, int N);
+
+/**
+\brief wrapper for qsort() to get sorted indicies of input array
+*/
+void index_sort(int *index, double *data, int N);
+
+
 void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB);
+
+/**
+ \brief return variance of data vector x
+ 
+ @param[in] x array
+ @param[in] N size of array
+ @return variance of x
+ */
+double get_variance(double *x, int N);
+
+/**
+ \brief return mean of data vector x
+ 
+ @param[in] x array
+ @param[in] N size of array
+ @return mean of x
+ */
+double get_mean(double *x, int N);
+
+/**
+ \brief return quantile q of sorted data vector
+
+ @param[in] data sorted data array
+ @param[in] N size of sorted data array
+ @param[in] q desired quantile
+ @return value of data array d at quantile q
+ */
+double get_quantile_from_sorted_data(double *data, int N, double q);
+
+/**
+ \brief get minimum and maximum value of data vector
+ 
+ @param[in] data unsorted data array
+ @param[in] N size of data array
+ @param[out] min minimum value of data array
+ @param[out] max maximum vallue of data array
+ */
+void get_min_max(double *data, int N, double *min, double *max);
+
 
 #endif /* math_h */

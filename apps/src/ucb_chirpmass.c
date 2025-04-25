@@ -7,8 +7,6 @@
 #include <time.h>
 #include <string.h>
 
-#include <gsl/gsl_sort.h>
-
 #include <glass_utils.h>
 
 #define RAD2ARCMIN 3437.75

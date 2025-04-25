@@ -154,139 +154,102 @@ int binary_search(double *array, int nmin, int nmax, double x)
     return -1;
 }
 
-void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
+void matrix_eigenstuff(double **matrix, double **evectors, double *evalues, int N)
 {
-    int i,j;
-    
-    // Don't let errors kill the program (yikes)
-    gsl_set_error_handler_off ();
-    int err=0;
-    
-    // Find eigenvectors and eigenvalues
-    gsl_matrix *GSLfisher = gsl_matrix_alloc(N,N);
-    gsl_matrix *GSLcovari = gsl_matrix_alloc(N,N);
-    gsl_matrix *GSLevectr = gsl_matrix_alloc(N,N);
-    gsl_vector *GSLevalue = gsl_vector_alloc(N);
-    
-    for(i=0; i<N; i++)
-    {
-        for(j=0; j<N; j++)
-        {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
-            gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
-        }
-    }
-    
-    // sort and put them into evec
-    gsl_eigen_symmv_workspace * workspace = gsl_eigen_symmv_alloc (N);
-    gsl_permutation * permutation = gsl_permutation_alloc(N);
-    err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
-    err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
-    
-    // eigenvalues destroy matrix
-    for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
-    
-    err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
-    err += gsl_linalg_LU_invert(GSLfisher, permutation, GSLcovari);
-    
-    if(err>0)
-    {
-        for(i=0; i<N; i++)for(j=0; j<N; j++)
-        {
-            evector[i][j] = 0.0;
-            if(i==j)
-            {
-                evector[i][j]=1.0;
-                evalue[i]=1./matrix[i][j];
-            }
-        }
+    // Local Integers
+    int n = N;    // Number of columns
+    int lda = N;  // Leading dimension of matrix A
+    int ldvl = N; // Leading dimension of matrix V (eigenvectors)
+    int ldvr = N; // Leading dimension of matrix V (eigenvectors)
+
+    // Local Arrays
+    double A[N*N]; //input matrix
+    double wr[N], wi[N]; // Eigenvalues
+    double vl[N*N], vr[N*N]; // Eigenvectors (will be stored in a 1D array)
         
-    }
-    else
-    {
-        
-        //unpack arrays from gsl inversion
-        for(i=0; i<N; i++)
-        {
-            evalue[i] = gsl_vector_get(GSLevalue,i);
-            for(j=0; j<N; j++)
-            {
-                evector[i][j] = gsl_matrix_get(GSLevectr,i,j);
-                if(evector[i][j] != evector[i][j]) evector[i][j] = 0.;
-            }
-        }
-                
-        //copy covariance matrix back into Fisher
-        for(i=0; i<N; i++)
-        {
-            for(j=0; j<N; j++)
-            {
-                matrix[i][j] = gsl_matrix_get(GSLcovari,i,j);
-            }
-        }
-        
-        //cap minimum size eigenvalues
-        for(i=0; i<N; i++)
-        {
-            if(evalue[i] != evalue[i] || evalue[i] <= 10.0) evalue[i] = 10.;
-        }
-    }
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) A[i*N+j] = matrix[i][j];
+
+    // Solve Eigenproblem
+    LAPACKE_dgeev( LAPACK_ROW_MAJOR, 'V', 'V', n, A, lda, wr, wi, vl, ldvl, vr, ldvr );
     
-    gsl_vector_free (GSLevalue);
-    gsl_matrix_free (GSLfisher);
-    gsl_matrix_free (GSLcovari);
-    gsl_matrix_free (GSLevectr);
-    gsl_eigen_symmv_free (workspace);
-    gsl_permutation_free (permutation);
+    // Assuming evalues are all real
+    for(int i=0; i<N; i++) evalues[i] = wr[i];
+    
+    // Assuming evectors that we want are real, and are the "left" ones
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) evectors[i][j] = vl[i*N + j];
 }
 
 void invert_matrix(double **matrix, int N)
 {
-    int i,j;
+    // Lapack wants the matrix as an array
+    double A[N*N];
     
-    // Don't let errors kill the program (yikes)
-    gsl_set_error_handler_off ();
-    int err=0;
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) A[i*N+j] = matrix[i][j];
     
-    // Find eigenvectors and eigenvalues
-    gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
-    gsl_matrix *GSLinvrse = gsl_matrix_alloc(N,N);
+    // Memory for Pivot Array
+    int *IPIV = int_vector(N);
     
-    for(i=0; i<N; i++)
+    // LU Factorization
+    LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,A,N,IPIV);
+    
+    // Compute the Inverse
+    LAPACKE_dgetri(LAPACK_ROW_MAJOR,N,A,N,IPIV);
+        
+    // Replace input matrix with inverse
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) matrix[i][j] = A[i*N+j];
+
+    // Free memory
+    free_int_vector(IPIV);
+}
+
+void decompose_matrix(double **matrix, double **inverse, double **L, double *det, int N)
+{
+    /* start off just like invert_matrix() */
+    
+    // Lapack wants the matrix as an array
+    double A[N*N];
+    
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) A[i*N+j] = matrix[i][j];
+    
+    // Memory for Pivot Array
+    int *IPIV = int_vector(N);
+    
+    // LU Factorization
+    LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,A,N,IPIV);
+    
+    /* detour to store L matrix & determinent */
+    for(int i=0; i<N; i++)
     {
-        for(j=0; j<N; j++)
+        for(int j=0; j<N; j++)
         {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
-            gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
+            if(i>j) L[i][j] = A[i*N+j];
+            else if (i == j) L[i][j] = 1.0;
+            else L[i][j] = 0.0;
         }
     }
-    
-    gsl_permutation * permutation = gsl_permutation_alloc(N);
-    
-    err += gsl_linalg_LU_decomp(GSLmatrix, permutation, &i);
-    err += gsl_linalg_LU_invert(GSLmatrix, permutation, GSLinvrse);
-    
-    if(err>0)
+
+    // Calculate determinant from L and U factors
+    double detA = 1.0;
+    for(int i=0; i<N; i++)
     {
-        fprintf(stderr,"WARNING: singluar matrix at line %d in file %s\n", __LINE__, __FILE__);
-        fflush(stderr);
-        exit(1);
+        detA *= A[i*N+i];
+        if(IPIV[i] != i+1) detA *= -1.0; // Account for row swaps
     }
-    else
-    {
-        //copy inverse back into matrix
-        for(i=0; i<N; i++)
-        {
-            for(j=0; j<N; j++)
-            {
-                matrix[i][j] = gsl_matrix_get(GSLinvrse,i,j);
-            }
-        }
-    }
+    *det = detA;
     
-    gsl_matrix_free (GSLmatrix);
-    gsl_matrix_free (GSLinvrse);
-    gsl_permutation_free (permutation);
+    /* and finally finish the job w/ the inverse */
+    
+    // Compute the Inverse
+    LAPACKE_dgetri(LAPACK_ROW_MAJOR,N,A,N,IPIV);
+        
+    // Replace input matrix with inverse
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) inverse[i][j] = A[i*N+j];
+
+    // Free memory
+    free_int_vector(IPIV);
 }
 
 void matrix_multiply(double **A, double **B, double **AB, int N)
@@ -314,26 +277,25 @@ void cholesky_decomp(double **A, double **L, int N)
 {
     /*
      factorize matrix A into cholesky decomposition L.
-     GSL overwrites the original matrix which we want
+     LAPACK overwrites the original matrix which we want
      to preserve
      */
-    int i,j;
-    gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
     
-    //copy covariance matrix into workspace
-    for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLmatrix,i,j,A[i][j]);
+    // LAPACK wants the matrix as an array
+    double matrix[N*N];
     
-    //make the magic happen
-    gsl_linalg_cholesky_decomp(GSLmatrix);
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) matrix[i*N+j] = A[i][j];
+    
+    // Cholesky Decomposition into lower triangle
+    LAPACKE_dpotrf(LAPACK_ROW_MAJOR,'L',N,matrix,N);
     
     //copy cholesky decomposition into output matrix
-    for(i=0; i<N; i++) for(j=0; j<N; j++)  L[i][j] = gsl_matrix_get(GSLmatrix,i,j);
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++)  L[i][j] = matrix[2*i+j];
     
     //zero upper half of matrix (copy of A)
-    for(i=0; i<N; i++) for(j=i+1; j<N; j++) L[i][j] = 0.0;
-    
-    gsl_matrix_free (GSLmatrix);
-    
+    for(int i=0; i<N; i++) for(int j=i+1; j<N; j++) L[i][j] = 0.0;
+
 }
 
 /*
@@ -449,9 +411,6 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
 {
     int n;
     
-    /* do our own error catching from interpolator */
-    gsl_set_error_handler_off();
-    
     /* set up GSL spline */
     
     /* Standard cubic spline */
@@ -491,33 +450,33 @@ void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double 
     
 }
 
-static gsl_vector* gsl_vector_union(gsl_vector *N, gsl_vector *Np)
+static double* vector_union(double *N, double *Np, int N_size, int Np_size)
 {
     // allocate memory for work space
-    double *N_temp = malloc(N->size*sizeof(double));
-    double *Np_temp = malloc(Np->size*sizeof(double));
+    double *N_temp = malloc(N_size*sizeof(double));
+    double *Np_temp = malloc(Np_size*sizeof(double));
     
-    int Nsize = N->size;
-    int Nmax = N->size+Np->size;
+    int Nsize = N_size;
+    int Nmax = N_size+Np_size;
     
     //printf("N.size=%i, Np.size=%i, Nmax=%i\n",N->size, Np->size, Nmax);
     
     double *N_union = malloc(Nmax*sizeof(double));
     
     // store contents of vectors in work space
-    for(int n=0; n<N->size; n++)
+    for(int n=0; n<N_size; n++)
     {
-        N_temp[n]  = gsl_vector_get(N,n);
+        N_temp[n]  = N[n];
         N_union[n] = N_temp[n];
     }
-    for(int n=0; n<Np->size; n++) Np_temp[n] = gsl_vector_get(Np,n);
+    for(int n=0; n<Np_size; n++) Np_temp[n] = Np[n];
     
     // get union of work space arrays
-    for(int i=0; i<Np->size; i++)
+    for(int i=0; i<Np_size; i++)
     {
         //traverse N to make sure it is a new point
         int flag=0;
-        for(int l=0; l<N->size; l++)
+        for(int l=0; l<N_size; l++)
         {
             if(N_temp[l]==Np_temp[i]) flag=1;
         }
@@ -530,32 +489,32 @@ static gsl_vector* gsl_vector_union(gsl_vector *N, gsl_vector *Np)
     
 
     // resize N to and copy work space union into GSL vector    
-    gsl_vector_free(N);
-    gsl_vector *Nnew = gsl_vector_alloc(Nsize);
-    for(int n=0; n<Nsize; n++) gsl_vector_set(Nnew,n,N_union[n]);
+    free_double_vector(N);
+    double *Nnew = double_vector(Nsize);
+    for(int n=0; n<Nsize; n++) Nnew[n] = N_union[n];
     
     // clean up
-    free(N_temp);
-    free(Np_temp);
-    free(N_union);
+    free_double_vector(N_temp);
+    free_double_vector(Np_temp);
+    free_double_vector(N_union);
     
     return Nnew;
             
 }
 
-static gsl_vector * find_neighbors(gsl_vector *X, double P, double epsilon)
+static double * find_neighbors(double *X, double P, double epsilon, int size, int *new_size)
 {
     /*
      return all points in X w/in epsilon of P, including P
      */
-    int N[X->size];
+    int N[size];
     int Nsize=0;
 
     // check all points in X
-    for(int n=0; n<X->size; n++)
+    for(int n=0; n<size; n++)
     {
         // distance measure
-        double D = fabs(gsl_vector_get(X,n) - P);
+        double D = fabs(X[n] - P);
         
         // store points closer than epsilon
         if(D < epsilon)
@@ -566,52 +525,55 @@ static gsl_vector * find_neighbors(gsl_vector *X, double P, double epsilon)
     }
     
     //create GSL vector with list of points within epsilon of P
-    gsl_vector *Neighbors = gsl_vector_alloc(Nsize);
-    for(int n=0; n<Nsize; n++) gsl_vector_set(Neighbors,n,N[n]);
+    double *Neighbors = double_vector(Nsize);
+    for(int n=0; n<Nsize; n++) Neighbors[n] = N[n];
+    
+    *new_size=Nsize;
     
     return Neighbors;
 }
 
-void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
+void dbscan(double *X, double eps, int min, int C[], int *K, int size)
 {
-            
+    int Nsize;
+    
     //Step 1: initialize cluster index and mark all points as unvisited
-    int visited[X->size];
+    int visited[size];
     int cluster_index=0;
-    for(int n=0; n<X->size; n++)
+    for(int n=0; n<size; n++)
     {
         visited[n] = 0;
         C[n] = 0;
     }
     
     //loop through all data points
-    for(int n=0; n<X->size; n++)
+    for(int n=0; n<size; n++)
     {
         //skip visited points
         if(visited[n]) continue;
 
         //Step 2: Choose a random unvisited data point p and mark it as visited
-        double P = gsl_vector_get(X,n);
+        double P = X[n];
         visited[n] = 1;
         
         //Step 3: Find neighbors of P within epsilon and store them in N
-        gsl_vector *N = find_neighbors(X,P,eps);
+        double *N = find_neighbors(X,P,eps,size,&Nsize);
                 
         /*
          Step 4: If N has at least min_samples elements,
          then P is a core point and a new cluster C is formed with P and N.
          Otherwise, X[n] is a noise point and no cluster is formed.
          */
-        if(N->size>=min)
+        if(Nsize>=min)
         {
             
             //assign current data point to current cluster
             C[n] = cluster_index;
             
             //loop through all neighbors of current data point
-            for(int m=0; m<N->size; m++)
+            for(int m=0; m<Nsize; m++)
             {
-                int j = (int)gsl_vector_get(N,m);
+                int j = (int)N[m];
                 
                 //skip visited neighbors
                 if(visited[j]) continue;
@@ -620,13 +582,14 @@ void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
                 visited[j] = 1;
                 
                 //find neighbors of P's neighbors
-                gsl_vector *Np = find_neighbors(X,gsl_vector_get(X,j),eps);
+                int Npsize;
+                double *Np = find_neighbors(X,X[j],eps,size,&Npsize);
 
                 //add neighbors' of P's neighbors to cluster
-                if(Np->size>=min)
+                if(Npsize>=min)
                 {
                     // N = N U N'
-                    N = gsl_vector_union(N,Np);
+                    N = vector_union(N,Np,size,Npsize);
                 }
                 
                 
@@ -634,7 +597,7 @@ void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
                 if(C[j]==0) C[j] = cluster_index;
                 
                 //free memory holding Np for point P
-                gsl_vector_free(Np);
+                free_double_vector(Np);
             }
 
             //advance index to be ready for next cluster
@@ -643,7 +606,7 @@ void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
         }else C[n]=-1;
         
         //free memory holding list of neighbors for next point
-        gsl_vector_free(N);
+        free_double_vector(N);
 
     }//end loop over data points
     
@@ -690,6 +653,47 @@ void integer_sort(int *x, int N)
 {
     qsort(x, N, sizeof(int), int_compare);
 }
+
+static int double_compare (const void * num1, const void * num2) {
+   if(*(double*)num1 > *(double*)num2)
+    return 1;
+   else
+    return -1;
+}
+
+void double_sort(double *x, int N)
+{
+    qsort(x, N, sizeof(double), double_compare);
+}
+
+// Structure to hold index and corresponding array value
+typedef struct {
+    int index;
+    int value;
+} IndexedValue;
+
+// Comparison function for qsort
+static int compare_indexed_values(const void *a, const void *b) {
+    int value_a = ((IndexedValue*)a)->value;
+    int value_b = ((IndexedValue*)b)->value;
+    return (value_a > value_b) - (value_a < value_b);
+}
+
+void index_sort(int *index, double *data, int N)
+{
+    IndexedValue indexed_arr[N];
+    for(int n=0; n<N; n++)
+    {
+        indexed_arr[n].index = n;
+        indexed_arr[n].value = data[n];
+    }
+    
+    // Sort the indexed array based on values
+    qsort(indexed_arr, N, sizeof(IndexedValue), compare_indexed_values);
+    
+    for(int n=0; n<N; n++) index[n] = indexed_arr[n].index;
+}
+
 
 void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
 {
@@ -738,4 +742,44 @@ void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
     *NAUB = j;
     free_int_vector(Utemp);
     free_int_vector(temp);
+}
+
+double get_mean(double *x, int N)
+{
+    double xbar = 0.0;
+    
+    for(int i=0; i<N; i++) xbar += x[i];
+
+    return xbar/(double)N;
+}
+
+double get_variance(double *x, int N)
+{
+    double xbar  = 0.0;
+    double x2 = 0.0;
+    
+    for(int i=0; i<N; i++)
+    {
+        xbar += x[i];
+        x2   += x[i]*x[i];
+    }
+
+    xbar/=(double)N;
+    
+    return x2/(double)N - xbar*xbar;
+}
+
+double get_quantile_from_sorted_data(double *data, int N, double q)
+{
+    return data[(int)(q*N)];
+}
+
+void get_min_max(double *data, int N, double *min, double *max)
+{
+    double *data_temp=double_vector(N);
+    memcpy(data_temp,data,N*sizeof(double));
+    double_sort(data_temp,N);
+    *min = data_temp[0];
+    *max = data_temp[N-1];
+    free_double_vector(data_temp);
 }

@@ -28,7 +28,7 @@
 
 void alloc_entry(struct Entry *entry, int IMAX)
 {
-    entry->I = 0;
+    entry->Nchain = 0;
     entry->source = malloc(IMAX*sizeof(struct Source*));
     entry->match  = malloc(IMAX*sizeof(double));
     entry->distance  = malloc(IMAX*sizeof(double));
@@ -57,13 +57,13 @@ void create_empty_source(struct Catalog *catalog, int NFFT, int Nchannel)
     struct Entry *entry = catalog->entry[N];
     
     alloc_entry(entry,1);
-    entry->source[entry->I] = malloc(sizeof(struct Source));
-    alloc_source(entry->source[entry->I], NFFT, Nchannel);
+    entry->source[entry->Nchain] = malloc(sizeof(struct Source));
+    alloc_source(entry->source[entry->Nchain], NFFT, Nchannel);
 
-    entry->match[entry->I] = 1.0;
-    entry->distance[entry->I] = 0.0;
+    entry->match[entry->Nchain] = 1.0;
+    entry->distance[entry->Nchain] = 0.0;
     
-    entry->I++; //increment number of samples for entry
+    entry->Nchain++; //increment number of samples for entry
     catalog->N++;//increment number of entries for catalog
 }
 
@@ -76,48 +76,48 @@ void create_new_source(struct Catalog *catalog, struct Source *sample, struct No
     struct Entry *entry = catalog->entry[N];
     
     alloc_entry(entry,IMAX);
-    entry->source[entry->I] = malloc(sizeof(struct Source));
-    alloc_source(entry->source[entry->I], NFFT, Nchannel);
+    entry->source[entry->Nchain] = malloc(sizeof(struct Source));
+    alloc_source(entry->source[entry->Nchain], NFFT, Nchannel);
     
     //add sample to the catalog as the new entry
-    copy_source(sample, entry->source[entry->I]);
+    copy_source(sample, entry->source[entry->Nchain]);
     
     //store SNR of reference sample to set match criteria
     entry->SNR = snr(sample,noise);
     
-    entry->match[entry->I] = 1.0;
-    entry->distance[entry->I] = 0.0;
+    entry->match[entry->Nchain] = 1.0;
+    entry->distance[entry->Nchain] = 0.0;
     entry->stepFlag[i] = 1;
     
-    entry->I++; //increment number of samples for entry
+    entry->Nchain++; //increment number of samples for entry
     catalog->N++;//increment number of entries for catalog
 }
 
 void append_sample_to_entry(struct Entry *entry, struct Source *sample, int IMAX, int NFFT, int Nchannel)
 {
     //malloc source structure for this sample's entry
-    entry->source[entry->I] = malloc(sizeof(struct Source));
+    entry->source[entry->Nchain] = malloc(sizeof(struct Source));
     /* This is taking up too much memory
-    alloc_source(entry->source[entry->I], NFFT, Nchannel, NP);
+    alloc_source(entry->source[entry->Nchain], NFFT, Nchannel, NP);
     
     //copy chain sample into catalog entry
-    copy_source(sample, entry->source[entry->I]);
+    copy_source(sample, entry->source[entry->Nchain]);
     */
 
     /* leaner way of storing source info */
     
     //only copy source parameters
-    entry->source[entry->I]->params=calloc(UCB_MODEL_NP,sizeof(double));
-    memcpy(entry->source[entry->I]->params, sample->params, UCB_MODEL_NP*sizeof(double));
+    entry->source[entry->Nchain]->params=calloc(UCB_MODEL_NP,sizeof(double));
+    memcpy(entry->source[entry->Nchain]->params, sample->params, UCB_MODEL_NP*sizeof(double));
     
     //need Tobs which isn't stored in entries
     double T = sample->params[0]/sample->f0;
     
     //get physical parameters for waveform calculations later
-    map_array_to_params(entry->source[entry->I], entry->source[entry->I]->params, T);
+    map_array_to_params(entry->source[entry->Nchain], entry->source[entry->Nchain]->params, T);
 
     //increment number of stored samples for this entry
-    entry->I++;
+    entry->Nchain++;
 }
 
 void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *detection_index, int detections, int IMAX, double **corr)
@@ -141,25 +141,25 @@ void get_correlation_matrix(struct Data *data, struct Catalog *catalog, int *det
         {
             double x;
             
-            for(int i=0; i<entry->I; i++)
+            for(int i=0; i<entry->Nchain; i++)
             {
                 x = entry->source[i]->params[n];
                 mean[d][n] += x;
             }
-            mean[d][n] /= (double)entry->I;
+            mean[d][n] /= (double)entry->Nchain;
 
             /*
              computing variance after mean (instead of using 1-pass method)
              because rounding error was non-negligible for frequency parameter
              std << mu
              */
-            for(int i=0; i<entry->I; i++)
+            for(int i=0; i<entry->Nchain; i++)
             {
                 x = entry->source[i]->params[n];
                 var[d][n] += (x - mean[d][n])*(x - mean[d][n]);
             }
             
-            var[d][n] /=(double)(entry->I);
+            var[d][n] /=(double)(entry->Nchain);
         }
     }
     
@@ -229,7 +229,7 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     if(flags->verbose)fprintf(stdout,"Event %s, NMODE=%i\n",entry->name,(int)NMODE);
     
     // number of samples
-    size_t NMCMC = entry->I;
+    size_t NMCMC = entry->Nchain;
     
     // number of EM iterations
     size_t NSTEP = 100;
@@ -241,9 +241,9 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     for(size_t n=0; n<NMCMC; n++)
     {
         samples[n] = malloc(sizeof(struct Sample));
-        samples[n]->x = gsl_vector_alloc(UCB_MODEL_NP);
-        samples[n]->p = gsl_vector_alloc(NMODE);
-        samples[n]->w = gsl_vector_alloc(NMODE);
+        samples[n]->x = double_vector(UCB_MODEL_NP);
+        samples[n]->p = double_vector(NMODE);
+        samples[n]->w = double_vector(NMODE);
     }
     
     // covariance matrices for different modes
@@ -257,11 +257,11 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     // Logistic mapping of samples onto R
     double y;
     double pmin,pmax;
-    gsl_vector *y_vec = gsl_vector_alloc(NMCMC);
+    double *y_vec = double_vector(NMCMC);
     
     /* parse chain file */
-    gsl_vector **params = malloc(UCB_MODEL_NP*sizeof(gsl_vector *));
-    for(size_t n=0; n<UCB_MODEL_NP; n++) params[n] = gsl_vector_alloc(NMCMC);
+    double **params = malloc(UCB_MODEL_NP*sizeof(double *));
+    for(size_t n=0; n<UCB_MODEL_NP; n++) params[n] = double_vector(NMCMC);
     double value[UCB_MODEL_NP];
     for(size_t i=0; i<NMCMC; i++)
     {
@@ -279,8 +279,7 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
         
         for(size_t n=0; n<UCB_MODEL_NP; n++)
         {
-            //gsl_vector_set(samples[i]->x,n,value[n]);
-            gsl_vector_set(params[n],i,value[n]);
+            params[n][i] = value[n];
         }
     }
     
@@ -290,8 +289,8 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
         // copy max and min into each MVG structure
         for(size_t k=0; k<NMODE; k++)
         {
-            gsl_matrix_set(modes[k]->minmax,n,0,ranges[n][0]);
-            gsl_matrix_set(modes[k]->minmax,n,1,ranges[n][1]);
+            modes[k]->minmax[n][0] = ranges[n][0];
+            modes[k]->minmax[n][1] = ranges[n][1];
         }
     }
     
@@ -299,20 +298,20 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     /* map params to R with logit function */
     for(size_t n=0; n<UCB_MODEL_NP; n++)
     {
-        pmin = gsl_matrix_get(modes[0]->minmax,n,0);
-        pmax = gsl_matrix_get(modes[0]->minmax,n,1);
-        logit_mapping(params[n], y_vec, pmin, pmax);
+        pmin = modes[0]->minmax[n][0];;
+        pmax = modes[0]->minmax[n][1];
+        logit_mapping(params[n], y_vec, pmin, pmax, NMCMC);
         
         for(size_t i=0; i<NMCMC; i++)
         {
-            y = gsl_vector_get(y_vec,i);
-            gsl_vector_set(samples[i]->x,n,y);
+            y = y_vec[i];
+            samples[i]->x[n] = y;
         }
     }
     
     /* The main Gaussian Mixture Model with Expectation Maximization function */
     double logL;
-    if(GMM_with_EM(modes,samples,NMCMC,NSTEP,seed,&logL,BIC)) return 1;
+    if(GMM_with_EM(modes,samples,UCB_MODEL_NP,NMODE,NMCMC,NSTEP,seed,&logL,BIC)) return 1;
     
     /* Write GMM results to binary for pick up by other processes */
     char filename[BUFFER_SIZE];
@@ -323,14 +322,14 @@ int gaussian_mixture_model_wrapper(double **ranges, struct Flags *flags, struct 
     fclose(fptr);
     
     /* print 1D PDFs and 2D contours of GMM model */
-    if(flags->verbose) print_model(modes, samples, NMCMC, logL, *BIC, NMODE);
+    if(flags->verbose) print_model(modes, samples, UCB_MODEL_NP, NMODE, NMCMC, logL, *BIC, NMODE);
     
     /* clean up */
     for(size_t n=0; n<NMCMC; n++)
     {
-        gsl_vector_free(samples[n]->x);
-        gsl_vector_free(samples[n]->p);
-        gsl_vector_free(samples[n]->w);
+        free_double_vector(samples[n]->x);
+        free_double_vector(samples[n]->p);
+        free_double_vector(samples[n]->w);
         free(samples[n]);
     }
     free(samples);

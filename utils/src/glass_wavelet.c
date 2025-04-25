@@ -99,7 +99,7 @@ static void wavelet(struct Wavelets *wdm, int m, double *wave)
     
 }
 
-static void wavelet_window(struct Wavelets *wdm)
+static void wavelet_window_time(struct Wavelets *wdm)
 {
     double *DX = (double*)malloc(sizeof(double)*(2*wdm->N));
     
@@ -163,7 +163,7 @@ static void wavelet_lookup_table(struct Wavelets *wdm)
     for(int j=0; j<wdm->fdot_steps; j++)  // loop over f-dot slices
     {
 
-        int NT = wdm->table[j]->size/2;
+        int NT = wdm->n_table[j];
         
         
         for(int n=0; n<NT; n++)  // loop of frequency slices
@@ -180,8 +180,8 @@ static void wavelet_lookup_table(struct Wavelets *wdm)
                 real_coeff += wave[i]*cos(phase)*wdm->cadence;
                 imag_coeff += wave[i]*sin(phase)*wdm->cadence;
             }
-            gsl_vector_set(wdm->table[j],2*n,real_coeff);
-            gsl_vector_set(wdm->table[j],2*n+1,imag_coeff);
+            wdm->table[j][2*n]   = real_coeff;
+            wdm->table[j][2*n+1] = imag_coeff;
         }
     }
     
@@ -216,7 +216,7 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
 
     wdm->fdot = malloc(wdm->fdot_steps*sizeof(double));
 
-    wdm->table   = malloc(wdm->fdot_steps*sizeof(gsl_vector *));
+    wdm->table   = malloc(wdm->fdot_steps*sizeof(double *));
     wdm->n_table = malloc(wdm->fdot_steps*sizeof(int));
 
     double fdot_step = wdm->df/wdm->T*wdm->d_fdot; // sets the f-dot increment
@@ -227,11 +227,11 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
         size_t N = (int)((wdm->BW+fabs(wdm->fdot[n])*wdm->T)/wdm->deltaf);
         if(N%2 != 0) N++; // makes sure it is an even number
         wdm->n_table[n] = N;
-        wdm->table[n] =  gsl_vector_alloc(2*N);
+        wdm->table[n] = double_vector(2*N);
     }
     
     //stores window function and normalization
-    wavelet_window(wdm);
+    wavelet_window_time(wdm);
     
     //stores lookup table of wavelet basis functions
     wavelet_lookup_table(wdm);
@@ -422,6 +422,75 @@ void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
     gsl_fft_complex_workspace_free(workspace);
 }
 
+void wavelet_transform_F(struct Wavelets *wdm, int jmin, int Nlayers, double *phihf, double *data)
+{
+    int Ntx;
+    double alpha, fac;
+    double *DX;
+    int n, m, i, j, jj, mm, mt;
+    
+    gsl_fft_real_wavetable * real;
+    gsl_fft_real_workspace * work;
+
+    Ntx = (Nlayers+1)*wdm->NT;
+    
+    fac = 1.0/sqrt((double)(Ntx/2));
+        
+    alpha = (8.0/(double)(wdm->NT));
+    
+    tukey(data, alpha, Ntx);
+    
+    work = gsl_fft_real_workspace_alloc (Ntx);
+    real = gsl_fft_real_wavetable_alloc (Ntx);
+    gsl_fft_real_transform (data, 1, Ntx, real, work);
+    gsl_fft_real_wavetable_free (real);
+    gsl_fft_real_workspace_free (work);
+    
+    DX = double_vector(2*wdm->NT);
+    
+    for(m=1; m< (Nlayers+1); m++)
+    {
+        mt = m+jmin-1;
+        
+        for(j=-wdm->NT/2; j< wdm->NT/2; j++)
+        {
+            i = j+wdm->NT/2;
+            
+            REAL(DX,i) = 0.0;
+            IMAG(DX,i) = 0.0;
+            
+            jj = j + m*wdm->NT/2;
+            
+            if(jj > 0 && jj < Ntx/2)
+            {
+                REAL(DX,i) = data[2*jj-1]*phihf[abs(j)];
+                IMAG(DX,i) = data[2*jj]*phihf[abs(j)];
+                
+            }
+        }
+        
+        gsl_fft_complex_radix2_backward(DX, 1, wdm->NT);
+        
+        for(n=0; n<wdm->NT; n++)
+        {
+            mm = Nlayers*n+m-1;
+            
+            if(mt%2 == 0)
+            {
+                if((n+mt)%2==0) data[mm] = fac*REAL(DX,n);
+                else            data[mm] = fac*IMAG(DX,n);
+            }
+            else
+            {
+                if((n+mt)%2==0) data[mm] =  fac*REAL(DX,n);
+                else            data[mm] = -fac*IMAG(DX,n);
+            }
+        }
+    }
+    free(DX);
+}
+
+
 void wavelet_transform_inverse(struct Wavelets *wdm, double *data)
 {
     int N = wdm->NT*wdm->NF;
@@ -487,15 +556,15 @@ void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *f
             jj = kk + wdm->n_table[n]/2;
             if(jj>=0 && jj< wdm->n_table[n]-1)
             {
-                y = (1.0-dx)*gsl_vector_get(wdm->table[n],2*jj)   + dx*gsl_vector_get(wdm->table[n],2*(jj+1));
-                z = (1.0-dx)*gsl_vector_get(wdm->table[n],2*jj+1) + dx*gsl_vector_get(wdm->table[n],2*(jj+1)+1);
+                y = (1.0-dx)*wdm->table[n][2*jj]   + dx*wdm->table[n][2*(jj+1)];
+                z = (1.0-dx)*wdm->table[n][2*jj+1] + dx*wdm->table[n][2*(jj+1)+1];
             }
 
             jj = kk + wdm->n_table[n+1]/2;
             if(jj >=0 && jj < wdm->n_table[n+1]-1)
             {
-                yy = (1.0-dx)*gsl_vector_get(wdm->table[n+1],2*jj)   + dx*gsl_vector_get(wdm->table[n+1],2*(jj+1));
-                zz = (1.0-dx)*gsl_vector_get(wdm->table[n+1],2*jj+1) + dx*gsl_vector_get(wdm->table[n+1],2*(jj+1)+1);
+                yy = (1.0-dx)*wdm->table[n+1][2*jj]   + dx*wdm->table[n+1][2*(jj+1)];
+                zz = (1.0-dx)*wdm->table[n+1][2*jj+1] + dx*wdm->table[n+1][2*(jj+1)+1];
             }
                 
             // interpolate over fdot
@@ -636,6 +705,48 @@ void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, dou
     *Nwavelet = N;
 }
 
+void wavelet_window_frequency(struct Wavelets *wdm, double *window, int Nlayers)
+{
+    
+    double dtx;
+    double OM, DOM, insDOM;
+    double om, dom;
+    double A, B, T;
+    double nrm;
+    int M;
+        
+    M = (Nlayers+1);
+    
+    dtx = wdm->dt/(double)(M);
+    
+    OM = M_PI/dtx;
+        
+    DOM = OM/(double)(M);
+    
+    insDOM = 1.0/sqrt(DOM);
 
+    B = OM/(double)(2*M);
+    
+    A = (DOM-B)/2.0;
+    
+    
+    T = wdm->dt*wdm->NT;
+    
+    dom = PI2/T;
+
+
+    for(int i=0; i<=wdm->NT/2; i++)
+    {
+        om = (double)(i)*dom;
+        window[i] = phitilde(om, insDOM, A, B);
+    }
+    
+    nrm = 0.0;
+    for(int i=-wdm->NT/2; i<= wdm->NT/2; i++) nrm += window[abs(i)]*window[abs(i)];
+    nrm = sqrt(nrm/dtx);
+    
+    for(int i=0; i<=wdm->NT/2; i++) window[i] /= nrm;
+    
+}
 
 

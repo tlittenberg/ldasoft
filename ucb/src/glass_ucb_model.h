@@ -84,7 +84,7 @@ struct Model
 */
 struct Source
 {
-    /// Array containing parameters to be passed to galactic_binary()
+    /// Array containing parameters to be passed to ucb_waveform()
     double *params;
 
     /// Instrument response to signal with Source::params \f$ h(\vec\theta) \f$

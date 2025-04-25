@@ -491,7 +491,7 @@ void set_gmm_prior(struct Flags *flags, struct Data *data, struct Prior *prior, 
 
 double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
 {
-    gsl_vector *x = gsl_vector_alloc(UCB_MODEL_NP);
+    double *x = double_vector(UCB_MODEL_NP);
     
     /* pointers to GMM contents */
     struct MVG **modes = gmm->modes;
@@ -503,34 +503,34 @@ double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
     alloc_source(source, data->N, data->Nchannel);
     
     map_array_to_params(source, params, data->T);
-    gsl_vector_set(x,0,source->f0);
-    gsl_vector_set(x,1,source->costheta);
-    gsl_vector_set(x,2,source->phi);
-    gsl_vector_set(x,3,log(source->amp));
-    gsl_vector_set(x,4,source->cosi);
-    gsl_vector_set(x,5,source->psi);
-    gsl_vector_set(x,6,source->phi0);
+    x[0] = source->f0;
+    x[1] = source->costheta;
+    x[2] = source->phi;
+    x[3] = log(source->amp);
+    x[4] = source->cosi;
+    x[5] = source->psi;
+    x[6] = source->phi0;
     if(UCB_MODEL_NP>7)
-        gsl_vector_set(x,7,source->dfdt);
+        x[7] = source->dfdt;
     if(UCB_MODEL_NP>8)
-        gsl_vector_set(x,8,source->d2fdt2);
+        x[8] = source->d2fdt2;
 
     //map parameters to R
     double xmin,xmax,xn,yn, logJ = 0;
     for(size_t n=0; n<UCB_MODEL_NP; n++)
     {
-        xmin = gsl_matrix_get(modes[0]->minmax,n,0);
-        xmax = gsl_matrix_get(modes[0]->minmax,n,1);
-        xn = gsl_vector_get(x,n);
+        xmin = modes[0]->minmax[n][0];
+        xmax = modes[0]->minmax[n][1];
+        xn = x[n];
         if(xn < xmin || xn >= xmax)
         {            
             //clean up
-            gsl_vector_free(x);
+            free_double_vector(x);
             free_source(source);
             return -INFINITY;
         }
         yn = logit(xn,xmin,xmax);
-        gsl_vector_set(x,n,yn);
+        x[n] = yn;
         
         //Jacobian
         //logJ -= log(dsigmoid(yn, xmin, xmax));
@@ -539,10 +539,10 @@ double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
     //sum over modes
     double P=0.0;
     for(size_t k=0; k<NMODES; k++)
-        P += modes[k]->p*multivariate_gaussian(x,modes[k]);
+        P += modes[k]->p*multivariate_gaussian(x,modes[k],UCB_MODEL_NP);
     
     //clean up
-    gsl_vector_free(x);
+    free_double_vector(x);
     free_source(source);
     
     return log(P) + logJ;

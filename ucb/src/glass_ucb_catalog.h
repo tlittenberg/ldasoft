@@ -48,7 +48,7 @@ struct Catalog
 */
 struct Entry
 {
-    int I;                  //!<number of chain samples
+    int Nchain;             //!<number of chain samples
     char name[128];         //!<source name
     char parent[128];       //!<source parent name
     char path[1024];        //!<path to catalog entry

@@ -71,9 +71,9 @@ void printUsage(const char *program);
  */
 struct Sample
 {
-    gsl_vector *x; //!< location in parameter space
-    gsl_vector *p; //!< p(x) for each mode
-    gsl_vector *w; //!< weight sample for mode
+    double *x; //!< location in parameter space
+    double *p; //!< p(x) for each mode
+    double *w; //!< weight sample for mode
 };
 
 /**
@@ -83,13 +83,13 @@ struct Sample
 struct MVG
 {
     size_t size; //!< dimension of mvg
-    gsl_vector *mu; //!< means
-    gsl_matrix *C; //!< covariance matrix
-    gsl_matrix *L; //!< LU decomposition of C: \f$ C = LL^{-1}\f$
-    gsl_matrix *Cinv; //!< inverse covariance matrix
-    gsl_matrix *evectors; //!< eigenvectors
-    gsl_vector *evalues; //!< eigenvalues
-    gsl_matrix *minmax; //!< min and max range for samples
+    double *mu; //!< means
+    double **C; //!< covariance matrix
+    double **L; //!< LU decomposition of C: \f$ C = LL^{-1}\f$
+    double **Cinv; //!< inverse covariance matrix
+    double **evectors; //!< eigenvectors
+    double *evalues; //!< eigenvalues
+    double **minmax; //!< min and max range for samples
     double detC; //!< determinant of covariance matrix
     double p; //!< prior for Mode (i.e. weighting)
     double Neff; //!< effective number of samples in mode
@@ -122,28 +122,9 @@ void copy_MVG(struct MVG *origin, struct MVG *copy);
  * \param[in] mvg data structure for multivariate gaussian
  * \param[out] probability \f$ \frac{\exp -\frac{1}{2}\left(x - \mu\right)^T C^{-1} \left(x - \mu\right)}{\sqrt{(2\pi)^N \det C}} \f$
  */
-double multivariate_gaussian(gsl_vector *x, struct MVG *mvg);
-double multivariate_gaussian_no_min(gsl_vector *x, struct MVG *mvg);
+double multivariate_gaussian(double *x, struct MVG *mvg, int N);
+double multivariate_gaussian_no_min(double *x, struct MVG *mvg);
 
-/**
- * \brief Wrapper for computing matrix inversion using
- * `GSL` functions.
- * \param[in] A input symmetric matrix
- * \param[out] Ainv inverse of `A`
- * \param[out] L LU decomposition of `A`
- * \param[out] detA determinant of `A`
- * \param[out] R recipricol condition number [0,1]
- */
-void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *detA, double *R);
-
-/**
- * \brief Wrapper for computing matrix eigenvalue decomposition using
- * `GSL` functions.
- * \param[in] A input symmetric matrix
- * \param[out] evec matrix where each row has components of eigenvector
- * \param[out] eval vector where each element is the eigenvalue associated with the same row of `evec`.
- */
-void decompose_matrix(gsl_matrix *A, gsl_matrix *evec, gsl_vector *eval);
 
 /**
  * \brief Log-likelihood of Gaussian Mixture Model
@@ -159,12 +140,12 @@ double log_likelihood(struct MVG **modes, struct Sample **samples, int NMCMC, in
 /**
  * \brief Print joint 1D distributions for each parameter to file
  */
-void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, char root[], size_t ix);
+void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMODE, size_t NMCMC, char root[], size_t ix);
 
 /**
  * \brief Print joint 2D distributions for each parameter to file
  */
-void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, char root[], size_t ix, size_t iy);
+void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMODE, size_t NMCMC, char root[], size_t ix, size_t iy);
 
 /**
  * \brief Print 1,2, and 3\f$\sigma\f$ contours of each individual
@@ -175,7 +156,7 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
 /**
  * \brief Wrapper for print_1D_pdfs() and print_2D_contours()
  */
-void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, double logL, double BIC, size_t step);
+void print_model(struct MVG **modes, struct Sample **samples, size_t NP, size_t NMODE, size_t NMCMC, double logL, double BIC, size_t step);
 
 
 /**
@@ -188,13 +169,15 @@ void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, doub
  * *M-step*: Recompute mean, covariance, and relative weight of newly weighted samples
  *
  * \param[in] samples data points \f$x_i\f$ and probabilities \f$p(x_i|k)\f$ for each Gaussian \f$k\f$
+ * \param[in] NP size of parameter space
+ * \param[in] NMODE number of modes
  * \param[in] NMCMC number of samples
  * \param[out] logL log-likelihood of input model
  * \param[out] BIC Bayesian Information Criteria (BIC) for input model
  * \param[in,out] modes parameters of each Gaussian including relative weights \f$\alpha_{k}\f$, updated by M-step.
  * \return `0` if successful, `1` if singular due to zero weight in one of the modes.
  */
-int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NMCMC, double *logL, double *BIC);
+int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NP, size_t NMODE, size_t NMCMC, double *logL, double *BIC);
 
 /**
  * \brief Gaussian Mixture Model fit with Expectation-Maximization (EM) Algorithm
@@ -203,20 +186,22 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
  *
  * \param[in] modes data structure of multivariate Gaussians in GMM
  * \param[in] samples data structure with all chain samples to be fit
+ * \param[in] NP size of parameter space
+ * \param[in] NMODE number of modes
  * \param[in] NMCMC number of chain samples
  * \param[in] NSTEP number of iterations of EM algorithm
- * \param[in] r `GSL` random number generator seed
+ * \param[in] r random number generator seed
  * \param[out] logL log-likelihood of input model
  * \param[out] BIC Bayesian Information Criteria (BIC) for input model
  * \return `0` if successfule, `1` if singular due to zero weight in one of the modes
 */
-int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, unsigned int *r, double *logL, double *BIC);
+int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NP, size_t NMODE, size_t NMCMC, size_t NSTEP, unsigned int *r, double *logL, double *BIC);
 
 
 double logit(double x,double xmin,double xmax);
 double sigmoid(double x,double xmin,double xmax);
 double dsigmoid(double x, double xmin, double xmax);
-void logit_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax);
-void sigmoid_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax);
+void logit_mapping(double *x_vec, double *y_vec, double xmin, double xmax, int N);
+void sigmoid_mapping(double *x_vec, double *y_vec, double xmin, double xmax, int N);
 
 #endif /* gmm_h */

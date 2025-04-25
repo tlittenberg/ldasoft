@@ -8,9 +8,8 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include <gsl/gsl_sort.h>
+#include <glass_utils.h>
 
-#define YEAR 31457280
 #define UCB_PER_SEGMENT 15
 #define MAX_UCB_FREQUENCY 0.012
 #define SEGMENT_BANDWIDTH 1E-5
@@ -43,7 +42,7 @@ int main(int argc, char* argv[])
     }
     fclose(cachefile);
     
-    gsl_sort(f, 1, count);
+    double_sort(f,count);
     
     
     FILE *outfile = fopen("ucb_grid.dat","w");

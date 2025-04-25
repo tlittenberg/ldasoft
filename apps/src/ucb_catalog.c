@@ -511,8 +511,8 @@ int main(int argc, char *argv[])
                         entryFlag[n] = 1;
                         Distance = waveform_distance(sample, entry->source[0], noise);
                         //append sample to entry
-                        entry->match[entry->I] = Match;
-                        entry->distance[entry->I] = Distance;
+                        entry->match[entry->Nchain] = Match;
+                        entry->distance[entry->Nchain] = Distance;
                         entry->stepFlag[i] = 1;
                         append_sample_to_entry(entry, sample, IMAX, data->N, data->Nchannel);
                         
@@ -552,7 +552,7 @@ int main(int argc, char *argv[])
     for(int n=0; n<catalog->N; n++)
     {
         
-        weight = (double)catalog->entry[n]->I/(double)(IMAX/downsample);
+        weight = (double)catalog->entry[n]->Nchain/(double)(IMAX/downsample);
         if(weight > weight_threshold)
         {
             //record index of catalog entry for detected source
@@ -579,7 +579,7 @@ int main(int argc, char *argv[])
     
     double f_med;
     double *f_vec;
-    size_t *index;
+    int *index;
     int i_med;
     
     fprintf(stdout,"\nPost processing events\n");
@@ -591,16 +591,17 @@ int main(int argc, char *argv[])
         entry = catalog->entry[n];
         
         //get sample containing median frequency as identifier of source
-        f_vec = calloc(entry->I,sizeof(double));
-        for(int i=0; i<entry->I; i++) f_vec[i] = entry->source[i]->f0;
+        f_vec = calloc(entry->Nchain,sizeof(double));
+        for(int i=0; i<entry->Nchain; i++) f_vec[i] = entry->source[i]->f0;
         
-        index = calloc(entry->I,(sizeof(size_t)));
-        gsl_sort_index(index,f_vec,1,entry->I);
-        i_med = (int)index[entry->I/2];
+        index = calloc(entry->Nchain,(sizeof(int)));
+        index_sort(index, f_vec, entry->Nchain);
+
+        i_med = (int)index[entry->Nchain/2];
         free(f_vec);
         free(index);
         
-        f_med = entry->source[i_med]->f0;//gsl_stats_median_from_sorted_data(f_vec, 1, entry->I);
+        f_med = entry->source[i_med]->f0;//gsl_stats_median_from_sorted_data(f_vec, 1, entry->Nchain);
         
         entry->i = i_med;
         
@@ -660,7 +661,7 @@ int main(int argc, char *argv[])
         fclose(out);
         
         //evidence for source related to number of visits in the chain
-        entry->evidence = (double)(entry->I-1)/(double)(IMAX/downsample);
+        entry->evidence = (double)(entry->Nchain-1)/(double)(IMAX/downsample);
         
         fprintf(catalogFile,"%s %lg %lg\n",entry->name, entry->SNR, entry->evidence);
     }
@@ -800,7 +801,7 @@ int main(int argc, char *argv[])
         out = fopen( filename, "w");
         
         //add parameters to file
-        for(int k=0; k<entry->I; k++)
+        for(int k=0; k<entry->Nchain; k++)
         {
             print_source_params(data,entry->source[k],out);
             
@@ -829,11 +830,11 @@ int main(int argc, char *argv[])
             
             //allocate and zero
             for(int k=0; k<data->Nchannel; k++)
-            hrec[j][k] = calloc(entry->I , sizeof(double));
+            hrec[j][k] = calloc(entry->Nchain , sizeof(double));
         }
         
         //insert waveform power
-        for(int i=0; i<entry->I; i++)
+        for(int i=0; i<entry->Nchain; i++)
         {
             
             source_waveform_wrapper(entry->source[i], data, orbit);
@@ -861,7 +862,7 @@ int main(int argc, char *argv[])
         {
             for(int k=0; k<data->Nchannel; k++)
             {
-                gsl_sort(hrec[j][k],1,entry->I);
+                double_sort(hrec[j][k],entry->Nchain);
             }
         }
         double A_med,A_lo_50,A_hi_50,A_lo_90,A_hi_90;
@@ -875,17 +876,17 @@ int main(int argc, char *argv[])
         {
             double f = (double)(j+data->qmin)/data->T;
             
-            A_med   = gsl_stats_median_from_sorted_data   (hrec[j][0], 1, entry->I);
-            A_lo_50 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.25);
-            A_hi_50 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.75);
-            A_lo_90 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.05);
-            A_hi_90 = gsl_stats_quantile_from_sorted_data (hrec[j][0], 1, entry->I, 0.95);
+            A_med   = get_quantile_from_sorted_data (hrec[j][0], entry->Nchain, 0.50);
+            A_lo_50 = get_quantile_from_sorted_data (hrec[j][0], entry->Nchain, 0.25);
+            A_hi_50 = get_quantile_from_sorted_data (hrec[j][0], entry->Nchain, 0.75);
+            A_lo_90 = get_quantile_from_sorted_data (hrec[j][0], entry->Nchain, 0.05);
+            A_hi_90 = get_quantile_from_sorted_data (hrec[j][0], entry->Nchain, 0.95);
             
-            E_med   = gsl_stats_median_from_sorted_data   (hrec[j][1], 1, entry->I);
-            E_lo_50 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.25);
-            E_hi_50 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.75);
-            E_lo_90 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.05);
-            E_hi_90 = gsl_stats_quantile_from_sorted_data (hrec[j][1], 1, entry->I, 0.95);
+            E_med   = get_quantile_from_sorted_data (hrec[j][1], entry->Nchain, 0.50);
+            E_lo_50 = get_quantile_from_sorted_data (hrec[j][1], entry->Nchain, 0.25);
+            E_hi_50 = get_quantile_from_sorted_data (hrec[j][1], entry->Nchain, 0.75);
+            E_lo_90 = get_quantile_from_sorted_data (hrec[j][1], entry->Nchain, 0.05);
+            E_hi_90 = get_quantile_from_sorted_data (hrec[j][1], entry->Nchain, 0.95);
             
             fprintf(out,"%.12g ",f);
             fprintf(out,"%lg ",A_med);

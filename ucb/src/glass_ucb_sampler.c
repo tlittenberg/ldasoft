@@ -469,8 +469,8 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
 {
     
     int N = model_x->Nlive;
-    gsl_vector * f = gsl_vector_alloc(N);
-    for(int n=0; n<N; n++) gsl_vector_set(f,n,model_x->source[n]->f0);
+    double * f = double_vector(N);
+    for(int n=0; n<N; n++) f[n] = model_x->source[n]->f0;
     
     //DBSCAN clustering of source frequencies
     int K=0;                //number of clusters
@@ -478,7 +478,7 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
     //double eps = 2/data->T; //use typical bandwidth as the max cluster spacing
     int min = 2;          //minimum occupation number for cluster
     int C[N];             //cluster assignments
-    if(N>=min) dbscan(f,eps,min,C,&K);
+    if(N>=min) dbscan(f,eps,min,C,&K,N);
     
     model_y->Nlive=model_x->Nlive;
     for(int n=0; n<N; n++)
@@ -548,7 +548,7 @@ static void rj_cluster_bomb(struct Orbit *orbit, struct Data *data, struct Model
     }
     else *logPy = -INFINITY;
     
-    gsl_vector_free(f);
+    free_double_vector(f);
 }
 
 void ucb_rjmcmc(struct Orbit *orbit, struct Data *data, struct Model *model, struct Model *trial, struct Chain *chain, struct Flags *flags, struct Prior *prior, struct Proposal **proposal, int ic)

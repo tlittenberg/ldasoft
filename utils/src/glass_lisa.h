@@ -30,12 +30,6 @@
 #ifndef lisa_h
 #define lisa_h
 
-//#include <stdio.h>
-//#include <hdf5.h>
-//#include <gsl/gsl_errno.h>
-//#include <gsl/gsl_spline.h>
-//#include "glass_constants.h"
-
 /// Mean arm length of constellation (m) for baseline LISA configuration
 #define LARM 2.5e9
 

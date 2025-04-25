@@ -237,14 +237,14 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
     for(int n=0; n<UCB_MODEL_NP; n++)
     {
         //start at mean
-        x[n] = gsl_vector_get(mode->mu,n);
+        x[n] = mode->mu[n];
         
         //add contribution from each row of invC
-        for(int m=0; m<UCB_MODEL_NP; m++) x[n] += ran_no[m]*gsl_matrix_get(mode->L,n,m);
+        for(int m=0; m<UCB_MODEL_NP; m++) x[n] += ran_no[m]*mode->L[n][m];
         
         //map params from R back to interval
-        double min = gsl_matrix_get(mode->minmax,n,0);
-        double max = gsl_matrix_get(mode->minmax,n,1);
+        double min = mode->minmax[n][0];
+        double max = mode->minmax[n][1];
         
         x[n] = sigmoid(x[n],min,max);
     }
@@ -1461,7 +1461,7 @@ void setup_cdf_proposal(struct Data *data, struct Flags *flags, struct Proposal 
             proposal->vector[n] = proposal->matrix[j][n];
         
         //sort it
-        gsl_sort(proposal->vector,1, proposal->size);
+        double_sort(proposal->vector, proposal->size);
         
         //replace that row of the matrix
         for(int n=0; n<proposal->size; n++)

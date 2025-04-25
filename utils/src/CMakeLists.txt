@@ -10,7 +10,7 @@ add_library(glass_utils STATIC
             glass_constants.h glass_utils.c glass_utils.h) 
 
 include_directories ("${PROJECT_SOURCE_DIR}/utils/src/")
-include_directories(SYSTEM ${GSL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS})
+include_directories(SYSTEM ${GSL_INCLUDE_DIRS} ${HDF5_INCLUDE_DIRS} ${BLAS_INCLUDE_DIRS})
 
 install(TARGETS glass_utils DESTINATION lib)
 install(DIRECTORY "./" DESTINATION include FILES_MATCHING PATTERN "*.h")

@@ -77,4 +77,7 @@
 //! Astronomical unit [m]
 #define AU 1.49597870700e11
 
+//! Velocity of the Earth around the Sun (relative to CLIGHT)
+#define VEARTH 0.00010103671
+
 #endif /* constants_h */

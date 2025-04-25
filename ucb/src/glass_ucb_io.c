@@ -1015,7 +1015,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
-            gsl_sort(data->h_rec[n][m],1,data->Nwave);
+            double_sort(data->h_rec[n][m],data->Nwave);
         }
     }
     
@@ -1023,10 +1023,10 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
-            gsl_sort(data->r_pow[n][m],1,data->Nwave);
-            gsl_sort(data->h_pow[n][m],1,data->Nwave);
-            gsl_sort(data->S_pow[n][m],1,data->Nwave);
-            res_var[n][m] = gsl_stats_variance(data->h_rec[2*n][m], 1, data->Nwave)+gsl_stats_variance(data->h_rec[2*n+1][m], 1, data->Nwave);
+            double_sort(data->r_pow[n][m],data->Nwave);
+            double_sort(data->h_pow[n][m],data->Nwave);
+            double_sort(data->S_pow[n][m],data->Nwave);
+            res_var[n][m] = get_variance(data->h_rec[2*n][m], data->Nwave)+get_variance(data->h_rec[2*n+1][m], data->Nwave);
         }
     }
     
@@ -1050,11 +1050,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
         {
             fprintf(fptr_var,"%.12g ",res_var[i][n]);
             
-            med   = gsl_stats_median_from_sorted_data   (data->r_pow[i][n], 1, data->Nwave);
-            lo_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.25);
-            hi_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.75);
-            lo_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.05);
-            hi_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.95);
+            med   = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.50);
+            lo_50 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.25);
+            hi_50 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.75);
+            lo_90 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.05);
+            hi_90 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.95);
             
             fprintf(fptr_res,"%lg ",med);
             fprintf(fptr_res,"%lg ",lo_50);
@@ -1062,11 +1062,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
             fprintf(fptr_res,"%lg ",lo_90);
             fprintf(fptr_res,"%lg ",hi_90);
             
-            med   = gsl_stats_median_from_sorted_data   (data->h_pow[i][n], 1, data->Nwave);
-            lo_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.25);
-            hi_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.75);
-            lo_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.05);
-            hi_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.95);
+            med   = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.50);
+            lo_50 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.25);
+            hi_50 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.75);
+            lo_90 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.05);
+            hi_90 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.95);
             
             fprintf(fptr_rec,"%lg ",med);
             fprintf(fptr_rec,"%lg ",lo_50);
