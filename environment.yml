@@ -1,0 +1,20 @@
+name: ldasoft-global-fit
+
+# Goal of this is to provide a conda environment that works
+# with the environment on a hyak compute node to allow ldasoft/mbh
+# to be built with the compute nodes libs available at compile time
+#
+# It is also intended to supply dependent libraries at runtime
+#
+# For interoperating with hyak's LMODs, it is necessary to load
+# modules after this environment is activated, because this 
+# environment will download MPI/UCX libraries; however, they 
+# will not necessarily be the correct versions.
+#
+channels:
+        - defaults
+        - conda-forge
+dependencies:
+        - conda-forge::gsl
+        - conda-forge::hdf5[build=mpi_openmpi*]
+        - conda-forge::libopenblas[build=openmp*]
