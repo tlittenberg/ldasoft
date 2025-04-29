@@ -17,6 +17,25 @@
 #include <glass_ucb.h>
 #include <glass_noise.h>
 
+static void print_wavelet_pixels(struct Wavelets *wdm, struct TDI *tdi, FILE *fptr)
+{
+    for(int j=0; j<wdm->NF; j++)
+    {
+        for(int i=0; i<wdm->NT; i++)
+        {
+            int k;
+            wavelet_pixel_to_index(wdm, i, j, &k);
+            fprintf(fptr,"%.12g %.12g ",i*WAVELET_DURATION,j*WAVELET_BANDWIDTH + WAVELET_BANDWIDTH/2);
+            fprintf(fptr,"%.12g ",tdi->X[k]);
+            fprintf(fptr,"%.12g ",tdi->Y[k]);
+            fprintf(fptr,"%.12g ",tdi->Z[k]);
+            fprintf(fptr,"\n");
+        }
+        fprintf(fptr,"\n");
+    }
+
+}
+
 int main(void)
 {
     clock_t start, end;
@@ -77,18 +96,40 @@ int main(void)
     params[7] = params[7]*(Tobs*Tobs);
 
 
-    //ucb_wavelet_waveform(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    ucb_waveform_wavelet_het(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    FILE *out = fopen("wavelet_het.dat","w");
+    print_wavelet_pixels(wdm, tdi, out);
+    fclose(out);
+
+    
+    
     start = clock();
     int Nwaveforms = 1000;
     for(int mc=0; mc<Nwaveforms; mc++)
     {
-        
         ucb_waveform_wavelet_het(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     }
     end = clock();
     double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("not as fast wavelet calculation took %f seconds\n", cpu_time_used/(double)Nwaveforms);
+    printf("het wavelet calculation took %f seconds\n", cpu_time_used/(double)Nwaveforms);
+    free_tdi(tdi);
 
+
+    alloc_tdi(tdi,N,3);
+
+    ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    out = fopen("wavelet_tab.dat","w");
+    print_wavelet_pixels(wdm, tdi, out);
+    fclose(out);
+
+    start = clock();
+    for(int mc=0; mc<Nwaveforms; mc++)
+    {
+        ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    }
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("tab wavelet calculation took %f seconds\n", cpu_time_used/(double)Nwaveforms);
 
     
     return 0;

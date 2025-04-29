@@ -1143,9 +1143,9 @@ static void detector_time(struct Orbit *orbit, double *params, double *time, int
     for(int n=0; n<N; n++)
     {
         
-        r[0] = gsl_spline_eval(orbit->dx[0],time[n],orbit->dx_acc);
-        r[1] = gsl_spline_eval(orbit->dy[0],time[n],orbit->dy_acc);
-        r[2] = gsl_spline_eval(orbit->dz[0],time[n],orbit->dz_acc);
+        r[0] = gsl_spline_eval(orbit->dx[0],time[n],orbit->dx_acc)/CLIGHT;
+        r[1] = gsl_spline_eval(orbit->dy[0],time[n],orbit->dy_acc)/CLIGHT;
+        r[2] = gsl_spline_eval(orbit->dz[0],time[n],orbit->dz_acc)/CLIGHT;
         
         // k dot r_0
         double kdotr = 0.0;
@@ -1153,6 +1153,7 @@ static void detector_time(struct Orbit *orbit, double *params, double *time, int
         
         // shift time reference to spacecraft 0
         time_sc[n] = time[n] - kdotr;
+        //printf("  detector time: %i %.12g %.12g %.12g\n",n,time[n],kdotr,time_sc[n]);
     }
 }
 
@@ -1223,6 +1224,11 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     //get ucb waveform on orbit grid
     ucb_barycenter_waveform(params, Nspline, orbit->t, phase_ssb, amp_ssb);
     
+    // get frequency layers containing signal
+    int min_layer; //bottom layer
+    int Nlayers;   //number of layers
+    ucb_wdm_layers(Tobs, params, wdm, &min_layer, &Nlayers);
+
     // convert back
     params[0] = params[0]*Tobs;
     params[3] = log(params[3]);
@@ -1245,7 +1251,7 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     double *time_sc  = double_vector(Nspline);
     
     // shift reference times from Barycenter to S/C 1
-    detector_time(orbit, params, orbit->t, Nspline, time_sc);
+    detector_time(orbit, params, time_ssb, Nspline, time_sc);
     
     // get signal phase at S/C 1
     for(int i=0; i< Nspline; i++)
@@ -1253,12 +1259,6 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
         phase_sc[i] = gsl_spline_eval(phase_ssb_spline, time_sc[i], interp_accel);
     }
     free(time_sc);
-
-    
-    // get frequency layers containing signal
-    int min_layer; //bottom layer
-    int Nlayers;   //number of layers
-    ucb_wdm_layers(Tobs, params, wdm, &min_layer, &Nlayers);
     
     // no really what is this now what??
     int N_ds     = wdm->NT*(Nlayers+1); //number of downsampled data points
@@ -1374,6 +1374,7 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     // Properly re-index to undo the heterodyning
     int N=0;
     int k;
+
     for(int i=0; i<wdm->NT; i++)
     {
         for(int j=min_layer; j<min_layer+Nlayers; j++)
@@ -1390,9 +1391,7 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
         }
     }
     *Nwavelet = N;
-    
-    
-    
+        
     //insert non-zero wavelet pixels into correct indicies
     for(int n=0; n<*Nwavelet; n++)
     {
@@ -1401,8 +1400,7 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
         Z[wavelet_list[n]] = wave->Z[n];
     }
     
-    
-    
+
     free_double_vector(time_ssb);
     free_double_vector(amp_ssb);
     free_double_vector(phase_ssb);
@@ -1412,7 +1410,7 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     gsl_interp_accel_free(interp_accel);
 
     free_double_vector(phase_sc);
-    free_double_vector(time_sc);
+    //free_double_vector(time_sc);
 
     free_double_vector(phase_ds);
     free_double_vector(time_ds);
@@ -1423,10 +1421,8 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
 
     free_tdi(tdi_phase);
     free_tdi(tdi_amp);
-    
     free_tdi(wave);
-    
+
     gsl_spline_free(amp_interpolant);
     gsl_spline_free(phase_interpolant);
-
 }

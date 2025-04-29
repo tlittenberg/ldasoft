@@ -300,6 +300,7 @@ void initialize_interpolated_analytic_orbits(struct Orbit *orbit, double Tobs, d
     double buffer = (Tobs)/(double)(N-1); // buffer for time sampling to keep interpolation away from edges of data
     double cadence = (Tobs + 2.0*buffer)/(double)(N-1);  // coarse sample cadence
     
+    //printf("buffer = %lg s , Tobs = %lg\n", buffer, Tobs);exit(1);
     //allocate memory for local workspace
     orbit->Norb = N;
     double t   = 0.0;

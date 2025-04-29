@@ -429,9 +429,6 @@ void wavelet_transform_F(struct Wavelets *wdm, int jmin, int Nlayers, double *ph
     double *DX;
     int n, m, i, j, jj, mm, mt;
     
-    gsl_fft_real_wavetable * real;
-    gsl_fft_real_workspace * work;
-
     Ntx = (Nlayers+1)*wdm->NT;
     
     fac = 1.0/sqrt((double)(Ntx/2));
@@ -440,15 +437,18 @@ void wavelet_transform_F(struct Wavelets *wdm, int jmin, int Nlayers, double *ph
     
     tukey(data, alpha, Ntx);
     
-    work = gsl_fft_real_workspace_alloc (Ntx);
-    real = gsl_fft_real_wavetable_alloc (Ntx);
-    gsl_fft_real_transform (data, 1, Ntx, real, work);
+    gsl_fft_real_workspace * rwork = gsl_fft_real_workspace_alloc (Ntx);
+    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (Ntx);
+    gsl_fft_real_transform (data, 1, Ntx, real, rwork);
     gsl_fft_real_wavetable_free (real);
-    gsl_fft_real_workspace_free (work);
+    gsl_fft_real_workspace_free (rwork);
     
+    gsl_fft_complex_wavetable * comp = gsl_fft_complex_wavetable_alloc (wdm->NT);
+    gsl_fft_complex_workspace * work = gsl_fft_complex_workspace_alloc (wdm->NT);
+
     DX = double_vector(2*wdm->NT);
     
-    for(m=1; m< (Nlayers+1); m++)
+    for(m=1; m<(Nlayers+1); m++)
     {
         mt = m+jmin-1;
         
@@ -469,7 +469,7 @@ void wavelet_transform_F(struct Wavelets *wdm, int jmin, int Nlayers, double *ph
             }
         }
         
-        gsl_fft_complex_radix2_backward(DX, 1, wdm->NT);
+        gsl_fft_complex_backward(DX, 1, wdm->NT, comp, work);
         
         for(n=0; n<wdm->NT; n++)
         {
@@ -487,7 +487,11 @@ void wavelet_transform_F(struct Wavelets *wdm, int jmin, int Nlayers, double *ph
             }
         }
     }
-    free(DX);
+           
+    gsl_fft_complex_wavetable_free (comp);
+    gsl_fft_complex_workspace_free (work);
+
+    free_double_vector(DX);
 }
 
 
