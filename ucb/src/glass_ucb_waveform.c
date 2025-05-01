@@ -910,7 +910,7 @@ static void extract_amplitude_and_phase(int Ns, double *As, double *Dphi, double
     
 }
 
-void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z)
+void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z)
 {
     /*
     Get waveform at solar system barycenter (SSB)
@@ -1153,11 +1153,10 @@ static void detector_time(struct Orbit *orbit, double *params, double *time, int
         
         // shift time reference to spacecraft 0
         time_sc[n] = time[n] - kdotr;
-        //printf("  detector time: %i %.12g %.12g %.12g\n",n,time[n],kdotr,time_sc[n]);
     }
 }
 
-static void ucb_wdm_layers(double Tobs, double *params, struct Wavelets *wdm, int *jstart, int *jwidth)
+static void ucb_wavelet_layers(double Tobs, double *params, struct Wavelets *wdm, int *jstart, int *jwidth)
 {
     double fmin, fmax;
     double dfmin, dfmax;
@@ -1198,12 +1197,8 @@ static void ucb_wdm_layers(double Tobs, double *params, struct Wavelets *wdm, in
 }
 
 
-void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z)
+void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z)
 {
-    // each waveform type will want its own time spacing. For galactic binaries uniform spacing is fine
-    // This section will need a flag to tell it what waveform type we are computing. For MBHMs the parameters
-    // of the signal will impact the time spacing
-
     int Nspline = orbit->Norb;
     double dt = Tobs/(double)(Nspline-1);
     
@@ -1227,7 +1222,7 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     // get frequency layers containing signal
     int min_layer; //bottom layer
     int Nlayers;   //number of layers
-    ucb_wdm_layers(Tobs, params, wdm, &min_layer, &Nlayers);
+    ucb_wavelet_layers(Tobs, params, wdm, &min_layer, &Nlayers);
 
     // convert back
     params[0] = params[0]*Tobs;
@@ -1245,7 +1240,7 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     gsl_spline_init(phase_ssb_spline, orbit->t, phase_ssb, Nspline);
     
     /*
-     resample SSB phase to reference spacecraft
+     Resample SSB phase to reference spacecraft
      */
     double *phase_sc = double_vector(Nspline);
     double *time_sc  = double_vector(Nspline);
@@ -1255,33 +1250,35 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     
     // get signal phase at S/C 1
     for(int i=0; i< Nspline; i++)
-    {
         phase_sc[i] = gsl_spline_eval(phase_ssb_spline, time_sc[i], interp_accel);
-    }
+
     free(time_sc);
     
-    // no really what is this now what??
+    /*
+     Downsample waveform (i.e. shift to lower frequency layer)
+     */
     int N_ds     = wdm->NT*(Nlayers+1); //number of downsampled data points
     double dt_ds = wdm->dt/(double)(Nlayers+1); //downsampled data cadence
    
-    double *phase_ds = double_vector(N_ds);  //downsampled phase
-    double *time_ds  = double_vector(N_ds);  //downsampled time
-    double *phase_het = double_vector(N_ds); //heterodyne phase
+    double *phase_ds  = double_vector(N_ds);  //downsampled phase
+    double *time_ds   = double_vector(N_ds);  //downsampled time
+    double *phase_het = double_vector(N_ds);  //heterodyne phase
     
     double f0 = (min_layer-1)*wdm->df; //"carrier" frequency
+    
     for(int i=0; i<N_ds; i++)
     {
-        time_ds[i]  = t0 + i*dt_ds;
+        time_ds[i]   = t0 + i*dt_ds;
         phase_het[i] = PI2 * f0 * time_ds[i];
     }
     
     // shift reference times from Barycenter to spacecraft 0
     time_sc = double_vector(N_ds);
     detector_time(orbit, params, time_ds, N_ds, time_sc);
+    
     for(int i=0; i<N_ds; i++)
-    {
         phase_ds[i] = gsl_spline_eval(phase_ssb_spline, time_sc[i], interp_accel);
-    }
+
     free(time_sc);
 
     
@@ -1360,18 +1357,22 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
         wave->Z[i] = Amp*cos(Phase);
     }
     
-    //finally compute wavelet coefficients for signal's TDI response
+    /*
+     Compute wavelet coefficients for signal's TDI response
+     */
  
     // get freqeuncy wavelet window function for downsampled data
     double *window = double_vector((wdm->NT/2+1));
     wavelet_window_frequency(wdm, window, Nlayers);
 
     // wavelet transform on heterodyned data using downsampled windows.
-    wavelet_transform_F(wdm, min_layer, Nlayers, window, wave->X);
-    wavelet_transform_F(wdm, min_layer, Nlayers, window, wave->Y);
-    wavelet_transform_F(wdm, min_layer, Nlayers, window, wave->Z);
+    wavelet_transform_by_layers(wdm, min_layer, Nlayers, window, wave->X);
+    wavelet_transform_by_layers(wdm, min_layer, Nlayers, window, wave->Y);
+    wavelet_transform_by_layers(wdm, min_layer, Nlayers, window, wave->Z);
 
-    // Properly re-index to undo the heterodyning
+    /*
+     Properly re-index to undo the heterodyning
+    */
     int N=0;
     int k;
 
@@ -1379,7 +1380,6 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     {
         for(int j=min_layer; j<min_layer+Nlayers; j++)
         {
-            
             wavelet_pixel_to_index(wdm,i,j,&k);
             
             //check that the pixel is in range
@@ -1410,7 +1410,6 @@ void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double 
     gsl_interp_accel_free(interp_accel);
 
     free_double_vector(phase_sc);
-    //free_double_vector(time_sc);
 
     free_double_vector(phase_ds);
     free_double_vector(time_ds);

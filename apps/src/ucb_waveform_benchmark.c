@@ -112,9 +112,9 @@ int main(void)
     end = clock();
     double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("het wavelet calculation took %f seconds\n", cpu_time_used/(double)Nwaveforms);
+
     free_tdi(tdi);
-
-
+    tdi = malloc(sizeof(struct TDI));
     alloc_tdi(tdi,N,3);
 
     ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);

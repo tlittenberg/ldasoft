@@ -19,6 +19,18 @@
 
 #include "glass_utils.h"
 
+static void setup_wdm_basis(struct Wavelets *wdm, int NF)
+{
+    wdm->NF = NF;
+    wdm->cadence = WAVELET_DURATION/wdm->NF;
+    wdm->Omega = M_PI/wdm->cadence;
+    wdm->dOmega = wdm->Omega/(double)wdm->NF;
+    wdm->inv_root_dOmega = 1.0/sqrt(wdm->dOmega);
+    wdm->B = wdm->Omega/(double)(2*wdm->NF);
+    wdm->A = (wdm->dOmega-wdm->B)/2.0;
+    wdm->BW = (wdm->A+wdm->B)/M_PI;
+}
+
 static double phitilde(double om, double insDOM, double A, double B)
 {
     double x, y, z;
@@ -193,9 +205,10 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
     
     wdm->NT = (int)ceil(T/WAVELET_DURATION);
     wdm->NF = WAVELET_DURATION/LISA_CADENCE;
-    wdm->cadence = LISA_CADENCE;//7.5;
     wdm->df = WAVELET_BANDWIDTH;
     wdm->dt = WAVELET_DURATION;
+
+    setup_wdm_basis(wdm, wdm->NF);
 
     wdm->frequency_steps = 400;
     wdm->fdot_steps = 50;
@@ -205,13 +218,8 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
     wdm->N = wdm->oversample * 2 * wdm->NF;
     wdm->T = wdm->N*wdm->cadence;
 
-    wdm->Omega = M_PI/wdm->cadence;
-    wdm->dOmega = wdm->Omega/(double)wdm->NF;
     wdm->domega = PI2/wdm->T;
-    wdm->inv_root_dOmega = 1.0/sqrt(wdm->dOmega);
-    wdm->B = wdm->Omega/(double)(2*wdm->NF);
-    wdm->A = (wdm->dOmega-wdm->B)/2.0;
-    wdm->BW = (wdm->A+wdm->B)/M_PI;
+    
     wdm->deltaf = wdm->BW/(double)(wdm->frequency_steps);
 
     wdm->fdot = malloc(wdm->fdot_steps*sizeof(double));
@@ -422,76 +430,83 @@ void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
     gsl_fft_complex_workspace_free(workspace);
 }
 
-void wavelet_transform_F(struct Wavelets *wdm, int jmin, int Nlayers, double *phihf, double *data)
+void wavelet_transform_by_layers(struct Wavelets *wdm, int jmin, int Nlayers, double *window, double *data)
 {
-    int Ntx;
-    double alpha, fac;
-    double *DX;
-    int n, m, i, j, jj, mm, mt;
+    int i,j,k,m,n;
     
-    Ntx = (Nlayers+1)*wdm->NT;
+    // size of input data
+    int N = (Nlayers+1)*wdm->NT;
     
-    fac = 1.0/sqrt((double)(Ntx/2));
-        
-    alpha = (8.0/(double)(wdm->NT));
-    
-    tukey(data, alpha, Ntx);
-    
-    gsl_fft_real_workspace * rwork = gsl_fft_real_workspace_alloc (Ntx);
-    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (Ntx);
-    gsl_fft_real_transform (data, 1, Ntx, real, rwork);
-    gsl_fft_real_wavetable_free (real);
-    gsl_fft_real_workspace_free (rwork);
-    
-    gsl_fft_complex_wavetable * comp = gsl_fft_complex_wavetable_alloc (wdm->NT);
-    gsl_fft_complex_workspace * work = gsl_fft_complex_workspace_alloc (wdm->NT);
+    //windowed data
+    double *wdata = double_vector(2*wdm->NT);
 
-    DX = double_vector(2*wdm->NT);
+    // mixed radix real fft
+    gsl_fft_real_workspace * rwork = gsl_fft_real_workspace_alloc (N);
+    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (N);
+
+    // mixed radix complex fft
+    gsl_fft_complex_wavetable *wavetable = gsl_fft_complex_wavetable_alloc(wdm->NT);
+    gsl_fft_complex_workspace *work_c    = gsl_fft_complex_workspace_alloc(wdm->NT);
+
+    double norm = 1.0/sqrt(0.5*N);
+        
+    double alpha = 8.0/wdm->NT;
     
-    for(m=1; m<(Nlayers+1); m++)
+    // FFT incoming data (timeseries)
+    tukey(data, alpha, N);
+    gsl_fft_real_transform (data, 1, N, real, rwork);
+    
+    // loop over frequency layers
+    for(j=1; j<Nlayers+1; j++)
     {
-        mt = m+jmin-1;
+        m = jmin + j - 1;
         
-        for(j=-wdm->NT/2; j< wdm->NT/2; j++)
+        // window data
+        for(i=-wdm->NT/2; i<wdm->NT/2; i++)
         {
-            i = j+wdm->NT/2;
+            n = i+wdm->NT/2;
             
-            REAL(DX,i) = 0.0;
-            IMAG(DX,i) = 0.0;
+            REAL(wdata,n) = 0.0;
+            IMAG(wdata,n) = 0.0;
             
-            jj = j + m*wdm->NT/2;
+            k = i + j*wdm->NT/2;
             
-            if(jj > 0 && jj < Ntx/2)
+            if(k > 0 && k < N/2)
             {
-                REAL(DX,i) = data[2*jj-1]*phihf[abs(j)];
-                IMAG(DX,i) = data[2*jj]*phihf[abs(j)];
-                
+                REAL(wdata,n) = data[2*k-1] * window[abs(i)];
+                IMAG(wdata,n) = data[2*k]   * window[abs(i)];
             }
-        }
+        }//end loop over window
         
-        gsl_fft_complex_backward(DX, 1, wdm->NT, comp, work);
-        
-        for(n=0; n<wdm->NT; n++)
+        // iFFT windowed data
+        gsl_fft_complex_inverse(wdata, 1, wdm->NT, wavetable, work_c);
+        for(i=0; i<2*wdm->NT; i++) wdata[i] *= wdm->NT;
+
+        // index magic
+        for(i=0; i<wdm->NT; i++)
         {
-            mm = Nlayers*n+m-1;
+            k = i*Nlayers + j - 1;
             
-            if(mt%2 == 0)
+            if(m%2 == 0)
             {
-                if((n+mt)%2==0) data[mm] = fac*REAL(DX,n);
-                else            data[mm] = fac*IMAG(DX,n);
+                if((i+m)%2==0) data[k] = norm*REAL(wdata,i);
+                else           data[k] = norm*IMAG(wdata,i);
             }
             else
             {
-                if((n+mt)%2==0) data[mm] =  fac*REAL(DX,n);
-                else            data[mm] = -fac*IMAG(DX,n);
+                if((i+m)%2==0) data[k] =  norm*REAL(wdata,i);
+                else           data[k] = -norm*IMAG(wdata,i);
             }
-        }
+        }//end loop over time slices
     }
-           
-    gsl_fft_complex_wavetable_free (comp);
-    gsl_fft_complex_workspace_free (work);
+       
+    gsl_fft_real_wavetable_free (real);
+    gsl_fft_real_workspace_free (rwork);
+    
+    gsl_fft_complex_wavetable_free (wavetable);
+    gsl_fft_complex_workspace_free (work_c);
 
-    free_double_vector(DX);
+    free_double_vector(wdata);
 }
 
 
@@ -711,45 +726,37 @@ void active_wavelet_list(struct Wavelets *wdm, double *freqX, double *freqY, dou
 
 void wavelet_window_frequency(struct Wavelets *wdm, double *window, int Nlayers)
 {
+    int i;
+    int N;
+    double T;
+    double domega;
+    double omega;
+    double norm=0.0;
     
-    double dtx;
-    double OM, DOM, insDOM;
-    double om, dom;
-    double A, B, T;
-    double nrm;
-    int M;
-        
-    M = (Nlayers+1);
-    
-    dtx = wdm->dt/(double)(M);
-    
-    OM = M_PI/dtx;
-        
-    DOM = OM/(double)(M);
-    
-    insDOM = 1.0/sqrt(DOM);
+    N = (Nlayers+1);
 
-    B = OM/(double)(2*M);
-    
-    A = (DOM-B)/2.0;
-    
+    //mini wavelet structure for basis covering just N layers
+    struct Wavelets *wdm_temp = malloc(sizeof(struct Wavelets));
+    setup_wdm_basis(wdm_temp, N);
     
     T = wdm->dt*wdm->NT;
     
-    dom = PI2/T;
+    domega = PI2/T;
 
-
-    for(int i=0; i<=wdm->NT/2; i++)
+    //wdm window function
+    for(i=0; i<=wdm->NT/2; i++)
     {
-        om = (double)(i)*dom;
-        window[i] = phitilde(om, insDOM, A, B);
+        omega = i*domega;
+        window[i] = phitilde(omega, wdm_temp->inv_root_dOmega, wdm_temp->A, wdm_temp->B);
     }
     
-    nrm = 0.0;
-    for(int i=-wdm->NT/2; i<= wdm->NT/2; i++) nrm += window[abs(i)]*window[abs(i)];
-    nrm = sqrt(nrm/dtx);
+    //normalize
+    for(i=-wdm->NT/2; i<= wdm->NT/2; i++) norm += window[abs(i)]*window[abs(i)];
+    norm = sqrt(norm/wdm_temp->cadence);
     
-    for(int i=0; i<=wdm->NT/2; i++) window[i] /= nrm;
+    for(i=0; i<=wdm->NT/2; i++) window[i] /= norm;
+    
+    free(wdm_temp);
     
 }
 
