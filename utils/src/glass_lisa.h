@@ -93,12 +93,9 @@ struct Orbit
      Stores the derivatives for the cubic spline for the location of each spacecraft (\f$dx,dy,dz\f$) and some internal `GSL` workspace `acc`.
      */
     ///@{
-    gsl_spline **dx; //!<spline derivatives in x-coordinate
-    gsl_spline **dy; //!<spline derivatives in y-coordinate
-    gsl_spline **dz; //!<spline derivatives in z-coordinate
-    gsl_interp_accel *dx_acc; //!<gsl interpolation work space for x-coordinate
-    gsl_interp_accel *dy_acc; //!<gsl interpolation work space for y-coordinate
-    gsl_interp_accel *dz_acc; //!<gsl interpolation work space for z-coordinate
+    struct CubicSpline **dx; //!<spline derivatives in x-coordinate
+    struct CubicSpline **dy; //!<spline derivatives in y-coordinate
+    struct CubicSpline **dz; //!<spline derivatives in z-coordinate
     ///@}
     
     /**
@@ -213,6 +210,11 @@ void initialize_numeric_orbit(struct Orbit *orbit);
 void initialize_interpolated_analytic_orbits(struct Orbit *orbit, double Tobs, double t0);
 
 /**
+ \brief allocate memory for Orbit
+ */
+void alloc_orbit(struct Orbit *orbit, int Norb);
+
+/**
  \brief free memory allocated for Orbit
  */
 void free_orbit(struct Orbit *orbit);
@@ -243,7 +245,7 @@ void LISA_tdi(double L, double fstar, double T, double ***d, double f0, long q, 
 void LISA_tdi_FF(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
 /// LISA TDI (LDC Sangria data)
 void LISA_tdi_Sangria(double L, double fstar, double T, double ***d, double f0, long q, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
-void LISA_TDI_spline(double *M, double *Mf, int a, int b, int c, double* tarray, int n, gsl_spline *amp_spline, gsl_spline *phase_spline, gsl_interp_accel *acc, double Aplus, double Across, double cos2psi, double sin2psi, double *App, double *Apm, double *Acp, double *Acm, double *kr, double *Larm);
+void LISA_TDI_spline(double *M, double *Mf, int a, int b, int c, double* tarray, int n, struct CubicSpline *amp_spline, struct CubicSpline *phase_spline, double Aplus, double Across, double cos2psi, double sin2psi, double *App, double *Apm, double *Acp, double *Acm, double *kr, double *Larm);
 ///@}
 void LISA_polarization_tensor_njc(double costh, double phi, double eplus[4][4], double ecross[4][4], double k[4]);
 
@@ -261,7 +263,7 @@ void LISA_polarization_tensor_njc(double costh, double phi, double eplus[4][4], 
  @param[out] R TDI structure of Response
  @param[out] Rf TDI structure of Response with phase flipped
  */
-void LISA_spline_response(struct Orbit *orbit, double *tarray, int N, double *params,  gsl_spline *amp_spline, gsl_spline *phase_spline, gsl_interp_accel *acc, struct TDI *R, struct TDI *Rf);
+void LISA_spline_response(struct Orbit *orbit, double *tarray, int N, double *params,  struct CubicSpline *amp_spline, struct CubicSpline *phase_spline, struct TDI *R, struct TDI *Rf);
 
 
 /** @name  LISA Noise Model for equal arm, TDI1.5 configuration */
@@ -287,18 +289,6 @@ double GBnoise_FF(double T, double fstar, double f);
 /// Noise transfer function \f$ sin^2(f/f_*)\f$
 double noise_transfer_function(double x);
 ///@}
-
-/**
- \brief Wrapper to `GSL` cubic spline interpolation routines.
-
- @param[in] N number of spline points
- @param[in] x vector of independent-variable spline points
- @param[in] y vector of dependent-variable spline points
- @param[in] Nint number of interpolated points
- @param[out] xint vector of interpolated independent-variable points
- @param[out] yint vector of interpolated dependent-variable points
- */
-void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint);
 
 /**
  \brief Print full-spectrum noise model to compare against other models/documents.

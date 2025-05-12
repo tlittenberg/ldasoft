@@ -29,13 +29,12 @@ struct GalaxyModulation
     double ***XZI;
     double *t;
 
-    gsl_spline *XX_spline;
-    gsl_spline *YY_spline;
-    gsl_spline *ZZ_spline;
-    gsl_spline *XY_spline;
-    gsl_spline *XZ_spline;
-    gsl_spline *YZ_spline;
-    gsl_interp_accel *acc;
+    struct CubicSpline *XX_spline;
+    struct CubicSpline *YY_spline;
+    struct CubicSpline *ZZ_spline;
+    struct CubicSpline *XY_spline;
+    struct CubicSpline *XZ_spline;
+    struct CubicSpline *YZ_spline;
 
     long Npix;
     double *skytheta;

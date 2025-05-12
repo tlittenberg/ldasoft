@@ -206,7 +206,7 @@ void ucb_waveform(struct Orbit *orbit, char *format, double T, double t0, double
  @param[out] X,Y,Z wavelet domain TDI channels
  */
 void ucb_waveform_wavelet(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z);
-void ucb_waveform_wavelet_het(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z);
+void ucb_waveform_wavelet_tab(struct Orbit *orbit, struct Wavelets *wdm, double Tobs, double t0, double *params, int *wavelet_list, int *Nwavelet, double *X, double *Y, double *Z);
 
 
 #endif /* ucb_waveform_h */

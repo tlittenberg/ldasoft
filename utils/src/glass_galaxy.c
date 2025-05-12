@@ -81,7 +81,7 @@ static void plms(double ***Plm, double *zlist)
     {
         for(m=0; m <= l; m++)
         {
-            x = (double)(2*l+1)/(4.0*M_PI)*gsl_sf_gamma((double)(l-m+1))/gsl_sf_gamma((double)(l+m+1));
+            x = (double)(2*l+1)/(4.0*M_PI)*tgamma((double)(l-m+1))/tgamma((double)(l+m+1));
             prefac[l][m] =  sqrt(x);
         }
     }
@@ -326,13 +326,12 @@ void initialize_galaxy_modulation(struct GalaxyModulation *gm, struct Wavelets *
     free(sa);
     
     //interpolants for modulation pattern
-    gm->XX_spline = gsl_spline_alloc (gsl_interp_cspline, gm->N);
-    gm->YY_spline = gsl_spline_alloc (gsl_interp_cspline, gm->N);
-    gm->ZZ_spline = gsl_spline_alloc (gsl_interp_cspline, gm->N);
-    gm->XY_spline = gsl_spline_alloc (gsl_interp_cspline, gm->N);
-    gm->XZ_spline = gsl_spline_alloc (gsl_interp_cspline, gm->N);
-    gm->YZ_spline = gsl_spline_alloc (gsl_interp_cspline, gm->N);
-    gm->acc       = gsl_interp_accel_alloc();
+    gm->XX_spline = alloc_cubic_spline(gm->N);
+    gm->YY_spline = alloc_cubic_spline(gm->N);
+    gm->ZZ_spline = alloc_cubic_spline(gm->N);
+    gm->XY_spline = alloc_cubic_spline(gm->N);
+    gm->XZ_spline = alloc_cubic_spline(gm->N);
+    gm->YZ_spline = alloc_cubic_spline(gm->N);
 
 
     double theta, phi;
@@ -714,12 +713,12 @@ void galaxy_modulation(struct GalaxyModulation *gm, double *params)
         xz[i] /= av;
     }
     
-    gsl_spline_init(gm->XX_spline, gm->t, xx, gm->N);
-    gsl_spline_init(gm->YY_spline, gm->t, yy, gm->N);
-    gsl_spline_init(gm->ZZ_spline, gm->t, zz, gm->N);
-    gsl_spline_init(gm->XY_spline, gm->t, xy, gm->N);
-    gsl_spline_init(gm->XZ_spline, gm->t, xz, gm->N);
-    gsl_spline_init(gm->YZ_spline, gm->t, yz, gm->N);
+    initialize_cubic_spline(gm->XX_spline, gm->t, xx);
+    initialize_cubic_spline(gm->YY_spline, gm->t, yy);
+    initialize_cubic_spline(gm->ZZ_spline, gm->t, zz);
+    initialize_cubic_spline(gm->XY_spline, gm->t, xy);
+    initialize_cubic_spline(gm->XZ_spline, gm->t, xz);
+    initialize_cubic_spline(gm->YZ_spline, gm->t, yz);
 
     FILE *out = fopen("modulation.dat", "w");
     for(int i=0; i<gm->N; i++)

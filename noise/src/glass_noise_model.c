@@ -188,15 +188,13 @@ void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_
     /* find location in data vector of knot */
     double T = 1./(psd->f[1] - psd->f[0]);
 
-    gsl_spline **cspline = malloc(model->Nchannel*sizeof(gsl_spline *));
-    gsl_interp_accel **acc = malloc(model->Nchannel*sizeof(gsl_interp_accel *));
+    struct CubicSpline **cspline = malloc(model->Nchannel*sizeof(struct CubicSpline *));
     
     /* have to recompute the spline everywhere (derivatives on boundary) */
     for(int n=0; n<model->Nchannel; n++)
     {
-        cspline[n] = gsl_spline_alloc(gsl_interp_akima, spline->N);
-        acc[n] = gsl_interp_accel_alloc();
-        gsl_spline_init(cspline[n],spline->f,spline->C[n][n],spline->N);
+        cspline[n] = alloc_cubic_spline(spline->N);
+        initialize_cubic_spline(cspline[n], spline->f, spline->C[n][n]);
     }
     
     int imin = (int)((spline->f[min_knot]-psd->f[0])*T);
@@ -207,7 +205,7 @@ void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_
     {
         for(int n=0; n<model->Nchannel; n++)
         {
-            psd->C[n][n][i]=gsl_spline_eval(cspline[n],psd->f[i],acc[n]);
+            psd->C[n][n][i]=spline_interpolation(cspline[n],psd->f[i]);
             
             /*
              apply transfer function
@@ -221,12 +219,9 @@ void update_spline_noise_model(struct SplineModel *model, int new_knot, int min_
 
     for(int n=0; n<model->Nchannel; n++)
     {
-        gsl_spline_free(cspline[n]);
-        gsl_interp_accel_free(acc[n]);
+        free_cubic_spline(cspline[n]);
     }
     free(cspline);
-    free(acc);
-
 }
 
 
@@ -236,7 +231,7 @@ void generate_spline_noise_model(struct SplineModel *model)
     struct Noise *spline = model->spline;
     
     for(int i=0; i<model->Nchannel; i++)
-        CubicSplineGSL(spline->N, spline->f, spline->C[i][i], psd->N, psd->f, psd->C[i][i]);
+        CubicSplineGLASS(spline->N, spline->f, spline->C[i][i], psd->N, psd->f, psd->C[i][i]);
 
     //set a floor on Sn so likelihood doesn't go crazy
     for(int n=0; n<psd->N; n++)
@@ -592,12 +587,12 @@ void generate_full_dynamic_covariance_matrix(struct Wavelets *wdm, struct Instru
             full->C[1][2][k] = inst->psd->C[1][2][j-jmin];
 
             //modulated galactic foreground
-            full->C[0][0][k] += conf->psd->C[0][0][j-jmin]*gsl_spline_eval(conf->modulation->XX_spline, t, conf->modulation->acc);
-            full->C[1][1][k] += conf->psd->C[1][1][j-jmin]*gsl_spline_eval(conf->modulation->YY_spline, t, conf->modulation->acc);
-            full->C[2][2][k] += conf->psd->C[2][2][j-jmin]*gsl_spline_eval(conf->modulation->ZZ_spline, t, conf->modulation->acc);
-            full->C[0][1][k] += conf->psd->C[0][1][j-jmin]*gsl_spline_eval(conf->modulation->XY_spline, t, conf->modulation->acc); 
-            full->C[0][2][k] += conf->psd->C[0][2][j-jmin]*gsl_spline_eval(conf->modulation->XZ_spline, t, conf->modulation->acc); 
-            full->C[1][2][k] += conf->psd->C[1][2][j-jmin]*gsl_spline_eval(conf->modulation->YZ_spline, t, conf->modulation->acc); 
+            full->C[0][0][k] += conf->psd->C[0][0][j-jmin]*spline_interpolation(conf->modulation->XX_spline, t);
+            full->C[1][1][k] += conf->psd->C[1][1][j-jmin]*spline_interpolation(conf->modulation->YY_spline, t);
+            full->C[2][2][k] += conf->psd->C[2][2][j-jmin]*spline_interpolation(conf->modulation->ZZ_spline, t);
+            full->C[0][1][k] += conf->psd->C[0][1][j-jmin]*spline_interpolation(conf->modulation->XY_spline, t);
+            full->C[0][2][k] += conf->psd->C[0][2][j-jmin]*spline_interpolation(conf->modulation->XZ_spline, t);
+            full->C[1][2][k] += conf->psd->C[1][2][j-jmin]*spline_interpolation(conf->modulation->YZ_spline, t);
 
             //noise covariance matrix is symmetric
             full->C[1][0][k] = full->C[0][1][k]; 

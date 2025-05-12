@@ -7,6 +7,128 @@
 
 #include "glass_utils.h"
 
+struct CubicSpline* alloc_cubic_spline(int N)
+{
+    struct CubicSpline *spline = malloc(sizeof(struct CubicSpline));
+    spline->N    = N;
+    spline->nmin = 0;
+    spline->nmax = 1;
+    spline->x    = malloc(spline->N*sizeof(double));
+    spline->y    = malloc(spline->N*sizeof(double));
+    spline->d2y  = malloc(spline->N*sizeof(double));
+    
+    spline->spline = gsl_spline_alloc(gsl_interp_cspline, N);
+    spline->acc = gsl_interp_accel_alloc();
+
+    return spline;
+}
+
+void initialize_cubic_spline(struct CubicSpline *spline, double *x, double *y)
+{
+    
+    //pack interpolant data {x,y} into spline structure
+    memcpy(spline->x, x, spline->N*sizeof(double));
+    memcpy(spline->y, y, spline->N*sizeof(double));
+    
+    //compute interpolant coefficients
+    gsl_spline_init(spline->spline, spline->x, spline->y, spline->N);
+    spline_coefficients(spline);
+    
+}
+
+void free_cubic_spline(struct CubicSpline *spline)
+{
+    free(spline->x);
+    free(spline->y);
+    free(spline->d2y);
+    
+    gsl_spline_free(spline->spline);
+    gsl_interp_accel_free(spline->acc);
+    
+    free(spline);
+}
+
+void spline_coefficients(struct CubicSpline *spline)
+{
+    int N = spline->N;
+    double *x = spline->x;
+    double *y = spline->y;
+    double *d2y = spline->d2y;
+    
+    double *temp = calloc(N,sizeof(double));
+    
+    // Implicitly set derivitives at boundary to 0
+    d2y[0] = d2y[N-1] = 0.0;
+    
+    // Iteratively solve the tridiagonal system of equations
+    for(int i=1; i<N-1; i++)
+    {
+        double sig = (x[i] - x[i-1])/(x[i+1] - x[i-1]);
+        double p = sig*d2y[i-1] + 2.0;
+        
+        d2y[i] = (sig - 1.0)/p;
+
+        double u = (y[i+1] - y[i])/(x[i+1] - x[i]) - (y[i] - y[i-1])/(x[i] - x[i-1]);
+        
+        temp[i] = (6.0*u/(x[i+1] - x[i-1]) - sig*temp[i-1])/p;
+
+    }
+    for(int i=N-2; i>=0; i--) d2y[i] = d2y[i]*d2y[i+1] + temp[i];
+
+    free(temp);
+}
+
+double spline_interpolation(struct CubicSpline *spline, double x)
+{
+    if(GSL_SPLINE)
+    {
+        return gsl_spline_eval(spline->spline, x, spline->acc);
+    }
+    else
+    {
+        // only search for which interval contains x if needed
+        if(x<spline->x[spline->nmin] || x > spline->x[spline->nmax] )
+        {
+            spline->nmin = binary_search(spline->x,0,spline->N,x);
+            spline->nmax = spline->nmin + 1;
+        }
+        
+        if(spline->nmin<0 || spline->nmax>=spline->N)
+        {
+            printf("Error in spline interpolation: x is out of bounds.  %g -> [%g,%g]\n",x,spline->x[0],spline->x[spline->N-1]);
+            abort();
+        }
+        
+        double x1 = spline->x[spline->nmin];
+        double x2 = spline->x[spline->nmax];
+        
+        double y1 = spline->y[spline->nmin];
+        double y2 = spline->y[spline->nmax];
+        
+        double d2y1 = spline->d2y[spline->nmin];
+        double d2y2 = spline->d2y[spline->nmax];
+        
+        double dx = x2 - x1;
+        
+        double a = (x2 - x)/dx;
+        double b = (x - x1)/dx;
+        double c = (a*a*a - a)*(dx*dx)/6.0;
+        double d = (b*b*b - b)*(dx*dx)/6.0;
+        
+        return a*y1 + b*y2 + c*d2y1 + d*d2y2;
+    }
+}
+
+double spline_interpolation_deriv(struct CubicSpline *spline, double x)
+{
+    return gsl_spline_eval_deriv(spline->spline, x, spline->acc);
+}
+
+double spline_interpolation_deriv2(struct CubicSpline *spline, double x)
+{
+    return gsl_spline_eval_deriv2(spline->spline, x, spline->acc);
+}
+
 void invert_noise_covariance_matrix(struct Noise *noise)
 {
     int X,Y,Z,A,E;
@@ -125,6 +247,9 @@ double wavelet_nwip(double *a, double *b, double *invC, int *list, int N)
 // otherwise -1
 int binary_search(double *array, int nmin, int nmax, double x)
 {
+    //catch if x exactly matches array[nmin]
+    if(x==array[nmin]) return nmin;
+    
     int next;
     if(nmax>nmin)
     {
@@ -373,81 +498,217 @@ void detrend(double *data, int N, int Navg)
     free(trend);
 }
 
-void unpack_gsl_rft_output(double *x, double *x_gsl, int N)
+void unpack_fft_output(double *x, double *x_packed, int N)
 {
-    x[0] = x_gsl[0];
-    x[1] = 0.0;
-
-    for(int n=1; n<N/2; n++)
-    {
-        x[2*n]   = x_gsl[2*n-1];
-        x[2*n+1] = x_gsl[2*n];
-    }
-}
-
-void unpack_gsl_fft_output(double *x, double *x_gsl, int N)
-{
-    x[0] = x_gsl[0];
+    x[0] = x_packed[0];
     x[1] = 0.0;
     for(int n=1; n<N/2; n++)
     {
-        x[2*n]   = x_gsl[n];
-        x[2*n+1] = x_gsl[N-n];
+        x[2*n]   = x_packed[n];
+        x[2*n+1] = x_packed[N-n];
     }
 }
 
-void pack_gsl_fft_input(double *x, double *x_gsl, int N)
+
+void glass_forward_complex_fft(double *data, int N)
 {
-    x_gsl[0]  = x[0];
-    x_gsl[N/2] = 0.0;
-    for(int n=1; n<N/2; n++)
+    //============= GSL RADIX2 =============//
+    //gsl_fft_complex_radix2_forward (data, 1, N);
+   
+    
+    //=========== GSL MIXED RADIX ==========//
+    if(GSL_FFT)
     {
-        x_gsl[n] = x[2*n];
-        x_gsl[N-n] = x[2*n+1];
+        // work space for GSL Fourier Transforms
+        gsl_fft_complex_wavetable *wavetable = gsl_fft_complex_wavetable_alloc(N);
+        gsl_fft_complex_workspace *workspace = gsl_fft_complex_workspace_alloc(N);
+        
+        // the FFT
+        gsl_fft_complex_forward(data, 1, N, wavetable, workspace);
+        
+        // clean up
+        gsl_fft_complex_wavetable_free(wavetable);
+        gsl_fft_complex_workspace_free(workspace);
+    }
+    //=============== KISSFFT ==============//
+    else
+    {
+        kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
+        kiss_fft_cpx timedata[N];
+        kiss_fft_cpx freqdata[N];
+        
+        for(int i=0; i<N; i++)
+        {
+            timedata[i].r = data[2*i];
+            timedata[i].i = data[2*i+1];
+        }
+        
+        // Perform the forward FFT
+        kiss_fft(cfg, timedata, freqdata);
+        
+        
+        for(int i=0; i<N; i++)
+        {
+            data[2*i]   = freqdata[i].r;
+            data[2*i+1] = freqdata[i].i;
+        }
+        
+        
+        // Clean up and free memory
+        kiss_fft_free(cfg);
     }
 }
 
-void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint)
+void glass_inverse_complex_fft(double *data, int N)
 {
-    int n;
+    //=========== GSL MIXED RADIX ==========//
+    if(GSL_FFT)
+    {
+        gsl_fft_complex_wavetable *wavetable = gsl_fft_complex_wavetable_alloc(N);
+        gsl_fft_complex_workspace *workspace = gsl_fft_complex_workspace_alloc(N);
+        
+        gsl_fft_complex_inverse(data, 1, N, wavetable, workspace);
+        for(int i=0; i<2*N; i++) data[i] *= N;
+        
+        gsl_fft_complex_wavetable_free(wavetable);
+        gsl_fft_complex_workspace_free(workspace);
+    }
+    //=============== KISSFFT ==============//
+    else
+    {
+        kiss_fft_cfg cfg = kiss_fft_alloc(N, 1, NULL, NULL); // 1 indicates backward FFT;
+        kiss_fft_cpx timedata[N];
+        kiss_fft_cpx freqdata[N];
+        
+        for(int i=0; i<N; i++)
+        {
+            freqdata[i].r = data[2*i];
+            freqdata[i].i = data[2*i+1];
+        }
+        
+        // Perform the inverse FFT
+        kiss_fft(cfg, freqdata, timedata);
+        
+        
+        for(int i=0; i<N; i++)
+        {
+            data[2*i]   = timedata[i].r;
+            data[2*i+1] = timedata[i].i;
+        }
+        
+        // Clean up and free memory
+        kiss_fft_free(cfg);
+    }
+}
+
+void glass_forward_real_fft(double *data, int N)
+{
+    //=========== GSL MIXED RADIX ==========//
+    if(GSL_FFT)
+    {
+        // get workspace
+        double *data_gsl = double_vector(N);
+        gsl_fft_real_wavetable * wavetable = gsl_fft_real_wavetable_alloc (N);
+        gsl_fft_real_workspace * workspace = gsl_fft_real_workspace_alloc (N);
+        
+        memcpy(data_gsl,data,N*sizeof(double));
+        
+        // perform the rfft
+        gsl_fft_real_transform(data_gsl, 1, N, wavetable, workspace);
+        
+        // unpack gsl arrays to the glass format
+        data[0] = data_gsl[0];
+        data[1] = 0.0;
+
+        for(int n=1; n<N/2; n++)
+        {
+            data[2*n]   = data_gsl[2*n-1];
+            data[2*n+1] = data_gsl[2*n];
+        }
+        
+        //clean up
+        gsl_fft_real_wavetable_free (wavetable);
+        gsl_fft_real_workspace_free (workspace);
+        free_double_vector(data_gsl);
+    }
     
-    /* set up GSL spline */
+    //=============== KISSFFT ==============//
+    else
+    {
+        kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
+        kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
+        kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
+        
+        for(int i=0; i<N; i++)  timedata[i] = data[i];
+        
+        // Perform the rFFT
+        kiss_fftr(cfg, timedata, freqdata);
+        
+        
+        for(int i=0; i<N/2; i++)
+        {
+            data[2*i]   = freqdata[i].r;
+            data[2*i+1] = freqdata[i].i;
+        }
+        
+        
+        // Clean up and free memory
+        kiss_fftr_free(cfg);
+        free(freqdata);
+        free(timedata);
+    }
+}
+
+void glass_inverse_real_fft(double *data, int N)
+{
+    //=========== GSL MIXED RADIX ==========//
+    if(GSL_FFT)
+    {
+        gsl_fft_halfcomplex_wavetable * wavetable = gsl_fft_halfcomplex_wavetable_alloc (N);
+        gsl_fft_real_workspace        * workspace = gsl_fft_real_workspace_alloc (N);
+        
+        gsl_fft_halfcomplex_inverse(data, 1, N, wavetable, workspace);
+        
+        gsl_fft_halfcomplex_wavetable_free(wavetable);
+        gsl_fft_real_workspace_free(workspace);
+    }
     
-    /* Standard cubic spline */
-    //gsl_spline *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
+    //=============== KISSFFT ==============//
+    else
+    {
+        kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 1, NULL, NULL); // 0 indicates forward FFT;
+        kiss_fft_cpx freqdata[N/2+1];
+        kiss_fft_scalar timedata[N];
+        
+        for(int i=0; i<N/2; i++)
+        {
+            freqdata[i].r = data[2*i];
+            freqdata[i].i = data[2*i+1];
+        }
+        
+        // Perform the rFFT
+        kiss_fftr(cfg, timedata, freqdata);
+        
+        for(int i=0; i<N; i++)  data[i] = timedata[i];
+        
+        // Clean up and free memory
+        kiss_fftr_free(cfg);
+    }
+}
+
+void CubicSplineGLASS(int N, double *x, double *y, int Nint, double *xint, double *yint)
+{
     
-    /*
-     Non-rounded Akima spline with natural boundary conditions.
-     This method uses the non-rounded corner algorithm of Wodicka.
-     Akima splines are ideal for fitting curves with rapidly
-     changing second derivatives.  They are C1 differentiable.
-     See
-     https://www.gnu.org/software/gsl/doc/html/interp.html#c.gsl_interp_type.gsl_interp_akima
-     */
-    gsl_spline *cspline = gsl_spline_alloc(gsl_interp_akima, N);
-    
-    /*
-     Steffen's splines are guaranteed to be monotonic between
-     control points.  Local maxima and minima only occur at
-     at control points. See
-     https://www.gnu.org/software/gsl/doc/html/interp.html#c.gsl_interp_type.gsl_interp_steffen
-     */
-    //gsl_spline *cspline = gsl_spline_alloc(gsl_interp_steffen, N);
-    
-    gsl_interp_accel *acc = gsl_interp_accel_alloc();
+    /* set up cubic spline */
+    struct CubicSpline *cspline = alloc_cubic_spline(N);
     
     /* get derivatives */
-    int status = gsl_spline_init(cspline,x,y,N);
+    initialize_cubic_spline(cspline,x,y);
     
-    //if error, return values that will be rjected by sampler
-    if(status) for(n=0; n<Nint; n++) yint[n]=1.0;
+    /* interpolation */
+    for(int n=0; n<Nint; n++) yint[n] = spline_interpolation(cspline,xint[n]);
     
-    //otherwise proceed w/ interpolation
-    else for(n=0; n<Nint; n++) yint[n]=gsl_spline_eval(cspline,xint[n],acc);
-    
-    gsl_spline_free (cspline);
-    gsl_interp_accel_free (acc);
-    
+    free_cubic_spline(cspline);
 }
 
 static double* vector_union(double *N, double *Np, int N_size, int Np_size)
@@ -488,7 +749,7 @@ static double* vector_union(double *N, double *Np, int N_size, int Np_size)
     }
     
 
-    // resize N to and copy work space union into GSL vector    
+    // resize N to and copy work space union into  vector
     free_double_vector(N);
     double *Nnew = double_vector(Nsize);
     for(int n=0; n<Nsize; n++) Nnew[n] = N_union[n];
@@ -782,4 +1043,34 @@ void get_min_max(double *data, int N, double *min, double *max)
     *min = data_temp[0];
     *max = data_temp[N-1];
     free_double_vector(data_temp);
+}
+
+static double hypergeometric_function(double a, double b, double c, double x)
+{
+   const double TOLERANCE = 1e-8;
+   double term = a * b * x / c;
+   double value = 1.0 + term;
+   int n = 1;
+
+   while ( fabs( term ) > TOLERANCE )
+   {
+      a++, b++, c++, n++;
+      term *= a * b * x / c / n;
+      value += term;
+   }
+
+   return value;
+}
+
+static double beta_function(double a, double b)
+{
+    double logbeta = lgamma(a) + lgamma(b) - lgamma(a+b);
+    return exp(logbeta);
+}
+
+double incomplete_beta_function(double a, double b, double x)
+{
+    double F = hypergeometric_function(a, 1-b, a+1, x);
+    double B = beta_function(a,b);
+    return pow(x,a) * F / B / a;
 }

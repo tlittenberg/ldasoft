@@ -26,11 +26,6 @@
 #include <time.h>
 #include <math.h>
 
-#include <gsl/gsl_fft_halfcomplex.h>
-#include <gsl/gsl_fft_complex.h>
-#include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_spline.h>
-
 #include "glass_constants.h"
 
 #define WAVELET_FILTER_CONSTANT 4  // filter steepness in frequency

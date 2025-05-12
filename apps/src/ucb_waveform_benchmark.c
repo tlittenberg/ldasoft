@@ -36,13 +36,20 @@ static void print_wavelet_pixels(struct Wavelets *wdm, struct TDI *tdi, FILE *fp
 
 }
 
-int main(void)
+int main(int argc, char* argv[])
 {
+    if(argc==1)
+    {
+        printf("Usage: ucb_waveform_benchmark f0\n");
+        return 0;
+    }
+    
     clock_t start, end;
 
     double t0=0.0;
-    double Tobs = 31457280.0;
+    double Tobs = 31558149.8;//31457280.0;
     int N = (int)(Tobs/LISA_CADENCE);
+    printf("N = %i\n", N);
 
     /*
     Define and set up Orbit structure which contains spacecraft ephemerides
@@ -56,6 +63,9 @@ int main(void)
     struct Wavelets *wdm = malloc(sizeof(struct Wavelets));
     initialize_wavelet(wdm, Tobs);
 
+    printf("NF = %i, NT=%i\n", wdm->NF, wdm->NT);;
+
+    
     /*
      Set injection parameters for test signal
     */
@@ -64,7 +74,7 @@ int main(void)
     double m1    = 0.6*TSUN;
     double m2    = 0.7*TSUN;
     double Mc    = pow(m1*m2,3.0/5.0)/pow(m1+m2,1.0/5.0);
-    double f     = 5.0e-3;
+    double f     = (double)atof(argv[1]);//10.02e-3;
     double fdot  = 96.0*pow(M_PI,8.0/3.0)/5.0*pow(Mc,5.0/3.0)*pow(f,11.0/3.0);
     double DL    = 1.0e3*PC/CLIGHT;
     double Amp   = 4.0*pow(Mc,5.0/3.0)*pow(M_PI*f,2.0/3.0)/DL;
@@ -96,18 +106,16 @@ int main(void)
     params[7] = params[7]*(Tobs*Tobs);
 
 
-    ucb_waveform_wavelet_het(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     FILE *out = fopen("wavelet_het.dat","w");
     print_wavelet_pixels(wdm, tdi, out);
     fclose(out);
-
-    
     
     start = clock();
-    int Nwaveforms = 1000;
+    int Nwaveforms = 1;
     for(int mc=0; mc<Nwaveforms; mc++)
     {
-        ucb_waveform_wavelet_het(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+        ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     }
     end = clock();
     double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
@@ -117,7 +125,7 @@ int main(void)
     tdi = malloc(sizeof(struct TDI));
     alloc_tdi(tdi,N,3);
 
-    ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    ucb_waveform_wavelet_tab(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     out = fopen("wavelet_tab.dat","w");
     print_wavelet_pixels(wdm, tdi, out);
     fclose(out);
@@ -125,7 +133,7 @@ int main(void)
     start = clock();
     for(int mc=0; mc<Nwaveforms; mc++)
     {
-        ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+        ucb_waveform_wavelet_tab(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     }
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;

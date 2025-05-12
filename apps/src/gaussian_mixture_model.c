@@ -48,8 +48,8 @@ for(size_t n=0; n<NP; n++)
 
     for(size_t i=0; i<NMCMC; i++)
     {
-        y = gsl_vector_get(y_vec,i);
-        gsl_vector_set(samples[i]->x,n,y);
+        y = y_vec[i];
+        samples[i]->x[n] = y;
     }
 }*/
 
@@ -156,17 +156,16 @@ int main(int argc, char* argv[])
     /* allocate memory in data structures*/
     
     // raw chain samples
-    gsl_vector **params = malloc(NP*sizeof(gsl_vector *));
-    for(size_t n=0; n<NP; n++) params[n] = gsl_vector_alloc(NMCMC);
+    double **params = double_matrix(NP,NMCMC);
     
     // mapped chain samples
     struct Sample **samples = malloc(NMCMC*sizeof(struct Sample*));
     for(size_t n=0; n<NMCMC; n++)
     {
         samples[n] = malloc(sizeof(struct Sample));
-        samples[n]->x = gsl_vector_alloc(NP);
-        samples[n]->p = gsl_vector_alloc(NMODE);
-        samples[n]->w = gsl_vector_alloc(NMODE);
+        samples[n]->x = double_vector(NP);
+        samples[n]->p = double_vector(NMODE);
+        samples[n]->w = double_vector(NMODE);
     }
     
     // covariance matrices for different modes
@@ -180,9 +179,7 @@ int main(int argc, char* argv[])
     // Logistic mapping of samples onto R
     double y;
     double pmin,pmax;
-    gsl_vector **pminmax = malloc(NP*sizeof(gsl_vector *));
-    for(size_t i=0; i<NP; i++) pminmax[i] = gsl_vector_alloc(2);
-    gsl_vector *y_vec = gsl_vector_alloc(NMCMC);
+    double *y_vec = double_vector(NMCMC);
 
     /* parse chain file */
     double value;
@@ -197,42 +194,41 @@ int main(int argc, char* argv[])
         {
             sscanf(column, "%lg", &value);
             if(LFLAG[n]) value = log(value);
-            gsl_vector_set(params[n],i,value);
+            params[n][i] = value;
             column=strtok(NULL," ");
         }
     }
     
     
     /* Get max and min for each parameter */
+    int *sorted_indicies = int_vector(NMCMC);
     for(size_t n=0; n<NP; n++)
     {
-        double *temp = malloc(10*sizeof(double));
-        gsl_sort_vector_smallest(temp, 10, params[n]);
-        pmin = temp[0] - (temp[9]-temp[0]); //pad min to avoid infs in mapping
-        
-        gsl_sort_vector_largest(temp, 10, params[n]);
-        pmax = temp[0] + (temp[0]-temp[9]); //pad max to avoid infs in mapping
+        index_sort(sorted_indicies,params[n],NMCMC);
+        pmin = params[n][sorted_indicies[0]] - (params[n][sorted_indicies[9]]-params[n][sorted_indicies[0]]); //pad min to avoid infs in mapping
+        pmax = params[n][sorted_indicies[NMCMC-1]] + (params[n][sorted_indicies[NMCMC-1]]-params[n][sorted_indicies[NMCMC-10]]); //pad min to avoid infs in mapping
         
         /* cpopy max and min into each MVG structure */
         for(size_t k=0; k<NMODE; k++)
         {
-            gsl_matrix_set(modes[k]->minmax,n,0,pmin);
-            gsl_matrix_set(modes[k]->minmax,n,1,pmax);
+            modes[k]->minmax[n][0] = pmin;
+            modes[k]->minmax[n][1] = pmax;
         }
     }
+    free_int_vector(sorted_indicies);
     
     
     /* map params to R with logit function */
     for(size_t n=0; n<NP; n++)
     {
-        double pmin = gsl_matrix_get(modes[0]->minmax,n,0);
-        double pmax = gsl_matrix_get(modes[0]->minmax,n,1);
-        logit_mapping(params[n], y_vec, pmin, pmax);
+        double pmin = modes[0]->minmax[n][0];
+        double pmax = modes[0]->minmax[n][1];
+        logit_mapping(params[n], y_vec, pmin, pmax, NMCMC);
 
         for(size_t i=0; i<NMCMC; i++)
         {
-            y = gsl_vector_get(y_vec,i);
-            gsl_vector_set(samples[i]->x,n,y);
+            y = y_vec[i];
+            samples[i]->x[n] = y;
         }
     }
     
@@ -242,7 +238,7 @@ int main(int argc, char* argv[])
     {
         for(size_t n=0; n<NP; n++)
         {
-            fprintf(scatter, "%lg ", gsl_vector_get(samples[i]->x,n));
+            fprintf(scatter, "%lg ", samples[i]->x[n]);
         }
         fprintf(scatter,"\n");
     }
@@ -250,7 +246,7 @@ int main(int argc, char* argv[])
 
     /* The main Gaussian Mixture Model with Expectation Maximization function */
     double logL, BIC;
-    if(GMM_with_EM(modes,samples,NMCMC,NSTEP,&r,&logL,&BIC)) return 1;
+    if(GMM_with_EM(modes,samples, NP, NMODE, NMCMC,NSTEP,&r,&logL,&BIC)) return 1;
     
 
     /* Write GMM results to binary for pick up by other processes */
@@ -267,7 +263,7 @@ int main(int argc, char* argv[])
     fclose(fptr);
 
     
-    print_model(modes, samples, NMCMC, logL, BIC, NMODE);
+    print_model(modes, samples, NP, NMODE, NMCMC, logL, BIC, NMODE);
 
     
     for(size_t n=0; n<NMODE; n++) fprintf(stdout,"%i %g\n",(int)n, modes[n]->p);
@@ -276,9 +272,9 @@ int main(int argc, char* argv[])
     /* clean up */
     for(size_t n=0; n<NMCMC; n++)
     {
-        gsl_vector_free(samples[n]->x);
-        gsl_vector_free(samples[n]->p);
-        gsl_vector_free(samples[n]->w);
+        free_double_vector(samples[n]->x);
+        free_double_vector(samples[n]->p);
+        free_double_vector(samples[n]->w);
         free(samples[n]);
     }
     free(samples);

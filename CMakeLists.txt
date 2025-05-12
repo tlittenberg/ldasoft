@@ -27,9 +27,7 @@ find_package(GSL REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(MPI REQUIRED)
-find_package(kissfft REQUIRED)
-#find_package(MBH)
-
+find_package(KISSFFT REQUIRED)
 
 # set cflags
 if(APPLE)

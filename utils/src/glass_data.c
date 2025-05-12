@@ -588,7 +588,6 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct TDI *tdi_dwt, struct Fl
     tukey(Ytime, alpha, N);
     tukey(Ztime, alpha, N);
     
-    
     /* Fourier transform time-domain TDI channels */
     for(int n=0; n<N; n++)
     {
@@ -596,14 +595,11 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct TDI *tdi_dwt, struct Fl
         Y[n] = Ytime[n];
         Z[n] = Ztime[n];
     }
+
+    glass_forward_real_fft(X,N);
+    glass_forward_real_fft(Y,N);
+    glass_forward_real_fft(Z,N);
     
-    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (N);
-    gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (N);
-
-    gsl_fft_real_transform (X, 1, N, real, work);
-    gsl_fft_real_transform (Y, 1, N, real, work);
-    gsl_fft_real_transform (Z, 1, N, real, work);
-
     /* Normalize FD data */
     double rft_norm = sqrt(Tobs)/(double)N;
     
@@ -614,16 +610,10 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct TDI *tdi_dwt, struct Fl
     
     for(int n=0; n<N; n++)
     {
-        X[n] *= rft_norm;
-        Y[n] *= rft_norm;
-        Z[n] *= rft_norm;
+        tdi->X[n] = X[n]*rft_norm;
+        tdi->Y[n] = Y[n]*rft_norm;
+        tdi->Z[n] = Z[n]*rft_norm;
     }
-        
-    /* unpack GSL-formatted arrays to the way GLASS expects them */
-    unpack_gsl_rft_output(tdi->X, X, N);
-    unpack_gsl_rft_output(tdi->Y, Y, N);
-    unpack_gsl_rft_output(tdi->Z, Z, N);
-    
     
     /* lets get rid of the high frequency ucbs */
     if(flags->no_ucb_hi)
@@ -658,26 +648,22 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct TDI *tdi_dwt, struct Fl
         tukey(Ygal, alpha, N);
         tukey(Zgal, alpha, N);
 
-        gsl_fft_real_transform (Xgal, 1, N, real, work);
-        gsl_fft_real_transform (Ygal, 1, N, real, work);
-        gsl_fft_real_transform (Zgal, 1, N, real, work);
-        
-        for(int n=0; n<N; n++)
-        {
-            Xgal[n] *= rft_norm;
-            Ygal[n] *= rft_norm;
-            Zgal[n] *= rft_norm;
-        }
+        glass_forward_real_fft(Xgal, N);
+        glass_forward_real_fft(Ygal, N);
+        glass_forward_real_fft(Zgal, N);
+
         
         /* Allocate data->tdi structure for Fourier transform output */
         struct TDI *tdi_gal = malloc(sizeof(struct TDI));
         alloc_tdi(tdi_gal, N, N_TDI_CHANNELS);
         tdi_gal->delta = 1./Tobs;
 
-        /* unpack GSL-formatted arrays to the way GLASS expects them */
-        unpack_gsl_rft_output(tdi_gal->X, Xgal, N);
-        unpack_gsl_rft_output(tdi_gal->Y, Ygal, N);
-        unpack_gsl_rft_output(tdi_gal->Z, Zgal, N);
+        for(int n=0; n<N; n++)
+        {
+            tdi_gal->X[n] = Xgal[n] * rft_norm;
+            tdi_gal->Y[n] = Ygal[n] * rft_norm;
+            tdi_gal->Z[n] = Zgal[n] * rft_norm;
+        }
 
         /* remove hi-f binaries */
         for(int n=0; n<N/2; n++)
@@ -734,8 +720,6 @@ void ReadHDF5(struct Data *data, struct TDI *tdi, struct TDI *tdi_dwt, struct Fl
     }
     
     /* Free memory */
-    gsl_fft_real_wavetable_free (real);
-    gsl_fft_real_workspace_free (work);
     free_tdi(tdi_td);
     free(X);
     free(Y);
@@ -994,8 +978,8 @@ void GetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags)
         double *fint = malloc(data->NFFT*sizeof(double));
         for(int n=0; n<data->NFFT; n++) fint[n] = data->fmin + (double)(n)/data->T;
 
-        CubicSplineGSL(lines, f, SnA, data->NFFT, fint, data->noise->C[0][0]);
-        CubicSplineGSL(lines, f, SnE, data->NFFT, fint, data->noise->C[1][1]);
+        CubicSplineGLASS(lines, f, SnA, data->NFFT, fint, data->noise->C[0][0]);
+        CubicSplineGLASS(lines, f, SnE, data->NFFT, fint, data->noise->C[1][1]);
         
         free(f);
         free(SnA);

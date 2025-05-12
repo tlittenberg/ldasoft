@@ -13,6 +13,76 @@
 #ifndef math_h
 #define math_h
 
+#define GSL_FFT 1
+#include <gsl/gsl_fft_real.h>
+#include <gsl/gsl_fft_complex.h>
+#include <gsl/gsl_fft_halfcomplex.h>
+
+#define GSL_SPLINE 1
+#include <gsl/gsl_spline.h>
+
+#include <gsl/gsl_sf_gamma.h>
+
+
+struct CubicSpline
+{
+    int N;       //!<Number of grid points to be interpolated
+    int nmin;    //!<Stored lower index of last call to interpolation
+    int nmax;    //!<Stored upper index of last call to interpolation
+    double *x;   //!<Independent variable of function to be interpolated
+    double *y;   //!<Dependent variable of function to be interpolated
+    double *d2y; //!<Second derivitives of function to be interpolated
+    
+    gsl_spline *spline;//!
+    gsl_interp_accel *acc;//!
+};
+
+struct CubicSpline* alloc_cubic_spline(int N);
+
+/**
+ \brief Computes cubic spline coefficients for input data {x,y}
+ 
+ @param[in,out] spline cubic spline structure
+ @param[in] x independent variable of interpolant
+ @param[in] y dependent variable of interpolant
+*/
+void initialize_cubic_spline(struct CubicSpline *spline, double *x, double *y);
+
+void free_cubic_spline(struct CubicSpline *spline);
+
+/**
+\brief GLASS implementation of solving for cubic spline interpolation coefficients
+ 
+ Uses the tridiagonal algorithm to compute the second derivatives d2y of the input data y=f(x).
+ It implicitly assumes 0 2nd deriviative at endpoints.
+ 
+ Returns interpolated value y = f(x).
+ 
+ @param[in] spline->N number of spline points
+ @param[in] spline->x vector of independent-variable grid points
+ @param[in] spline->y vector of dependent-variable grid points
+ @param[out] spline->d2y second derivatives of \f$ f(x)\f$
+
+ */
+void spline_coefficients(struct CubicSpline *spline);
+
+/**
+\brief GLASS implementation of cubic spline interpolation
+ 
+ Returns interpolated value y = f(x).
+ 
+ @param[in] spline->N number of spline points
+ @param[in] spline->x vector of independent-variable grid points
+ @param[in] spline->y vector of dependent-variable grid points
+ @param[in] spline->d2y second derivatives of \f$ f(x)\f$
+ @param[in] x value of independent-variable where interpolated value is neede
+ @return interpolated value \f$ y = f(x)\f$
+
+ */
+double spline_interpolation(struct CubicSpline *spline, double x);
+double spline_interpolation_deriv(struct CubicSpline *spline, double x);
+double spline_interpolation_deriv2(struct CubicSpline *spline, double x);
+
 /**
  \brief Analytic in-place inversion of noise covariance matrix
  
@@ -72,9 +142,24 @@ void detrend(double *data, int N, int Navg);
  @param x_gsl[in] input array with gsl-formatted courier coefficients
  @param N[in] size of arrays
  */
-void unpack_gsl_rft_output(double *x, double *x_gsl, int N);
-void unpack_gsl_fft_output(double *x, double *x_gsl, int N);
-void pack_gsl_fft_input(double *x, double *x_gsl, int N);
+//void unpack_gsl_rft_output(double *x, double *x_gsl, int N);
+//void unpack_gsl_fft_output(double *x, double *x_gsl, int N);
+//void pack_gsl_fft_input(double *x, double *x_gsl, int N);
+
+void unpack_fft_output(double *x, double *x_packed, int N);
+
+/**
+\brief Wrappers to FFT functions
+ 
+ In-place forward and reverse mixed radix Fourier transforms
+  
+ @param data[in/out] array to be transformed
+ @param N[in] size of arrays
+ */
+void glass_forward_complex_fft(double *data, int N);
+void glass_inverse_complex_fft(double *data, int N);
+void glass_forward_real_fft(double *data, int N);
+void glass_inverse_real_fft(double *data, int N);
 
 /**
 \brief Compute power of complex amplitude in single element of data
@@ -149,7 +234,7 @@ void decompose_matrix(double **matrix, double **inverse, double **L, double *det
 void matrix_multiply(double **A, double **B, double **AB, int N);
 
 /**
-\brief Wrapper to GSL Cholesky decomposition routine
+\brief Wrapper to LAPACK Cholesky decomposition routine
    
  Copies matrices into `gsl_matrix` structures and then fills the lower half of \f$L\f$ with the result.  GSL returns the original matrix in the upper half of \f$L\f$. We replace the upper half of \f$L\f$ with all 0s. Contents of \f$A\f$ are unaltered.
  
@@ -160,7 +245,7 @@ void matrix_multiply(double **A, double **B, double **AB, int N);
 void cholesky_decomp(double **A, double **L, int N);
 
 /**
- \brief Wrapper to `GSL` cubic spline interpolation routines.
+ \brief Wrapper to `GLASS` cubic spline interpolation routines.
 
  @param[in] N number of spline points
  @param[in] x vector of independent-variable spline points
@@ -169,7 +254,7 @@ void cholesky_decomp(double **A, double **L, int N);
  @param[out] xint vector of interpolated independent-variable points
  @param[out] yint vector of interpolated dependent-variable points
  */
-void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint);
+void CubicSplineGLASS(int N, double *x, double *y, int Nint, double *xint, double *yint);
 
 /**
 \brief GLASS implementation of DBSCAN clustering algorithm
@@ -254,5 +339,18 @@ double get_quantile_from_sorted_data(double *data, int N, double q);
  */
 void get_min_max(double *data, int N, double *min, double *max);
 
+/**
+ \brief GLASS implementation of the normalized incomplete Beta function
+ 
+ which is \f$ I_x(a,b) = B_x(a,b) / B(a,b) \f$ computed using the relation
+ \f$ I_x(a,b,x) = (1/a) x^a {}_2F_1(a,1-b,a+1,x)/B(a,b) \f$
+ 
+ @param[in] a
+ @param[in] b
+ @param[in] x
+ @return \f$ I_x(a,b) \f$
+ */
+double incomplete_beta_function(double a, double b, double x);
 
 #endif /* math_h */
+

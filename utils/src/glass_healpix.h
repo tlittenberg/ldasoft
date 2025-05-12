@@ -27,5 +27,4 @@
  *---------------------------------------------------------------------------*/
 
 
-void ang2pix_ring( const long nside, double theta, double phi, long *ipix);
 void pix2ang_ring( long nside, long ipix, double *theta, double *phi);

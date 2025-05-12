@@ -40,7 +40,7 @@ static double phitilde(double om, double insDOM, double A, double B)
     if(fabs(om) >= A && fabs(om) < A+B)
     {
         x = (fabs(om)-A)/B;
-        y = gsl_sf_beta_inc(WAVELET_FILTER_CONSTANT, WAVELET_FILTER_CONSTANT, x);
+        y = incomplete_beta_function(WAVELET_FILTER_CONSTANT, WAVELET_FILTER_CONSTANT, x);
         z = insDOM*cos(y*M_PI/2.0);
     }
     
@@ -95,20 +95,15 @@ static void wavelet(struct Wavelets *wdm, int m, double *wave)
         
     }
     
-    gsl_fft_complex_wavetable * comp = gsl_fft_complex_wavetable_alloc (N);
-    gsl_fft_complex_workspace * work = gsl_fft_complex_workspace_alloc (N);
-    gsl_fft_complex_backward(DE, 1, N, comp, work);
+    glass_inverse_complex_fft(DE,N);
 
     for(int i=0; i < N/2; i++)
     {
         wave[i] = REAL(DE,N/2+i)/wdm->norm;
         wave[i+N/2] = REAL(DE,i)/wdm->norm;
     }
-    
-    gsl_fft_complex_wavetable_free (comp);
-    gsl_fft_complex_workspace_free (work);
+
     free(DE);
-    
 }
 
 static void wavelet_window_time(struct Wavelets *wdm)
@@ -133,10 +128,8 @@ static void wavelet_window_time(struct Wavelets *wdm)
         IMAG(DX,j) =  0.0;
     }
         
-    gsl_fft_complex_wavetable * comp = gsl_fft_complex_wavetable_alloc (wdm->N);
-    gsl_fft_complex_workspace * work = gsl_fft_complex_workspace_alloc (wdm->N);
-    gsl_fft_complex_backward(DX, 1, wdm->N, comp, work);
-    
+    glass_inverse_complex_fft(DX, wdm->N);
+
     wdm->window = (double*)malloc(sizeof(double)* (wdm->N));
     for(int i=0; i < wdm->N/2; i++)
     {
@@ -146,8 +139,6 @@ static void wavelet_window_time(struct Wavelets *wdm)
     
     wdm->norm = sqrt((double)wdm->N * wdm->cadence / wdm->domega);
 
-    gsl_fft_complex_wavetable_free (comp);
-    gsl_fft_complex_workspace_free (work);
     free(DX);
 }
 
@@ -283,7 +274,6 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
     
     //windowed data packets
     double *wdata     = double_vector(wdm->N);
-    double *wdata_gsl = double_vector(wdm->N);
 
     //wavelet wavepacket transform of the signal
     double **wave = double_matrix(wdm->NT,wdm->NF);
@@ -293,11 +283,7 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
     
     //normalization fudge factor
     fac *= sqrt(wdm->cadence)/2;
-    
-    //workspace for RFTs
-    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (wdm->N);
-    gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (wdm->N);
-    
+        
     //do the wavelet transform by convolving data w/ window and FFT
     for(int i=0; i<wdm->NT; i++)
     {
@@ -309,12 +295,9 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
             if(n >= ND) n -= ND;  // periodically wrap the data
             wdata[j] = data[n] * wdm->window[j];  // apply the window
         }
-        
-        for(int n=0; n<wdm->N; n++) wdata_gsl[n]=wdata[n];
-        
-        gsl_fft_real_transform(wdata_gsl, 1, wdm->N, real, work);
-        unpack_gsl_rft_output(wdata,wdata_gsl,wdm->N);
-        
+                
+        glass_forward_real_fft(wdata, wdm->N);
+
         //unpack Fourier transform
         wave[i][0] = wdata[0];
         for(int j=1; j<wdm->NF; j++)
@@ -341,10 +324,7 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
     }
     
     free_double_vector(wdata);
-    free_double_vector(wdata_gsl);
     free_double_matrix(wave,wdm->NT);
-    gsl_fft_real_wavetable_free (real);
-    gsl_fft_real_workspace_free (work);
 }
 
 void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
@@ -357,9 +337,6 @@ void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
     double Tobs   = N*wdm->cadence;
     double sign;
 
-    //work space for GSL Fourier Transforms
-    gsl_fft_complex_wavetable *wavetable = gsl_fft_complex_wavetable_alloc(wdm->NT);
-    gsl_fft_complex_workspace *workspace = gsl_fft_complex_workspace_alloc(wdm->NT);
 
     for(int i=0; i<=wdm->NT/2; i++)
     {
@@ -389,8 +366,8 @@ void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
             }
         }
         
-        gsl_fft_complex_forward(row, 1, wdm->NT, wavetable, workspace);
-        
+        glass_forward_complex_fft(row,wdm->NT);
+
         int jj = j*(wdm->NT/2);
         
         // negative frequencies
@@ -410,13 +387,10 @@ void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
             work[kk] += x*REAL(row,i);
             work[N-kk] += x*IMAG(row,i);
         }
-
-        
-        
     }
     
     //unpack work vector into real and imaginary parts consistent w/ GLASS conventions
-    unpack_gsl_fft_output(data,work,N);
+    unpack_fft_output(data,work,N);
 
     //normalize -- wtf?
     double fft_norm = 2.*sqrt(M_PI/Tobs);
@@ -426,8 +400,6 @@ void wavelet_to_fourier_transform(struct Wavelets *wdm, double *data)
     free_double_vector(phit);
     free_double_vector(work);
     free_double_vector(row);
-    gsl_fft_complex_wavetable_free(wavetable);
-    gsl_fft_complex_workspace_free(workspace);
 }
 
 void wavelet_transform_by_layers(struct Wavelets *wdm, int jmin, int Nlayers, double *window, double *data)
@@ -437,16 +409,11 @@ void wavelet_transform_by_layers(struct Wavelets *wdm, int jmin, int Nlayers, do
     // size of input data
     int N = (Nlayers+1)*wdm->NT;
     
+    // transformed data
+    double *data_wdm = double_vector(N);
+    
     //windowed data
     double *wdata = double_vector(2*wdm->NT);
-
-    // mixed radix real fft
-    gsl_fft_real_workspace * rwork = gsl_fft_real_workspace_alloc (N);
-    gsl_fft_real_wavetable * real = gsl_fft_real_wavetable_alloc (N);
-
-    // mixed radix complex fft
-    gsl_fft_complex_wavetable *wavetable = gsl_fft_complex_wavetable_alloc(wdm->NT);
-    gsl_fft_complex_workspace *work_c    = gsl_fft_complex_workspace_alloc(wdm->NT);
 
     double norm = 1.0/sqrt(0.5*N);
         
@@ -454,7 +421,7 @@ void wavelet_transform_by_layers(struct Wavelets *wdm, int jmin, int Nlayers, do
     
     // FFT incoming data (timeseries)
     tukey(data, alpha, N);
-    gsl_fft_real_transform (data, 1, N, real, rwork);
+    glass_forward_real_fft(data, N);
     
     // loop over frequency layers
     for(j=1; j<Nlayers+1; j++)
@@ -473,15 +440,13 @@ void wavelet_transform_by_layers(struct Wavelets *wdm, int jmin, int Nlayers, do
             
             if(k > 0 && k < N/2)
             {
-                REAL(wdata,n) = data[2*k-1] * window[abs(i)];
-                IMAG(wdata,n) = data[2*k]   * window[abs(i)];
+                REAL(wdata,n) = data[2*k]   * window[abs(i)];
+                IMAG(wdata,n) = data[2*k+1] * window[abs(i)];
             }
         }//end loop over window
         
-        // iFFT windowed data
-        gsl_fft_complex_inverse(wdata, 1, wdm->NT, wavetable, work_c);
-        for(i=0; i<2*wdm->NT; i++) wdata[i] *= wdm->NT;
-
+        glass_inverse_complex_fft(wdata, wdm->NT);
+        
         // index magic
         for(i=0; i<wdm->NT; i++)
         {
@@ -489,23 +454,21 @@ void wavelet_transform_by_layers(struct Wavelets *wdm, int jmin, int Nlayers, do
             
             if(m%2 == 0)
             {
-                if((i+m)%2==0) data[k] = norm*REAL(wdata,i);
-                else           data[k] = norm*IMAG(wdata,i);
+                if((i+m)%2==0) data_wdm[k] = norm*REAL(wdata,i);
+                else           data_wdm[k] = norm*IMAG(wdata,i);
             }
             else
             {
-                if((i+m)%2==0) data[k] =  norm*REAL(wdata,i);
-                else           data[k] = -norm*IMAG(wdata,i);
+                if((i+m)%2==0) data_wdm[k] =  norm*REAL(wdata,i);
+                else           data_wdm[k] = -norm*IMAG(wdata,i);
             }
         }//end loop over time slices
     }
-       
-    gsl_fft_real_wavetable_free (real);
-    gsl_fft_real_workspace_free (rwork);
     
-    gsl_fft_complex_wavetable_free (wavetable);
-    gsl_fft_complex_workspace_free (work_c);
-
+    //replace input data w/ WDM'ed data
+    memcpy(data, data_wdm, N*sizeof(double));
+    
+    free_double_vector(data_wdm);
     free_double_vector(wdata);
 }
 
@@ -517,12 +480,7 @@ void wavelet_transform_inverse(struct Wavelets *wdm, double *data)
     wavelet_to_fourier_transform(wdm,data);
     
     //transform to time domain data
-    gsl_fft_real_workspace * work = gsl_fft_real_workspace_alloc (N);
-    gsl_fft_halfcomplex_wavetable * hc = gsl_fft_halfcomplex_wavetable_alloc (N);
-    gsl_fft_halfcomplex_inverse(data, 1, N, hc, work);
-    
-    gsl_fft_real_workspace_free(work);
-    gsl_fft_halfcomplex_wavetable_free(hc);
+    glass_inverse_real_fft(data,N);
 }
 
 void wavelet_transform_from_table(struct Wavelets *wdm, double *phase, double *freq, double *freqd, double *amp, int *jmin, int *jmax, double *wave, int *list, int *rlist, int Nmax)
