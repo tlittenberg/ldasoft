@@ -557,9 +557,9 @@ void glass_forward_complex_fft(double *data, int N)
     else
     {
         kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
-        kiss_fft_cpx timedata[N];
-        kiss_fft_cpx freqdata[N];
-        
+        kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
+        kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
+
         for(int i=0; i<N; i++)
         {
             timedata[i].r = data[2*i];
@@ -579,6 +579,8 @@ void glass_forward_complex_fft(double *data, int N)
         
         // Clean up and free memory
         kiss_fft_free(cfg);
+        free(freqdata);
+        free(timedata);
     }
 }
 
@@ -600,9 +602,9 @@ void glass_inverse_complex_fft(double *data, int N)
     else
     {
         kiss_fft_cfg cfg = kiss_fft_alloc(N, 1, NULL, NULL); // 1 indicates backward FFT;
-        kiss_fft_cpx timedata[N];
-        kiss_fft_cpx freqdata[N];
-        
+        kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
+        kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
+
         for(int i=0; i<N; i++)
         {
             freqdata[i].r = data[2*i];
@@ -621,6 +623,9 @@ void glass_inverse_complex_fft(double *data, int N)
         
         // Clean up and free memory
         kiss_fft_free(cfg);
+        free(freqdata);
+        free(timedata);
+
     }
 }
 
@@ -700,9 +705,9 @@ void glass_inverse_real_fft(double *data, int N)
     else
     {
         kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 1, NULL, NULL); // 0 indicates forward FFT;
-        kiss_fft_cpx freqdata[N/2+1];
-        kiss_fft_scalar timedata[N];
-        
+        kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
+        kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
+
         for(int i=0; i<N/2; i++)
         {
             freqdata[i].r = data[2*i];
@@ -716,6 +721,8 @@ void glass_inverse_real_fft(double *data, int N)
         
         // Clean up and free memory
         kiss_fftr_free(cfg);
+        free(timedata);
+        free(freqdata);
     }
 }
 

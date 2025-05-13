@@ -1224,7 +1224,7 @@ void waveform_check(struct Orbit *orbit, struct Data *data, struct Model *model,
         map_array_to_params(source_temp, source_temp->params, data->T);
     
         //Simulate gravitational wave signal
-        ucb_waveform_wavelet_temp(orbit, data->wdm, data->T, model->t0, source_temp->params, source_temp->list, &source_temp->Nlist, source_temp->tdi->X, source_temp->tdi->Y, source_temp->tdi->Z);
+        ucb_waveform_wavelet_tab(orbit, data->wdm, data->T, model->t0, source_temp->params, source_temp->list, &source_temp->Nlist, source_temp->tdi->X, source_temp->tdi->Y, source_temp->tdi->Z);
 
         //Add waveform to model TDI channels
         add_signal_model_wavelet(data,model_temp,source_temp);

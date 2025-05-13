@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     tdi = malloc(sizeof(struct TDI));
     alloc_tdi(tdi,N,3);
 
-    ucb_waveform_wavelet_temp(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    ucb_waveform_wavelet_tab(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     out = fopen("wavelet_tab.dat","w");
     print_wavelet_pixels(wdm, tdi, out);
     fclose(out);
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     start = clock();
     for(int mc=0; mc<Nwaveforms; mc++)
     {
-        ucb_waveform_wavelet_temp(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+        ucb_waveform_wavelet_tab(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     }
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
