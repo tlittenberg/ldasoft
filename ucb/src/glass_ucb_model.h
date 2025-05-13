@@ -290,4 +290,6 @@ void remove_signal_model_wavelet(struct Data *data, struct Model *model, struct 
 void add_signal_model(struct Data *data, struct Model *model, struct Source *source);
 void add_signal_model_wavelet(struct Data *data, struct Model *model, struct Source *source);
 
+void waveform_check(struct Orbit *orbit, struct Data *data, struct Model *model, struct Source *source);
+
 #endif /* ucb_model_h */

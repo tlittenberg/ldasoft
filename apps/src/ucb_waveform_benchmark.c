@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     clock_t start, end;
 
     double t0=0.0;
-    double Tobs = 31558149.8;//31457280.0;
+    double Tobs = 31457280;//31457280.0;
     int N = (int)(Tobs/LISA_CADENCE);
     printf("N = %i\n", N);
 
@@ -105,7 +105,16 @@ int main(int argc, char* argv[])
     params[3] = log(params[3]);
     params[7] = params[7]*(Tobs*Tobs);
 
-
+    params[0] = 315356.8757188157;
+    params[1] = -0.3314182857663456;
+    params[2] = 2.679373660852499;
+    params[3] = -53.18000649622642;
+    params[4] = 0.4077044806479031;
+    params[5] = 2.025080440894665;
+    params[6] = 5.307507556802117;
+    params[7] = -3.667077368701908;
+    //315356.8757188157 -0.3314182857663456 2.679373660852499 -53.18000649622642 0.4077044806479031 2.025080440894665 5.307507556802117 -3.667077368701908 0.000405848
+    
     ucb_waveform_wavelet(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     FILE *out = fopen("wavelet_het.dat","w");
     print_wavelet_pixels(wdm, tdi, out);
@@ -125,7 +134,7 @@ int main(int argc, char* argv[])
     tdi = malloc(sizeof(struct TDI));
     alloc_tdi(tdi,N,3);
 
-    ucb_waveform_wavelet_tab(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+    ucb_waveform_wavelet_temp(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     out = fopen("wavelet_tab.dat","w");
     print_wavelet_pixels(wdm, tdi, out);
     fclose(out);
@@ -133,7 +142,7 @@ int main(int argc, char* argv[])
     start = clock();
     for(int mc=0; mc<Nwaveforms; mc++)
     {
-        ucb_waveform_wavelet_tab(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
+        ucb_waveform_wavelet_temp(orbit, wdm, Tobs, 0.0, params, wavelet_list, &Nwavelet, tdi->X, tdi->Y, tdi->Z);
     }
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;

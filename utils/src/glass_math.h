@@ -13,12 +13,12 @@
 #ifndef math_h
 #define math_h
 
-#define GSL_FFT 1
+#define GSL_FFT 0
 #include <gsl/gsl_fft_real.h>
 #include <gsl/gsl_fft_complex.h>
 #include <gsl/gsl_fft_halfcomplex.h>
 
-#define GSL_SPLINE 1
+#define GSL_SPLINE 0
 #include <gsl/gsl_spline.h>
 
 #include <gsl/gsl_sf_gamma.h>

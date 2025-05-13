@@ -187,7 +187,7 @@ int ucb_bandwidth(double L, double fstar, double f, double fdot, double costheta
 void ucb_waveform(struct Orbit *orbit, char *format, double T, double t0, double params[], int NParams, double *X, double *Y, double *Z, double *A, double *E, int BW, int NI);
 
 /**
- \brief Wavelet domain galactic binary waveform generator as first described in <a href="https://https://journals.aps.org/prd/abstract/10.1103/PhysRevD.102.124038">Cornish, PRD 102, 124038</a>.
+ \brief Wavelet domain ultra compact binary waveform generators as first described in <a href="https://https://journals.aps.org/prd/abstract/10.1103/PhysRevD.102.124038">Cornish, PRD 102, 124038</a>.
 
  Computes the wavelet domain TDI response to a circular, slowly evolving, binary with parameters params.  The detector geometry is defined in Orbit.  The format of the TDI data is hard-coded to match the conventions of LDC2.1.
  

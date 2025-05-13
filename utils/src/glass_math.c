@@ -27,8 +27,15 @@ void initialize_cubic_spline(struct CubicSpline *spline, double *x, double *y)
 {
     
     //pack interpolant data {x,y} into spline structure
-    memcpy(spline->x, x, spline->N*sizeof(double));
-    memcpy(spline->y, y, spline->N*sizeof(double));
+    //memcpy is not thread safe?!
+    //memcpy(spline->x, x, spline->N*sizeof(double));
+    //memcpy(spline->y, y, spline->N*sizeof(double));
+    
+    for(int i=0; i<spline->N; i++)
+    {
+        spline->x[i] = x[i];
+        spline->y[i] = y[i];
+    }
     
     //compute interpolant coefficients
     gsl_spline_init(spline->spline, spline->x, spline->y, spline->N);
@@ -86,19 +93,24 @@ double spline_interpolation(struct CubicSpline *spline, double x)
     }
     else
     {
-        // only search for which interval contains x if needed
+        /* Caching nmin and nmax is not thread safe
+         // only search for which interval contains x if needed
         if(x<spline->x[spline->nmin] || x > spline->x[spline->nmax] )
         {
             spline->nmin = binary_search(spline->x,0,spline->N,x);
             spline->nmax = spline->nmin + 1;
         }
         
+        spline->nmin = binary_search(spline->x,0,spline->N,x);
+        spline->nmax = spline->nmin + 1;
+
         if(spline->nmin<0 || spline->nmax>=spline->N)
         {
+            printf("Error in spline interpolation: [nmin,nmax] =  [%i,%i] out of [0,%i]\n",spline->nmin, spline->nmax, spline->N);
             printf("Error in spline interpolation: x is out of bounds.  %g -> [%g,%g]\n",x,spline->x[0],spline->x[spline->N-1]);
             abort();
         }
-        
+
         double x1 = spline->x[spline->nmin];
         double x2 = spline->x[spline->nmax];
         
@@ -107,6 +119,19 @@ double spline_interpolation(struct CubicSpline *spline, double x)
         
         double d2y1 = spline->d2y[spline->nmin];
         double d2y2 = spline->d2y[spline->nmax];
+         */
+        
+        int nmin = binary_search(spline->x,0,spline->N,x);
+        int nmax = nmin + 1;
+
+        double x1 = spline->x[nmin];
+        double x2 = spline->x[nmax];
+        
+        double y1 = spline->y[nmin];
+        double y2 = spline->y[nmax];
+        
+        double d2y1 = spline->d2y[nmin];
+        double d2y2 = spline->d2y[nmax];
         
         double dx = x2 - x1;
         
@@ -261,13 +286,11 @@ int binary_search(double *array, int nmin, int nmax, double x)
         
         // If the element is present at the middle
         // itself
-        if (x > array[mid])
-        {
-            if(x < array[next]) return mid;
-        }
+        if (x > array[mid] && x < array[next])
+            return mid;
         
         // the element is in the lower half
-        if (array[mid] > x)
+        if (array[mid] >= x)
             return binary_search(array, nmin, mid, x);
         
         // the element is in upper half
