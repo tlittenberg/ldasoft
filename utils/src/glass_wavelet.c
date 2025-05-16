@@ -215,6 +215,7 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
 
     wdm->fdot = malloc(wdm->fdot_steps*sizeof(double));
 
+    /* Only needed when using the lookup table waveform generator
     wdm->table   = malloc(wdm->fdot_steps*sizeof(double *));
     wdm->n_table = malloc(wdm->fdot_steps*sizeof(int));
 
@@ -228,12 +229,13 @@ void initialize_wavelet(struct Wavelets *wdm, double T)
         wdm->n_table[n] = N;
         wdm->table[n] = double_vector(2*N);
     }
+        
+    //stores lookup table of wavelet basis functions
+    wavelet_lookup_table(wdm);
+    */
     
     //stores window function and normalization
     wavelet_window_time(wdm);
-    
-    //stores lookup table of wavelet basis functions
-    wavelet_lookup_table(wdm);
 
     //set defaults for min and maximum pixels
     wavelet_pixel_to_index(wdm,0,1,&wdm->kmin);         //first pixel of second layer
@@ -273,7 +275,7 @@ void wavelet_transform(struct Wavelets *wdm, double *data)
     int ND = wdm->NT*wdm->NF;
     
     //windowed data packets
-    double *wdata     = double_vector(wdm->N);
+    double *wdata = double_vector(wdm->N);
 
     //wavelet wavepacket transform of the signal
     double **wave = double_matrix(wdm->NT,wdm->NF);

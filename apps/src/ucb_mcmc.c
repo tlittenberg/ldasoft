@@ -215,6 +215,9 @@ int main(int argc, char *argv[])
     /* Write example gb_catalog bash script in run directory */
     print_ucb_catalog_script(flags, data, orbit);
     
+    /* allow nested parallelization in mcmc loop (for rebuilding fstat proposal) */
+    omp_set_max_active_levels(2);
+
     //For saving the number of threads actually given
     int numThreads;
     int mcmc = mcmc_start;
@@ -249,7 +252,7 @@ int main(int argc, char *argv[])
                 struct Model *trial_ptr = trial[chain->index[ic]];
                 copy_model(model_ptr,trial_ptr);
 
-                for(int steps=0; steps < 100; steps++)
+                for(int steps=0; steps < 10; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
                     if(rand_r_U_0_1(&chain->r[ic])<0.9 && flags->rj)

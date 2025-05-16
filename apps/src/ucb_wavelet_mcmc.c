@@ -159,6 +159,9 @@ int main(int argc, char *argv[])
     struct Model **model = malloc(sizeof(struct Model*)*NC);
     initialize_ucb_state(data, orbit, flags, chain, proposal, model, trial, inj);
 
+    /* allow nested parallelization in mcmc loop (for rebuilding fstat proposal) */
+    omp_set_max_active_levels(2);
+    
     //For saving the number of threads actually given
     int numThreads;
     int mcmc = mcmc_start;
@@ -193,7 +196,7 @@ int main(int argc, char *argv[])
                 struct Model *trial_ptr = trial[chain->index[ic]];
                 copy_model(model_ptr,trial_ptr);
                 
-                for(int steps=0; steps < 100; steps++)
+                for(int steps=0; steps < 10; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
                     if(rand_r_U_0_1(&chain->r[ic])<0.1 && flags->rj)

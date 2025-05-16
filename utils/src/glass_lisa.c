@@ -1066,8 +1066,8 @@ double GBnoise_FF(double T, double fstar, double f)
     double afk = -3.60976122e-1;
     double bfk = -2.37822436;
     
-    double fr1 = pow(10., af1*log10(T/31457280.) + bf1);
-    double knee = pow(10., afk*log10(T/31457280.) + bfk);
+    double fr1 = pow(10., af1*log10(T/YEAR) + bf1);
+    double knee = pow(10., afk*log10(T/YEAR) + bfk);
     double SG_sense = Ampl * exp(-pow(f/fr1,alpha)) * pow(f,-7./3.) * 0.5 * (1.0 + tanh(-(f-knee)/fr2) );
     double SGXYZ = t*SG_sense;
     double SGAE  = 1.5*SGXYZ;
