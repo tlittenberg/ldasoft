@@ -196,7 +196,8 @@ int main(int argc, char *argv[])
                 struct Model *trial_ptr = trial[chain->index[ic]];
                 copy_model(model_ptr,trial_ptr);
                 
-                for(int steps=0; steps < 10; steps++)
+                int Nstep = model_ptr->Nlive+10;
+                for(int steps=0; steps < Nstep; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
                     if(rand_r_U_0_1(&chain->r[ic])<0.1 && flags->rj)
@@ -206,8 +207,7 @@ int main(int argc, char *argv[])
                     //fixed dimension parameter updates
                     else
                     {
-                        for(int n=0; n<model_ptr->Nlive; n++)
-                            ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                        ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     }
                 }//loop over MCMC steps
 
