@@ -369,7 +369,7 @@ void initialize_galaxy_modulation(struct GalaxyModulation *gm, struct Wavelets *
     for(i=0; i<gm->Npix; i++)
     {
         // get theta, phi coordinates of pixel (ecliptic)
-        pix2ang_ring(NSIDE,  i, &theta, &phi);
+        astropy_pix2ang_ring(NSIDE,  i, &theta, &phi);
         
         xe[0] = sin(theta)*cos(phi);
         xe[1] = sin(theta)*sin(phi);
@@ -501,12 +501,12 @@ static void alm2map(double *skyrecon, double **almR, double **almI, double ***Pl
     
     x = (double)(Npix)/(4.0*M_PI);
     
-    pix2ang_ring(NSIDE, 0, &thold, &phi);
+    astropy_pix2ang_ring(NSIDE, 0, &thold, &phi);
     i = 1;
     
     for(pix=0; pix < Npix; pix++)
     {
-        pix2ang_ring(NSIDE, pix, &theta, &phi);
+        astropy_pix2ang_ring(NSIDE, pix, &theta, &phi);
         
         if(fabs(theta-thold) > 1.0e-6)
         {
@@ -559,12 +559,12 @@ static void map2alm(double *sky, double **almR, double **almI, double ***Plm)
         Npix = 12*NSIDE*NSIDE;
         
         // we use this to keep track of which theta ring were are on (not very efficient)
-        pix2ang_ring(NSIDE, 0, &thold, &phi);
+        astropy_pix2ang_ring(NSIDE, 0, &thold, &phi);
         i = 1;
         
         for(pix=0; pix < Npix; pix++)
         {
-            pix2ang_ring(NSIDE, pix, &theta, &phi);
+            astropy_pix2ang_ring(NSIDE, pix, &theta, &phi);
             
             if(fabs(theta-thold) > 1.0e-6)
             {

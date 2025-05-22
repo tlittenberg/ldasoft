@@ -5,7 +5,8 @@ add_library(glass_utils STATIC
             glass_math.c glass_math.h 
             glass_gmm.c glass_gmm.h 
             glass_wavelet.c glass_wavelet.h 
-            glass_healpix.c glass_healpix.h
+            pix2ang.c pix2ang.h
+            astrometry/astrometry.c astrometry/astrometry.h
             glass_galaxy.c glass_galaxy.h 
             glass_constants.h glass_utils.c glass_utils.h) 
 

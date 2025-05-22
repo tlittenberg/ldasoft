@@ -49,7 +49,7 @@
 #include "glass_data.h"
 #include "glass_math.h"
 #include "glass_gmm.h"
-#include "glass_healpix.h"
+#include "pix2ang.h"
 #include "glass_galaxy.h"
 
 /**
