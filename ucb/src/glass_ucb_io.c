@@ -1104,9 +1104,9 @@ void print_psd_draw(struct Data *data, struct Model *model, struct Flags *flags)
             double f = data->fmin + n/data->T;
             
             fprintf(fptr,"%lg ",f);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[0][0][n]);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[1][1][n]);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[2][2][n]);
+            fprintf(fptr,"%lg ", model->noise->C[0][0][n]);
+            fprintf(fptr,"%lg ", model->noise->C[1][1][n]);
+            fprintf(fptr,"%lg ", model->noise->C[2][2][n]);
             fprintf(fptr,"\n");
         }
     }
@@ -1122,15 +1122,15 @@ void print_psd_draw(struct Data *data, struct Model *model, struct Flags *flags)
             k-=data->wdm->kmin;
             
             fprintf(fptr,"%lg ",fmin);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[0][0][k]);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[1][1][k]);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[2][2][k]);
+            fprintf(fptr,"%lg ", model->noise->C[0][0][k]);
+            fprintf(fptr,"%lg ", model->noise->C[1][1][k]);
+            fprintf(fptr,"%lg ", model->noise->C[2][2][k]);
             fprintf(fptr,"\n");
             
             fprintf(fptr,"%lg ",fmax);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[0][0][k]);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[1][1][k]);
-            fprintf(fptr,"%lg ", 1./model->noise->invC[2][2][k]);
+            fprintf(fptr,"%lg ", model->noise->C[0][0][k]);
+            fprintf(fptr,"%lg ", model->noise->C[1][1][k]);
+            fprintf(fptr,"%lg ", model->noise->C[2][2][k]);
             
             fprintf(fptr,"\n");
         }
