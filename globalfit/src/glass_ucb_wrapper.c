@@ -297,7 +297,7 @@ int update_ucb_sampler(struct UCBData *ucb_data)
                 for(int m=0; m<100; m++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(gsl_rng_uniform(chain->r[ic])<0.25 && flags->rj)
+                    if(rand_r_U_0_1(chain->r[ic])<0.25 && flags->rj)
                         ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     
                     //fixed dimension parameter updates

@@ -148,7 +148,7 @@ void select_mbh_segment(struct MBHData *mbh_data, struct TDI *tdi_full)
     struct MBH_Data *data = mbh_data->data;
     /*
      fill data matrix with FD TDI data
-      MBH sampler uses GSL FFT conventions for complex arrays
+      MBH sampler uses bespoke FFT conventions for complex arrays
      */
     data->data[0][0] = tdi_full->A[0];
     data->data[1][0] = tdi_full->E[0];
@@ -214,7 +214,7 @@ void setup_mbh_data(struct MBHData *mbh_data, struct UCBData *ucb_data, struct T
     
     /*
      fill data matrix with FD TDI data
-      MBH sampler uses GSL FFT conventions for complex arrays
+      MBH sampler uses bespoke FFT conventions for complex arrays
      */
     select_mbh_segment(mbh_data, tdi_full);
 
@@ -249,15 +249,10 @@ void setup_mbh_data(struct MBHData *mbh_data, struct UCBData *ucb_data, struct T
 
     
     /* Set up RNG for MBH sampler */
-    const gsl_rng_type * P;
-    gsl_rng_env_setup();
-    P = gsl_rng_default;
-
-    mbh_data->rvec = (gsl_rng **)malloc(sizeof(gsl_rng *) * (mbh_data->NC+1));
+    mbh_data->rvec = malloc(sizeof(unsigned int *) * (mbh_data->NC+1));
 
     for(int i = 0 ; i<= mbh_data->NC; i++){
-        mbh_data->rvec[i] = gsl_rng_alloc(P);
-        gsl_rng_set(mbh_data->rvec[i] , i);
+        mbh_data->rvec[i] = 150914+i;
     }
 
     set_mbh_priors(mbh_data->data,2,mbh_data->min,mbh_data->max);
@@ -485,7 +480,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
     int **av = mbh_data->av;
     int NH = mbh_data->NH;
     int NC = mbh_data->NC;
-    gsl_rng **rvec = mbh_data->rvec;
+    unsigned int **rvec = mbh_data->rvec;
     FILE *chain = mbh_data->chainFile;
     
     //some extra stuff
@@ -515,7 +510,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
         efix(dat, het, 1, 2, paramx[i], min, max, ejump[i], evec[i], 1.0);
     }
 
-    double alpha = gsl_rng_uniform(rvec[0]);
+    double alpha = rand_r_N_0_1(rvec[0]);
     double beta;
     
     for(int cycle = 0; cycle<1000; cycle++)
@@ -524,10 +519,10 @@ int update_mbh_sampler(struct MBHData *mbh_data)
         if((NC > 1) && (alpha < 0.2)) // chain swap
         {
             int hold; //hold on to current chain index
-            alpha = (double)(NC-1)*gsl_rng_uniform(rvec[0]);
+            alpha = (double)(NC-1)*rand_r_N_0_1(rvec[0]);
             int j = (int)(alpha);
             beta = exp((logLx[who[j]]-logLx[who[j+1]])/heat[j+1] - (logLx[who[j]]-logLx[who[j+1]])/heat[j]);
-            alpha = gsl_rng_uniform(rvec[0]);
+            alpha = rand_r_N_0_1(rvec[0]);
             if(beta > alpha)
             {
                 hold = who[j];
@@ -540,7 +535,7 @@ int update_mbh_sampler(struct MBHData *mbh_data)
             for(int j = 0; j < NC; j++)  for(int i = 0; i < NParams; i++) paramy[j][i] = paramx[j][i];
             
             // all chains do the same type of update since some (especially type 2) are much slower than the others. Saves them waiting on others to finish
-            alpha = gsl_rng_uniform(rvec[0]);
+            alpha = rand_r_N_0_1(rvec[0]);
             
             if(alpha > a)      typ = 0;
             else if(alpha > b) typ = 1;

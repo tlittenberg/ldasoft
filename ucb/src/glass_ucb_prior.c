@@ -163,15 +163,8 @@ void set_galaxy_prior(struct Flags *flags, struct Prior *prior)
             
             if(phi<0.0) phi += 2.0*M_PI;
             
-            //      if(mc%1000 == 0 && flags->verbose) fprintf(chain,"%d %e %e %e %e %e %e %e\n", mc/1000, logLx, x[0], x[1], x[2], theta, phi, r_ec);
-            
             ith = (int)(0.5*(1.0+sin(theta))*(double)(Nth));
-            //iph = (int)(phi/(2.0*M_PI)*(double)(Nph));
-            //ith = (int)(0.5*(1.0-sin(theta))*(double)(Nth));
             iph = (int)((2*M_PI-phi)/(2.0*M_PI)*(double)(Nph));
-            
-            //ith = (int)floor(Nth*gsl_rng_uniform(r));
-            //iph = (int)floor(Nph*gsl_rng_uniform(r));
             
             cnt++;
             
@@ -495,7 +488,7 @@ double evaluate_gmm_prior(struct Data *data, struct GMM *gmm, double *params)
     size_t NMODES = gmm->NMODE;
     
 
-    //pack parameters into gsl_vector with correct units
+    //pack parameters into source with correct units
     struct Source *source = malloc(sizeof(struct Source));
     alloc_source(source, data->N, data->Nchannel);
     
@@ -661,7 +654,7 @@ double evaluate_calibration_prior(struct Data *data, struct Model *model)
     
     double logP = 0.0;
     
-    /*apply calibration error to full signal model
+    /* apply calibration error to full signal model */
     double dA,dphi;
     switch(data->Nchannel)
     {
@@ -669,62 +662,62 @@ double evaluate_calibration_prior(struct Data *data, struct Model *model)
             
             //amplitude
             dA   = model->calibration->dampX;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
             dphi = model->calibration->dphiX;
-            logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
             
             break;
         case 2:
             
             //amplitude
             dA   = model->calibration->dampA;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
             dphi = model->calibration->dphiA;
-            logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
             
             //amplitude
             dA   = model->calibration->dampE;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
             dphi = model->calibration->dphiE;
-            logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
             break;
         case 3:
             
             //amplitude
             dA   = model->calibration->dampX;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
             dphi = model->calibration->dphiX;
-            logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
             
             //amplitude
             dA   = model->calibration->dampY;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
             dphi = model->calibration->dphiY;
-            logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
 
             //amplitude
             dA   = model->calibration->dampZ;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
             dphi = model->calibration->dphiZ;
-            logP += log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
             break;
 
         default:
             break;
     }//end switch
-    */
+
     return logP;
 }
 

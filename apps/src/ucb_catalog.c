@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
         free(f_vec);
         free(index);
         
-        f_med = entry->source[i_med]->f0;//gsl_stats_median_from_sorted_data(f_vec, 1, entry->Nchain);
+        f_med = entry->source[i_med]->f0;
         
         entry->i = i_med;
         

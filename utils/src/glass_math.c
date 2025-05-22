@@ -27,9 +27,6 @@ struct CubicSpline* alloc_cubic_spline(int N)
     spline->y    = malloc(spline->N*sizeof(double));
     spline->d2y  = malloc(spline->N*sizeof(double));
     
-    spline->spline = gsl_spline_alloc(gsl_interp_cspline, N);
-    spline->acc = gsl_interp_accel_alloc();
-
     return spline;
 }
 
@@ -48,7 +45,6 @@ void initialize_cubic_spline(struct CubicSpline *spline, double *x, double *y)
     }
     
     //compute interpolant coefficients
-    gsl_spline_init(spline->spline, spline->x, spline->y, spline->N);
     spline_coefficients(spline);
     
 }
@@ -58,9 +54,6 @@ void free_cubic_spline(struct CubicSpline *spline)
     free(spline->x);
     free(spline->y);
     free(spline->d2y);
-    
-    gsl_spline_free(spline->spline);
-    gsl_interp_accel_free(spline->acc);
     
     free(spline);
 }
@@ -97,71 +90,68 @@ void spline_coefficients(struct CubicSpline *spline)
 
 double spline_interpolation(struct CubicSpline *spline, double x)
 {
-    if(GSL_SPLINE)
+    /* Caching nmin and nmax is not thread safe
+     // only search for which interval contains x if needed
+    if(x<spline->x[spline->nmin] || x > spline->x[spline->nmax] )
     {
-        return gsl_spline_eval(spline->spline, x, spline->acc);
-    }
-    else
-    {
-        /* Caching nmin and nmax is not thread safe
-         // only search for which interval contains x if needed
-        if(x<spline->x[spline->nmin] || x > spline->x[spline->nmax] )
-        {
-            spline->nmin = binary_search(spline->x,0,spline->N,x);
-            spline->nmax = spline->nmin + 1;
-        }
-        
         spline->nmin = binary_search(spline->x,0,spline->N,x);
         spline->nmax = spline->nmin + 1;
-
-        if(spline->nmin<0 || spline->nmax>=spline->N)
-        {
-            printf("Error in spline interpolation: [nmin,nmax] =  [%i,%i] out of [0,%i]\n",spline->nmin, spline->nmax, spline->N);
-            printf("Error in spline interpolation: x is out of bounds.  %g -> [%g,%g]\n",x,spline->x[0],spline->x[spline->N-1]);
-            abort();
-        }
-
-        double x1 = spline->x[spline->nmin];
-        double x2 = spline->x[spline->nmax];
-        
-        double y1 = spline->y[spline->nmin];
-        double y2 = spline->y[spline->nmax];
-        
-        double d2y1 = spline->d2y[spline->nmin];
-        double d2y2 = spline->d2y[spline->nmax];
-         */
-        
-        int nmin = binary_search(spline->x,0,spline->N,x);
-        int nmax = nmin + 1;
-
-        double x1 = spline->x[nmin];
-        double x2 = spline->x[nmax];
-        
-        double y1 = spline->y[nmin];
-        double y2 = spline->y[nmax];
-        
-        double d2y1 = spline->d2y[nmin];
-        double d2y2 = spline->d2y[nmax];
-        
-        double dx = x2 - x1;
-        
-        double a = (x2 - x)/dx;
-        double b = (x - x1)/dx;
-        double c = (a*a*a - a)*(dx*dx)/6.0;
-        double d = (b*b*b - b)*(dx*dx)/6.0;
-        
-        return a*y1 + b*y2 + c*d2y1 + d*d2y2;
     }
+    
+    spline->nmin = binary_search(spline->x,0,spline->N,x);
+    spline->nmax = spline->nmin + 1;
+
+    if(spline->nmin<0 || spline->nmax>=spline->N)
+    {
+        printf("Error in spline interpolation: [nmin,nmax] =  [%i,%i] out of [0,%i]\n",spline->nmin, spline->nmax, spline->N);
+        printf("Error in spline interpolation: x is out of bounds.  %g -> [%g,%g]\n",x,spline->x[0],spline->x[spline->N-1]);
+        abort();
+    }
+
+    double x1 = spline->x[spline->nmin];
+    double x2 = spline->x[spline->nmax];
+    
+    double y1 = spline->y[spline->nmin];
+    double y2 = spline->y[spline->nmax];
+    
+    double d2y1 = spline->d2y[spline->nmin];
+    double d2y2 = spline->d2y[spline->nmax];
+     */
+    
+    int nmin = binary_search(spline->x,0,spline->N,x);
+    int nmax = nmin + 1;
+
+    double x1 = spline->x[nmin];
+    double x2 = spline->x[nmax];
+    
+    double y1 = spline->y[nmin];
+    double y2 = spline->y[nmax];
+    
+    double d2y1 = spline->d2y[nmin];
+    double d2y2 = spline->d2y[nmax];
+    
+    double dx = x2 - x1;
+    
+    double a = (x2 - x)/dx;
+    double b = (x - x1)/dx;
+    double c = (a*a*a - a)*(dx*dx)/6.0;
+    double d = (b*b*b - b)*(dx*dx)/6.0;
+    
+    return a*y1 + b*y2 + c*d2y1 + d*d2y2;
 }
 
 double spline_interpolation_deriv(struct CubicSpline *spline, double x)
 {
-    return gsl_spline_eval_deriv(spline->spline, x, spline->acc);
+    printf("ERROR: spline_interpolation_deriv() is undefined\n");
+    exit(1);
+    return 0.0;
 }
 
 double spline_interpolation_deriv2(struct CubicSpline *spline, double x)
 {
-    return gsl_spline_eval_deriv2(spline->spline, x, spline->acc);
+    printf("ERROR: spline_interpolation_deriv() is undefined\n");
+    exit(1);
+    return 0.0;
 }
 
 void invert_noise_covariance_matrix(struct Noise *noise)
@@ -456,20 +446,6 @@ void cholesky_decomp(double **A, double **L, int N)
 
 }
 
-/*
-static void window(double *data, int N)
-{
-    int i;
-    double filter;
-    double tau = LISA_CADENCE/FILTER_LENGTH;
-    for(i=0; i<N; i++)
-    {
-        double x = i*LISA_CADENCE;
-        filter = (0.5*(1+tanh(tau*(x-FILTER_LENGTH))))*(0.5*(1-tanh(tau*(x-N*LISA_CADENCE))));
-        data[i]*=filter;
-    }
-}
-*/
 void tukey(double *data, double alpha, int N)
 {
     int i, imin, imax;
@@ -545,195 +521,107 @@ void unpack_fft_output(double *x, double *x_packed, int N)
 
 void glass_forward_complex_fft(double *data, int N)
 {
-    //============= GSL RADIX2 =============//
-    //gsl_fft_complex_radix2_forward (data, 1, N);
-   
+    kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
+    kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
+    kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
     
-    //=========== GSL MIXED RADIX ==========//
-    if(GSL_FFT)
+    for(int i=0; i<N; i++)
     {
-        // work space for GSL Fourier Transforms
-        gsl_fft_complex_wavetable *wavetable = gsl_fft_complex_wavetable_alloc(N);
-        gsl_fft_complex_workspace *workspace = gsl_fft_complex_workspace_alloc(N);
-        
-        // the FFT
-        gsl_fft_complex_forward(data, 1, N, wavetable, workspace);
-        
-        // clean up
-        gsl_fft_complex_wavetable_free(wavetable);
-        gsl_fft_complex_workspace_free(workspace);
+        timedata[i].r = data[2*i];
+        timedata[i].i = data[2*i+1];
     }
-    //=============== KISSFFT ==============//
-    else
+    
+    // Perform the forward FFT
+    kiss_fft(cfg, timedata, freqdata);
+    
+    
+    for(int i=0; i<N; i++)
     {
-        kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
-        kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
-        kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
-
-        for(int i=0; i<N; i++)
-        {
-            timedata[i].r = data[2*i];
-            timedata[i].i = data[2*i+1];
-        }
-        
-        // Perform the forward FFT
-        kiss_fft(cfg, timedata, freqdata);
-        
-        
-        for(int i=0; i<N; i++)
-        {
-            data[2*i]   = freqdata[i].r;
-            data[2*i+1] = freqdata[i].i;
-        }
-        
-        
-        // Clean up and free memory
-        kiss_fft_free(cfg);
-        free(freqdata);
-        free(timedata);
+        data[2*i]   = freqdata[i].r;
+        data[2*i+1] = freqdata[i].i;
     }
+    
+    
+    // Clean up and free memory
+    kiss_fft_free(cfg);
+    free(freqdata);
+    free(timedata);
 }
 
 void glass_inverse_complex_fft(double *data, int N)
 {
-    //=========== GSL MIXED RADIX ==========//
-    if(GSL_FFT)
-    {
-        gsl_fft_complex_wavetable *wavetable = gsl_fft_complex_wavetable_alloc(N);
-        gsl_fft_complex_workspace *workspace = gsl_fft_complex_workspace_alloc(N);
-        
-        gsl_fft_complex_inverse(data, 1, N, wavetable, workspace);
-        for(int i=0; i<2*N; i++) data[i] *= N;
-        
-        gsl_fft_complex_wavetable_free(wavetable);
-        gsl_fft_complex_workspace_free(workspace);
-    }
-    //=============== KISSFFT ==============//
-    else
-    {
-        kiss_fft_cfg cfg = kiss_fft_alloc(N, 1, NULL, NULL); // 1 indicates backward FFT;
-        kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
-        kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
+    kiss_fft_cfg cfg = kiss_fft_alloc(N, 1, NULL, NULL); // 1 indicates backward FFT;
+    kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
+    kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
 
-        for(int i=0; i<N; i++)
-        {
-            freqdata[i].r = data[2*i];
-            freqdata[i].i = data[2*i+1];
-        }
-        
-        // Perform the inverse FFT
-        kiss_fft(cfg, freqdata, timedata);
-        
-        
-        for(int i=0; i<N; i++)
-        {
-            data[2*i]   = timedata[i].r;
-            data[2*i+1] = timedata[i].i;
-        }
-        
-        // Clean up and free memory
-        kiss_fft_free(cfg);
-        free(freqdata);
-        free(timedata);
-
+    for(int i=0; i<N; i++)
+    {
+        freqdata[i].r = data[2*i];
+        freqdata[i].i = data[2*i+1];
     }
+    
+    // Perform the inverse FFT
+    kiss_fft(cfg, freqdata, timedata);
+    
+    
+    for(int i=0; i<N; i++)
+    {
+        data[2*i]   = timedata[i].r;
+        data[2*i+1] = timedata[i].i;
+    }
+    
+    // Clean up and free memory
+    kiss_fft_free(cfg);
+    free(freqdata);
+    free(timedata);
 }
 
 void glass_forward_real_fft(double *data, int N)
 {
-    //=========== GSL MIXED RADIX ==========//
-    if(GSL_FFT)
+    kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
+    kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
+    kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
+    
+    for(int i=0; i<N; i++)  timedata[i] = data[i];
+    
+    // Perform the rFFT
+    kiss_fftr(cfg, timedata, freqdata);
+    
+    
+    for(int i=0; i<N/2; i++)
     {
-        // get workspace
-        double *data_gsl = double_vector(N);
-        gsl_fft_real_wavetable * wavetable = gsl_fft_real_wavetable_alloc (N);
-        gsl_fft_real_workspace * workspace = gsl_fft_real_workspace_alloc (N);
-        
-        memcpy(data_gsl,data,N*sizeof(double));
-        
-        // perform the rfft
-        gsl_fft_real_transform(data_gsl, 1, N, wavetable, workspace);
-        
-        // unpack gsl arrays to the glass format
-        data[0] = data_gsl[0];
-        data[1] = 0.0;
-
-        for(int n=1; n<N/2; n++)
-        {
-            data[2*n]   = data_gsl[2*n-1];
-            data[2*n+1] = data_gsl[2*n];
-        }
-        
-        //clean up
-        gsl_fft_real_wavetable_free (wavetable);
-        gsl_fft_real_workspace_free (workspace);
-        free_double_vector(data_gsl);
+        data[2*i]   = freqdata[i].r;
+        data[2*i+1] = freqdata[i].i;
     }
     
-    //=============== KISSFFT ==============//
-    else
-    {
-        kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
-        kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
-        kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
-        
-        for(int i=0; i<N; i++)  timedata[i] = data[i];
-        
-        // Perform the rFFT
-        kiss_fftr(cfg, timedata, freqdata);
-        
-        
-        for(int i=0; i<N/2; i++)
-        {
-            data[2*i]   = freqdata[i].r;
-            data[2*i+1] = freqdata[i].i;
-        }
-        
-        
-        // Clean up and free memory
-        kiss_fftr_free(cfg);
-        free(freqdata);
-        free(timedata);
-    }
+    
+    // Clean up and free memory
+    kiss_fftr_free(cfg);
+    free(freqdata);
+    free(timedata);
 }
 
 void glass_inverse_real_fft(double *data, int N)
 {
-    //=========== GSL MIXED RADIX ==========//
-    if(GSL_FFT)
+    kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 1, NULL, NULL); // 0 indicates forward FFT;
+    kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
+    kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
+
+    for(int i=0; i<N/2; i++)
     {
-        gsl_fft_halfcomplex_wavetable * wavetable = gsl_fft_halfcomplex_wavetable_alloc (N);
-        gsl_fft_real_workspace        * workspace = gsl_fft_real_workspace_alloc (N);
-        
-        gsl_fft_halfcomplex_inverse(data, 1, N, wavetable, workspace);
-        
-        gsl_fft_halfcomplex_wavetable_free(wavetable);
-        gsl_fft_real_workspace_free(workspace);
+        freqdata[i].r = data[2*i];
+        freqdata[i].i = data[2*i+1];
     }
     
-    //=============== KISSFFT ==============//
-    else
-    {
-        kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 1, NULL, NULL); // 0 indicates forward FFT;
-        kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
-        kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
-
-        for(int i=0; i<N/2; i++)
-        {
-            freqdata[i].r = data[2*i];
-            freqdata[i].i = data[2*i+1];
-        }
-        
-        // Perform the rFFT
-        kiss_fftr(cfg, timedata, freqdata);
-        
-        for(int i=0; i<N; i++)  data[i] = timedata[i];
-        
-        // Clean up and free memory
-        kiss_fftr_free(cfg);
-        free(timedata);
-        free(freqdata);
-    }
+    // Perform the rFFT
+    kiss_fftr(cfg, timedata, freqdata);
+    
+    for(int i=0; i<N; i++)  data[i] = timedata[i];
+    
+    // Clean up and free memory
+    kiss_fftr_free(cfg);
+    free(timedata);
+    free(freqdata);
 }
 
 void CubicSplineGLASS(int N, double *x, double *y, int Nint, double *xint, double *yint)
@@ -1044,6 +932,12 @@ void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
     free_int_vector(Utemp);
     free_int_vector(temp);
 }
+
+double gaussian_pdf(double x, double mean, double sigma)
+{
+    return exp(-0.5*(x-mean)*(x-mean)/sigma/sigma)/sqrt(PI2)/sigma;
+}
+
 
 double get_mean(double *x, int N)
 {

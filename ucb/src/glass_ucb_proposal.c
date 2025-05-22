@@ -432,49 +432,49 @@ double draw_calibration_parameters(struct Data *data, struct Model *model, unsig
 {
     double logP = 0.0;
     
-    /*apply calibration error to full signal model
+    /* apply calibration error to full signal model */
     double dA,dphi;
     switch(data->Nchannel)
     {
         case 1:
             
             //amplitude
-            dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+            dA = rand_r_N_0_1(seed)*CAL_SIGMA_AMP;
             model->calibration->dampX = dA;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
-            dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+            dphi = 0.0;//rand_r_N_0_1(seed)*CAL_SIGMA_PHASE;
             model->calibration->dphiX = dphi;
-            logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += 0.0;//log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
             
             break;
         case 2:
             
             //amplitude
-            dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+            dA = rand_r_N_0_1(seed)*CAL_SIGMA_AMP;
             model->calibration->dampA = dA;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
-            dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+            dphi = 0.0;//rand_r_N_0_1(seed,CAL_SIGMA_PHASE);
             model->calibration->dphiA = dphi;
-            logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += 0.0;//log(gaussian_pdf(dphi,0,CAL_SIGMA_PHASE));
             
             //amplitude
-            dA = gsl_ran_gaussian(seed,CAL_SIGMA_AMP);
+            dA = rand_r_N_0_1(seed)*CAL_SIGMA_AMP;
             model->calibration->dampE = dA;
-            logP += log(gsl_ran_gaussian_pdf(dA,CAL_SIGMA_AMP));
+            logP += log(gaussian_pdf(dA,0,CAL_SIGMA_AMP));
             
             //phase
-            dphi = 0.0;//gsl_ran_gaussian(seed,CAL_SIGMA_PHASE);
+            dphi = 0.0;//rand_r_N_0_1(seed)*CAL_SIGMA_PHASE;
             model->calibration->dphiE = dphi;
-            logP += 0.0;//log(gsl_ran_gaussian_pdf(dphi,CAL_SIGMA_PHASE));
+            logP += 0.0;//log(gaussian_pdf(dphi0,,CAL_SIGMA_PHASE));
             
             break;
         default:
             break;
-    }end switch*/
+    }
 
     return logP;
 }
@@ -1640,13 +1640,6 @@ void setup_covariance_proposal(struct Data *data, struct Flags *flags, struct Pr
             fprintf(stderr,"Error reading %s\n",flags->covFile);
             exit(1);
         }
-        
-        //use gsl cholesky decomposition, preserving Cij
-        /*
-         this gives identical results to what is in the cov files
-         */
-        //Lij = proposal->tensor[n];
-        //cholesky_decomp(Cij, Lij, NP);
         
         //next NP rows are the lower half of the cholesky decomp.
         Lij = proposal->tensor[n];

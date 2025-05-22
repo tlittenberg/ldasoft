@@ -57,7 +57,7 @@ struct MBHData
     double ***evec; //!< Directions for Fisher matrix proposals
     int **cv; //!< Unknown
     int **av; //!< Unknown
-    gsl_rng **rvec; //!< Vector of RNG seeds for multithreading PTMCMC
+    int **rvec; //!< Vector of RNG seeds for multithreading PTMCMC
 
     int NC; //!< Number of chains
     int NH; //!< Some global variable?

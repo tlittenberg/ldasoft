@@ -22,17 +22,6 @@
 #ifndef math_h
 #define math_h
 
-#define GSL_FFT 0
-#include <gsl/gsl_fft_real.h>
-#include <gsl/gsl_fft_complex.h>
-#include <gsl/gsl_fft_halfcomplex.h>
-
-#define GSL_SPLINE 0
-#include <gsl/gsl_spline.h>
-
-#include <gsl/gsl_sf_gamma.h>
-
-
 struct CubicSpline
 {
     int N;       //!<Number of grid points to be interpolated
@@ -41,9 +30,6 @@ struct CubicSpline
     double *x;   //!<Independent variable of function to be interpolated
     double *y;   //!<Dependent variable of function to be interpolated
     double *d2y; //!<Second derivitives of function to be interpolated
-    
-    gsl_spline *spline;//!
-    gsl_interp_accel *acc;//!
 };
 
 struct CubicSpline* alloc_cubic_spline(int N);
@@ -309,6 +295,17 @@ void index_sort(int *index, double *data, int N);
 
 
 void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB);
+
+/**
+ \brief return pdf gaussian at x
+ 
+ @param[in] x value for which you want \f$ p(x) \f$
+ @param[in] mean mean of the Gaussian distribution \f$(\mu)\f$
+ @param[in] sigma standard deviaiton of the Gaussian distrubtion \f$(\sigma)\f$
+ @return \f$ p(x) = \frac{1}{\sqrt{2\pi}\sigma} exp^{-\frac{1}{2}\frac{(x-\mu)^2}{\sigma^2} } \f$
+ */
+double gaussian_pdf(double x, double mean, double sigma);
+
 
 /**
  \brief return variance of data vector x

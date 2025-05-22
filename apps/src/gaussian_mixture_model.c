@@ -1,26 +1,21 @@
 /*
- *  Author: Tyson B. Littenberg (MSFC-ST12)
- *  Created: 07.27.2020
+ * Copyright 2020 Tyson B. Littenberg
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
- *
- * Gaussian Mixture Model using the Expectation-Maximization Algorithm
- *
- * Compile: gcc gaussian_mixture_model.c -lm -lgsl -lgslcblas  -lglass_utils -o gaussian_mixture_model
  * Usage: gaussian_mixture_model -h
  * Example: Fit 4 gaussians to the first two columns of `chain.dat`
  *          gaussian_mixture_model --file chain.dat --modes 4 --nparams 2
