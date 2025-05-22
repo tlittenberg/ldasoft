@@ -1466,8 +1466,8 @@ void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orb
     flags->orbit       = 0;
     flags->prior       = 0;
     flags->resume      = 0;
-    flags->NMCMC       = 10000;
-    flags->NBURN       = 10000;
+    flags->NMCMC       = 1000;
+    flags->NBURN       = 1000;
     flags->threads     = omp_get_max_threads();
     sprintf(flags->runDir,"./");
     chain->NC          = 12;//number of chains

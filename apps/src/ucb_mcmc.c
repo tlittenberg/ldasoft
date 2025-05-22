@@ -252,31 +252,27 @@ int main(int argc, char *argv[])
                 struct Model *trial_ptr = trial[chain->index[ic]];
                 copy_model(model_ptr,trial_ptr);
 
-                for(int steps=0; steps < 10; steps++)
+                for(int steps=0; steps < 500; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(rand_r_U_0_1(&chain->r[ic])<0.9 && flags->rj)
+                    if(rand_r_U_0_1(&chain->r[ic])<0.1 && flags->rj)
                     {
                         ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     }
                     //fixed dimension parameter updates
                     else
                     {
-                        for(int n=0; n<model_ptr->Nlive; n++)
                             ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
-                    }     
+                    }  
+
+                    if( (flags->strainData || flags->simNoise) && !flags->psd)
+                        noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
+
                 }//loop over MCMC steps
-
-
-                if( (flags->strainData || flags->simNoise) && !flags->psd)
-                    noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
-
 
                 //update fisher matrix for each chain
                 for(int n=0; n<model_ptr->Nlive; n++)
                     ucb_fisher(orbit, data, model_ptr->source[n], data->noise);
-
-
                 
             }// end (parallel) loop over chains
             

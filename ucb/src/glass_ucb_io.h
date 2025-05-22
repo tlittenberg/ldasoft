@@ -42,6 +42,11 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags);
 void parse_vgb_args(int argc, char **argv, struct Flags *flags);
 
 /**
+ \brief Prints constants and flags for the MCMC run
+ */
+void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, FILE *fptr);
+
+/**
  \brief Print functional example `ucb_catalog` bash script based on input args
  */
 void print_ucb_catalog_script(struct Flags *flags, struct Data *data, struct Orbit *orbit);

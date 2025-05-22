@@ -196,8 +196,7 @@ int main(int argc, char *argv[])
                 struct Model *trial_ptr = trial[chain->index[ic]];
                 copy_model(model_ptr,trial_ptr);
                 
-                int Nstep = model_ptr->Nlive+10;
-                for(int steps=0; steps < Nstep; steps++)
+                for(int steps=0; steps < 500; steps++)
                 {
                     //reverse jump birth/death or split/merge moves
                     if(rand_r_U_0_1(&chain->r[ic])<0.1 && flags->rj)
@@ -209,11 +208,12 @@ int main(int argc, char *argv[])
                     {
                         ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     }
+                    
+                    if( (flags->strainData || flags->simNoise) && !flags->psd)
+                        noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
+                    
                 }//loop over MCMC steps
-
-                if( (flags->strainData || flags->simNoise) && !flags->psd)
-                    for(int steps=0; steps < 10; steps++) noise_model_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, ic);
-
+                
                 //update information matrix for each chain
                 for(int n=0; n<model_ptr->Nlive; n++)
                     ucb_fisher_wavelet(orbit, data, model_ptr->source[n], data->noise);
