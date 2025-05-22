@@ -1,13 +1,19 @@
-//
-//  glass_ucb_fstatistic.c
-//
-//
-//  Created on 7/21/17 by
-//    Robson, Travis (Montana State Univ.)
-//    Cornish, Neil (Montana State Univ.)
-//    Littenberg, Tyson B. (MSFC-ZP12)
-//
-//
+/*
+ * Copyright 2019 Travis Robson, Tyson B. Littenberg, Neil J. Cornish
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 
 #ifndef ucb_fstatistic_h
 #define ucb_fstatistic_h

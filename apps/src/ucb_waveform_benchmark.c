@@ -1,17 +1,21 @@
-//
-//  waveform_benchmark.c
-//  
-//
-//  Created by Tyson Littenberg on 3/18/25.
-//
-
-//gcc waveform_benchmark.c -lm -lgsl -lhdf5 -lgslcblas -lglass_utils -lglass_ucb -lopenblas -lomp -I/Users/tyson/opt/include -L/Users/tyson/opt/lib -o waveform_benchmark
+/*
+ * Copyright 2025 Tyson B. Littenberg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <stdio.h>
 #include <time.h>
-#include <gsl/gsl_spline.h>
-#include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_fft_complex.h>
 
 #include <glass_utils.h>
 #include <glass_ucb.h>
@@ -33,7 +37,6 @@ static void print_wavelet_pixels(struct Wavelets *wdm, struct TDI *tdi, FILE *fp
         }
         fprintf(fptr,"\n");
     }
-
 }
 
 int main(int argc, char* argv[])

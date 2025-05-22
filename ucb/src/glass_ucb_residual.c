@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ *  Copyright (C) 2019 Tyson B. Littenberg & Neil J. Cornish
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  *  MA  02111-1307  USA
  */
 
-/***************************  REQUIRED LIBRARIES  ***************************/
 
 #include <glass_utils.h>
 
