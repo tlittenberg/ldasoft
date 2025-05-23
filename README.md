@@ -1,14 +1,12 @@
-\mainpage
-
 Prototype data analysis software for LISA analysis
 
 # Doxygen code documentation
-https://tlittenberg.github.io/ldasoft/html/index.html
+https://tlittenberg.github.io/glass/html/index.html
 
 # Acknowledgment
 
 ```bibtex
-@misc{ldasoft,
+@misc{glass,
 	author = "Tyson B. Littenberg, Neil J. Cornish, Kristen Lackeos, Travis Robson",
 	title = "LDASoft",
 	howpublished = "free software (GPL)"
@@ -43,7 +41,7 @@ export GLASS_PREFIX=<EDIT: path to desired install directories>
 export PATH=${GLASS_PREFIX}/bin:${PATH}
 ```
 
-Directory tree for the ldasoft installation:
+Directory tree for the GLASS installation:
 ```
 ├── bin
 │   ├── gaussian_mixture_model
@@ -87,8 +85,8 @@ Directory tree for the ldasoft installation:
 
 
 # Issue tracker
-https://github.com/tlittenberg/ldasoft/issues
+https://github.com/tlittenberg/glass/issues
 
 # Other resources
- + [Example LISA analysis flow chart](https://www.draw.io/#Htlittenberg%2Fldasoft%2Fmaster%2FLISADataFlow.drawio)
- + [Global Fit block diagram](https://app.diagrams.net/#Htlittenberg%2Fldasoft%2Fmaster%2FGlobalFit.drawio)
+ + [Example LISA analysis flow chart](https://www.draw.io/#Htlittenberg%2Fglass%2Fmaster%2FLISADataFlow.drawio)
+ + [Global Fit block diagram](https://app.diagrams.net/#Htlittenberg%2Fglass%2Fmaster%2FGlobalFit.drawio)
