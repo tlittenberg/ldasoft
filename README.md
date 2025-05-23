@@ -27,8 +27,6 @@ hdf5
 lapack
 kissfft
 ```
-The `GlobalFit` pipeline additionally requires the `global-fit` branch of [`LISA-Massive-Black-Hole`](https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/tree/global-fit) to be installed.
-
 # Installation
 
 Example build script:
@@ -36,13 +34,13 @@ Example build script:
 #!/bin/bash
 
 # set prefix for install directories
-export LDASOFT_PREFIX=<EDIT: path to desired install directories>
+export GLASS_PREFIX=<EDIT: path to desired install directories>
 
 # build codes
-./install.sh ${LDASOFT_PREFIX}
+./install.sh ${GLASS_PREFIX}
 
 # add location of binaries to PATH 
-export PATH=${LDASOFT_PREFIX}/bin:${PATH}
+export PATH=${GLASS_PREFIX}/bin:${PATH}
 ```
 
 Directory tree for the ldasoft installation:
