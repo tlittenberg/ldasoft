@@ -1,88 +1,90 @@
-Prototype data analysis software for LISA analysis\hypertarget{index_autotoc_md0}{}\doxysection{Doxygen code documentation}\label{index_autotoc_md0}
-\href{https://tlittenberg.github.io/ldasoft/html/index.html}{\texttt{ https\+://tlittenberg.\+github.\+io/ldasoft/html/index.\+html}}\hypertarget{index_autotoc_md1}{}\doxysection{Acknowledgment}\label{index_autotoc_md1}
+\chapter{GLASS}
+\hypertarget{index}{}\label{index}\index{GLASS@{GLASS}}
+Prototype data analysis software for LISA analysis\hypertarget{index_autotoc_md0}{}\doxysection{\texorpdfstring{Doxygen code documentation}{Doxygen code documentation}}\label{index_autotoc_md0}
+\href{https://tlittenberg.github.io/ldasoft/html/index.html}{\texttt{ https\+://tlittenberg.\+github.\+io/ldasoft/html/index.\+html}}\hypertarget{index_autotoc_md1}{}\doxysection{\texorpdfstring{Acknowledgment}{Acknowledgment}}\label{index_autotoc_md1}
 
 \begin{DoxyCode}{0}
 \DoxyCodeLine{@misc\{ldasoft,}
-\DoxyCodeLine{    author = "{}Tyson B. Littenberg, Neil J. Cornish, Kristen Lackeos, Travis Robson"{},}
-\DoxyCodeLine{    title = "{}LDASoft"{},}
-\DoxyCodeLine{    howpublished = "{}free software (GPL)"{}}
-\DoxyCodeLine{    doi = "{}10.5281/zenodo.2026177"{}}
-\DoxyCodeLine{    year = "{}2020"{}}
+\DoxyCodeLine{\ \ \ \ author\ =\ "{}Tyson\ B.\ Littenberg,\ Neil\ J.\ Cornish,\ Kristen\ Lackeos,\ Travis\ Robson"{},}
+\DoxyCodeLine{\ \ \ \ title\ =\ "{}LDASoft"{},}
+\DoxyCodeLine{\ \ \ \ howpublished\ =\ "{}free\ software\ (GPL)"{}}
+\DoxyCodeLine{\ \ \ \ doi\ =\ "{}10.5281/zenodo.2026177"{}}
+\DoxyCodeLine{\ \ \ \ year\ =\ "{}2020"{}}
 \DoxyCodeLine{\}}
 
 \end{DoxyCode}
 
 
-\href{https://doi.org/10.5281/zenodo.2026177}{\texttt{ }}\hypertarget{index_autotoc_md2}{}\doxysection{C Dependencies}\label{index_autotoc_md2}
+\href{https://doi.org/10.5281/zenodo.2026177}{\texttt{ }}\hypertarget{index_autotoc_md2}{}\doxysection{\texorpdfstring{C Dependencies}{C Dependencies}}\label{index_autotoc_md2}
 
 \begin{DoxyCode}{0}
-\DoxyCodeLine{gsl}
-\DoxyCodeLine{gslcblas}
 \DoxyCodeLine{openmp}
 \DoxyCodeLine{mpi}
 \DoxyCodeLine{hdf5}
+\DoxyCodeLine{lapack}
+\DoxyCodeLine{kissfft}
 
 \end{DoxyCode}
- The {\ttfamily Global\+Fit} pipeline additionally requires the {\ttfamily global-\/fit} branch of \href{https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/tree/global-fit}{\texttt{ {\ttfamily LISA-\/\+Massive-\/\+Black-\/\+Hole}}} to be installed.\hypertarget{index_autotoc_md3}{}\doxysection{Installation}\label{index_autotoc_md3}
+ The {\ttfamily Global\+Fit} pipeline additionally requires the {\ttfamily global-\/fit} branch of \href{https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/tree/global-fit}{\texttt{ {\ttfamily LISA-\/\+Massive-\/\+Black-\/\+Hole}}} to be installed.\hypertarget{index_autotoc_md3}{}\doxysection{\texorpdfstring{Installation}{Installation}}\label{index_autotoc_md3}
 Example build script\+: 
 \begin{DoxyCode}{0}
 \DoxyCodeLine{\#!/bin/bash}
 \DoxyCodeLine{}
-\DoxyCodeLine{\# set prefix for install directories}
-\DoxyCodeLine{export LDASOFT\_PREFIX=<EDIT: path to desired install directories>}
+\DoxyCodeLine{\#\ set\ prefix\ for\ install\ directories}
+\DoxyCodeLine{export\ LDASOFT\_PREFIX=<EDIT:\ path\ to\ desired\ install\ directories>}
 \DoxyCodeLine{}
-\DoxyCodeLine{\# build codes}
-\DoxyCodeLine{./install.sh \$\{LDASOFT\_PREFIX\}}
+\DoxyCodeLine{\#\ build\ codes}
+\DoxyCodeLine{./install.sh\ \$\{LDASOFT\_PREFIX\}}
 \DoxyCodeLine{}
-\DoxyCodeLine{\# add location of binaries to PATH }
-\DoxyCodeLine{export PATH=\$\{LDASOFT\_PREFIX\}/bin:\$\{PATH\}}
+\DoxyCodeLine{\#\ add\ location\ of\ binaries\ to\ PATH\ }
+\DoxyCodeLine{export\ PATH=\$\{LDASOFT\_PREFIX\}/bin:\$\{PATH\}}
 
 \end{DoxyCode}
 
 
 Directory tree for the ldasoft installation\+: 
 \begin{DoxyCode}{0}
-\DoxyCodeLine{├── bin}
-\DoxyCodeLine{│   ├── gaussian\_mixture\_model}
-\DoxyCodeLine{│   ├── global\_fit}
-\DoxyCodeLine{│   ├── noise\_mcmc}
-\DoxyCodeLine{│   ├── noise\_spline\_mcmc}
-\DoxyCodeLine{│   ├── ucb\_catalog}
-\DoxyCodeLine{│   ├── ucb\_chirpmass}
-\DoxyCodeLine{│   ├── ucb\_grid}
-\DoxyCodeLine{│   ├── ucb\_match}
-\DoxyCodeLine{│   ├── ucb\_mcmc}
-\DoxyCodeLine{│   └── vgb\_mcmc}
-\DoxyCodeLine{├── include}
-\DoxyCodeLine{│   ├── gitversion.h}
-\DoxyCodeLine{│   ├── glass\_constants.h}
-\DoxyCodeLine{│   ├── glass\_data.h}
-\DoxyCodeLine{│   ├── glass\_gmm.h}
-\DoxyCodeLine{│   ├── glass\_lisa.h}
-\DoxyCodeLine{│   ├── glass\_math.h}
-\DoxyCodeLine{│   ├── glass\_noise.h}
-\DoxyCodeLine{│   ├── glass\_noise\_io.h}
-\DoxyCodeLine{│   ├── glass\_noise\_model.h}
-\DoxyCodeLine{│   ├── glass\_noise\_sampler.h}
-\DoxyCodeLine{│   ├── glass\_ucb.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_catalog.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_data.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_fstatistic.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_io.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_model.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_prior.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_proposal.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_sampler.h}
-\DoxyCodeLine{│   ├── glass\_ucb\_waveform.h}
-\DoxyCodeLine{│   └── glass\_utils.h}
-\DoxyCodeLine{└── lib}
-\DoxyCodeLine{    ├── libglass\_noise.a}
-\DoxyCodeLine{    ├── libglass\_ucb.a}
-\DoxyCodeLine{    └── libglass\_utils.a}
+\DoxyCodeLine{├──\ bin}
+\DoxyCodeLine{│  \ ├──\ gaussian\_mixture\_model}
+\DoxyCodeLine{│  \ ├──\ global\_fit}
+\DoxyCodeLine{│  \ ├──\ noise\_mcmc}
+\DoxyCodeLine{│  \ ├──\ noise\_spline\_mcmc}
+\DoxyCodeLine{│  \ ├──\ ucb\_catalog}
+\DoxyCodeLine{│  \ ├──\ ucb\_chirpmass}
+\DoxyCodeLine{│  \ ├──\ ucb\_grid}
+\DoxyCodeLine{│  \ ├──\ ucb\_match}
+\DoxyCodeLine{│  \ ├──\ ucb\_mcmc}
+\DoxyCodeLine{│  \ └──\ vgb\_mcmc}
+\DoxyCodeLine{├──\ include}
+\DoxyCodeLine{│  \ ├──\ gitversion.h}
+\DoxyCodeLine{│  \ ├──\ glass\_constants.h}
+\DoxyCodeLine{│  \ ├──\ glass\_data.h}
+\DoxyCodeLine{│  \ ├──\ glass\_gmm.h}
+\DoxyCodeLine{│  \ ├──\ glass\_lisa.h}
+\DoxyCodeLine{│  \ ├──\ glass\_math.h}
+\DoxyCodeLine{│  \ ├──\ glass\_noise.h}
+\DoxyCodeLine{│  \ ├──\ glass\_noise\_io.h}
+\DoxyCodeLine{│  \ ├──\ glass\_noise\_model.h}
+\DoxyCodeLine{│  \ ├──\ glass\_noise\_sampler.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_catalog.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_data.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_fstatistic.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_io.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_model.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_prior.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_proposal.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_sampler.h}
+\DoxyCodeLine{│  \ ├──\ glass\_ucb\_waveform.h}
+\DoxyCodeLine{│  \ └──\ glass\_utils.h}
+\DoxyCodeLine{└──\ lib}
+\DoxyCodeLine{\ \ \ \ ├──\ libglass\_noise.a}
+\DoxyCodeLine{\ \ \ \ ├──\ libglass\_ucb.a}
+\DoxyCodeLine{\ \ \ \ └──\ libglass\_utils.a}
 
 \end{DoxyCode}
-\hypertarget{index_autotoc_md4}{}\doxysection{Issue tracker}\label{index_autotoc_md4}
-\href{https://github.com/tlittenberg/ldasoft/issues}{\texttt{ https\+://github.\+com/tlittenberg/ldasoft/issues}}\hypertarget{index_autotoc_md5}{}\doxysection{Other resources}\label{index_autotoc_md5}
+\hypertarget{index_autotoc_md4}{}\doxysection{\texorpdfstring{Issue tracker}{Issue tracker}}\label{index_autotoc_md4}
+\href{https://github.com/tlittenberg/ldasoft/issues}{\texttt{ https\+://github.\+com/tlittenberg/ldasoft/issues}}\hypertarget{index_autotoc_md5}{}\doxysection{\texorpdfstring{Other resources}{Other resources}}\label{index_autotoc_md5}
 
 \begin{DoxyItemize}
 \item \href{https://www.draw.io/\#Htlittenberg\%2Fldasoft\%2Fmaster\%2FLISADataFlow.drawio}{\texttt{ Example LISA analysis flow chart}}

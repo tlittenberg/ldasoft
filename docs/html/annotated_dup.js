@@ -3,16 +3,18 @@ var annotated_dup =
     [ "Calibration", "structCalibration.html", null ],
     [ "Catalog", "structCatalog.html", "structCatalog" ],
     [ "Chain", "structChain.html", "structChain" ],
+    [ "CubicSpline", "structCubicSpline.html", "structCubicSpline" ],
     [ "Data", "structData.html", "structData" ],
     [ "Entry", "structEntry.html", "structEntry" ],
     [ "Filter", "structFilter.html", null ],
     [ "Flags", "structFlags.html", "structFlags" ],
     [ "ForegroundModel", "structForegroundModel.html", "structForegroundModel" ],
     [ "freq_data", "structfreq__data.html", null ],
+    [ "GalaxyModulation", "structGalaxyModulation.html", null ],
     [ "GlobalFitData", "structGlobalFitData.html", null ],
     [ "GMM", "structGMM.html", null ],
+    [ "IndexedValue", "structIndexedValue.html", null ],
     [ "InstrumentModel", "structInstrumentModel.html", "structInstrumentModel" ],
-    [ "MBHData", "structMBHData.html", "structMBHData" ],
     [ "Model", "structModel.html", "structModel" ],
     [ "MVG", "structMVG.html", "structMVG" ],
     [ "Noise", "structNoise.html", "structNoise" ],
@@ -25,5 +27,6 @@ var annotated_dup =
     [ "SplineModel", "structSplineModel.html", "structSplineModel" ],
     [ "TDI", "structTDI.html", "structTDI" ],
     [ "UCBData", "structUCBData.html", "structUCBData" ],
-    [ "VGBData", "structVGBData.html", "structVGBData" ]
+    [ "VGBData", "structVGBData.html", "structVGBData" ],
+    [ "Wavelets", "structWavelets.html", "structWavelets" ]
 ];

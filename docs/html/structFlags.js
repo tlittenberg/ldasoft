@@ -41,6 +41,7 @@ var structFlags =
     [ "runDir", "structFlags.html#a0e180de144de26732c748a0d5aa04375", null ],
     [ "simNoise", "structFlags.html#a84863fdaac48e30b194b1d112e2ae514", null ],
     [ "snrPrior", "structFlags.html#acf5ce15c8b6fd59d471ec7b12f4f5ebd", null ],
+    [ "stationary", "structFlags.html#a1c2bf41b00c7847da008020556498fca", null ],
     [ "strainData", "structFlags.html#a0e7b06500d417cf52b290fecff8dcec7", null ],
     [ "threads", "structFlags.html#ac5948da1f28e92b5e60603f6d75c969b", null ],
     [ "ucbGridFile", "structFlags.html#a66dee5fced93f1561ce41b58c54d7afc", null ],

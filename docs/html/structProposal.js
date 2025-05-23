@@ -2,7 +2,7 @@ var structProposal =
 [
     [ "accept", "structProposal.html#a04235a6edbb89b37f5ebf514e74fc4ba", null ],
     [ "density", "structProposal.html#a9c600af1bf6f47a578be3bc60cead450", null ],
-    [ "function", "structProposal.html#a4ea081b1905164a990c8a2d2239bcd34", null ],
+    [ "function", "structProposal.html#ab8f80e0ea509dcf531feeb9d9bc5de63", null ],
     [ "gmm", "structProposal.html#a423c3e8d55806f2853ac5444d362cb96", null ],
     [ "matrix", "structProposal.html#af23e1e359df0ad1172ab360b440a62e3", null ],
     [ "maxp", "structProposal.html#ab7c7b47c87acc31027fc19fb3a33ef15", null ],

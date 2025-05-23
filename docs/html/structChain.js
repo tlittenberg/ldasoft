@@ -15,8 +15,7 @@ var structChain =
     [ "NC", "structChain.html#a8ecd4e9da9ab5490971515655a49cae6", null ],
     [ "noiseFile", "structChain.html#a900a8760a27ddacbf6d801c8c817cea2", null ],
     [ "parameterFile", "structChain.html#a28c3caa18e9b68a2dbde9c490f1c64f4", null ],
-    [ "r", "structChain.html#a6ae8537a4979bad68e1e68860e8732c1", null ],
-    [ "T", "structChain.html#a1b41dad93ccb01da4f4cd2f2fc7b3007", null ],
+    [ "r", "structChain.html#a1e3df39c4ddd1e683783e16d893b4f5b", null ],
     [ "temperature", "structChain.html#a8ee7c3ffcf5aa3b77b263c617ccedb6d", null ],
     [ "temperatureFile", "structChain.html#ad4792c62796b3a6d3610d1badc70617b", null ]
 ];

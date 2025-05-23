@@ -17,5 +17,5 @@ var searchData=
   ['cov_5fdensity_14',['cov_density',['../glass__ucb__proposal_8h.html#a48c97df4de6815daf57b7f054092a035',1,'glass_ucb_proposal.c']]],
   ['create_5fempty_5fsource_15',['create_empty_source',['../glass__ucb__catalog_8h.html#a8f6968dd2a428624543481bd2df76e94',1,'glass_ucb_catalog.c']]],
   ['create_5fnew_5fsource_16',['create_new_source',['../glass__ucb__catalog_8h.html#a3bbe6b39ae5f206d71241de63d5b073a',1,'glass_ucb_catalog.c']]],
-  ['cubicsplinegsl_17',['CubicSplineGSL',['../glass__lisa_8h.html#a805d240e93c0309da5a4c6985defab31',1,'CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint):&#160;glass_math.c'],['../glass__math_8h.html#a805d240e93c0309da5a4c6985defab31',1,'CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint):&#160;glass_math.c']]]
+  ['cubicsplineglass_17',['CubicSplineGLASS',['../glass__math_8h.html#a1e6346e26742eefbbdbfb6b4980b88bd',1,'glass_math.c']]]
 ];
