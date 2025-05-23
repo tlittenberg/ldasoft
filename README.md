@@ -21,6 +21,7 @@ https://tlittenberg.github.io/glass/html/index.html
 openmp
 mpi
 hdf5
+openblas
 lapack
 kissfft
 ```
@@ -84,8 +85,8 @@ Directory tree for the GLASS installation:
 
 
 # Issue tracker
-https://github.com/tlittenberg/glass/issues
+https://github.com/lisa-analysis-center/glass/issues
 
 # Other resources
- + [Example LISA analysis flow chart](https://www.draw.io/#Htlittenberg%2Fglass%2Fmaster%2FLISADataFlow.drawio)
- + [Global Fit block diagram](https://app.diagrams.net/#Htlittenberg%2Fglass%2Fmaster%2FGlobalFit.drawio)
+ + [Example LISA analysis flow chart](https://www.draw.io/#Hlisa-analysis-center%2Fglass%2Fmaster%2FLISADataFlow.drawio)
+ + [Global Fit block diagram](https://app.diagrams.net/#Htlisa-analysis-center%2Fglass%2Fmaster%2FGlobalFit.drawio)
