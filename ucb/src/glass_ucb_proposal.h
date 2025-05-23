@@ -1,21 +1,19 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish, Kristen Lackeos
+ * Copyright 2019 Tyson B. Littenberg, Neil J. Cornish & Kristen Lackeos
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 
 /**
  @file glass_ucb_proposal.h
@@ -54,7 +52,7 @@ struct Proposal
      @param  params parameter vector
      @return logQ proposal density
      */
-    double (*function)(struct Data*,struct Model*,struct Source*,struct Proposal*,double*,gsl_rng*);
+    double (*function)(struct Data*,struct Model*,struct Source*,struct Proposal*,double*,unsigned int*);
 
     /**
      \brief Compute proposal density given parameters.
@@ -101,7 +99,7 @@ void print_acceptance_rates(struct Proposal **proposal, int NProp, int ic, FILE 
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
 \brief Fair draw from gaussian mixture model prior for each parameter
@@ -110,7 +108,7 @@ double draw_from_prior(struct Data *data, struct Model *model, struct Source *so
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
 \brief Fair draw from uniform ranges for each parameter
@@ -119,7 +117,7 @@ double draw_from_gmm_prior(struct Data *data, struct Model *model, struct Source
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
 \brief Fair draw from prior for location and orientation parameters
@@ -128,7 +126,7 @@ double draw_from_uniform_prior(UNUSED struct Data *data, struct Model *model, UN
  @return logQ = \f$\ln p(\f$ \c params \f$)\f$
 
  */
-double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Jump from current location along eigenvectors of Fisher information matrix
@@ -152,7 +150,7 @@ double draw_from_extrinsic_prior(UNUSED struct Data *data, struct Model *model, 
  
 
  */
-double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw each parameter from 1D marginalized CDF
@@ -163,7 +161,7 @@ double draw_from_fisher(UNUSED struct Data *data, struct Model *model, struct So
 @return logQ = cdf_density()
  
  */
-double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw from multivariate Gaussian characterized by chain covariance
@@ -183,7 +181,7 @@ double draw_from_cdf(UNUSED struct Data *data, struct Model *model, struct Sourc
  @return logQ = cov_density()
 
  */
-double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw from 3D F-statistic distribution
@@ -194,7 +192,7 @@ double draw_from_cov(UNUSED struct Data *data, struct Model *model, struct Sourc
  @return logQ = evaluate_fstatistic_proposal()
 
  */
-double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSED struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw \f$f_0\f$ weighted by power spectrum of data
@@ -203,7 +201,7 @@ double draw_from_fstatistic(struct Data *data, UNUSED struct Model *model, UNUSE
  @return logQ = 0
 
  */
-double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double draw_from_spectrum(struct Data *data, struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Shift \f$f_0\f$ by orbital modulation frequency
@@ -216,7 +214,7 @@ double draw_from_spectrum(struct Data *data, struct Model *model, struct Source 
  @return logQ = 0 (symmetric proposal)
 
  */
-double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double fm_shift(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Jumps between modes in \f$\psi\f$--\f$\varphi_0\f$ plane.
@@ -230,7 +228,7 @@ double fm_shift(struct Data *data, struct Model *model, struct Source *source, s
  @return logQ = 0 (symmetric proposal)
 
  */
-double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, gsl_rng *seed);
+double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct Source *source, UNUSED struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Same as draw_from_fstatistic() with fm_shift()
@@ -241,7 +239,7 @@ double psi_phi_jump(UNUSED struct Data *data, UNUSED struct Model *model, struct
  @return logQ = evaluate_fstatistic_proposal()
 
  */
-double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, gsl_rng *seed);
+double jump_from_fstatistic(struct Data *data, struct Model *model, struct Source *source, struct Proposal *proposal, double *params, unsigned int *seed);
 
 /**
  \brief Draw sky location from galaxy prior defined in set_galaxy_prior()
@@ -252,7 +250,7 @@ double jump_from_fstatistic(struct Data *data, struct Model *model, struct Sourc
  @return logQ = prior->skyhist[]
 
  */
-double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, gsl_rng *seed);
+double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *params, unsigned int *seed);
 
 
 /**
@@ -262,7 +260,7 @@ double draw_from_galaxy_prior(struct Model *model, struct Prior *prior, double *
  @return logQ = 
 
  */
-double draw_calibration_parameters(struct Data *data, struct Model *model, gsl_rng *seed);
+double draw_calibration_parameters(struct Data *data, struct Model *model, unsigned int *seed);
 
 /**
  \brief Evaluate probability density from CDF
@@ -286,18 +284,28 @@ void initialize_proposal(struct Orbit *orbit, struct Data *data, struct Prior *p
 void initialize_vb_proposal(struct Orbit *orbit, struct Data *data, struct Prior *prior, struct Chain *chain, struct Flags *flags, struct Proposal **proposal, int NMAX);
 
 /**
- \brief Create 3D histogram for F-statistics proposal
- 
-  - discretize \f${f_0,\cos\theta,\phi}\f$ space.
-    - frequency resolution is hard-coded to 1/4 of a bin
-    - sky location resolution is hard-coded to 30x30 bins
-  - compute F-statistic in each cell of the grid
-  - cap F-statistic at SNRmax=20
-  - normalize to make it a proper proposal (this part is a pain to get right...)
-
- TODO: adaptive grid spacing based on Fisher sub-matrix
+ \brief Sets up memory for and builds 3D histogram for F-statistics proposal
  */
 void setup_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
+
+/**
+\brief Create 3D histogram for F-statistics proposal
+
+ - discretize \f${f_0,\cos\theta,\phi}\f$ space.
+   - frequency resolution is hard-coded to 1/4 of a bin
+   - sky location resolution is hard-coded to 30x30 bins
+ - compute F-statistic in each cell of the grid
+ - cap F-statistic at SNRmax=20
+ - normalize to make it a proper proposal (this part is a pain to get right...)
+
+TODO: adaptive grid spacing based on Fisher sub-matrix
+*/
+void build_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Flags *flags, struct Proposal *proposal);
+
+/**
+ \brief Rebuilds F-statistic proposal using current residual
+ */
+void rebuild_fstatistic_proposal(struct Orbit *orbit, struct Data *data, struct Model *model, struct Flags *flags, struct Proposal *proposal);
 
 /**
  \brief package priors into Proposal structures
@@ -313,7 +321,7 @@ void setup_prior_proposal(struct Flags *flags, struct Prior *prior, struct Propo
  
  Monte Carlo integration of the covariance proposal rejection sampling on the prior boundaries.  The matrices \f$C_{ij}\f$ and \f$L_{ij}\f$ are re-wighted to keep most of the proposal mass within the prior.
  */
-void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, gsl_rng *seed);
+void test_covariance_proposal(struct Data *data, struct Flags *flags, struct Model *model, struct Prior *prior, struct Proposal *proposal, unsigned int *seed);
 
 /**
  \brief Stores CDF of chain file input with --update flag

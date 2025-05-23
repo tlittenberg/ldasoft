@@ -1,28 +1,27 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2019 Tyson B. Littenberg & Neil J. Cornish
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <glass_utils.h>
+#include <glass_noise.h>
 
 #include "glass_ucb_model.h"
 #include "glass_ucb_io.h"
 #include "glass_ucb_catalog.h"
 #include "glass_ucb_waveform.h"
+#include "glass_ucb_fstatistic.h"
 #include "glass_ucb_data.h"
 
 
@@ -31,15 +30,15 @@ void UCBInjectVerificationSet(struct Data *data, struct Orbit *orbit, struct Fla
     //TODO: Combine this function w/ UCBInjectVerificationSource()
 
     //Book-keeping of injection time-frequency volume
-    galactic_binary_alignment(orbit, data, inj);
+    ucb_alignment(orbit, data, inj);
 
-    galactic_binary(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, data->Nchannel);
+    ucb_waveform(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, data->Nchannel);
     
     //Add waveform to data TDI channels
     for(int j=0; j<inj->BW; j++)
     {
         int i = j+inj->imin;
-        if(i>0 && i<data->N)
+        if(i>0 && i<data->NFFT)
         {
             data->tdi->X[2*i]   += inj->tdi->X[2*j];
             data->tdi->X[2*i+1] += inj->tdi->X[2*j+1];
@@ -121,25 +120,22 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         //draw extrinsic parameters
         
         //set RNG for injection
-        const gsl_rng_type *T = gsl_rng_default;
-        gsl_rng *r = gsl_rng_alloc(T);
-        gsl_rng_env_setup();
-        gsl_rng_set (r, data->iseed);
+        unsigned int r = data->iseed;
         
         //TODO: support for verification binary priors
-        phi0 = gsl_rng_uniform(r)*M_PI*2.;
-        psi  = gsl_rng_uniform(r)*M_PI/4.;
+        phi0 = rand_r_U_0_1(&r)*M_PI*2.;
+        psi  = rand_r_U_0_1(&r)*M_PI/4.;
         
         
         //compute derived parameters
         Mc  = chirpmass(m1,m2);
-        amp = galactic_binary_Amp(Mc, f0, D);
+        amp = amplitude(Mc, f0, D);
                 
         //set bandwidth of data segment centered on injection
-        data->fmin = f0 - (data->N/2)/data->T;
-        data->fmax = f0 + (data->N/2)/data->T;
+        data->fmin = f0 - (data->NFFT/2)/data->T;
+        data->fmax = f0 + (data->NFFT/2)/data->T;
         data->qmin = (int)(data->fmin*data->T);
-        data->qmax = data->qmin+data->N;
+        data->qmax = data->qmin+data->NFFT;
         
         //recompute fmin and fmax so they align with a bin
         data->fmin = data->qmin/data->T;
@@ -148,7 +144,7 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         if(!flags->quiet)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
         if(!flags->quiet) fprintf(stdout,"   ...start time  %g\n",data->t0);
         
-        for(int n=0; n<2*data->N; n++)
+        for(int n=0; n<data->N; n++)
         {
             inj->tdi->A[n] = 0.0;
             inj->tdi->E[n] = 0.0;
@@ -177,10 +173,10 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         fclose(paramFile);
         
         //Book-keeping of injection time-frequency volume
-        galactic_binary_alignment(orbit, data, inj);
+        ucb_alignment(orbit, data, inj);
         
         //Simulate gravitational wave signal
-        galactic_binary(orbit, data->format, data->T, data->t0, inj->params, 8, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+        ucb_waveform(orbit, data->format, data->T, data->t0, inj->params, 8, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
         
         //Add waveform to data TDI channels
         for(int n=0; n<inj->BW; n++)
@@ -205,7 +201,7 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         
         sprintf(filename,"%s/data/waveform_injection_%i.dat",flags->runDir,ii);
         fptr=fopen(filename,"w");
-        for(int i=0; i<data->N; i++)
+        for(int i=0; i<data->NFFT; i++)
         {
             double f = (double)(i+data->qmin)/data->T;
             switch(data->Nchannel)
@@ -225,7 +221,7 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         
         sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,ii);
         fptr=fopen(filename,"w");
-        for(int i=0; i<data->N; i++)
+        for(int i=0; i<data->NFFT; i++)
         {
             double f = (double)(i+data->qmin)/data->T;
             switch(data->Nchannel)
@@ -246,6 +242,7 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         //Get noise spectrum for data segment
         GetNoiseModel(data,orbit,flags);
         
+        
         //Get injected SNR
         if(!flags->quiet) fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data->noise));
         
@@ -256,21 +253,19 @@ void UCBInjectVerificationSource(struct Data *data, struct Orbit *orbit, struct 
         //Compute fisher information matrix of injection
         if(!flags->quiet) fprintf(stdout,"   ...computing Fisher Information Matrix of injection\n");
         
-        galactic_binary_fisher(orbit, data, inj, data->noise);
+        ucb_fisher(orbit, data, inj, data->noise);
         
         fclose(injectionFile);
-                
-        gsl_rng_free(r);
     }
     
-    print_data(data,tdi,flags);
+    print_data(data,flags);
     
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
-void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source *inj)
+void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Source **inj_vec)
 {
+    int k;
     FILE *fptr;
-    alloc_source(inj, data->N, data->Nchannel);
     
     /* Get injection parameters */
     double f0,dfdt,theta,phi,amp,iota,phi0,psi;//read from injection file
@@ -280,10 +275,11 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
     char filename[1024];
         
     struct TDI *tdi = data->tdi;
-
+    struct Source *inj = NULL;
+    
+    int n_inj = 0; // keep track of number of injections
     for(int ii = 0; ii<flags->NINJ; ii++)
     {
-        
         injectionFile = fopen(flags->injFile[ii],"r");
         if(!injectionFile)
             fprintf(stderr,"Missing injection file %s\n",flags->injFile[ii]);
@@ -306,14 +302,20 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
         rewind(injectionFile);
         N--;
         
-        //set RNG for injection
-        const gsl_rng_type *T = gsl_rng_default;
-        gsl_rng *r = gsl_rng_alloc(T);
-        gsl_rng_env_setup();
-        gsl_rng_set (r, data->iseed);
-        
         for(int nn=0; nn<N; nn++)
         {
+            if(n_inj<flags->DMAX)
+            {
+                alloc_source(inj_vec[n_inj], data->N, data->Nchannel);
+                inj = inj_vec[n_inj];
+            }
+            else
+            {
+                printf("WARNING: number of injections (%i) exceeds size of model (%i)\n",n_inj,flags->DMAX);
+                inj = inj_vec[flags->DMAX-1];
+            }
+            
+
             int check = fscanf(injectionFile,"%lg %lg %lg %lg %lg %lg %lg %lg",&f0,&dfdt,&theta,&phi,&amp,&iota,&psi,&phi0);
             if(!check)
             {
@@ -324,20 +326,48 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             //set bandwidth of data segment centered on injection
             if(nn==0 && !flags->strainData)
             {
-                data->fmin = f0 - (data->N/2)/data->T;
-                data->fmax = f0 + (data->N/2)/data->T;
-                data->qmin = (int)(data->fmin*data->T);
-                data->qmax = data->qmin+data->N;
+                if(!strcmp("fourier",data->basis))
+                {
+                    data->fmin = f0 - (data->NFFT/2)/data->T;
+                    data->fmax = f0 + (data->NFFT/2)/data->T;
+                    data->qmin = (int)(data->fmin*data->T);
+                    data->qmax = data->qmin+data->NFFT;
+
+                    //recompute fmin and fmax so they align with a bin
+                    data->fmin = data->qmin/data->T;
+                    data->fmax = data->qmax/data->T;
+
+                    if(!flags->quiet)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
+                }
+                if(!strcmp("wavelet",data->basis))
+                {
+                    
+                    int q0 = (int)floor(f0/WAVELET_BANDWIDTH);
+
+                    //pad by one layer above and below
+                    data->lmin = q0-((data->Nlayer-1)/2);   //mimimum frequency layer
+                    data->lmax = data->lmin + data->Nlayer; //maximum frequency layer
+                    
+                    //reset wavelet basis max and min ranges
+                    wavelet_pixel_to_index(data->wdm,0,data->lmin,&data->wdm->kmin);
+                    wavelet_pixel_to_index(data->wdm,0,data->lmax,&data->wdm->kmax);
+                    
+                    //recompute fmin and fmax so they align with a bin
+                    data->fmin = data->lmin*WAVELET_BANDWIDTH;
+                    data->fmax = data->lmax*WAVELET_BANDWIDTH;
+                    data->qmin = (int)(data->fmin*data->T);
+                    data->qmax = data->qmin+data->NFFT;
+
+                    if(!flags->quiet)fprintf(stdout,"  Frequency layers [%i,%i]\n",data->lmin,data->lmax);
+                    
+                    printf("  fmin=%lg, fmax=%lg\n",data->fmin,data->fmax);
+                }
                 
-                //recompute fmin and fmax so they align with a bin
-                data->fmin = data->qmin/data->T;
-                data->fmax = data->qmax/data->T;
                 
-                if(!flags->quiet)fprintf(stdout,"Frequency bins for segment [%i,%i]\n",data->qmin,data->qmax);
                 if(!flags->quiet)fprintf(stdout,"   ...start time: %g\n",data->t0);
             }
             
-            for(int n=0; n<2*data->N; n++)
+            for(int n=0; n<data->N; n++)
             {
                 inj->tdi->A[n] = 0.0;
                 inj->tdi->E[n] = 0.0;
@@ -375,100 +405,174 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
             fclose(paramFile);
             
             //Book-keeping of injection time-frequency volume
-            galactic_binary_alignment(orbit, data, inj);
-            
-            if(inj->qmax < data->qmin || inj->qmin > data->qmax)
+            if(!strcmp("fourier",data->basis))
             {
-                fprintf(stdout,"Injection %i is outside of the requested frequency segment\n",nn);
-                continue;
+                ucb_alignment(orbit, data, inj);
+                if(inj->qmax < data->qmin || inj->qmin > data->qmax)
+                {
+                    fprintf(stdout,"Injection %i is outside of the requested frequency segment\n",nn);
+                    continue;
+                }
+                printf("   ...bandwidth : %i\n",inj->BW);
+                printf("   ...fdot      : %g\n",inj->dfdt*data->T*data->T);
+                printf("   ...fddot     : %g\n",inj->d2fdt2*data->T*data->T*data->T);
+                printf("   ...t0        : %g\n",data->t0);
+                
             }
-            
-            printf("   ...bandwidth : %i\n",inj->BW);
-            printf("   ...fdot      : %g\n",inj->dfdt*data->T*data->T);
-            printf("   ...fddot     : %g\n",inj->d2fdt2*data->T*data->T*data->T);
-            
+
             //Simulate gravitational wave signal
-            printf("   ...t0        : %g\n",data->t0);
-            galactic_binary(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, data->Nchannel);
+            if(!strcmp("fourier",data->basis))     
+                ucb_waveform(orbit, data->format, data->T, data->t0, inj->params, UCB_MODEL_NP, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, data->Nchannel);
+            if(!strcmp("wavelet",data->basis)) 
+                ucb_waveform_wavelet(orbit, data->wdm, data->T, data->t0, inj->params, inj->list, &inj->Nlist, inj->tdi->X, inj->tdi->Y, inj->tdi->Z);
+            
             
             //Add waveform to data TDI channels
-            for(int n=0; n<inj->BW; n++)
+            if(!strcmp("fourier",data->basis))
             {
-                int i = n+inj->imin;
-                if(i>0 && i<data->N)
+                printf("add fourier waveform to data\n");
+                for(int n=0; n<inj->BW; n++)
                 {
-                    tdi->X[2*i]   += inj->tdi->X[2*n];
-                    tdi->X[2*i+1] += inj->tdi->X[2*n+1];
+                    int i = n+inj->imin;
+                    if(i>0 && i<data->NFFT)
+                    {
+                        tdi->X[2*i]   += inj->tdi->X[2*n];
+                        tdi->X[2*i+1] += inj->tdi->X[2*n+1];
 
-                    tdi->Y[2*i]   += inj->tdi->Y[2*n];
-                    tdi->Y[2*i+1] += inj->tdi->Y[2*n+1];
+                        tdi->Y[2*i]   += inj->tdi->Y[2*n];
+                        tdi->Y[2*i+1] += inj->tdi->Y[2*n+1];
 
-                    tdi->Z[2*i]   += inj->tdi->Z[2*n];
-                    tdi->Z[2*i+1] += inj->tdi->Z[2*n+1];
+                        tdi->Z[2*i]   += inj->tdi->Z[2*n];
+                        tdi->Z[2*i+1] += inj->tdi->Z[2*n+1];
 
-                    tdi->A[2*i]   += inj->tdi->A[2*n];
-                    tdi->A[2*i+1] += inj->tdi->A[2*n+1];
-                    
-                    tdi->E[2*i]   += inj->tdi->E[2*n];
-                    tdi->E[2*i+1] += inj->tdi->E[2*n+1];
+                        tdi->A[2*i]   += inj->tdi->A[2*n];
+                        tdi->A[2*i+1] += inj->tdi->A[2*n+1];
+                        
+                        tdi->E[2*i]   += inj->tdi->E[2*n];
+                        tdi->E[2*i+1] += inj->tdi->E[2*n+1];
+                    }
+                }
+            }
+            if(!strcmp("wavelet",data->basis))
+            {
+                for(int n=0; n<inj->Nlist; n++)
+                {
+                    k = inj->list[n];
+                    tdi->X[k] += inj->tdi->X[k];
+                    tdi->Y[k] += inj->tdi->Y[k];
+                    tdi->Z[k] += inj->tdi->Z[k];
                 }
             }
             
-            sprintf(filename,"%s/data/waveform_injection_%i.dat",flags->runDir,ii);
+            sprintf(filename,"%s/data/waveform_injection_%i.dat",flags->runDir,n_inj);
             fptr=fopen(filename,"w");
-            for(int i=0; i<data->N; i++)
+            if(!strcmp("fourier",data->basis))
             {
-                double f = (double)(i+data->qmin)/data->T;
-                switch(data->Nchannel)
+                for(int i=0; i<data->NFFT; i++)
                 {
-                    case 1:
-                        fprintf(fptr,"%lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1]);
-                        break;
-                    case 2:
-                        fprintf(fptr,"%lg %lg %lg %lg %lg\n", f, tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
-                        break;
-                    case 3:
-                        fprintf(fptr,"%lg %lg %lg %lg %lg %lg %lg\n", f, tdi->X[2*i],tdi->X[2*i+1], tdi->Y[2*i],tdi->Y[2*i+1], tdi->Z[2*i],tdi->Z[2*i+1]);
-                        break;
+                    double f = (double)(i+data->qmin)/data->T;
+                    switch(data->Nchannel)
+                    {
+                        case 1:
+                            fprintf(fptr,"%.14e %.14e %.14e\n", f, inj->tdi->X[2*i],tdi->X[2*i+1]);
+                            break;
+                        case 2:
+                            fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e\n", f, inj->tdi->A[2*i],tdi->A[2*i+1], tdi->E[2*i],tdi->E[2*i+1]);
+                            break;
+                        case 3:
+                            fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e %.14e %.14e\n", f, inj->tdi->X[2*i],inj->tdi->X[2*i+1], inj->tdi->Y[2*i],inj->tdi->Y[2*i+1],inj->tdi->Z[2*i],inj->tdi->Z[2*i+1]);
+                            break;
+                    }
+                }
+            }
+            if(!strcmp("wavelet",data->basis))
+            {
+                for(int j=data->lmin; j<data->lmax; j++)
+                {
+                    double f = j*data->wdm->df;
+                    for(int i=0; i<data->wdm->NT; i++)
+                    {
+                        double t = i*data->wdm->dt;
+                        wavelet_pixel_to_index(data->wdm,i,j,&k);
+                        k-=data->wdm->kmin;
+                        fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e\n", t, f, inj->tdi->X[k], inj->tdi->Y[k], inj->tdi->Z[k]);
+                    }
+                    fprintf(fptr,"\n");
                 }
             }
             fclose(fptr);
-            
-            sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,ii);
-            fptr=fopen(filename,"w");
-            for(int i=0; i<data->N; i++)
+
+            if(!strcmp("wavelet",data->basis))
             {
-                double f = (double)(i+data->qmin)/data->T;
-                switch(data->Nchannel)
+                sprintf(filename,"%s/waveform_injection_fourier_%i.dat",data->dataDir,n_inj);
+                print_wavelet_fourier_spectra(data, inj->tdi, filename);
+            }
+
+            
+            sprintf(filename,"%s/data/power_injection_%i.dat",flags->runDir,n_inj);
+            fptr=fopen(filename,"w");
+            if(!strcmp("fourier",data->basis))
+            {
+                for(int i=0; i<inj->BW; i++)
                 {
-                    case 1:
-                        fprintf(fptr,"%.12g %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1]);
-                        break;
-                    case 2:
-                        fprintf(fptr,"%.12g %lg %lg\n", f, tdi->A[2*i]*tdi->A[2*i]+tdi->A[2*i+1]*tdi->A[2*i+1], tdi->E[2*i]*tdi->E[2*i]+tdi->E[2*i+1]*tdi->E[2*i+1]);
-                        break;
-                    case 3:
-                        fprintf(fptr,"%.12g %lg %lg %lg\n", f, tdi->X[2*i]*tdi->X[2*i]+tdi->X[2*i+1]*tdi->X[2*i+1], tdi->Y[2*i]*tdi->Y[2*i]+tdi->Y[2*i+1]*tdi->Y[2*i+1],tdi->Z[2*i]*tdi->Z[2*i]+tdi->Z[2*i+1]*tdi->Z[2*i+1]);
-                        break;
+                    double f = (double)(i+inj->qmin)/data->T;
+                    switch(data->Nchannel)
+                    {
+                        case 1:
+                            fprintf(fptr,"%.14e %.14e\n", f, inj->tdi->X[2*i]*inj->tdi->X[2*i]+inj->tdi->X[2*i+1]*inj->tdi->X[2*i+1]);
+                            break;
+                        case 2:
+                            fprintf(fptr,"%.14e %.14e %.14e\n", f, inj->tdi->A[2*i]*inj->tdi->A[2*i]+inj->tdi->A[2*i+1]*inj->tdi->A[2*i+1], inj->tdi->E[2*i]*inj->tdi->E[2*i]+inj->tdi->E[2*i+1]*inj->tdi->E[2*i+1]);
+                            break;
+                        case 3:
+                            fprintf(fptr,"%.14e %.14e %.14e %.14e\n", f, 
+                                inj->tdi->X[2*i]*inj->tdi->X[2*i]+inj->tdi->X[2*i+1]*inj->tdi->X[2*i+1], 
+                                inj->tdi->Y[2*i]*inj->tdi->Y[2*i]+inj->tdi->Y[2*i+1]*inj->tdi->Y[2*i+1],
+                                inj->tdi->Z[2*i]*inj->tdi->Z[2*i]+inj->tdi->Z[2*i+1]*inj->tdi->Z[2*i+1]);
+                            break;
+                    }
+                }
+            }
+            if(!strcmp("wavelet",data->basis))
+            {
+                for(int j=data->lmin; j<data->lmax; j++)
+                {
+                    double f = j*data->wdm->df;
+                    for(int i=0; i<data->wdm->NT; i++)
+                    {
+                        double t = i*data->wdm->dt;
+                        wavelet_pixel_to_index(data->wdm,i,j,&k);
+                        k-=data->wdm->kmin;
+                        fprintf(fptr,"%.14e %.14e %.14e %.14e %.14e\n", t, f, inj->tdi->X[k]*inj->tdi->X[k], inj->tdi->Y[k]*inj->tdi->Y[k], inj->tdi->Z[k]*inj->tdi->Z[k]);
+                    }
+                    fprintf(fptr,"\n");
                 }
             }
             fclose(fptr);
             
             //Get noise spectrum for data segment
-            GetNoiseModel(data,orbit,flags);
-            
+            if(!strcmp("fourier",data->basis)) GetNoiseModel(data,orbit,flags);
+            if(!strcmp("wavelet",data->basis)) GetDynamicNoiseModel(data, orbit, flags);
+
             //Get injected SNR
-            if(!flags->quiet)fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data->noise));
+            if(!flags->quiet)
+            {
+                if(!strcmp("fourier",data->basis))fprintf(stdout,"   ...injected SNR=%g\n",snr(inj, data->noise));
+                if(!strcmp("wavelet",data->basis))fprintf(stdout,"   ...injected SNR=%g\n",snr_wavelet(inj,data->noise));
+            }
             
-            //Add Gaussian noise to injection
+            /*Add Gaussian noise to injection
             if(flags->simNoise && nn==0)
-                AddNoise(data,tdi);
-            
+            {
+                if(!strcmp("fourier",data->basis)) AddNoise(data,tdi);
+                if(!strcmp("wavelet",data->basis)) AddNoiseWavelet(data,tdi);
+            }*/
+
             //Compute fisher information matrix of injection
             if(!flags->quiet)fprintf(stdout,"   ...computing Fisher Information Matrix of injection\n");
             
-            galactic_binary_fisher(orbit, data, inj, data->noise);
-            
+            if(!strcmp("fourier",data->basis)) ucb_fisher(orbit, data, inj, data->noise);
+            if(!strcmp("wavelet",data->basis)) ucb_fisher_wavelet(orbit, data, inj, data->noise);
             
             if(!flags->quiet)
             {
@@ -478,23 +582,42 @@ void UCBInjectSimulatedSource(struct Data *data, struct Orbit *orbit, struct Fla
                     fprintf(stdout," ");
                     for(int j=0; j<UCB_MODEL_NP; j++)
                     {
-                        if(inj->fisher_matrix[i][j]<0)fprintf(stdout,"%.2e ", inj->fisher_matrix[i][j]);
-                        else                          fprintf(stdout,"+%.2e ",inj->fisher_matrix[i][j]);
+                        fprintf(stdout,"%+.2e ", inj->fisher_matrix[i][j]);
                     }
                     fprintf(stdout,"\n");
                 }
                 
                 
                 printf("\n Fisher std. errors:\n");
-                for(int j=0; j<UCB_MODEL_NP; j++)  fprintf(stdout," %.4e\n", sqrt(inj->fisher_matrix[j][j]));
+                for(int j=0; j<UCB_MODEL_NP; j++)  fprintf(stdout," %.2e\n", sqrt(inj->fisher_matrix[j][j]));
             }
             
+            n_inj++;
+            
         }//end nn loop over sources in file
-        fclose(injectionFile);
-        gsl_rng_free(r);
-    }
+        
+        fclose(injectionFile);        
+    }//end ii loop over injection files
     
-    print_data(data,tdi,flags);
+    //print_data(data,flags);
+
+    /* compute overlaps between injections */
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        printf("\n Match Matrix:\n");
+        for(int i=0; i<n_inj; i++)
+        {
+            for(int j=0; j<n_inj; j++)
+            {
+                if(i==j) printf(" %+.2e",snr_wavelet(inj_vec[i],data->noise));
+                else printf(" %+.2e",waveform_match_wavelet(inj_vec[i], inj_vec[j], data->noise));
+            }
+            printf("\n");
+        }
+        
+        sprintf(filename,"%s/data/waveform_injection_fourier.dat",flags->runDir);
+        print_wavelet_fourier_spectra(data, inj_vec[0]->tdi, filename);
+    }
 
     if(!flags->quiet)fprintf(stdout,"================================================\n\n");
 }
@@ -518,17 +641,17 @@ void GetVerificationBinary(struct Data *data, struct Flags *flags, struct Source
     
     //compute derived parameters
     Mc  = chirpmass(m1,m2);
-    amp = galactic_binary_Amp(Mc, f0, D);
+    amp = amplitude(Mc, f0, D);
     
     //initialize extrinsic parameters
     phi0 = 0.0;
     psi  = 0.0;
     
     //set bandwidth of data segment centered on injection
-    data->fmin = f0 - (data->N/2)/data->T;
-    data->fmax = f0 + (data->N/2)/data->T;
+    data->fmin = f0 - (data->NFFT)/data->T;
+    data->fmax = f0 + (data->NFFT)/data->T;
     data->qmin = (int)(data->fmin*data->T);
-    data->qmax = data->qmin+data->N;
+    data->qmax = data->qmin+data->NFFT;
     
     //recompute fmin and fmax so they align with a bin
     data->fmin = data->qmin/data->T;

@@ -1,9 +1,18 @@
-//
-//  VerificationBinaryWrapper.c
-//  ldasoft
-//
-//  Created by Tyson Littenberg on 8/11/21.
-//
+/*
+ * Copyright 2021 Tyson B. Littenberg (MSFC-ST12)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <glass_utils.h>
 #include <glass_ucb.h>
@@ -115,7 +124,6 @@ void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct T
     
     /*
      Initialize measured time of model update.
-     Used to determine number of steps relative to mbh model
      */
     vgb_data->cpu_time = 1.0;
 }
@@ -147,10 +155,10 @@ void initialize_vgb_sampler(struct VGBData *vgb_data)
         initialize_vb_proposal(orbit, data, prior, chain, flags, proposal, flags->DMAX);
         
         /* Initialize data models */
-        initialize_ucb_state(data, orbit, flags, chain, proposal, model, trial, vgb);
+        initialize_ucb_state(data, orbit, flags, chain, proposal, model, trial,  vgb_data->vgb_vec);
         
         /* Store data segment in working directory */
-        if(vgb_data->procID==1) print_data(data, data->tdi, flags);
+        if(vgb_data->procID==1) print_data(data, flags);
         
         /* Store post-processing script */
         print_ucb_catalog_script(flags, data, orbit);
@@ -221,7 +229,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
                 copy_model(model_ptr,trial_ptr);
 
                 for(int steps=0; steps<numSteps; steps++)
-                        galactic_binary_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
+                    ucb_mcmc(orbit, data_vec[n], model_ptr, trial_ptr, chain_vec[n], flags, prior_vec[n], proposal_vec[n], ic);
             }
         }// end (parallel) loop over chains
     }//end parallel section
@@ -237,7 +245,7 @@ int update_vgb_sampler(struct VGBData *vgb_data)
         //update fisher matrix for each chain
         for(int ic=0; ic<NC; ic++)
         {
-            galactic_binary_fisher(orbit, data, model[chain->index[ic]]->source[0], model[chain->index[ic]]->noise);
+            ucb_fisher(orbit, data, model[chain->index[ic]]->source[0], model[chain->index[ic]]->noise);
         }
 
         ptmcmc(model_vec[n],chain_vec[n],flags);

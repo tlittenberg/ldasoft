@@ -1,26 +1,19 @@
 /*
- *  Author: Tyson B. Littenberg (MSFC-ST12)
- *  Created: 07.27.2020
+ * Copyright 2020 Tyson B. Littenberg
  *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
- *
- *  Library for Gaussian Mixture Model using the Expectation-Maximization Algorithm
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,15 +22,7 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_eigen.h>
-#include <gsl/gsl_statistics.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
-#include "glass_gmm.h"
+#include "glass_utils.h"
 
 /*
 static void printProgress (double percentage)
@@ -102,102 +87,132 @@ void read_gmm_binary(struct GMM *gmm, char filename[])
 void alloc_MVG(struct MVG *mode, size_t N)
 {
     mode->size = N;
-    mode->mu = gsl_vector_alloc(mode->size);
-    mode->C = gsl_matrix_calloc(mode->size,mode->size);
-    mode->L = gsl_matrix_calloc(mode->size,mode->size);
-    mode->Cinv = gsl_matrix_calloc(mode->size,mode->size);
-    mode->evectors = gsl_matrix_calloc(mode->size,mode->size);
-    mode->evalues = gsl_vector_calloc(mode->size);
-    mode->minmax = gsl_matrix_calloc(mode->size,2);
+
+    mode->mu       = double_vector(mode->size);
+    mode->C        = double_matrix(mode->size,mode->size);
+    mode->L        = double_matrix(mode->size,mode->size);
+    mode->Cinv     = double_matrix(mode->size,mode->size);
+    mode->evalues  = double_vector(mode->size);
+    mode->evectors = double_matrix(mode->size,mode->size);
+    mode->minmax   = double_matrix(mode->size,2);
 }
 
 void free_MVG(struct MVG *mode)
 {
-    gsl_vector_free(mode->mu);
-    gsl_matrix_free(mode->C);
-    gsl_matrix_free(mode->L);
-    gsl_matrix_free(mode->Cinv);
-    gsl_matrix_free(mode->evectors);
-    gsl_vector_free(mode->evalues);
-    gsl_matrix_free(mode->minmax);
+    free_double_vector(mode->mu);
+    free_double_matrix(mode->C,mode->size);
+    free_double_matrix(mode->L,mode->size);
+    free_double_matrix(mode->Cinv,mode->size);
+    free_double_matrix(mode->evectors,mode->size);
+    free_double_vector(mode->evalues);
+    free_double_matrix(mode->minmax,2);
     free(mode);
 }
+
+static void glass_vector_fwrite(FILE *fptr, int n, double *v)
+{
+    fwrite(v, sizeof(double), (size_t)n, fptr);
+}
+
+static void glass_matrix_fwrite(FILE *fptr, int n, double **m)
+{
+    for(int i=0; i<n; i++) glass_vector_fwrite(fptr, n, m[i]);
+}
+
+static void glass_vector_fread(FILE *fptr, int n, double *v)
+{
+    fread(v, sizeof(double), (size_t)n, fptr);
+}
+
+static void glass_matrix_fread(FILE *fptr, int n, double **m)
+{
+    for(int i=0; i<n; i++) glass_vector_fread(fptr, n, m[i]);
+}
+
 
 void write_MVG(struct MVG *mode, FILE *fptr)
 {
     //pack detC,p,and Neff into a vector to make life easier
-    gsl_vector *temp = gsl_vector_alloc(3);
-    gsl_vector_set(temp,0,mode->detC);
-    gsl_vector_set(temp,1,mode->p);
-    gsl_vector_set(temp,2,mode->Neff);
+    double *temp = double_vector(3);
+    temp[0] = mode->detC;
+    temp[1] = mode->p;
+    temp[2] = mode->Neff;
 
     //write 'em!
-    gsl_vector_fwrite(fptr,mode->mu);
-    gsl_matrix_fwrite(fptr,mode->C);
-    gsl_matrix_fwrite(fptr,mode->L);
-    gsl_matrix_fwrite(fptr,mode->Cinv);
-    gsl_matrix_fwrite(fptr,mode->evectors);
-    gsl_vector_fwrite(fptr,mode->evalues);
-    gsl_vector_fwrite(fptr,temp);
-    gsl_matrix_fwrite(fptr,mode->minmax);
-    gsl_vector_free(temp);
+    glass_vector_fwrite(fptr,mode->size,mode->mu);
+    glass_matrix_fwrite(fptr,mode->size,mode->C);
+    glass_matrix_fwrite(fptr,mode->size,mode->L);
+    glass_matrix_fwrite(fptr,mode->size,mode->Cinv);
+    glass_matrix_fwrite(fptr,mode->size,mode->evectors);
+    glass_vector_fwrite(fptr,mode->size,mode->evalues);
+    glass_vector_fwrite(fptr,3,temp);
+    glass_matrix_fwrite(fptr,2,mode->minmax);
+    free_double_vector(temp);
 }
 
 void read_MVG(struct MVG *mode, FILE *fptr)
 {
     //vector for holding packed detC,p,and Neff
-    gsl_vector *temp = gsl_vector_alloc(3);
+    double *temp = double_vector(3);
 
     //read 'em!
-    gsl_vector_fread(fptr,mode->mu);
-    gsl_matrix_fread(fptr,mode->C);
-    gsl_matrix_fread(fptr,mode->L);
-    gsl_matrix_fread(fptr,mode->Cinv);
-    gsl_matrix_fread(fptr,mode->evectors);
-    gsl_vector_fread(fptr,mode->evalues);
-    gsl_vector_fread(fptr,temp);
-    gsl_matrix_fread(fptr,mode->minmax);
+    glass_vector_fread(fptr,mode->size,mode->mu);
+    glass_matrix_fread(fptr,mode->size,mode->C);
+    glass_matrix_fread(fptr,mode->size,mode->L);
+    glass_matrix_fread(fptr,mode->size,mode->Cinv);
+    glass_matrix_fread(fptr,mode->size,mode->evectors);
+    glass_vector_fread(fptr,mode->size,mode->evalues);
+    glass_vector_fread(fptr,3,temp);
+    glass_matrix_fread(fptr,2,mode->minmax);
 
     //unpack 'em!
-    mode->detC = gsl_vector_get(temp,0);
-    mode->p = gsl_vector_get(temp,1);
-    mode->Neff = gsl_vector_get(temp,2);
+    mode->detC = temp[0];
+    mode->p    = temp[1];
+    mode->Neff = temp[2];
 
-    gsl_vector_free(temp);
+    free_double_vector(temp);
+}
+
+static void glass_vector_memcpy(double *copy, double *origin, int n)
+{
+    memcpy(copy,origin,n*sizeof(double));
+}
+static void glass_matrix_memcpy(double **copy, double **origin, int n)
+{
+    for(int i=0; i<n; i++) glass_vector_memcpy(copy[i], origin[i], n);
 }
 
 void copy_MVG(struct MVG *origin, struct MVG *copy)
 {
     copy->size = origin->size;
-    gsl_vector_memcpy(copy->mu, origin->mu);
-    gsl_matrix_memcpy(copy->C, origin->C);
-    gsl_matrix_memcpy(copy->L, origin->L);
-    gsl_matrix_memcpy(copy->Cinv, origin->Cinv);
-    gsl_matrix_memcpy(copy->evectors, origin->evectors);
-    gsl_matrix_memcpy(copy->minmax, origin->minmax);
-    gsl_vector_memcpy(copy->evalues, origin->evalues);
+    glass_vector_memcpy(copy->mu, origin->mu, origin->size);
+    glass_matrix_memcpy(copy->C, origin->C, origin->size);
+    glass_matrix_memcpy(copy->L, origin->L, origin->size);
+    glass_matrix_memcpy(copy->Cinv, origin->Cinv, origin->size);
+    glass_matrix_memcpy(copy->evectors, origin->evectors, origin->size);
+    glass_matrix_memcpy(copy->minmax, origin->minmax, origin->size);
+    glass_vector_memcpy(copy->evalues, origin->evalues, origin->size);
     copy->detC = origin->detC;
     copy->p = origin->p;
     copy->Neff = origin->Neff;
 }
 
-double multivariate_gaussian(gsl_vector *x, struct MVG *mvg)
+double multivariate_gaussian(double *x, struct MVG *mvg, int N)
 {
     
-    size_t N = x->size;
-    gsl_vector *dx = gsl_vector_alloc(N);
-    gsl_vector *mu = mvg->mu;
-    gsl_matrix *Cinv = mvg->Cinv;
+    double *dx = double_vector(N);
+    double *mu = mvg->mu;
+    double **Cinv = mvg->Cinv;
     double detC = mvg->detC;
     
     // x-mu
     for(size_t n=0; n<N; n++)
     {
-        double xi = gsl_vector_get(x,n);
-        double mi = gsl_vector_get(mu,n);
+        double xi = x[n];
+        double mi = mu[n];
         double d  = xi-mi;
         
-        gsl_vector_set(dx,n,d);
+        dx[n]=d;
     }
     
     
@@ -211,75 +226,13 @@ double multivariate_gaussian(gsl_vector *x, struct MVG *mvg)
         CdotX = 0.0;
         for(size_t n=0; n<N; n++)
         {
-            CdotX += gsl_matrix_get(Cinv,m,n)*gsl_vector_get(dx,n);
+            CdotX += Cinv[m][n]*dx[n];
         }
-        chi2 += CdotX*gsl_vector_get(dx,m);
+        chi2 += CdotX*dx[m];
     }
-    gsl_vector_free(dx);
+    free_double_vector(dx);
     
-    return exp(-0.5*chi2)/sqrt(pow(2.0*M_PI,N)*detC);
-}
-
-void invert_gsl_matrix(gsl_matrix *A, gsl_matrix *Ainv, gsl_matrix *L, double *detA, double *R)
-{
-    int i,j;
-    
-    gsl_set_error_handler_off();
-    
-    //get size of matrix (assumed to be NxN)
-    size_t N = A->size1;
-    
-    //some workspace
-    gsl_permutation * permutation = gsl_permutation_alloc(N);
-    
-    //copy A into Ainv because LU decomposition destroys the matrix
-    gsl_matrix_memcpy(Ainv,A);
-    
-    //cholesky decomposition
-    gsl_linalg_cholesky_decomp(Ainv);
-    
-    //get condition number
-    gsl_vector *work = gsl_vector_alloc(3*N);
-    gsl_linalg_cholesky_rcond(Ainv, R, work);
-
-    //inverse of A
-    gsl_linalg_cholesky_invert(Ainv);
-    
-    //get deteriminant, need LU decomposition
-    gsl_matrix_memcpy(L,A);
-    gsl_linalg_LU_decomp(L,permutation,&i);
-    *detA = gsl_linalg_LU_det(L,i);
-    
-    //recompute and save L
-    gsl_matrix_memcpy(L,A);
-    gsl_linalg_cholesky_decomp(L);
-    for(i=0; i<N; i++) for(j=i+1; j<N; j++) gsl_matrix_set(L,i,j,0.0);
-
-    //clean up
-    gsl_vector_free (work);
-    gsl_permutation_free (permutation);
-}
-
-void decompose_matrix(gsl_matrix *A, gsl_matrix *evec, gsl_vector *eval)
-{
-    //get size of matrix (assumed to be NxN)
-    size_t N = A->size1;
-    
-    //get deteriminant, need LU decomposition
-    gsl_matrix *Atemp = gsl_matrix_calloc(N,N);
-    gsl_eigen_symmv_workspace * workspace = gsl_eigen_symmv_alloc (N);
-    gsl_permutation * permutation = gsl_permutation_alloc(N);
-    
-    //copy A into Atemp because eigen_symmv destroys the matrix
-    gsl_matrix_memcpy(Atemp,A);
-    
-    //the reason we're all here...
-    gsl_eigen_symmv (Atemp, eval, evec, workspace);
-    
-    gsl_matrix_free (Atemp);
-    gsl_eigen_symmv_free (workspace);
-    gsl_permutation_free (permutation);
-    
+    return exp(-0.5*chi2)/sqrt(pow(PI2,N)*detC);
 }
 
 double log_likelihood(struct MVG **modes, struct Sample **samples, int NMCMC, int NMODE)
@@ -291,33 +244,32 @@ double log_likelihood(struct MVG **modes, struct Sample **samples, int NMCMC, in
         double P = PMIN;
         for(size_t k=0; k<NMODE; k++)
         {
-            P += modes[k]->p*gsl_vector_get(samples[i]->p,k);
+            P += modes[k]->p*samples[i]->p[k];
         }
         logL += log(P);
     }
     return logL;
 }
 
-void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, char root[], size_t ix)
+void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMODE, size_t NMCMC, char root[], size_t ix)
 {
     char filename[128];
     sprintf(filename,"%s_%i.dat",root,(int)ix);
     FILE *fptr = fopen(filename,"w");
-    
-    size_t NMODE = samples[0]->p->size;
-    
+        
     //get original parameter boundaries
-    double pmin = gsl_matrix_get(modes[0]->minmax,ix,0);
-    double pmax = gsl_matrix_get(modes[0]->minmax,ix,1);
+    double pmin = modes[0]->minmax[ix][0];
+    double pmax = modes[0]->minmax[ix][1];
     
-    double *xvec = malloc(NMCMC*sizeof(double));
+    double *xvec = double_vector(NMCMC);
     double xmin,xmax;
     double x0 =  1e60;
     double xf = -1e60;
     for(size_t k=0; k<NMODE; k++)
     {
-        for(size_t i=0; i<NMCMC; i++) xvec[i] = gsl_vector_get(samples[i]->x,ix);
-        gsl_stats_minmax(&xmin,&xmax,xvec,1,NMCMC);
+        for(size_t i=0; i<NMCMC; i++) xvec[i] = samples[i]->x[ix];
+        get_min_max(xvec, NMCMC, &xmin, &xmax);
+
         if(xmin<x0) x0 = xmin;
         if(xmax>xf) xf = xmax;
     }
@@ -331,8 +283,8 @@ void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
         x = x0 + (double)n*dx;
         for(size_t k=0; k<NMODE; k++)
         {
-            double mean = gsl_vector_get(modes[k]->mu,ix);
-            double var  = gsl_matrix_get(modes[k]->C,ix,ix);
+            double mean = modes[k]->mu[ix];
+            double var  = modes[k]->C[ix][ix];
             
             /*
              Probability density p is weight * normal / Jacobian
@@ -350,22 +302,20 @@ void print_1D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     free(xvec);
 }
 
-void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, char root[], size_t ix, size_t iy)
+void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMODE, size_t NMCMC, char root[], size_t ix, size_t iy)
 {
     char filename[128];
     sprintf(filename,"%s_%i_%i.dat",root,(int)ix,(int)iy);
     FILE *fptr = fopen(filename,"w");
-    
-    size_t NMODE = samples[0]->p->size;
-    
+        
     //get original parameter boundaries
-    double pmin_x = gsl_matrix_get(modes[0]->minmax,ix,0);
-    double pmax_x = gsl_matrix_get(modes[0]->minmax,ix,1);
-    double pmin_y = gsl_matrix_get(modes[0]->minmax,iy,0);
-    double pmax_y = gsl_matrix_get(modes[0]->minmax,iy,1);
+    double pmin_x = modes[0]->minmax[ix][0];
+    double pmax_x = modes[0]->minmax[ix][1];
+    double pmin_y = modes[0]->minmax[iy][0];
+    double pmax_y = modes[0]->minmax[iy][1];
 
-    double *xvec = malloc(NMCMC*sizeof(double));
-    double *yvec = malloc(NMCMC*sizeof(double));
+    double *xvec = double_vector(NMCMC);
+    double *yvec = double_vector(NMCMC);
     double xmin,xmax;
     double ymin,ymax;
     double x0 =  1e60;
@@ -374,13 +324,13 @@ void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     double yf = -1e60;
     for(size_t k=0; k<NMODE; k++)
     {
-        for(size_t i=0; i<NMCMC; i++) xvec[i] = gsl_vector_get(samples[i]->x,ix);
-        gsl_stats_minmax(&xmin,&xmax,xvec,1,NMCMC);
+        for(size_t i=0; i<NMCMC; i++) xvec[i] = samples[i]->x[ix];
+        get_min_max(xvec,NMCMC,&xmin,&xmax);
         if(xmin<x0) x0 = xmin;
         if(xmax>xf) xf = xmax;
         
-        for(size_t i=0; i<NMCMC; i++) yvec[i] = gsl_vector_get(samples[i]->x,iy);
-        gsl_stats_minmax(&ymin,&ymax,yvec,1,NMCMC);
+        for(size_t i=0; i<NMCMC; i++) yvec[i] = samples[i]->x[iy];
+        get_min_max(yvec,NMCMC,&ymin,&ymax);
         if(ymin<y0) y0 = ymin;
         if(ymax>yf) yf = ymax;
     }
@@ -403,15 +353,15 @@ void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
             
             for(size_t k=0; k<NMODE; k++)
             {
-                double mean_x = gsl_vector_get(modes[k]->mu,ix);
-                double mean_y = gsl_vector_get(modes[k]->mu,iy);
+                double mean_x = modes[k]->mu[ix];
+                double mean_y = modes[k]->mu[iy];
                 if(n==0 && m==0 && ix==2 && iy==5)
                 {
                     printf("means: %g %g -> %g %g\n",mean_x,mean_y, sigmoid(mean_x,pmin_x,pmax_x),sigmoid(mean_y,pmin_y,pmax_y));
                 }
-                double C_xx  = gsl_matrix_get(modes[k]->C,ix,ix);
-                double C_xy  = gsl_matrix_get(modes[k]->C,ix,iy);
-                double C_yy  = gsl_matrix_get(modes[k]->C,iy,iy);
+                double C_xx  = modes[k]->C[ix][ix];
+                double C_xy  = modes[k]->C[ix][iy];
+                double C_yy  = modes[k]->C[iy][iy];
                 double detC = C_xx*C_yy - C_xy*C_xy;
                 double iC_xx = C_yy/detC;
                 double iC_yy = C_xx/detC;
@@ -431,8 +381,8 @@ void print_2D_pdfs(struct MVG **modes, struct Sample **samples, size_t NMCMC, ch
     fclose(fptr);
 
     
-    free(xvec);
-    free(yvec);
+    free_double_vector(xvec);
+    free_double_vector(yvec);
 }
 
 void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1, size_t x2)
@@ -450,8 +400,8 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
     }
     
     //get original parameter boundaries
-    double pmin[2] = {gsl_matrix_get(modes[0]->minmax,x1,0),gsl_matrix_get(modes[0]->minmax,x2,0)};
-    double pmax[2] = {gsl_matrix_get(modes[0]->minmax,x1,1),gsl_matrix_get(modes[0]->minmax,x2,1)};
+    double pmin[2] = {modes[0]->minmax[x1][0],modes[0]->minmax[x2][0]};
+    double pmax[2] = {modes[0]->minmax[x1][1],modes[0]->minmax[x2][1]};
 
     
     //Pick parameters
@@ -461,11 +411,11 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
     {
         for(size_t n=0; n<2; n++)
         {
-            gsl_vector_set(submodes[k]->mu,n,gsl_vector_get(modes[k]->mu,X[n]));
-            for(size_t m=0; m<2; m++) gsl_matrix_set(submodes[k]->C,m,n,gsl_matrix_get(modes[k]->C,X[m],X[n]));
+            submodes[k]->mu[n] = modes[k]->mu[X[n]];
+            for(size_t m=0; m<2; m++) submodes[k]->C[m][n] = modes[k]->C[X[m]][X[n]];
         }
         
-        decompose_matrix(submodes[k]->C, submodes[k]->evectors, submodes[k]->evalues);
+        matrix_eigenstuff(submodes[k]->C, submodes[k]->evectors, submodes[k]->evalues, 2);
     }
     
     
@@ -478,11 +428,11 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
         fptr2=fopen(filename2,"w");
         for(int n=0; n<=100; n++)
         {
-            double theta = atan2(gsl_matrix_get(submodes[k]->evectors,0,1),gsl_matrix_get(submodes[k]->evectors,0,0));
-            double Rx = sqrt(gsl_vector_get(submodes[k]->evalues,0));
-            double Ry = sqrt(gsl_vector_get(submodes[k]->evalues,1));
-            double Cx = gsl_vector_get(submodes[k]->mu,0);
-            double Cy = gsl_vector_get(submodes[k]->mu,1);
+            double theta = atan2( submodes[k]->evectors[0][1], submodes[k]->evectors[0][0]);
+            double Rx = sqrt(submodes[k]->evalues[0]);
+            double Ry = sqrt(submodes[k]->evalues[1]);
+            double Cx = submodes[k]->mu[0];
+            double Cy = submodes[k]->mu[1];
             
             double angle = n*(2.*M_PI/100.);
             x = 1.*( Rx*cos(angle)*cos(theta) + Ry*sin(angle)*sin(theta) ) + Cx;
@@ -517,10 +467,8 @@ void print_2D_contours(struct MVG **modes, size_t NMODE, char root[], size_t x1,
     free(submodes);
 }
 
-void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, double logL, double BIC, size_t step)
+void print_model(struct MVG **modes, struct Sample **samples, size_t NP, size_t NMODE, size_t NMCMC, double logL, double BIC, size_t step)
 {
-    size_t NP = samples[0]->x->size;
-    size_t NMODE = samples[0]->w->size;
     char filename[128];
     
     sprintf(filename,"gmm.dat");
@@ -536,7 +484,7 @@ void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, doub
             if(m==n)
             {
                 sprintf(filename,"pdf_%i",(int)step);
-                print_1D_pdfs(modes, samples, NMCMC, filename, m);
+                print_1D_pdfs(modes, samples, NMODE, NMCMC, filename, m);
             }
             
             /* Get Eigenvectors & Eigenvalues of Covariance matrix for plotting */
@@ -546,7 +494,7 @@ void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, doub
                 print_2D_contours(modes, NMODE, filename, m, n);
                 
                 sprintf(filename,"2Dpdf_%i",(int)step);
-                print_2D_pdfs(modes, samples, NMCMC, filename, m, n);
+                print_2D_pdfs(modes, samples, NMODE, NMCMC, filename, m, n);
 
             }
         }
@@ -554,11 +502,8 @@ void print_model(struct MVG **modes, struct Sample **samples, size_t NMCMC, doub
 }
 
 
-int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NMCMC, double *logL, double *BIC)
+int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t NP, size_t NMODE, size_t NMCMC, double *logL, double *BIC)
 {
-    size_t NP    = samples[0]->x->size;
-    size_t NMODE = samples[0]->p->size;
-    
     // aliases to structures
     struct MVG *M = NULL;
     struct Sample *s = NULL;
@@ -567,7 +512,6 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
     double norm;
     double mu=0.0;
     double C=0.0;
-    double R;
     double p;
     
     /*
@@ -588,21 +532,21 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
             M = modes[k];
             
             //compute p(x|mode)
-            p = multivariate_gaussian(s->x, M);
+            p = multivariate_gaussian(s->x, M, NP);
             p = p > PMIN ? p : PMIN;
 
-            gsl_vector_set(s->p,k,p);
-            gsl_vector_set(s->w,k,M->p*p);
+            s->p[k] = p;
+            s->w[k] = M->p*p;
             norm += M->p*p;
         }
-        gsl_vector_scale(s->w,1./norm);
+        for(size_t k=0; k<NMODE; k++) s->w[k]/=norm;
     }
     
     /* weigh the number of samples in each mode */
     for(size_t k=0; k<NMODE; k++)
     {
         modes[k]->Neff = 0;
-        for(size_t i=0; i<NMCMC; i++) modes[k]->Neff += gsl_vector_get(samples[i]->w,k);
+        for(size_t i=0; i<NMCMC; i++) modes[k]->Neff += samples[i]->w[k];
         if(modes[k]->Neff < 1.0 || modes[k]->Neff != modes[k]->Neff) return 1;
         modes[k]->p = modes[k]->Neff/(double)NMCMC;
     }
@@ -630,9 +574,9 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
             
             //mu is a weighted average for each mode
             for(size_t i=0; i<NMCMC; i++)
-                mu += (gsl_vector_get(samples[i]->w,k)/modes[k]->Neff) * gsl_vector_get(samples[i]->x,n);
+                mu += (samples[i]->w[k]/modes[k]->Neff) * samples[i]->x[n];
             
-            gsl_vector_set(M->mu,n,mu);
+            M->mu[n] = mu;
         }
         
         //get new covariance
@@ -646,54 +590,50 @@ int expectation_maximization(struct Sample **samples, struct MVG **modes, size_t
                 //loop over samples
                 for(size_t i=0; i<NMCMC; i++)
                 {
-                    double dx_m = gsl_vector_get(samples[i]->x,m) - gsl_vector_get(M->mu,m);
-                    double dx_n = gsl_vector_get(samples[i]->x,n) - gsl_vector_get(M->mu,n);
+                    double dx_m = samples[i]->x[m] - M->mu[m];
+                    double dx_n = samples[i]->x[n] - M->mu[n];
                     
-                    C += (gsl_vector_get(samples[i]->w,k)/modes[k]->Neff)*(dx_m)*(dx_n);
+                    C += (samples[i]->w[k]/modes[k]->Neff)*(dx_m)*(dx_n);
                 }
-                gsl_matrix_set(M->C,m,n,C);
+                M->C[m][n] = C;
             }
         }
         
         //invert new matrix to evaluate the probabilities
-        invert_gsl_matrix(modes[k]->C, modes[k]->Cinv, modes[k]->L, &modes[k]->detC, &R);
+        decompose_matrix(modes[k]->C, modes[k]->Cinv, modes[k]->L, &modes[k]->detC, NP);
     }
     
     return 0;
 }
 
-int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_t NSTEP, gsl_rng *r, double *logL, double *BIC)
+int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NP, size_t NMODE, size_t NMCMC, size_t NSTEP, unsigned int *r, double *logL, double *BIC)
 {
-    size_t NP    = samples[0]->x->size;
-    size_t NMODE = samples[0]->p->size;
 
     /* construct diagonal covariance matrix of full sample variances */
     double x_temp[NMCMC];
-    double mean_temp, var_temp;
+    double var_temp;
     for(size_t i=0; i<NP; i++)
     {
-        for(size_t n=0; n<NMCMC; n++) x_temp[n] = gsl_vector_get(samples[n]->x,i);
-        mean_temp = gsl_stats_mean(x_temp,1,NMCMC);
-        var_temp  = gsl_stats_variance_m(x_temp,1,NMCMC, mean_temp);
+        for(size_t n=0; n<NMCMC; n++) x_temp[n] = samples[n]->x[i];
+        var_temp  = get_variance(x_temp,NMCMC);
         
         //set diagonals of C
-        for(size_t n=0; n<NMODE; n++) gsl_matrix_set(modes[n]->C,i,i,var_temp);
+        for(size_t n=0; n<NMODE; n++) modes[n]->C[i][i] = var_temp;
         
     }
     
     /* place covariance matrices at random draws from the chain file */
-    double R; //condition number of matrix
     for(size_t k=0; k<NMODE; k++)
     {
         //pick a sample from the chain to anchor each covariance matrix
-        int fair_draw = (int)gsl_ran_flat(r,0,NMCMC);
-        for(size_t n=0; n<NP; n++) gsl_vector_set(modes[k]->mu,n,gsl_vector_get(samples[fair_draw]->x,n));
+        int fair_draw = (int)(rand_r_U_0_1(r)*NMCMC);
+        for(size_t n=0; n<NP; n++) modes[k]->mu[n] = samples[fair_draw]->x[n];
         
         //set priors for each model
         modes[k]->p = (double)1./(double)NMODE;
         
         //get inverse, determinant, etc.
-        invert_gsl_matrix(modes[k]->C, modes[k]->Cinv, modes[k]->L, &modes[k]->detC, &R);
+        decompose_matrix(modes[k]->C, modes[k]->Cinv, modes[k]->L, &modes[k]->detC, NP);
     }
     
     /* EM Algorithm for Gaussian Mixture Models */
@@ -702,7 +642,7 @@ int GMM_with_EM(struct MVG **modes, struct Sample **samples, size_t NMCMC, size_
     while(step<NSTEP)
     {
         //printProgress((double)(step+1)/NSTEP);
-        if(expectation_maximization(samples, modes, NMCMC, logL, BIC)) return 1;
+        if(expectation_maximization(samples, modes, NP, NMODE, NMCMC, logL, BIC)) return 1;
         else
         {
             if(floor(*BIC) < floor(BICmin))
@@ -735,13 +675,11 @@ double dsigmoid(double x, double xmin, double xmax)
 }
 
 
-void logit_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax)
+void logit_mapping(double *x_vec, double *y_vec, double xmin, double xmax, int N)
 {
-    size_t N = x_vec->size;
-
     for(size_t n=0; n<N; n++)
     {
-        double x = gsl_vector_get(x_vec,n);
+        double x = x_vec[n];
         if(x<xmin || x>xmax)
         {
             /*
@@ -755,19 +693,17 @@ void logit_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xma
             if(x<xmin) x += 2.*(xmin-x);
         }
         double y = logit(x,xmin,xmax);//log( (x - xmin)/(xmax - x) );
-        gsl_vector_set(y_vec,n,y);
+        y_vec[n]=y;
     }
 }
 
 /* sigmoid function */
-void sigmoid_mapping(gsl_vector *x_vec, gsl_vector *y_vec, double xmin, double xmax)
+void sigmoid_mapping(double *x_vec, double *y_vec, double xmin, double xmax, int N)
 {
-    size_t N = x_vec->size;
-
     for(size_t n=0; n<N; n++)
     {
-        double y = gsl_vector_get(y_vec,n);
+        double y = y_vec[n];
         double x = sigmoid(y,xmin,xmax);//xmin + (1./(1. + exp(-y)))*(xmax - xmin);
-        gsl_vector_set(x_vec,n,x);
+        x_vec[n] = x;
     }
 }

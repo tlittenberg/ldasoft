@@ -1,9 +1,18 @@
-//
-//  noise_spline_mcmc.c
-//
-//
-//  Created by Tyson Littenberg on 4/06/21.
-//
+/*
+ * Copyright 2021 Tyson B. Littenberg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /**
  @file noise_spline_mcmc.c
@@ -18,9 +27,6 @@
 #include <time.h>
 
 #include <sys/stat.h>
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
 
 #include <omp.h>
 
@@ -55,7 +61,7 @@ int main(int argc, char *argv[])
     struct Orbit *orbit = malloc(sizeof(struct Orbit));
     struct Chain *chain = malloc(sizeof(struct Chain));
     
-    parse_data_args(argc,argv,data,orbit,flags,chain);
+    parse_data_args(argc,argv,data,orbit,flags,chain,"fourier");
     if(flags->help)print_usage();
     
     /*
@@ -137,7 +143,7 @@ int main(int argc, char *argv[])
                 for(int mc=0; mc<10; mc++)
                 {
                     
-                    if(gsl_rng_uniform(chain->r[ic])<0.9)
+                    if(rand_r_U_0_1(&chain->r[ic])<0.9)
                         noise_spline_model_mcmc(orbit, data, model_ptr, chain, flags, ic);
                     else
                         noise_spline_model_rjmcmc(orbit, data, model_ptr, chain, flags, ic);

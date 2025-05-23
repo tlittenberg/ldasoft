@@ -1,9 +1,18 @@
-//
-//  UCBWrapper.c
-//
-//
-//  Created by Tyson Littenberg on 1/28/21.
-//
+/*
+ * Copyright 2021 Tyson B. Littenberg (MSFC-ST12)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <mpi.h>
 
@@ -60,7 +69,6 @@ void setup_ucb_data(struct UCBData *ucb_data, struct TDI *tdi_full)
     
     /*
      Initialize measured time of model update.
-     Used to determin number of steps relative to mbh model
      */
     ucb_data->cpu_time = 1.0;
 }
@@ -181,7 +189,7 @@ void initialize_ucb_sampler(struct UCBData *ucb_data)
     initialize_proposal(orbit, data, prior, chain, flags, catalog, proposal, flags->DMAX);
     
     /* Initialize UCB sampler state */
-    struct Source *inj = NULL;
+    struct Source **inj = NULL;
     initialize_ucb_state(data, orbit, flags, chain, proposal, model, trial, inj);
         
     /* Set sampler counter */
@@ -214,7 +222,7 @@ void initialize_ucb_sampler(struct UCBData *ucb_data)
     }
     
     /* Store data segment in working directory */
-    print_data(data, data->tdi, flags);
+    print_data(data, flags);
 
     /* Store post-processing script */
     print_ucb_catalog_script(flags, data, orbit);
@@ -288,19 +296,19 @@ int update_ucb_sampler(struct UCBData *ucb_data)
                 for(int m=0; m<100; m++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(gsl_rng_uniform(chain->r[ic])<0.25 && flags->rj)
-                        galactic_binary_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                    if(rand_r_U_0_1(&chain->r[ic])<0.25 && flags->rj)
+                        ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     
                     //fixed dimension parameter updates
                     else
-                        galactic_binary_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
+                        ucb_mcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                 }
             }
             
             //update fisher matrix for each chain
             for(int n=0; n<model_ptr->Nlive; n++)
             {
-                galactic_binary_fisher(orbit, data, model_ptr->source[n], model_ptr->noise);
+                ucb_fisher(orbit, data, model_ptr->source[n], model_ptr->noise);
             }
 
             
@@ -458,7 +466,7 @@ void exchange_ucb_source_params(struct UCBData *ucb_data)
     if(Nlive_new > 0)
     {
         struct Model *new_model = malloc(sizeof(struct Model));
-        alloc_model(new_model,Nlive_new,data->N,data->Nchannel);
+        alloc_model(data,new_model,Nlive_new);
         new_model->Nlive = Nlive_new;
         //set noise model
         copy_noise(data->noise, new_model->noise);

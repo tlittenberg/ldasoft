@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ *  Copyright (C) 2019 Tyson B. Littenberg & Neil J. Cornish
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  *  MA  02111-1307  USA
  */
 
-/***************************  REQUIRED LIBRARIES  ***************************/
 
 #include <glass_utils.h>
 
@@ -41,7 +40,7 @@ int main(int argc, char *argv[])
     struct Data  *data  = malloc(sizeof(struct Data));
     struct Chain *chain = malloc(sizeof(struct Chain));
     
-    parse_data_args(argc,argv,data,orbit,flags,chain);
+    parse_data_args(argc,argv,data,orbit,flags,chain,"fourier");
     parse_ucb_args(argc,argv,flags);
     
     /* Load spacecraft ephemerides */
@@ -108,7 +107,7 @@ int main(int argc, char *argv[])
     
     
     
-    for(int i=0; i<data->N; i++)
+    for(int i=0; i<data->NFFT; i++)
     {
         data->tdi->A[2*i]   = 0.0;// inj->tdi->A[2*n];
         data->tdi->E[2*i]   = 0.0;//inj->tdi->E[2*n];
@@ -139,15 +138,15 @@ int main(int argc, char *argv[])
         }
         
         //set bandwidth of data segment centered on injection
-        data->fmin = f0 - (data->N/2)/data->T;
-        data->fmax = f0 + (data->N/2)/data->T;
+        data->fmin = f0 - (data->NFFT/2)/data->T;
+        data->fmax = f0 + (data->NFFT/2)/data->T;
         data->qmin = (int)(data->fmin*data->T);
-        data->qmax = data->qmin+data->N;
+        data->qmax = data->qmin+data->NFFT;
         
         struct Source *inj = malloc(sizeof(struct Source));
         alloc_source(inj, data->N, data->Nchannel);
         
-        for(int n=0; n<2*data->N; n++)
+        for(int n=0; n<data->N; n++)
         {
             inj->tdi->A[n] = 0.0;
             inj->tdi->E[n] = 0.0;
@@ -167,19 +166,19 @@ int main(int argc, char *argv[])
         map_params_to_array(inj, inj->params, data->T);
         
         //Book-keeping of injection time-frequency volume
-        galactic_binary_alignment(orbit, data, inj);
+        ucb_alignment(orbit, data, inj);
         
         //Simulate gravitational wave signal
         double t0 = data->t0;
-        galactic_binary(orbit, data->format, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
+        ucb_waveform(orbit, data->format, data->T, t0, inj->params, 8, inj->tdi->X, inj->tdi->Y, inj->tdi->Z, inj->tdi->A, inj->tdi->E, inj->BW, 2);
         
         
-        if(inj->BW > data->N) printf("WARNING:  Bandwidth %i wider than N %i at f=%.2e\n",inj->BW,data->N,data->fmin);
+        if(inj->BW > data->NFFT) printf("WARNING:  Bandwidth %i wider than N %i at f=%.2e\n",inj->BW,data->NFFT,data->fmin);
         
         for(int n=0; n<inj->BW; n++)
         {
             int i = inj->qmin+n;
-            if(i>0 && i<data->N)
+            if(i>0 && i<data->NFFT)
             {
                 //        data->tdi->A[2*i]   -= inj->tdi->A[2*n];
                 //        data->tdi->E[2*i]   -= inj->tdi->E[2*n];
@@ -198,7 +197,7 @@ int main(int argc, char *argv[])
     //print full galaxy and density file
     FILE *galaxyFile  = fopen("galaxy_data_AE_clean.dat","w");
     
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         double f = (double)n/data->T;
         fprintf(galaxyFile,"%.12g ",f);

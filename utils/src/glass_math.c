@@ -1,11 +1,158 @@
-//
-//  math.c
-//  data
-//
-//  Created by Tyson Littenberg on 11/29/23.
-//
+/*
+ * Copyright 2023 Tyson B. Littenberg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 
 #include "glass_utils.h"
+
+struct CubicSpline* alloc_cubic_spline(int N)
+{
+    struct CubicSpline *spline = malloc(sizeof(struct CubicSpline));
+    spline->N    = N;
+    spline->nmin = 0;
+    spline->nmax = 1;
+    spline->x    = malloc(spline->N*sizeof(double));
+    spline->y    = malloc(spline->N*sizeof(double));
+    spline->d2y  = malloc(spline->N*sizeof(double));
+    
+    return spline;
+}
+
+void initialize_cubic_spline(struct CubicSpline *spline, double *x, double *y)
+{
+    
+    //pack interpolant data {x,y} into spline structure
+    //memcpy is not thread safe?!
+    //memcpy(spline->x, x, spline->N*sizeof(double));
+    //memcpy(spline->y, y, spline->N*sizeof(double));
+    
+    for(int i=0; i<spline->N; i++)
+    {
+        spline->x[i] = x[i];
+        spline->y[i] = y[i];
+    }
+    
+    //compute interpolant coefficients
+    spline_coefficients(spline);
+    
+}
+
+void free_cubic_spline(struct CubicSpline *spline)
+{
+    free(spline->x);
+    free(spline->y);
+    free(spline->d2y);
+    
+    free(spline);
+}
+
+void spline_coefficients(struct CubicSpline *spline)
+{
+    int N = spline->N;
+    double *x = spline->x;
+    double *y = spline->y;
+    double *d2y = spline->d2y;
+    
+    double *temp = calloc(N,sizeof(double));
+    
+    // Implicitly set derivitives at boundary to 0
+    d2y[0] = d2y[N-1] = 0.0;
+    
+    // Iteratively solve the tridiagonal system of equations
+    for(int i=1; i<N-1; i++)
+    {
+        double sig = (x[i] - x[i-1])/(x[i+1] - x[i-1]);
+        double p = sig*d2y[i-1] + 2.0;
+        
+        d2y[i] = (sig - 1.0)/p;
+
+        double u = (y[i+1] - y[i])/(x[i+1] - x[i]) - (y[i] - y[i-1])/(x[i] - x[i-1]);
+        
+        temp[i] = (6.0*u/(x[i+1] - x[i-1]) - sig*temp[i-1])/p;
+
+    }
+    for(int i=N-2; i>=0; i--) d2y[i] = d2y[i]*d2y[i+1] + temp[i];
+
+    free(temp);
+}
+
+double spline_interpolation(struct CubicSpline *spline, double x)
+{
+    /* Caching nmin and nmax is not thread safe
+     // only search for which interval contains x if needed
+    if(x<spline->x[spline->nmin] || x > spline->x[spline->nmax] )
+    {
+        spline->nmin = binary_search(spline->x,0,spline->N,x);
+        spline->nmax = spline->nmin + 1;
+    }
+    
+    spline->nmin = binary_search(spline->x,0,spline->N,x);
+    spline->nmax = spline->nmin + 1;
+
+    if(spline->nmin<0 || spline->nmax>=spline->N)
+    {
+        printf("Error in spline interpolation: [nmin,nmax] =  [%i,%i] out of [0,%i]\n",spline->nmin, spline->nmax, spline->N);
+        printf("Error in spline interpolation: x is out of bounds.  %g -> [%g,%g]\n",x,spline->x[0],spline->x[spline->N-1]);
+        abort();
+    }
+
+    double x1 = spline->x[spline->nmin];
+    double x2 = spline->x[spline->nmax];
+    
+    double y1 = spline->y[spline->nmin];
+    double y2 = spline->y[spline->nmax];
+    
+    double d2y1 = spline->d2y[spline->nmin];
+    double d2y2 = spline->d2y[spline->nmax];
+     */
+    
+    int nmin = binary_search(spline->x,0,spline->N,x);
+    int nmax = nmin + 1;
+
+    double x1 = spline->x[nmin];
+    double x2 = spline->x[nmax];
+    
+    double y1 = spline->y[nmin];
+    double y2 = spline->y[nmax];
+    
+    double d2y1 = spline->d2y[nmin];
+    double d2y2 = spline->d2y[nmax];
+    
+    double dx = x2 - x1;
+    
+    double a = (x2 - x)/dx;
+    double b = (x - x1)/dx;
+    double c = (a*a*a - a)*(dx*dx)/6.0;
+    double d = (b*b*b - b)*(dx*dx)/6.0;
+    
+    return a*y1 + b*y2 + c*d2y1 + d*d2y2;
+}
+
+double spline_interpolation_deriv(struct CubicSpline *spline, double x)
+{
+    printf("ERROR: spline_interpolation_deriv() is undefined\n");
+    exit(1);
+    return 0.0;
+}
+
+double spline_interpolation_deriv2(struct CubicSpline *spline, double x)
+{
+    printf("ERROR: spline_interpolation_deriv() is undefined\n");
+    exit(1);
+    return 0.0;
+}
 
 void invert_noise_covariance_matrix(struct Noise *noise)
 {
@@ -62,6 +209,15 @@ double chirpmass(double m1, double m2)
     return pow(m1*m2,3./5.)/pow(m1+m2,1./5.);
 }
 
+double amplitude(double Mc, double f0, double D)
+{
+    double f = f0;;
+    double M = Mc*TSUN;
+    double dL= D*PC/CLIGHT;
+    
+    return 2.*pow(pow(M,5)*pow(M_PI*f,2),1./3.)/dL;
+}
+
 double power_spectrum(double *data, int n)
 {
     int i,j;
@@ -75,24 +231,39 @@ double power_spectrum(double *data, int n)
     return (Re*Re + Im*Im);
 }
 
-double fourier_nwip(double *a, double *b, double *invC, int n)
+double fourier_nwip(double *a, double *b, double *invC, int N)
 {
-    int i, j, k;
+    int j,k;
     double arg, product;
     double ReA, ReB, ImA, ImB;
     
     arg = 0.0;
-    for(i=0; i<n; i++)
+    for(int n=0; n<N; n++)
     {
-        j = i * 2;
+        j = n * 2;
         k = j + 1;
         ReA = a[j]; ImA = a[k];
         ReB = b[j]; ImB = b[k];
         product = ReA*ReB + ImA*ImB;
-        arg += product*invC[i];
+        arg += product*invC[n];
     }
     
     return(2.0*arg);
+}
+
+double wavelet_nwip(double *a, double *b, double *invC, int *list, int N)
+{
+    double arg = 0.0;
+    for(int n=0; n<N; n++)
+    {
+        if(list[n] > 0)
+        {
+            int k = list[n];
+            arg += a[k]*b[k]*invC[k];
+        }
+        
+    }
+    return arg;
 }
 
 
@@ -101,6 +272,9 @@ double fourier_nwip(double *a, double *b, double *invC, int n)
 // otherwise -1
 int binary_search(double *array, int nmin, int nmax, double x)
 {
+    //catch if x exactly matches array[nmin]
+    if(x==array[nmin]) return nmin;
+    
     int next;
     if(nmax>nmin)
     {
@@ -112,13 +286,11 @@ int binary_search(double *array, int nmin, int nmax, double x)
         
         // If the element is present at the middle
         // itself
-        if (x > array[mid])
-        {
-            if(x < array[next]) return mid;
-        }
+        if (x > array[mid] && x < array[next])
+            return mid;
         
         // the element is in the lower half
-        if (array[mid] > x)
+        if (array[mid] >= x)
             return binary_search(array, nmin, mid, x);
         
         // the element is in upper half
@@ -130,138 +302,102 @@ int binary_search(double *array, int nmin, int nmax, double x)
     return -1;
 }
 
-void matrix_eigenstuff(double **matrix, double **evector, double *evalue, int N)
+void matrix_eigenstuff(double **matrix, double **evectors, double *evalues, int N)
 {
-    int i,j;
-    
-    // Don't let errors kill the program (yikes)
-    gsl_set_error_handler_off ();
-    int err=0;
-    
-    // Find eigenvectors and eigenvalues
-    gsl_matrix *GSLfisher = gsl_matrix_alloc(N,N);
-    gsl_matrix *GSLcovari = gsl_matrix_alloc(N,N);
-    gsl_matrix *GSLevectr = gsl_matrix_alloc(N,N);
-    gsl_vector *GSLevalue = gsl_vector_alloc(N);
-    
-    for(i=0; i<N; i++)
-    {
-        for(j=0; j<N; j++)
-        {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
-            gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
-        }
-    }
-    
-    // sort and put them into evec
-    gsl_eigen_symmv_workspace * workspace = gsl_eigen_symmv_alloc (N);
-    gsl_permutation * permutation = gsl_permutation_alloc(N);
-    err += gsl_eigen_symmv (GSLfisher, GSLevalue, GSLevectr, workspace);
-    err += gsl_eigen_symmv_sort (GSLevalue, GSLevectr, GSL_EIGEN_SORT_ABS_ASC);
-    
-    // eigenvalues destroy matrix
-    for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLfisher,i,j,matrix[i][j]);
-    
-    err += gsl_linalg_LU_decomp(GSLfisher, permutation, &i);
-    err += gsl_linalg_LU_invert(GSLfisher, permutation, GSLcovari);
-    
-    if(err>0)
-    {
-        for(i=0; i<N; i++)for(j=0; j<N; j++)
-        {
-            evector[i][j] = 0.0;
-            if(i==j)
-            {
-                evector[i][j]=1.0;
-                evalue[i]=1./matrix[i][j];
-            }
-        }
+    // Local Integers
+    int n = N;    // Number of columns
+    int lda = N;  // Leading dimension of matrix A
+    int ldvl = N; // Leading dimension of matrix V (eigenvectors)
+    int ldvr = N; // Leading dimension of matrix V (eigenvectors)
+
+    // Local Arrays
+    double A[N*N]; //input matrix
+    double wr[N], wi[N]; // Eigenvalues
+    double vl[N*N], vr[N*N]; // Eigenvectors (will be stored in a 1D array)
         
-    }
-    else
-    {
-        
-        //unpack arrays from gsl inversion
-        for(i=0; i<N; i++)
-        {
-            evalue[i] = gsl_vector_get(GSLevalue,i);
-            for(j=0; j<N; j++)
-            {
-                evector[i][j] = gsl_matrix_get(GSLevectr,i,j);
-                if(evector[i][j] != evector[i][j]) evector[i][j] = 0.;
-            }
-        }
-                
-        //copy covariance matrix back into Fisher
-        for(i=0; i<N; i++)
-        {
-            for(j=0; j<N; j++)
-            {
-                matrix[i][j] = gsl_matrix_get(GSLcovari,i,j);
-            }
-        }
-        
-        //cap minimum size eigenvalues
-        for(i=0; i<N; i++)
-        {
-            if(evalue[i] != evalue[i] || evalue[i] <= 10.0) evalue[i] = 10.;
-        }
-    }
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) A[i*N+j] = matrix[i][j];
+
+    // Solve Eigenproblem
+    LAPACKE_dgeev( LAPACK_ROW_MAJOR, 'V', 'V', n, A, lda, wr, wi, vl, ldvl, vr, ldvr );
     
-    gsl_vector_free (GSLevalue);
-    gsl_matrix_free (GSLfisher);
-    gsl_matrix_free (GSLcovari);
-    gsl_matrix_free (GSLevectr);
-    gsl_eigen_symmv_free (workspace);
-    gsl_permutation_free (permutation);
+    // Assuming evalues are all real
+    for(int i=0; i<N; i++) evalues[i] = wr[i];
+    
+    // Assuming evectors that we want are real, and are the "left" ones
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) evectors[i][j] = vl[i*N + j];
 }
 
 void invert_matrix(double **matrix, int N)
 {
-    int i,j;
+    // Lapack wants the matrix as an array
+    double A[N*N];
     
-    // Don't let errors kill the program (yikes)
-    gsl_set_error_handler_off ();
-    int err=0;
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) A[i*N+j] = matrix[i][j];
     
-    // Find eigenvectors and eigenvalues
-    gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
-    gsl_matrix *GSLinvrse = gsl_matrix_alloc(N,N);
+    // Memory for Pivot Array
+    int *IPIV = int_vector(N);
     
-    for(i=0; i<N; i++)
+    // LU Factorization
+    LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,A,N,IPIV);
+    
+    // Compute the Inverse
+    LAPACKE_dgetri(LAPACK_ROW_MAJOR,N,A,N,IPIV);
+        
+    // Replace input matrix with inverse
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) matrix[i][j] = A[i*N+j];
+
+    // Free memory
+    free_int_vector(IPIV);
+}
+
+void decompose_matrix(double **matrix, double **inverse, double **L, double *det, int N)
+{
+    /* start off just like invert_matrix() */
+    
+    // Lapack wants the matrix as an array
+    double A[N*N];
+    
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) A[i*N+j] = matrix[i][j];
+    
+    // Memory for Pivot Array
+    int *IPIV = int_vector(N);
+    
+    // LU Factorization
+    LAPACKE_dgetrf(LAPACK_ROW_MAJOR,N,N,A,N,IPIV);
+    
+    /* detour to store L matrix & determinent */
+    for(int i=0; i<N; i++)
     {
-        for(j=0; j<N; j++)
+        for(int j=0; j<N; j++)
         {
-            if(matrix[i][j]!=matrix[i][j])fprintf(stderr,"nan matrix element at line %d in file %s\n", __LINE__, __FILE__);
-            gsl_matrix_set(GSLmatrix,i,j,matrix[i][j]);
+            if(i>j) L[i][j] = A[i*N+j];
+            else if (i == j) L[i][j] = 1.0;
+            else L[i][j] = 0.0;
         }
     }
-    
-    gsl_permutation * permutation = gsl_permutation_alloc(N);
-    
-    err += gsl_linalg_LU_decomp(GSLmatrix, permutation, &i);
-    err += gsl_linalg_LU_invert(GSLmatrix, permutation, GSLinvrse);
-    
-    if(err>0)
+
+    // Calculate determinant from L and U factors
+    double detA = 1.0;
+    for(int i=0; i<N; i++)
     {
-        fprintf(stderr,"data.c:647: WARNING: singluar matrix\n");
-        fflush(stderr);
+        detA *= A[i*N+i];
+        if(IPIV[i] != i+1) detA *= -1.0; // Account for row swaps
     }
-    else
-    {
-        //copy inverse back into matrix
-        for(i=0; i<N; i++)
-        {
-            for(j=0; j<N; j++)
-            {
-                matrix[i][j] = gsl_matrix_get(GSLinvrse,i,j);
-            }
-        }
-    }
+    *det = detA;
     
-    gsl_matrix_free (GSLmatrix);
-    gsl_matrix_free (GSLinvrse);
-    gsl_permutation_free (permutation);
+    /* and finally finish the job w/ the inverse */
+    
+    // Compute the Inverse
+    LAPACKE_dgetri(LAPACK_ROW_MAJOR,N,A,N,IPIV);
+        
+    // Replace input matrix with inverse
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) inverse[i][j] = A[i*N+j];
+
+    // Free memory
+    free_int_vector(IPIV);
 }
 
 void matrix_multiply(double **A, double **B, double **AB, int N)
@@ -289,42 +425,27 @@ void cholesky_decomp(double **A, double **L, int N)
 {
     /*
      factorize matrix A into cholesky decomposition L.
-     GSL overwrites the original matrix which we want
+     LAPACK overwrites the original matrix which we want
      to preserve
      */
-    int i,j;
-    gsl_matrix *GSLmatrix = gsl_matrix_alloc(N,N);
     
-    //copy covariance matrix into workspace
-    for(i=0; i<N; i++) for(j=0; j<N; j++) gsl_matrix_set(GSLmatrix,i,j,A[i][j]);
+    // LAPACK wants the matrix as an array
+    double matrix[N*N];
     
-    //make the magic happen
-    gsl_linalg_cholesky_decomp(GSLmatrix);
+    // Store matrix in row-major format (as expected by C wrappers for LAPACK)
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++) matrix[i*N+j] = A[i][j];
+    
+    // Cholesky Decomposition into lower triangle
+    LAPACKE_dpotrf(LAPACK_ROW_MAJOR,'L',N,matrix,N);
     
     //copy cholesky decomposition into output matrix
-    for(i=0; i<N; i++) for(j=0; j<N; j++)  L[i][j] = gsl_matrix_get(GSLmatrix,i,j);
+    for(int i=0; i<N; i++) for(int j=0; j<N; j++)  L[i][j] = matrix[2*i+j];
     
     //zero upper half of matrix (copy of A)
-    for(i=0; i<N; i++) for(j=i+1; j<N; j++) L[i][j] = 0.0;
-    
-    gsl_matrix_free (GSLmatrix);
-    
+    for(int i=0; i<N; i++) for(int j=i+1; j<N; j++) L[i][j] = 0.0;
+
 }
 
-/*
-static void window(double *data, int N)
-{
-    int i;
-    double filter;
-    double tau = LISA_CADENCE/FILTER_LENGTH;
-    for(i=0; i<N; i++)
-    {
-        double x = i*LISA_CADENCE;
-        filter = (0.5*(1+tanh(tau*(x-FILTER_LENGTH))))*(0.5*(1-tanh(tau*(x-N*LISA_CADENCE))));
-        data[i]*=filter;
-    }
-}
-*/
 void tukey(double *data, double alpha, int N)
 {
     int i, imin, imax;
@@ -342,8 +463,8 @@ void tukey(double *data, double alpha, int N)
     }
 }
 
-/*
-static double tukey_scale(double alpha, int N)
+
+double tukey_scale(double alpha, int N)
 {
     int i, imin, imax;
     double scale = 0.0;
@@ -365,93 +486,186 @@ static double tukey_scale(double alpha, int N)
     
     return scale;
 }
-*/
 
-void unpack_gsl_rft_output(double *x, double *x_gsl, int N)
+void detrend(double *data, int N, int Navg)
 {
-    x[0] = x_gsl[0];
-    x[1] = 0.0;
+    double *trend = malloc(N*sizeof(double));
+    double X0=0;
+    double XN=0;
+    for(int n=0; n<Navg; n++)
+    {
+        X0+=data[n];
+        XN+=data[N-1-n];
+    }
+    X0/=(double)Navg;
+    XN/=(double)Navg;
+    
+    for(int n=0; n<N; n++) trend[n] = X0 + ((XN-X0)/(N-1))*n;
+    
+    for(int n=0; n<N; n++) data[n] -= trend[n];
+    
+    free(trend);
+}
 
+void unpack_fft_output(double *x, double *x_packed, int N)
+{
+    x[0] = x_packed[0];
+    x[1] = 0.0;
     for(int n=1; n<N/2; n++)
     {
-        x[2*n]   = x_gsl[2*n-1];
-        x[2*n+1] = x_gsl[2*n];
+        x[2*n]   = x_packed[n];
+        x[2*n+1] = x_packed[N-n];
     }
 }
 
-void CubicSplineGSL(int N, double *x, double *y, int Nint, double *xint, double *yint)
+
+void glass_forward_complex_fft(double *data, int N)
 {
-    int n;
+    kiss_fft_cfg cfg = kiss_fft_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
+    kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
+    kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
     
-    /* do our own error catching from interpolator */
-    gsl_set_error_handler_off();
+    for(int i=0; i<N; i++)
+    {
+        timedata[i].r = data[2*i];
+        timedata[i].i = data[2*i+1];
+    }
     
-    /* set up GSL spline */
+    // Perform the forward FFT
+    kiss_fft(cfg, timedata, freqdata);
     
-    /* Standard cubic spline */
-    //gsl_spline *cspline = gsl_spline_alloc(gsl_interp_cspline, N);
     
-    /*
-     Non-rounded Akima spline with natural boundary conditions.
-     This method uses the non-rounded corner algorithm of Wodicka.
-     Akima splines are ideal for fitting curves with rapidly
-     changing second derivatives.  They are C1 differentiable.
-     See
-     https://www.gnu.org/software/gsl/doc/html/interp.html#c.gsl_interp_type.gsl_interp_akima
-     */
-    gsl_spline *cspline = gsl_spline_alloc(gsl_interp_akima, N);
+    for(int i=0; i<N; i++)
+    {
+        data[2*i]   = freqdata[i].r;
+        data[2*i+1] = freqdata[i].i;
+    }
     
-    /*
-     Steffen's splines are guaranteed to be monotonic between
-     control points.  Local maxima and minima only occur at
-     at control points. See
-     https://www.gnu.org/software/gsl/doc/html/interp.html#c.gsl_interp_type.gsl_interp_steffen
-     */
-    //gsl_spline *cspline = gsl_spline_alloc(gsl_interp_steffen, N);
     
-    gsl_interp_accel *acc = gsl_interp_accel_alloc();
-    
-    /* get derivatives */
-    int status = gsl_spline_init(cspline,x,y,N);
-    
-    //if error, return values that will be rjected by sampler
-    if(status) for(n=0; n<Nint; n++) yint[n]=1.0;
-    
-    //otherwise proceed w/ interpolation
-    else for(n=0; n<Nint; n++) yint[n]=gsl_spline_eval(cspline,xint[n],acc);
-    
-    gsl_spline_free (cspline);
-    gsl_interp_accel_free (acc);
-    
+    // Clean up and free memory
+    kiss_fft_free(cfg);
+    free(freqdata);
+    free(timedata);
 }
 
-static gsl_vector* gsl_vector_union(gsl_vector *N, gsl_vector *Np)
+void glass_inverse_complex_fft(double *data, int N)
+{
+    kiss_fft_cfg cfg = kiss_fft_alloc(N, 1, NULL, NULL); // 1 indicates backward FFT;
+    kiss_fft_cpx *freqdata = malloc(N*sizeof(kiss_fft_cpx));
+    kiss_fft_cpx *timedata = malloc(N*sizeof(kiss_fft_cpx));
+
+    for(int i=0; i<N; i++)
+    {
+        freqdata[i].r = data[2*i];
+        freqdata[i].i = data[2*i+1];
+    }
+    
+    // Perform the inverse FFT
+    kiss_fft(cfg, freqdata, timedata);
+    
+    
+    for(int i=0; i<N; i++)
+    {
+        data[2*i]   = timedata[i].r;
+        data[2*i+1] = timedata[i].i;
+    }
+    
+    // Clean up and free memory
+    kiss_fft_free(cfg);
+    free(freqdata);
+    free(timedata);
+}
+
+void glass_forward_real_fft(double *data, int N)
+{
+    kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 0, NULL, NULL); // 0 indicates forward FFT;
+    kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
+    kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
+    
+    for(int i=0; i<N; i++)  timedata[i] = data[i];
+    
+    // Perform the rFFT
+    kiss_fftr(cfg, timedata, freqdata);
+    
+    
+    for(int i=0; i<N/2; i++)
+    {
+        data[2*i]   = freqdata[i].r;
+        data[2*i+1] = freqdata[i].i;
+    }
+    
+    
+    // Clean up and free memory
+    kiss_fftr_free(cfg);
+    free(freqdata);
+    free(timedata);
+}
+
+void glass_inverse_real_fft(double *data, int N)
+{
+    kiss_fftr_cfg cfg = kiss_fftr_alloc(N, 1, NULL, NULL); // 0 indicates forward FFT;
+    kiss_fft_scalar *timedata = malloc(N*sizeof(kiss_fft_scalar));
+    kiss_fft_cpx    *freqdata = malloc((N/2+1)*sizeof(kiss_fft_cpx));
+
+    for(int i=0; i<N/2; i++)
+    {
+        freqdata[i].r = data[2*i];
+        freqdata[i].i = data[2*i+1];
+    }
+    
+    // Perform the rFFT
+    kiss_fftr(cfg, timedata, freqdata);
+    
+    for(int i=0; i<N; i++)  data[i] = timedata[i];
+    
+    // Clean up and free memory
+    kiss_fftr_free(cfg);
+    free(timedata);
+    free(freqdata);
+}
+
+void CubicSplineGLASS(int N, double *x, double *y, int Nint, double *xint, double *yint)
+{
+    
+    /* set up cubic spline */
+    struct CubicSpline *cspline = alloc_cubic_spline(N);
+    
+    /* get derivatives */
+    initialize_cubic_spline(cspline,x,y);
+    
+    /* interpolation */
+    for(int n=0; n<Nint; n++) yint[n] = spline_interpolation(cspline,xint[n]);
+    
+    free_cubic_spline(cspline);
+}
+
+static double* vector_union(double *N, double *Np, int N_size, int Np_size)
 {
     // allocate memory for work space
-    double *N_temp = malloc(N->size*sizeof(double));
-    double *Np_temp = malloc(Np->size*sizeof(double));
+    double *N_temp = malloc(N_size*sizeof(double));
+    double *Np_temp = malloc(Np_size*sizeof(double));
     
-    int Nsize = N->size;
-    int Nmax = N->size+Np->size;
+    int Nsize = N_size;
+    int Nmax = N_size+Np_size;
     
     //printf("N.size=%i, Np.size=%i, Nmax=%i\n",N->size, Np->size, Nmax);
     
     double *N_union = malloc(Nmax*sizeof(double));
     
     // store contents of vectors in work space
-    for(int n=0; n<N->size; n++)
+    for(int n=0; n<N_size; n++)
     {
-        N_temp[n]  = gsl_vector_get(N,n);
+        N_temp[n]  = N[n];
         N_union[n] = N_temp[n];
     }
-    for(int n=0; n<Np->size; n++) Np_temp[n] = gsl_vector_get(Np,n);
+    for(int n=0; n<Np_size; n++) Np_temp[n] = Np[n];
     
     // get union of work space arrays
-    for(int i=0; i<Np->size; i++)
+    for(int i=0; i<Np_size; i++)
     {
         //traverse N to make sure it is a new point
         int flag=0;
-        for(int l=0; l<N->size; l++)
+        for(int l=0; l<N_size; l++)
         {
             if(N_temp[l]==Np_temp[i]) flag=1;
         }
@@ -463,33 +677,33 @@ static gsl_vector* gsl_vector_union(gsl_vector *N, gsl_vector *Np)
     }
     
 
-    // resize N to and copy work space union into GSL vector    
-    gsl_vector_free(N);
-    gsl_vector *Nnew = gsl_vector_alloc(Nsize);
-    for(int n=0; n<Nsize; n++) gsl_vector_set(Nnew,n,N_union[n]);
+    // resize N to and copy work space union into  vector
+    free_double_vector(N);
+    double *Nnew = double_vector(Nsize);
+    for(int n=0; n<Nsize; n++) Nnew[n] = N_union[n];
     
     // clean up
-    free(N_temp);
-    free(Np_temp);
-    free(N_union);
+    free_double_vector(N_temp);
+    free_double_vector(Np_temp);
+    free_double_vector(N_union);
     
     return Nnew;
             
 }
 
-static gsl_vector * find_neighbors(gsl_vector *X, double P, double epsilon)
+static double * find_neighbors(double *X, double P, double epsilon, int size, int *new_size)
 {
     /*
      return all points in X w/in epsilon of P, including P
      */
-    int N[X->size];
+    int N[size];
     int Nsize=0;
 
     // check all points in X
-    for(int n=0; n<X->size; n++)
+    for(int n=0; n<size; n++)
     {
         // distance measure
-        double D = fabs(gsl_vector_get(X,n) - P);
+        double D = fabs(X[n] - P);
         
         // store points closer than epsilon
         if(D < epsilon)
@@ -500,52 +714,55 @@ static gsl_vector * find_neighbors(gsl_vector *X, double P, double epsilon)
     }
     
     //create GSL vector with list of points within epsilon of P
-    gsl_vector *Neighbors = gsl_vector_alloc(Nsize);
-    for(int n=0; n<Nsize; n++) gsl_vector_set(Neighbors,n,N[n]);
+    double *Neighbors = double_vector(Nsize);
+    for(int n=0; n<Nsize; n++) Neighbors[n] = N[n];
+    
+    *new_size=Nsize;
     
     return Neighbors;
 }
 
-void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
+void dbscan(double *X, double eps, int min, int C[], int *K, int size)
 {
-            
+    int Nsize;
+    
     //Step 1: initialize cluster index and mark all points as unvisited
-    int visited[X->size];
+    int visited[size];
     int cluster_index=0;
-    for(int n=0; n<X->size; n++)
+    for(int n=0; n<size; n++)
     {
         visited[n] = 0;
         C[n] = 0;
     }
     
     //loop through all data points
-    for(int n=0; n<X->size; n++)
+    for(int n=0; n<size; n++)
     {
         //skip visited points
         if(visited[n]) continue;
 
         //Step 2: Choose a random unvisited data point p and mark it as visited
-        double P = gsl_vector_get(X,n);
+        double P = X[n];
         visited[n] = 1;
         
         //Step 3: Find neighbors of P within epsilon and store them in N
-        gsl_vector *N = find_neighbors(X,P,eps);
+        double *N = find_neighbors(X,P,eps,size,&Nsize);
                 
         /*
          Step 4: If N has at least min_samples elements,
          then P is a core point and a new cluster C is formed with P and N.
          Otherwise, X[n] is a noise point and no cluster is formed.
          */
-        if(N->size>=min)
+        if(Nsize>=min)
         {
             
             //assign current data point to current cluster
             C[n] = cluster_index;
             
             //loop through all neighbors of current data point
-            for(int m=0; m<N->size; m++)
+            for(int m=0; m<Nsize; m++)
             {
-                int j = (int)gsl_vector_get(N,m);
+                int j = (int)N[m];
                 
                 //skip visited neighbors
                 if(visited[j]) continue;
@@ -554,13 +771,14 @@ void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
                 visited[j] = 1;
                 
                 //find neighbors of P's neighbors
-                gsl_vector *Np = find_neighbors(X,gsl_vector_get(X,j),eps);
+                int Npsize;
+                double *Np = find_neighbors(X,X[j],eps,size,&Npsize);
 
                 //add neighbors' of P's neighbors to cluster
-                if(Np->size>=min)
+                if(Npsize>=min)
                 {
                     // N = N U N'
-                    N = gsl_vector_union(N,Np);
+                    N = vector_union(N,Np,size,Npsize);
                 }
                 
                 
@@ -568,7 +786,7 @@ void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
                 if(C[j]==0) C[j] = cluster_index;
                 
                 //free memory holding Np for point P
-                gsl_vector_free(Np);
+                free_double_vector(Np);
             }
 
             //advance index to be ready for next cluster
@@ -577,10 +795,216 @@ void dbscan(gsl_vector *X, double eps, int min, int C[], int *K)
         }else C[n]=-1;
         
         //free memory holding list of neighbors for next point
-        gsl_vector_free(N);
+        free_double_vector(N);
 
     }//end loop over data points
     
     //assign number of clusters
     *K = cluster_index;
+}
+
+void unwrap_phase(int N, double *phase)
+{
+    double u, v, q;
+    int i;
+    
+    v = phase[0];
+    for(i=0; i<N ;i++)
+    {
+        u = phase[i];
+        q = rint(fabs(u-v)/(PI2));
+        if(q > 0.0)
+        {
+           if(v > u) u += q*PI2;
+           else      u -= q*PI2;
+        }
+        v = u;
+        phase[i] = u;
+    }
+}
+
+double simpson_integration_3(double f0, double f1, double f2, double h)
+{
+    return h*(f0 + 4.0*f1 + f2)/6.0;
+}
+
+double simpson_integration_5(double f0, double f1, double f2, double f3, double f4, double h)
+{
+    return h*(f0 + 4.0*f1 + 2.0*f2 + 4.0*f3 + f4)/12.0;
+}
+
+static int int_compare(const void* a, const void* b) 
+{
+   return (*(int*)a - *(int*)b);
+}
+
+void integer_sort(int *x, int N)
+{
+    qsort(x, N, sizeof(int), int_compare);
+}
+
+static int double_compare (const void * num1, const void * num2) {
+   if(*(double*)num1 > *(double*)num2)
+    return 1;
+   else
+    return -1;
+}
+
+void double_sort(double *x, int N)
+{
+    qsort(x, N, sizeof(double), double_compare);
+}
+
+// Structure to hold index and corresponding array value
+typedef struct {
+    int index;
+    int value;
+} IndexedValue;
+
+// Comparison function for qsort
+static int compare_indexed_values(const void *a, const void *b) {
+    int value_a = ((IndexedValue*)a)->value;
+    int value_b = ((IndexedValue*)b)->value;
+    return (value_a > value_b) - (value_a < value_b);
+}
+
+void index_sort(int *index, double *data, int N)
+{
+    IndexedValue indexed_arr[N];
+    for(int n=0; n<N; n++)
+    {
+        indexed_arr[n].index = n;
+        indexed_arr[n].value = data[n];
+    }
+    
+    // Sort the indexed array based on values
+    qsort(indexed_arr, N, sizeof(IndexedValue), compare_indexed_values);
+    
+    for(int n=0; n<N; n++) index[n] = indexed_arr[n].index;
+}
+
+
+void list_union(int *A, int *B, int NA, int NB, int *AUB, int *NAUB)
+{
+    int i,j;
+    int Ntemp = NA+NB;
+    int *Utemp = int_vector(Ntemp);
+    int *temp = int_vector(Ntemp);
+
+    //first list
+    j=0;
+    for(i=0; i<NA; i++)
+    {
+        Utemp[j]=A[i];
+        j++;
+    }
+    //second list
+    for(i=0; i<NB; i++)
+    {
+        Utemp[j]=B[i];
+        j++;
+    }
+    //sort master list
+    integer_sort(Utemp,Ntemp);
+    
+    //find and remeove repeats
+    j=0;
+    for(i=0; i<Ntemp-1;i++)
+    {
+        if (Utemp[i] != Utemp[i + 1])
+        {
+            temp[j] = Utemp[i];
+            j++;
+        }
+    }
+    
+    // Store the last element as whether 
+    // it is unique or repeated, it hasn't 
+    // stored previously
+    temp[j] = Utemp[Ntemp - 1];
+    j++;
+
+    // Modify original array
+    for (i=0; i<j; i++)
+        AUB[i] = temp[i];
+
+    *NAUB = j;
+    free_int_vector(Utemp);
+    free_int_vector(temp);
+}
+
+double gaussian_pdf(double x, double mean, double sigma)
+{
+    return exp(-0.5*(x-mean)*(x-mean)/sigma/sigma)/sqrt(PI2)/sigma;
+}
+
+
+double get_mean(double *x, int N)
+{
+    double xbar = 0.0;
+    
+    for(int i=0; i<N; i++) xbar += x[i];
+
+    return xbar/(double)N;
+}
+
+double get_variance(double *x, int N)
+{
+    double xbar  = 0.0;
+    double x2 = 0.0;
+    
+    for(int i=0; i<N; i++)
+    {
+        xbar += x[i];
+        x2   += x[i]*x[i];
+    }
+
+    xbar/=(double)N;
+    
+    return x2/(double)N - xbar*xbar;
+}
+
+double get_quantile_from_sorted_data(double *data, int N, double q)
+{
+    return data[(int)(q*N)];
+}
+
+void get_min_max(double *data, int N, double *min, double *max)
+{
+    double *data_temp=double_vector(N);
+    memcpy(data_temp,data,N*sizeof(double));
+    double_sort(data_temp,N);
+    *min = data_temp[0];
+    *max = data_temp[N-1];
+    free_double_vector(data_temp);
+}
+
+static double hypergeometric_function(double a, double b, double c, double x)
+{
+   const double TOLERANCE = 1e-8;
+   double term = a * b * x / c;
+   double value = 1.0 + term;
+   int n = 1;
+
+   while ( fabs( term ) > TOLERANCE )
+   {
+      a++, b++, c++, n++;
+      term *= a * b * x / c / n;
+      value += term;
+   }
+
+   return value;
+}
+
+static double beta_function(double a, double b)
+{
+    double logbeta = lgamma(a) + lgamma(b) - lgamma(a+b);
+    return exp(logbeta);
+}
+
+double incomplete_beta_function(double a, double b, double x)
+{
+    double F = hypergeometric_function(a, 1-b, a+1, x);
+    double B = beta_function(a,b);
+    return pow(x,a) * F / B / a;
 }

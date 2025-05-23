@@ -1,21 +1,19 @@
 /*
- *  Copyright (C) 2019 Travis Robson, Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2019 Travis Robson, Tyson B. Littenberg & Neil J. Cornish
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 
 #include <glass_utils.h>
 
@@ -68,39 +66,109 @@ void init_A_filters(struct Orbit *orbit, struct Data *data, struct Filter *F_fil
     initialize_XLS(M, F_filter->A3_fX, F_filter->A3_fA, F_filter->A3_fE);
     initialize_XLS(M, F_filter->A4_fX, F_filter->A4_fA, F_filter->A4_fE);
     
-    //   get_filters(orbit, data, 1, F_filter);
-    //   get_filters(orbit, data, 2, F_filter);
-    //   get_filters(orbit, data, 2, F_filter);
-    //   get_filters(orbit, data, 2, F_filter);
+       get_filters(orbit, data, 1, F_filter);
+       get_filters(orbit, data, 2, F_filter);
+       get_filters(orbit, data, 3, F_filter);
+       get_filters(orbit, data, 4, F_filter);
     
     // Make use of a phase shift to quickly generate other filters
-    get_filters(orbit, data, 3, F_filter);    
-    // copy  F_filter->A3_fX into F_filter->A1_fX
-    for (int i=0; i<M; i++)
-    {
-        F_filter->A1_fX[2*i+1]   = -F_filter->A3_fX[2*i];
-        F_filter->A1_fX[2*i] =  F_filter->A3_fX[2*i+1];
-        
-        F_filter->A1_fA[2*i+1]   = -F_filter->A3_fA[2*i];
-        F_filter->A1_fA[2*i] =  F_filter->A3_fA[2*i+1];
-        
-        F_filter->A1_fE[2*i+1]   = -F_filter->A3_fE[2*i];
-        F_filter->A1_fE[2*i] =  F_filter->A3_fE[2*i+1];
-    }
-    
-    get_filters(orbit, data, 4, F_filter);
-    for (int i=0; i<M; i++)
-    {
-        F_filter->A2_fX[2*i+1]    = -F_filter->A4_fX[2*i];
-        F_filter->A2_fX[2*i] =  F_filter->A4_fX[2*i+1];
-        
-        F_filter->A2_fA[2*i+1]    = -F_filter->A4_fA[2*i];
-        F_filter->A2_fA[2*i] =  F_filter->A4_fA[2*i+1];
-        
-        F_filter->A2_fE[2*i+1]    = -F_filter->A4_fE[2*i];
-        F_filter->A2_fE[2*i] =  F_filter->A4_fE[2*i+1];
-    }
-    
+//    get_filters(orbit, data, 3, F_filter);    
+//    // copy  F_filter->A3_fX into F_filter->A1_fX
+//    for (int i=0; i<M; i++)
+//    {
+//        F_filter->A1_fX[2*i+1]   = -F_filter->A3_fX[2*i];
+//        F_filter->A1_fX[2*i] =  F_filter->A3_fX[2*i+1];
+//        
+//        F_filter->A1_fA[2*i+1]   = -F_filter->A3_fA[2*i];
+//        F_filter->A1_fA[2*i] =  F_filter->A3_fA[2*i+1];
+//        
+//        F_filter->A1_fE[2*i+1]   = -F_filter->A3_fE[2*i];
+//        F_filter->A1_fE[2*i] =  F_filter->A3_fE[2*i+1];
+//    }
+//    
+//    get_filters(orbit, data, 4, F_filter);
+//    for (int i=0; i<M; i++)
+//    {
+//        F_filter->A2_fX[2*i+1]    = -F_filter->A4_fX[2*i];
+//        F_filter->A2_fX[2*i] =  F_filter->A4_fX[2*i+1];
+//        
+//        F_filter->A2_fA[2*i+1]    = -F_filter->A4_fA[2*i];
+//        F_filter->A2_fA[2*i] =  F_filter->A4_fA[2*i+1];
+//        
+//        F_filter->A2_fE[2*i+1]    = -F_filter->A4_fE[2*i];
+//        F_filter->A2_fE[2*i] =  F_filter->A4_fE[2*i+1];
+//    }
+//    
+//    char filename[128];
+//    FILE *fptr;
+//    
+//    sprintf(filename,"data_dft/filter_0.dat");
+//    fptr=fopen(filename,"w");
+//    for(int n=0; n<data->NFFT; n++)
+//    {
+//        int re = 2*n;
+//        int im = re+1;
+//        double f = data->fmin + (double)n/data->T;
+//
+//        fprintf(fptr,"%.12g ",f);
+//        fprintf(fptr,"%.12g ",F_filter->A1_fA[re]);
+//        fprintf(fptr,"%.12g ",F_filter->A1_fA[im]);
+//        fprintf(fptr,"%.12g ",F_filter->A1_fE[re]);
+//        fprintf(fptr,"%.12g\n",F_filter->A1_fE[im]);
+//    }
+//    fclose(fptr);
+//
+//    
+//    sprintf(filename,"data_dft/filter_1.dat");
+//    fptr=fopen(filename,"w");
+//    for(int n=0; n<data->NFFT; n++)
+//    {
+//        int re = 2*n;
+//        int im = re+1;
+//        double f = data->fmin + (double)n/data->T;
+//
+//        fprintf(fptr,"%.12g ",f);
+//        fprintf(fptr,"%.12g ",F_filter->A2_fA[re]);
+//        fprintf(fptr,"%.12g ",F_filter->A2_fA[im]);
+//        fprintf(fptr,"%.12g ",F_filter->A2_fE[re]);
+//        fprintf(fptr,"%.12g\n",F_filter->A2_fE[im]);
+//    }
+//    fclose(fptr);
+//
+//    
+//    sprintf(filename,"data_dft/filter_2.dat");
+//    fptr=fopen(filename,"w");
+//    for(int n=0; n<data->NFFT; n++)
+//    {
+//        int re = 2*n;
+//        int im = re+1;
+//        double f = data->fmin + (double)n/data->T;
+//
+//        fprintf(fptr,"%.12g ",f);
+//        fprintf(fptr,"%.12g ",F_filter->A3_fA[re]);
+//        fprintf(fptr,"%.12g ",F_filter->A3_fA[im]);
+//        fprintf(fptr,"%.12g ",F_filter->A3_fE[re]);
+//        fprintf(fptr,"%.12g\n",F_filter->A3_fE[im]);
+//    }
+//    fclose(fptr);
+//
+//    
+//    sprintf(filename,"data_dft/filter_3.dat");
+//    fptr=fopen(filename,"w");
+//    for(int n=0; n<data->NFFT; n++)
+//    {
+//        int re = 2*n;
+//        int im = re+1;
+//        double f = data->fmin + (double)n/data->T;
+//
+//        fprintf(fptr,"%.12g ",f);
+//        fprintf(fptr,"%.12g ",F_filter->A4_fA[re]);
+//        fprintf(fptr,"%.12g ",F_filter->A4_fA[im]);
+//        fprintf(fptr,"%.12g ",F_filter->A4_fE[re]);
+//        fprintf(fptr,"%.12g\n",F_filter->A4_fE[im]);
+//    }
+//    fclose(fptr);
+//
     //////////////////////
 }
 
@@ -204,7 +272,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
     if (filter_id == 1)
     {
         A_f      = 2.0;
-        iota_f   = PIon2;
+        iota_f   = M_PI_2;
         psi_f    = 0.0;
         phase_f  = 0.0;
         
@@ -219,13 +287,13 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         // map to conventions for waveform generator
         params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A1_fX, F_filter->A1_fY, F_filter->A1_fZ, F_filter->A1_fA, F_filter->A1_fE, (int)M_filter, 2);
+        ucb_waveform(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A1_fX, F_filter->A1_fY, F_filter->A1_fZ, F_filter->A1_fA, F_filter->A1_fE, (int)M_filter, 2);
         
     } else if (filter_id == 2){
         
         A_f      = 2.0;
-        iota_f   = PIon2;
-        psi_f    = PIon4;
+        iota_f   = M_PI_2;
+        psi_f    = M_PI_4;
         phase_f  = M_PI;
         
         params[3] = A_f;
@@ -238,14 +306,14 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         // map to conventions for waveform generator
         params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A2_fX, F_filter->A2_fY, F_filter->A2_fZ, F_filter->A2_fA, F_filter->A2_fE, (int)M_filter, 2);
+        ucb_waveform(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A2_fX, F_filter->A2_fY, F_filter->A2_fZ, F_filter->A2_fA, F_filter->A2_fE, (int)M_filter, 2);
         
     } else if (filter_id == 3){
         
         A_f      = 2.0;
-        iota_f   = PIon2;
+        iota_f   = M_PI_2;
         psi_f    = 0.0;
-        phase_f  = 3.0*PIon2;
+        phase_f  = 3.0*M_PI_2;
         
         params[3] = A_f;
         params[4] = iota_f;
@@ -257,14 +325,14 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         // map to conventions for waveform generator
         params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A3_fX, F_filter->A3_fY, F_filter->A3_fZ, F_filter->A3_fA, F_filter->A3_fE, (int)M_filter, 2);
+        ucb_waveform(orbit, data->format, data->T, data->t0, params, UCB_MODEL_NP, F_filter->A3_fX, F_filter->A3_fY, F_filter->A3_fZ, F_filter->A3_fA, F_filter->A3_fE, (int)M_filter, 2);
         
     } else {
         
         A_f      = 2.0;
-        iota_f   = PIon2;
-        psi_f    = PIon4;
-        phase_f  = PIon2;
+        iota_f   = M_PI_2;
+        psi_f    = M_PI_4;
+        phase_f  = M_PI_2;
         
         params[3] = A_f;
         params[4] = iota_f;
@@ -276,7 +344,7 @@ void get_filters(struct Orbit *orbit, struct Data *data, int filter_id, struct F
         // map to conventions for waveform generator
         params[3]=log(params[3]);
         params[4]=cos(params[4]);
-        galactic_binary(orbit, data->format, data->T, data->t0, params, 9, F_filter->A4_fX, F_filter->A4_fY, F_filter->A4_fZ, F_filter->A4_fA, F_filter->A4_fE, (int)M_filter, 2);
+        ucb_waveform(orbit, data->format, data->T, data->t0, params, 9, F_filter->A4_fX, F_filter->A4_fY, F_filter->A4_fZ, F_filter->A4_fA, F_filter->A4_fE, (int)M_filter, 2);
     }
     
     free(params);
@@ -295,11 +363,11 @@ void get_N(struct Data *data, struct Filter *F_filter)
     // N^{i} = (s|A^{i})
     //
     /////////
-    XfLS = data->tdi->X;
-    AALS = data->tdi->A;
-    EELS = data->tdi->E;
+    XfLS = data->dft->X;
+    AALS = data->dft->A;
+    EELS = data->dft->E;
     
-    q  = F_filter->q - data->qmin;
+    q  = F_filter->q - (int)(data->fmin*data->T);
     
     M_filter = F_filter->M_filter;
     
@@ -312,7 +380,7 @@ void get_N(struct Data *data, struct Filter *F_filter)
     {
         k = (q + i - M_filter/2);
         
-        if(k>0 && k<data->N)
+        if(k>0 && k<data->NFFT)
         {
             
             F_filter->N1_X  += (XfLS[2*k]*F_filter->A1_fX[2*i] + XfLS[2*k+1]*F_filter->A1_fX[2*i+1])/data->noise->C[0][0][k];
@@ -350,14 +418,14 @@ void get_M(struct Filter *F_filter, double **M_inv_X, double **M_inv_AE, struct 
     long q, M_filter;
     
     M = F_filter->M_filter;
-    q = F_filter->q-data->qmin;
+    q = F_filter->q-(int)(data->fmin*data->T);
     M_filter = F_filter->M_filter;
     
     for (i=0; i<M; i++)
     {
         k = ((int)q + i - (int)M_filter/2);
         
-        if(k>0 && k<data->N)
+        if(k>0 && k<data->NFFT)
         {
             M_inv_X[0][0] += 4.0*(F_filter->A1_fX[2*i]  *F_filter->A1_fX[2*i]
                                   +F_filter->A1_fX[2*i+1]*F_filter->A1_fX[2*i+1])/data->noise->C[0][0][k];
@@ -596,7 +664,7 @@ void get_Fstat_logL(struct Orbit *orbit, struct Data *data, double f0, double fd
     F_filter->phi    = phi;
     
 
-    int BW = galactic_binary_bandwidth(orbit->L, orbit->fstar, f0, fdot, cos(theta), 1.e-22, data->T, data->N);
+    int BW = ucb_bandwidth(orbit->L, orbit->fstar, f0, fdot, cos(theta), 1.e-22, data->T, data->NFFT);
     M_filter = BW;
     N_filter = BW;
 
@@ -656,7 +724,7 @@ void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *x
  
     long M_filter, N_filter;
     
-    int BW = galactic_binary_bandwidth(orbit->L, orbit->fstar, f0, fdot, cos(theta), 1.e-22, data->T, data->N);
+    int BW = ucb_bandwidth(orbit->L, orbit->fstar, f0, fdot, cos(theta), 1.e-22, data->T, data->NFFT);
     M_filter = BW;
     N_filter = BW;
 
@@ -695,4 +763,118 @@ void get_Fstat_xmax(struct Orbit *orbit, struct Data *data, double *x, double *x
 }
 
 
+double get_Fstat_logL_wavelet(struct Orbit *orbit, struct Data *data, double f0, double fdot, double theta, double phi)
+{
+
+    /* compute filters A_i */
+    
+    int Nfilter = 4;
+    
+    struct Source **A = malloc(Nfilter*(sizeof(struct Source *)));
+    for(int i=0; i<Nfilter; i++) 
+    {
+        A[i] = malloc(sizeof(struct Source));
+        alloc_source(A[i],data->N,data->Nchannel);
+    }
+    
+    //set parameters for each filter
+    for(int i=0; i<Nfilter; i++)
+    {
+        A[i]->params[0] = f0*data->T;  //frequency
+        A[i]->params[1] = cos(theta);  //ecliptic lat
+        A[i]->params[2] = phi;         //ecliptic lon
+        A[i]->params[3] = log(2.0);    //log amplitude
+        A[i]->params[4] = cos(M_PI_2); //cos inclination
+
+        switch(i)
+        {
+            case 0:
+                A[i]->params[5] = 0;      //polarization
+                A[i]->params[6] = 0;      //initial phase
+                break;
+            case 1:
+                A[i]->params[5] = M_PI_4; //polarization
+                A[i]->params[6] = M_PI;   //initial phase
+                break;
+            case 2:
+                A[i]->params[5] = 0;       //polarization
+                A[i]->params[6] = 3*M_PI_2;//initial phase
+                break;
+            case 3:
+                A[i]->params[5] = M_PI_4;  //polarization
+                A[i]->params[6] = M_PI_2;  //initial phase
+                break;
+            default:
+                break;
+        }
+
+        A[i]->params[7] = fdot*data->T*data->T;
+        if(UCB_MODEL_NP>8) A[i]->params[8] = 0.0;
+
+        map_array_to_params(A[i], A[i]->params, data->T);
+        ucb_waveform_wavelet(orbit,data->wdm,data->T, data->t0, A[i]->params, A[i]->list, &A[i]->Nlist, A[i]->tdi->X, A[i]->tdi->Y, A[i]->tdi->Z);
+
+        //catch waveforms that are out of band
+        if(A[i]->Nlist==0) return 1.0;
+        
+    }
+    
+    /* compute vectors N_i = (s|A_i) */
+    double *N = double_vector(Nfilter);
+
+    for(int i=0; i<Nfilter; i++)
+    {
+        N[i] += wavelet_nwip(data->tdi->X, A[i]->tdi->X, data->noise->invC[0][0], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->Y, A[i]->tdi->Y, data->noise->invC[1][1], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->Z, A[i]->tdi->Z, data->noise->invC[2][2], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->X, A[i]->tdi->Y, data->noise->invC[0][1], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->X, A[i]->tdi->Z, data->noise->invC[0][2], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->Y, A[i]->tdi->Z, data->noise->invC[1][2], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->Y, A[i]->tdi->X, data->noise->invC[1][0], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->Z, A[i]->tdi->X, data->noise->invC[2][0], A[i]->list, A[i]->Nlist);
+        N[i] += wavelet_nwip(data->tdi->Z, A[i]->tdi->Y, data->noise->invC[2][1], A[i]->list, A[i]->Nlist);
+    }
+
+    /* compute matrix M_ij = (A_i|A_j) */
+    double **M = double_matrix(Nfilter,Nfilter);
+    for(int i=0; i<Nfilter; i++)
+    {
+        for(int j=0; j<Nfilter; j++) //Mij symmetric so this could be faster
+        {
+            int *list = int_vector(data->N);
+            int Nlist;
+            list_union(A[i]->list, A[j]->list, A[i]->Nlist, A[j]->Nlist, list, &Nlist);
+
+            M[i][j] += wavelet_nwip(A[i]->tdi->X, A[j]->tdi->X, data->noise->invC[0][0], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->Y, A[j]->tdi->Y, data->noise->invC[1][1], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->Z, A[j]->tdi->Z, data->noise->invC[2][2], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->X, A[j]->tdi->Y, data->noise->invC[0][1], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->X, A[j]->tdi->Z, data->noise->invC[0][2], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->Y, A[j]->tdi->Z, data->noise->invC[1][2], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->Y, A[j]->tdi->X, data->noise->invC[1][0], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->Z, A[j]->tdi->X, data->noise->invC[2][0], list, Nlist);
+            M[i][j] += wavelet_nwip(A[i]->tdi->Z, A[j]->tdi->Y, data->noise->invC[2][1], list, Nlist);
+
+            free(list);
+        }
+    }
+    
+    //invert M-matrix
+    invert_matrix(M,Nfilter);
+
+    /* get logL = N * M^-1 * N */
+    double logL = 0.0;
+    for(int i=0; i<Nfilter; i++) 
+        for(int j=0; j<Nfilter; j++) 
+            logL += N[i]*M[i][j]*N[j]; //also ignoring symmetry
+
+
+    for(int i=0; i<Nfilter; i++) free_source(A[i]);
+    free(A);
+
+    free_double_vector(N);
+    free_double_matrix(M,Nfilter);
+
+    return logL;
+}
 

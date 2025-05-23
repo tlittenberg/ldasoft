@@ -1,20 +1,17 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2019 Tyson B. Littenberg & Neil J. Cornish
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -40,6 +37,11 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags);
  \brief Parse part of command line defining verification binary lists
 */
 void parse_vgb_args(int argc, char **argv, struct Flags *flags);
+
+/**
+ \brief Prints constants and flags for the MCMC run
+ */
+void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, FILE *fptr);
 
 /**
  \brief Print functional example `ucb_catalog` bash script based on input args
@@ -110,8 +112,9 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags);
 
 /// Print current state of waveform and residuals during run for diagnostics. Disabled when Flags::quiet=`TRUE`.
 void print_waveform_draw(struct Data *data, struct Model *model, struct Flags *flags);
+void print_psd_draw(struct Data *data, struct Model *model, struct Flags *flags);
 ///@}
-///
+
 /**
  \brief Print evidence for each dimension model
  */

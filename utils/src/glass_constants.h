@@ -1,20 +1,17 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2019 Tyson B. Littenberg
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -31,19 +28,18 @@
 
 /* --------------  MATHEMATICAL CONSTANTS  -------------- */
 /* Some square roots */
-#define SQ2 1.4142135623731  ///< \f$\sqrt{2}\f$
 #define SQ3 1.73205080757    ///< \f$\sqrt{3}\f$
 #define SQ8 2.82842712474619 ///< \f$\sqrt{8}\f$
 
-/* Pi's and frinds */
-//use math.h (M_PI) for PI
+/* Pi's and frinds
+ use math.h where possible
+ M_PI for PI,
+ M_PI_2 for PI/2
+ M_PI_4 for PI/4
+ */
 #define PI2   6.283185307179586      ///< \f$2\pi\f$
-#define PIon2 1.57079632679          ///< \f$\pi/2\f$
-#define PIon4 0.78539816339          ///< \f$\pi/4\f$
+#define RTPI  1.77245385090552       ///< \f$\sqrt{\pi}\f$
 #define RT2PI 2.5066282746310005024  ///< \f$\sqrt{2\pi}\f$
-
-/* Natural log of 2 */
-#define LN2 0.693147180559945 ///< \f$\ln{2}\f$
 
 /* Convert between angles*/
 #define RAD2DEG 0.01745329251 ///< 1 deg [rad]
@@ -70,12 +66,15 @@
 #define PC 3.0856775815e16
 
 //! Year [s]
-#define YEAR 31457280.0
+#define YEAR 3.15581497632e7
+
+//! Day [s]
+#define DAY 86400.0
 
 //! Astronomical unit [m]
 #define AU 1.49597870700e11
 
-//! Orbital radius of the LISA guiding center [m]
-#define RGC (1.0*AU)
+//! Velocity of the Earth around the Sun (relative to CLIGHT)
+#define VEARTH 0.00010103671
 
 #endif /* constants_h */

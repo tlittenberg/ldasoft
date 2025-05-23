@@ -1,21 +1,19 @@
 /*
- *  Copyright (C) 2023 Tyson B. Littenberg (MSFC-ST12)
+ * Copyright 2023 Tyson B. Littenberg
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 
 #include <glass_utils.h>
 
@@ -78,20 +76,20 @@ void print_noise_reconstruction(struct Data *data, struct Flags *flags)
     sprintf(filename,"%s/power_noise_reconstruction.dat",data->dataDir);
     fptr_Snf=fopen(filename,"w");
     
-    for(int i=0; i<data->N; i++)
+    for(int i=0; i<data->NFFT; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
         fprintf(fptr_Snf,"%.12g ",f);
         
         for(int j=0; j<data->Nchannel; j++)
         {
-            gsl_sort(data->S_pow[i][j],1,data->Nwave);
+            double_sort(data->S_pow[i][j],data->Nwave);
 
-            double S_med   = gsl_stats_median_from_sorted_data   (data->S_pow[i][j], 1, data->Nwave);
-            double S_lo_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.25);
-            double S_hi_50 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.75);
-            double S_lo_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.05);
-            double S_hi_90 = gsl_stats_quantile_from_sorted_data (data->S_pow[i][j], 1, data->Nwave, 0.95);
+            double S_med   = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.50);
+            double S_lo_50 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.25);
+            double S_hi_50 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.75);
+            double S_lo_90 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.05);
+            double S_hi_90 = get_quantile_from_sorted_data(data->S_pow[i][j], data->Nwave, 0.95);
             
             fprintf(fptr_Snf,"%lg ",S_med);
             fprintf(fptr_Snf,"%lg ",S_lo_50);

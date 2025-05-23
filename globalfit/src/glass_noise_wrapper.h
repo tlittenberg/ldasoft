@@ -1,9 +1,18 @@
-//
-//  glass_noise_wrapper.h
-//  
-//
-//  Created by Tyson Littenberg on 2/5/21.
-//
+/*
+ * Copyright 2021 Tyson B. Littenberg (MSFC-ST12)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /**
  @file glass_noise_wrapper.h
@@ -39,7 +48,7 @@ struct NoiseData
 };
 
 void alloc_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, int procID, int nProc);
-void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, struct VGBData *vbmcmc_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID);
+void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, struct VGBData *vbmcmc_data, struct TDI *tdi_full, int procID);
 void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chain *chain, struct Model **model);
 
 void initialize_noise_sampler(struct NoiseData *noise_data);

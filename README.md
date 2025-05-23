@@ -21,11 +21,11 @@ https://tlittenberg.github.io/ldasoft/html/index.html
 
 # C Dependencies 
 ```bash
-gsl
-gslcblas
 openmp
 mpi
 hdf5
+lapack
+kissfft
 ```
 The `GlobalFit` pipeline additionally requires the `global-fit` branch of [`LISA-Massive-Black-Hole`](https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/tree/global-fit) to be installed.
 

@@ -1,20 +1,17 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2019 Tyson B. Littenberg & Neil J. Cornish 
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <glass_utils.h>
@@ -60,7 +57,7 @@ void map_params_to_array(struct Source *source, double *params, double T)
         params[8] = source->d2fdt2*T*T*T;
 }
 
-void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
+void alloc_model(struct Data *data, struct Model *model, int Nmax)
 {
     int n;
     
@@ -69,6 +66,10 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
     model->Neff  = 2;
     model->t0 = 0.0;
 
+    //Wavelet bookkeeping
+    model->Nlist = 0;
+    model->list = calloc(data->N,sizeof(int));
+
     model->source = malloc(model->Nmax*sizeof(struct Source *));
     
     model->calibration = malloc(sizeof(struct Calibration) );
@@ -76,20 +77,23 @@ void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel)
     model->tdi         = malloc(sizeof(struct TDI)         );
     model->residual    = malloc(sizeof(struct TDI)         );
     
-    alloc_noise(model->noise,NFFT, Nchannel);
-    alloc_tdi(model->tdi, NFFT, Nchannel);
-    alloc_tdi(model->residual, NFFT, Nchannel);
+    if(!strcmp(data->basis,"fourier")) alloc_noise(model->noise,data->NFFT, data->Nlayer, data->Nchannel);
+    if(!strcmp(data->basis,"wavelet")) alloc_noise(model->noise,data->N, data->Nlayer, data->Nchannel);
+
+    alloc_tdi(model->tdi, data->N, data->Nchannel);
+    alloc_tdi(model->residual, data->N, data->Nchannel);
     alloc_calibration(model->calibration);
     
     for(n=0; n<model->Nmax; n++)
     {
         model->source[n] = malloc(sizeof(struct Source));
-        alloc_source(model->source[n],NFFT,Nchannel);
+        alloc_source(model->source[n],data->N,data->Nchannel);
     }
     
     model->logPriorVolume = calloc(UCB_MODEL_NP,sizeof(double));
     model->prior = malloc(UCB_MODEL_NP*sizeof(double *));
     for(n=0; n<UCB_MODEL_NP; n++) model->prior[n] = calloc(2,sizeof(double));
+
 }
 
 void copy_model(struct Model *origin, struct Model *copy)
@@ -126,6 +130,11 @@ void copy_model(struct Model *origin, struct Model *copy)
     //Model likelihood
     copy->logL           = origin->logL;
     copy->logLnorm       = origin->logLnorm;
+
+    //Wavelet bookkeeping
+    copy->Nlist = origin->Nlist;
+    memcpy(copy->list,origin->list,origin->Nlist*sizeof(int));
+
 }
 
 void copy_model_lite(struct Model *origin, struct Model *copy)
@@ -142,6 +151,10 @@ void copy_model_lite(struct Model *origin, struct Model *copy)
     
     //Model likelihood
     copy->logL = origin->logL;
+
+    //Wavelet bookkeeping
+    copy->Nlist = origin->Nlist;
+    memcpy(copy->list,origin->list,origin->Nlist*sizeof(int));
 }
 
 int compare_model(struct Model *a, struct Model *b)
@@ -286,11 +299,13 @@ void free_model(struct Model *model)
     free_tdi(model->residual);
     free_noise(model->noise);
     free_calibration(model->calibration);
+
+    free(model->list);
     
     free(model);
 }
 
-void alloc_source(struct Source *source, int NFFT, int Nchannel)
+void alloc_source(struct Source *source, int N, int Nchannel)
 {
     //Intrinsic
     source->m1=1.;
@@ -313,11 +328,11 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel)
     source->d2fdt2=0.;
     
     //Book-keeping
-    source->BW   = NFFT;
+    source->BW   = N/2;
     source->qmin = 0;
-    source->qmax = NFFT;
+    source->qmax = N/2;
     source->imin = 0;
-    source->imax = NFFT;
+    source->imax = N/2;
     
     
     //Package parameters for waveform generator
@@ -325,9 +340,9 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel)
     
     //Response
     source->tdi = malloc(sizeof(struct TDI));
-    alloc_tdi(source->tdi,NFFT, Nchannel);
+    alloc_tdi(source->tdi,N, Nchannel);
     
-    //FIsher
+    //Fisher
     source->fisher_matrix = malloc(UCB_MODEL_NP*sizeof(double *));
     source->fisher_evectr = malloc(UCB_MODEL_NP*sizeof(double *));
     source->fisher_evalue = calloc(UCB_MODEL_NP,sizeof(double));
@@ -336,6 +351,10 @@ void alloc_source(struct Source *source, int NFFT, int Nchannel)
         source->fisher_matrix[i] = calloc(UCB_MODEL_NP,sizeof(double));
         source->fisher_evectr[i] = calloc(UCB_MODEL_NP,sizeof(double));
     }
+
+    //Wavelet bookkeeping
+    source->Nlist = 0;
+    source->list = calloc(N,sizeof(int));
 };
 
 void copy_source(struct Source *origin, struct Source *copy)
@@ -381,6 +400,9 @@ void copy_source(struct Source *origin, struct Source *copy)
         memcpy(copy->fisher_matrix[i], origin->fisher_matrix[i], UCB_MODEL_NP*sizeof(double));
         memcpy(copy->fisher_evectr[i], origin->fisher_evectr[i], UCB_MODEL_NP*sizeof(double));
     }
+
+    copy->Nlist = origin->Nlist;
+    memcpy(copy->list, origin->list, origin->Nlist*sizeof(int));
     
 }
 
@@ -397,6 +419,8 @@ void free_source(struct Source *source)
     free(source->params);
     
     free_tdi(source->tdi);
+
+    free(source->list);
     
     free(source);
 }
@@ -404,9 +428,8 @@ void free_source(struct Source *source)
 void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
 {
     int i,n;
-    int N2=data->N*2;
-    
-    for(n=0; n<N2; n++)
+
+    for(n=0; n<data->N; n++)
     {
         model->tdi->X[n]=0.0;
         model->tdi->Y[n]=0.0;
@@ -422,7 +445,8 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
         
         if(source_id==-1 || source_id==n)
         {
-            for(i=0; i<N2; i++)
+
+            for(i=0; i<data->N; i++)
             {
                 source->tdi->X[i]=0.0;
                 source->tdi->Y[i]=0.0;
@@ -430,20 +454,67 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
                 source->tdi->A[i]=0.0;
                 source->tdi->E[i]=0.0;
             }
-            
+
             map_array_to_params(source, source->params, data->T);
             
+
             //Book-keeping of injection time-frequency volume
-            galactic_binary_alignment(orbit, data, source);
+            ucb_alignment(orbit, data, source);
+
         }
         
         //Simulate gravitational wave signal
         /* the source_id = -1 condition is redundent if the model->tdi structure is up to date...*/
-        if(source_id==-1 || source_id==n) galactic_binary(orbit, data->format, data->T, model->t0, source->params, UCB_MODEL_NP, source->tdi->X, source->tdi->Y, source->tdi->Z, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
+
+        if(source_id==-1 || source_id==n) ucb_waveform(orbit, data->format, data->T, model->t0, source->params, UCB_MODEL_NP, source->tdi->X, source->tdi->Y, source->tdi->Z, source->tdi->A, source->tdi->E, source->BW, source->tdi->Nchannel);
         
         //Add waveform to model TDI channels
         add_signal_model(data,model,source);
+
         
+    }//loop over sources
+}
+
+void generate_signal_model_wavelet(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id)
+{
+    int i,n;
+    
+    for(n=0; n<data->N; n++)
+    {
+        model->tdi->X[n]=0.0;
+        model->tdi->Y[n]=0.0;
+        model->tdi->Z[n]=0.0;
+        model->tdi->A[n]=0.0;
+        model->tdi->E[n]=0.0;
+    }
+    
+    //Loop over signals in model
+    for(n=0; n<model->Nlive; n++)
+    {
+        struct Source *source = model->source[n];
+        
+        if(source_id==-1 || source_id==n)
+        {
+            for(i=0; i<data->N; i++)
+            {
+                source->tdi->X[i]=0.0;
+                source->tdi->Y[i]=0.0;
+                source->tdi->Z[i]=0.0;
+                source->tdi->A[i]=0.0;
+                source->tdi->E[i]=0.0;
+                source->list[i]=0;
+            }
+            
+            map_array_to_params(source, source->params, data->T);            
+        }
+        
+        //Simulate gravitational wave signal
+        /* the source_id = -1 condition is redundent if the model->tdi structure is up to date...*/
+        if(source_id==-1 || source_id==n) ucb_waveform_wavelet(orbit, data->wdm, data->T, model->t0, source->params, source->list, &source->Nlist, source->tdi->X, source->tdi->Y, source->tdi->Z);
+
+        //Add waveform to model TDI channels
+        add_signal_model_wavelet(data,model,source);
+
     }//loop over sources
 }
 
@@ -454,7 +525,7 @@ void remove_signal_model(struct Data *data, struct Model *model, struct Source *
     {
         int j = i+source->imin;
         
-        if(j>-1 && j<data->N)
+        if(j>-1 && j<data->NFFT)
         {
             int i_re = 2*i;
             int i_im = i_re+1;
@@ -488,14 +559,16 @@ void remove_signal_model(struct Data *data, struct Model *model, struct Source *
         }//check that source_id is in range
     }//loop over waveform bins
 }
+
+
 void add_signal_model(struct Data *data, struct Model *model, struct Source *source)
 {
-    //subtract current nth source from  model
+    //add current nth source to  model
     for(int i=0; i<source->BW; i++)
     {
         int j = i+source->imin;
         
-        if(j>-1 && j<data->N)
+        if(j>-1 && j<data->NFFT)
         {
             int i_re = 2*i;
             int i_im = i_re+1;
@@ -529,11 +602,47 @@ void add_signal_model(struct Data *data, struct Model *model, struct Source *sou
         }//check that source_id is in range
     }//loop over waveform bins
 }
+void add_signal_model_wavelet(struct Data *data, struct Model *model, struct Source *source)
+{
+    //insert source into model 
+    for(int n=0; n<source->Nlist; n++)
+    {
+        int k = source->list[n];
+        model->tdi->X[k] += source->tdi->X[k];
+        model->tdi->Y[k] += source->tdi->Y[k];
+        model->tdi->Z[k] += source->tdi->Z[k];
+    }
+
+    //get union of list
+    list_union(model->list, source->list, model->Nlist, source->Nlist, model->list, &model->Nlist); 
+}
+
+void remove_signal_model_wavelet(struct Data *data, struct Model *model, struct Source *source)
+{
+    //insert source into model 
+    for(int n=0; n<source->Nlist; n++)
+    {
+        int k=source->list[n];
+        if(k>=0 && k<data->N)
+        {
+            model->tdi->X[k] -= source->tdi->X[k];
+            model->tdi->Y[k] -= source->tdi->Y[k];
+            model->tdi->Z[k] -= source->tdi->Z[k];
+        }
+    }
+
+    //get union of list
+    if(model->Nlive == 0) model->Nlist = 0;
+    else
+    {
+        for(int n=0; n<model->Nlive; n++)
+            list_union(model->list, model->source[n]->list, model->Nlist, model->source[n]->Nlist, model->list, &model->Nlist); 
+    }
+}
 
 void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id)
 {
     int i;
-    int N2=data->N*2;
     struct Source *source_x = model_x->source[source_id];
     struct Source *source_y = model_y->source[source_id];
     
@@ -541,7 +650,7 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
     remove_signal_model(data,model_y,source_x);
 
     //generate proposed signal model
-    for(i=0; i<N2; i++)
+    for(i=0; i<data->N; i++)
     {
         switch(data->Nchannel)
         {
@@ -561,24 +670,70 @@ void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *m
     }
 
     map_array_to_params(source_y, source_y->params, data->T);
-    galactic_binary_alignment(orbit, data, source_y);
+    ucb_alignment(orbit, data, source_y);
 
-    galactic_binary(orbit, data->format, data->T, model_y->t0, source_y->params, UCB_MODEL_NP, source_y->tdi->X,source_y->tdi->Y,source_y->tdi->Z, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
+    ucb_waveform(orbit, data->format, data->T, model_y->t0, source_y->params, UCB_MODEL_NP, source_y->tdi->X,source_y->tdi->Y,source_y->tdi->Z, source_y->tdi->A, source_y->tdi->E, source_y->BW, source_y->tdi->Nchannel);
 
     //add proposed nth source to model
     add_signal_model(data,model_y,source_y);
     
 }
 
+void update_signal_model_wavelet(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id)
+{
+    int i;
+    int N=data->N;
+    struct Source *source_x = model_x->source[source_id];
+    struct Source *source_y = model_y->source[source_id];
+    
+    //subtract current nth source from  model
+    remove_signal_model_wavelet(data,model_y,source_x);
+
+    //generate proposed signal model
+    for(i=0; i<N; i++)
+    {
+        source_y->tdi->X[i]=0.0;
+        source_y->tdi->Y[i]=0.0;
+        source_y->tdi->Z[i]=0.0;
+    }
+
+    map_array_to_params(source_y, source_y->params, data->T);
+    ucb_waveform_wavelet(orbit, data->wdm, data->T, model_y->t0, source_y->params, source_y->list, &source_y->Nlist, source_y->tdi->X, source_y->tdi->Y, source_y->tdi->Z);
+
+    //add proposed nth source to model
+    add_signal_model_wavelet(data,model_y,source_y);
+    
+}
+
 void generate_noise_model(struct Data *data, struct Model *model)
 {
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
-        model->noise->f[n] = data->fmin + (double)n/data->T;
-
         for(int i=0; i<data->Nchannel; i++)
             for(int j=i; j<data->Nchannel; j++)
                 model->noise->C[i][j][n] = model->noise->C[j][i][n] = data->noise->C[i][j][n]*sqrt(model->noise->eta[i]*model->noise->eta[j]);
+
+    }
+    invert_noise_covariance_matrix(model->noise);
+}
+
+void generate_noise_model_wavelet(struct Data *data, struct Model *model)
+{
+    int Nlayers = data->Nlayer;         //number of frequency layers
+    int Nslices = data->N/data->Nlayer; //number of time slices
+    for(int n=0; n<Nlayers; n++)
+    {
+        for(int m=0; m<Nslices; m++)
+        {
+            int k = n*Nslices+m;
+            for(int i=0; i<data->Nchannel; i++)
+            {
+                for(int j=i; j<data->Nchannel; j++)
+                {
+                    model->noise->C[i][j][k] = model->noise->C[j][i][k] = data->noise->C[i][j][k]*sqrt(model->noise->eta[i*Nlayers+n]*model->noise->eta[j*Nlayers+n]);
+                }
+            }
+        }
 
     }
     invert_noise_covariance_matrix(model->noise);
@@ -774,13 +929,12 @@ double gaussian_log_likelihood(struct Data *data, struct Model *model)
     *
     */
     
-    int N2 = data->N*2;
     double chi2 = 0.0; //chi^2, where logL = -chi^2 / 2
     
     //loop over time segments
     struct TDI *residual = model->residual;
     
-    for(int i=0; i<N2; i++)
+    for(int i=0; i<data->N; i++)
     {
         residual->X[i] = data->tdi->X[i] - model->tdi->X[i];
         residual->Y[i] = data->tdi->Y[i] - model->tdi->Y[i];
@@ -792,20 +946,20 @@ double gaussian_log_likelihood(struct Data *data, struct Model *model)
     switch(data->Nchannel)
     {
         case 1:
-            chi2 += fourier_nwip(residual->X, residual->X, model->noise->invC[0][0], data->N);
+            chi2 += fourier_nwip(residual->X, residual->X, model->noise->invC[0][0], data->NFFT);
             break;
         case 2:
-            chi2 += fourier_nwip(residual->A, residual->A, model->noise->invC[0][0], data->N);
-            chi2 += fourier_nwip(residual->E, residual->E, model->noise->invC[1][1], data->N);
+            chi2 += fourier_nwip(residual->A, residual->A, model->noise->invC[0][0], data->NFFT);
+            chi2 += fourier_nwip(residual->E, residual->E, model->noise->invC[1][1], data->NFFT);
             break;
         case 3:
-            chi2 += fourier_nwip(residual->X, residual->X, model->noise->invC[0][0], data->N);
-            chi2 += fourier_nwip(residual->Y, residual->Y, model->noise->invC[1][1], data->N);
-            chi2 += fourier_nwip(residual->Z, residual->Z, model->noise->invC[2][2], data->N);
+            chi2 += fourier_nwip(residual->X, residual->X, model->noise->invC[0][0], data->NFFT);
+            chi2 += fourier_nwip(residual->Y, residual->Y, model->noise->invC[1][1], data->NFFT);
+            chi2 += fourier_nwip(residual->Z, residual->Z, model->noise->invC[2][2], data->NFFT);
 
-            chi2 += 2.0*fourier_nwip(residual->X, residual->Y, model->noise->invC[0][1], data->N);
-            chi2 += 2.0*fourier_nwip(residual->X, residual->Z, model->noise->invC[0][2], data->N);
-            chi2 += 2.0*fourier_nwip(residual->Y, residual->Z, model->noise->invC[1][2], data->N);
+            chi2 += 2.0*fourier_nwip(residual->X, residual->Y, model->noise->invC[0][1], data->NFFT);
+            chi2 += 2.0*fourier_nwip(residual->X, residual->Z, model->noise->invC[0][2], data->NFFT);
+            chi2 += 2.0*fourier_nwip(residual->Y, residual->Z, model->noise->invC[1][2], data->NFFT);
 
             break;
         default:
@@ -822,7 +976,8 @@ double gaussian_log_likelihood_constant_norm(struct Data *data, struct Model *mo
     double logLnorm = 0.0;
     
     //loop over time segments
-    logLnorm -= (double)data->N*log(model->noise->detC[0]);
+    if(!strcmp(data->basis,"fourier")) logLnorm -= (double)data->NFFT*log(model->noise->detC[0]);
+    if(!strcmp(data->basis,"wavelet")) logLnorm -= 0.5*(double)data->N*log(model->noise->detC[0]);
     
     return logLnorm;
 }
@@ -831,11 +986,16 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
 {
     
     double logLnorm = 0.0;
-    
+    int N;
+    if(!strcmp(data->basis,"fourier")) N=data->NFFT;
+    if(!strcmp(data->basis,"wavelet")) N=data->N;
+
     //loop over time segments
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<N; n++)
         logLnorm -= log(model->noise->detC[n]);
 
+    if(!strcmp(data->basis,"wavelet")) logLnorm *= 0.5;  //normalization of 1/2 for wavelet domain (sum over N, not N/2)
+    
     return logLnorm;
 }
 
@@ -859,7 +1019,7 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
     for(int i=0; i<source_x->BW; i++)
     {
         int j = i+source_x->imin;
-        if(j>-1 && j<data->N)
+        if(j>-1 && j<data->NFFT)
         {
             int i_re = 2*i;
             int i_im = i_re+1;
@@ -883,7 +1043,7 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
     for(int i=0; i<source_y->BW; i++)
     {
         int j = i+source_y->imin;
-        if(j>-1 && j<data->N)
+        if(j>-1 && j<data->NFFT)
         {
             int i_re = 2*i;
             int i_im = i_re+1;
@@ -908,7 +1068,7 @@ double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Mod
     int imax = find_max(source_y->imin+source_y->BW,source_x->imin+source_x->BW);
     
     //keep it in bounds
-    if(imax>data->N)imax=data->N;
+    if(imax>data->NFFT)imax=data->NFFT;
     if(imin<0)imin=0;
 
     //the complex array elements to skip in the sum
@@ -987,3 +1147,47 @@ int update_max_log_likelihood(struct Model **model, struct Chain *chain, struct 
     return 0;
 }
 
+double gaussian_log_likelhood_wavelet(struct Data *data, struct Model *model)
+{
+    /*
+    Form residual and sum
+    */
+
+    double chi2 = 0.0;
+
+    struct TDI *residual = model->residual;
+
+    
+    for(int n=0; n<data->N; n++)
+    {
+        residual->X[n] = data->tdi->X[n];
+        residual->Y[n] = data->tdi->Y[n];
+        residual->Z[n] = data->tdi->Z[n];
+    }
+    
+    for(int n=0; n<model->Nlist; n++)
+    {
+        int k = model->list[n];
+        if(k>=0 && k<data->N)
+        {
+            residual->X[k] -= model->tdi->X[k];
+            residual->Y[k] -= model->tdi->Y[k];
+            residual->Z[k] -= model->tdi->Z[k];
+        }
+    }
+    
+    int *list = int_vector(data->N);
+    for(int n=0; n<data->N; n++) list[n]=n;
+
+    chi2 += wavelet_nwip(residual->X, residual->X, model->noise->invC[0][0], list, data->N);
+    chi2 += wavelet_nwip(residual->Y, residual->Y, model->noise->invC[1][1], list, data->N);
+    chi2 += wavelet_nwip(residual->Z, residual->Z, model->noise->invC[2][2], list, data->N);
+    chi2 += wavelet_nwip(residual->X, residual->Y, model->noise->invC[0][1], list, data->N)*2;
+    chi2 += wavelet_nwip(residual->X, residual->Z, model->noise->invC[0][2], list, data->N)*2;
+    chi2 += wavelet_nwip(residual->Y, residual->Z, model->noise->invC[1][2], list, data->N)*2;
+
+    free_int_vector(list);
+    
+    return -0.5*chi2;
+
+}

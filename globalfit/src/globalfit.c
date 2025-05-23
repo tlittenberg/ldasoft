@@ -1,9 +1,18 @@
-//
-//  globalfit.c
-//  
-//
-//  Created by Tyson Littenberg on 1/26/21.
-//
+/*
+ * Copyright 2021 Tyson B. Littenberg (MSFC-ST12)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /**
  @file globalfit.c
@@ -15,11 +24,9 @@
 #include <glass_utils.h>
 #include <glass_ucb.h>
 #include <glass_noise.h>
-#include <mbh.h>
 
 #include "glass_ucb_wrapper.h"
 #include "glass_vgb_wrapper.h"
-#include "glass_mbh_wrapper.h"
 #include "glass_noise_wrapper.h"
 
 struct GlobalFitData
@@ -29,6 +36,7 @@ struct GlobalFitData
     int nVGB;
     
     struct TDI *tdi_full;
+    struct TDI *tdi_full_dwt;
     struct TDI *tdi_store;
     struct TDI *tdi_ucb;
     struct TDI *tdi_vgb;
@@ -44,6 +52,7 @@ struct GlobalFitData
 static void alloc_gf_data(struct GlobalFitData *global_fit)
 {
     global_fit->tdi_full = malloc(sizeof(struct TDI));
+    global_fit->tdi_full_dwt = malloc(sizeof(struct TDI));
     global_fit->tdi_store = malloc(sizeof(struct TDI));
     global_fit->tdi_vgb = malloc(sizeof(struct TDI));
     global_fit->tdi_ucb = malloc(sizeof(struct TDI));
@@ -133,7 +142,7 @@ static void dump_data(struct Data *data, struct Flags *flags)
 
 static void share_vgb_model(struct UCBData *ucb_data,
                                struct VGBData *vgb_data,
-                               struct MBHData *mbh_data,
+                               //struct MBHData *mbh_data,
                                struct GlobalFitData *gf,
                                int root, int procID)
 {
@@ -190,13 +199,13 @@ static void share_vgb_model(struct UCBData *ucb_data,
             MPI_Send(gf->tdi_vgb->Z, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 2, MPI_COMM_WORLD);
         }
         
-        //send full model to MBH nodes
+        /*send full model to MBH nodes
         for(int id=mbh_data->procID_min; id<=mbh_data->procID_max; id++)
         {
             MPI_Send(gf->tdi_vgb->X, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
             MPI_Send(gf->tdi_vgb->Y, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
             MPI_Send(gf->tdi_vgb->Z, gf->tdi_vgb->N*2, MPI_DOUBLE, id, 2, MPI_COMM_WORLD);
-        }
+        }*/
 
     }
     
@@ -210,7 +219,7 @@ static void share_vgb_model(struct UCBData *ucb_data,
         MPI_Recv(gf->tdi_vgb->Z, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 2, MPI_COMM_WORLD, &status);
     }
     
-    /* Recieve vgb segment at MBH models */
+    /* Recieve vgb segment at MBH models
     if(procID>=mbh_data->procID_min && procID<=mbh_data->procID_max)
     {
         MPI_Status status;
@@ -218,13 +227,13 @@ static void share_vgb_model(struct UCBData *ucb_data,
         MPI_Recv(gf->tdi_vgb->X, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_vgb->Y, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_vgb->Z, gf->tdi_vgb->N*2, MPI_DOUBLE, root, 2, MPI_COMM_WORLD, &status);
-    }
+    }*/
 
 }
 
 static void share_ucb_model(struct UCBData *ucb_data,
                                struct VGBData *vgb_data,
-                               struct MBHData *mbh_data,
+                               //struct MBHData *mbh_data,
                                struct GlobalFitData *gf,
                                int root, int procID)
 {
@@ -295,13 +304,13 @@ static void share_ucb_model(struct UCBData *ucb_data,
             MPI_Send(gf->tdi_ucb->Z, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 2, MPI_COMM_WORLD);
         }
         
-        //send to MBH node
+        /*send to MBH node
         for(int id=mbh_data->procID_min; id<=mbh_data->procID_max; id++)
         {
             MPI_Send(gf->tdi_ucb->X, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 0, MPI_COMM_WORLD);
             MPI_Send(gf->tdi_ucb->Y, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 1, MPI_COMM_WORLD);
             MPI_Send(gf->tdi_ucb->Z, gf->tdi_ucb->N*2, MPI_DOUBLE, id, 2, MPI_COMM_WORLD);
-        }
+        }*/
     }
     
     //recieve
@@ -315,6 +324,7 @@ static void share_ucb_model(struct UCBData *ucb_data,
         MPI_Recv(gf->tdi_ucb->Z, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 2, MPI_COMM_WORLD, &status);
     }
     
+    /*
     if(procID>=mbh_data->procID_min && procID<=mbh_data->procID_max)
     {
         MPI_Status status;
@@ -323,104 +333,111 @@ static void share_ucb_model(struct UCBData *ucb_data,
         MPI_Recv(gf->tdi_ucb->X, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_ucb->Y, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 1, MPI_COMM_WORLD, &status);
         MPI_Recv(gf->tdi_ucb->Z, gf->tdi_ucb->N*2, MPI_DOUBLE, root, 2, MPI_COMM_WORLD, &status);
-    }
+    }*/
 
 }
 
-static void share_mbh_model(struct UCBData *ucb_data,
-                            struct VGBData *vgb_data,
-                            struct MBHData *mbh_data,
-                            struct GlobalFitData *global_fit,
-                            int root, int procID)
-{
-    int NF;
-    int index;
-    
-    /* send MBH models to root */
-    if(procID >= mbh_data->procID_min && procID <= mbh_data->procID_max)
-    {
-        NF = mbh_data->het->MM - mbh_data->het->MN;
-        index = 2*(int)(mbh_data->data->fmin*mbh_data->data->Tobs);
-        
-        get_mbh_waveform(mbh_data);
 
-        MPI_Send(&NF, 1, MPI_INT, root, 0, MPI_COMM_WORLD); //number of frequency bins for MBH model
-        MPI_Send(&index, 1, MPI_INT, root, 1, MPI_COMM_WORLD); //first bin for MBH model
-        MPI_Send(mbh_data->tdi->X+index, 2*NF, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
-        MPI_Send(mbh_data->tdi->Y+index, 2*NF, MPI_DOUBLE, root, 3, MPI_COMM_WORLD);
-        MPI_Send(mbh_data->tdi->Z+index, 2*NF, MPI_DOUBLE, root, 4, MPI_COMM_WORLD);
-    }
-    
-    /* combine all incoming MBH waveforms */
-    if(procID==root)
-    {
-        MPI_Status status;
-        int N = global_fit->tdi_full->N;
-                
-        double *X = malloc(N*sizeof(double));
-        double *Y = malloc(N*sizeof(double));
-        double *Z = malloc(N*sizeof(double));
+//static void share_mbh_model(struct UCBData *ucb_data,
+//                            struct VGBData *vgb_data,
+//                            struct MBHData *mbh_data,
+//                            struct GlobalFitData *global_fit,
+//                            int root, int procID)
+//{
+//    int NF;
+//    int index;
+//    
+//    /* send MBH models to root */
+//    if(procID >= mbh_data->procID_min && procID <= mbh_data->procID_max)
+//    {
+//        NF = mbh_data->het->MM - mbh_data->het->MN;
+//        index = 2*(int)(mbh_data->data->fmin*mbh_data->data->Tobs);
+//        
+//        get_mbh_waveform(mbh_data);
+//
+//        MPI_Send(&NF, 1, MPI_INT, root, 0, MPI_COMM_WORLD); //number of frequency bins for MBH model
+//        MPI_Send(&index, 1, MPI_INT, root, 1, MPI_COMM_WORLD); //first bin for MBH model
+//        MPI_Send(mbh_data->tdi->X+index, 2*NF, MPI_DOUBLE, root, 2, MPI_COMM_WORLD);
+//        MPI_Send(mbh_data->tdi->Y+index, 2*NF, MPI_DOUBLE, root, 3, MPI_COMM_WORLD);
+//        MPI_Send(mbh_data->tdi->Z+index, 2*NF, MPI_DOUBLE, root, 4, MPI_COMM_WORLD);
+//    }
+//    
+//    /* combine all incoming MBH waveforms */
+//    if(procID==root)
+//    {
+//        MPI_Status status;
+//        int N = global_fit->tdi_full->N;
+//                
+//        double *X = malloc(N*sizeof(double));
+//        double *Y = malloc(N*sizeof(double));
+//        double *Z = malloc(N*sizeof(double));
+//
+//        //zero out mbh model
+//        for(int i=0; i<global_fit->tdi_mbh->N*2; i++)
+//        {
+//            global_fit->tdi_mbh->X[i] = 0.0;
+//            global_fit->tdi_mbh->Y[i] = 0.0;
+//            global_fit->tdi_mbh->Z[i] = 0.0;
+//        }
+//
+//        for(int n=mbh_data->procID_min; n<=mbh_data->procID_max; n++)
+//        {
+//            //zero out the workspace for collecting the worker nodes' waveforms
+//            for(int i=0; i<N; i++) X[i] = Y[i] = Z[i] = 0.0;
+//            
+//            //get model from worker node
+//            MPI_Recv(&NF, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
+//            MPI_Recv(&index, 1, MPI_INT, n, 1, MPI_COMM_WORLD, &status);
+//            MPI_Recv(X+index, 2*NF, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
+//            MPI_Recv(Y+index, 2*NF, MPI_DOUBLE, n, 3, MPI_COMM_WORLD, &status);
+//            MPI_Recv(Z+index, 2*NF, MPI_DOUBLE, n, 4, MPI_COMM_WORLD, &status);
+//
+//            //remove from joint residual
+//            for(int i=0; i<2*NF; i++)
+//            {
+//                global_fit->tdi_mbh->X[index+i] += X[i+index];
+//                global_fit->tdi_mbh->Y[index+i] += Y[i+index];
+//                global_fit->tdi_mbh->Z[index+i] += Z[i+index];
+//            }
+//        }
+//        
+//        free(X);
+//        free(Y);
+//        free(Z);
+//    }
+//
+//
+//    
+//    /* Broadcast joint MBH model to all worker nodes */
+//    MPI_Bcast(global_fit->tdi_mbh->X, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
+//    MPI_Bcast(global_fit->tdi_mbh->Y, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
+//    MPI_Bcast(global_fit->tdi_mbh->Z, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
+//
+//    /* Remove current state of MBH model from joint fit */
+//    if(procID >= mbh_data->procID_min && procID <= mbh_data->procID_max)
+//    {
+//        for(int i=0; i<2*NF; i++)
+//        {
+//            global_fit->tdi_mbh->X[index+i] -= mbh_data->tdi->X[index+i];
+//            global_fit->tdi_mbh->Y[index+i] -= mbh_data->tdi->Y[index+i];
+//            global_fit->tdi_mbh->Z[index+i] -= mbh_data->tdi->Z[index+i];
+//
+//        }
+//    }
+//
+//    /* Broadcast run time of first MBH source (used to scale other updates) */
+//    MPI_Bcast(&mbh_data->cpu_time, 1, MPI_DOUBLE, mbh_data->procID_min, MPI_COMM_WORLD);
+//
+//
+//}
 
-        //zero out mbh model
-        for(int i=0; i<global_fit->tdi_mbh->N*2; i++)
-        {
-            global_fit->tdi_mbh->X[i] = 0.0;
-            global_fit->tdi_mbh->Y[i] = 0.0;
-            global_fit->tdi_mbh->Z[i] = 0.0;
-        }
-
-        for(int n=mbh_data->procID_min; n<=mbh_data->procID_max; n++)
-        {
-            //zero out the workspace for collecting the worker nodes' waveforms
-            for(int i=0; i<N; i++) X[i] = Y[i] = Z[i] = 0.0;
-            
-            //get model from worker node
-            MPI_Recv(&NF, 1, MPI_INT, n, 0, MPI_COMM_WORLD, &status);
-            MPI_Recv(&index, 1, MPI_INT, n, 1, MPI_COMM_WORLD, &status);
-            MPI_Recv(X+index, 2*NF, MPI_DOUBLE, n, 2, MPI_COMM_WORLD, &status);
-            MPI_Recv(Y+index, 2*NF, MPI_DOUBLE, n, 3, MPI_COMM_WORLD, &status);
-            MPI_Recv(Z+index, 2*NF, MPI_DOUBLE, n, 4, MPI_COMM_WORLD, &status);
-
-            //remove from joint residual
-            for(int i=0; i<2*NF; i++)
-            {
-                global_fit->tdi_mbh->X[index+i] += X[i+index];
-                global_fit->tdi_mbh->Y[index+i] += Y[i+index];
-                global_fit->tdi_mbh->Z[index+i] += Z[i+index];
-            }
-        }
-        
-        free(X);
-        free(Y);
-        free(Z);
-    }
-
-
-    
-    /* Broadcast joint MBH model to all worker nodes */
-    MPI_Bcast(global_fit->tdi_mbh->X, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(global_fit->tdi_mbh->Y, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
-    MPI_Bcast(global_fit->tdi_mbh->Z, global_fit->tdi_mbh->N*2, MPI_DOUBLE, root, MPI_COMM_WORLD);
-
-    /* Remove current state of MBH model from joint fit */
-    if(procID >= mbh_data->procID_min && procID <= mbh_data->procID_max)
-    {
-        for(int i=0; i<2*NF; i++)
-        {
-            global_fit->tdi_mbh->X[index+i] -= mbh_data->tdi->X[index+i];
-            global_fit->tdi_mbh->Y[index+i] -= mbh_data->tdi->Y[index+i];
-            global_fit->tdi_mbh->Z[index+i] -= mbh_data->tdi->Z[index+i];
-
-        }
-    }
-
-    /* Broadcast run time of first MBH source (used to scale other updates) */
-    MPI_Bcast(&mbh_data->cpu_time, 1, MPI_DOUBLE, mbh_data->procID_min, MPI_COMM_WORLD);
-
-
-}
-
-static void share_noise_model(struct NoiseData *noise_data, struct UCBData *ucb_data, struct VGBData *vgb_data, struct MBHData *mbh_data, struct GlobalFitData *global_fit, int root, int procID)
+static void share_noise_model(struct NoiseData *noise_data, 
+                              struct UCBData *ucb_data,
+                              //struct MBHData *mbh_data,
+                              struct VGBData *vgb_data,
+                              struct GlobalFitData *global_fit,
+                              int root,
+                              int procID)
 {
     
     int ic = 0;
@@ -467,25 +484,33 @@ static void create_residual(struct GlobalFitData *global_fit, int UCB_Flag, int 
 
         /*
          MBH nodes hold all other MBH states in their global_fit structure
-         */
+         
         if(global_fit->nMBH>0)
         {
             global_fit->tdi_full->X[i] -= global_fit->tdi_mbh->X[i];
             global_fit->tdi_full->Y[i] -= global_fit->tdi_mbh->Y[i];
             global_fit->tdi_full->Z[i] -= global_fit->tdi_mbh->Z[i];
-        }
+        }*/
     }
 
 }
 
-static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_data, struct VGBData *vgb_data, struct MBHData *mbh_data, int UCB_Flag, int VGB_Flag, int Noise_Flag, int MBH_Flag)
+static void print_data_state(struct NoiseData *noise_data, 
+                             struct UCBData *ucb_data,
+                             struct VGBData *vgb_data,
+                             //struct MBHData *mbh_data,
+                             int UCB_Flag,
+                             int VGB_Flag,
+                             int Noise_Flag,
+                             int MBH_Flag
+                             )
 {
     if(Noise_Flag)
     {
-        print_data(noise_data->data, noise_data->data->tdi, noise_data->flags);
+        print_data(noise_data->data, noise_data->flags);
         char filename[256];
         sprintf(filename,"%s/data/current_instrument_noise_model.dat",noise_data->flags->runDir);
-        generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
+        generate_instrument_noise_model(noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
         print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
         
         if(noise_data->flags->confNoise)
@@ -497,12 +522,13 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
     }
     if(VGB_Flag)
     {
-        for(int n=0; n<vgb_data->flags->NVB; n++)print_data(vgb_data->data_vec[n], vgb_data->data_vec[n]->tdi, vgb_data->flags);
+        for(int n=0; n<vgb_data->flags->NVB; n++)print_data(vgb_data->data_vec[n], vgb_data->flags);
     }
     if(UCB_Flag)
     {
-        print_data(ucb_data->data, ucb_data->data->tdi, ucb_data->flags);
+        print_data(ucb_data->data, ucb_data->flags);
     }
+    /*
     if(MBH_Flag)
     {
         char tempFileName[MAXSTRINGSIZE];
@@ -547,10 +573,18 @@ static void print_data_state(struct NoiseData *noise_data, struct UCBData *ucb_d
         
         fclose(tempFile);
         
-    }
+    }*/
 }
 
-static void print_globalfit_state(struct NoiseData *noise_data, struct UCBData *ucb_data, struct VGBData *vgb_data, struct MBHData *mbh_data, int UCB_Flag, int VGB_Flag, int Noise_Flag, int MBH_Flag, FILE *fptr, int counter)
+static void print_globalfit_state(struct NoiseData *noise_data, 
+                                  struct UCBData *ucb_data,
+                                  struct VGBData *vgb_data,
+                                  //struct MBHData *mbh_data,
+                                  int UCB_Flag, int VGB_Flag,
+                                  int Noise_Flag,
+                                  int MBH_Flag,
+                                  FILE *fptr,
+                                  int counter)
 {
     if(Noise_Flag)
         print_noise_state(noise_data, fptr, counter);
@@ -561,8 +595,8 @@ static void print_globalfit_state(struct NoiseData *noise_data, struct UCBData *
     if(UCB_Flag)
         print_ucb_state(ucb_data, fptr, counter);
     
-    if(MBH_Flag)
-        print_mbh_state(mbh_data, fptr, counter);
+    /*if(MBH_Flag)
+        print_mbh_state(mbh_data, fptr, counter);*/
 }
 
 static void blocked_gibbs_load_balancing(struct GlobalFitData *global_fit, int root, int procID, int Nproc)
@@ -618,7 +652,7 @@ int main(int argc, char *argv[])
     struct NoiseData     *noise_data = malloc(sizeof(struct NoiseData));
     struct UCBData       *ucb_data   = malloc(sizeof(struct UCBData));
     struct VGBData       *vgb_data   = malloc(sizeof(struct VGBData));
-    struct MBHData       *mbh_data   = malloc(sizeof(struct MBHData));
+    //struct MBHData       *mbh_data   = malloc(sizeof(struct MBHData));
 
     alloc_gf_data(global_fit);
 
@@ -632,22 +666,22 @@ int main(int argc, char *argv[])
     struct Data  *data  = ucb_data->data;
 
     /* all processes parse command line and set defaults/flags */
-    parse_data_args(argc,argv,data,orbit,flags,chain);
+    parse_data_args(argc,argv,data,orbit,flags,chain,"fourier");
     parse_vgb_args(argc, argv, flags);
-    parse_mbh_args(argc, argv, mbh_data);
+    //parse_mbh_args(argc, argv, mbh_data);
     parse_ucb_args(argc, argv, flags);
     if(procID==0 && flags->help) print_usage();
     
     /* Allocate remaining data structures */
     alloc_noise_data(noise_data, ucb_data, procID, Nproc-1); //noise runs on root process
     alloc_vgb_data(vgb_data, ucb_data, procID); //vbs run on process 1
-    alloc_mbh_data(mbh_data, ucb_data, procID); //next are the MBH processes
+    //alloc_mbh_data(mbh_data, ucb_data, procID); //next are the MBH processes
     
     /* Store size of each model component */
-    global_fit->nMBH = mbh_data->NMBH;
+    //global_fit->nMBH = mbh_data->NMBH;
     global_fit->nVGB = vgb_data->flags->NVB;
     global_fit->nUCB = Nproc - 1; //room for noise model
-    if(global_fit->nMBH>0) global_fit->nUCB -= global_fit->nMBH; //room for MBH mdodels
+    //if(global_fit->nMBH>0) global_fit->nUCB -= global_fit->nMBH; //room for MBH mdodels
     if(global_fit->nVGB>0) global_fit->nUCB -= 1; //room for VGB mdodels
 
     /* Assign processes to models */
@@ -668,7 +702,7 @@ int main(int argc, char *argv[])
         pid_counter++;
     }
     
-    //mbh model takes one node/source
+    /*mbh model takes one node/source
     mbh_data->procID_min =  0;
     mbh_data->procID_max = -1;
     if(global_fit->nMBH>0)
@@ -676,7 +710,7 @@ int main(int argc, char *argv[])
         mbh_data->procID_min = pid_counter;
         mbh_data->procID_max = pid_counter+mbh_data->NMBH-1;
         pid_counter+=mbh_data->NMBH;
-    }
+    }*/
     
     //ucb model takes remaining nodes
     ucb_data->procID_min = pid_counter;
@@ -689,7 +723,7 @@ int main(int argc, char *argv[])
         fprintf(stdout,"\n =============== Global Fit Analysis ============== \n");
         fprintf(stdout,"  %i noise  processes (pid %i)\n",1+noise_data->procID_max-noise_data->procID_min,noise_data->procID_min);
         if(global_fit->nVGB>0) fprintf(stdout,"  %i vgb processes (pid %i)\n",1+vgb_data->procID_max-vgb_data->procID_min,vgb_data->procID_min);
-        if(global_fit->nMBH>0) fprintf(stdout,"  %i mbh    processes (pid %i-%i)\n",1+mbh_data->procID_max-mbh_data->procID_min,mbh_data->procID_min,mbh_data->procID_max);
+        //if(global_fit->nMBH>0) fprintf(stdout,"  %i mbh    processes (pid %i-%i)\n",1+mbh_data->procID_max-mbh_data->procID_min,mbh_data->procID_min,mbh_data->procID_max);
         fprintf(stdout,"  %i ucb processes (pid %i-%i)\n",1+ucb_data->procID_max-ucb_data->procID_min,ucb_data->procID_min,ucb_data->procID_max);
         fprintf(stdout," ================================================== \n");
    }
@@ -761,21 +795,21 @@ int main(int argc, char *argv[])
         setup_run_directories(ucb_data->flags, ucb_data->data, ucb_data->chain);
 
     }
-    else if(procID>=mbh_data->procID_min && procID <=mbh_data->procID_max)
-    {
-        
-        /* joint chain file for noise parameters */
-        char filename[MAXSTRINGSIZE];
-        sprintf(filename,"%s/samples/mbh_samples_%04d.dat",mbh_data->flags->runDir,procID);
-        global_fit->chainFile=fopen(filename,"w");
-
-        sprintf(mbh_data->flags->runDir,"%s/mbh",mbh_data->flags->runDir);
-        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-        sprintf(mbh_data->flags->runDir,"%s/src%04d",mbh_data->flags->runDir, procID-mbh_data->procID_min);
-        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        
-    }
+//    else if(procID>=mbh_data->procID_min && procID <=mbh_data->procID_max)
+//    {
+//        
+//        /* joint chain file for noise parameters */
+//        char filename[MAXSTRINGSIZE];
+//        sprintf(filename,"%s/samples/mbh_samples_%04d.dat",mbh_data->flags->runDir,procID);
+//        global_fit->chainFile=fopen(filename,"w");
+//
+//        sprintf(mbh_data->flags->runDir,"%s/mbh",mbh_data->flags->runDir);
+//        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+//
+//        sprintf(mbh_data->flags->runDir,"%s/src%04d",mbh_data->flags->runDir, procID-mbh_data->procID_min);
+//        mkdir(mbh_data->flags->runDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+//        
+//    }
        
     if(procID>=ucb_data->procID_min && procID<=ucb_data->procID_max)
     {
@@ -786,7 +820,7 @@ int main(int argc, char *argv[])
     alloc_data(data, flags);
             
     /* root process reads data */
-    if(procID==root) ReadHDF5(data,global_fit->tdi_full,flags);
+    if(procID==root) ReadHDF5(data,global_fit->tdi_full,global_fit->tdi_full_dwt,flags);
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* alias of full TDI data */
@@ -805,13 +839,13 @@ int main(int argc, char *argv[])
     if(vgb_data->flags->NVB>0)setup_vgb_data(vgb_data, ucb_data, tdi_full);
 
     /* set up data for mbh model processes */
-    if(mbh_data->NMBH>0)setup_mbh_data(mbh_data, ucb_data, tdi_full, procID);
+    //if(mbh_data->NMBH>0)setup_mbh_data(mbh_data, ucb_data, tdi_full, procID);
 
     /* set up data for noise model processes */
-    setup_noise_data(noise_data, ucb_data, vgb_data, mbh_data, tdi_full, procID);
+    setup_noise_data(noise_data, ucb_data, vgb_data, tdi_full, procID);
 
     /* allocate global fit noise model for all processes */
-    alloc_noise(global_fit->psd, noise_data->data->N, noise_data->data->Nchannel);
+    alloc_noise(global_fit->psd, noise_data->data->NFFT, noise_data->data->Nlayer, noise_data->data->Nchannel);
     
     /* print ASCII copy of raw data for visualizations */
     if(procID == 0) dump_data(noise_data->data, flags);
@@ -849,7 +883,7 @@ int main(int argc, char *argv[])
     }
     MPI_Bcast(global_fit->psd->detC, global_fit->psd->N, MPI_DOUBLE, root, MPI_COMM_WORLD);
 
-    share_noise_model(noise_data,ucb_data,vgb_data,mbh_data,global_fit,root,procID);
+    share_noise_model(noise_data,ucb_data,vgb_data,global_fit,root,procID);
 
     /* Assign processes to VB model */
     if(procID>=vgb_data->procID_min && procID<=vgb_data->procID_max)
@@ -878,20 +912,20 @@ int main(int argc, char *argv[])
         fclose(test);*/
     }
 
-    /* Assign processes to MBH model */
+    /* Assign processes to MBH model
     if(procID >= mbh_data->procID_min && procID <= mbh_data->procID_max)
     {
         MBH_Flag = 1;
         initialize_mbh_sampler(mbh_data);
-    }
+    }*/
 
     /* distribute current state of models to worker nodes */
-    share_noise_model (noise_data, ucb_data, vgb_data, mbh_data, global_fit, root, procID);
-    if(global_fit->nUCB>0)share_ucb_model(ucb_data, vgb_data, mbh_data, global_fit, root, procID);
-    if(global_fit->nVGB>0)share_vgb_model(ucb_data, vgb_data, mbh_data, global_fit, root, procID);
-    if(global_fit->nMBH>0)share_mbh_model   (ucb_data, vgb_data, mbh_data, global_fit, root, procID);
+    share_noise_model (noise_data, ucb_data, vgb_data, global_fit, root, procID);
+    if(global_fit->nUCB>0)share_ucb_model(ucb_data, vgb_data, global_fit, root, procID);
+    if(global_fit->nVGB>0)share_vgb_model(ucb_data, vgb_data, global_fit, root, procID);
+    //if(global_fit->nMBH>0)share_mbh_model   (ucb_data, vgb_data, mbh_data, global_fit, root, procID);
 
-    /* number of update steps for each module (scaled to MBH model update) */
+    /* number of update steps for each module*/
     int cycle;
     global_fit->max_block_time=1;
     /*
@@ -939,7 +973,7 @@ int main(int argc, char *argv[])
         /*  MASSIVE BLACK HOLE BINARIES  */
         /* ============================= */
 
-        /* mbh model update */
+        /* mbh model update
         if(MBH_Flag)
         {
             create_residual(global_fit, UCB_Flag, VGB_Flag, MBH_Flag);
@@ -953,15 +987,15 @@ int main(int argc, char *argv[])
                 mbh_data->status = update_mbh_sampler(mbh_data);
             
             global_fit->block_time = mbh_data->cpu_time;
-        }
+        }*/
         
         
         /* ========================================= */
-        /* MPI EXCHANGES OF UCB & MBH MODEL STATES */
+        /* MPI EXCHANGES OF UCB MODEL STATES */
         /* ========================================= */
 
-        if(global_fit->nUCB>0)share_ucb_model(ucb_data, vgb_data, mbh_data, global_fit, root, procID);
-        if(global_fit->nMBH>0)share_mbh_model   (ucb_data, vgb_data, mbh_data, global_fit, root, procID);
+        if(global_fit->nUCB>0)share_ucb_model(ucb_data, vgb_data, global_fit, root, procID);
+        //if(global_fit->nMBH>0)share_mbh_model   (ucb_data, vgb_data, mbh_data, global_fit, root, procID);
 
         
         /* ============================= */
@@ -1010,17 +1044,17 @@ int main(int argc, char *argv[])
         /* MPI EXCHANGES OF NOISE & VGB MODEL STATES */
         /* ========================================= */
         
-        share_noise_model (noise_data, ucb_data, vgb_data, mbh_data, global_fit, root, procID);
-        if(global_fit->nVGB>0)share_vgb_model(ucb_data, vgb_data, mbh_data, global_fit, root, procID);
+        share_noise_model (noise_data, ucb_data, vgb_data, global_fit, root, procID);
+        if(global_fit->nVGB>0)share_vgb_model(ucb_data, vgb_data, global_fit, root, procID);
 
         /* send time spent in each block to root for load balancing */
         blocked_gibbs_load_balancing(global_fit, root, procID, Nproc);
 
         /* DEBUG */
-        print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
+        print_data_state(noise_data,ucb_data,vgb_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
 
         /* save state of global model */
-        print_globalfit_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag, global_fit->chainFile, global_fit_counter);
+        print_globalfit_state(noise_data,ucb_data,vgb_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag, global_fit->chainFile, global_fit_counter);
         
         global_fit_counter++;
 
@@ -1050,19 +1084,15 @@ int main(int argc, char *argv[])
     {
         char filename[128];
         sprintf(filename,"%s/data/final_instrument_noise_model.dat",noise_data->flags->runDir);
-        generate_instrument_noise_model(noise_data->data,noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
+        generate_instrument_noise_model(noise_data->orbit,noise_data->inst_model[noise_data->chain->index[0]]);
         print_noise_model(noise_data->inst_model[noise_data->chain->index[0]]->psd, filename);
 
         print_noise_reconstruction(noise_data->data, noise_data->flags);
     }
-    if(MBH_Flag)
-    {
-        /* waveform reconstructions */
-        //print_mbh_waveform_reconstruction(mbh_data);
-    }
+
     fclose(global_fit->chainFile);
     
-    print_data_state(noise_data,ucb_data,vgb_data,mbh_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
+    print_data_state(noise_data,ucb_data,vgb_data,UCB_Flag,VGB_Flag,Noise_Flag,MBH_Flag);
 
     //print total run time
     stop = time(NULL);

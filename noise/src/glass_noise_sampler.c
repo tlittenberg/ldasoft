@@ -1,20 +1,17 @@
 /*
- *  Copyright (C) 2023 Tyson B. Littenberg (MSFC-ST12)
+ * Copyright 2023 Tyson B. Littenberg 
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <glass_utils.h>
@@ -50,13 +47,13 @@ void spline_ptmcmc(struct SplineModel **model, struct Chain *chain, struct Flags
         logL2 = model[oldb]->logL;
         
         //Hot chains jump more rarely
-        if(gsl_rng_uniform(chain->r[a])<1.0)
+        if(rand_r_U_0_1(&chain->r[a])<1.0)
         {
             dlogL = logL2 - logL1;
             H  = (heat2 - heat1)/(heat2*heat1);
             
             alpha = exp(dlogL*H);
-            beta  = gsl_rng_uniform(chain->r[a]);
+            beta  = rand_r_U_0_1(&chain->r[a]);
             
             if(alpha >= beta)
             {
@@ -97,13 +94,13 @@ void noise_ptmcmc(struct InstrumentModel **model, struct Chain *chain, struct Fl
         logL2 = model[oldb]->logL;
         
         //Hot chains jump more rarely
-        if(gsl_rng_uniform(chain->r[a])<1.0)
+        if(rand_r_U_0_1(&chain->r[a])<1.0)
         {
             dlogL = logL2 - logL1;
             H  = (heat2 - heat1)/(heat2*heat1);
             
             alpha = exp(dlogL*H);
-            beta  = gsl_rng_uniform(chain->r[a]);
+            beta  = rand_r_U_0_1(&chain->r[a]);
             
             if(alpha >= beta)
             {
@@ -115,9 +112,9 @@ void noise_ptmcmc(struct InstrumentModel **model, struct Chain *chain, struct Fl
     }
 }
 
-static double uniform_frequency_draw(double fmin, double fmax, gsl_rng *r)
+static double uniform_frequency_draw(double fmin, double fmax, unsigned int *r)
 {
-    return exp(log(fmin) + (log(fmax) - log(fmin))*gsl_rng_uniform(r));
+    return exp(log(fmin) + (log(fmax) - log(fmin))*rand_r_U_0_1(r));
 }
 
 static int check_frequency_spacing(double *f, int k, double T)
@@ -140,7 +137,7 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     //shorthand pointers
     struct SplineModel *model_x = model;
     struct SplineModel *model_y = malloc(sizeof(struct SplineModel));
-    alloc_spline_model(model_y, model_x->psd->N, data->Nchannel, model_x->spline->N);
+    alloc_spline_model(model_y, model_x->psd->N, data->Nlayer, data->Nchannel, model_x->spline->N);
 
     //alisases for pointers to frequency vectors
     double *fx = model_x->spline->f;
@@ -150,7 +147,7 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     copy_spline_model(model_x, model_y);
     
     //pick a point any point
-    int k = (int)floor(gsl_rng_uniform(chain->r[ic])*(double)model_y->spline->N);
+    int k = (int)floor(rand_r_U_0_1(&chain->r[ic])*(double)model_y->spline->N);
 
     //find the minimum and maximum indecies for stencil
     //int half_stencil = (MIN_SPLINE_STENCIL-1)/2;
@@ -162,7 +159,7 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     if(k>0 && k<model_y->spline->N-1)
     {
         /* normal draw */
-        if(gsl_rng_uniform(chain->r[ic])<0.8)
+        if(rand_r_U_0_1(&chain->r[ic])<0.8)
         {
             
             //get shortest distance between neighboring points
@@ -174,13 +171,13 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
             double sigma = df/3.;
             
             //draw new frequency (illegally) checking that it stays between existing points
-            do fy[k] = exp(log(fx[k]) + sigma*gsl_ran_gaussian(chain->r[ic],1));
+            do fy[k] = exp(log(fx[k]) + sigma*rand_r_N_0_1(&chain->r[ic]));
             while( fy[k]<fy[k-1] || fy[k]>fy[k+1]);
         }
         else
         {
             /* uniform draw */
-            fy[k] = uniform_frequency_draw(fx[k-1], fx[k+1], chain->r[ic]);
+            fy[k] = uniform_frequency_draw(fx[k-1], fx[k+1], &chain->r[ic]);
         }
 
         //check frequency prior
@@ -194,9 +191,9 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     double Sn;
     if(model_y->Nchannel==2) Sn = AEnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k], Spm, Sop);
     else Sn = XYZnoise_FF(orbit->L, orbit->fstar, model_y->spline->f[k], Spm, Sop);
-    double scale = pow(10., -2.0 + 2.0*gsl_rng_uniform(chain->r[ic]));
+    double scale = pow(10., -2.0 + 2.0*rand_r_U_0_1(&chain->r[ic]));
     for(int n=0; n<model_y->Nchannel; n++)
-        model_y->spline->C[n][n][k] += scale*Sn*gsl_ran_gaussian(chain->r[ic],1);
+        model_y->spline->C[n][n][k] += scale*Sn*rand_r_N_0_1(&chain->r[ic]);
     
 
     
@@ -219,7 +216,7 @@ void noise_spline_model_mcmc(struct Orbit *orbit, struct Data *data, struct Spli
     }
     logH += logPy - logPx; //priors
     
-    loga = log(gsl_rng_uniform(chain->r[ic]));
+    loga = log(rand_r_U_0_1(&chain->r[ic]));
     if(logH > loga)
     {
         copy_spline_model(model_y, model_x);
@@ -243,7 +240,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
     //decide if doing a birth or death move
     int Nspline;
     char move;
-    if(gsl_rng_uniform(chain->r[ic])>0.5)
+    if(rand_r_U_0_1(&chain->r[ic])>0.5)
     {
         Nspline = model_x->spline->N + 1; //birth move
         move = 'B';
@@ -253,7 +250,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
         Nspline = model_x->spline->N - 1; //death move
         move = 'D';
     }
-    alloc_spline_model(model_y, model_x->psd->N, data->Nchannel, Nspline);
+    alloc_spline_model(model_y, model_x->psd->N, data->Nlayer, data->Nchannel, Nspline);
     model_y->Nmin = model_x->Nmin;
     model_y->Nmax = model_x->Nmax;
 
@@ -277,7 +274,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
              */
             
             // first pick the left most point (it can't be the last point)
-            kmin = (int)floor(gsl_rng_uniform(chain->r[0])*(double)(model_x->spline->N-1));
+            kmin = (int)floor(rand_r_U_0_1(&chain->r[0])*(double)(model_x->spline->N-1));
             kmax = kmin+1;
             
             //copy current state into trial
@@ -294,7 +291,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             
             //get grid place for new point
             int birth = kmin+1;
-            fy[birth] = uniform_frequency_draw(fx[kmin], fx[kmax], chain->r[ic]);
+            fy[birth] = uniform_frequency_draw(fx[kmin], fx[kmax], &chain->r[ic]);
             
             //check frequency prior
             if(check_frequency_spacing(fy, birth, data->T)) logPy = -INFINITY;
@@ -309,7 +306,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             double Snmin = -Sn*100.;
             double Snmax =  Sn*100.;
             for(int n=0; n<model_y->Nchannel; n++)
-                model_y->spline->C[n][n][birth] = Snmin + (Snmax - Snmin)*gsl_rng_uniform(chain->r[ic]);
+                model_y->spline->C[n][n][birth] = Snmin + (Snmax - Snmin)*rand_r_U_0_1(&chain->r[ic]);
             
             // now fill in all higher points over k index
             for(int k=kmax; k<model_x->spline->N; k++)
@@ -328,7 +325,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
             // first pick the left most point (it can't be the last point)
             kmin = 1;
             kmax = model_x->spline->N - 1;
-            int kill = kmin + (int)floor( (double)(kmax-kmin)*gsl_rng_uniform(chain->r[ic]) );
+            int kill = kmin + (int)floor( (double)(kmax-kmin)*rand_r_U_0_1(&chain->r[ic]) );
 
             //copy current state into trial
             for(int k=0; k<kill; k++)
@@ -374,7 +371,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
     }
     logH += logPy - logPx; //priors
     
-    loga = log(gsl_rng_uniform(chain->r[ic]));
+    loga = log(rand_r_U_0_1(&chain->r[ic]));
     if(logH > loga)
     {
         //reallocate noise structure to size of new spline model
@@ -382,7 +379,7 @@ void noise_spline_model_rjmcmc(struct Orbit *orbit, struct Data *data, struct Sp
         
         free_noise(model_x->spline);
         model_x->spline = malloc(sizeof(struct Noise));
-        alloc_noise(model_x->spline,model_y->spline->N, data->Nchannel);
+        alloc_noise(model_x->spline,model_y->spline->N, data->Nlayer, data->Nchannel);
          
         
         copy_spline_model(model_y, model_x);
@@ -403,15 +400,17 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     struct InstrumentModel *model_x = model;
     struct InstrumentModel *model_y = trial;
     copy_instrument_model(model_x,model_y);
-        
+
     //initialize likelihood
     //TODO: this shouldn't be necessary
-    generate_instrument_noise_model(data,orbit,model_x);
+    generate_instrument_noise_model(orbit,model_x);
     copy_Cij(model_x->psd->C, psd->C, psd->Nchannel, psd->N);
-    if(flags->confNoise) generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
+    if(flags->confNoise) 
+        generate_full_covariance_matrix(psd,galaxy->psd, data->Nchannel);
     invert_noise_covariance_matrix(psd);
+    
     model_x->logL = noise_log_likelihood(data, psd);
-
+    
     
     //set priors
     double Sacc = 9.00e-30;
@@ -449,18 +448,16 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     correlation_matrix[3][4] = correlation_matrix[4][3] = +1.0;
     correlation_matrix[3][5] = correlation_matrix[5][3] = -1.0;
 
-
     for(int mc=0; mc<10; mc++)
     {
-        
         //get jump sizes
         double acc_jump,oms_jump;
         double scale;
-        if(gsl_rng_uniform(chain->r[ic])>0.75)
+        if(rand_r_U_0_1(&chain->r[ic])>0.75)
             scale = 1;
-        else if(gsl_rng_uniform(chain->r[ic])>0.5)
+        else if(rand_r_U_0_1(&chain->r[ic])>0.5)
             scale = 0.1;
-        else if(gsl_rng_uniform(chain->r[ic])>0.25)
+        else if(rand_r_U_0_1(&chain->r[ic])>0.25)
             scale = 0.01;
         else
             scale = 0.001;
@@ -471,15 +468,15 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         
         int i;
         int j;
-        type = (int)(gsl_rng_uniform(chain->r[ic])*3.);
+        type = (int)(rand_r_U_0_1(&chain->r[ic])*3.);
         
         switch(type)
         {
             case 0:
                 //update one link at a time
-                i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
-                model_y->sacc[i] = model_x->sacc[i] + scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
-                model_y->soms[i] = model_x->soms[i] + scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
+                i = (int)(rand_r_U_0_1(&chain->r[ic])* (double)model_x->Nlink);
+                model_y->sacc[i] = model_x->sacc[i] + scale * Sacc * rand_r_N_0_1(&chain->r[ic]);
+                model_y->soms[i] = model_x->soms[i] + scale * Soms * rand_r_N_0_1(&chain->r[ic]);
                 
                 //OMS noise is degenerate on a link
                 if(i%2==0) model_y->soms[i+1] = model_y->soms[i];
@@ -492,14 +489,14 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
                 break;
             case 1:
                 //update pair of links according to correlations
-                i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
+                i = (int)(rand_r_U_0_1(&chain->r[ic])* (double)model_x->Nlink);
                 do
                 {
-                    j = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nlink);
+                    j = (int)(rand_r_U_0_1(&chain->r[ic])* (double)model_x->Nlink);
                 }while(i!=j);
                 
-                acc_jump = scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
-                oms_jump = scale * Soms * gsl_ran_gaussian(chain->r[ic],1);
+                acc_jump = scale * Sacc * rand_r_N_0_1(&chain->r[ic]);
+                oms_jump = scale * Soms * rand_r_N_0_1(&chain->r[ic]);
                 
                 if(abs(i-j)==1)
                 {
@@ -533,7 +530,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
                 //update acceleration noise using correlation matrix
                 for(i=0; i<model_x->Nlink; i++)
                 {
-                    acc_jump_vec[i] = scale * Sacc * gsl_ran_gaussian(chain->r[ic],1);
+                    acc_jump_vec[i] = scale * Sacc * rand_r_N_0_1(&chain->r[ic]);
                     model_y->sacc[i] = model_x->sacc[i];
                 }
                 
@@ -553,7 +550,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         //get noise covariance matrix for initial parameters
         if(logPy > -INFINITY && !flags->prior)
         {
-            generate_instrument_noise_model(data,orbit,model_y);
+            generate_instrument_noise_model(orbit,model_y);
             copy_Cij(model_y->psd->C, psd->C, psd->Nchannel, psd->N);
             
             //add foreground noise contribution
@@ -568,7 +565,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         }
         logH += logPy - logPx; //priors
         
-        loga = log(gsl_rng_uniform(chain->r[ic]));
+        loga = log(rand_r_U_0_1(&chain->r[ic]));
         if(logH > loga)
         {
             copy_instrument_model(model_y, model_x);
@@ -583,7 +580,7 @@ void noise_instrument_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
 
 }
 
-void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic)
+void noise_foreground_model_mcmc(struct Data *data, struct InstrumentModel *noise, struct ForegroundModel *model, struct ForegroundModel *trial, struct Noise *psd, struct Chain *chain, struct Flags *flags, int ic)
 {
     double logH  = 0.0; //(log) Hastings ratio
     double loga  = 1.0; //(log) transition probability
@@ -598,7 +595,7 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
     
     //initialize likelhood
     //TODO: this shouldn't be necessary!
-    generate_galactic_foreground_model(data,orbit,model_x);
+    generate_galactic_foreground_model(model_x);
     copy_Cij(model_x->psd->C, psd->C, psd->Nchannel, psd->N);
     generate_full_covariance_matrix(psd, noise->psd, data->Nchannel);
     invert_noise_covariance_matrix(psd);
@@ -660,25 +657,25 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         
         //get jump sizes
         double scale;
-        if(gsl_rng_uniform(chain->r[ic])>0.75)
+        if(rand_r_U_0_1(&chain->r[ic])>0.75)
             scale = 0.1;
-        else if(gsl_rng_uniform(chain->r[ic])>0.5)
+        else if(rand_r_U_0_1(&chain->r[ic])>0.5)
             scale = 0.01;
-        else if(gsl_rng_uniform(chain->r[ic])>0.25)
+        else if(rand_r_U_0_1(&chain->r[ic])>0.25)
             scale = 0.001;
         else
             scale = 0.0001;
         
-        if(gsl_rng_uniform(chain->r[ic])<0.5)
+        if(rand_r_U_0_1(&chain->r[ic])<0.5)
         {
             //pick which parameter to update
-            int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nparams);
-            model_y->sgal[i] = model_x->sgal[i] + scale * 0.5*(prior[i][1]+prior[i][0]) * gsl_ran_gaussian(chain->r[ic],1);
+            int i = (int)(rand_r_U_0_1(&chain->r[ic])* (double)model_x->Nparams);
+            model_y->sgal[i] = model_x->sgal[i] + scale * 0.5*(prior[i][1]+prior[i][0]) * rand_r_N_0_1(&chain->r[ic]);
         }
         else
         {
             //jump along correlated directions
-            double jump=gsl_ran_gaussian(chain->r[ic],1);
+            double jump=rand_r_N_0_1(&chain->r[ic]);
             for(int n=0; n<model_x->Nparams; n++)
             {
                 acc_jump_vec[n] = scale *  0.5*(prior[n][1]+prior[n][0]) * jump;
@@ -686,7 +683,7 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
             }
             
             //pick which vector
-            int i = (int)(gsl_rng_uniform(chain->r[ic])* (double)model_x->Nparams);
+            int i = (int)(rand_r_U_0_1(&chain->r[ic])* (double)model_x->Nparams);
             
             //jump
             for(int j=0; j<model_x->Nparams; j++)
@@ -702,7 +699,7 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         //get noise covariance matrix for initial parameters
         if(logPy > -INFINITY && !flags->prior)
         {
-            generate_galactic_foreground_model(data,orbit,model_y);
+            generate_galactic_foreground_model(model_y);
             copy_Cij(model_y->psd->C, psd->C, psd->Nchannel, psd->N);
             
             //add instrument noise contribution
@@ -716,7 +713,7 @@ void noise_foreground_model_mcmc(struct Orbit *orbit, struct Data *data, struct 
         }
         logH += logPy - logPx; //priors
         
-        loga = log(gsl_rng_uniform(chain->r[ic]));
+        loga = log(rand_r_U_0_1(&chain->r[ic]));
         if(logH > loga)
         {
             copy_foreground_model(model_y, model_x);

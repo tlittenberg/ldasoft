@@ -1,20 +1,17 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2019 Tyson B. Littenberg & Neil J. Cornish
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <glass_utils.h>
@@ -133,7 +130,7 @@ void parse_ucb_args(int argc, char **argv, struct Flags *flags)
                 if(strcmp("cheat",       long_options[long_index].name) == 0) flags->cheat      = 1;
                 if(strcmp("sources",     long_options[long_index].name) == 0)
                 {
-                    flags->DMAX = atoi(optarg)+1;
+                    flags->DMAX = atoi(optarg);
                 }
                 if(strcmp("em-prior",    long_options[long_index].name) == 0)
                 {
@@ -295,7 +292,7 @@ void print_ucb_catalog_script(struct Flags *flags, struct Data *data, struct Orb
 {
     
     //back out original input f & N
-    int samples = data->N - 2*data->qpad;
+    int samples = data->NFFT - 2*data->qpad;
     double fmin = data->fmin + data->qpad/data->T;
     
     char filename[MAXSTRINGSIZE];
@@ -376,7 +373,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     fprintf(fptr,"  Max # of sources......%i   \n",flags->DMAX-1);
     fprintf(fptr,"  MCMC steps............%i   \n",flags->NMCMC);
     fprintf(fptr,"  MCMC burnin steps.....%i   \n",flags->NBURN);
-    fprintf(fptr,"  MCMC chain seed ..... %li  \n",data->cseed);
+    fprintf(fptr,"  MCMC chain seed ..... %i   \n",data->cseed);
     fprintf(fptr,"  Number of threads ... %i   \n",flags->threads);
     fprintf(fptr,"  Run Directory is .... %s\n",flags->runDir);
     fprintf(fptr,"\n");
@@ -388,7 +385,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     if(flags->NINJ>0)
     {
         fprintf(fptr,"  Injected sources..... %i\n",flags->NINJ);
-        fprintf(fptr,"     seed ............. %li\n",data->iseed);
+        fprintf(fptr,"     seed ............. %i\n",data->iseed);
         for(int i=0; i<flags->NINJ; i++)
         {
             fprintf(fptr,"     source ........... %s\n",flags->injFile[i]);
@@ -409,7 +406,7 @@ void print_run_settings(int argc, char **argv, struct Data *data, struct Orbit *
     if(flags->simNoise)
     {
         fprintf(fptr,"  Noise simulation is.. ENABLED\n");
-        fprintf(fptr,"  Noise seed .......... %li  \n",data->nseed);
+        fprintf(fptr,"  Noise seed .......... %i  \n",data->nseed);
     }
     else                fprintf(fptr,"  Noise simulation is.. DISABLED\n");
     if(flags->rj)       fprintf(fptr,"  RJMCMC is ........... ENABLED\n");
@@ -477,7 +474,7 @@ void restore_chain_state(struct Orbit *orbit, struct Data *data, struct Model **
         for(int i=0; i<D; i++)
         {
             scan_source_params(data,model[n]->source[i], stateFile);
-            galactic_binary_fisher(orbit, data, model[n]->source[i], data->noise);
+            ucb_fisher(orbit, data, model[n]->source[i], data->noise);
         }
         
         generate_noise_model(data, model[n]);
@@ -541,7 +538,9 @@ void print_chain_files(struct Data *data, struct Model **model, struct Chain *ch
         if(flags->verbose)
         {
             //numerical SNR
-            double snr_n = snr(model[n]->source[i], data->noise);
+            double snr_n;
+            if(!strcmp("fourier",data->basis)) snr_n = snr(model[n]->source[i], data->noise);
+            if(!strcmp("wavelet",data->basis)) snr_n = snr_wavelet(model[n]->source[i], data->noise);
             //analytic SNR
             double snr_a = analytic_snr(exp(model[n]->source[i]->params[3]), data->noise->C[0][0][0], data->sine_f_on_fstar, data->sqT);
             
@@ -685,7 +684,7 @@ void print_psd_state(struct Data *data, struct Model *model, FILE *fptr, int ste
     fprintf(fptr, "%i ",step);
     fprintf(fptr, "%lg %lg ",model->logL, model->logLnorm);
     
-    for(int n=0; n<data->Nchannel; n++)
+    for(int n=0; n<data->Nchannel*data->Nlayer; n++)
         fprintf(fptr, "%lg ", model->noise->eta[n]);
 
     fprintf(fptr, "\n");
@@ -738,132 +737,161 @@ void save_waveforms(struct Data *data, struct Model *model, int mcmc)
     int n_re,n_im;
     double A_re,A_im,E_re,E_im,X_re,X_im,Y_re,Y_im,Z_re,Z_im,R_re,R_im;
     
-    switch(data->Nchannel)
+    if(!strcmp(data->format,"fourier"))
     {
-        case 1:
-            for(int n=0; n<data->N; n++)
-            {
-                n_re = 2*n;
-                n_im = n_re++;
-                
-                X_re = model->tdi->X[n_re];
-                X_im = model->tdi->X[n_im];
-                
-                data->h_rec[n_re][0][mcmc] = X_re;
-                data->h_rec[n_im][0][mcmc] = X_im;
-                
-                R_re = data->tdi->X[n_re] - X_re;
-                R_im = data->tdi->X[n_im] - X_im;
-                
-                data->h_res[n_re][0][mcmc] = R_re;
-                data->h_res[n_im][0][mcmc] = R_im;
-                
-                data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
-                data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
-                
-                data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
-            }
-            break;
-        case 2:
-            for(int n=0; n<data->N; n++)
-            {
-                n_re = 2*n;
-                n_im = n_re++;
-                
-                A_re = model->tdi->A[n_re];
-                A_im = model->tdi->A[n_im];
-                E_re = model->tdi->E[n_re];
-                E_im = model->tdi->E[n_im];
-                
-                data->h_rec[n_re][0][mcmc] = A_re;
-                data->h_rec[n_im][0][mcmc] = A_im;
-                data->h_rec[n_re][1][mcmc] = E_re;
-                data->h_rec[n_im][1][mcmc] = E_im;
-                
-                R_re = data->tdi->A[n_re] - A_re;
-                R_im = data->tdi->A[n_im] - A_im;
-                
-                data->h_res[n_re][0][mcmc] = R_re;
-                data->h_res[n_im][0][mcmc] = R_im;
-                
-                data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
-                
-                R_re = data->tdi->E[n_re] - E_re;
-                R_im = data->tdi->E[n_im] - E_im;
-                
-                data->h_res[n_re][1][mcmc] = R_re;
-                data->h_res[n_im][1][mcmc] = R_im;
-                
-                data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
-                
-                data->h_pow[n][0][mcmc] = A_re*A_re + A_im*A_im;
-                data->h_pow[n][1][mcmc] = E_re*E_re + E_im*E_im;
-                
-                data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
-                data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
-            }
-            break;
-        case 3:
-            for(int n=0; n<data->N; n++)
-            {
-                n_re = 2*n;
-                n_im = n_re++;
-                
-                X_re = model->tdi->X[n_re];
-                X_im = model->tdi->X[n_im];
-                Y_re = model->tdi->Y[n_re];
-                Y_im = model->tdi->Y[n_im];
-                Z_re = model->tdi->Z[n_re];
-                Z_im = model->tdi->Z[n_im];
-                
-                data->h_rec[n_re][0][mcmc] = X_re;
-                data->h_rec[n_im][0][mcmc] = X_im;
-                data->h_rec[n_re][1][mcmc] = Y_re;
-                data->h_rec[n_im][1][mcmc] = Y_im;
-                data->h_rec[n_re][2][mcmc] = Z_re;
-                data->h_rec[n_im][2][mcmc] = Z_im;
-                
-                R_re = data->tdi->X[n_re] - X_re;
-                R_im = data->tdi->X[n_im] - X_im;
-                
-                data->h_res[n_re][0][mcmc] = R_re;
-                data->h_res[n_im][0][mcmc] = R_im;
-                
-                data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
-                
-                R_re = data->tdi->Y[n_re] - Y_re;
-                R_im = data->tdi->Y[n_im] - Y_im;
-                
-                data->h_res[n_re][1][mcmc] = R_re;
-                data->h_res[n_im][1][mcmc] = R_im;
-                
-                data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
-                
-                R_re = data->tdi->Z[n_re] - Z_re;
-                R_im = data->tdi->Z[n_im] - Z_im;
-                
-                data->h_res[n_re][2][mcmc] = R_re;
-                data->h_res[n_im][2][mcmc] = R_im;
-                
-                data->r_pow[n][2][mcmc] = R_re*R_re + R_im*R_im;
-                
-                
-                data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
-                data->h_pow[n][1][mcmc] = Y_re*Y_re + Y_im*Y_im;
-                data->h_pow[n][2][mcmc] = Z_re*Z_re + Z_im*Z_im;
-                
-                data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
-                data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
-                data->S_pow[n][2][mcmc] = 1./model->noise->invC[2][2][n];
-                
-            }
-            break;
+        switch(data->Nchannel)
+        {
+            case 1:
+                for(int n=0; n<data->NFFT; n++)
+                {
+                    n_re = 2*n;
+                    n_im = n_re++;
+                    
+                    X_re = model->tdi->X[n_re];
+                    X_im = model->tdi->X[n_im];
+                    
+                    data->h_rec[n_re][0][mcmc] = X_re;
+                    data->h_rec[n_im][0][mcmc] = X_im;
+                    
+                    R_re = data->tdi->X[n_re] - X_re;
+                    R_im = data->tdi->X[n_im] - X_im;
+                    
+                    data->h_res[n_re][0][mcmc] = R_re;
+                    data->h_res[n_im][0][mcmc] = R_im;
+                    
+                    data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
+                    data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
+                    
+                    data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+                }
+                break;
+            case 2:
+                for(int n=0; n<data->NFFT; n++)
+                {
+                    n_re = 2*n;
+                    n_im = n_re++;
+                    
+                    A_re = model->tdi->A[n_re];
+                    A_im = model->tdi->A[n_im];
+                    E_re = model->tdi->E[n_re];
+                    E_im = model->tdi->E[n_im];
+                    
+                    data->h_rec[n_re][0][mcmc] = A_re;
+                    data->h_rec[n_im][0][mcmc] = A_im;
+                    data->h_rec[n_re][1][mcmc] = E_re;
+                    data->h_rec[n_im][1][mcmc] = E_im;
+                    
+                    R_re = data->tdi->A[n_re] - A_re;
+                    R_im = data->tdi->A[n_im] - A_im;
+                    
+                    data->h_res[n_re][0][mcmc] = R_re;
+                    data->h_res[n_im][0][mcmc] = R_im;
+                    
+                    data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    R_re = data->tdi->E[n_re] - E_re;
+                    R_im = data->tdi->E[n_im] - E_im;
+                    
+                    data->h_res[n_re][1][mcmc] = R_re;
+                    data->h_res[n_im][1][mcmc] = R_im;
+                    
+                    data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    data->h_pow[n][0][mcmc] = A_re*A_re + A_im*A_im;
+                    data->h_pow[n][1][mcmc] = E_re*E_re + E_im*E_im;
+                    
+                    data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+                    data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
+                }
+                break;
+            case 3:
+                for(int n=0; n<data->NFFT; n++)
+                {
+                    n_re = 2*n;
+                    n_im = n_re++;
+                    
+                    X_re = model->tdi->X[n_re];
+                    X_im = model->tdi->X[n_im];
+                    Y_re = model->tdi->Y[n_re];
+                    Y_im = model->tdi->Y[n_im];
+                    Z_re = model->tdi->Z[n_re];
+                    Z_im = model->tdi->Z[n_im];
+                    
+                    data->h_rec[n_re][0][mcmc] = X_re;
+                    data->h_rec[n_im][0][mcmc] = X_im;
+                    data->h_rec[n_re][1][mcmc] = Y_re;
+                    data->h_rec[n_im][1][mcmc] = Y_im;
+                    data->h_rec[n_re][2][mcmc] = Z_re;
+                    data->h_rec[n_im][2][mcmc] = Z_im;
+                    
+                    R_re = data->tdi->X[n_re] - X_re;
+                    R_im = data->tdi->X[n_im] - X_im;
+                    
+                    data->h_res[n_re][0][mcmc] = R_re;
+                    data->h_res[n_im][0][mcmc] = R_im;
+                    
+                    data->r_pow[n][0][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    R_re = data->tdi->Y[n_re] - Y_re;
+                    R_im = data->tdi->Y[n_im] - Y_im;
+                    
+                    data->h_res[n_re][1][mcmc] = R_re;
+                    data->h_res[n_im][1][mcmc] = R_im;
+                    
+                    data->r_pow[n][1][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    R_re = data->tdi->Z[n_re] - Z_re;
+                    R_im = data->tdi->Z[n_im] - Z_im;
+                    
+                    data->h_res[n_re][2][mcmc] = R_re;
+                    data->h_res[n_im][2][mcmc] = R_im;
+                    
+                    data->r_pow[n][2][mcmc] = R_re*R_re + R_im*R_im;
+                    
+                    
+                    data->h_pow[n][0][mcmc] = X_re*X_re + X_im*X_im;
+                    data->h_pow[n][1][mcmc] = Y_re*Y_re + Y_im*Y_im;
+                    data->h_pow[n][2][mcmc] = Z_re*Z_re + Z_im*Z_im;
+                    
+                    data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+                    data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
+                    data->S_pow[n][2][mcmc] = 1./model->noise->invC[2][2][n];
+                    
+                }
+                break;
+        }
+    }//end if Fourier
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        for(int n=0; n<data->N; n++)
+        {
+            data->h_rec[n][0][mcmc] = model->tdi->X[n];
+            data->h_rec[n][1][mcmc] = model->tdi->Y[n];
+            data->h_rec[n][2][mcmc] = model->tdi->Z[n];
+            
+            data->h_res[n][0][mcmc] = data->tdi->X[n] - model->tdi->X[n];
+            data->h_res[n][1][mcmc] = data->tdi->Y[n] - model->tdi->Y[n];
+            data->h_res[n][2][mcmc] = data->tdi->Z[n] - model->tdi->Z[n];
+            
+            data->r_pow[n][0][mcmc] = data->h_res[n][0][mcmc]*data->h_res[n][0][mcmc];
+            data->r_pow[n][1][mcmc] = data->h_res[n][1][mcmc]*data->h_res[n][1][mcmc];
+            data->r_pow[n][2][mcmc] = data->h_res[n][2][mcmc]*data->h_res[n][2][mcmc];
+            
+            
+            data->h_rec[n][0][mcmc] = model->tdi->X[n]*model->tdi->X[n];
+            data->h_rec[n][1][mcmc] = model->tdi->Y[n]*model->tdi->Y[n];
+            data->h_rec[n][2][mcmc] = model->tdi->Z[n]*model->tdi->Z[n];
+            
+            data->S_pow[n][0][mcmc] = 1./model->noise->invC[0][0][n];
+            data->S_pow[n][1][mcmc] = 1./model->noise->invC[1][1][n];
+            data->S_pow[n][2][mcmc] = 1./model->noise->invC[2][2][n];
+        }
     }
 }
 
 void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
 {
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<data->NFFT; n++)
     {
         int re = 2*n;
         int im = re+1;
@@ -905,30 +933,50 @@ void print_waveform(struct Data *data, struct Model *model, FILE *fptr)
 
 void print_waveform_strain(struct Data *data, struct Model *model, FILE *fptr)
 {
-    for(int n=0; n<data->N; n++)
+    if(!strcmp(data->basis,"fourier"))
     {
-        int re = 2*n;
-        int im = re+1;
-        double f = data->fmin + (double)n/data->T;
-
-        fprintf(fptr,"%.12g ",f);
-        switch(data->Nchannel)
+        for(int n=0; n<data->NFFT; n++)
         {
-            case 2:
-                fprintf(fptr,"%.12g ",model->tdi->A[re]);
-                fprintf(fptr,"%.12g ",model->tdi->A[im]);
-                fprintf(fptr,"%.12g ",model->tdi->E[re]);
-                fprintf(fptr,"%.12g\n",model->tdi->E[im]);
-                break;
-            case 3:
-                fprintf(fptr,"%.12g ",model->tdi->X[re]);
-                fprintf(fptr,"%.12g ",model->tdi->X[im]);
-                fprintf(fptr,"%.12g ",model->tdi->Y[re]);
-                fprintf(fptr,"%.12g ",model->tdi->Y[im]);
-                fprintf(fptr,"%.12g ",model->tdi->Z[re]);
-                fprintf(fptr,"%.12g\n",model->tdi->Z[im]);
-                break;
-
+            int re = 2*n;
+            int im = re+1;
+            double f = data->fmin + (double)n/data->T;
+            
+            fprintf(fptr,"%.12g ",f);
+            switch(data->Nchannel)
+            {
+                case 2:
+                    fprintf(fptr,"%.12g ",model->tdi->A[re]);
+                    fprintf(fptr,"%.12g ",model->tdi->A[im]);
+                    fprintf(fptr,"%.12g ",model->tdi->E[re]);
+                    fprintf(fptr,"%.12g\n",model->tdi->E[im]);
+                    break;
+                case 3:
+                    fprintf(fptr,"%.12g ",model->tdi->X[re]);
+                    fprintf(fptr,"%.12g ",model->tdi->X[im]);
+                    fprintf(fptr,"%.12g ",model->tdi->Y[re]);
+                    fprintf(fptr,"%.12g ",model->tdi->Y[im]);
+                    fprintf(fptr,"%.12g ",model->tdi->Z[re]);
+                    fprintf(fptr,"%.12g\n",model->tdi->Z[im]);
+                    break;
+                    
+            }
+        }
+    }
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        for(int j=0; j<data->wdm->NF; j++)
+        {
+            for(int i=0; i<data->wdm->NT; i++)
+            {
+                int k;
+                wavelet_pixel_to_index(data->wdm, i, j, &k);
+                fprintf(fptr,"%.12g %.12g ",i*WAVELET_DURATION,j*WAVELET_BANDWIDTH + WAVELET_BANDWIDTH/2);
+                fprintf(fptr,"%.12g ",model->tdi->X[k]);
+                fprintf(fptr,"%.12g ",model->tdi->Y[k]);
+                fprintf(fptr,"%.12g ",model->tdi->Z[k]);
+                fprintf(fptr,"\n");
+            }
+            fprintf(fptr,"\n");
         }
     }
 }
@@ -951,27 +999,31 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     FILE *fptr_res;
     FILE *fptr_var;
     
+    int Nsamples;
+    if(!strcmp(data->basis,"fourier")) Nsamples = data->NFFT;
+    if(!strcmp(data->basis,"wavelet")) Nsamples = data->N;
+    
     //get variance of residual
-    double **res_var = malloc(data->N*sizeof(double *));
-    for(int n=0; n<data->N; n++)
+    double **res_var = malloc(Nsamples*sizeof(double *));
+    for(int n=0; n<Nsamples; n++)
         res_var[n] = calloc(data->Nchannel,sizeof(double));
     
-    for(int n=0; n<data->N*2; n++)
+    for(int n=0; n<Nsamples; n++)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
-            gsl_sort(data->h_rec[n][m],1,data->Nwave);
+            double_sort(data->h_rec[n][m],data->Nwave);
         }
     }
     
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<Nsamples; n++)
     {
         for(int m=0; m<data->Nchannel; m++)
         {
-            gsl_sort(data->r_pow[n][m],1,data->Nwave);
-            gsl_sort(data->h_pow[n][m],1,data->Nwave);
-            gsl_sort(data->S_pow[n][m],1,data->Nwave);
-            res_var[n][m] = gsl_stats_variance(data->h_rec[2*n][m], 1, data->Nwave)+gsl_stats_variance(data->h_rec[2*n+1][m], 1, data->Nwave);
+            double_sort(data->r_pow[n][m],data->Nwave);
+            double_sort(data->h_pow[n][m],data->Nwave);
+            double_sort(data->S_pow[n][m],data->Nwave);
+            res_var[n][m] = get_variance(data->h_rec[2*n][m], data->Nwave)+get_variance(data->h_rec[2*n+1][m], data->Nwave);
         }
     }
     
@@ -984,7 +1036,7 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     
     double med,lo_50,hi_50,lo_90,hi_90;
     
-    for(int i=0; i<data->N; i++)
+    for(int i=0; i<Nsamples; i++)
     {
         double f = (double)(i+data->qmin)/data->T;
         fprintf(fptr_var,"%.12g ",f);
@@ -995,11 +1047,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
         {
             fprintf(fptr_var,"%.12g ",res_var[i][n]);
             
-            med   = gsl_stats_median_from_sorted_data   (data->r_pow[i][n], 1, data->Nwave);
-            lo_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.25);
-            hi_50 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.75);
-            lo_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.05);
-            hi_90 = gsl_stats_quantile_from_sorted_data (data->r_pow[i][n], 1, data->Nwave, 0.95);
+            med   = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.50);
+            lo_50 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.25);
+            hi_50 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.75);
+            lo_90 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.05);
+            hi_90 = get_quantile_from_sorted_data (data->r_pow[i][n], data->Nwave, 0.95);
             
             fprintf(fptr_res,"%lg ",med);
             fprintf(fptr_res,"%lg ",lo_50);
@@ -1007,11 +1059,11 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
             fprintf(fptr_res,"%lg ",lo_90);
             fprintf(fptr_res,"%lg ",hi_90);
             
-            med   = gsl_stats_median_from_sorted_data   (data->h_pow[i][n], 1, data->Nwave);
-            lo_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.25);
-            hi_50 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.75);
-            lo_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.05);
-            hi_90 = gsl_stats_quantile_from_sorted_data (data->h_pow[i][n], 1, data->Nwave, 0.95);
+            med   = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.50);
+            lo_50 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.25);
+            hi_50 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.75);
+            lo_90 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.05);
+            hi_90 = get_quantile_from_sorted_data (data->h_pow[i][n], data->Nwave, 0.95);
             
             fprintf(fptr_rec,"%lg ",med);
             fprintf(fptr_rec,"%lg ",lo_50);
@@ -1029,12 +1081,64 @@ void print_waveforms_reconstruction(struct Data *data, struct Flags *flags)
     fclose(fptr_res);
     fclose(fptr_rec);
     
-    for(int n=0; n<data->N; n++)
+    for(int n=0; n<Nsamples; n++)
     {
         free(res_var[n]);
     }
     free(res_var);
 }
+
+
+void print_psd_draw(struct Data *data, struct Model *model, struct Flags *flags)
+{
+    FILE *fptr;
+    char filename[128];
+    
+    sprintf(filename,"%s/psd_draw.dat",data->dataDir);
+    fptr=fopen(filename,"w");
+
+    if(!strcmp(data->basis,"fourier"))
+    {
+        for(int n=0; n<data->NFFT; n++)
+        {
+            double f = data->fmin + n/data->T;
+            
+            fprintf(fptr,"%lg ",f);
+            fprintf(fptr,"%lg ", model->noise->C[0][0][n]);
+            fprintf(fptr,"%lg ", model->noise->C[1][1][n]);
+            fprintf(fptr,"%lg ", model->noise->C[2][2][n]);
+            fprintf(fptr,"\n");
+        }
+    }
+    if(!strcmp(data->basis,"wavelet"))
+    {
+        for(int n=0; n<data->Nlayer; n++)
+        {
+            int k;
+            double fmin = (data->lmin + n)*WAVELET_BANDWIDTH;
+            double fmax = fmin + WAVELET_BANDWIDTH;
+            
+            wavelet_pixel_to_index(data->wdm, 0, data->lmin + n, &k);
+            k-=data->wdm->kmin;
+            
+            fprintf(fptr,"%lg ",fmin);
+            fprintf(fptr,"%lg ", model->noise->C[0][0][k]);
+            fprintf(fptr,"%lg ", model->noise->C[1][1][k]);
+            fprintf(fptr,"%lg ", model->noise->C[2][2][k]);
+            fprintf(fptr,"\n");
+            
+            fprintf(fptr,"%lg ",fmax);
+            fprintf(fptr,"%lg ", model->noise->C[0][0][k]);
+            fprintf(fptr,"%lg ", model->noise->C[1][1][k]);
+            fprintf(fptr,"%lg ", model->noise->C[2][2][k]);
+            
+            fprintf(fptr,"\n");
+        }
+    }
+    fclose(fptr);
+}
+
+
 
 void print_evidence(struct Chain *chain,struct Flags *flags)
 {

@@ -1,6 +1,17 @@
-/**
- @file ucb_grid.c
- \brief App for setting up frequency grid based on UCB catalog
+/*
+ * Copyright 2024 Tyson B. Littenberg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <stdlib.h>
@@ -8,9 +19,8 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include <gsl/gsl_sort.h>
+#include <glass_utils.h>
 
-#define YEAR 31457280
 #define UCB_PER_SEGMENT 15
 #define MAX_UCB_FREQUENCY 0.012
 #define SEGMENT_BANDWIDTH 1E-5
@@ -43,7 +53,7 @@ int main(int argc, char* argv[])
     }
     fclose(cachefile);
     
-    gsl_sort(f, 1, count);
+    double_sort(f,count);
     
     
     FILE *outfile = fopen("ucb_grid.dat","w");

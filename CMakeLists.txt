@@ -21,12 +21,12 @@ set(CMAKE_C_COMPILER mpicc)
 project(ldasoft VERSION 1.0.0 LANGUAGES C)
 
 # External packages
-find_package(GSL REQUIRED)
+find_package(LAPACK REQUIRED)
+find_package(OpenBLAS REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(MPI REQUIRED)
-find_package(MBH)
-
+find_package(KISSFFT REQUIRED)
 
 # set cflags
 if(APPLE)
@@ -76,8 +76,4 @@ add_subdirectory(utils)
 add_subdirectory(ucb)
 add_subdirectory(noise)
 add_subdirectory(apps)
-if(MBH_FOUND)
-  add_subdirectory(globalfit)
-else()
-   message(STATUS "MBH module not found, skipping GlobalFit install")
-endif()
+add_subdirectory(globalfit)

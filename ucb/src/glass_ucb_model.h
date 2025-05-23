@@ -1,20 +1,17 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2019 Tyson B. Littenberg & Neil J. Cornish
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -71,6 +68,12 @@ struct Model
     double logL; //!<unnormalized log likelihood \f$ -(d-h|d-h)/2 \f$
     double logLnorm; //!<normalization of log likelihood \f$ \propto -\log \det C \f$
     ///@}
+
+    ///@name Wavelet bookkeeping
+    ///@{
+    int *list; //!<list of active wavelet pixels
+    int Nlist; //!<number of active wavelet pixels
+    ///@}
 };
 
 /**
@@ -78,7 +81,7 @@ struct Model
 */
 struct Source
 {
-    /// Array containing parameters to be passed to galactic_binary()
+    /// Array containing parameters to be passed to ucb_waveform()
     double *params;
 
     /// Instrument response to signal with Source::params \f$ h(\vec\theta) \f$
@@ -129,6 +132,13 @@ struct Source
     double *fisher_evalue;  //!<Eigenvalues of covariance matrix
     int fisher_update_flag; //!<1 if fisher needs update, 0 if not
     ///@}
+
+    ///@name Wavelet bookkeeping
+    ///@{
+    int *list; //!<list of active wavelet pixels
+    int Nlist; //!<number of active wavelet pixels
+    ///@}
+
 };
 
 /**
@@ -138,6 +148,7 @@ struct Source
  in the Model::Source, and creates meta template of all sources in the model.
  */
 void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id);
+void generate_signal_model_wavelet(struct Orbit *orbit, struct Data *data, struct Model *model, int source_id);
 
 /**
 \brief Modify galactic binary model waveform
@@ -146,6 +157,7 @@ void generate_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
  in the Model::Source, and updates meta template of all sources in the model.
  */
 void update_signal_model(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id);
+void update_signal_model_wavelet(struct Orbit *orbit, struct Data *data, struct Model *model_x, struct Model *model_y, int source_id);
 
 /**
 \brief F-statistic maximization of galactic binary parameters
@@ -164,6 +176,7 @@ void maximize_signal_model(struct Orbit *orbit, struct Data *data, struct Model 
  Computes \f$S_n(f)\f$ from Model::noise.
  */
 void generate_noise_model(struct Data *data, struct Model *model);
+void generate_noise_model_wavelet(struct Data *data, struct Model *model);
 
 /**
  \brief Create LISA instrument calibration model
@@ -216,6 +229,7 @@ double gaussian_log_likelihood_model_norm(struct Data *data, struct Model *model
  */
 double delta_log_likelihood(struct Data *data, struct Model *model_x, struct Model *model_y, int source_id);
 
+double gaussian_log_likelhood_wavelet(struct Data *data, struct Model *model);
 
 /**
  \brief Check for increase in maximum log likelihood
@@ -237,8 +251,8 @@ void map_array_to_params(struct Source *source, double *params, double T);
 
 /** @name Allocate memory for structures */
 ///@{
-void alloc_model(struct Model *model, int Nmax, int NFFT, int Nchannel);
-void alloc_source(struct Source *source, int NFFT, int Nchannel);
+void alloc_model(struct Data *data, struct Model *model, int Nmax);
+void alloc_source(struct Source *source, int N, int Nchannel);
 ///@}
 
 /**
@@ -268,5 +282,9 @@ void free_source(struct Source *source);
 int compare_model(struct Model *a, struct Model *b);
 
 void remove_signal_model(struct Data *data, struct Model *model, struct Source *source);
+void remove_signal_model_wavelet(struct Data *data, struct Model *model, struct Source *source);
+
 void add_signal_model(struct Data *data, struct Model *model, struct Source *source);
+void add_signal_model_wavelet(struct Data *data, struct Model *model, struct Source *source);
+
 #endif /* ucb_model_h */

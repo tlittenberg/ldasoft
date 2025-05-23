@@ -1,14 +1,25 @@
+/*
+ * Copyright 2019 Tyson B. Littenberg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-/***************************  REQUIRED LIBRARIES  ***************************/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
-
-#include <gsl/gsl_sort.h>
-#include <gsl/gsl_randist.h>
 
 #include <glass_utils.h>
 
@@ -39,7 +50,7 @@ double beta(double f, double fdot, double fddot)
   return (11.*(-3*sqrt(f*fddot)+sqrt(33.)*fdot)*pow((sqrt(fddot)*fdot)/(-30.*sqrt(f*fddot) + 11.*sqrt(33.)*fdot),2./5.)*pow(5./M_PI,2./5.))/(12.*pow(f,11./10.)*sqrt(fddot));
 }
 
-double galactic_binary_dL(double f0, double dfdt, double A)
+double distance(double f0, double dfdt, double A)
 {
   double f    = f0;//T;
   double fd = dfdt;//(T*T);
@@ -76,12 +87,7 @@ int main(int argc, char* argv[])
   }
   
   //set up RNG in case tidal params are used
-  const gsl_rng_type * T;
-  gsl_rng * r;
-  gsl_rng_env_setup();
-  T = gsl_rng_default;
-  r = gsl_rng_alloc (T);
-  
+  unsigned int r = 150914;
   
   
   char filename[128];
@@ -146,7 +152,7 @@ int main(int argc, char* argv[])
     {
       do
       {
-        alpha = alpha0+dalpha0*gsl_ran_gaussian(r,1.0);
+        alpha = alpha0+dalpha0*rand_r_N_0_1(&r);
       }while(alpha < 0.0);
     }
     else alpha = 0.0;
@@ -156,7 +162,7 @@ int main(int argc, char* argv[])
     {
       Mc = M_fdot_fddot(f,fdot,fddot);
       B = beta(f,fdot,fddot);
-      fprintf(ofile3,"%.12g %.12g %.12g %.12g %.12g\n",phi*RAD2ARCMIN,theta*RAD2ARCMIN,galactic_binary_dL(f,fdot,A)/(1.+alpha),acos(cosi)*RAD2DEGREE,M_fdot(f,fdot));
+      fprintf(ofile3,"%.12g %.12g %.12g %.12g %.12g\n",phi*RAD2ARCMIN,theta*RAD2ARCMIN,distance(f,fdot,A)/(1.+alpha),acos(cosi)*RAD2DEGREE,M_fdot(f,fdot));
       fprintf(ofile2,"%.12g %.12g %.12g\n",f,fdot,fddot);
       if(Mc==Mc && B==B) fprintf(ofile,"%.12g %.12g %.12g %.12g\n",M_fdot(f,fdot),M_fddot(f,fddot),M_fdot_fddot(f,fdot,fddot),beta(f,fdot,fddot));
     }

@@ -1,20 +1,17 @@
 /*
- *  Copyright (C) 2019 Tyson B. Littenberg (MSFC-ST12), Neil J. Cornish
+ * Copyright 2023 Tyson B. Littenberg
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -26,8 +23,18 @@
 #define glass_data_h
 
 #define N_TDI_CHANNELS 3
-#define FILTER_LENGTH 5e4 //seconds
+#define FILTER_LENGTH 5e3 //seconds
 #define MAXSTRINGSIZE 1024 //!<maximum number of characters for `path+filename` strings
+
+
+//#define WAVELET_DURATION 7680.0
+//#define WAVELET_BANDWIDTH 6.51041666666667e-5
+//#define WAVELET_DURATION 20480.0 //!<duration of wavelet pixels [s]
+//#define WAVELET_BANDWIDTH 2.44140625e-05 //!<bandwidth of wavelet pixels [Hz]
+//#define WAVELET_DURATION 40960.0 //!<duration of wavelet pixels [s]
+//#define WAVELET_BANDWIDTH 1.220703125e-05 //!<bandwidth of wavelet pixels [Hz]
+#define WAVELET_DURATION 81920.0 //!<duration of wavelet pixels [s]
+#define WAVELET_BANDWIDTH 6.103515625e-06 //!<bandwidth of wavelet pixels [Hz]
 
 /*!
  * \brief Analaysis segment and meta data about size of segment, location in full data stream, and LISA observation parameters.
@@ -43,17 +50,19 @@
 struct Data
 {
     /** @name Size of Data and Model */
-     ///@{
-    int N;        //!<number of frequency bins
+    ///@{
+    int N;        //!<number of data points bins
+    int NFFT;     //!<number of frequency bins
     int Nchannel; //!<number of data channels
+    int Nlayer;   //!<number of frequency layers
     double logN;  //!<log total number of data points \f$ \log ( 2 \times N \times N_{\rm channel} \times N_{\rm T} )\f$
     ///@}
 
     /** @name Random Number Generator Seeds */
      ///@{
-    long cseed; //!<seed for MCMC set by `[--chainseed=INT; default=150914]`
-    long nseed; //!<seed for noise realization set by `[--noiseseed=INT; default=151226]`
-    long iseed; //!<seed for injection parameters set by `[--injseed=INT; default=151012]`
+    unsigned int cseed; //!<seed for MCMC set by `[--chainseed=INT; default=150914]`
+    unsigned int nseed; //!<seed for noise realization set by `[--noiseseed=INT; default=151226]`
+    unsigned int iseed; //!<seed for injection parameters set by `[--injseed=INT; default=151012]`
     ///@}
 
     /** @name Time of Observations */
@@ -63,28 +72,32 @@ struct Data
     double t0;   //!<start times of segments
     ///@}
 
-    
+    /** @name Wavelet Basis */
+    struct Wavelets *wdm;
+
     /** @name Analysis Frequency Segment */
      ///@{
-    int qmin; //!<minimum frequency bin of segment
-    int qmax; //!<maximum frequency bin of segment
-    int qpad; //!<number of frequency bins padding ends of segment
+    int qmin; //!<minimum DFT frequency bin of segment
+    int qmax; //!<maximum DFT frequency bin of segment
+    int qpad; //!<number of DFT frequency bins padding ends of segment
     
+    int lmin; //!<minimum DWT frequency layer
+    int lmax; //!<maximum DWT frequency layer
+
     double fmin; //!<minimum frequency of segment
     double fmax; //!<maximum frequency of segment
     double sine_f_on_fstar; //!<\f$sin(f * 2\pi L/c)\f$
 
-    //some manipulations of f,fmin for likelihood calculation
-    double sum_log_f; //!<\f$\sum \log(f)\f$ appears in some normalizations
-    double logfmin; //!<\f$\log(f_{\rm min})\f$ appears in some normalizations
-    double logfmax; //!<\f$\log(f_{\rm max})\f$ appears spline setup for bayesline
     ///@}
 
     /** @name TDI Data and Noise */
      ///@{
     struct TDI *tdi; //!<TDI data channels as seen by sampler
     struct TDI *raw; //!<TDI data channels unaltered from input
+    struct TDI *dft; //!<Fourier transform of TDI data channels
+    struct TDI *dwt; //!<Wavelet transform of TDI data channels
     struct Noise *noise; //!<Reference noise model
+
     /**
      \brief Convention for data format
      
@@ -94,6 +107,14 @@ struct Data
      */
     char format[16];
     char dataDir[MAXSTRINGSIZE]; //!<Directory for storing data files
+
+    /** 
+     \brief Basis for analysis
+
+     basis = "fourier" for frequency-domain analysis
+     basis = "wavelet" for WDM wavelet-domain analysis
+    */
+    char basis[16];
 
     //Spectrum proposal
     double *p; //!<power spectral density of data
@@ -149,6 +170,7 @@ struct Flags
     int NVB;        //!<number of known binaries for `vb_mcmc`
     int DMAX;       //!<`[--sources=INT; default=10]`: max number of sources
     int simNoise;   //!<`[--sim-noise; default=FALSE]`: simulate random noise realization and add to data
+    int stationary; //!<`[--stationary; default=FALSE]`: use stationary noise model in wavelet domain
     int fixSky;     //!<`[--fix-sky; default=FALSE]`: hold sky location fixed to injection parameters.  Set to `TRUE` if Flags::knownSource=`TRUE`.
     int fixFdot;
     int fixFreq;    //!<`[--fix-freq; default=FALSE]`: hold GW frequency fixed to injection parameters
@@ -237,16 +259,8 @@ struct Chain
     /// Store the maximum value of \f$\log p(d|\vec\theta)\f$ encountered by the chain.  Used for determining when burn-in is complete.
     double logLmax;
     
-    /** @name Random Number Generator (RNG) Data Types
-     Thread-safe random number generator data types used by `GSL`
-     */
-     ///@{
-    /// Needed for initializing RNG
-    const gsl_rng_type **T;
-    
-    /// Seed for RNGs for each parallel chain.
-    gsl_rng **r;
-    ///@}
+    /// Random Number Generator (RNG) seed
+    unsigned int *r;
     
     /** @name Chain File Pointers
      By default only the cold chain `M=0` is saved.  When Flags::verbose = `TRUE` files for each of the parallel chain are written.
@@ -319,9 +333,15 @@ struct Noise
 {
     /// Number of data samples fit by noise model
     int N;
-    
+
+    /// Minimum index of wavelet pixels  
+    int kmin; 
+
     /// Number of TDI channels
     int Nchannel;
+    
+    /// Number of frequency layers (for DWT data)
+    int Nlayer;
     
     ///@name Constant Noise Parameters
     ///Each \f$\eta\f$ is a multiplier to the assumed noise level \f$S_n\f$ stored in Data structure. One per channel (`X` for 4-link, `A`,`E` or `X`,`Y`,`Z` for 6-link)
@@ -409,12 +429,12 @@ void initialize_orbit(struct Data *data, struct Orbit *orbit, struct Flags *flag
 /**
  \brief Allocates and initializes Chain structure and prepares output files.
  */
-void initialize_chain(struct Chain *chain, struct Flags *flags, long *seed, const char *mode);
+void initialize_chain(struct Chain *chain, struct Flags *flags, unsigned int *seed, const char *mode);
 
 /** @name Allocate memory for structures */
 ///@{
 void alloc_data(struct Data *data, struct Flags *flags);
-void alloc_noise(struct Noise *noise, int NFFT, int Nchannel);
+void alloc_noise(struct Noise *noise, int N, int Nlayer, int Nchannel);
 void alloc_calibration(struct Calibration *calibration);
 ///@}
 
@@ -445,7 +465,7 @@ void ReadData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 /**
  \brief Reads LDC-formatted HDF5 data using `--h5-data` flag
  */
-void ReadHDF5(struct Data *data, struct TDI *tdi, struct Flags *flags);
+void ReadHDF5(struct Data *data, struct TDI *tdi, struct TDI *tdi_dwt, struct Flags *flags);
 
 /**
  \brief Reads ASCII data using `--data` flag
@@ -457,25 +477,32 @@ void ReadASCII(struct Data *data, struct TDI *tdi);
  */
 void GetNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
-/**
- \brief Add simulated Gaussian noise realization to data
- */
+/** @name Add simulated Gaussian noise realization to data */
+///@{
 void AddNoise(struct Data *data, struct TDI *tdi);
+void AddNoiseWavelet(struct Data *data, struct TDI *tdi);
+///@}
 
 /**
  \brief Generate noise-only simulated data
  */
 void SimulateData(struct Data *data, struct Orbit *orbit, struct Flags *flags);
 
+/** @name Wrapper functions that call data print functions */
+///@{
+void print_data(struct Data *data, struct Flags *flags);
+void print_wavelet_fourier_spectra(struct Data *data, struct TDI *tdi, char filename[]);
+///@}
+
 /**
- \brief Wrapper function that calls data print functions
+ \brief convert DWT of TDI data to DFT
  */
-void print_data(struct Data *data, struct TDI *tdi, struct Flags *flags);
+void wavelet_layer_to_fourier_transform(struct Data *data);
 
 /**
  \brief Parse command line
  */
-void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain);
+void parse_data_args(int argc, char **argv, struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Chain *chain, char basis[]);
 
 /**
  \brief copy `argv` string because `parse()` does not preserve order

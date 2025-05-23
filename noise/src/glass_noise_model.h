@@ -1,21 +1,19 @@
 /*
- *  Copyright (C) 2023 Tyson B. Littenberg (MSFC-ST12)
+ * Copyright 2023 Tyson B. Littenberg & Neil J. Cornish
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- *  You should have received a copy of the GNU General Public License
- *  along with with program; see the file COPYING. If not, write to the
- *  Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
- *  MA  02111-1307  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 
 /**
  @file glass_noise_model.h
@@ -86,6 +84,8 @@ struct ForegroundModel
     double fk;
     double f2;    //!< some other frequency parameter? (~0.53 mHz)
      ///@}
+
+    struct GalaxyModulation *modulation; //!< time-series of modulation
 };
 
 /**
@@ -113,17 +113,17 @@ void map_array_to_foreground_params(struct ForegroundModel *model);
 /**
  \brief Allocates spline model structure and contents.
  */
-void alloc_spline_model(struct SplineModel *model, int Ndata, int Nchannel, int Nspline);
+void alloc_spline_model(struct SplineModel *model, int Ndata, int Nlayer, int Nchannel, int Nspline);
 
 /**
  \brief Allocates instrument model structure and contents.
  */
-void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nchannel);
+void alloc_instrument_model(struct InstrumentModel *model, int Ndata, int Nlayer, int Nchannel);
 
 /**
  \brief Allocates galactic foreground model structure and contents.
  */
-void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nchannel);
+void alloc_foreground_model(struct ForegroundModel *model, int Ndata, int Nlayer, int Nchannel);
 
 /**
  \brief Free allocated spline model.
@@ -163,17 +163,20 @@ void generate_spline_noise_model(struct SplineModel *model);
 /**
  \brief Compute instrument model contribution to noise covariance matrix based on current state of `model`
  */
-void generate_instrument_noise_model(struct Data *data, struct Orbit *orbit, struct InstrumentModel *model);
+void generate_instrument_noise_model(struct Orbit *orbit, struct InstrumentModel *model);
+void generate_instrument_noise_model_wavelet(struct Wavelets *wdm, struct Orbit *orbit, struct InstrumentModel *model);
 
 /**
  \brief Compute galactic foreground contribution to covariance matrix based on current state of `model`
  */
-void generate_galactic_foreground_model(struct Data *data, struct Orbit *orbit, struct ForegroundModel *model);
+void generate_galactic_foreground_model(struct ForegroundModel *model);
+void generate_galactic_foreground_model_wavelet(struct Wavelets *wdm, struct ForegroundModel *model);
 
 /**
  \brief Add components to `full` noise covariance matrix `C`
  */
 void generate_full_covariance_matrix(struct Noise *full, struct Noise *component, int Nchannel);
+void generate_full_dynamic_covariance_matrix(struct Wavelets *wdm, struct InstrumentModel *inst, struct ForegroundModel *conf, struct Noise *full);
 
 /**
 \brief Compute spline model only where interpolant changes
@@ -201,5 +204,23 @@ double noise_log_likelihood(struct Data *data, struct Noise *noise);
  */
 double noise_delta_log_likelihood(struct Data *data, struct SplineModel *model_x, struct SplineModel *model_y, double fmin, double fmax, int ic);
 
+/**
+ \brief Set initial state of spline `model`
+ */
+void initialize_spline_model(struct Orbit *orbit, struct Data *data, struct SplineModel *model, int Nspline);
+
+/**
+ \brief Set initial state of instrument noise `model`
+ */
+void initialize_instrument_model(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model);
+void initialize_instrument_model_wavelet(struct Orbit *orbit, struct Data *data, struct InstrumentModel *model);
+/**
+ \brief Set initial state of instrument noise `model`
+ */
+void initialize_foreground_model(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model);
+void initialize_foreground_model_wavelet(struct Orbit *orbit, struct Data *data, struct ForegroundModel *model);
+
+void GetDynamicNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags);
+void GetStationaryNoiseModel(struct Data *data, struct Orbit *orbit, struct Flags *flags, struct Noise *noise);
 
 #endif /* noise_model_h */
