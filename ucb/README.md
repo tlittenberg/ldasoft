@@ -24,8 +24,6 @@
 <a name="dependencies"></a>
 ## C Dependencies
 ```bash
-gsl
-gslcblas
 openmp
 mpi
 hdf5

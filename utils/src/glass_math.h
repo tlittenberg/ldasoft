@@ -129,18 +129,14 @@ double tukey_scale(double alpha, int N);
 void detrend(double *data, int N, int Navg);
 
 /**
-\brief Rearrange output of GSL RFT 
+\brief Rearrange output ofRFT
  
- Real and Imaginary components from GSL RFT functions are not ordered the way the rest of the package expects.
+ Real and Imaginary components from  RFT functions are not ordered the way the rest of the package expects.
   
  @param x[out] array to be filled with ordered fourier coefficients
- @param x_gsl[in] input array with gsl-formatted courier coefficients
+ @param x_packed[in] input array with ill-formatted fourier coefficients
  @param N[in] size of arrays
  */
-//void unpack_gsl_rft_output(double *x, double *x_gsl, int N);
-//void unpack_gsl_fft_output(double *x, double *x_gsl, int N);
-//void pack_gsl_fft_input(double *x, double *x_gsl, int N);
-
 void unpack_fft_output(double *x, double *x_packed, int N);
 
 /**
@@ -230,9 +226,7 @@ void matrix_multiply(double **A, double **B, double **AB, int N);
 
 /**
 \brief Wrapper to LAPACK Cholesky decomposition routine
-   
- Copies matrices into `gsl_matrix` structures and then fills the lower half of \f$L\f$ with the result.  GSL returns the original matrix in the upper half of \f$L\f$. We replace the upper half of \f$L\f$ with all 0s. Contents of \f$A\f$ are unaltered.
- 
+    
  @param[in] N size of matrix
  @param[in] A \f$N\times N\f$ matrix \f$A\f$
  @param[out] L Cholesky decomposition of \f$A = LL^{-1}\f$

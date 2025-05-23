@@ -124,7 +124,6 @@ void setup_vgb_data(struct VGBData *vgb_data, struct UCBData *ucb_data, struct T
     
     /*
      Initialize measured time of model update.
-     Used to determine number of steps relative to mbh model
      */
     vgb_data->cpu_time = 1.0;
 }
@@ -156,10 +155,10 @@ void initialize_vgb_sampler(struct VGBData *vgb_data)
         initialize_vb_proposal(orbit, data, prior, chain, flags, proposal, flags->DMAX);
         
         /* Initialize data models */
-        initialize_ucb_state(data, orbit, flags, chain, proposal, model, trial, vgb);
+        initialize_ucb_state(data, orbit, flags, chain, proposal, model, trial,  vgb_data->vgb_vec);
         
         /* Store data segment in working directory */
-        if(vgb_data->procID==1) print_data(data, data->tdi, flags);
+        if(vgb_data->procID==1) print_data(data, flags);
         
         /* Store post-processing script */
         print_ucb_catalog_script(flags, data, orbit);

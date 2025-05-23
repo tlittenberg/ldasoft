@@ -69,7 +69,6 @@ void setup_ucb_data(struct UCBData *ucb_data, struct TDI *tdi_full)
     
     /*
      Initialize measured time of model update.
-     Used to determin number of steps relative to mbh model
      */
     ucb_data->cpu_time = 1.0;
 }
@@ -190,7 +189,7 @@ void initialize_ucb_sampler(struct UCBData *ucb_data)
     initialize_proposal(orbit, data, prior, chain, flags, catalog, proposal, flags->DMAX);
     
     /* Initialize UCB sampler state */
-    struct Source *inj = NULL;
+    struct Source **inj = NULL;
     initialize_ucb_state(data, orbit, flags, chain, proposal, model, trial, inj);
         
     /* Set sampler counter */
@@ -223,7 +222,7 @@ void initialize_ucb_sampler(struct UCBData *ucb_data)
     }
     
     /* Store data segment in working directory */
-    print_data(data, data->tdi, flags);
+    print_data(data, flags);
 
     /* Store post-processing script */
     print_ucb_catalog_script(flags, data, orbit);
@@ -297,7 +296,7 @@ int update_ucb_sampler(struct UCBData *ucb_data)
                 for(int m=0; m<100; m++)
                 {
                     //reverse jump birth/death or split/merge moves
-                    if(rand_r_U_0_1(chain->r[ic])<0.25 && flags->rj)
+                    if(rand_r_U_0_1(&chain->r[ic])<0.25 && flags->rj)
                         ucb_rjmcmc(orbit, data, model_ptr, trial_ptr, chain, flags, prior, proposal, ic);
                     
                     //fixed dimension parameter updates

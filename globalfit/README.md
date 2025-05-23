@@ -10,8 +10,6 @@ A schematic block diagram showing how the processes are divided, and how the com
 <a name="dependencies"></a>
 ## C Dependencies
 ```bash
-gsl
-gslcblas
 openmp
 mpi
 hdf5

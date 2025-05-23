@@ -19,11 +19,9 @@
 #include <glass_utils.h>
 #include <glass_noise.h>
 #include <glass_ucb.h>
-#include <mbh.h>
 
 #include "glass_ucb_wrapper.h"
 #include "glass_vgb_wrapper.h"
-#include "glass_mbh_wrapper.h"
 #include "glass_noise_wrapper.h"
 
 void alloc_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, int procID, int nProc)
@@ -66,7 +64,12 @@ void select_noise_segment(struct Noise *psd_full, struct Data *data, struct Chai
 
 }
 
-void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, struct VGBData *vgb_data, struct MBHData *mbh_data, struct TDI *tdi_full, int procID)
+void setup_noise_data(struct NoiseData *noise_data, 
+                      struct UCBData *ucb_data,
+                      struct VGBData *vgb_data,
+                      //struct MBHData *mbh_data,
+                      struct TDI *tdi_full,
+                      int procID)
 {
     noise_data->data->downsample = ucb_data->data->downsample;
     noise_data->data->Nwave      = 100;
@@ -98,7 +101,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, st
     noise_data->data->fmin -= 1./T;
     noise_data->data->fmax += 1./T;
 
-    //adjust noise model bandwidth to account for MBHs
+    /*adjust noise model bandwidth to account for MBHs
     if(mbh_data->NMBH>0)
     {
         //set limits of noise model to cover both models
@@ -106,7 +109,7 @@ void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, st
         noise_data->data->fmax = (mbh_data->data->fmax > noise_data->data->fmax ) ? mbh_data->data->fmax : noise_data->data->fmax;
 
         //pad noise model even more (MBH bandwidth fluctuates)
-    }
+    }*/
         
     noise_data->data->N = (int)((noise_data->data->fmax - noise_data->data->fmin)*T);
     
@@ -123,15 +126,14 @@ void setup_noise_data(struct NoiseData *noise_data, struct UCBData *ucb_data, st
     noise_data->data->qmax = noise_data->data->qmin+noise_data->data->N;
     noise_data->data->fmax = (double)noise_data->data->qmax/T;
     
-    //store max and min frequency in MBH structure
+    /*store max and min frequency in MBH structure
     mbh_data->data->fmin = noise_data->data->fmin;
-    mbh_data->data->fmax = noise_data->data->fmax;
+    mbh_data->data->fmax = noise_data->data->fmax;*/
     
     select_frequency_segment(noise_data->data, tdi_full);
     
     /*
      Initialize measured time of model update.
-     Used to determine number of steps relative to mbh model
      */
     noise_data->cpu_time = 1.0;
 
@@ -172,7 +174,7 @@ void initialize_noise_sampler(struct NoiseData *noise_data)
     noise_data->mcmc_step = -flags->NBURN;
     
     /* Store data segment in working directory */
-    print_data(data, data->tdi, flags);
+    print_data(data, flags);
 
 }
 
@@ -196,7 +198,7 @@ void initialize_noise_state(struct NoiseData *noise_data)
     {
         /* Initialize work space for assembling full Noise model */
         psd[ic] = malloc(sizeof(struct Noise));
-        alloc_noise(psd[ic], data->NFFT, data->Nchannel);
+        alloc_noise(psd[ic], data->NFFT, data->Nlayer, data->Nchannel);
 
         /* Initialize Instrument Noise Model */
         inst_model[ic] = malloc(sizeof(struct InstrumentModel));
@@ -274,7 +276,7 @@ void resume_noise_state(struct NoiseData *noise_data)
     }
     fclose(noiseFile);
 
-    generate_instrument_noise_model(data,orbit,inst_model[0]);
+    generate_instrument_noise_model(orbit,inst_model[0]);
     invert_noise_covariance_matrix(inst_model[0]->psd);
     inst_model[0]->logL = noise_log_likelihood(data, inst_model[0]->psd);
     
@@ -327,7 +329,7 @@ int update_noise_sampler(struct NoiseData *noise_data)
             for(int steps=0; steps<10; steps++)
             {
                 noise_instrument_model_mcmc(orbit, data, inst_model_ptr, inst_trial_ptr, conf_model_ptr, psd_ptr, chain, flags, ic);
-                if(flags->confNoise) noise_foreground_model_mcmc(orbit, data, inst_model_ptr, conf_model_ptr, conf_trial_ptr, psd_ptr, chain, flags, ic);
+                if(flags->confNoise) noise_foreground_model_mcmc(data, inst_model_ptr, conf_model_ptr, conf_trial_ptr, psd_ptr, chain, flags, ic);
             }
             
             
@@ -353,10 +355,10 @@ int update_noise_sampler(struct NoiseData *noise_data)
 
     //save point estimate of noise model
     int i = (noise_data->mcmc_step+flags->NBURN)%data->Nwave;
-    generate_instrument_noise_model(data,orbit,inst_model[chain->index[0]]);
+    generate_instrument_noise_model(orbit,inst_model[chain->index[0]]);
     if(flags->confNoise)
     {
-        generate_galactic_foreground_model(data,orbit,conf_model[chain->index[0]]);
+        generate_galactic_foreground_model(conf_model[chain->index[0]]);
         generate_full_covariance_matrix(inst_model[chain->index[0]]->psd,conf_model[chain->index[0]]->psd, data->Nchannel);
     }
     invert_noise_covariance_matrix(inst_model[chain->index[0]]->psd);
