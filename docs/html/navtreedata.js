@@ -25,12 +25,14 @@
 var NAVTREE =
 [
   [ "GLASS", "index.html", [
-    [ "Doxygen code documentation", "index.html#autotoc_md0", null ],
-    [ "Acknowledgment", "index.html#autotoc_md1", null ],
-    [ "C Dependencies", "index.html#autotoc_md2", null ],
-    [ "Installation", "index.html#autotoc_md3", null ],
-    [ "Issue tracker", "index.html#autotoc_md4", null ],
-    [ "Other resources", "index.html#autotoc_md5", null ],
+    [ "README", "md_README.html", [
+      [ "Doxygen code documentation", "md_README.html#autotoc_md0", null ],
+      [ "Acknowledgment", "md_README.html#autotoc_md1", null ],
+      [ "C Dependencies", "md_README.html#autotoc_md2", null ],
+      [ "Installation", "md_README.html#autotoc_md3", null ],
+      [ "Issue tracker", "md_README.html#autotoc_md4", null ],
+      [ "Other resources", "md_README.html#autotoc_md5", null ]
+    ] ],
     [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -54,9 +56,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"glass__ucb__catalog_8h.html#a2a143534fd0acd7c73cdf5195900e809",
-"structData.html#ad89c9b316266fa46dfd5b5b3897fcf6e",
-"structWavelets.html#aaad4481d4054e5b4b5d2fc105d110197"
+"glass__ucb__catalog_8h.html#a01aee5f5a290122a3b6d745f7c35ec01",
+"structData.html#ad3d0769680658f8358958bd6c3d58a54",
+"structWavelets.html#a94e5b690fe5c1568da00d83dd8fafb18"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

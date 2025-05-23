@@ -3,7 +3,7 @@ var searchData=
   ['a_0',['A',['../structTDI.html#a24bf46f010217c055a56506b435c87e8',1,'TDI']]],
   ['accept_1',['accept',['../structProposal.html#a04235a6edbb89b37f5ebf514e74fc4ba',1,'Proposal']]],
   ['acceptance_2',['acceptance',['../structChain.html#abb03d9262839e259360c964c15ce373d',1,'Chain']]],
-  ['acknowledgment_3',['Acknowledgment',['../index.html#autotoc_md1',1,'']]],
+  ['acknowledgment_3',['Acknowledgment',['../md_README.html#autotoc_md1',1,'']]],
   ['adapt_5ftemperature_5fladder_4',['adapt_temperature_ladder',['../glass__ucb__sampler_8h.html#ac97ca10801918e6cd12966cc22138e07',1,'glass_ucb_sampler.c']]],
   ['aenoise_5',['AEnoise',['../glass__lisa_8h.html#a19c242aefb6a191a2260cfe7303eaa2e',1,'glass_lisa.c']]],
   ['aenoise_5fff_6',['AEnoise_FF',['../glass__lisa_8h.html#a5d48deb242e995a512137afafe6cd151',1,'glass_lisa.c']]],

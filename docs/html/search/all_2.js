@@ -1,7 +1,7 @@
 var searchData=
 [
   ['c_0',['C',['../structNoise.html#a907723fa2398a46d4e5f31c85a78b35f',1,'Noise::C'],['../structMVG.html#a2f2b2240a4f79a12de0dcde5de928a07',1,'MVG::C']]],
-  ['c_20dependencies_1',['C Dependencies',['../index.html#autotoc_md2',1,'']]],
+  ['c_20dependencies_1',['C Dependencies',['../md_README.html#autotoc_md2',1,'']]],
   ['cadence_2',['cadence',['../structWavelets.html#a20be7319d599fff001f27993511cce75',1,'Wavelets']]],
   ['cal_5fsigma_5famp_3',['CAL_SIGMA_AMP',['../glass__ucb__prior_8h.html#a0993d8ce382e8cf7fc797120d14df348',1,'glass_ucb_prior.h']]],
   ['cal_5fsigma_5fphase_4',['CAL_SIGMA_PHASE',['../glass__ucb__prior_8h.html#a3ceec529fce62b2bf562379ccbe35e03',1,'glass_ucb_prior.h']]],
@@ -24,7 +24,7 @@ var searchData=
   ['cholesky_5fdecomp_21',['cholesky_decomp',['../glass__math_8h.html#a2431c31bce9711b866999db85774919a',1,'glass_math.c']]],
   ['cinv_22',['Cinv',['../structMVG.html#aa0a2af66671d5980c2a9943a76e68d6b',1,'MVG']]],
   ['clight_23',['CLIGHT',['../glass__constants_8h.html#a579085cbd9e0993223cae68700a306cf',1,'glass_constants.h']]],
-  ['code_20documentation_24',['Doxygen code documentation',['../index.html#autotoc_md0',1,'']]],
+  ['code_20documentation_24',['Doxygen code documentation',['../md_README.html#autotoc_md0',1,'']]],
   ['compare_5fmodel_25',['compare_model',['../glass__ucb__model_8h.html#aa9152d7274cafed11f3aef58c5aec474',1,'glass_ucb_model.c']]],
   ['confnoise_26',['confNoise',['../structFlags.html#a3c7fc8f6a94fd9e840d46d0494b1ee86',1,'Flags']]],
   ['copy_5fargv_27',['copy_argv',['../glass__data_8h.html#a07ac76a2abf11b4804b28e788d310a60',1,'glass_data.c']]],

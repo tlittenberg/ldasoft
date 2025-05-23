@@ -20,7 +20,7 @@ var searchData=
   ['initialize_5fucb_5fsampler_17',['initialize_ucb_sampler',['../glass__ucb__wrapper_8h.html#a97d3fe7566977e0d76dd4e4b96374fd8',1,'glass_ucb_wrapper.c']]],
   ['initialize_5fucb_5fstate_18',['initialize_ucb_state',['../glass__ucb__sampler_8h.html#a5892581c1ee3b48ab900b592d95a3e1e',1,'glass_ucb_sampler.c']]],
   ['injfile_19',['injFile',['../structFlags.html#ab824e717f38a66fb3f58621b46119baa',1,'Flags']]],
-  ['installation_20',['Installation',['../index.html#autotoc_md3',1,'']]],
+  ['installation_20',['Installation',['../md_README.html#autotoc_md3',1,'']]],
   ['instrumentmodel_21',['InstrumentModel',['../structInstrumentModel.html',1,'']]],
   ['integer_5fsort_22',['integer_sort',['../glass__math_8h.html#a63a7e5ac801b5b5197f707c4917e5831',1,'glass_math.c']]],
   ['interpolate_5forbits_23',['interpolate_orbits',['../glass__lisa_8h.html#a3e7bbddde117293cbb918d494cfd5756',1,'glass_lisa.c']]],
@@ -29,5 +29,5 @@ var searchData=
   ['invert_5fnoise_5fcovariance_5fmatrix_26',['invert_noise_covariance_matrix',['../glass__math_8h.html#aa832de50c97ec75e53423259310ab758',1,'glass_math.c']]],
   ['ipow_27',['ipow',['../glass__math_8h.html#a6bda7243d9d6427acdcf175555f631f6',1,'glass_math.c']]],
   ['iseed_28',['iseed',['../structData.html#a3f6f6282d62cef7675f33998d5d7fa9a',1,'Data']]],
-  ['issue_20tracker_29',['Issue tracker',['../index.html#autotoc_md4',1,'']]]
+  ['issue_20tracker_29',['Issue tracker',['../md_README.html#autotoc_md4',1,'']]]
 ];

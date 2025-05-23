@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.11.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>GLASS: GLASS</title>
+<title>GLASS: Main Page</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,7 +33,7 @@ MathJax.Hub.Config({
 <table cellspacing="0" cellpadding="0">
  <tbody>
  <tr id="projectrow">
-  <td id="projectlogo"><img alt="Logo" src="GBMCMC.png"/></td>
+  <td id="projectlogo"><img alt="Logo" src="GLASS.png"/></td>
   <td id="projectalign">
    <div id="projectname">GLASS
    </div>
@@ -104,91 +104,10 @@ $(function(){initNavTree('index.html',''); initResizable(true); });
 </div>
 </div>
 
-<div><div class="header">
-  <div class="headertitle"><div class="title">GLASS </div></div>
+<div class="header">
+  <div class="headertitle"><div class="title">GLASS Documentation</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Prototype data analysis software for LISA analysis</p>
-<h1><a class="anchor" id="autotoc_md0"></a>
-Doxygen code documentation</h1>
-<p><a href="https://tlittenberg.github.io/ldasoft/html/index.html">https://tlittenberg.github.io/ldasoft/html/index.html</a></p>
-<h1><a class="anchor" id="autotoc_md1"></a>
-Acknowledgment</h1>
-<div class="fragment"><div class="line">@misc{ldasoft,</div>
-<div class="line">    author = &quot;Tyson B. Littenberg, Neil J. Cornish, Kristen Lackeos, Travis Robson&quot;,</div>
-<div class="line">    title = &quot;LDASoft&quot;,</div>
-<div class="line">    howpublished = &quot;free software (GPL)&quot;</div>
-<div class="line">    doi = &quot;10.5281/zenodo.2026177&quot;</div>
-<div class="line">    year = &quot;2020&quot;</div>
-<div class="line">}</div>
-</div><!-- fragment --><p><a href="https://doi.org/10.5281/zenodo.2026177"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.2026177.svg" alt="DOI" style="pointer-events: none;" class="inline"/></a></p>
-<h1><a class="anchor" id="autotoc_md2"></a>
-C Dependencies</h1>
-<div class="fragment"><div class="line">openmp</div>
-<div class="line">mpi</div>
-<div class="line">hdf5</div>
-<div class="line">lapack</div>
-<div class="line">kissfft</div>
-</div><!-- fragment --><p> The <code>GlobalFit</code> pipeline additionally requires the <code>global-fit</code> branch of <a href="https://github.com/eXtremeGravityInstitute/LISA-Massive-Black-Hole/tree/global-fit"><code>LISA-Massive-Black-Hole</code></a> to be installed.</p>
-<h1><a class="anchor" id="autotoc_md3"></a>
-Installation</h1>
-<p>Example build script: </p><div class="fragment"><div class="line">#!/bin/bash</div>
-<div class="line"> </div>
-<div class="line"># set prefix for install directories</div>
-<div class="line">export LDASOFT_PREFIX=&lt;EDIT: path to desired install directories&gt;</div>
-<div class="line"> </div>
-<div class="line"># build codes</div>
-<div class="line">./install.sh ${LDASOFT_PREFIX}</div>
-<div class="line"> </div>
-<div class="line"># add location of binaries to PATH </div>
-<div class="line">export PATH=${LDASOFT_PREFIX}/bin:${PATH}</div>
-</div><!-- fragment --><p>Directory tree for the ldasoft installation: </p><div class="fragment"><div class="line">├── bin</div>
-<div class="line">│   ├── gaussian_mixture_model</div>
-<div class="line">│   ├── global_fit</div>
-<div class="line">│   ├── noise_mcmc</div>
-<div class="line">│   ├── noise_spline_mcmc</div>
-<div class="line">│   ├── ucb_catalog</div>
-<div class="line">│   ├── ucb_chirpmass</div>
-<div class="line">│   ├── ucb_grid</div>
-<div class="line">│   ├── ucb_match</div>
-<div class="line">│   ├── ucb_mcmc</div>
-<div class="line">│   └── vgb_mcmc</div>
-<div class="line">├── include</div>
-<div class="line">│   ├── gitversion.h</div>
-<div class="line">│   ├── glass_constants.h</div>
-<div class="line">│   ├── glass_data.h</div>
-<div class="line">│   ├── glass_gmm.h</div>
-<div class="line">│   ├── glass_lisa.h</div>
-<div class="line">│   ├── glass_math.h</div>
-<div class="line">│   ├── glass_noise.h</div>
-<div class="line">│   ├── glass_noise_io.h</div>
-<div class="line">│   ├── glass_noise_model.h</div>
-<div class="line">│   ├── glass_noise_sampler.h</div>
-<div class="line">│   ├── glass_ucb.h</div>
-<div class="line">│   ├── glass_ucb_catalog.h</div>
-<div class="line">│   ├── glass_ucb_data.h</div>
-<div class="line">│   ├── glass_ucb_fstatistic.h</div>
-<div class="line">│   ├── glass_ucb_io.h</div>
-<div class="line">│   ├── glass_ucb_model.h</div>
-<div class="line">│   ├── glass_ucb_prior.h</div>
-<div class="line">│   ├── glass_ucb_proposal.h</div>
-<div class="line">│   ├── glass_ucb_sampler.h</div>
-<div class="line">│   ├── glass_ucb_waveform.h</div>
-<div class="line">│   └── glass_utils.h</div>
-<div class="line">└── lib</div>
-<div class="line">    ├── libglass_noise.a</div>
-<div class="line">    ├── libglass_ucb.a</div>
-<div class="line">    └── libglass_utils.a</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md4"></a>
-Issue tracker</h1>
-<p><a href="https://github.com/tlittenberg/ldasoft/issues">https://github.com/tlittenberg/ldasoft/issues</a></p>
-<h1><a class="anchor" id="autotoc_md5"></a>
-Other resources</h1>
-<ul>
-<li><a href="https://www.draw.io/#Htlittenberg%2Fldasoft%2Fmaster%2FLISADataFlow.drawio">Example LISA analysis flow chart</a></li>
-<li><a href="https://app.diagrams.net/#Htlittenberg%2Fldasoft%2Fmaster%2FGlobalFit.drawio">Global Fit block diagram</a> </li>
-</ul>
-</div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"/>
 </div><!-- contents -->
 </div><!-- doc-content -->
