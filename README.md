@@ -7,11 +7,10 @@ https://tlittenberg.github.io/glass/html/index.html
 
 ```bibtex
 @misc{glass,
-	author = "Tyson B. Littenberg, Neil J. Cornish, Kristen Lackeos, Travis Robson",
-	title = "LDASoft",
-	howpublished = "free software (GPL)"
-	doi = "10.5281/zenodo.2026177"
-	year = "2020"
+	author = "Tyson B. Littenberg, Neil J. Cornish",
+	title = "GLASS",
+	howpublished = "free software (Apache 2.0)"
+	year = "2025"
 }
 ```
 
